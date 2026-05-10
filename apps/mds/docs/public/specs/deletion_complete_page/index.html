@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — DeletionCompletePage (app_user · DeletionCompleteRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   DeletionCompletePage — wizard step 4/4. 탈퇴 요청 완료 confirmation/farewell.
+   widget: apps/app_user/lib/src/features/account_deletion/ui/deletion_complete_page.dart
+   ============================================================ */
+
+/* Override default `.viewport` (relative + overflow:hidden) to flex column so
+   .dc-body can `flex: 1` and fill the remaining height below the AppBar. */
+.dc-viewport {
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+}
+body.dark-mode .dc-viewport { background: var(--color-dark-background); }
+
+.dc-appbar {
+  height: 56px;
+  display: flex; align-items: center;
+  padding: 0 var(--spacing-screen-edge);
+  background: var(--color-surface);
+}
+.dc-appbar__back {
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  color: var(--color-text-primary);
+  background: none; border: none;
+}
+.dc-appbar__back svg { width: 22px; height: 22px; }
+.dc-appbar h2 {
+  flex: 1;
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-align: center;
+  margin-right: 40px;
+}
+body.dark-mode .dc-appbar { background: var(--color-dark-background); }
+body.dark-mode .dc-appbar h2,
+body.dark-mode .dc-appbar__back { color: var(--color-dark-text-primary); }
+
+/* Body — Padding(24) Column with two Spacers wrapping content */
+.dc-body {
+  flex: 1;
+  padding: var(--spacing-large);
+  display: flex; flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dc-spacer { flex: 1; }
+
+.dc-hero {
+  display: flex; flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-large);
+}
+.dc-hero__icon {
+  width: 72px; height: 72px;
+  color: var(--color-primary);
+  display: grid; place-items: center;
+}
+.dc-hero__icon svg { width: 72px; height: 72px; }
+.dc-hero__title {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--color-text-primary);
+  text-align: center;
+  margin: 0;
+}
+.dc-hero__sub {
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  text-align: center;
+  margin: 0;
+  max-width: 280px;
+}
+.dc-hero__title-sub-gap { height: var(--spacing-small); }
+
+/* CTA — sits at bottom of body Padding (no separate region) */
+.dc-cta {
+  width: 100%;
+}
+.dc-btn-filled {
+  width: 100%;
+  height: 48px;
+  border: none; border-radius: var(--radius-button);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 16px; font-weight: 600;
+  cursor: pointer;
+}
+
+/* Success snackbar (after _finish) */
+.dc-snackbar {
+  position: absolute;
+  left: 16px; right: 16px;
+  bottom: 24px;
+  background: var(--color-success);
+  color: #fff;
+  border-radius: 4px;
+  padding: 14px 16px;
+  font-size: 14px;
+  display: flex; align-items: center; gap: 12px;
+}
+.dc-snackbar svg { width: 18px; height: 18px; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<header>
+  <h1>Deletion Complete Page</h1>
+</header>
+
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>디자인완료</strong> <em style="color: var(--color-text-secondary);">— wizard step 4/4 · 2 state (default + transition)</em></td>
+      </tr>
+      <tr><th>App</th><td><code>app_user</code></td></tr>
+      <tr><th>Category</th><td>account · privacy · destructive · wizard-step · confirmation</td></tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>DeletionCompleteRoute</code> — <code>DeletionCompletePage</code> (no params)</td>
+      </tr>
+      <tr><th>Path</th><td><code>/my/privacy/delete/complete</code></td></tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="/specs/deletion_verify_page/index.html"><code>DeletionVerifyPage</code></a> — coordinator.goComplete()로 stack 교체.<br>
+          <strong>Children</strong>: <em>—</em> (terminal screen — "확인" 탭 시 home으로 go + signOut + success snackbar)
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          탈퇴 요청 wizard의 마지막 단계 — 요청이 정상 접수되었음을 확인하고 사용자에게 작별을 인사한다.
+          7일 grace period 정보를 한 번 더 상기시켜 사용자가 마음을 바꿀 수 있는 마지막 mental anchor를 제공.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: 본인 확인 화면에서 한 번 더 확인을 거쳐 탈퇴 요청이 접수된 직후 진입.<br>
+          <strong>Exit points</strong>:
+          ① "확인" 탭 → 홈으로 이동하면서 자동 로그아웃되고, 잠시 "탈퇴 요청이 접수되었어요." 안내가 노출된다 ·
+          ② 시스템 뒤로 가기 → 사실상 동일한 결과 (홈/로그인으로 자동 이동).
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          탈퇴는 되돌리기 어려운 액션이라 별도의 마무리 화면을 둔다 — 사용자가 "내가 정말 했구나"를 시각적으로 매듭짓도록.
+          큰 success 아이콘 + 짧은 메시지 + 7일 복구 안내(reassurance) 패턴은 다른 wizard 종료 화면과 동일한 톤.
+        </td>
+      </tr>
+      <tr><th>Frequency</th><td>매우 낮음 — 계정당 ≤ 1회 (탈퇴 요청 성공 시).</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">이 spec의 주요 변경 이력. 최신 항목 위.</p>
+  <table class="ref">
+    <thead><tr><th style="width: 110px;">Date</th><th style="width: 80px;">Version</th><th style="width: 120px;">Author</th><th>Changes</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>v1.4 template으로 작성. wizard step 4/4 · 2 state — Default(success hero) baseline · "확인" 탭 후 transition(snackbar). <code>appCoordinatorProvider.goToHome()</code> + <code>authControllerProvider.signOut()</code> + <code>showMinglitSuccess</code> 매핑.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#global-behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">AppBar(title) + 단일 Padded Column with 2 Spacers — center hero(success icon + title + sub) + bottom CTA. 다른 wizard 단계와 달리 ListView/Expanded 구조 없음.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      Scaffold + AppBar("탈퇴 완료") + SafeArea Padding(<code>spacing-large (24)</code>) Column. <em>Spacer + hero(icon + title + sub) + Spacer + FilledButton</em> 패턴 — hero를 화면 vertical center로, CTA를 하단으로 균등 분리.
+      AppBar는 닫기/뒤로 가기 default leading 사용 (back 버튼 노출).
+    </p>
+
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 600px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">① AppBar — "탈퇴 완료" + back · h=56</span>
+        </div>
+
+        <!-- Top spacer -->
+        <div class="blueprint__region" style="top:56px;left:24px;right:24px;height:140px;">
+          <span class="blueprint__region-label">— Spacer (flex)</span>
+        </div>
+
+        <!-- Hero -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:200px;left:24px;right:24px;height:200px;">
+          <span class="blueprint__region-label">② Hero — icon 72 + title + sub</span>
+        </div>
+
+        <!-- Bottom spacer -->
+        <div class="blueprint__region" style="top:404px;left:24px;right:24px;height:140px;">
+          <span class="blueprint__region-label">— Spacer (flex)</span>
+        </div>
+
+        <!-- CTA -->
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:24px;left:24px;right:24px;height:48px;">
+          <span class="blueprint__region-label">③ "확인" FilledButton · w∞</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:60px;right:8px;">title centered</div>
+        <div class="blueprint__align-marker" style="top:280px;right:8px;">center align</div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+└─ <b>AppBar</b>(<i>title: Text("탈퇴 완료")</i>)              ← ①
+└─ <b>SafeArea</b>
+   └─ <b>Padding</b>(<code>spacing-large (24)</code> all)
+      └─ <b>Column</b>
+         ├─ <b>Spacer</b>()
+         ├─ <em>hero stack</em>                              ← ②
+         │  ├─ <b>Icon</b>(<i>Icons.check_circle_rounded</i>, size: 72, color: <code>color-primary</code>)
+         │  ├─ SizedBox(<code>spacing-large (24)</code>)
+         │  ├─ <b>Text</b>("탈퇴 요청이 완료됐어요", headlineSmall, center)
+         │  ├─ SizedBox(<code>spacing-small (8)</code>)
+         │  └─ <b>Text</b>("지금부터 7일 안에 다시 로그인하면 계정을 복구할 수 있어요.", bodyLarge · onSurfaceVariant, center)
+         ├─ <b>Spacer</b>()
+         └─ <b>SizedBox</b>(width: ∞)                         ← ③
+            └─ <b>FilledButton</b>("확인" · onPressed: _finish)</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead><tr><th style="width: 60px;">#</th><th style="width: 200px;">Region</th><th style="width: 220px;">Alignment</th><th>Spacing</th></tr></thead>
+      <tbody>
+        <tr><td>—</td><td>Body padding</td><td>—</td><td>Padding <code>spacing-large (24)</code> all sides</td></tr>
+        <tr><td>①</td><td>AppBar</td><td>title centered · leading back auto</td><td>height 56 · scaffold gray bg · border-bottom 없음</td></tr>
+        <tr><td>②</td><td>Hero — icon + title + sub</td><td>Column center (axis cross + text align center)</td><td>icon ↔ title 사이 SizedBox <code>spacing-large (24)</code> · title ↔ sub 사이 SizedBox <code>spacing-small (8)</code></td></tr>
+        <tr><td>③</td><td>Bottom CTA</td><td>full width · single FilledButton</td><td>FilledButton height 48 · Spacer로 hero와 분리</td></tr>
+        <tr><td>—</td><td>Spacer × 2</td><td>flex 1 each</td><td>hero를 vertical center에 위치시키고 CTA를 하단으로 push — Column 내부 동등 분배</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ① — Hero (icon + title + sub)</h2>
+    <p class="intro">
+      success 확인 패턴. 큰 primary 색 체크 아이콘(72px)이 시각적 앵커 — 그 아래 제목 + 부제. 모든 텍스트는 가운데 정렬이며, 부제는 한 단계 톤 다운된 색.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 240px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:24px;left:50%;width:72px;height:72px; transform: translateX(-36px);">
+          <span class="blueprint__region-label">㉠ icon 72</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:120px;left:24px;right:24px;height:32px;">
+          <span class="blueprint__region-label">㉡ title (headlineSmall)</span>
+        </div>
+        <div class="blueprint__region" style="top:160px;left:24px;right:24px;height:48px;">
+          <span class="blueprint__region-label">㉢ sub (bodyLarge · onSurfaceVariant)</span>
+        </div>
+      </div>
+      <div class="layout-tree"><b>Column</b>
+├─ <b>Icon</b>(check_circle_rounded, size: 72, color: <code>color-primary</code>)  ← ㉠
+├─ SizedBox(<code>spacing-large (24)</code>)
+├─ <b>Text</b>("탈퇴 요청이 완료됐어요", headlineSmall · center)                    ← ㉡
+├─ SizedBox(<code>spacing-small (8)</code>)
+└─ <b>Text</b>("지금부터 7일 안에 …", bodyLarge · onSurfaceVariant · center)        ← ㉢</div>
+    </div>
+    <table class="ref" style="margin-top: 16px;">
+      <thead><tr><th style="width: 60px;">#</th><th style="width: 180px;">Element</th><th style="width: 220px;">Alignment</th><th>Spacing / tokens</th></tr></thead>
+      <tbody>
+        <tr><td>㉠</td><td>success icon</td><td>horizontal center</td><td>72px · color <code>color-primary</code> (purple) · Material rounded variant</td></tr>
+        <tr><td>㉡</td><td>title</td><td>center · single or 2 lines</td><td>typography <code>headlineSmall</code> · color text-primary</td></tr>
+        <tr><td>㉢</td><td>sub</td><td>center · multiline (max-width effectively constrained by Padding 24)</td><td>typography <code>bodyLarge</code> · color <code>onSurfaceVariant</code> (text-secondary) · 1.5 line-height (default)</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">2가지 시각 변형 — baseline = 진입 직후(success hero) · "확인" 탭 후 전이 컷(success 스낵바가 보이며 홈/로그인으로 이동). 데이터 fetch는 없다.</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      <strong>State 식별 기준</strong>:
+      ① 진입 직후 — 사용자가 hero를 보고 안내문을 읽는 단계 (baseline) ·
+      ② "확인" 탭 직후의 전이 — 화면이 홈/로그인으로 바뀌는 짧은 사이에 success 스낵바가 잠시 노출되는 컷.
+    </p>
+
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- State 1: Default (baseline) -->
+      <table class="ref state-mini is-baseline-tint">
+        <thead>
+          <tr><th colspan="3"><strong>Default · 탈퇴 완료 hero</strong> 🎯 <small>baseline · 탈퇴 요청이 접수된 직후 진입한 상태</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport dc-viewport">
+                <div class="dc-appbar">
+                  <button class="dc-appbar__back" title="뒤로">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                  </button>
+                  <h2>탈퇴 완료</h2>
+                </div>
+                <div class="dc-body">
+                  <span class="annotation" style="top:60px;left:24px;">spacing-large (24) all</span>
+                  <span class="callout" style="top:240px;right:24px;">ⓐ</span>
+                  <span class="callout" style="top:340px;right:24px;">ⓑ</span>
+                  <span class="callout" style="bottom:24px;right:24px;">ⓒ</span>
+
+                  <div class="dc-spacer"></div>
+                  <div class="dc-hero">
+                    <div class="dc-hero__icon">
+                      <!-- Icons.check_circle_rounded -->
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    </div>
+                    <div style="text-align: center;">
+                      <h3 class="dc-hero__title">탈퇴 요청이 완료됐어요</h3>
+                      <div class="dc-hero__title-sub-gap"></div>
+                      <p class="dc-hero__sub">지금부터 7일 안에 다시 로그인하면 계정을 복구할 수 있어요.</p>
+                    </div>
+                  </div>
+                  <div class="dc-spacer"></div>
+                  <div class="dc-cta">
+                    <button class="dc-btn-filled">확인</button>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>본인 확인 화면에서 한 번 더 확인을 거친 뒤 탈퇴 요청이 접수된 직후 — 화면 중앙에 success hero가 노출된 상태.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · <strong>"확인" 탭</strong> → 화면이 홈으로 이동하면서 자동 로그아웃되고, "탈퇴 요청이 접수되었어요." 안내가 잠시 노출된다. 인증 상태가 사라지면 곧 로그인 화면으로 자연스럽게 이어진다.<br>
+              · 뒤로 가기 → "확인"과 사실상 동일한 결과 (홈/로그인으로 이동).
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · "확인"을 누르지 않으면 화면은 그대로 머무른다 — 사용자가 안내문을 충분히 읽도록 의도된 동작.<br>
+              · "확인" 직후 자동 로그아웃이 잠시 늦어져도, 다음 화면 전환에서 자연스럽게 보정된다.
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>
+              <code>Scaffold</code> · <code>AppBar</code>("탈퇴 완료") ·
+              <code>SafeArea</code> · <code>Padding</code>(<code>spacing-large (24)</code>) ·
+              <code>Column</code> · <code>Spacer</code> ×2 ·
+              <code>Icon</code>(<code>Icons.check_circle_rounded</code> · 72px · primary) ·
+              <code>Text</code>(headlineSmall · "탈퇴 요청이 완료됐어요") ·
+              <code>Text</code>(bodyLarge · onSurfaceVariant · 안내) ·
+              <code>SizedBox</code>(width: ∞) · <code>FilledButton</code>("확인")
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>
+              <code>color-surface</code> (scaffold) ·
+              <code>color-primary</code> (success icon · FilledButton bg) ·
+              <code>color-text-primary</code> (title) · <code>color-text-secondary</code> / <code>onSurfaceVariant</code> (sub) ·
+              <code>spacing-large (24)</code> · <code>spacing-small (8)</code> ·
+              <code>radius-button (12)</code> (FilledButton) ·
+              typography <code>headlineSmall</code> · <code>bodyLarge</code>
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 success 아이콘은 일반적인 success 그린이 아닌 brand primary 색을 사용한다 — "환영"이 아닌 "정중한 마무리"라는 톤을 의도.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- State 2: Transition (post _finish) -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>"확인" 탭 후 transition</strong> <small>화면이 홈/로그인으로 이동하는 짧은 사이에 success 스낵바가 잠시 노출된 컷</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport dc-viewport" style="position: relative;">
+                <div class="dc-appbar">
+                  <button class="dc-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+                  <h2>탈퇴 완료</h2>
+                </div>
+                <div class="dc-body">
+                  <div class="dc-spacer"></div>
+                  <div class="dc-hero">
+                    <div class="dc-hero__icon">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                    </div>
+                    <div style="text-align: center;">
+                      <h3 class="dc-hero__title">탈퇴 요청이 완료됐어요</h3>
+                      <div class="dc-hero__title-sub-gap"></div>
+                      <p class="dc-hero__sub">지금부터 7일 안에 다시 로그인하면 계정을 복구할 수 있어요.</p>
+                    </div>
+                  </div>
+                  <div class="dc-spacer"></div>
+                  <div class="dc-cta">
+                    <button class="dc-btn-filled">확인</button>
+                  </div>
+                </div>
+                <div class="dc-snackbar">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                  탈퇴 요청이 접수되었어요.
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>"확인" 탭 직후 화면이 홈/로그인으로 이동하는 짧은 사이 — 본문은 잠시 그대로 보이고 그 위에 success 스낵바가 등장한 컷.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · 이 짧은 전이 동안에는 본문 입력은 받지 않는다.<br>
+              · 스낵바는 손가락으로 옆으로 밀어 즉시 닫을 수 있으며, 그렇지 않으면 약 4초 후 자동으로 사라진다.<br>
+              · 다음 화면이 표시된 후 인증 상태 변경에 따라 로그인 화면으로 자연스럽게 이어진다.
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · 화면이 홈으로 바뀐 뒤에도 success 스낵바는 잠시 그대로 표시된다 — 사용자에게 "탭 → ack → 사라짐" 경험을 일관되게 제공.<br>
+              · 자동 로그아웃이 약간 늦어져도 다음 화면 이동에서 자연스럽게 정리된다.
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>+ <code>SnackBar</code>(<code>showMinglitSuccess</code> wrapped — Material SnackBar with success leading icon)<br>↔ 화면 자체는 baseline 동일 (transition frame)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>+ <code>color-success</code> (snackbar leading icon · success theme bg) · scrim 없음</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 사용자가 인지할 수 있는 "탭→ack→사라짐"의 짧은 중간 컷 — 별도 컷으로 분리해 안내한다.</td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </section>
+</div>
+
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">cross-cutting — 모든 state에 적용되는 액션 / motion / global edge cases.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr></thead>
+      <tbody>
+        <tr><td>뒤로 가기 (시스템 / AppBar)</td><td>이 화면은 wizard의 마지막 단계라 이전 단계로 돌아갈 수 없다 — "확인"과 사실상 동일하게 홈/로그인으로 이동한다.</td></tr>
+        <tr><td>"확인" 탭</td><td>항상 활성. 화면이 홈으로 이동하면서 자동 로그아웃되고 success 스낵바가 잠시 노출된다.</td></tr>
+        <tr><td>"확인" 탭 피드백</td><td>탭 시 짧은 ripple 피드백.</td></tr>
+        <tr><td>다크 모드 토글</td><td>배경/텍스트는 다크 토큰으로 자동 전환되고, primary 색은 동일하게 유지된다.</td></tr>
+        <tr><td>화면 전이 후 스낵바 보존</td><td>홈으로 화면이 바뀐 뒤에도 success 스낵바는 약 4초 동안 그대로 노출된다.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion &amp; timing</h2>
+    <p class="intro">Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code> → <code>MinglitAnimation</code>.</p>
+    <table class="ref">
+      <thead><tr><th style="width: 200px;">Token</th><th style="width: 80px;">Value</th><th>Use</th></tr></thead>
+      <tbody>
+        <tr><td><code>MinglitAnimation.micro</code></td><td>100ms</td><td>"확인" 탭 ripple.</td></tr>
+        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>화면 진입 / 홈으로의 전환 / 로그인 화면으로의 자동 이동.</td></tr>
+        <tr><td><em>(시스템 기본)</em> 스낵바</td><td>~250ms</td><td>스낵바 등장과 사라짐 — 약 4초 후 자동으로 사라짐.</td></tr>
+      </tbody>
+    </table>
+    <table class="ref" style="margin-top: 12px;">
+      <thead><tr><th style="width: 220px;">Transition</th><th style="width: 140px;">Duration (token)</th><th>Curve / notes</th></tr></thead>
+      <tbody>
+        <tr><td>이전 단계 → 이 화면 진입</td><td><code>fast</code> (200ms)</td><td>스택을 교체하는 전환.</td></tr>
+        <tr><td>"확인" → 홈</td><td><code>fast</code> (200ms)</td><td>홈으로 화면을 교체.</td></tr>
+        <tr><td>자동 로그아웃 → 로그인</td><td><code>fast</code> (200ms)</td><td>인증 상태 변경에 따라 로그인 화면으로 자연스럽게 이동.</td></tr>
+        <tr><td>스낵바 등장 / 사라짐</td><td>~250ms</td><td>약 4초 동안 노출.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>Loading / Error 상태 없음</strong> — 이 화면은 데이터를 불러오지 않으며, "확인" 직후의 후속 동작은 사용자에게 별도 에러로 보이지 않는다.</li>
+      <li><strong>다크 모드</strong> — 배경/텍스트/아이콘은 다크 토큰으로 자동 전환되고, primary 색은 그대로 유지된다.</li>
+      <li><strong>접근성</strong> — 제목은 강조해서 안내되고, success 아이콘은 장식으로 처리되어 별도로 안내되지 않는다.</li>
+      <li><strong>화면 회전</strong> — hero는 항상 화면의 세로 가운데에, "확인" 버튼은 하단에 위치한다.</li>
+      <li><strong>자동 로그아웃 실패</strong> — 자동 로그아웃이 실패해도 화면은 이미 홈으로 이동한 상태라 사용자에게 보이는 변화는 없으며, 이후의 작업에서 자연스럽게 보정된다.</li>
+    </ul>
+  </section>
+</div>
+
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">Implementation source + 인접 화면 link. Components / Tokens는 위 mini-table에 분산.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 200px;">항목</th><th>Path / Reference</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Widget class</strong></td><td><code>DeletionCompletePage</code> · <code>ConsumerWidget</code></td></tr>
+        <tr><td><strong>File path</strong></td><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/account_deletion/ui/deletion_complete_page.dart"><code>apps/app_user/lib/src/features/account_deletion/ui/deletion_complete_page.dart</code></a></td></tr>
+        <tr><td><strong>App coordinator</strong></td><td><code>appCoordinatorProvider.goToHome()</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/routing/app_coordinator.dart"><code>app_coordinator.dart</code></a></td></tr>
+        <tr><td><strong>Auth controller</strong></td><td><code>authControllerProvider.notifier.signOut()</code> · minglit_kit auth controller</td></tr>
+        <tr><td><strong>Success snackbar</strong></td><td><code>context.showMinglitSuccess('탈퇴 요청이 접수되었어요.')</code> · minglit_kit (root ScaffoldMessenger)</td></tr>
+        <tr><td><strong>Route</strong></td><td><code>DeletionCompleteRoute</code> · path: <code>/my/privacy/delete/complete</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr><td><a href="/specs/deletion_reason_page/index.html"><code>DeletionReasonPage</code></a></td><td>Step 1/4 — 사유 선택.</td></tr>
+        <tr><td><a href="/specs/deletion_info_page/index.html"><code>DeletionInfoPage</code></a></td><td>Step 2/4 — 안내.</td></tr>
+        <tr><td><a href="/specs/deletion_verify_page/index.html"><code>DeletionVerifyPage</code></a></td><td>Previous step (3/4) — coordinator.goComplete로 진입.</td></tr>
+        <tr><td><a href="/specs/login_page/index.html"><code>LoginPage</code></a></td><td>signOut 직후 도착지 — auth state 변동에 의한 redirect.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,57 @@
+name: Render MDS spec mockups
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - 'apps/mds/docs/public/specs/**.html'
+      - 'apps/mds/docs/public/specs/**.css'
+      - 'apps/mds/docs/scripts/render-spec-mockups.js'
+      - 'shared/packages/mds/tokens/lib/generated/tokens.css'
+  workflow_dispatch:
+
+concurrency:
+  group: render-spec-mockups
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Playwright + Chromium
+        working-directory: apps/mds/docs
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+
+      - name: Sync MDS tokens
+        working-directory: apps/mds/docs
+        run: npm run tokens:sync
+
+      - name: Render spec mockups
+        working-directory: apps/mds/docs
+        run: node scripts/render-spec-mockups.js
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/mds/docs/public/specs/*.png
+          if git diff --staged --quiet; then
+            echo "변경 없음 — commit skip"
+            exit 0
+          fi
+          CHANGED=$(git diff --staged --name-only | wc -l)
+          git commit -m "chore(mds): auto-render $CHANGED spec mockup PNGs [skip ci]"
+          git push

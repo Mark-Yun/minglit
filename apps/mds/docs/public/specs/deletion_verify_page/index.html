@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — DeletionVerifyPage (app_user · DeletionVerifyRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   DeletionVerifyPage — wizard step 3/4. 본인 확인 — 비밀번호 입력 / 소셜 안내.
+   widget: apps/app_user/lib/src/features/account_deletion/ui/deletion_verify_page.dart
+   ============================================================ */
+
+.dv-viewport { background: var(--color-surface); }
+body.dark-mode .dv-viewport { background: var(--color-dark-background); }
+
+.dv-appbar {
+  height: 56px;
+  display: flex; align-items: center;
+  padding: 0 var(--spacing-screen-edge);
+  background: var(--color-surface);
+}
+.dv-appbar__back {
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  color: var(--color-text-primary);
+  background: none; border: none;
+}
+.dv-appbar__back svg { width: 22px; height: 22px; }
+.dv-appbar h2 {
+  flex: 1;
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-align: center;
+  margin-right: 40px;
+}
+body.dark-mode .dv-appbar { background: var(--color-dark-background); }
+body.dark-mode .dv-appbar h2,
+body.dark-mode .dv-appbar__back { color: var(--color-dark-text-primary); }
+
+/* Body */
+.dv-body {
+  padding: var(--spacing-large);
+  display: flex; flex-direction: column;
+  gap: var(--spacing-small);
+}
+.dv-title {
+  font-size: 16px; font-weight: 600;
+  line-height: 1.45;
+  color: var(--color-text-primary);
+}
+.dv-sub {
+  font-size: 14px; line-height: 1.45;
+  color: var(--color-text-primary);
+}
+.dv-spacer-l { height: var(--spacing-large); }
+.dv-spacer-m { height: var(--spacing-medium); }
+
+/* Reason recap card — Material Card with leading icon */
+.dv-reason {
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-divider);
+  padding: 12px 16px;
+  display: flex; align-items: center;
+  gap: 16px;
+}
+.dv-reason__icon {
+  width: 24px; height: 24px;
+  color: var(--color-text-primary);
+  flex-shrink: 0;
+}
+.dv-reason__icon svg { width: 24px; height: 24px; }
+.dv-reason__body {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.dv-reason__title { font-size: 16px; line-height: 1.4; color: var(--color-text-primary); }
+.dv-reason__sub { font-size: 13px; line-height: 1.4; color: var(--color-text-secondary); }
+
+/* MinglitTextField (password) */
+.dv-textfield {
+  background: var(--color-background);
+  border-radius: var(--radius-input);
+  border: 1px solid var(--color-divider);
+  padding: 12px 14px;
+  display: flex; flex-direction: column;
+  gap: 4px;
+}
+.dv-textfield--error { border-color: var(--color-error); }
+.dv-textfield__label {
+  font-size: 12px; font-weight: 500;
+  color: var(--color-text-secondary);
+}
+.dv-textfield__label--error { color: var(--color-error); }
+.dv-textfield__input {
+  font-size: 14px;
+  color: var(--color-text-primary);
+  letter-spacing: 4px;
+}
+.dv-textfield__hint {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+}
+.dv-textfield__error {
+  font-size: 12px;
+  color: var(--color-error);
+  margin-top: 2px;
+}
+
+/* Social info card (non-password user) */
+.dv-social {
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-divider);
+  padding: var(--spacing-medium);
+}
+.dv-social__body {
+  font-size: 14px; line-height: 1.5;
+  color: var(--color-text-primary);
+}
+
+/* CTA */
+.dv-cta {
+  padding: var(--spacing-small) var(--spacing-large) var(--spacing-large);
+}
+.dv-btn-filled {
+  width: 100%;
+  height: 48px;
+  border: none; border-radius: var(--radius-button);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 16px; font-weight: 600;
+  cursor: pointer;
+  display: grid; place-items: center;
+}
+.dv-btn-filled[disabled] {
+  background: color-mix(in srgb, var(--color-text-secondary) 20%, transparent);
+  color: color-mix(in srgb, var(--color-text-secondary) 50%, transparent);
+}
+.dv-btn-filled__spinner {
+  width: 20px; height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: dv-spin 1s linear infinite;
+}
+@keyframes dv-spin { to { transform: rotate(360deg); } }
+
+/* Confirm dialog */
+.dv-dialog-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: grid;
+  place-items: center;
+  padding: 0 var(--spacing-large);
+}
+.dv-dialog {
+  width: 100%;
+  max-width: 280px;
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  padding: 24px 24px 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+.dv-dialog__title { font-size: 18px; font-weight: 700; color: var(--color-text-primary); margin-bottom: 8px; }
+.dv-dialog__body { font-size: 14px; line-height: 1.5; color: var(--color-text-secondary); margin-bottom: 16px; }
+.dv-dialog__actions { display: flex; justify-content: flex-end; gap: 8px; }
+.dv-dialog__btn { padding: 8px 12px; font-size: 14px; font-weight: 600; background: none; border: none; }
+.dv-dialog__btn--cancel { color: var(--color-text-secondary); }
+.dv-dialog__btn--confirm { color: var(--color-primary); }
+
+/* Error snackbar */
+.dv-snackbar {
+  position: absolute;
+  left: 16px; right: 16px;
+  bottom: 24px;
+  background: var(--color-error);
+  color: #fff;
+  border-radius: 4px;
+  padding: 14px 16px;
+  font-size: 14px;
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<header>
+  <h1>Deletion Verify Page</h1>
+</header>
+
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>디자인완료</strong> <em style="color: var(--color-text-secondary);">— wizard step 3/4 · 6 state (auth-method × verify-state)</em></td>
+      </tr>
+      <tr><th>App</th><td><code>app_user</code></td></tr>
+      <tr><th>Category</th><td>account · privacy · destructive · wizard-step · auth</td></tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>DeletionVerifyRoute</code> — <code>DeletionVerifyPage({reasonCode, reasonText})</code></td>
+      </tr>
+      <tr><th>Path</th><td><code>/my/privacy/delete/verify</code> · query: <code>?reasonCode=&amp;reasonText=</code></td></tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="/specs/deletion_info_page/index.html"><code>DeletionInfoPage</code></a> — coordinator.pushVerify로 push.<br>
+          <strong>Children</strong>:
+          <a href="/specs/deletion_complete_page/index.html"><code>DeletionCompletePage</code></a> (success — coordinator.goComplete) · in-place confirm dialog (<code>showMinglitConfirm</code>) — wizard 마지막 mental gate.
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          탈퇴 요청 직전 본인 확인 — 비밀번호 사용자는 현재 비밀번호 입력으로, 소셜 사용자는 다음 단계의 reauth flow 안내로 가벼운 검증 추가.
+          탈퇴는 destructive + 되돌리기 어려운 액션이라 password / reauthenticate라는 사실상 두번째 인증을 명시적으로 통과하게 한다.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: 이전 안내 화면의 "계속 진행" 탭으로 진입.<br>
+          <strong>Exit points</strong>:
+          ① "탈퇴 요청" 탭 + 본인 확인 통과 + 확인 다이얼로그의 "탈퇴 요청" → 마지막 완료 화면으로 이동 ·
+          ② 확인 다이얼로그의 "돌아가기" 또는 바깥 영역 탭 → 본 화면 그대로 유지 ·
+          ③ 비밀번호 빈 필드 / 잘못된 비밀번호 → 화면 머무름 (에러 안내 노출) ·
+          ④ 뒤로 가기 → 이전 안내 화면으로 복귀.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          탈퇴가 타인이나 단말 탈취 시나리오에서 악용되지 않도록 본인 확인을 강제한다. 비밀번호 계정은 이 자리에서 비밀번호로 재확인하고, 소셜 계정은 다음 단계에서 재인증을 진행한다 (현재는 가벼운 통과 상태 — 향후 OAuth 재인증 단계가 추가될 예정).
+          확인 다이얼로그를 한 번 더 끼워 넣어 "버튼 잘못 누름" 사고를 막는다 — 다른 destructive flow와 동일한 톤.
+        </td>
+      </tr>
+      <tr><th>Frequency</th><td>매우 낮음 — 탈퇴 wizard 진입 시 1회.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">이 spec의 주요 변경 이력. 최신 항목 위.</p>
+  <table class="ref">
+    <thead><tr><th style="width: 110px;">Date</th><th style="width: 80px;">Version</th><th style="width: 120px;">Author</th><th>Changes</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>v1.4 template으로 작성. wizard step 3/4 · 6 state — Password user(baseline · reason 동반) · Social user · 비밀번호 빈 필드 에러 · Submit loading · Confirm dialog · Reauth/Submit 실패. controller(<code>accountDeletionControllerProvider</code>) · <code>usesPasswordAuth(user)</code> · <code>showMinglitConfirm</code> · <code>handleMinglitError</code> 매핑.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#global-behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">AppBar(title) + Expanded ListView(heading + 옵셔널 reason recap + auth input(password OR social info)) + Bottom CTA(단일 FilledButton, loading 시 spinner).</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      Scaffold + AppBar("본인 확인") + SafeArea Column. 위젯은 <code>currentUserProvider</code>를 watch — user가 null이면 빈 Scaffold(SizedBox.shrink) 반환(전이 frame). 일반적 진입 시:
+      <em>heading + 14px sub copy + (옵셔널 reason recap Card) + (password TextField OR social info Card)</em>.
+      <code>usesPasswordAuth(user)</code>로 비밀번호 vs 소셜 분기 — 두 경우의 두 번째 자식만 swap된다.
+    </p>
+
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 600px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">① AppBar — "본인 확인" + back · h=56</span>
+        </div>
+
+        <div class="blueprint__region" style="top:56px;left:0;right:0;bottom:96px;">
+          <span class="blueprint__region-label">② Expanded ListView · padding 24 all</span>
+        </div>
+
+        <!-- heading group -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:80px;left:24px;right:24px;height:72px;">
+          <span class="blueprint__region-label">㉠ heading + sub copy</span>
+        </div>
+
+        <!-- Optional reason recap -->
+        <div class="blueprint__region" style="top:176px;left:24px;right:24px;height:64px; border-style: dashed;">
+          <span class="blueprint__region-label">㉡ reason recap (옵셔널) — Card + ListTile</span>
+        </div>
+
+        <!-- Auth input -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:264px;left:24px;right:24px;height:96px;">
+          <span class="blueprint__region-label">㉢ auth input (password TextField OR social info Card)</span>
+        </div>
+
+        <!-- Bottom CTA -->
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:0;left:0;right:0;height:96px;">
+          <span class="blueprint__region-label">③ Bottom CTA · "탈퇴 요청" / spinner</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:60px;right:8px;">title centered</div>
+        <div class="blueprint__align-marker" style="bottom:8px;right:8px;">stretch</div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+└─ <em>if user == null: return Scaffold(SizedBox.shrink) — 빈 frame (transition)</em>
+└─ <b>AppBar</b>(<i>title: Text("본인 확인")</i>)              ← ①
+└─ <b>SafeArea</b>
+   └─ <b>Column</b>
+      ├─ <b>Expanded</b> ← ②
+      │  └─ <b>ListView</b>(padding: <code>spacing-large (24)</code>)
+      │     ├─ <em>heading group</em>                          ← ㉠
+      │     │  ├─ Text("회원 탈퇴 전에 본인 확인이 필요해요.", titleMedium)
+      │     │  ├─ SizedBox(<code>spacing-small (8)</code>)
+      │     │  └─ Text("탈퇴 요청이 접수되면 7일 동안 복구할 수 있어요.", bodyMedium)
+      │     ├─ SizedBox(<code>spacing-large (24)</code>)
+      │     │
+      │     ├─ <em>if reason != null:</em>                     ← ㉡
+      │     │  ├─ <b>Card</b>
+      │     │  │  └─ <b>ListTile</b>
+      │     │  │     ├─ leading: Icon(<i>check_circle_outline</i>)
+      │     │  │     ├─ title:   "선택한 탈퇴 사유"
+      │     │  │     └─ subtitle: <i>withdrawalReasonLabel(reason.reasonCode)</i>
+      │     │  └─ SizedBox(<code>spacing-medium (16)</code>)
+      │     │
+      │     └─ <em>if isPasswordUser:</em>                     ← ㉢
+      │        └─ <b>MinglitTextField</b>(<i>label: "비밀번호" · obscure: true · errorText: _passwordErrorText · hint: "현재 비밀번호를 입력해주세요"</i>)
+      │     <em>else:</em>
+      │        └─ <b>Card</b> → <b>Padding</b>(<code>spacing-medium (16)</code>) → Text("소셜 로그인 계정은 다음 단계에서 재인증이 진행돼요.")
+      │
+      └─ <b>Padding</b>(24, 8, 24, 24)                          ← ③
+         └─ <b>SizedBox</b>(width: ∞)
+            └─ <b>FilledButton</b>(<i>onPressed: isLoading ? null : _submitDeletion</i>)
+               └─ child: <em>isLoading ? CircularProgressIndicator(20×20, strokeWidth 2) : Text("탈퇴 요청")</em></div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead><tr><th style="width: 60px;">#</th><th style="width: 200px;">Region</th><th style="width: 220px;">Alignment</th><th>Spacing</th></tr></thead>
+      <tbody>
+        <tr><td>—</td><td>Body padding</td><td>—</td><td>ListView padding <code>spacing-large (24)</code> all sides</td></tr>
+        <tr><td>①</td><td>AppBar</td><td>title centered · leading back auto</td><td>height 56 · scaffold gray bg · border-bottom 없음</td></tr>
+        <tr><td>②</td><td>ListView body</td><td>vertical scroll</td><td>heading↔reason recap 사이 SizedBox <code>spacing-large (24)</code> · reason recap↔auth 사이 <code>spacing-medium (16)</code></td></tr>
+        <tr><td>㉠</td><td>heading group</td><td>start · title + sub</td><td>title (titleMedium) ↔ sub (bodyMedium) 사이 SizedBox <code>spacing-small (8)</code></td></tr>
+        <tr><td>㉡</td><td>reason recap (옵셔널)</td><td>ListTile default</td><td>Material Card · ListTile leading 24px · title bodyMedium · subtitle bodySmall</td></tr>
+        <tr><td>㉢</td><td>auth input</td><td>full width</td><td>password: TextField radius <code>radius-input (12)</code> · maxLines 1 · obscureText. social: Card padding <code>spacing-medium (16)</code></td></tr>
+        <tr><td>③</td><td>Bottom CTA</td><td>full width</td><td>Padding(24, 8, 24, 24) · FilledButton 단일 · loading 시 spinner 20×20 stroke 2</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ① — Reason recap (옵셔널 ListTile in Card)</h2>
+    <p class="intro">
+      이전 안내 화면과 마찬가지로 사유가 없으면 통째로 빠진다. 안내 화면의 사유 카드와 달리 여기서는 한 줄짜리 가벼운 카드(좌측 아이콘 + 제목 + 부제) — 이미 사유를 한 번 보여준 뒤의 reminder 톤.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 200px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;width:24px;height:24px;">
+          <span class="blueprint__region-label">㉠ icon · check_circle_outline</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:14px;left:56px;right:16px;height:20px;">
+          <span class="blueprint__region-label">㉡ title "선택한 탈퇴 사유"</span>
+        </div>
+        <div class="blueprint__region" style="top:38px;left:56px;right:16px;height:18px;">
+          <span class="blueprint__region-label">㉢ subtitle (reasonLabel)</span>
+        </div>
+      </div>
+      <div class="layout-tree"><b>Card</b>
+└─ <b>ListTile</b>
+   ├─ leading: <b>Icon</b>(<i>Icons.check_circle_outline</i>)   ← ㉠
+   ├─ title:   <b>Text</b>("선택한 탈퇴 사유")                    ← ㉡
+   └─ subtitle: <b>Text</b>(<i>withdrawalReasonLabel(reason.reasonCode)</i>) ← ㉢</div>
+    </div>
+    <table class="ref" style="margin-top: 16px;">
+      <thead><tr><th style="width: 60px;">#</th><th style="width: 180px;">Element</th><th style="width: 220px;">Alignment</th><th>Spacing / tokens</th></tr></thead>
+      <tbody>
+        <tr><td>㉠</td><td>leading icon</td><td>vertical center · 좌측 16</td><td>Material 24px <code>Icons.check_circle_outline</code> · color text-primary (default)</td></tr>
+        <tr><td>㉡</td><td>title</td><td>start · single line</td><td>typography <code>bodyMedium</code></td></tr>
+        <tr><td>㉢</td><td>subtitle</td><td>start · single line</td><td>typography <code>bodySmall</code> · color text-secondary</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">6가지 시각 변형. baseline = 비밀번호 사용자 · 사유 동반. 소셜 사용자 · 비밀번호 빈 필드 에러 · 제출 진행 중 · 확인 다이얼로그 · 본인 확인/제출 실패.</span>
+  </div>
+
+  <section class="doc">
+    <h3 style="margin-top: 24px;">State summary <small style="font-size:12px;font-weight:400;color:var(--color-text-secondary);">— 6개 state</small></h3>
+    <table class="ref">
+      <thead><tr><th style="width: 220px;">State</th><th style="width: 90px;">Tag</th><th style="width: 240px;">조건 (요약)</th><th>Key visual differentiator</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Password user · 사유 동반</strong></td><td>baseline</td><td>비밀번호 계정 + 이전 단계에서 사유 동반</td><td>사유 카드 + 비밀번호 입력란 + "탈퇴 요청" 활성</td></tr>
+        <tr><td><strong>Social user</strong></td><td>variant</td><td>소셜 계정 (Google / Apple / Kakao 등)</td><td>비밀번호 입력란 대신 안내 카드 "다음 단계에서 재인증이 진행돼요"</td></tr>
+        <tr><td><strong>비밀번호 빈 필드 에러</strong></td><td>validation</td><td>비밀번호 계정이 빈 필드로 "탈퇴 요청" 시도</td><td>입력란 빨간 외곽선 + 에러 안내 "비밀번호를 입력해주세요."</td></tr>
+        <tr><td><strong>제출 진행 중</strong></td><td>loading</td><td>탈퇴 요청이 백엔드로 전송되고 응답을 기다리는 동안</td><td>"탈퇴 요청" 버튼 위치에 회전하는 스피너 (라벨 사라짐)</td></tr>
+        <tr><td><strong>Confirm dialog</strong></td><td>modal</td><td>본인 확인 통과 직후 한 번 더 묻는 단계</td><td>어두운 배경 + 다이얼로그 "정말 탈퇴할까요?" — 돌아가기 / 탈퇴 요청</td></tr>
+        <tr><td><strong>본인 확인 / 제출 실패</strong></td><td>error</td><td>본인 확인이나 탈퇴 요청이 실패한 경우</td><td>화면 하단에 에러 안내 스낵바 — 화면 그대로 유지</td></tr>
+      </tbody>
+    </table>
+
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- State 1: Password user (baseline) -->
+      <table class="ref state-mini is-baseline-tint">
+        <thead>
+          <tr><th colspan="3"><strong>Password user · 사유 동반</strong> 🎯 <small>baseline · 비밀번호 계정 사용자가 사유와 함께 진입한 상태</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport dv-viewport">
+                <div class="dv-appbar">
+                  <button class="dv-appbar__back" title="뒤로">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                  </button>
+                  <h2>본인 확인</h2>
+                </div>
+                <div class="dv-body">
+                  <span class="annotation" style="top:60px;left:24px;">spacing-large (24) all</span>
+                  <span class="callout" style="top:80px;right:24px;">ⓐ</span>
+                  <span class="callout" style="top:184px;right:24px;">ⓑ</span>
+                  <span class="callout" style="top:284px;right:24px;">ⓒ</span>
+
+                  <div class="dv-title">회원 탈퇴 전에 본인 확인이 필요해요.</div>
+                  <div class="dv-sub">탈퇴 요청이 접수되면 7일 동안 복구할 수 있어요.</div>
+                  <div class="dv-spacer-l"></div>
+
+                  <div class="dv-reason">
+                    <div class="dv-reason__icon">
+                      <!-- Icons.check_circle_outline -->
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="9 12 12 15 16 9"/></svg>
+                    </div>
+                    <div class="dv-reason__body">
+                      <div class="dv-reason__title">선택한 탈퇴 사유</div>
+                      <div class="dv-reason__sub">원하는 이벤트가 없어요</div>
+                    </div>
+                  </div>
+                  <div class="dv-spacer-m"></div>
+
+                  <div class="dv-textfield">
+                    <div class="dv-textfield__label">비밀번호</div>
+                    <div class="dv-textfield__hint">현재 비밀번호를 입력해주세요</div>
+                  </div>
+                </div>
+                <div class="dv-cta">
+                  <button class="dv-btn-filled">탈퇴 요청</button>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>로그인된 사용자가 비밀번호 계정이며, 이전 안내 화면에서 사유와 함께 진입한 상태.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · 비밀번호 입력 — 입력을 시작하면 직전의 빈 필드 에러 표시는 사라진다.<br>
+              · <strong>"탈퇴 요청" 탭</strong> → 비밀번호가 비어있으면 빈 필드 에러로 전이, 채워져 있으면 본인 확인을 거쳐 확인 다이얼로그가 뜬다.<br>
+              · 뒤로 가기 → 이전 안내 화면으로 복귀.
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · 매우 드물게 사용자 정보를 잠시 얻지 못하는 순간에는 본문이 잠시 빈 화면으로 보일 수 있다.<br>
+              · 공백만 입력해도 빈 필드로 처리되어 에러가 노출된다.<br>
+              · 비밀번호는 입력 시 점 문자로 가려서 표시한다.
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>
+              <code>Scaffold</code> · <code>AppBar</code> ·
+              <code>Text</code>(titleMedium · bodyMedium) ·
+              <code>Card</code> + <code>ListTile</code>(reason recap · leading <code>Icons.check_circle_outline</code>) ·
+              <code>MinglitTextField</code>(label "비밀번호" · obscureText · hint · onChanged) ·
+              <code>FilledButton</code>("탈퇴 요청") ·
+              <code>SafeArea</code> · <code>Expanded</code> · <code>ListView</code>
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>
+              <code>color-surface</code> (scaffold) · <code>color-background</code> (Card · TextField bg) ·
+              <code>color-text-primary</code> · <code>color-text-secondary</code> ·
+              <code>color-primary</code> (FilledButton bg) ·
+              <code>spacing-large (24)</code> · <code>spacing-medium (16)</code> · <code>spacing-small (8)</code> ·
+              <code>radius-card (16)</code> (Card) · <code>radius-input (12)</code> (TextField) · <code>radius-button (12)</code> (FilledButton) ·
+              typography <code>titleMedium</code> · <code>bodyMedium</code>
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 비밀번호 계정 여부 판정은 여러 조건을 함께 본다 — 사용자에게 보이는 것은 "비밀번호 입력란이 뜨는가, 안내 카드가 뜨는가" 두 결과뿐.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- State 2: Social user -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Social user</strong> <small>Google / Apple / Kakao 등 소셜 로그인으로 가입한 사용자</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport dv-viewport">
+                <div class="dv-appbar">
+                  <button class="dv-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+                  <h2>본인 확인</h2>
+                </div>
+                <div class="dv-body">
+                  <div class="dv-title">회원 탈퇴 전에 본인 확인이 필요해요.</div>
+                  <div class="dv-sub">탈퇴 요청이 접수되면 7일 동안 복구할 수 있어요.</div>
+                  <div class="dv-spacer-l"></div>
+
+                  <div class="dv-reason">
+                    <div class="dv-reason__icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="9 12 12 15 16 9"/></svg>
+                    </div>
+                    <div class="dv-reason__body">
+                      <div class="dv-reason__title">선택한 탈퇴 사유</div>
+                      <div class="dv-reason__sub">개인정보가 걱정돼요</div>
+                    </div>
+                  </div>
+                  <div class="dv-spacer-m"></div>
+
+                  <div class="dv-social">
+                    <div class="dv-social__body">소셜 로그인 계정은 다음 단계에서 재인증이 진행돼요.</div>
+                  </div>
+                </div>
+                <div class="dv-cta">
+                  <button class="dv-btn-filled">탈퇴 요청</button>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>소셜 로그인으로 가입한 사용자 — 비밀번호 입력란 자리에 안내 카드가 노출된다.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · 비밀번호 입력은 없다.<br>
+              · <strong>"탈퇴 요청" 탭</strong> → 본인 확인을 거친 뒤 확인 다이얼로그가 뜬다.<br>
+              · 뒤로 가기 → 이전 안내 화면으로 복귀.
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · 현재 단계에서는 별도의 재인증 절차 없이 가볍게 통과한다 — 향후 OAuth 재인증 단계가 추가되면 이 자리에서 한 번 더 확인이 진행될 예정이다.<br>
+              · "다음 단계에서 재인증이 진행돼요" 안내는 향후 단계가 추가되는 것을 염두에 둔 카피.
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>↔ <code>MinglitTextField</code> → <code>Card</code> + <code>Padding</code>(<code>spacing-medium (16)</code>) + <code>Text</code>("소셜 로그인 계정은 …")</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>− <code>radius-input (12)</code> (TextField 미사용)<br>+ <code>radius-card (16)</code> (Card · 이미 baseline에 있긴 함)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 소셜 계정 사용자가 비밀번호 입력란을 만나면 혼란을 주므로, 가입 경로에 따라 정확히 두 화면이 분기되어야 한다.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- State 3: empty password validation -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>비밀번호 빈 필드 에러</strong> <small>비밀번호 계정에서 빈 필드로 "탈퇴 요청"을 시도한 직후</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport dv-viewport">
+                <div class="dv-appbar">
+                  <button class="dv-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+                  <h2>본인 확인</h2>
+                </div>
+                <div class="dv-body">
+                  <div class="dv-title">회원 탈퇴 전에 본인 확인이 필요해요.</div>
+                  <div class="dv-sub">탈퇴 요청이 접수되면 7일 동안 복구할 수 있어요.</div>
+                  <div class="dv-spacer-l"></div>
+
+                  <div class="dv-textfield dv-textfield--error">
+                    <div class="dv-textfield__label dv-textfield__label--error">비밀번호</div>
+                    <div class="dv-textfield__hint">현재 비밀번호를 입력해주세요</div>
+                    <div class="dv-textfield__error">비밀번호를 입력해주세요.</div>
+                  </div>
+                </div>
+                <div class="dv-cta">
+                  <button class="dv-btn-filled">탈퇴 요청</button>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>비밀번호 계정 사용자가 빈 필드로 "탈퇴 요청"을 누른 직후 — 입력란 외곽선과 라벨이 빨간색으로 바뀌고 그 아래 안내 메시지 "비밀번호를 입력해주세요."가 노출된다.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · 비밀번호 입력 시작 → 빨간 외곽선과 안내 메시지가 즉시 사라진다.<br>
+              · 빈 채로 다시 "탈퇴 요청" 탭 → 동일한 빈 필드 에러가 다시 노출된다.<br>
+              · 뒤로 가기 → 이전 안내 화면으로 복귀.
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · 공백만 입력해도 빈 필드로 처리되어 동일한 에러가 노출된다.<br>
+              · 이 컷의 mock에서는 핵심 변화에 집중하기 위해 사유 카드를 생략했지만, 실제 화면에서는 사유와 함께 진입했다면 사유 카드도 그대로 노출된다.
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>+ <code>MinglitTextField</code>의 <code>errorText: '비밀번호를 입력해주세요.'</code> 활성 — error border + error text 추가.<br>동일: 나머지</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>+ <code>color-error</code> (TextField error border + error text)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 "빈 필드"는 입력란 자체에 inline 에러로 안내되고, "틀린 비밀번호"는 본인 확인 실패 상태(State 6)의 스낵바로 안내된다 — 두 경로가 시각적으로 구분된다.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- State 4: loading -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>제출 진행 중 (loading)</strong> <small>탈퇴 요청이 백엔드로 전송되고 응답을 기다리는 동안</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport dv-viewport">
+                <div class="dv-appbar">
+                  <button class="dv-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+                  <h2>본인 확인</h2>
+                </div>
+                <div class="dv-body">
+                  <div class="dv-title">회원 탈퇴 전에 본인 확인이 필요해요.</div>
+                  <div class="dv-sub">탈퇴 요청이 접수되면 7일 동안 복구할 수 있어요.</div>
+                  <div class="dv-spacer-l"></div>
+                  <div class="dv-textfield">
+                    <div class="dv-textfield__label">비밀번호</div>
+                    <div class="dv-textfield__input">••••••••</div>
+                  </div>
+                </div>
+                <div class="dv-cta">
+                  <button class="dv-btn-filled" disabled>
+                    <div class="dv-btn-filled__spinner"></div>
+                  </button>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>탈퇴 요청이 백엔드로 전송되고 응답을 기다리는 동안 — "탈퇴 요청" 버튼 자리에 회전하는 스피너가 노출되고 라벨은 사라진다.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · "탈퇴 요청" 탭 → 비활성 상태라 반응하지 않음.<br>
+              · 비밀번호 입력은 가능하지만 진행 중인 요청에는 영향이 없다.<br>
+              · 뒤로 가기 → 이전 안내 화면으로 복귀.
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · 본인 확인 단계에서도 짧게 같은 스피너 톤이 보일 수 있다.<br>
+              · 네트워크가 오래 걸리면 스피너가 길게 회전한다 — 별도 timeout UI는 없다 (이미 확인 다이얼로그를 통과해 사용자 의도가 분명한 단계).
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>↔ <code>FilledButton</code> child: <code>Text("탈퇴 요청")</code> → <code>SizedBox(20×20)</code> + <code>CircularProgressIndicator(strokeWidth: 2)</code></td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>↔ baseline 동일. spinner는 Material default(button bg 위 흰색 원).</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 진행 중 버튼은 표준 비활성 톤으로 바뀌고 스피너가 그 자리에 노출되어 "잠시 기다려" 신호를 준다.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- State 5: Confirm dialog -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Confirm dialog "정말 탈퇴할까요?"</strong> <small>본인 확인 통과 직후 한 번 더 묻는 단계</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport dv-viewport" style="position: relative;">
+                <div class="dv-appbar">
+                  <button class="dv-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+                  <h2>본인 확인</h2>
+                </div>
+                <div class="dv-body">
+                  <div class="dv-title">회원 탈퇴 전에 본인 확인이 필요해요.</div>
+                  <div class="dv-sub">탈퇴 요청이 접수되면 7일 동안 복구할 수 있어요.</div>
+                  <div class="dv-spacer-l"></div>
+                  <div class="dv-textfield">
+                    <div class="dv-textfield__label">비밀번호</div>
+                    <div class="dv-textfield__input">••••••••</div>
+                  </div>
+                </div>
+                <div class="dv-cta">
+                  <button class="dv-btn-filled">탈퇴 요청</button>
+                </div>
+                <div class="dv-dialog-scrim">
+                  <div class="dv-dialog">
+                    <div class="dv-dialog__title">정말 탈퇴할까요?</div>
+                    <div class="dv-dialog__body">탈퇴 요청 후 7일 동안은 다시 로그인해 복구할 수 있어요.</div>
+                    <div class="dv-dialog__actions">
+                      <button class="dv-dialog__btn dv-dialog__btn--cancel">돌아가기</button>
+                      <button class="dv-dialog__btn dv-dialog__btn--confirm">탈퇴 요청</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>본인 확인을 통과한 직후 — 화면 위에 어두운 배경이 깔리고 한 번 더 의사를 묻는 다이얼로그가 등장한다. 제목 "정말 탈퇴할까요?", 본문 "탈퇴 요청 후 7일 동안은 다시 로그인해 복구할 수 있어요."가 노출된다.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · <strong>"돌아가기" 탭</strong> → 다이얼로그가 닫히고 화면은 그대로 유지된다 (비밀번호 입력은 살아있음).<br>
+              · <strong>"탈퇴 요청" 탭</strong> → 탈퇴 요청이 시작되고, 성공 시 마지막 완료 화면으로 이동한다.<br>
+              · 어두운 배경 탭 / 시스템 뒤로 가기 → 다이얼로그가 닫히고 화면은 그대로 유지된다.
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · 다이얼로그의 확인 버튼은 destructive 톤이 아닌 primary 색으로 노출되어 부드러운 인상을 준다.<br>
+              · 다이얼로그가 떠있는 동안에는 진행 중 스피너가 보이지 않는다 — 본인 확인은 이미 끝났고, 탈퇴 요청은 아직 시작되지 않은 idle window.<br>
+              · 다이얼로그를 띄우는 사이 화면이 사라지면 다음 단계로의 이동은 자동으로 취소된다.
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>+ <code>showMinglitConfirm</code> (Material AlertDialog wrap) — title · message · confirmLabel "탈퇴 요청" · cancelLabel "돌아가기"</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>+ <code>color-background</code> (dialog surface) · <code>radius-card (16)</code> (dialog corner) · <code>color-primary</code> (confirm text) · scrim alpha 0.45 (Material default)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 다이얼로그의 확인 버튼 라벨이 본 화면 CTA와 동일한 "탈퇴 요청"이다 — "이미 눌렀는데 또?"라는 인상을 줄 수 있지만, 한 번 더 묻기 위한 의도된 중복.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- State 6: Reauth/Submit failure -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>본인 확인 / 제출 실패</strong> <small>본인 확인이나 탈퇴 요청이 실패해 안내 스낵바가 노출된 상태</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport dv-viewport" style="position: relative;">
+                <div class="dv-appbar">
+                  <button class="dv-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+                  <h2>본인 확인</h2>
+                </div>
+                <div class="dv-body">
+                  <div class="dv-title">회원 탈퇴 전에 본인 확인이 필요해요.</div>
+                  <div class="dv-sub">탈퇴 요청이 접수되면 7일 동안 복구할 수 있어요.</div>
+                  <div class="dv-spacer-l"></div>
+                  <div class="dv-textfield">
+                    <div class="dv-textfield__label">비밀번호</div>
+                    <div class="dv-textfield__input">••••••••</div>
+                  </div>
+                </div>
+                <div class="dv-cta">
+                  <button class="dv-btn-filled">탈퇴 요청</button>
+                </div>
+                <div class="dv-snackbar">비밀번호가 일치하지 않아요. 다시 시도해주세요.</div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>본인 확인이나 탈퇴 요청이 실패한 경우 — 화면 하단에 에러 메시지가 담긴 스낵바가 노출되고 화면 자체는 그대로 유지된다.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · 비밀번호 재입력 — 서버 에러 메시지는 잠시 후 자동으로 사라진다.<br>
+              · 다시 "탈퇴 요청" → 동일한 흐름으로 재시도된다.<br>
+              · 뒤로 가기 → 이전 안내 화면으로 복귀.
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · 본인 확인 실패는 네트워크 문제, 잘못된 비밀번호, 소셜 인증 거절 등 다양한 사유에서 발생할 수 있으며, 사용자에게는 사유에 맞춘 한국어 안내가 보인다.<br>
+              · 본인 확인을 통과한 뒤의 탈퇴 요청 실패는 드물지만 동일한 스낵바로 안내된다.<br>
+              · 안내 도중 화면이 사라지면 스낵바는 노출되지 않는다.
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>+ <code>SnackBar</code>(error message · ScaffoldMessenger)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>+ <code>color-error</code> (snackbar bg — Material default error theme)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 스낵바 문구는 실패 사유에 따라 다르며 모두 한국어로 안내된다.</td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </section>
+</div>
+
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">cross-cutting — 모든 state에 적용되는 액션 / motion / global edge cases.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr></thead>
+      <tbody>
+        <tr><td>뒤로 가기 (시스템 / AppBar)</td><td>이전 안내 화면으로 복귀하며, 비밀번호 입력 내용은 사라진다.</td></tr>
+        <tr><td>비밀번호 입력 중 키보드 등장</td><td>본문 영역이 자동으로 축소되어 입력란이 가려지지 않으며, 하단 CTA 영역은 안전 영역 하단에 고정된다.</td></tr>
+        <tr><td>"탈퇴 요청" 탭</td><td>비밀번호 계정이 빈 필드면 빈 필드 에러로 전이, 그렇지 않으면 본인 확인을 거쳐 확인 다이얼로그가 뜬다.</td></tr>
+        <tr><td>"탈퇴 요청" 탭 피드백</td><td>탭 시 짧은 ripple 피드백.</td></tr>
+        <tr><td>다크 모드 토글</td><td>배경/카드/입력란/다이얼로그 모두 다크 토큰으로 자동 전환되며, error 톤도 다크에서 동일하게 유지된다.</td></tr>
+        <tr><td>로그인 상태가 일시적으로 비는 순간</td><td>본문이 잠시 빈 화면으로 보일 수 있으며, 정상 흐름에서는 거의 발생하지 않는다.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion &amp; timing</h2>
+    <p class="intro">Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code> → <code>MinglitAnimation</code>.</p>
+    <table class="ref">
+      <thead><tr><th style="width: 200px;">Token</th><th style="width: 80px;">Value</th><th>Use</th></tr></thead>
+      <tbody>
+        <tr><td><code>MinglitAnimation.micro</code></td><td>100ms</td><td>버튼 / 입력란 포커스 ripple.</td></tr>
+        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>화면 진입 / 마지막 완료 화면으로의 전환 / 입력란 에러 외곽선 변화.</td></tr>
+        <tr><td><code>MinglitAnimation.medium</code></td><td>350ms</td><td>확인 다이얼로그 등장 / 스피너 등장과 사라짐.</td></tr>
+        <tr><td><em>(시스템 기본)</em> 스피너</td><td>1000ms loop</td><td>스피너 회전 주기.</td></tr>
+      </tbody>
+    </table>
+    <table class="ref" style="margin-top: 12px;">
+      <thead><tr><th style="width: 220px;">Transition</th><th style="width: 140px;">Duration (token)</th><th>Curve / notes</th></tr></thead>
+      <tbody>
+        <tr><td>이전 단계 → 이 화면 진입</td><td><code>fast</code> (200ms)</td><td>표준 좌→우 slide 전환.</td></tr>
+        <tr><td>확인 다이얼로그 등장</td><td><code>medium</code> (350ms)</td><td>화면 위에 페이드인.</td></tr>
+        <tr><td>탈퇴 요청 성공 → 완료 화면</td><td><code>fast</code> (200ms)</td><td>스택을 교체하는 전환.</td></tr>
+        <tr><td>"탈퇴 요청" 활성 ↔ 진행 중 스피너</td><td>cut</td><td>전환 애니메이션 없이 즉시 교체.</td></tr>
+        <tr><td>입력란 에러 외곽선</td><td><code>fast</code> (200ms)</td><td>외곽선이 부드럽게 빨간색으로 전환.</td></tr>
+        <tr><td>스낵바 등장 / 사라짐</td><td>~250ms</td><td>약 4초 후 자동으로 사라짐.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>네트워크 끊김</strong> — 본인 확인이나 탈퇴 요청이 실패하면 화면 하단 스낵바로 안내되고 화면은 그대로 유지된다.</li>
+      <li><strong>다크 모드</strong> — 배경/카드/입력란/다이얼로그 모두 다크 토큰으로 자동 전환되고, 비밀번호의 점 문자도 다크에 맞는 톤으로 보인다.</li>
+      <li><strong>접근성</strong> — 비밀번호는 가려져 있어 스크린 리더가 직접 읽지 않으며, 에러 안내는 별도로 안내된다.</li>
+      <li><strong>키보드 자동 포커스</strong> — 화면 진입 직후 자동 포커스는 없다. 사용자가 입력란을 탭해야 키보드가 등장하며, 이는 의도된 한 단계의 mental gate.</li>
+      <li><strong>비동기 도중 화면 사라짐</strong> — 본인 확인이나 탈퇴 요청 중 화면이 사라지면 후속 안내(스낵바, 화면 전환)는 자동으로 생략된다.</li>
+    </ul>
+  </section>
+</div>
+
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">Implementation source + 인접 화면 link. Components / Tokens는 위 mini-table에 분산.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 200px;">항목</th><th>Path / Reference</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Widget class</strong></td><td><code>DeletionVerifyPage</code> · <code>ConsumerStatefulWidget</code></td></tr>
+        <tr><td><strong>File path</strong></td><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/account_deletion/ui/deletion_verify_page.dart"><code>apps/app_user/lib/src/features/account_deletion/ui/deletion_verify_page.dart</code></a></td></tr>
+        <tr><td><strong>Controller</strong></td><td><code>accountDeletionControllerProvider</code> — <code>reauthenticate(password?)</code> · <code>requestDeletion({reason})</code> · controller state(<code>isLoading</code>) watch</td></tr>
+        <tr><td><strong>Coordinator</strong></td><td><code>accountDeletionCoordinatorProvider.goComplete()</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/account_deletion/logic/account_deletion_coordinator.dart"><code>account_deletion_coordinator.dart</code></a></td></tr>
+        <tr><td><strong>Auth helper</strong></td><td><code>usesPasswordAuth(user)</code> — identities/appMetadata 검사 · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/account_deletion/account_deletion_flow.dart"><code>account_deletion_flow.dart</code></a></td></tr>
+        <tr><td><strong>Confirm</strong></td><td><code>context.showMinglitConfirm(title, message, confirmLabel, cancelLabel)</code> · <code>handleMinglitError(context, error, stackTrace)</code> · minglit_kit</td></tr>
+        <tr><td><strong>Local state</strong></td><td><code>_passwordController: TextEditingController</code> · <code>_passwordErrorText: String?</code></td></tr>
+        <tr><td><strong>Route</strong></td><td><code>DeletionVerifyRoute({reasonCode?, reasonText?})</code> · path: <code>/my/privacy/delete/verify</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr><td><a href="/specs/deletion_reason_page/index.html"><code>DeletionReasonPage</code></a></td><td>Step 1/4 — 사유 선택.</td></tr>
+        <tr><td><a href="/specs/deletion_info_page/index.html"><code>DeletionInfoPage</code></a></td><td>Previous step (2/4) — coordinator.pushVerify로 진입.</td></tr>
+        <tr><td><a href="/specs/deletion_complete_page/index.html"><code>DeletionCompletePage</code></a></td><td>Next (4/4) — confirm + requestDeletion 성공 시 goComplete.</td></tr>
+        <tr><td><a href="/specs/login_page/index.html"><code>LoginPage</code></a></td><td>로그아웃 후 도착지 — CompletePage 단계에서 signOut 발생.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>

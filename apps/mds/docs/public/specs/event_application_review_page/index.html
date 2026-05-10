@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — EventApplicationReviewPage (app_user · EventApplicationReviewRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   EventApplicationReviewPage-specific atoms.
+   "ear" prefix = Event Application Review.
+   Timeline stepper · status별 종결 step inline 사유 + CTA.
+   ============================================================ */
+
+.ear-viewport { background: var(--color-surface); position: relative; overflow: hidden; }
+body.dark-mode .ear-viewport { background: var(--color-dark-background); }
+
+/* AppBar — title "심사 상태" */
+.ear-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-medium);
+  padding: 0 var(--spacing-screen-edge);
+  background: var(--color-surface);
+}
+.ear-appbar__back svg { width: 24px; height: 24px; color: var(--color-text-primary); }
+.ear-appbar h2 {
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+body.dark-mode .ear-appbar { background: var(--color-dark-background); }
+body.dark-mode .ear-appbar h2 { color: var(--color-dark-text-primary); }
+
+/* Body (v1.6: top padding 제거 — AppBar 밑 불필요한 여백 제거 · 좌우/하단만 유지) */
+.ear-body {
+  position: absolute;
+  top: 56px; left: 0; right: 0; bottom: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: 0 var(--spacing-medium) var(--spacing-medium);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-medium);
+}
+.ear-body::-webkit-scrollbar { display: none; }
+
+/* Card */
+.ear-card {
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-medium);
+  box-shadow: 0 2px 8px rgba(31, 41, 55, 0.06);
+  display: flex;
+  flex-direction: column;
+}
+body.dark-mode .ear-card { background: var(--color-dark-surface); }
+
+/* --- Hero card (v1.1 — 부모 detail의 Hero와 동일 디자인 재사용 · v1.6 — tappable → EventDetailPage) --- */
+.ear-hero {
+  cursor: pointer;
+}
+.ear-hero__heading {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-small);
+}
+.ear-hero__heading .ear-hero__title { flex: 1; min-width: 0; }
+.ear-hero__chevron {
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+.ear-hero__chevron svg { width: 20px; height: 20px; }
+.ear-hero__thumb {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-medium);
+  background: var(--color-surface);
+  display: grid;
+  place-items: center;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  margin-bottom: var(--spacing-medium);
+}
+.ear-hero__thumb svg { width: 40px; height: 40px; }
+.ear-hero__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.4;
+}
+.ear-hero__meta {
+  font-size: 14px;
+  color: var(--color-text-primary);
+  margin-top: var(--spacing-xsmall);
+}
+.ear-hero__meta--muted { color: var(--color-text-secondary); }
+
+/* --- Section title --- */
+.ear-section__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-medium);
+}
+
+/* --- Timeline (v1.1: dot/line 정렬 보정 · dot 크기 축소 · step 간 마진 증가) --- */
+.ear-timeline {
+  position: relative;
+  padding-left: 32px; /* dot column 좀 더 넓게 — content 호흡 ↑ */
+}
+.ear-step {
+  position: relative;
+  padding-bottom: var(--spacing-xlarge); /* spacing-large(24) → spacing-xlarge(32) — step 간격 확보 */
+}
+.ear-step:last-child { padding-bottom: 0; }
+
+/* connecting line — dot 중앙 기준으로 정렬 (dot 12px border-box · left -28 → center -22, line width 2 → left -23) */
+.ear-step:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: -23px;
+  top: 18px;
+  bottom: -8px;
+  width: 2px;
+  background: var(--color-divider);
+}
+
+/* Dot (border-box로 size 일관 · 작아짐) */
+.ear-step__dot {
+  position: absolute;
+  left: -28px;
+  top: 4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-text-secondary);
+  border: 2px solid var(--color-background);
+  box-sizing: border-box;
+}
+.ear-step--completed .ear-step__dot { background: var(--color-success); }
+.ear-step--active .ear-step__dot {
+  background: var(--color-primary);
+  animation: ear-pulse 1.4s ease-in-out infinite;
+}
+.ear-step--failed .ear-step__dot { background: var(--color-error); }
+.ear-step--cancelled .ear-step__dot { background: var(--color-text-secondary); }
+@keyframes ear-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+/* Step content (v1.3: title + time inline · 가독성 ↑) */
+.ear-step__heading {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--spacing-small);
+}
+.ear-step__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+}
+.ear-step--active .ear-step__title { color: var(--color-primary); }
+.ear-step--failed .ear-step__title { color: var(--color-error); }
+.ear-step__time {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.ear-step__detail {
+  font-size: 13px;
+  color: var(--color-text-primary);
+  margin-top: var(--spacing-xsmall);
+}
+.ear-step__detail--muted { color: var(--color-text-secondary); }
+
+/* 사유 박스 — 말풍선 톤 (v1.2: 좌측 border 제거 · 빨간색 강조 약화 · 단일 neutral 스타일)
+   라벨 자리에는 "검토자 이름 / 시스템 / 본인" 등 sender가 들어감 — 검토자 라인은 폐기. */
+.ear-step__reason {
+  margin-top: var(--spacing-small);
+  padding: var(--spacing-sm) var(--spacing-medium);
+  background: rgba(31, 41, 55, 0.04);
+  border-radius: 12px;
+  font-size: 13px;
+  color: var(--color-text-primary);
+  line-height: 1.5;
+}
+.ear-step__reason__label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  display: block;
+  margin-bottom: var(--spacing-xsmall);
+}
+
+/* CTA — 종결 step 바깥 · timeline card 마지막 element로 위치 (v1.2: step 내부 X) */
+.ear-card-cta {
+  display: block;
+  width: 100%;
+  height: 48px;
+  margin-top: var(--spacing-large);
+  border: none;
+  border-radius: var(--radius-button);
+  background: var(--color-primary);
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* --- 신청 step 안 collapsible 제출한 정보 영역 (v1.3 — 별도 카드 폐기, timeline 안 통합) ---
+   "신청" step은 항상 제출한 정보 collapsible을 가짐 (snapshotData entry 1개당 답변 + comments).
+   v1.4: 모든 status에서 default 접힘 — 사용자가 명시적으로 펼쳐 봐야 함 (status별 분기 폐기). */
+.ear-step__answers {
+  margin-top: var(--spacing-small);
+}
+.ear-step__answers__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xsmall);
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ear-step__answers__toggle svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.2s;
+}
+.ear-step__answers--expanded .ear-step__answers__toggle svg { transform: rotate(180deg); }
+.ear-step__answers__content {
+  margin-top: var(--spacing-small);
+  padding: var(--spacing-sm) var(--spacing-medium);
+  background: rgba(31, 41, 55, 0.04);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-medium);
+}
+.ear-step__answers--collapsed .ear-step__answers__content { display: none; }
+
+.ear-answer-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xsmall);
+}
+.ear-answer-row__label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.ear-answer-row__value {
+  font-size: 13px;
+  color: var(--color-text-primary);
+  line-height: 1.5;
+}
+.ear-answer-row__photo {
+  margin-top: var(--spacing-xsmall);
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-small);
+  background: var(--color-background);
+  display: grid;
+  place-items: center;
+  color: var(--color-text-secondary);
+}
+.ear-answer-row__photo svg { width: 28px; height: 28px; }
+
+/* 검토자 코멘트 — 답변 content 마지막 row */
+.ear-step__answers__comment {
+  border-top: 1px solid rgba(31, 41, 55, 0.08);
+  padding-top: var(--spacing-small);
+}
+.ear-step__answers__comment__label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: var(--spacing-xsmall);
+}
+.ear-step__answers__comment__body {
+  font-size: 13px;
+  color: var(--color-text-primary);
+  line-height: 1.5;
+}
+
+/* Loading / Error */
+.ear-loading, .ear-error {
+  position: absolute;
+  inset: 56px 0 0 0;
+  display: grid;
+  place-items: center;
+}
+.ear-error {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  padding: 0 var(--spacing-large);
+  justify-content: center;
+}
+.ear-error__icon { color: var(--color-error); }
+.ear-error__icon svg { width: 32px; height: 32px; }
+.ear-error__title {
+  margin-top: var(--spacing-medium);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.ear-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--color-divider);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: ear-spin 0.7s linear infinite;
+}
+@keyframes ear-spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<header>
+  <h1>Event Application Review</h1>
+</header>
+
+<!-- ============================================================
+     OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>🚧 디자인중</strong> <em style="color: var(--color-text-secondary);">— PurchaseHistoryDetailPage 심사 상태 row tap 시 push할 자식 spec. Flutter 미구현 (TBD).</em></td>
+      </tr>
+      <tr><th>App</th><td><code>app_user</code></td></tr>
+      <tr><th>Category</th><td>my · payment · review</td></tr>
+      <tr><th>Route / Surface</th><td><code>EventApplicationReviewRoute</code> · widget: <code>EventApplicationReviewPage</code> <em style="color: var(--color-text-secondary);">(TBD)</em></td></tr>
+      <tr><th>Path</th><td><code>/purchase-history/:applicationId/review</code></td></tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="/specs/purchase_history_detail_page/index.html"><code>PurchaseHistoryDetailPage</code></a> <em style="color: var(--color-text-secondary);">(심사 상태 row tap 시 push)</em><br>
+          <strong>Children</strong>: <em>—</em> (terminal — review의 CTA "다시 신청하기"는 외부 — <a href="/specs/event_detail_page/index.html"><code>EventDetailPage</code></a>로 push, detail에서 신청 흐름 진행)
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          사용자가 자기 신청 1건이 <strong>시간 흐름상 어떻게 진행됐는지</strong>를 timeline으로 확인하고, 종결된 결제(거절/취소/결제 실패)에서는 사유 + 다음 액션(다시 신청하기)으로 연결한다.
+          부모 detail은 "지금 어떤 상태"만 답하고, 이 페이지는 "어떻게 그 상태가 됐나" + "왜 그렇게 됐나"를 답한다. 신청 시 제출한 답변(snapshotData) 스냅샷도 같이 확인 가능.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: PurchaseHistoryDetail의 ④ 심사 상태 row tap (단일 진입점).<br>
+          <strong>Exit points</strong>: "다시 신청하기" CTA tap → <strong>같은 이벤트 detail page로 push</strong> (모든 case 통일 동작 — detail에서 status 분기 처리). · 뒤로 가기 → PurchaseHistoryDetail로 복귀.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          PurchaseHistoryDetail이 정보-과다를 막기 위해 <strong>심층 정보(거절 사유 / 신청 답변 / 검토 시점 / timeline)를 본문에 펴지 않고</strong> 한 뎁스 위임받은 페이지.
+          핵심 가치는 "<strong>시간 흐름 + 사유</strong>" — 사용자가 부모 detail에서 못 보는 유일한 정보. 자동 취소(이벤트 시작 도래 등)도 별도 use case로 빼지 않고 <strong>timeline 마지막 step의 사유</strong>로 통합 표현 (사용자 직접 취소도 같은 step, reason만 다름).
+          제출한 정보(<code>VerificationSubmission.snapshotData</code>)는 timeline의 "신청" step 안 collapsible로 통합 — default 접힘. 사용자가 토글로 펼쳐 봄 (v1.3 통합 + v1.4 default 접힘).
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>거절/취소/심사 중일 때만 의미 있음. 결제 직후 paid/approved 상태에선 진입 빈도 매우 낮음 (timeline이 단순). 신청 1건당 0-1회.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">이 spec의 주요 변경 이력. 최신 항목 위.</p>
+  <table class="ref">
+    <thead>
+      <tr><th style="width: 110px;">Date</th><th style="width: 80px;">Version</th><th style="width: 120px;">Author</th><th>Changes</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-03</td>
+        <td>1.10</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>"다시 신청하기" 동작 명확화</strong> — 이전: 모호한 "wizard 또는 list" 분기. 변경: <strong>모든 status에서 EventDetailRoute push 통일</strong>. 이유: (a) 단일 destination으로 코드/spec 단순, (b) detail이 이벤트 현재 상태(모집 중/종료/만석/가격 변동)를 보여줘 사용자 인지 ↑, (c) detail의 신청 흐름을 review가 재사용 (코드 중복 X), (d) rejected 케이스에서 자격 조건 다시 확인 자연스러움.
+          <strong>Backend 재신청 / 결제 재시도 모델 = Model 1 (history 누적)</strong> — 같은 applicationId 안에서 status 전환 (rejected/cancelled → pending_review · payment_failed → paid) + snapshot_data array에 새 entry append. 새 application 생성하지 않음. 이유: timeline의 핵심 가치(시간 흐름)가 history 분리 시 약해짐. 후속 작업 표에 backend 정책 확인 필요 항목 명시 (status 전환 허용 / DB unique constraint 검토).
+        </td>
+      </tr>
+      <tr>
+        <td>2026-05-03</td>
+        <td>1.9</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>MinglitTimeline 컴포넌트 generic화</strong> — v1.8에서 promote한 컴포넌트가 review-specific이라 더 generic하게 재설계.
+          (a) <code>status: completed/active/failed/cancelled</code> enum (신청 lifecycle 어휘) → <code>tone: success/progress/error/neutral/muted</code> (semantic-neutral) — 어떤 도메인 lifecycle도 매핑 가능.
+          (b) <code>pulsing</code>을 tone과 orthogonal한 별도 prop으로 분리 — review의 active 강조용 시각 효과지만, 어떤 tone과도 결합 가능.
+          (c) <code>time</code> string prop → <code>trailing</code> Widget slot으로 일반화 — 시점/금액/badge/icon 무엇이든.
+          (d) <code>muted</code> tone 신규 — outline only로 미래/대기 step 표현 (review는 미사용, order tracking 등에서 활용).
+          <strong>Review의 lifecycle → tone 매핑 표</strong>를 Sub-anatomy ②에 명시 (completed→success / active→progress+pulsing / failed→error / cancelled→neutral). 다른 use case(정산/배송 등)는 자체 매핑.
+        </td>
+      </tr>
+      <tr>
+        <td>2026-05-03</td>
+        <td>1.8</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>Timeline 패턴을 MinglitTimeline 컴포넌트로 promote</strong> — Sub-anatomy ②의 inline timeline 패턴(dot/line/heading + status enum)을 mds 공용 컴포넌트로 분리. <code>MinglitTimeline</code> + <code>MinglitTimelineStep</code> 작성 (<a href="/components#MinglitTimeline">/components#MinglitTimeline</a>). 다른 use case(정산 진행 / 환불 진행 / 배송 추적 등)에서 재사용 가능.
+          <strong>Page-specific은 children slot으로 주입</strong> — ReasonBox / "제출한 정보" collapsible / 검토자 메모 / "다시 신청하기" CTA는 모두 review-specific이므로 컴포넌트 안에 들어가지 않음. step의 children slot으로 작성 측에서 자유 컨텐츠 주입. 컴포넌트는 dot/line/heading만 책임.
+          <strong>Implementation source 갱신</strong> — 기존 file-private <code>_Timeline</code> / <code>_TimelineStep</code> 표현 → <code>MinglitTimeline</code> + <code>MinglitTimelineStep</code> reference로 변경. mds_core에 widget 신규 추가 필요 (후속 PR).
+        </td>
+      </tr>
+      <tr>
+        <td>2026-05-03</td>
+        <td>1.7</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>Spec internal cleanup pass</strong> — v1.0~v1.6 evolution 과정에서 누락된 stale references 일괄 정리:
+          (a) state summary table의 모든 row를 v1.4(default 접힘) + v1.6(Hero tap) 반영하게 갱신,
+          (b) state 2/3/4/5 mini-table의 사용자 액션·에지케이스·컴포넌트·노트 셀에서 "신청 답변 카드 자동 펼침/접힘" → "제출한 정보 default 접힘 / 토글 펼침" 표현으로 통일,
+          (c) 변형 표(Step 4 결과)의 paid 행을 "신청 완료" terminal → "결제 완료" terminal (step 2개 압축) 으로 정정 — v1.5에서 첫 step "신청"으로 바뀌면서 "신청 완료" terminal과 충돌 해결,
+          (d) approved 행을 "검토자 라인" → "ReasonBox 라벨=검토자 이름 / 본문=환영 메시지" (v1.3 통일 패턴) 으로 정정,
+          (e) Background paragraph / Motion timing / Global edge cases / 접근성 조항에서 "신청 답변 카드" 표현 → "신청 step의 제출한 정보 collapsible"로 일괄 갱신.
+          <strong>Spec ↔ mockup 동기화 확인 완료</strong> — 모든 mockup HTML이 최신 결정사항 반영, spec text와 충돌 없음.
+        </td>
+      </tr>
+      <tr>
+        <td>2026-05-03</td>
+        <td>1.6</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>Hero card tappable</strong> — 카드 전체가 InkWell · onTap → push EventDetailRoute. 이벤트명 옆에 chevron right 한 개로 시각 시그널. 모든 state에서 동일 동작 (Hero는 status에 무관).
+          <strong>Body top padding 제거</strong> — AppBar 바로 아래 불필요한 여백 제거. 첫 카드(Hero)가 AppBar에 더 붙어 시작감 ↑. 좌우 / 하단 padding은 그대로 유지 (spacing-medium).
+        </td>
+      </tr>
+      <tr>
+        <td>2026-05-03</td>
+        <td>1.5</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>State 5 (결제 실패) 첫 step 카피 정정</strong> — "신청 시도" → "신청". 다른 state와 동일 카피로 일관. snapshotData가 backend에 생성됐다면 신청 행위는 완료된 거고, 실패한 건 결제 단계뿐. "시도" prefix는 불필요한 mental gymnastics.
+        </td>
+      </tr>
+      <tr>
+        <td>2026-05-03</td>
+        <td>1.4</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>제출한 정보 collapsible default 접힘 통일</strong> — 기존 status별 분기(pending_review/rejected 자동 펼침 / 그 외 접힘) 폐기. 모든 status / 모든 entry에서 default 접힘. 사용자가 명시적으로 토글 탭해야 펼침. 일관 동작 + 화면 진입 시 노이즈 ↓.
+          <strong>워딩 변경</strong> — "답변 보기/닫기" → "제출한 정보 보기/닫기". "답변"이 Q&amp;A처럼 모호했고, snapshotData가 텍스트 + 이미지 mix이므로 "정보"가 더 포괄적. 시점("제출한")으로 신청 wizard에서 입력한 것임을 명확히. 검토자 메모(같은 카드 내 다른 row)와 의미상 분리.
+        </td>
+      </tr>
+      <tr>
+        <td>2026-05-03</td>
+        <td>1.3</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>신청 답변 카드 폐기 → "신청" step 안 collapsible 통합</strong> — snapshot_data가 submission attempt history array(entry당 신청 시도 1번)이라는 본질에 맞춰, 모든 entry를 timeline의 별도 "신청" step으로 노출. 각 step 안 collapsible content에 그 entry의 data + comments 포함. 별도 신청 답변 카드 삭제 (Sub-anatomy ③ 폐기) → 본문 카드 3 → 2.
+          <strong>step 라벨은 단순 "신청"</strong> (1차/2차 분기 X — 시간순 노출로 자연 구분). 재제출은 entry 추가로 timeline이 자동 확장됨 — entries 사이 result='rejected'가 있으면 synthetic 거절됨 step 삽입.
+          <strong>검토자 코멘트 노출</strong> — entry.comments가 있으면 답변 row 아래 1px divider + "검토자 메모" 라벨로 자연 구분.
+          <strong>step heading inline 변경</strong> — 기존 title 아래 줄 time 별도 → title + time이 한 줄에 inline (flex baseline · gap spacing-small). 메타데이터 가독성 ↑.
+          <strong>심사 진행 중 step의 time 제거</strong> — "진행 중"이라 specific 시점 모호. 카피만 노출.
+          <strong>승인됨 step에도 ReasonBox 적용</strong> — 기존 "검토: ..." 별도 라인을 ReasonBox 라벨/본문 형태로 통일 (검토자 메시지 톤). 별도 .ear-step__reviewer 클래스 폐기.
+        </td>
+      </tr>
+      <tr>
+        <td>2026-05-03</td>
+        <td>1.2</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>ReasonBox 톤 다운 + 말풍선화</strong> — (a) 좌측 3px error border 제거 · (b) bg 빨간색 6% tint → onSurface 4% subtle neutral 단일 스타일 (rejected/cancelled 색 분기 폐기) · (c) radius radius-small(8) → radius-medium(12) softer corners · (d) 라벨 자리에 일반 "사유" 대신 <strong>sender 이름</strong>(검토자 / 시스템 / 본인) — 별도 검토자 라인 폐기 후 흡수.
+          <strong>CTA "다시 신청하기" 위치 변경</strong> — 종결 step 내부 → <strong>timeline card 마지막 element</strong>(step 바깥, 카드 자체의 액션처럼). full-width filled 스타일은 그대로. step 내부 full width가 step의 일부로 안 보였던 이슈 해결.
+          <strong>cancelled 사유 라벨 "시스템" / "본인" 분기</strong> — 자동 취소 = "시스템", 사용자 직접 취소 = "본인". rejected = 검토자 이름. payment_failed = "시스템".
+        </td>
+      </tr>
+      <tr>
+        <td>2026-05-03</td>
+        <td>1.1</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>Hero 디자인 부모 detail과 통일</strong> — compact(이벤트명+일시)에서 풀 hero(thumb 16:9 + 제목 + 일시 + 장소)로 변경. 시각 일관성 우선.
+          <strong>Timeline dot/line 정렬 보정 + dot 크기 축소 + step 간격 증가</strong> — dot 14×14 → 12×12 (border-box), dot ↔ line center 일치 (둘 다 -22 center), step 간 gap spacing-large(24) → spacing-xlarge(32).
+          <strong>Active step copy 변경</strong> — "예상 결과 발표일" 대신 "이벤트 시작 시점까지 심사가 완료되지 않으면 자동 취소되며, 결제 금액은 자동 환불됩니다" — 사용자에게 더 의미 있는 안내.
+          <strong>"다시 신청하기" CTA 스타일 변경</strong> — OutlinedButton(primary border + transparent bg) → <strong>FilledButton</strong>(primary bg + white fg · full width 48px). 부모 detail의 예매 취소 버튼과 같은 시각 무게감.
+          <strong>Cancelled state CTA 제거</strong> — 사용자가 직접 취소했거나 시스템이 자동 취소한 케이스에서 즉각 재신청 prompt가 부자연스럽고, 자동 취소(이벤트 시작 도래)는 같은 이벤트 재신청 자체가 의미 없음. CTA는 rejected / payment_failed에서만 노출.
+          <strong>snapshotData 실제 backend 스키마 확인 결과 반영</strong> — Q&amp;A list가 아니라 submission attempt history array (각 entry: submitted_at / data / comments / result). spec 안 ⚠ 박스로 명시. 재제출 history를 어떻게 표현할지(최근만 vs 전체 vs 재제출 시만)는 다음 iteration 결정 사항.
+        </td>
+      </tr>
+      <tr>
+        <td>2026-05-03</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>
+          v1.4 template으로 신규 작성. PurchaseHistoryDetailPage의 심사 상태 row가 push할 자식 spec.
+          IA: Hero(compact) → Timeline card(메인 vertical stepper) → 신청 답변 card(collapsible). Timeline 단계: 신청 → 결제 → [심사 — 자격 심사 있는 이벤트만] → 결과/취소. 종결 step 안에 사유 + 검토자 + CTA "다시 신청하기" inline.
+          7 state 정의: 심사 진행 중 / 승인 완료 / 거절됨 / 취소됨(user/auto 통합) / 결제 실패 / Loading / Error. 자동 취소(이벤트 시작 도래 등)는 별도 state가 아니라 cancelled state의 reason 변형으로 흡수.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Anchor nav -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#global-behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">AppBar + 스크롤 body(<strong>2 카드 — Hero + Timeline</strong>). Hero 카드는 부모 detail과 동일 디자인. 메인 Timeline 카드는 <a href="/components#MinglitTimeline"><code>MinglitTimeline</code></a> 컴포넌트(v1.8 promoted) · "신청" step 안 collapsible로 답변+검토자 메모 통합 (v1.3).</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      Scaffold + Material default AppBar (title "심사 상태") + MinglitAsyncValueWidget. data branch: 단일 EventApplication(+ joined VerificationSubmission)을 받아 Hero → Timeline 카드 2개 stack. Sticky CTA 없음 — "다시 신청하기"는 timeline 카드 마지막 element로 inline. v1.3에서 신청 답변 카드 폐기, "신청" step의 collapsible로 통합.
+    </p>
+
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 540px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">① AppBar — back arrow + "심사 상태"</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:56px;left:16px;right:16px;height:208px;">
+          <span class="blueprint__region-label">② Hero card — thumb 16:9 + 제목/일시/장소 · AppBar 바로 아래(top 0 padding · v1.6)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:280px;left:16px;right:16px;height:240px;">
+          <span class="blueprint__region-label">③ Timeline card — vertical stepper · 신청 step 안 답변 collapsible · 종결 step 안 사유 · 카드 마지막 CTA</span>
+        </div>
+        <div class="blueprint__align-marker" style="bottom:8px;right:8px;">scrollable body — sticky CTA 없음</div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+└─ <b>AppBar</b>(<i>title: "심사 상태"</i>)                           ← ①
+└─ <b>MinglitAsyncValueWidget&lt;EventApplication&gt;</b>
+   ├─ loading → <b>MinglitCircularProgressIndicator</b>
+   ├─ error   → <b>_DefaultErrorView</b>
+   └─ data    → <b>SingleChildScrollView</b>(padding: <i>0 / spacing-medium / spacing-medium / spacing-medium</i> · top 0 — v1.6)
+      └─ <b>Column</b>(gap: <i>spacing-medium</i>)
+         ├─ <em>Hero card</em>                                 ← ②
+         └─ <em>Timeline card</em>                             ← ③
+            <em>(신청 step 안 답변 collapsible · 종결 step 안 사유 · 카드 마지막 CTA "다시 신청하기")</em></div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr><th style="width: 60px;">#</th><th style="width: 200px;">Region</th><th style="width: 220px;">Alignment</th><th>Spacing</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>Body padding</td><td>—</td><td>SingleChildScrollView padding: <strong>top 0</strong> (v1.6 — AppBar 바로 아래 첫 카드 시작) · 좌/우 <code>spacing-medium (16px)</code> · bottom <code>spacing-medium (16px)</code></td></tr>
+        <tr><td>①</td><td>AppBar</td><td>title left + auto back arrow</td><td>height: 56 · scaffold gray bg · border-bottom 없음</td></tr>
+        <tr><td>②③</td><td>본문 카드 (Hero + Timeline · v1.3에서 신청 답변 카드 폐기 후 2개)</td><td>full width · vertical stack</td><td>radius: <code>radius-card (16px)</code> · padding all: <code>spacing-medium (16px)</code> · shadow blur 8 offset (0,2) opacity <code>shadowXs (0.06)</code> · 카드 사이 gap <code>spacing-medium (16px)</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ① — Hero card (tappable · v1.6)</h2>
+    <p class="intro">
+      <strong>v1.1: 부모 detail의 Hero 디자인 재사용</strong> — thumb 16:9 + 이벤트명 + 일시 + 장소. 부모 detail과 동일 patterns/tokens.
+      <strong>v1.6: 카드 전체가 InkWell tappable → push EventDetailRoute</strong> — 사용자가 "이 신청이 어떤 이벤트였는지" 더 깊이 보고 싶을 때 한 탭으로 이벤트 상세 진입. 시각 시그널은 이벤트명 옆 chevron right 한 개 (오른쪽 끝 정렬). InkWell ripple은 카드 전체에 적용.
+      StatusBadge는 노출하지 않음 (부모 detail의 ② 심사 상태 row가 status indicator 담당, review 페이지는 timeline이 status 표현).
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 200px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;right:16px;height:90px;"><span class="blueprint__region-label">㉠ thumb 16:9 · radius-medium</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:120px;left:16px;right:60px;height:24px;"><span class="blueprint__region-label">㉡ 이벤트명 (titleLarge bold · maxLines 2)</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:120px;right:16px;width:24px;height:24px;"><span class="blueprint__region-label">㉤ ›</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:152px;left:16px;right:16px;height:18px;"><span class="blueprint__region-label">㉢ 일시 (bodyMedium)</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:174px;left:16px;right:16px;height:18px;"><span class="blueprint__region-label">㉣ 장소 (bodyMedium · onSurfaceVariant)</span></div>
+      </div>
+      <div class="layout-tree"><b>InkWell</b>(onTap → push EventDetailRoute · v1.6)
+└─ <b>Container</b>(card chrome)
+   └─ <b>Padding</b>(<code>spacing-medium</code>)
+      └─ <b>Column</b>(crossAxis: start)
+         ├─ <em>thumb</em>                                    ← ㉠
+         ├─ Gap: <code>spacing-medium</code>
+         ├─ <b>Row</b>(crossAxis: start · gap small)
+         │  ├─ <em>이벤트명</em>(flex 1)                       ← ㉡
+         │  └─ <em>chevron right</em> (Icons.chevron_right · 20 · onSurfaceVariant) ← ㉤
+         ├─ Gap: <code>spacing-xsmall</code>
+         ├─ <em>일시</em>                                      ← ㉢
+         └─ <em>장소</em>                                      ← ㉣</div>
+    </div>
+    <table class="ref" style="margin-top: 16px;">
+      <thead><tr><th style="width: 60px;">#</th><th style="width: 180px;">Region</th><th style="width: 220px;">Alignment</th><th>Spacing / tokens</th></tr></thead>
+      <tbody>
+        <tr><td>㉠</td><td>thumb</td><td>full width · 16:9</td><td><code>radius-medium (12px)</code> · 누락 시 placeholder bg <code>color-surface</code></td></tr>
+        <tr><td>㉡</td><td>이벤트명</td><td>start · flex 1 · maxLines 2</td><td>typography <code>titleLarge</code> w700</td></tr>
+        <tr><td>㉤</td><td>chevron right</td><td>flex-shrink 0 · 우측 끝 · 제목 baseline 살짝 위(margin-top 2px)</td><td>20×20 · color <code>color-text-secondary</code> · gap from 제목 <code>spacing-small (8px)</code></td></tr>
+        <tr><td>㉢</td><td>일시</td><td>start</td><td>typography <code>bodyMedium</code></td></tr>
+        <tr><td>㉣</td><td>장소</td><td>start</td><td>typography <code>bodyMedium</code> · color <code>color-text-secondary</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ② — Timeline card (메인)</h2>
+    <p class="intro">
+      Vertical stepper. 단계 = 신청 → 결제 → [심사 — 자격 심사 있는 이벤트만 노출] → 결과(승인 / 거절 / 취소). 각 step은 dot + 연결 line + 라벨 + 시점 + (있으면) 추가 detail. <strong>종결 step</strong>에는 사유 박스 + 검토자 + CTA "다시 신청하기"가 inline.
+      <strong>미래 step은 노출하지 않음</strong> — 현재 진행 중인 step까지만 (회색 미래 dot은 wizard 톤이라 review에 부적합). 진행 중 step은 active(primary color + pulsing dot)으로 강조.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 320px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;right:16px;height:24px;"><span class="blueprint__region-label">㉠ "진행 단계" 섹션 제목</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:56px;left:32px;right:16px;height:60px;"><span class="blueprint__region-label">㉡ Step 1 — 신청 (completed dot · 시점)</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:128px;left:32px;right:16px;height:60px;"><span class="blueprint__region-label">㉢ Step 2 — 결제 (completed dot · 시점 · 금액)</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:200px;left:32px;right:16px;height:60px;"><span class="blueprint__region-label">㉣ Step 3 — 심사 (active dot · 진행 중 · 자격 심사 있는 이벤트)</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:268px;left:32px;right:16px;height:48px; opacity:0.6;"><span class="blueprint__region-label">㉤ Step 4 — 결과 (종결 시 dot + 사유 + CTA)</span></div>
+      </div>
+      <div class="layout-tree"><b>Container</b>(card chrome)
+└─ <b>Padding</b>(<code>spacing-medium</code>)
+   └─ <b>Column</b>(crossAxis: stretch)
+      ├─ <em>"진행 단계"</em>                                  ← ㉠
+      ├─ Gap: <code>spacing-medium</code>
+      ├─ <b>MinglitTimeline</b> (v1.8 mds 컴포넌트 — vertical stepper · dot/line/heading은 컴포넌트 책임 · step 내부 children은 page-specific)
+      │  ├─ <b>Step 신청</b> × <em>snapshot_data.length</em>     ← ㉡ (각 entry당 1개)
+      │  │  ├─ <b>Dot</b>(completed · success · 12×12 border-box)
+      │  │  ├─ <b>Line</b>(아래 step과 연결 · 2px · color-divider)
+      │  │  ├─ <b>Heading row</b> (inline · v1.3)
+      │  │  │  ├─ <b>Text</b>(title "신청" · <code>bodyMedium</code> w600)
+      │  │  │  └─ <b>Text</b>(time = entry.submitted_at · <code>bodySmall</code> onSurfaceVariant)
+      │  │  └─ <b>StepAnswers</b> (collapsible — v1.3 통합)
+      │  │     ├─ <b>ToggleButton</b> "제출한 정보 보기/닫기" + chevron 14 (default 접힘 — v1.4)
+      │  │     └─ <em>if expanded</em>
+      │  │        └─ <b>Container</b>(bg onSurface 4% · radius 12 · padding sm/medium)
+      │  │           ├─ <b>AnswerRow</b> × N (data 항목별 — text / 이미지)
+      │  │           │  ├─ <b>Text</b>(label · <code>labelSmall</code> w700 onSurfaceVariant uppercase)
+      │  │           │  └─ <b>Text</b> 또는 <b>MinglitImage</b>(64×64 radius-small)
+      │  │           └─ <em>if entry.comments.length &gt; 0</em>
+      │  │              └─ <b>CommentRow</b> (위 1px divider)
+      │  │                 ├─ <b>Text</b>("검토자 메모" · labelSmall w700 onSurfaceVariant uppercase)
+      │  │                 └─ <b>Text</b>(comments join · bodySmall onSurface)
+      │  ├─ <b>Step 결제</b>                                   ← ㉢
+      │  │  ├─ <b>Dot</b> + <b>Line</b>
+      │  │  └─ <b>Heading row</b> (inline title + time + amount)
+      │  ├─ <em>entries 사이에 result='rejected'면</em>
+      │  │  └─ <b>Step 거절됨</b> (synthetic — 다음 신청 step과 분기)
+      │  ├─ <em>if 자격 심사 있는 이벤트 + 마지막 entry result null</em>
+      │  │  └─ <b>Step 심사 진행 중</b>                        ← ㉣
+      │  │     ├─ <b>Dot</b>(active · primary · pulsing) + <b>Line</b>
+      │  │     ├─ <b>Heading</b>("심사 진행 중" · primary · <em>time 미노출 · v1.3</em>)
+      │  │     └─ <b>Text</b>(detail · "이벤트 시작까지 자동 환불 안내")
+      │  └─ <em>if 종결 (승인 / 거절 / 취소 / 결제 실패)</em>     ← ㉤
+      │     └─ <b>Step 결과</b> (terminal · last · line 없음)
+      │        ├─ <b>Dot</b>(success / error / neutral 분기)
+      │        ├─ <b>Heading</b>(title + time)
+      │        └─ <em>if 거절 / 취소 / 결제 실패 / 승인</em>
+      │           └─ <b>ReasonBox</b> (말풍선 톤 · v1.2)
+      │              ├─ <b>Text</b>(label = sender — 검토자명 / "시스템" / "본인")
+      │              └─ <b>Text</b>(본문 = 사유 또는 검토자 메시지)
+      └─ <em>if rejected / payment_failed (cancelled X · v1.2)</em>
+         └─ <b>FilledButton</b>("다시 신청하기" · primary · full width 48 · margin-top spacing-large)</div>
+    </div>
+    <table class="ref" style="margin-top: 16px;">
+      <thead><tr><th style="width: 60px;">#</th><th style="width: 180px;">Region</th><th style="width: 220px;">Alignment</th><th>Spacing / tokens</th></tr></thead>
+      <tbody>
+        <tr><td>㉠</td><td>섹션 제목</td><td>start</td><td>typography <code>labelLarge</code> w700</td></tr>
+        <tr><td>㉡㉢㉣㉤</td><td>Timeline step</td><td>start · 좌측 32px(dot 영역) padding</td><td>step 사이 gap <strong><code>spacing-xlarge (32px)</code></strong> (v1.1 — was 24) · dot <strong>12×12</strong> border-box (v1.1 — was 14×14) radius 50% · dot ↔ line 정렬 보정 (dot left -28 · line left -23 · 둘 다 center -22) · line 2px width · line 색 <code>color-divider</code></td></tr>
+        <tr><td>—</td><td>Step title</td><td>start</td><td>typography <code>bodyMedium</code> w600 · color: completed = onSurface · active = <code>color-primary</code> · failed = <code>color-error</code> · cancelled = onSurface</td></tr>
+        <tr><td>—</td><td>Step time</td><td>start</td><td>typography <code>bodySmall</code> · color <code>color-text-secondary</code> · 2px gap from title</td></tr>
+        <tr><td>—</td><td>ReasonBox <em>(말풍선 톤 v1.2)</em></td><td>full width</td><td>padding <code>spacing-sm</code> v + <code>spacing-medium</code> h · radius <strong><code>radius-medium (12px)</code></strong> (softer corners) · <strong>좌측 border 제거</strong> (v1.2) · bg <strong>단일 neutral subtle tint</strong> (onSurface 4% — rejected/cancelled 색 분기 폐기) · 라벨 자리 = <strong>sender</strong> (검토자 이름 / "시스템" / "본인" 등) · 본문 = 사유 텍스트 · 라벨 <code>bodySmall (12px)</code> w700 onSurfaceVariant · 본문 <code>bodySmall (13px)</code> onSurface line-height 1.5 · margin-top <code>spacing-small</code></td></tr>
+        <tr><td>—</td><td>"다시 신청하기" CTA</td><td>full width · 가운데 정렬</td><td><strong>v1.2: timeline card 마지막 element로 이동 (step 내부 X)</strong> — step과 분리되어 카드 액션처럼 인지. FilledButton · height 48 · width 100% · bg <code>color-primary</code> · fg white · border 없음 · radius <code>radius-button (12px)</code> · typography <code>labelLarge</code> w600 · margin-top <code>spacing-large (24px)</code> from timeline. 부모 detail의 예매 취소 버튼과 같은 시각 무게감(forward-looking이라 destructive errorContainer 대신 primary).</td></tr>
+      </tbody>
+    </table>
+
+    <p class="variant-label">신청 lifecycle → MinglitTimelineStep tone 매핑 (review use case)</p>
+    <table class="ref">
+      <thead><tr><th style="width: 180px;">신청 상황</th><th style="width: 140px;">tone</th><th style="width: 100px;">pulsing</th><th>의미 / 사용 시점</th></tr></thead>
+      <tbody>
+        <tr><td><strong>이미 통과한 step</strong> (신청·결제 완료·승인됨)</td><td><code>success</code></td><td>—</td><td>color-success (초록) — 달성/통과된 단계</td></tr>
+        <tr><td><strong>현재 진행 중</strong> (심사 진행 중 / 결제 처리 중)</td><td><code>progress</code></td><td>true</td><td>color-primary + 1.4s pulse — "지금 여기" 강조</td></tr>
+        <tr><td><strong>실패 종결</strong> (결제 실패 / 거절됨)</td><td><code>error</code></td><td>—</td><td>color-error (빨강) — 종결되었으나 실패</td></tr>
+        <tr><td><strong>취소 종결</strong> (사용자 취소 / 자동 취소)</td><td><code>neutral</code></td><td>—</td><td>color-text-secondary — 종결됐으나 강조 안 함</td></tr>
+        <tr><td>(미래 step)</td><td><code>muted</code></td><td>—</td><td>review에서는 미사용 — 현재까지만 노출. order tracking 등 다른 use case에서 활용</td></tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top: 8px;">
+      <strong>note</strong> — <code>tone</code>은 semantic-neutral. review 도메인의 lifecycle을 위 표대로 매핑해서 사용. 다른 use case (정산/배송/알림 등)는 자체 매핑.
+    </p>
+
+    <p class="variant-label">Step 4 결과 — status별 변형</p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 140px;">application.status</th>
+          <th style="width: 100px;">dot 색</th>
+          <th style="width: 140px;">title</th>
+          <th>본문 (사유 박스 / CTA)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>paid (자격 심사 X)</td><td>completed</td><td>마지막 step "결제 완료"</td><td>심사 step skip — 결제 완료가 terminal step. detail "이벤트 당일 체크인하세요" · CTA 없음 · 사실상 step 2개로 압축 (신청 → 결제 완료)</td></tr>
+        <tr><td>approved</td><td>completed</td><td>"승인됨"</td><td>ReasonBox 라벨 = <strong>검토자 이름</strong> (예: "강남 라운지 운영팀") · 본문 = 환영 메시지 (예: "신청 감사합니다. 이벤트 당일 뵙겠습니다.") · CTA 없음 · v1.3 — 별도 검토자 라인 폐기, ReasonBox로 통일</td></tr>
+        <tr><td>pending_review</td><td>active (pulsing)</td><td>"심사 진행 중"</td><td>"이벤트 시작 시점까지 심사가 완료되지 않으면 자동 취소되며, 결제 금액은 자동 환불됩니다." · 마지막 step (terminal · 미완) · CTA 없음 · line 없음 (v1.1 — 예상 발표일 대신 자동 환불 안내로 변경)</td></tr>
+        <tr><td>pending · payment_pending</td><td>active</td><td>"결제 처리 중"</td><td>결제 step에서 active 상태로 멈춤 · 그 위 신청 step은 completed · CTA 없음</td></tr>
+        <tr><td>cancelled (사용자 직접)</td><td>cancelled</td><td>"취소됨"</td><td>ReasonBox 라벨 "<strong>본인</strong>" · 본문 "직접 취소했습니다" 또는 사용자 입력 사유 · <strong>CTA 없음</strong></td></tr>
+        <tr><td>cancelled (자동 — 이벤트 시작 도래)</td><td>cancelled</td><td>"취소됨"</td><td>ReasonBox 라벨 "<strong>시스템</strong>" · 본문 "이벤트 시작 시점에 도달하여 자동 취소되었습니다. 결제 금액은 자동 환불 처리됐어요." · <strong>CTA 없음</strong></td></tr>
+        <tr><td>cancelled (자동 — 심사 지연)</td><td>cancelled</td><td>"취소됨"</td><td>ReasonBox 라벨 "<strong>시스템</strong>" · 본문 "심사가 완료되지 못해 자동 취소되었습니다" · <strong>CTA 없음</strong></td></tr>
+        <tr><td>rejected</td><td>failed</td><td>"거절됨"</td><td>ReasonBox 라벨 = <strong>검토자 이름</strong> (예: "서울 숲 파티 운영팀") · 본문 = 파트너 거절 사유 (<code>rejectionReason</code>) · CTA "다시 신청하기" (timeline card 마지막 element)</td></tr>
+        <tr><td>payment_failed</td><td>failed</td><td>"결제 실패"</td><td>결제 step에서 실패 · 그 위 신청 step만 completed · ReasonBox 라벨 "<strong>시스템</strong>" · 본문 "카드 인증 실패" 등 PG 응답 메시지 · CTA "다시 신청하기"</td></tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top: 12px;">
+      <strong>note</strong> — 자동 취소(이벤트 시작 도래 / 심사 지연 등)는 별도 state로 빼지 않고 cancelled state의 reason 변형으로 통합. 사용자 직접 취소도 같은 step, reason만 다름. 카피는 backend가 setting하는 cancellation_reason 필드(또는 동등) 그대로 노출 — 시스템 사유는 문장 그대로, 사용자 입력 사유는 따옴표로 감쌈.
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>신청 답변 — Sub-anatomy ② 안 통합 (v1.3)</h2>
+    <p class="intro">
+      <strong>v1.3 변경: 별도 신청 답변 카드 폐기 → "신청" step 안 collapsible로 통합.</strong>
+      이유: snapshotData가 submission entry 단위(각 entry = 1번의 신청 시도)이고, 사용자가 "내가 어떻게 여기까지 왔는지"를 timeline의 시간축 위에서 보는 게 자연. 별도 카드로 따로 두면 두 timeline(메인 진행 단계 + 답변 history)을 머리속에서 join해야 하는 부담.
+    </p>
+    <p class="variant-label">실제 backend 스키마 (v1.1 확인 결과 · v1.3에서 history mode 채택)</p>
+    <pre style="background: var(--color-surface); padding: 12px; border-radius: 4px; font-size: 12px; overflow-x: auto;">snapshot_data: [
+  {
+    submitted_at: "2026-03-15",         // ISO timestamp
+    data: { university: "서울대", ... }, // verification 정의별 자유 key-value
+    comments: [],                       // 검토자가 단 코멘트 array (v1.3: 사용자에게 노출)
+    result: "rejected" | null,          // 그 시도의 결과
+  },
+  // 재제출 시 새 entry append
+]</pre>
+    <p class="intro">
+      <strong>v1.3 채택 결정 사항</strong>:
+      <ul style="margin: var(--spacing-small) 0;">
+        <li><strong>모든 entry 노출</strong> — array의 각 entry는 timeline의 별도 "신청" step으로. 1번 제출한 사용자는 step 1개, 재제출 사용자는 step 여러 개.</li>
+        <li><strong>각 entry의 data + comments</strong>를 그 step의 collapsible 안에 함께 노출. 검토자 메모가 있으면 답변 row 아래에 1px divider + "검토자 메모" 라벨로 구분.</li>
+        <li><strong>step 라벨은 단순히 "신청"</strong> — "1차/2차" 등 분기 안 함 (시간순으로 나열되면 자연스럽게 구분됨).</li>
+        <li><strong>entry 사이의 거절</strong> — 첫 entry result='rejected' + 다음 entry 존재 시, 두 신청 step 사이에 "거절됨" 종결 step 형태로 자동 삽입 (단, 최근 result가 null이면 마지막 step은 active "심사 진행 중").</li>
+        <li><strong>default 접힘 (v1.4)</strong> — 모든 status / 모든 entry에서 default 접힘. 사용자가 명시적으로 "제출한 정보 보기" 토글을 탭해야 펼쳐짐. status별 분기 폐기 — 일관 동작.</li>
+      </ul>
+      <strong>verification field 메타 (key → user-facing label 매핑)</strong>는 <code>Verification</code> 모델에 정의되어 있을 것 — 이벤트별로 항목이 다름. UI는 verification에서 받은 메타 + snapshot_data.data를 join해서 친화적 라벨 노출. backend 스키마 확정 시 동기화 필요 (TBD).
+    </p>
+    <p class="variant-label">data 안 항목 종류별 표시 형태</p>
+    <table class="ref">
+      <thead><tr><th style="width: 200px;">data 안 항목</th><th>표시</th></tr></thead>
+      <tbody>
+        <tr><td>텍스트 값 (자기소개 / 자유 답변 / 직업 등)</td><td>label + 본문 텍스트 (line-height 1.5)</td></tr>
+        <tr><td>이미지 URL (인증 사진)</td><td>label + 64×64 thumbnail (radius-small) · 탭 시 풀스크린 모달 (Phase 2)</td></tr>
+        <tr><td>선택지 (단일 / 다중)</td><td>label + 선택된 옵션 텍스트 (다중이면 쉼표 구분)</td></tr>
+        <tr><td>날짜 / timestamp</td><td>label + "yyyy.MM.dd" 포맷</td></tr>
+        <tr><td><code>comments</code> (검토자 메모)</td><td>data row 아래 divider 1px + "검토자 메모" 라벨(uppercase) + 본문 (배열이 여러 개면 줄바꿈으로 join)</td></tr>
+        <tr><td><code>submitted_at</code></td><td>step의 inline time으로 노출 (heading 옆)</td></tr>
+        <tr><td><code>result</code></td><td>다음 step(거절됨 등)의 존재로 표현. 별도 visual 없음.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">7 state. Timeline 종결 step의 dot 색 / 사유 박스 / CTA 노출 / 신청 step 답변 펼침 default로 갈라짐. v1.3에서 신청 답변 카드를 timeline 안 통합. 자동 취소(시스템 사유)는 cancelled state에 reason 변형으로 흡수. 재제출 history는 entry당 step 추가로 자연스럽게 표현.</span>
+  </div>
+
+  <section class="doc">
+    <h3 style="margin-top: 24px;">State summary <small style="font-size:12px;font-weight:400;color:var(--color-text-secondary);">— 7 states</small></h3>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 200px;">State</th><th style="width: 100px;">Tag</th><th style="width: 200px;">조건</th><th>Key visual differentiator</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Default · 심사 진행 중</strong></td><td>baseline</td><td>pending_review (또는 pending · payment_pending)</td><td>마지막 step active (pulsing primary dot) · 종결 step 없음 · 제출한 정보 default 접힘</td></tr>
+        <tr><td><strong>Default · 완료 (paid / approved)</strong></td><td>variant</td><td>paid (자격 심사 X · step 2개) 또는 approved (자격 심사 통과 · step 4개)</td><td>모든 step completed · paid 마지막 "결제 완료" + detail("이벤트 당일 체크인") · approved 마지막 "승인됨" + ReasonBox 환영 메시지 · CTA 없음 · 제출한 정보 default 접힘</td></tr>
+        <tr><td><strong>Default · 거절됨</strong></td><td>variant</td><td>rejected</td><td>마지막 step failed (error red dot) · ReasonBox 말풍선 톤 — 라벨 검토자 / 본문 거절 사유 · CTA "다시 신청하기" · 제출한 정보 default 접힘 (검토자 메모도 같이)</td></tr>
+        <tr><td><strong>Default · 취소됨</strong></td><td>variant</td><td>cancelled (user / auto 통합)</td><td>마지막 step cancelled (neutral) · ReasonBox 라벨 "시스템" 또는 "본인" · <strong>CTA 없음 (v1.1)</strong> · 제출한 정보 default 접힘</td></tr>
+        <tr><td><strong>Default · 결제 실패</strong></td><td>variant</td><td>payment_failed</td><td>결제 step에서 failed · timeline 2 steps (신청 → 결제 실패) · ReasonBox 라벨 "시스템" · CTA "다시 신청하기" · 제출한 정보 토글 미렌더 가능 (snapshot 없으면)</td></tr>
+        <tr><td><strong>Loading</strong></td><td>async</td><td>fetch 중</td><td>화면 중앙 spinner</td></tr>
+        <tr><td><strong>Error</strong></td><td>network/server</td><td>로드 실패</td><td>error_outline icon + "오류가 발생했습니다."</td></tr>
+      </tbody>
+    </table>
+
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- ─── State 1: 심사 진행 중 (baseline) ──────────── -->
+      <table class="ref state-mini is-baseline-tint">
+        <thead><tr><th colspan="3"><strong>Default · 심사 진행 중</strong> 🎯 <small>baseline · pending_review · 마지막 step active · 제출한 정보 default 접힘 (v1.4)</small></th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport ear-viewport">
+                <div class="ear-appbar">
+                  <span class="ear-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></span>
+                  <h2>심사 상태</h2>
+                </div>
+                <div class="ear-body">
+                  <div class="ear-card ear-hero">
+                    <div class="ear-hero__thumb">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="15" r="2"/></svg>
+                    </div>
+                    <div class="ear-hero__heading">
+                      <span class="ear-hero__title">스피드 데이팅 · 강남 라운지</span>
+                      <span class="ear-hero__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+                    </div>
+                    <div class="ear-hero__meta">5월 4일 (월) 20:00</div>
+                    <div class="ear-hero__meta ear-hero__meta--muted">강남역 5번 출구 · 라운지B</div>
+                  </div>
+                  <div class="ear-card">
+                    <div class="ear-section__title">진행 단계</div>
+                    <div class="ear-timeline">
+                      <div class="ear-step ear-step--completed">
+                        <span class="ear-step__dot"></span>
+                        <div class="ear-step__heading">
+                          <span class="ear-step__title">신청</span>
+                          <span class="ear-step__time">2026.04.10 19:42</span>
+                        </div>
+                        <div class="ear-step__answers ear-step__answers--collapsed">
+                          <button class="ear-step__answers__toggle">
+                            제출한 정보 보기
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                          </button>
+                          <div class="ear-step__answers__content">
+                            <div class="ear-answer-row">
+                              <span class="ear-answer-row__label">자기소개</span>
+                              <span class="ear-answer-row__value">안녕하세요, 강남에서 일하는 30대 디자이너입니다.</span>
+                            </div>
+                            <div class="ear-answer-row">
+                              <span class="ear-answer-row__label">MBTI</span>
+                              <span class="ear-answer-row__value">ENFP</span>
+                            </div>
+                            <div class="ear-answer-row">
+                              <span class="ear-answer-row__label">프로필 사진</span>
+                              <div class="ear-answer-row__photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="9" r="3"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></svg></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="ear-step ear-step--completed">
+                        <span class="ear-step__dot"></span>
+                        <div class="ear-step__heading">
+                          <span class="ear-step__title">결제 완료</span>
+                          <span class="ear-step__time">2026.04.10 19:43 · 25,000원</span>
+                        </div>
+                      </div>
+                      <div class="ear-step ear-step--active">
+                        <span class="ear-step__dot"></span>
+                        <div class="ear-step__heading">
+                          <span class="ear-step__title">심사 진행 중</span>
+                        </div>
+                        <div class="ear-step__detail ear-step__detail--muted">이벤트 시작 시점까지 심사가 완료되지 않으면 자동 취소되며, 결제 금액은 자동 환불됩니다.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <span class="callout" style="top:88px;left:24px;">ⓐ</span>
+                <span class="callout" style="top:172px;left:24px;">ⓑ</span>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>결제 완료, 파트너가 신청을 검토 중인 상태. 자격 심사가 있는 이벤트.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              ① <strong>Hero card tap</strong> → EventDetailRoute push (이벤트 상세) — v1.6<br>
+              ② <strong>"제출한 정보 보기" 토글 탭</strong> (신청 step 안) → collapsible 펼침/닫힘 (default 접힘 — v1.4)<br>
+              ③ <strong>이미지 답변 thumbnail 탭</strong> → 풀스크린 미리보기 (Phase 2 — 현재는 무반응)<br>
+              ④ <strong>스크롤</strong> → timeline 끝까지<br>
+              ⑤ <strong>뒤로 가기</strong> → 부모 detail로 복귀
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · <strong>자동 환불 안내 카피</strong> — "이벤트 시작 시점까지 심사가 완료되지 않으면 자동 취소되며, 결제 금액은 자동 환불됩니다". 이벤트 시작 시점 정보가 없으면 "(검토 중)" fallback<br>
+              · <strong>심사 진행 중 step에 시간 미노출</strong> (v1.3) — "진행 중"이라 specific 시점이 모호 · 카피만 노출<br>
+              · <strong>snapshotData 비어 있음</strong> — 신청 step의 답변 toggle 자체 미렌더 (자격 심사 없는 이벤트)<br>
+              · <strong>답변에 이미지 + 텍스트 mix</strong> — 항목별 row 분리 노출, 순서는 backend가 보낸 array 순서대로<br>
+              · <strong>재제출 case</strong> — snapshot_data array에 entry가 2개 이상이면, 각 entry당 "신청" step 추가 + 그 사이 거절됨 step 삽입 (v1.3 — 모든 history를 timeline에 노출)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>
+              · <code>Scaffold</code> + Material <code>AppBar(title: '심사 상태')</code><br>
+              · <a href="/components#MinglitAsyncValueWidget"><code>MinglitAsyncValueWidget&lt;EventApplication&gt;</code></a><br>
+              · <code>SingleChildScrollView</code> + <code>Column</code> (<strong>2 카드 stack — Hero + Timeline</strong>) — v1.3에서 신청 답변 카드 폐기, timeline 안 통합<br>
+              · Hero card: thumb + 이벤트명 + 일시 + 장소<br>
+              · Timeline card: <a href="/components#MinglitTimeline"><code>MinglitTimeline</code></a> + <code>MinglitTimelineStep</code> (v1.8 — mds 컴포넌트로 promoted) + step 내부 children에 <code>_StepAnswers</code>(collapsible · <code>AnimatedSize</code>) + <code>_AnswerRow</code> × N + 검토자 코멘트 row 주입<br>
+              · <code>MinglitImage</code> (이미지 답변 thumbnail)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>
+              · color: <code>color-surface</code> (scaffold + AppBar bg), <code>color-background</code> (카드 bg), <code>color-text-primary</code> (제목 / 답변 본문), <code>color-text-secondary</code> (일시 / 라벨 / 시점 / chevron / muted detail), <code>color-divider</code> (timeline line · KeyValueRow separator), <code>color-success</code> (completed dot), <code>color-primary</code> (active dot · pulse), <code>color-error</code> (failed dot — state 3·5에서)<br>
+              · radius: <code>radius-card (16px)</code>, <code>radius-small (8px)</code> (이미지 thumbnail · ReasonBox), 50% (timeline dot)<br>
+              · spacing: <code>spacing-medium (16px)</code> (body padding 좌/우/하단 · top은 0 v1.6 · card padding · 카드 gap · 섹션 제목→내용), <code>spacing-large (24px)</code> (timeline step 간 gap), <code>spacing-sm (12px)</code> (ReasonBox padding · timeline dot column width 32-2*dot edge), <code>spacing-small (8px)</code> (step title↔time gap inline · step→reason gap · Hero 제목↔chevron gap), <code>spacing-xsmall (4px)</code> (이미지 라벨 gap · 답변 row label↔value gap)<br>
+              · animation: <code>MinglitAnimation.fast (200ms)</code> (chevron rotate · expand/collapse), 1.4s (active dot pulse — 토큰 미정의 · ms 직접 명시)<br>
+              · typography: appBarTitle (18/600), titleMedium bold (Hero 이벤트명), labelLarge bold (섹션 제목 · 신청 답변 헤더), bodyMedium w600 (step title), bodyMedium (답변 본문), bodySmall (Hero 일시 · step time · detail muted), labelSmall bold uppercase (ReasonBox 라벨 · 답변 라벨)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 ⓐ Hero (tappable v1.6 — chevron right) · ⓑ Timeline (제출한 정보 default 접힘 v1.4 · 사용자가 토글로 펼침). v1.3에서 신청 답변 카드를 timeline 안 통합. v1.4에서 default 접힘 통일.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ─── State 2: 완료 (paid / approved) ──────────── -->
+      <table class="ref state-mini">
+        <thead><tr><th colspan="3"><strong>Default · 완료 (paid / approved)</strong> <small>모든 step completed · CTA 없음 · 제출한 정보 default 접힘</small></th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport ear-viewport">
+                <div class="ear-appbar">
+                  <span class="ear-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></span>
+                  <h2>심사 상태</h2>
+                </div>
+                <div class="ear-body">
+                  <div class="ear-card ear-hero">
+                    <div class="ear-hero__thumb">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="15" r="2"/></svg>
+                    </div>
+                    <div class="ear-hero__heading">
+                      <span class="ear-hero__title">스피드 데이팅 · 강남 라운지</span>
+                      <span class="ear-hero__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+                    </div>
+                    <div class="ear-hero__meta">5월 4일 (월) 20:00</div>
+                    <div class="ear-hero__meta ear-hero__meta--muted">강남역 5번 출구 · 라운지B</div>
+                  </div>
+                  <div class="ear-card">
+                    <div class="ear-section__title">진행 단계</div>
+                    <div class="ear-timeline">
+                      <div class="ear-step ear-step--completed">
+                        <span class="ear-step__dot"></span>
+                        <div class="ear-step__heading">
+                          <span class="ear-step__title">신청</span>
+                          <span class="ear-step__time">2026.04.10 19:42</span>
+                        </div>
+                        <div class="ear-step__answers ear-step__answers--collapsed">
+                          <button class="ear-step__answers__toggle">
+                            제출한 정보 보기
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                          </button>
+                        </div>
+                      </div>
+                      <div class="ear-step ear-step--completed">
+                        <span class="ear-step__dot"></span>
+                        <div class="ear-step__heading">
+                          <span class="ear-step__title">결제 완료</span>
+                          <span class="ear-step__time">2026.04.10 19:43 · 25,000원</span>
+                        </div>
+                      </div>
+                      <div class="ear-step ear-step--completed">
+                        <span class="ear-step__dot"></span>
+                        <div class="ear-step__heading">
+                          <span class="ear-step__title">승인됨</span>
+                          <span class="ear-step__time">2026.04.13 11:08</span>
+                        </div>
+                        <div class="ear-step__reason">
+                          <span class="ear-step__reason__label">강남 라운지 운영팀</span>
+                          신청 감사합니다. 이벤트 당일 뵙겠습니다.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>↔ 신청·결제·심사 모두 통과한 happy path. paid(자격 심사 X)와 approved(자격 심사 O 통과)로 분기되지만 시각적으로는 거의 동일 — title만 "신청 완료" / "승인됨" 다름.</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>동일: Hero tap / 신청 step의 "제출한 정보 보기" 토글 / 뒤로 가기<br>− 종결 step CTA 없음 (이미 통과 — "다시 신청하기" 미렌더)</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>· paid (자격 심사 X)에서 step 2개로 압축 — "심사" step skip · 마지막 step "결제 완료"가 terminal (detail "이벤트 당일 체크인하세요")<br>· approved에서 마지막 step "승인됨" + ReasonBox(라벨 검토자 이름, 본문 환영 메시지) 노출. paid에서는 ReasonBox 미렌더 (검토자 개념 없음)</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ 마지막 step dot: active → completed (success)<br>− CTA "다시 신청하기" 미렌더<br>+ <strong>ReasonBox</strong> (approved일 때 — 라벨 검토자 / 본문 환영 메시지)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>− <code>color-primary</code> · pulse animation 미사용<br>동일: 그 외</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 paid·approved에서 사용자 진입 빈도 낮음 (timeline이 단순). 다만 "내가 뭘 적어 냈지?" 확인하러 들어오는 케이스를 위해 제출한 정보 collapsible은 살아있음 (default 접힘 · 토글로 펼침).</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── State 3: 거절됨 ──────────── -->
+      <table class="ref state-mini">
+        <thead><tr><th colspan="3"><strong>Default · 거절됨</strong> <small>rejected · 마지막 step failed (error) · ReasonBox + 검토자 + CTA · 제출한 정보 default 접힘 (v1.4)</small></th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport ear-viewport">
+                <div class="ear-appbar">
+                  <span class="ear-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></span>
+                  <h2>심사 상태</h2>
+                </div>
+                <div class="ear-body">
+                  <div class="ear-card ear-hero">
+                    <div class="ear-hero__thumb">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="15" r="2"/></svg>
+                    </div>
+                    <div class="ear-hero__heading">
+                      <span class="ear-hero__title">봄 가든 파티</span>
+                      <span class="ear-hero__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+                    </div>
+                    <div class="ear-hero__meta">4월 20일 (일) 18:00</div>
+                    <div class="ear-hero__meta ear-hero__meta--muted">서울숲 가든존</div>
+                  </div>
+                  <div class="ear-card">
+                    <div class="ear-section__title">진행 단계</div>
+                    <div class="ear-timeline">
+                      <div class="ear-step ear-step--completed">
+                        <span class="ear-step__dot"></span>
+                        <div class="ear-step__heading">
+                          <span class="ear-step__title">신청</span>
+                          <span class="ear-step__time">2026.04.10 19:42</span>
+                        </div>
+                        <div class="ear-step__answers ear-step__answers--collapsed">
+                          <button class="ear-step__answers__toggle">
+                            제출한 정보 보기
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                          </button>
+                          <div class="ear-step__answers__content">
+                            <div class="ear-answer-row">
+                              <span class="ear-answer-row__label">자기소개</span>
+                              <span class="ear-answer-row__value">야외 모임 좋아하는 직장인입니다.</span>
+                            </div>
+                            <div class="ear-answer-row">
+                              <span class="ear-answer-row__label">프로필 사진</span>
+                              <div class="ear-answer-row__photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="9" r="3"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></svg></div>
+                            </div>
+                            <div class="ear-step__answers__comment">
+                              <span class="ear-step__answers__comment__label">검토자 메모</span>
+                              <div class="ear-step__answers__comment__body">사진이 흐려서 본인 확인 어려움</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="ear-step ear-step--completed">
+                        <span class="ear-step__dot"></span>
+                        <div class="ear-step__heading">
+                          <span class="ear-step__title">결제 완료</span>
+                          <span class="ear-step__time">2026.04.10 19:43 · 15,000원</span>
+                        </div>
+                      </div>
+                      <div class="ear-step ear-step--failed">
+                        <span class="ear-step__dot"></span>
+                        <div class="ear-step__heading">
+                          <span class="ear-step__title">거절됨</span>
+                          <span class="ear-step__time">2026.04.13 11:08</span>
+                        </div>
+                        <div class="ear-step__reason">
+                          <span class="ear-step__reason__label">서울 숲 파티 운영팀</span>
+                          제출하신 프로필 사진의 화질이 낮아 본인 확인이 어렵습니다. 다음 신청 시에는 정면 사진을 부탁드려요.
+                        </div>
+                      </div>
+                    </div>
+                    <button class="ear-card-cta">다시 신청하기</button>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>↔ 파트너가 신청을 거절. 자동 환불도 함께 처리됨 (부모 detail의 State 3 환불 완료와 짝).</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              + <strong>"다시 신청하기" 탭</strong> (timeline 카드 마지막 FilledButton) → <strong>이벤트 detail page push</strong> (status 통일 동작 · v1.10). detail에서 사용자가 신청 버튼 다시 누르면 wizard 진입 — backend는 같은 applicationId의 snapshot_data array에 새 entry append + status 'pending_review' 전환 (Model 1 — history 누적)<br>
+              + <strong>"제출한 정보 보기" 토글 탭</strong> (신청 step 안) → 답변 + 검토자 메모 펼침 — 거절 사유와 비교 가능<br>
+              동일: Hero tap / 뒤로 가기
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · <strong>거절 사유 미설정</strong> — ReasonBox에 "(사유 미기재)" placeholder<br>
+              · <strong>거절 사유가 매우 김</strong> — 줄바꿈 그대로 노출, 카드가 길어짐<br>
+              · <strong>이벤트 종료 후 진입</strong> — detail page에서 모집 종료 상태가 보임 (신청 버튼 disabled). 사용자가 detail에서 다른 이벤트 탐색하거나 뒤로 가기<br>
+              · <strong>검토자 정보 누락</strong> — ReasonBox 라벨이 "(검토자)" 또는 비워둠 — 본문(사유)만 노출
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>
+              + <strong>Step "심사 진행"</strong> (completed · success — 심사가 진행됐다가 거절됨) + <strong>Step "거절됨"</strong> (failed · error)<br>
+              + <strong>ReasonBox 말풍선 톤</strong> (v1.2 — bg 4% subtle neutral · radius 12 · border 없음) — 라벨 = 검토자 이름 / 본문 = 거절 사유<br>
+              + <strong>검토자 메모</strong> (신청 step의 collapsible 안 — entry.comments)<br>
+              + <strong>FilledButton</strong> "다시 신청하기" (primary 채움 · timeline card 마지막 element · v1.6)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>
+              + <code>color-error</code> (failed dot · ReasonBox border / bg tint · step title)<br>
+              + 6% (ReasonBox bg alpha)<br>
+              + <code>color-primary</code> (CTA 텍스트 + border)<br>
+              동일: 그 외
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 거절 사유는 부모 detail에서 미노출이었던 핵심 정보 — 이 페이지의 가장 중요한 가치. ReasonBox 좌측 3px error border가 "이게 핵심" 시그널. CTA OutlinedButton(채우지 않은 형태)을 쓴 이유: 이 페이지의 종결 액션이 destructive 아니라 forward-looking — primary 채워진 ElevatedButton보다 가벼운 위계가 자연.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ─── State 4: 취소됨 (user / auto 통합) ──────────── -->
+      <table class="ref state-mini">
+        <thead><tr><th colspan="3"><strong>Default · 취소됨</strong> <small>cancelled — user / auto(이벤트 시작 / 심사 지연) 통합 · ReasonBox neutral · CTA</small></th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport ear-viewport">
+                <div class="ear-appbar">
+                  <span class="ear-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></span>
+                  <h2>심사 상태</h2>
+                </div>
+                <div class="ear-body">
+                  <div class="ear-card ear-hero">
+                    <div class="ear-hero__thumb">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="15" r="2"/></svg>
+                    </div>
+                    <div class="ear-hero__heading">
+                      <span class="ear-hero__title">봄 가든 파티</span>
+                      <span class="ear-hero__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+                    </div>
+                    <div class="ear-hero__meta">4월 20일 (일) 18:00</div>
+                    <div class="ear-hero__meta ear-hero__meta--muted">서울숲 가든존</div>
+                  </div>
+                  <div class="ear-card">
+                    <div class="ear-section__title">진행 단계</div>
+                    <div class="ear-timeline">
+                      <div class="ear-step ear-step--completed">
+                        <span class="ear-step__dot"></span>
+                        <div class="ear-step__heading">
+                          <span class="ear-step__title">신청</span>
+                          <span class="ear-step__time">2026.04.10 19:42</span>
+                        </div>
+                        <div class="ear-step__answers ear-step__answers--collapsed">
+                          <button class="ear-step__answers__toggle">
+                            제출한 정보 보기
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                          </button>
+                        </div>
+                      </div>
+                      <div class="ear-step ear-step--completed">
+                        <span class="ear-step__dot"></span>
+                        <div class="ear-step__heading">
+                          <span class="ear-step__title">결제 완료</span>
+                          <span class="ear-step__time">2026.04.10 19:43 · 15,000원</span>
+                        </div>
+                      </div>
+                      <div class="ear-step ear-step--cancelled">
+                        <span class="ear-step__dot"></span>
+                        <div class="ear-step__heading">
+                          <span class="ear-step__title">취소됨</span>
+                          <span class="ear-step__time">2026.04.13 11:08</span>
+                        </div>
+                        <div class="ear-step__reason">
+                          <span class="ear-step__reason__label">시스템</span>
+                          이벤트 시작 시점에 도달하여 자동 취소되었습니다. 결제 금액은 자동 환불 처리됐어요.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>↔ 사용자가 직접 취소했거나 시스템이 자동 취소(이벤트 시작 도래 / 심사 지연 등)한 상태. 자동 환불 처리도 보통 함께 (부모 detail의 State 3과 짝).</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              − "다시 신청하기" 탭 (CTA 미노출 — v1.1: 사용자가 이미 결정한 액션 직후 즉각 재신청 prompt는 부자연스럽고, 자동 취소 케이스도 같은 이벤트 재신청 의미 X)<br>
+              동일: Hero tap / 신청 step의 "제출한 정보 보기" 토글 / 뒤로 가기
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · <strong>사용자 직접 취소</strong> — 사유 카피: "사용자가 직접 취소했습니다" 또는 사용자 입력 사유 (있으면)<br>
+              · <strong>이벤트 시작 도래 자동 취소</strong> — "이벤트 시작 시점에 도달하여 자동 취소되었습니다. 결제 금액은 자동 환불 처리됐어요."<br>
+              · <strong>심사 지연 자동 취소</strong> — "심사가 완료되지 못해 자동 취소되었습니다."<br>
+              · 카피는 backend가 setting하는 cancellation_reason 필드 그대로 노출 — 시스템 사유는 문장 그대로, 사용자 입력 사유는 따옴표로 감싸 표기 (UI가 구분 어휘 제공)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>
+              ↔ 마지막 step dot: success → <strong>cancelled (neutral)</strong><br>
+              ↔ ReasonBox 라벨: 검토자 이름 → <strong>"시스템" 또는 "본인"</strong> (자동 vs 사용자 직접 분기)<br>
+              − ReasonBox 색 분기 폐기 (v1.2 — 단일 neutral 스타일)<br>
+              − CTA "다시 신청하기" (v1.1 — cancelled에서는 미렌더)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>
+              ↔ ReasonBox color: <code>color-error</code> → <code>color-text-secondary</code> (border + bg tint)<br>
+              ↔ 마지막 step title color: error → onSurface (cancelled는 강조 없음)<br>
+              − pulse animation 미사용
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 자동 취소를 별도 state로 빼지 않은 게 핵심 결정. user/system 통합한 "취소됨" 단일 state + reason 변형으로 처리. 사용자에게 "왜 취소됐는지"가 명확하면 충분 — 시스템/사용자 출처는 카피 어휘로 자연스럽게 구분 (예: "자동 취소되었습니다" vs "직접 취소했습니다").</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ─── State 5: 결제 실패 ──────────── -->
+      <table class="ref state-mini">
+        <thead><tr><th colspan="3"><strong>Default · 결제 실패</strong> <small>payment_failed · 결제 step에서 failed · ReasonBox + CTA</small></th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport ear-viewport">
+                <div class="ear-appbar">
+                  <span class="ear-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></span>
+                  <h2>심사 상태</h2>
+                </div>
+                <div class="ear-body">
+                  <div class="ear-card ear-hero">
+                    <div class="ear-hero__thumb">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="15" r="2"/></svg>
+                    </div>
+                    <div class="ear-hero__heading">
+                      <span class="ear-hero__title">봄 가든 파티</span>
+                      <span class="ear-hero__chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>
+                    </div>
+                    <div class="ear-hero__meta">4월 20일 (일) 18:00</div>
+                    <div class="ear-hero__meta ear-hero__meta--muted">서울숲 가든존</div>
+                  </div>
+                  <div class="ear-card">
+                    <div class="ear-section__title">진행 단계</div>
+                    <div class="ear-timeline">
+                      <div class="ear-step ear-step--completed">
+                        <span class="ear-step__dot"></span>
+                        <div class="ear-step__heading">
+                          <span class="ear-step__title">신청</span>
+                          <span class="ear-step__time">2026.04.18 21:14</span>
+                        </div>
+                      </div>
+                      <div class="ear-step ear-step--failed">
+                        <span class="ear-step__dot"></span>
+                        <div class="ear-step__heading">
+                          <span class="ear-step__title">결제 실패</span>
+                          <span class="ear-step__time">2026.04.18 21:14</span>
+                        </div>
+                        <div class="ear-step__reason">
+                          <span class="ear-step__reason__label">시스템</span>
+                          카드 인증에 실패했습니다. 다른 결제 수단으로 다시 시도해주세요.
+                        </div>
+                      </div>
+                    </div>
+                    <button class="ear-card-cta">다시 신청하기</button>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>↔ 결제 자체가 실패한 상태 — 신청은 시도됐으나 결제 처리가 안 됨. 환불 자체 개념 없음 (부모 detail의 State 4와 짝).</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ "다시 신청하기" 탭 (timeline card 마지막) → 이벤트 detail page push (v1.10 통일 동작). detail에서 신청 버튼 → 결제 재시도. backend는 같은 applicationId status 전환 (payment_failed → paid · Model 1)<br>− 신청 step의 "제출한 정보 보기" 토글 미렌더 가능 (snapshotData 비어있을 때)<br>동일: Hero tap / 뒤로 가기</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>· timeline step이 2개로 짧음 (신청 → 결제 실패) — 심사 step 도달 못 함<br>· 첫 step title "신청" — 다른 state와 동일 카피로 일관 (snapshotData가 만들어졌다면 신청은 끝났고 결제만 실패)<br>· snapshotData 비어 있으면 신청 step의 "제출한 정보 보기" 토글 자체 미렌더 — 결제 실패 케이스에선 답변 입력 전에 결제 실패할 수도</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ Step 수: 4 → 2 (신청 + 결제 실패)<br>− Step "심사 진행" + Step "결과" 미렌더<br>↔ Step 2(결제) dot: completed → <strong>failed (error)</strong><br>+ ReasonBox 말풍선 톤 (state 3과 동일 스타일 · 라벨 "시스템")<br>+ CTA "다시 신청하기" (timeline 카드 마지막)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-error</code> (Step 2 dot · step title)<br>동일: 그 외</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 결제 실패는 자격 인증 답변(snapshotData) 입력 전에 발생할 수도 있음. 그 경우 신청 step의 "제출한 정보 보기" 토글 미렌더. 첫 step 카피는 단순히 "신청" — 다른 state와 일관 (v1.5).</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── State 6: Loading ──────────── -->
+      <table class="ref state-mini">
+        <thead><tr><th colspan="3"><strong>Loading</strong> <small>async fetch 진행 중</small></th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport ear-viewport">
+                <div class="ear-appbar">
+                  <span class="ear-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></span>
+                  <h2>심사 상태</h2>
+                </div>
+                <div class="ear-loading"><div class="ear-spinner"></div></div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>화면 진입 직후 application + submission 정보를 불러오는 중. 부모 detail에서 이미 application을 갖고 진입하므로 보통 거의 발생 안 함 — deep-link 진입 시만.</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>↔ 모든 액션 무반응<br>동일: 뒤로 → 부모 detail로 복귀</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>· 네트워크 느릴 때 spinner 길게 노출<br>· 토큰 만료 시 자동으로 error 화면으로 전환</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ 모든 카드 → <code>MinglitCircularProgressIndicator</code> · 화면 중앙</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>− 카드 토큰 모두 미사용<br>+ <code>color-primary</code> (spinner)</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 부모 detail에서 객체 함께 push하면 즉시 default state. Loading은 deep-link에서만.</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── State 7: Error ──────────── -->
+      <table class="ref state-mini">
+        <thead><tr><th colspan="3"><strong>Error</strong> <small>fetch 실패 — 네트워크 / RLS / 서버</small></th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="state-mini__mock" rowspan="6">
+              <div class="viewport ear-viewport">
+                <div class="ear-appbar">
+                  <span class="ear-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></span>
+                  <h2>심사 상태</h2>
+                </div>
+                <div class="ear-error">
+                  <div class="ear-error__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="13"/><circle cx="12" cy="16.5" r="0.7" fill="currentColor"/></svg></div>
+                  <div class="ear-error__title">오류가 발생했습니다.</div>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>↔ 네트워크 / 권한 / 서버 오류로 application + submission을 받아오지 못함.</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>− 모든 카드/버튼 액션 없음<br>동일: 뒤로 → 부모 detail로 복귀<br>− 화면 내 재시도 버튼 없음</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>· 에러 본문 노출 X<br>· 토큰 만료도 동일 화면</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ 모든 카드 → <code>_DefaultErrorView</code> (Icons.error_outline + Text)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ <code>color-error</code> (icon)<br>+ <code>color-text-primary</code> (title)<br>+ spacing: <code>spacing-large</code> · <code>spacing-medium</code></td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 화면 내 재시도 CTA 없음 (Phase 2). 부모 detail spec과 동일 패턴.</td></tr>
+        </tbody>
+      </table>
+
+    </div>
+  </section>
+</div>
+
+<!-- ============================================================
+     GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">cross-cutting — 모든 state에 적용되는 액션, motion, 글로벌 에지케이스.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr></thead>
+      <tbody>
+        <tr><td>뒤로 가기</td><td>부모 PurchaseHistoryDetailPage로 복귀.</td></tr>
+        <tr><td>다크 모드 토글</td><td>scaffold / 카드 / dot / ReasonBox 모두 dark 토큰으로 swap. dot success/error/primary는 light/dark colorset 자동 대응.</td></tr>
+        <tr><td>버튼 / row tap haptic</td><td>InkWell ripple + Material default haptic light. 카드 본체 자체는 tap 액션 없음 — 신청 답변 헤더, 종결 step CTA만 액션.</td></tr>
+        <tr><td>풀-다운 새로고침</td><td><strong>구현 안 함</strong> — review는 본질적으로 historical view. 갱신은 부모 detail로 돌아갔다 다시 진입.</td></tr>
+        <tr><td>부모 detail → 진입</td><td>extra: application + submission 함께 push 권장. id만으로 deep-link도 허용 — 이때 Loading.</td></tr>
+        <tr><td>"다시 신청하기" tap (v1.10)</td><td><strong>이벤트 detail page로 push</strong> (모든 status에서 통일 동작 — rejected / payment_failed). detail이 이벤트 현재 상태(모집 중/종료/만석)를 보여주고 사용자가 detail의 신청 버튼 → wizard 또는 결제 재시도. backend 측은 <strong>Model 1 — 같은 applicationId 안 status 전환 + snapshot_data array append</strong> (history 누적). 새 application 생성 X.</td></tr>
+        <tr><td>Hero card tap (v1.6)</td><td>EventDetailRoute로 push — 이벤트 상세 페이지로 이동. 모든 state에서 동일 동작 (Hero card 자체는 status에 무관). 이벤트가 삭제됐으면 EventDetailPage가 ErrorView 표시 (별도 fallback 없음).</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion timing</h2>
+    <p class="intro">Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code> → <code>MinglitAnimation</code>.</p>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Transition</th><th style="width: 200px;">Token / Duration</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>부모 detail → review push</td><td><code>MinglitAnimation.fast</code> (200ms)</td><td>GoRouter Material default 좌→우 slide.</td></tr>
+        <tr><td>"제출한 정보" collapsible expand/collapse (신청 step 안)</td><td><code>MinglitAnimation.fast</code> (200ms)</td><td>AnimatedSize 자동 ease + toggle chevron rotate 180°.</td></tr>
+        <tr><td>Active step dot pulse</td><td><em>(unscoped)</em> 1.4s loop</td><td>opacity 1 → 0.5 → 1 + scale 1 → 0.85 → 1. 토큰 미정의 — ms 직접 명시. 현재 단계가 진행 중임을 시각 시그널.</td></tr>
+        <tr><td>"다시 신청하기" tap → 이벤트 detail push</td><td><code>MinglitAnimation.fast</code> (200ms)</td><td>GoRouter default. detail에서 추가 신청 흐름은 EventDetailPage spec 참조.</td></tr>
+        <tr><td>InkWell ripple</td><td><code>MinglitAnimation.micro</code> (100ms)</td><td>Material default ripple.</td></tr>
+        <tr><td>Step dot 색 변경 (status 변동 시)</td><td>cut</td><td>화면 진입 시 한 번만 결정 — 진입 중 status 변경되면 재진입까지 갱신 안 됨.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>application + submission 둘 다 fetch 필요</strong> — application은 부모 detail에서 받아온 것 재사용 권장(extra push). submission은 별도 fetch 또는 application과 함께 join. submission 없으면 신청 step의 "제출한 정보 보기" 토글이 미렌더 (timeline은 그대로).</li>
+      <li><strong>자격 심사 없는 이벤트 (submission == null)</strong> — 신청 step의 제출한 정보 토글 미렌더 + timeline의 "심사" step skip → step 2개로 압축 (신청 → 결제 완료, 결제가 terminal).</li>
+      <li><strong>cancellation_reason / rejectionReason 시스템 vs 사용자 입력 구분</strong> — backend가 시스템 사유는 plain text, 사용자 입력 사유는 quoted 또는 별도 flag로 구분. UI는 카피 어휘로 자연스럽게 ("자동 취소되었습니다" vs "직접 취소했습니다") — backend 스키마 확정 시 동기화 필요 (TBD).</li>
+      <li><strong>다크 모드</strong> — 카드 bg → <code>color-dark-surface</code>, scaffold → <code>color-dark-background</code>, ReasonBox bg/border는 dark colorset 알파로 swap.</li>
+      <li><strong>접근성</strong> — Active dot pulse는 시각 단서. screen reader에는 step title이 명확("심사 진행 중", "거절됨", "결제 실패") + reason 본문이 그대로 읽힘. 신청 step의 "제출한 정보 보기" 토글은 <code>aria-expanded</code> 적용 권장. Hero card는 <code>InkWell</code>이라 screen reader가 "버튼 — 이벤트 상세로 이동"으로 읽음.</li>
+      <li><strong>저성능 디바이스</strong> — pulse animation이 부담될 수 있음 — <code>MediaQuery.of(context).disableAnimations</code> 시 pulse 제거하고 정적 dot으로 fallback.</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">implementation source + 인접 화면. 🚧 디자인중 — 미존재 항목은 TBD.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <tbody>
+        <tr><th style="width: 200px;">Widget class</th><td><code>EventApplicationReviewPage</code> · <code>TBD</code></td></tr>
+        <tr><th>File path</th><td><code>apps/app_user/lib/src/features/event/admission/event_application_review_page.dart</code> · <code>TBD</code></td></tr>
+        <tr><th>Controller</th><td>부모 detail의 <code>PurchaseHistoryController</code> 재사용 (단일 application 조회) 또는 별도 <code>EventApplicationReviewController</code> 신규 — submission(VerificationSubmission) join 포함 · <code>TBD</code></td></tr>
+        <tr><th>Route</th><td><code>EventApplicationReviewRoute</code> · path: <code>/purchase-history/:applicationId/review</code> · <code>TBD</code></td></tr>
+        <tr><th>Repository</th><td><code>eventRepositoryProvider.getApplicationById(id)</code> + <code>verificationRepositoryProvider.getSubmissionByApplicationId(id)</code> · <code>TBD</code></td></tr>
+        <tr><th>Async wrapper</th><td><a href="/components#MinglitAsyncValueWidget"><code>MinglitAsyncValueWidget</code></a></td></tr>
+        <tr><th>Timeline 컴포넌트</th><td><a href="/components#MinglitTimeline"><code>MinglitTimeline</code></a> + <code>MinglitTimelineStep</code> (v1.8 promoted) — mds_core에 widget 신규 추가 필요 (TBD). step 내부 컨텐츠는 children slot으로 주입.</td></tr>
+        <tr><th>신청 답변 위젯</th><td>file-private <code>_AnswersCard</code> + <code>_AnswerRow</code> — collapsible (AnimatedSize · ExpansionTile 변형 또는 직접 구현)</td></tr>
+        <tr><th>"다시 신청하기" 라우팅</th><td><code>EventDetailRoute(eventId)</code>로 단일 push (v1.10 통일 동작). detail에서 status 분기 처리.</td></tr>
+        <tr><th>Icons (Material)</th><td><code>arrow_back</code> · <code>error_outline</code> · <code>expand_more</code> (chevron — 답변 카드 toggle) · <code>chevron_right</code> (CTA 화살표)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>후속 작업 (이 review가 활성되려면 필요한 변경)</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 280px;">변경 항목</th><th>설명</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Flutter — 위젯 / 라우트 신규</strong></td><td><code>EventApplicationReviewPage</code> + <code>EventApplicationReviewRoute</code> 추가 (app_user). 부모 detail의 심사 상태 row tap이 이 라우트로 push.</td></tr>
+        <tr><td><strong>Backend — cancellation_reason 필드 표준화</strong></td><td>EventApplication에 <code>cancellation_reason</code> 컬럼 (또는 동등) 추가 + 시스템 사유 / 사용자 입력 사유 구분 (별도 enum 또는 flag). 현재 모델은 <code>rejectionReason</code>만 있음 — cancelled 케이스의 사유 표현 필드 부재.</td></tr>
+        <tr><td><strong>Backend — review_started_at / reviewedAt 노출</strong></td><td>timeline의 "심사 진행" step time을 표시하려면 검토 시작 시점이 backend 응답에 있어야 함. 현재 <code>VerificationSubmission.reviewedAt</code>은 종료 시점만 — <code>reviewStartedAt</code>(또는 동등) 추가 필요. 또는 application의 <code>updatedAt</code> + 상태 전이 history로 유추.</td></tr>
+        <tr><td><strong>Backend — snapshotData 스키마 확정</strong></td><td>현재 <code>List&lt;dynamic&gt;</code> 자유형 — UI가 라벨/본문/이미지 매핑하려면 typed item structure 필요 (예: <code>{type: 'text'|'image'|'choice', label: string, value: any}</code>).</td></tr>
+        <tr><td><strong>"다시 신청하기" 라우팅 로직</strong></td><td>v1.10에서 <code>EventDetailRoute(eventId)</code> 단일 push로 통일 — detail이 이벤트 현재 상태 + 신청 흐름을 처리. controller는 분기 없이 단순 push.</td></tr>
+        <tr><td><strong>Backend — 재신청 / 결제 재시도 모델 (Model 1)</strong></td><td>같은 applicationId 안에서 status 전환 + snapshot_data array에 새 entry append (history 누적). 검토: (a) rejected / cancelled → pending_review 전환 허용, (b) payment_failed → paid 전환 허용, (c) DB 측 user_id × event_id unique constraint 여부 (있으면 Model 1 강제, 없으면 정책 결정 필요). 새 application 생성 모델(Model 2)은 history 분리되어 timeline의 의미 약해짐 — 채택 X.</td></tr>
+        <tr><td><strong>Spec — 부모 detail의 후속 작업 표 업데이트</strong></td><td><a href="/specs/purchase_history_detail_page/index.html"><code>PurchaseHistoryDetailPage</code></a>의 후속 작업 표에서 "심사 상태 detail spec 신규" 항목 → 머지됨으로 표시 (이번 spec 머지 후).</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr><td><a href="/specs/purchase_history_detail_page/index.html"><code>PurchaseHistoryDetailPage</code></a></td><td>부모 — 심사 상태 row tap 시 이 review page로 push.</td></tr>
+        <tr><td><a href="/specs/purchase_history_page/index.html"><code>PurchaseHistoryPage</code></a></td><td>조부 — 리스트 → detail → review 흐름.</td></tr>
+        <tr><td><a href="/specs/event_detail_page/index.html"><code>EventDetailPage</code></a></td><td>"다시 신청하기" CTA의 단일 push 대상 (v1.10). detail이 이벤트 현재 상태 + 신청 흐름을 통합 처리.</td></tr>
+        <tr><td><a href="/specs/event_application_wizard_page/index.html"><code>EventApplicationWizardPage</code></a></td><td>EventDetail의 신청 버튼 → 이 wizard로 push (간접). review에서 직접 진입하지 않음.</td></tr>
+        <tr><td><a href="/specs/event_application_detail_page/index.html"><code>EventApplicationDetailPage</code></a> <em>(app_partner)</em></td><td>대칭 화면 — 파트너가 보는 신청 detail. 같은 application을 다른 시점(파트너→신청자)에서 봄. 거절 사유 작성도 그쪽에서.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>

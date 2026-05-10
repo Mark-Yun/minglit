@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — SettlementPage (app_partner · SettlementRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   SettlementPage-specific atoms.
+
+   Partner app theme:
+   - Page (Scaffold) bg = light gray (var(--color-surface))
+   - AppBar matches scaffold (light gray) — but TabBar adds an
+     explicit bottom hairline divider since TabBar.bottom is a
+     PreferredSizeWidget under the AppBar.
+   - Brand primary = MinglitPartnerColors.primary (#6c3ce1 — indigo)
+     → use via var(--color-partner-primary). Scoped to .viewport
+     so docs chrome stays neutral.
+   ============================================================ */
+.viewport {
+  --color-primary: var(--color-partner-primary);   /* #6c3ce1 */
+  --spec-blueprint-rgb: 108, 60, 225;
+}
+body.dark-mode .viewport {
+  --color-primary: var(--color-partner-dark-primary); /* #9b7bec */
+}
+
+/* --- App bar (default · scaffold gray, no border) --- */
+.sp-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  background: var(--color-surface);
+  padding: 0 var(--spacing-xsmall);
+}
+.sp-appbar__title {
+  flex: 1;
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  padding-left: var(--spacing-medium);
+}
+.sp-appbar__action {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+}
+.sp-appbar__action svg {
+  width: 22px; height: 22px;
+  color: var(--color-text-primary);
+}
+
+/* --- TabBar (2 tabs · partner primary indicator) --- */
+.sp-tabbar {
+  height: 48px;
+  display: flex;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-divider);
+}
+.sp-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--typography-font-size-body);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  position: relative;
+}
+.sp-tab--active {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+.sp-tab--active::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 2px;
+  background: var(--color-primary);
+}
+
+/* --- Body (List tab) --- */
+.sp-body {
+  position: absolute;
+  top: 104px;          /* 56 appbar + 48 tabbar */
+  left: 0; right: 0; bottom: 0;
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Filter chip row --- */
+.sp-chips {
+  display: flex;
+  gap: var(--spacing-small);
+  padding: var(--spacing-small) var(--spacing-medium);
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: var(--color-surface);
+}
+.sp-chips::-webkit-scrollbar { display: none; }
+.sp-chip {
+  height: 32px;
+  padding: 0 var(--spacing-sm);
+  border-radius: var(--radius-chip);
+  display: flex;
+  align-items: center;
+  font-size: var(--typography-font-size-caption);
+  font-weight: 600;
+  flex-shrink: 0;
+  border: 1px solid var(--color-divider);
+  background: var(--color-background);
+  color: var(--color-text-secondary);
+}
+.sp-chip--active {
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  color: var(--color-primary);
+  border-color: transparent;
+}
+
+/* --- Scrollable list area --- */
+.sp-list {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: none;
+  background: var(--color-background);
+}
+.sp-list::-webkit-scrollbar { display: none; }
+
+/* --- Month header (sticky-look · onSurfaceVariant bold) --- */
+.sp-month {
+  padding: var(--spacing-medium) var(--spacing-medium) var(--spacing-xsmall);
+  font-size: var(--typography-font-size-caption);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  background: var(--color-background);
+}
+
+/* --- Settlement card row (SettlementCard · InkWell + Padding + Row) --- */
+.sp-card {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-sm) var(--spacing-medium);
+  background: var(--color-background);
+  gap: var(--spacing-sm);
+}
+.sp-card + .sp-card {
+  border-top: 1px solid var(--color-divider);
+}
+.sp-card__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sp-card__title {
+  font-size: var(--typography-font-size-body);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.4;
+}
+.sp-card__date {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+}
+.sp-card__amount {
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+}
+.sp-card__amount--neg { color: var(--color-text-primary); }
+
+/* --- Status badge (mirrors SettlementStatusBadge — see settlement_detail_page) --- */
+.sp-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-xxsmall) var(--spacing-small);
+  border-radius: var(--radius-badge);
+  font-size: var(--typography-font-size-caption);
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.sp-badge--pending {
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+.sp-badge--ready {
+  /* primaryContainer-like — partner primary @ ~10% */
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+}
+.sp-badge--processing {
+  background: rgba(255, 153, 0, 0.12);
+  color: var(--color-secondary);
+}
+.sp-badge--completed {
+  background: rgba(22, 163, 74, 0.10);
+  color: var(--color-success);
+}
+.sp-badge--failed {
+  background: rgba(239, 68, 68, 0.10);
+  color: var(--color-error);
+}
+.sp-badge--hold {
+  background: rgba(239, 68, 68, 0.10);
+  color: var(--color-error);
+}
+.sp-badge--canceled {
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  text-decoration: line-through;
+}
+
+/* --- Dashboard tab — RevenueSummaryCard (gradient) --- */
+.sp-revenue {
+  margin: var(--spacing-medium);
+  padding: var(--spacing-large);
+  border-radius: var(--radius-button);
+  background: linear-gradient(135deg, var(--color-primary) 0%, color-mix(in srgb, var(--color-primary) 60%, white) 100%);
+  color: #fff;
+}
+.sp-revenue__period {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-medium);
+  padding: 0 0 var(--spacing-medium);
+  color: var(--color-text-primary);
+}
+.sp-revenue__period svg { width: 20px; height: 20px; color: var(--color-text-secondary); }
+.sp-revenue__period-label { font-size: var(--typography-font-size-body); font-weight: 700; }
+.sp-revenue__caption {
+  font-size: var(--typography-font-size-caption);
+  opacity: 0.7;
+}
+.sp-revenue__total {
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: -1px;
+  margin-top: 2px;
+}
+.sp-revenue__row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--spacing-small);
+  font-size: var(--typography-font-size-caption);
+}
+.sp-revenue__row-label { opacity: 0.7; }
+
+/* --- Dashboard tab — Status summary grid card --- */
+.sp-grid-card {
+  margin: 0 var(--spacing-medium) var(--spacing-medium);
+  padding: var(--spacing-medium);
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.sp-grid-card__title {
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
+}
+.sp-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-small);
+}
+.sp-grid__cell {
+  aspect-ratio: 1.2 / 1;
+  border-radius: var(--radius-small);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.sp-grid__cell-count {
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  line-height: 1.2;
+}
+.sp-grid__cell-label {
+  font-size: var(--typography-font-size-caption);
+}
+
+/* --- Empty state (centered icon + text + optional CTA) --- */
+.sp-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-medium);
+  padding: var(--spacing-xlarge);
+  text-align: center;
+}
+.sp-empty svg { width: 56px; height: 56px; color: var(--color-text-secondary); opacity: 0.6; }
+.sp-empty__title {
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.sp-empty__sub {
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-secondary);
+  max-width: 240px;
+  line-height: 1.5;
+}
+.sp-empty__cta {
+  margin-top: var(--spacing-small);
+  height: 44px;
+  padding: 0 var(--spacing-large);
+  border-radius: var(--radius-button);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  border: none;
+}
+
+/* --- Spinner --- */
+.sp-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--color-divider);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: sp-spin 0.7s linear infinite;
+  position: absolute;
+  inset: 0;
+  margin: auto;
+}
+@keyframes sp-spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header>
+  <h1>Settlement</h1>
+</header>
+
+<!-- ============================================================
+     OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 5 state · 정산 dashboard + 내역 list parent</em></td>
+      </tr>
+      <tr>
+        <th>App</th>
+        <td><code>app_partner</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>settlement · list · dashboard</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>SettlementRoute</code> · widget: <code>SettlementPage</code> (Scaffold + 2-tab TabBar: 대시보드 / 정산 내역)</td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td><code>/settlement</code></td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <em>— (StatefulShellBranch top-level — bottom nav "정산" 탭)</em><br>
+          <strong>Children</strong>:
+          <a href="/specs/settlement_detail_page/index.html"><code>SettlementDetailPage</code></a>
+          (정산 내역 탭의 카드 탭으로 진입 · <code>/settlement/:id</code>) ·
+          <a href="/specs/bank_account_page/index.html"><code>BankAccountPage</code></a>
+          (AppBar 우측 지갑 아이콘 · <code>/settlement/bank-account</code> · SETTLEMENT_EDIT 권한 보유 시만)
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          파트너가 (1) 월별 정산 대시보드(완료 매출 / 대기 / 상태별 카운트)와
+          (2) 정산 항목 list(상태 필터 + 월별 그룹)를 한 화면에서 확인한다.
+          개별 항목 상세는 <code>SettlementDetailPage</code>로 진입.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: 하단 네비게이션 "정산" 탭 / 푸시 알림(정산 완료) 탭.<br>
+          <strong>Exit points</strong>: 카드 탭 → 정산 상세 화면 · AppBar 지갑 아이콘 → 정산 계좌 화면 (정산 편집 권한 보유 시) · 빈 상태 CTA "첫 이벤트 만들기" → 파티 생성 화면 (다른 탭으로 점프).
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          정산 항목은 7가지 상태(대기 / 준비 / 처리 중 / 완료 / 실패 / 보류 / 취소)로 분류된다. 대시보드 카드는 정산 완료 매출 / 완료 순매출 / 대기 매출 / 상태별 카운트를 보여주며, 정산 내역 리스트는 항목 생성일 기준으로 월별 그룹으로 묶인다.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>월 1–2회 + 정산 완료 알림 수신 시 즉시 진입.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">
+    이 spec의 주요 변경 이력. 최신 항목 위.
+  </p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>v1.4 template으로 작성. SettlementDetailPage의 부모 list/dashboard 화면 신규 spec.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Anchor nav -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      Scaffold + AppBar(title:"정산", actions: 지갑 IconButton, bottom: 2-tab TabBar)
+      + TabBarView(<code>_DashboardTab</code> / <code>_ListTab</code>).
+      List 탭은 StatusFilterChips(8 chips) + ListView(month header + SettlementCard rows).
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- AppBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">① AppBar — "정산" + 지갑 IconButton (SETTLEMENT_EDIT only)</span>
+        </div>
+        <!-- TabBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:56px;left:0;right:0;height:48px;">
+          <span class="blueprint__region-label">② TabBar — 대시보드 · 정산 내역</span>
+        </div>
+        <!-- Filter chips (List tab) -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:112px;left:0;right:0;height:48px;">
+          <span class="blueprint__region-label">③ StatusFilterChips (8 chips · h-scroll · List 탭 한정)</span>
+        </div>
+        <!-- List body -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:168px;left:0;right:0;bottom:0;">
+          <span class="blueprint__region-label">④ ListView — _MonthHeaderWidget + SettlementCard rows<br>(또는 Dashboard 탭: PeriodSelector + RevenueSummaryCard + StatusSummaryGrid)</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">screen-edge pad</div>
+        <div class="blueprint__align-marker" style="bottom:8px;right:8px;">scroll bottom</div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+├─ <b>appBar</b>: AppBar(title: '정산')                    ← ①
+│  ├─ <b>actions</b>: [if canEditSettlement] IconButton(account_balance_wallet_outlined → BankAccount)
+│  └─ <b>bottom</b>: TabBar(controller, length:2)          ← ②
+│     ├─ Tab('대시보드')
+│     └─ Tab('정산 내역')
+└─ <b>body</b>: TabBarView(controller)
+   ├─ <b>_DashboardTab</b> (RefreshIndicator + SingleChildScrollView)
+   │  └─ Column(stretch · padding spacing-medium)
+   │     ├─ <b>_PeriodSelector</b>(selectedMonth · ◀ "YYYY년 M월" ▶)
+   │     ├─ status.when(
+   │     │   data: [
+   │     │     <b>_RevenueSummaryCard</b>(gradient · "정산 완료 매출" 라벨 + 큰 금액 + 완료/대기 행)
+   │     │     <b>_StatusSummaryGrid</b>(Card · 4×2 grid · 7 status)
+   │     │   ],
+   │     │   loading: CircularProgressIndicator,
+   │     │   error:   Text+다시시도 FilledButton)
+   │     └─
+   └─ <b>_ListTab</b> (Column)
+      ├─ <b>StatusFilterChips</b>(MinglitChipGroup · 8 ChoiceChip)   ← ③
+      └─ <b>Expanded</b>                                              ← ④
+         ├─ [error&amp;&amp;empty] <b>MinglitEmptyState</b>(error_outline · "다시 시도")
+         ├─ [empty]         <b>MinglitEmptyState</b>(receipt_long · CTA "첫 이벤트 만들기"
+         │                    필터 없을 때만 · cross-branch root push)
+         └─ [data]          <b>RefreshIndicator</b> → <b>ListView.builder</b>
+            ├─ <b>_MonthHeaderWidget</b>('YYYY년 M월') + …
+            ├─ <b>SettlementCard</b>(item · onTap → SettlementDetailRoute(id))
+            │  └─ Row(Column[정산 항목 / yyyy-MM-dd / ±₩금액] + SettlementStatusBadge)
+            ├─ Divider(1px) · …
+            └─ [isLoading more] CircularProgressIndicator footer</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 220px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>①</td><td>AppBar</td><td>height 56 · title 좌측 (centerTitle 미설정) · action 우측</td><td>표준 AppBar · scaffold-gray bg · 하단 border 없음</td></tr>
+        <tr><td>②</td><td>TabBar</td><td>height 48 · 2 equal-flex tabs · indicator 2px</td><td>indicator color = partner primary · active label = primary, inactive = secondary · 하단 1px <code>color-divider</code></td></tr>
+        <tr><td>③</td><td>StatusFilterChips</td><td>row · h-scroll · 칩 8개 (전체 + 7 status)</td><td>chip 간: <code>spacing-small (8)</code> · row v-pad: <code>spacing-small</code> 위/아래 · h-pad: <code>spacing-medium</code></td></tr>
+        <tr><td>④a</td><td>SettlementCard row (List 탭)</td><td>Row · 좌 Column(title/date/amount stacked) · 우 SettlementStatusBadge</td><td>row pad: <code>spacing-medium (16h)</code> · <code>spacing-sm (12v)</code> · 행 분리: 1px Divider · column 내부: <code>spacing-xsmall (4)</code></td></tr>
+        <tr><td>④b</td><td>_MonthHeaderWidget</td><td>좌측 정렬 · UPPERCASE 아님 · bold</td><td>pad: 16/16/16/4 (top/right/bottom/left? 실제는 16,16,16,4 fromLTRB) · onSurfaceVariant · labelMedium bold</td></tr>
+        <tr><td>④c</td><td>RevenueSummaryCard (Dashboard)</td><td>column start · gradient bg · 큰 금액 강조</td><td>card outer margin: <code>spacing-medium</code> · inner pad: <code>spacing-large (24)</code> · 라벨↔금액: <code>spacing-xsmall</code> · row 간격: <code>spacing-sm</code></td></tr>
+        <tr><td>④d</td><td>StatusSummaryGrid (Dashboard)</td><td>4-col grid · childAspectRatio 1.2 · 7 status (PENDING/READY/PROCESSING/COMPLETED/FAILED/HOLD/CANCELED)</td><td>card inner pad: <code>spacing-medium</code> · grid main/cross spacing: <code>spacing-small</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">시각 변형 5종. baseline = 정산 내역 탭 + 데이터 있음, 나머지는 additive diff.</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      <strong>State 종류 식별 기준</strong>:
+      ① 활성 탭(대시보드 / 정산 내역)
+      ② 정산 항목이 비어있는지 여부 + 상태 필터 선택 여부
+      ③ 정산 목록 조회 실패 여부
+      ④ 정산 목록 로딩 진행 여부.
+    </p>
+
+    <!-- State 1: List · Default (baseline) -->
+    <table class="ref state-mini is-baseline-tint">
+      <thead>
+        <tr><th colspan="3"><strong>List · 정산 내역 (mixed status)</strong> 🎯 <small>baseline · production</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="sp-appbar">
+                <div class="sp-appbar__title">정산</div>
+                <div class="sp-appbar__action">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+                </div>
+              </div>
+              <div class="sp-tabbar">
+                <div class="sp-tab">대시보드</div>
+                <div class="sp-tab sp-tab--active">정산 내역</div>
+              </div>
+              <div class="sp-body">
+                <div class="sp-chips">
+                  <div class="sp-chip sp-chip--active">전체</div>
+                  <div class="sp-chip">대기</div>
+                  <div class="sp-chip">확정</div>
+                  <div class="sp-chip">지급중</div>
+                  <div class="sp-chip">완료</div>
+                  <div class="sp-chip">실패</div>
+                  <div class="sp-chip">보류</div>
+                </div>
+                <div class="sp-list">
+                  <div class="sp-month">2026년 4월</div>
+                  <div class="sp-card">
+                    <div class="sp-card__main">
+                      <div class="sp-card__title">정산 항목</div>
+                      <div class="sp-card__date">2026-04-26</div>
+                      <div class="sp-card__amount">₩722,400</div>
+                    </div>
+                    <div class="sp-badge sp-badge--completed">지급 완료</div>
+                  </div>
+                  <div class="sp-card">
+                    <div class="sp-card__main">
+                      <div class="sp-card__title">정산 항목</div>
+                      <div class="sp-card__date">2026-04-25</div>
+                      <div class="sp-card__amount">₩516,000</div>
+                    </div>
+                    <div class="sp-badge sp-badge--processing">지급 중</div>
+                  </div>
+                  <div class="sp-card">
+                    <div class="sp-card__main">
+                      <div class="sp-card__title">정산 항목</div>
+                      <div class="sp-card__date">2026-04-22</div>
+                      <div class="sp-card__amount">₩301,000</div>
+                    </div>
+                    <div class="sp-badge sp-badge--ready">정산 확정</div>
+                  </div>
+                  <div class="sp-card">
+                    <div class="sp-card__main">
+                      <div class="sp-card__title">정산 항목</div>
+                      <div class="sp-card__date">2026-04-18</div>
+                      <div class="sp-card__amount">-₩42,000</div>
+                    </div>
+                    <div class="sp-badge sp-badge--failed">지급 실패</div>
+                  </div>
+                  <div class="sp-month">2026년 3월</div>
+                  <div class="sp-card">
+                    <div class="sp-card__main">
+                      <div class="sp-card__title">정산 항목</div>
+                      <div class="sp-card__date">2026-03-30</div>
+                      <div class="sp-card__amount">₩188,000</div>
+                    </div>
+                    <div class="sp-badge sp-badge--hold">보류</div>
+                  </div>
+                  <div class="sp-card">
+                    <div class="sp-card__main">
+                      <div class="sp-card__title">정산 항목</div>
+                      <div class="sp-card__date">2026-03-15</div>
+                      <div class="sp-card__amount">₩155,000</div>
+                    </div>
+                    <div class="sp-badge sp-badge--pending">정산 대기</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>활성 탭이 정산 내역이며, 정산 항목이 1개 이상 있고 상태 필터는 '전체'.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>카드 탭</strong> → 정산 상세 화면으로 이동<br>
+            ② <strong>chip 탭</strong> → 해당 상태로 리스트가 좁혀짐 (State 2)<br>
+            ③ <strong>탭 스와이프 / "대시보드" tap</strong> → 대시보드 탭으로 전환<br>
+            ④ <strong>스크롤 끝</strong> → 다음 페이지가 자동으로 더 불러와짐<br>
+            ⑤ <strong>pull-to-refresh</strong> → 리스트 새로고침<br>
+            ⑥ <strong>지갑 아이콘</strong> → 정산 계좌 화면 (정산 편집 권한 보유 시만 노출)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 음수 정산금: <code>-₩42,000</code> 형식 (마이너스 부호가 ₩ 앞)<br>
+            · 동일 월 내 여러 항목 → 월 헤더는 1회만 표시 후 카드 연속<br>
+            · 추가 로딩 중간 실패 → 하단 스피너가 사라지고 다음 스크롤 시 재시도<br>
+            · 취소된 항목 → 배지에 취소선 표시
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            · <code>AppBar</code>(title:'정산', actions:[wallet IconButton, gated by SETTLEMENT_EDIT])<br>
+            · <code>TabBar</code> + <code>TabController</code>(length:2) · <code>TabBarView</code><br>
+            · <code>StatusFilterChips</code>(MinglitChipGroup · 8 ChoiceChip — 전체/PENDING/READY/PROCESSING/COMPLETED/FAILED/HOLD/CANCELED)<br>
+            · <code>RefreshIndicator</code> + <code>ListView.builder</code>(_scrollController · loadMore at maxScroll-200)<br>
+            · <code>_MonthHeaderWidget</code>(labelMedium bold · onSurfaceVariant · padding 16,16,16,4)<br>
+            · <code>SettlementCard</code> — InkWell + Row(Column[title='정산 항목' bodyMedium 600, date bodySmall onSurfaceVariant, amount bodyMedium] + <a href="/specs/settlement_detail_page/index.html"><code>SettlementStatusBadge</code></a> compact:true)<br>
+            · <code>Divider</code>(height 1) 카드 사이
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            · color: <code>color-partner-primary</code> (<code>#6c3ce1</code> — TabBar indicator/active label · chip selected · READY 배지 · loadMore spinner), <code>color-success</code> (COMPLETED 배지), <code>color-secondary</code> (PROCESSING — 주황 #ff9900 계열), <code>color-error</code> (FAILED · HOLD), <code>color-surface</code> (scaffold + appbar + tabbar + chip row), <code>color-background</code> (list bg + 카드 bg), <code>color-divider</code> (TabBar 하단 hairline · 카드 사이 Divider · 비선택 chip border)<br>
+            · radius: <code>radius-chip</code> (100 · ChoiceChip), <code>radius-badge</code> (4 · Badge)<br>
+            · spacing: <code>spacing-medium</code> (16 · 카드 h-pad · 월 헤더 pad), <code>spacing-sm</code> (12 · 카드 v-pad · badge↔content), <code>spacing-small</code> (8 · chip 간격 · row 위/아래 v-pad), <code>spacing-xsmall</code> (4 · 월 헤더 하단 pad · row 내 텍스트 stacked gap)<br>
+            · typography: appBarTitle (18/600), bodyMedium (14/600 — 카드 title · "지급 완료" 텍스트), bodySmall (12 — 날짜 · onSurfaceVariant · amount), labelMedium (12/700 — 월 헤더 · onSurfaceVariant), labelSmall (11/600 — Badge compact:true)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 정산 카드 자체는 별도 widget이지만 spec은 분리하지 않음 (단순 row + 상태 배지만 재사용). 상태 배지 색상은 settlement_detail spec과 100% 동일.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 2: Filtered -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>List · Filtered (PROCESSING)</strong> <small>지급중 chip 선택 · 해당 상태만 표시</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="sp-appbar">
+                <div class="sp-appbar__title">정산</div>
+                <div class="sp-appbar__action">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+                </div>
+              </div>
+              <div class="sp-tabbar">
+                <div class="sp-tab">대시보드</div>
+                <div class="sp-tab sp-tab--active">정산 내역</div>
+              </div>
+              <div class="sp-body">
+                <div class="sp-chips">
+                  <div class="sp-chip">전체</div>
+                  <div class="sp-chip">대기</div>
+                  <div class="sp-chip">확정</div>
+                  <div class="sp-chip sp-chip--active">지급중</div>
+                  <div class="sp-chip">완료</div>
+                  <div class="sp-chip">실패</div>
+                  <div class="sp-chip">보류</div>
+                </div>
+                <div class="sp-list">
+                  <div class="sp-month">2026년 4월</div>
+                  <div class="sp-card">
+                    <div class="sp-card__main">
+                      <div class="sp-card__title">정산 항목</div>
+                      <div class="sp-card__date">2026-04-25</div>
+                      <div class="sp-card__amount">₩516,000</div>
+                    </div>
+                    <div class="sp-badge sp-badge--processing">지급 중</div>
+                  </div>
+                  <div class="sp-card">
+                    <div class="sp-card__main">
+                      <div class="sp-card__title">정산 항목</div>
+                      <div class="sp-card__date">2026-04-21</div>
+                      <div class="sp-card__amount">₩232,000</div>
+                    </div>
+                    <div class="sp-badge sp-badge--processing">지급 중</div>
+                  </div>
+                  <div class="sp-card">
+                    <div class="sp-card__main">
+                      <div class="sp-card__title">정산 항목</div>
+                      <div class="sp-card__date">2026-04-19</div>
+                      <div class="sp-card__amount">₩98,000</div>
+                    </div>
+                    <div class="sp-badge sp-badge--processing">지급 중</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>'지급중' chip이 선택되어 있고 해당 상태의 항목이 1개 이상 존재.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>+ "전체" chip 탭 → baseline으로 복귀 · 동일 chip 재탭 → 변화 없음<br>나머지 동일</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 필터가 켜진 상태에서 결과 0건 → 빈 상태가 노출되며 안내 부제는 "다른 상태를 선택해 보세요." (CTA 없음)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ chip 선택 → '지급중'<br>− 다른 상태의 카드는 보이지 않음</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>동일</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 chip 라벨은 다음 7개 상태로 고정: 전체 · 대기 · 확정 · 지급중 · 완료 · 실패 · 보류 · 취소.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 3: Empty (no settlements ever) -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>List · Empty (no settlements)</strong> <small>최초 진입 · CTA "첫 이벤트 만들기"</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="sp-appbar">
+                <div class="sp-appbar__title">정산</div>
+                <div class="sp-appbar__action">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+                </div>
+              </div>
+              <div class="sp-tabbar">
+                <div class="sp-tab">대시보드</div>
+                <div class="sp-tab sp-tab--active">정산 내역</div>
+              </div>
+              <div class="sp-body">
+                <div class="sp-chips">
+                  <div class="sp-chip sp-chip--active">전체</div>
+                  <div class="sp-chip">대기</div>
+                  <div class="sp-chip">확정</div>
+                  <div class="sp-chip">지급중</div>
+                  <div class="sp-chip">완료</div>
+                  <div class="sp-chip">실패</div>
+                  <div class="sp-chip">보류</div>
+                </div>
+                <div class="sp-list" style="position:relative;">
+                  <div class="sp-empty">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><path d="M9 13h6M9 17h6M9 9h2"/></svg>
+                    <div class="sp-empty__title">정산 항목이 없습니다</div>
+                    <div class="sp-empty__sub">파티를 만들고 첫 이벤트를 시작해 보세요.</div>
+                    <button class="sp-empty__cta">첫 이벤트 만들기</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>정산 항목이 0개이고 로딩/오류가 아니며 상태 필터는 '전체'.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            + <strong>"첫 이벤트 만들기" CTA 탭</strong> → 파티 생성 화면으로 이동 (정산 탭에서 더보기/이벤트 영역으로 점프)<br>
+            + chip 탭 → 다른 상태 선택 시 빈 필터 상태로 전환
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 정산 조회 권한만 있고 편집 권한이 없으면 AppBar 지갑 아이콘이 보이지 않음 — 빈 상태 본문에는 영향 없음</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>+ <code>MinglitEmptyState</code>(variant:fullPage · icon:<code>Icons.receipt_long_outlined</code> · title '정산 항목이 없습니다' · subtitle '파티를 만들고 첫 이벤트를 시작해 보세요.' · actionLabel '첫 이벤트 만들기' · onAction → coordinator)<br>− Month header / SettlementCard / Divider</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ icon @ <code>color-text-secondary</code> opacity 0.6 (Icons.display 48px · MinglitEmptyState fullPage default · outline tone)<br>+ FilledButton bg = <code>color-partner-primary</code> · fg white</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 빈 정산 상태에 CTA 추가 (Fix #997) — 필터 없을 때만 노출. 필터가 켜진 상태에서는 CTA가 노출되지 않고 안내 부제만 변경됨.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 4: Dashboard tab -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Dashboard tab</strong> <small>대시보드 탭 · 월별 요약 + 상태별 카운트</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="sp-appbar">
+                <div class="sp-appbar__title">정산</div>
+                <div class="sp-appbar__action">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+                </div>
+              </div>
+              <div class="sp-tabbar">
+                <div class="sp-tab sp-tab--active">대시보드</div>
+                <div class="sp-tab">정산 내역</div>
+              </div>
+              <div class="sp-body" style="overflow-y:auto;">
+                <div class="sp-revenue__period" style="padding-top:16px;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                  <span class="sp-revenue__period-label">2026년 4월</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </div>
+                <div class="sp-revenue">
+                  <div class="sp-revenue__caption">정산 완료 매출</div>
+                  <div class="sp-revenue__total">₩1,884,400</div>
+                  <div class="sp-revenue__row"><span class="sp-revenue__row-label">정산 완료</span><span style="font-weight:700;">₩1,621,200</span></div>
+                  <div class="sp-revenue__row"><span class="sp-revenue__row-label">정산 대기</span><span style="font-weight:700;">₩516,000</span></div>
+                </div>
+                <div class="sp-grid-card">
+                  <div class="sp-grid-card__title">상태별 현황</div>
+                  <div class="sp-grid">
+                    <div class="sp-grid__cell" style="background:rgba(0,0,0,0.04); color:var(--color-text-secondary);"><div class="sp-grid__cell-count">3</div><div class="sp-grid__cell-label">대기</div></div>
+                    <div class="sp-grid__cell" style="background:color-mix(in srgb, var(--color-primary) 10%, transparent); color:var(--color-primary);"><div class="sp-grid__cell-count">2</div><div class="sp-grid__cell-label">확정</div></div>
+                    <div class="sp-grid__cell" style="background:rgba(255,153,0,0.10); color:var(--color-secondary);"><div class="sp-grid__cell-count">1</div><div class="sp-grid__cell-label">지급중</div></div>
+                    <div class="sp-grid__cell" style="background:rgba(22,163,74,0.10); color:var(--color-success);"><div class="sp-grid__cell-count">5</div><div class="sp-grid__cell-label">완료</div></div>
+                    <div class="sp-grid__cell" style="background:rgba(239,68,68,0.10); color:var(--color-error);"><div class="sp-grid__cell-count">1</div><div class="sp-grid__cell-label">실패</div></div>
+                    <div class="sp-grid__cell" style="background:rgba(239,68,68,0.10); color:var(--color-error);"><div class="sp-grid__cell-count">1</div><div class="sp-grid__cell-label">보류</div></div>
+                    <div class="sp-grid__cell" style="background:rgba(0,0,0,0.04); color:var(--color-text-secondary);"><div class="sp-grid__cell-count">0</div><div class="sp-grid__cell-label">취소</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>활성 탭이 대시보드이며 월별 요약 데이터가 도착한 상태.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            + <strong>◀ / ▶ 월 이동</strong> → 이전/다음 달로 이동하며 대시보드 데이터가 갱신됨<br>
+            + <strong>pull-to-refresh</strong> → 대시보드 새로고침<br>
+            + <strong>"정산 내역" tab tap / 우 swipe</strong> → 정산 내역 탭으로 전환<br>
+            ↔ 상태 필터 chip 없음 (정산 내역 탭 한정)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · '정산 완료 매출'은 완료 상태 항목만 합산 (지급중/확정/보류 제외)<br>
+            · 상태 카운트가 누락된 상태는 해당 cell이 0으로 표시<br>
+            · 로딩 중: 중앙 스피너 · 오류: 안내 텍스트 + "다시 시도" 버튼
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            ↔ body → <code>_DashboardTab</code> (RefreshIndicator + SingleChildScrollView · padding spacing-medium)<br>
+            + <code>_PeriodSelector</code> (Row · IconButton chevron_left + Text titleMedium + IconButton chevron_right · centered)<br>
+            + <code>_RevenueSummaryCard</code> (Container · gradient primary→primary@scrimLight · radius-button · displayLarge w900 -1px letter)<br>
+            + <code>_StatusSummaryGrid</code> (Card · Column · titleSmall '상태별 현황' + GridView 4×2 · childAspectRatio 1.2)<br>
+            + <code>_StatusCell</code> (Container · status.textColor @ MinglitOpacity.highlight bg · radius-small · count titleMedium bold + label bodySmall)<br>
+            − chip row · ListView · SettlementCard
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            + gradient: <code>color-partner-primary</code> 0% → <code>color-partner-primary</code> @ <code>MinglitOpacity.scrimLight</code> 100% (topLeft → bottomRight)<br>
+            + onPrimary text @ <code>scrimLight</code> opacity (caption '정산 완료 매출' · 행 라벨), full opacity (큰 금액 · 행 값)<br>
+            + grid cell bg: <code>SettlementStatus.textColor</code> @ <code>MinglitOpacity.highlight</code> (~10%) · cell text: <code>SettlementStatus.textColor</code> 그대로<br>
+            − chip / divider tokens
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 대시보드 탭은 7개 상태 모두 cell이 있고, 정산 내역 탭 chip도 동일 7개. 두 화면의 색·라벨은 단일 매핑으로 통일되어 drift 없음.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 5: Loading -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Loading</strong> <small>진입 직후 또는 새로고침 중</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="sp-appbar">
+                <div class="sp-appbar__title">정산</div>
+                <div class="sp-appbar__action">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+                </div>
+              </div>
+              <div class="sp-tabbar">
+                <div class="sp-tab">대시보드</div>
+                <div class="sp-tab sp-tab--active">정산 내역</div>
+              </div>
+              <div class="sp-body">
+                <div class="sp-chips">
+                  <div class="sp-chip sp-chip--active">전체</div>
+                  <div class="sp-chip">대기</div>
+                  <div class="sp-chip">확정</div>
+                  <div class="sp-chip">지급중</div>
+                  <div class="sp-chip">완료</div>
+                  <div class="sp-chip">실패</div>
+                  <div class="sp-chip">보류</div>
+                </div>
+                <div class="sp-list" style="position:relative;">
+                  <div class="sp-spinner"></div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>최초 데이터 조회 중이고 항목이 비어 있는 상태. 추가 페이지를 더 받아오는 경우는 리스트 하단 스피너로 표시되며 이 화면과는 다름.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>↔ chip 탭 가능 (탭하면 새 조회 시작), 카드 탭 영역은 없음. 탭 전환은 그대로 가능</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 새로고침 시 기존 항목을 그대로 둔 채 상단에 인디케이터만 노출 (별도 state로 그리지 않음)<br>· 데이터 조회 실패 → 오류 상태로 진입 (아래)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ ListView body → <code>CircularProgressIndicator</code> 단일<br>− SettlementCard / Month header</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>− 카드 토큰 미사용. 스피너만 <code>color-partner-primary</code> + <code>color-divider</code> (track)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 AppBar + TabBar + chip row는 유지. body만 spinner.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 6: Error -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Error</strong> <small>정산 목록을 받지 못함 · 재시도 CTA</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="sp-appbar">
+                <div class="sp-appbar__title">정산</div>
+                <div class="sp-appbar__action">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+                </div>
+              </div>
+              <div class="sp-tabbar">
+                <div class="sp-tab">대시보드</div>
+                <div class="sp-tab sp-tab--active">정산 내역</div>
+              </div>
+              <div class="sp-body">
+                <div class="sp-chips">
+                  <div class="sp-chip sp-chip--active">전체</div>
+                  <div class="sp-chip">대기</div>
+                  <div class="sp-chip">확정</div>
+                  <div class="sp-chip">지급중</div>
+                  <div class="sp-chip">완료</div>
+                  <div class="sp-chip">실패</div>
+                  <div class="sp-chip">보류</div>
+                </div>
+                <div class="sp-list" style="position:relative;">
+                  <div class="sp-empty">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <div class="sp-empty__title">목록을 불러오지 못했습니다</div>
+                    <div class="sp-empty__sub">잠시 후 다시 시도해 주세요.</div>
+                    <button class="sp-empty__cta">다시 시도</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>정산 목록 조회가 실패했고 항목 캐시가 비어 있는 상태 (Fix #127: 빈 상태 대신 명시적 오류 화면).</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>+ <strong>"다시 시도" CTA</strong> → 새로고침 시도 · 성공 시 baseline / 빈 상태 / 오류 중 하나로 전환</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 오류는 발생했지만 직전 항목 캐시가 남아 있는 경우 → 빈 화면 대신 직전 리스트 + 무음 오류 (이 화면에는 해당 안 됨)<br>· 권한 부족으로 인한 거부 → 동일 화면으로 표시 (메시지 분기 없음 — 후속 개선 후보)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ body → <code>MinglitEmptyState</code>(icon:<code>Icons.error_outline</code> · title '목록을 불러오지 못했습니다' · subtitle '잠시 후 다시 시도해 주세요.' · actionLabel '다시 시도' · onAction → refresh)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>↔ icon → 동일 outline tone (MinglitEmptyState는 fullPage variant에서 항상 outline color · 에러용 색 분기 없음)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 시각적으로 빈 상태와 매우 유사. 차이는 아이콘 / 타이틀 / CTA 라벨. 일반 빈 상태와 명확히 구분하기 위함 (Fix #127).</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </section>
+</div>
+
+<!-- ============================================================
+     GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">cross-cutting — 모든 state에 적용되는 액션, motion, 글로벌 에지케이스. 각 state 한정 액션은 위 mini-table 참고.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">사용자 액션</th>
+          <th>화면에 보이는 결과</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>탭 전환 (대시보드 ↔ 정산 내역)</td>
+          <td>탭/스와이프 모두 가능. 두 탭은 데이터를 별도로 가져오므로 한쪽을 새로고침해도 다른 쪽은 자동 갱신되지 않음.</td>
+        </tr>
+        <tr>
+          <td>AppBar 지갑 IconButton</td>
+          <td>정산 편집 권한 보유 시만 노출. 탭 → 정산 계좌 화면으로 이동.</td>
+        </tr>
+        <tr>
+          <td>알 수 없는 상태 값 응답</td>
+          <td>지원되지 않는 상태가 들어오면 "알 수 없음" 라벨로 표시되며 회색 배지로 fallback. (빈 상태 화면에는 영향 없음)</td>
+        </tr>
+        <tr>
+          <td>다크 모드 토글</td>
+          <td>scaffold/list 배경 → <code>color-dark-surface</code>(#212121) · primary → <code>color-partner-dark-primary</code>(#9b7bec) · 배지 색상은 상태별 약 10% 투명도로 자동 조정.</td>
+        </tr>
+        <tr>
+          <td>금액 포맷 (모든 state 공통)</td>
+          <td>정산 카드 금액은 음수일 때 마이너스 부호가 ₩ 앞에 표시됨 (예: <code>-₩42,000</code>). 천 단위 콤마는 모든 금액에 일관되게 적용.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion timing</h2>
+    <p class="intro">
+      Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code> → <code>MinglitAnimation</code>.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">Transition</th>
+          <th style="width: 200px;">Token / Duration</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>화면 진입 (다른 탭 → /settlement)</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>Bottom nav indexChanged · StatefulShell branch 전환은 cut transition이 default.</td>
+        </tr>
+        <tr>
+          <td>TabBarView 스와이프 / tap</td>
+          <td><code>MinglitAnimation.medium</code> (350ms)</td>
+          <td>Material default TabController.animateTo curve.</td>
+        </tr>
+        <tr>
+          <td>chip 토글</td>
+          <td><code>MinglitAnimation.micro</code> (100ms)</td>
+          <td>ChoiceChip ripple + fill swap. 직후 list refetch (별도 spinner는 없음 — items 그대로 두고 갱신).</td>
+        </tr>
+        <tr>
+          <td>카드 tap → SettlementDetail 진입</td>
+          <td><code>MinglitAnimation.medium</code> (350ms)</td>
+          <td><code>MinglitPageTransitions.sharedAxisScaled</code> (X-axis · scale + slide).</td>
+        </tr>
+        <tr>
+          <td>pull-to-refresh / loadMore</td>
+          <td>Material default</td>
+          <td>RefreshIndicator는 자체 progress · loadMore는 ListView footer spinner (cut 표시).</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>정산 조회 권한만 보유</strong> — AppBar 지갑 아이콘이 보이지 않음. 리스트 / 대시보드는 정상 표시.</li>
+      <li><strong>무한 스크롤 race</strong> — 리스트 끝에 가까워지면 자동으로 다음 페이지가 로드됨. 이미 로드 중인 동안에는 중복 호출이 일어나지 않도록 보장 필요 (drift 점검 후보).</li>
+      <li><strong>탭 경계 CTA</strong> — 빈 상태의 "첫 이벤트 만들기"는 정산 탭에서 다른 탭으로 점프해야 하므로 일반 push가 아닌 표준 코디네이터를 통해 이동.</li>
+      <li><strong>대시보드 오류</strong> — 대시보드 오류 화면의 '다시 시도' 버튼은 일반 FilledButton (정산 내역 탭의 빈/오류 화면과 시각적 결이 다름) — 후속 통일 후보.</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">implementation source + 인접 화면. Components / Tokens는 위 mini-table 참고.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <tbody>
+        <tr><th style="width: 200px;">Widget</th><td><code>SettlementPage</code> + <code>_DashboardTab</code> / <code>_ListTab</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/settlement/settlement_page.dart"><code>apps/app_partner/lib/src/features/settlement/settlement_page.dart</code></a></td></tr>
+        <tr><th>Route</th><td><code>SettlementRoute</code> · <code>/settlement</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
+        <tr><th>Theme</th><td><code>MinglitTheme.partnerTheme</code> — primary <code>MinglitPartnerColors.primary</code>(<code>#6c3ce1</code>). user app(<code>#9900ff</code>)과 다름.</td></tr>
+        <tr><th>Controllers</th><td><code>settlementDashboardControllerProvider</code> (월별 dashboard · loadDashboard · changeMonth) · <code>settlementListControllerProvider</code> (list · changeStatus · loadMore · refresh)</td></tr>
+        <tr><th>Coordinator</th><td><code>settlementCoordinatorProvider</code> — <code>goToDetail(id)</code> · <code>goToBankAccount()</code> · <code>goToPartyCreate()</code> (root GoRouter · Fix #1680)</td></tr>
+        <tr><th>Permission gate</th><td><code>currentMemberPermissionsProvider</code> · <code>SETTLEMENT_EDIT</code> 보유 시만 AppBar 지갑 아이콘 노출 (Fix #1568)</td></tr>
+        <tr><th>Sub-widgets</th><td><code>SettlementCard</code> (list row) · <code>SettlementStatusBadge</code> + <code>SettlementStatus</code> enum (<a href="/specs/settlement_detail_page/index.html">settlement_detail_page</a>에 documented) · <code>StatusFilterChips</code> (8 ChoiceChip · MinglitChipGroup) · <code>_PeriodSelector</code> · <code>_RevenueSummaryCard</code> · <code>_StatusSummaryGrid</code> · <code>_StatusCell</code> · <code>_MonthHeaderWidget</code></td></tr>
+        <tr><th>Empty / Error</th><td><code>MinglitEmptyState</code>(fullPage variant) — <code>shared/packages/mds/core/lib/src/ui/widgets/common/minglit_empty_state.dart</code></td></tr>
+        <tr><th>⚠️ Drift / 후속 후보</th><td>· Dashboard error column은 MinglitEmptyState 미사용 (인라인 Text + FilledButton) — list와 시각적 결 통일 후보<br>· loadMore 가드 위치 점검 (race 가능성 · isLoading 체크)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/settlement_detail_page/index.html"><code>SettlementDetailPage</code></a></td>
+          <td>본 spec의 자식 — list 탭의 SettlementCard tap으로 진입. <code>SettlementStatusBadge</code> · status enum · 색상 매핑 single source of truth.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/bank_account_page/index.html"><code>BankAccountPage</code></a></td>
+          <td>본 spec의 자식 — AppBar 지갑 IconButton(SETTLEMENT_EDIT)으로 진입. <code>/settlement/bank-account</code>.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/partner_home_page/index.html"><code>PartnerHomePage</code></a></td>
+          <td>partner brand color scoping (<code>--color-partner-primary</code>) · bottom nav peer.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_application_manage_page/index.html"><code>EventApplicationManagePage</code></a></td>
+          <td>유사 패턴 — Scaffold + AppBar + TabBar + tab별 list. 본 spec의 List tab과 비교 참고.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/party_create_wizard_page/index.html"><code>PartyCreateWizardPage</code></a></td>
+          <td>Empty state CTA "첫 이벤트 만들기"의 도착지 (cross-branch root push).</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+</body>
+</html>

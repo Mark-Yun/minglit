@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — PartyDetailPage (app_partner · PartyDetailRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   PartyDetailPage-specific atoms.
+
+   Partner app theme:
+   - Page (Scaffold) bg = light gray (var(--color-surface))
+   - Cards / ColorScheme.surface = white (var(--color-background))
+   - AppBar matches scaffold (light gray, no border-bottom)
+   - Brand primary = MinglitPartnerColors.primary (#6c3ce1 — indigo)
+     → use var(--color-partner-primary) for tab indicator / labels.
+   ============================================================ */
+
+/* --- App bar (SliverAppBar pinned · centerTitle) --- */
+.pd-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  background: var(--color-surface);
+  position: relative;
+}
+.pd-appbar__back,
+.pd-appbar__more {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-primary);
+}
+.pd-appbar__back svg,
+.pd-appbar__more svg { width: 22px; height: 22px; }
+.pd-appbar__title {
+  flex: 1;
+  text-align: center;
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  /* offset the leading back button + trailing more so the title is centered */
+  padding-right: 0;
+}
+
+/* --- Tab bar (SliverPersistentHeader · 50px) --- */
+.pd-tabbar {
+  height: 50px;
+  display: flex;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-divider);
+}
+.pd-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--typography-font-size-body);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  padding: 0 var(--spacing-sm);
+  position: relative;
+}
+.pd-tab--active {
+  color: var(--color-partner-primary);
+  font-weight: 700;
+}
+.pd-tab--active::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 3px;
+  background: var(--color-partner-primary);
+  border-radius: 2px 2px 0 0;
+}
+
+/* --- Body (under sliver header — scaffold gray) --- */
+.pd-body {
+  position: absolute;
+  top: 106px; /* 56 appbar + 50 tabbar */
+  left: 0; right: 0; bottom: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  background: var(--color-surface);
+}
+.pd-body::-webkit-scrollbar { display: none; }
+.pd-body__padding { padding: var(--spacing-medium); }
+
+/* --- MinglitEditableSection (subtle bg, title + edit pencil + child) --- */
+.pd-section {
+  padding: var(--spacing-medium);
+  /* surfaceContainerLowest with strong opacity → near-white in light theme.
+     Use var(--color-background) (white) to approximate. */
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+}
+.pd-section__header {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-small);
+}
+.pd-section__title {
+  flex: 1;
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.pd-section__edit {
+  width: 16px; height: 16px;
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+}
+.pd-section + .pd-section {
+  margin-top: var(--spacing-large);
+}
+
+/* --- Recurrence summary card (Material Card with InkWell) --- */
+.pd-recurrence {
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-small) var(--spacing-medium);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+  margin-bottom: var(--spacing-large);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+.pd-recurrence__icon {
+  width: 20px; height: 20px;
+  color: var(--color-partner-primary);
+  flex-shrink: 0;
+}
+.pd-recurrence__body { flex: 1; }
+.pd-recurrence__text {
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+  margin-bottom: 2px;
+}
+.pd-recurrence__chev {
+  width: 22px; height: 22px;
+  color: var(--color-text-secondary);
+}
+
+/* --- MinglitTag (badge for "운영중" / "비공개" / 반복 status) --- */
+.pd-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-badge);
+  font-size: var(--typography-font-size-caption);
+  font-weight: 600;
+}
+.pd-tag--active {
+  background: rgba(108, 60, 225, 0.10);
+  color: var(--color-partner-primary);
+}
+.pd-tag--private {
+  background: rgba(239, 68, 68, 0.10);
+  color: var(--color-error);
+}
+.pd-tag svg { width: 12px; height: 12px; }
+
+/* --- Section title (plain Text — Tab1 events title · Tab3 tickets title) --- */
+.pd-text-title {
+  font-size: var(--typography-font-size-body);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-small);
+}
+
+/* --- AddActionCard (dashed border, big "+" + subtitle) --- */
+.pd-add-card {
+  border: 1px dashed var(--color-partner-primary);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-medium);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+  color: var(--color-partner-primary);
+  background: var(--color-background);
+}
+.pd-add-card__icon {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: rgba(108, 60, 225, 0.10);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.pd-add-card__icon svg { width: 16px; height: 16px; color: var(--color-partner-primary); }
+.pd-add-card__body { flex: 1; }
+.pd-add-card__title {
+  font-size: var(--typography-font-size-body);
+  font-weight: 600;
+  color: var(--color-partner-primary);
+}
+.pd-add-card__sub {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+}
+
+/* --- Event list card (compact — placeholder for EventCard atom) --- */
+.pd-event-card {
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-medium);
+  margin-bottom: var(--spacing-small);
+  border: 1px solid var(--color-divider);
+}
+.pd-event-card__date {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+  margin-bottom: 2px;
+}
+.pd-event-card__title {
+  font-size: var(--typography-font-size-body);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* --- Capacity / contact row (icon · label · value) --- */
+.pd-info-row {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-xsmall) 0;
+  gap: var(--spacing-small);
+}
+.pd-info-row__icon { width: 16px; height: 16px; color: var(--color-text-secondary); flex-shrink: 0; }
+.pd-info-row__label {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+}
+.pd-info-row__value {
+  margin-left: auto;
+  font-size: var(--typography-font-size-caption);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* --- Image strip (mock for hero images in basic info) --- */
+.pd-image-strip {
+  display: flex;
+  gap: 4px;
+  margin-top: var(--spacing-small);
+}
+.pd-image-strip__thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-small);
+  background: linear-gradient(135deg, #d1c4e9, #b39ddb);
+}
+
+/* --- Quill description block (read-only mock) --- */
+.pd-description {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+  margin-top: var(--spacing-small);
+}
+
+/* --- Location map placeholder --- */
+.pd-map {
+  width: 100%;
+  height: 80px;
+  background: linear-gradient(135deg, #e8eaf6, #c5cae9);
+  border-radius: var(--radius-small);
+  margin-bottom: var(--spacing-small);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+}
+
+/* --- Entry group row (Tab3 — entrance condition list) --- */
+.pd-entry-group {
+  background: var(--color-background);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-small) var(--spacing-medium);
+  margin-bottom: var(--spacing-small);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+}
+.pd-entry-group__name {
+  flex: 1;
+  font-size: var(--typography-font-size-body);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.pd-entry-group__count {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+}
+
+/* --- Ticket row (Tab3 — ticket list) --- */
+.pd-ticket {
+  background: var(--color-background);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-medium);
+  margin-bottom: var(--spacing-small);
+}
+.pd-ticket__title {
+  font-size: var(--typography-font-size-body);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 2px;
+}
+.pd-ticket__meta {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+}
+
+/* --- Empty state placeholder (entry groups / events) --- */
+.pd-empty {
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-large);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-small);
+  color: var(--color-text-secondary);
+}
+.pd-empty svg { width: 32px; height: 32px; opacity: 0.5; }
+.pd-empty__text {
+  font-size: var(--typography-font-size-body);
+  text-align: center;
+}
+
+/* --- Popup menu (more_vert overflow) --- */
+.pd-popup {
+  position: absolute;
+  top: 48px; right: 8px;
+  min-width: 180px;
+  background: var(--color-background);
+  border-radius: var(--radius-small);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 10;
+  padding: var(--spacing-small) 0;
+}
+.pd-popup__item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+  padding: var(--spacing-sm) var(--spacing-medium);
+  font-size: var(--typography-font-size-body);
+  color: var(--color-text-primary);
+}
+.pd-popup__item--danger { color: var(--color-error); }
+.pd-popup__item svg { width: 20px; height: 20px; }
+
+/* --- Loading / Error full-page states --- */
+.pd-fullpage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: var(--spacing-small);
+  padding: var(--spacing-large);
+  text-align: center;
+}
+.pd-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--color-divider);
+  border-top-color: var(--color-partner-primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.pd-fullpage__text {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header>
+  <h1>Party Detail</h1>
+</header>
+
+<!-- ============================================================
+     OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 6 state · 3-tab 파티 운영 콘솔</em></td>
+      </tr>
+      <tr>
+        <th>App</th>
+        <td><code>app_partner</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>party · detail / management</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>PartyDetailRoute</code> · widget: <code>PartyDetailPage</code> (3-tab DefaultTabController scaffold)</td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td><code>/more/parties/:partyId</code></td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/party/list/party_list_page.dart"><code>PartyListPage</code></a> (파티 목록에서 카드 탭 진입)<br>
+          <strong>Children</strong>:
+          <a href="/specs/party_create_wizard_page/index.html"><code>PartyEditRoute</code></a> (편집 — wizard 재사용 spec) ·
+          <code>EventCreateRoute</code> ·
+          <code>EventDetailRoute</code> (Tab1) ·
+          <code>RecurrenceManagementRoute</code> (반복 규칙) ·
+          <code>TicketCreateRoute</code> / <code>PartyTicketEditRoute</code> (Tab3) ·
+          embedded modal screens: <code>PartyBasicInfoEditScreen</code>, <code>PartyCapacityContactEditScreen</code>, <code>PartyLocationEditScreen</code>, <code>PartyEntryGroupManagementScreen</code> (Tab2/Tab3 — Coordinator가 <code>Navigator.push</code>로 띄움, route 없음)
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          파트너가 자신이 만든 파티의 상세를 확인하고, 운영(이벤트 인스턴스 추가/관리), 정보(기본정보/인원·연락처/위치),
+          입장/티켓(입장 그룹/티켓) 세 영역을 탭으로 분리하여 편집한다. 파티 활성화/비활성화 toggle, 편집 진입의 hub.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry</strong>: PartyListPage에서 카드 탭.<br>
+          <strong>Exit</strong>: 뒤로가기 → 목록 / 메뉴 "수정" → PartyEditRoute /
+          Tab1 "이벤트 생성" → EventCreateRoute / Tab1 카드 탭 → EventDetailRoute /
+          Tab2 섹션 탭 → 모달 편집 화면 / Tab3 추가/탭 → 티켓·입장 그룹 화면.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          파티는 파트너 운영의 최소 단위. 한 파티는 여러 event 인스턴스(반복/일회성)를 가지며,
+          status는 <code>active</code> / <code>closed</code> 두 가지. <code>more_vert</code> 메뉴의 활성/비활성 항목은 status에 따라 한쪽만 노출됨
+          (party_detail_page.dart:61, :75 — conditional <code>PopupMenuItem</code>).
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>파트너의 파티 운영 중심 화면. 운영 기간 내 매일 1회 이상.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">spec 주요 변경 이력. 최신 항목 위.</p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>v1.4 template으로 작성. 3-tab 구조(이벤트 관리 / 파티 정보 / 입장 그룹 및 티켓) + 6 state(Tab1 baseline · Tab1 빈 이벤트 · Tab2 · Tab3 · Loading · Overflow menu) mini-table per state. Partner 브랜드 indigo (<code>--color-partner-primary</code>) 적용 — 사용자 앱의 brand purple과 구분.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Anchor nav -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      Scaffold + DefaultTabController(length: 3) + NestedScrollView. headerSliverBuilder에 SliverAppBar (pinned, centerTitle, more_vert action) +
+      SliverPersistentHeader(50px · TabBar + 1px Divider). body는 TabBarView 3개.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- Sliver AppBar (pinned) -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">① SliverAppBar — title(party.title, centerTitle) + more_vert</span>
+        </div>
+        <!-- Sliver TabBar (pinned, 50px) -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:64px;left:0;right:0;height:50px;">
+          <span class="blueprint__region-label">② SliverPersistentHeader — TabBar (3 tabs) + Divider 1px</span>
+        </div>
+        <!-- Tab body -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:122px;left:0;right:0;bottom:8px;">
+          <span class="blueprint__region-label">③ TabBarView<br>Tab1: 이벤트 관리 / Tab2: 파티 정보 / Tab3: 입장 그룹 및 티켓</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">screen-edge pad 16</div>
+      </div>
+
+      <div class="layout-tree"><b>DefaultTabController</b>(length: 3)
+└─ <b>Scaffold</b>
+   └─ <b>body</b>: <b>MinglitAsyncValueWidget</b>(partyDetailProvider(partyId))
+      ├─ [error]    Scaffold(simpleAppBar) + Center(error text)
+      └─ [data]     <b>NestedScrollView</b>
+         ├─ <b>headerSliverBuilder</b>:
+         │   ├─ <b>SliverAppBar</b>(pinned, centerTitle)             ← ①
+         │   │   ├─ title: Text(party.title)
+         │   │   └─ actions: <b>PopupMenuButton</b>(more_vert)
+         │   │      ├─ "수정" (always)
+         │   │      ├─ "활성화" — only if status=='closed'
+         │   │      └─ "비활성화" — only if status=='active' (error color)
+         │   └─ <b>SliverPersistentHeader</b>(pinned, 50)              ← ②
+         │      └─ Column
+         │         ├─ <b>TabBar</b>(indicatorWeight:3 · sm h-padding)
+         │         │   tabs: '이벤트 관리' · '파티 정보' · '입장 그룹 및 티켓'
+         │         └─ Divider(1px · outlineVariant)
+         └─ <b>body</b>: <b>TabBarView</b>                              ← ③
+            ├─ <b>PartyEventManagementTab</b>
+            │   └─ SingleChildScrollView(pad: medium)
+            │      ├─ RecurrenceRuleSummaryCard(partyId)  [hidden if rule==null/cancelled]
+            │      ├─ Text("이벤트", titleMedium)
+            │      └─ MinglitAsyncValueWidget(partyEventsProvider)
+            │         └─ PartyEventListSummary(events, onCreate, onTap)
+            │            ├─ EventCard × N
+            │            └─ AddActionCard("이벤트 생성")
+            │
+            ├─ <b>PartyInfoTab</b>
+            │   └─ SingleChildScrollView(pad: medium · bottom + safe-area)
+            │      ├─ MinglitEditableSection("기본 정보")
+            │      │   ├─ PartyBasicInfoSummary(title, description, images, status)
+            │      │   └─ if isPrivate: MinglitTag("비공개", lock icon, error color)
+            │      ├─ SizedBox(large=24)
+            │      ├─ MinglitEditableSection("인원 및 연락처 설정")
+            │      │   ├─ PartyCapacitySummary(min, max)
+            │      │   └─ PartyContactSummary(contactOptions)
+            │      ├─ SizedBox(large=24)
+            │      └─ MinglitEditableSection("위치")
+            │          └─ MinglitAsyncValueWidget(locationDetailProvider)
+            │             └─ PartyLocationSummary(location, addressDetail, directions)
+            │
+            └─ <b>PartyRuleManagementTab</b>
+                └─ SingleChildScrollView(pad: medium)
+                   ├─ MinglitEditableSection("입장 조건")
+                   │   └─ PartyEntranceConditionSummary(entryGroups)
+                   ├─ SizedBox(xlarge=32)
+                   ├─ Text("입장권", titleMedium)
+                   └─ MinglitAsyncValueWidget(partyTicketsProvider)
+                      └─ PartyTicketsSummary(tickets, entryGroups, maxCapacity)</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>①</td><td>SliverAppBar</td><td>56px · centerTitle · pinned</td><td>표준 AppBar. <code>more_vert</code> action 1개. surfaceTintColor: transparent (테마 default). 배경 = scaffold gray (테마 #1218).</td></tr>
+        <tr><td>②</td><td>SliverPersistentHeader (TabBar)</td><td>min/maxExtent = 50 · 3 tab equal flex</td><td>TabBar.indicatorWeight: 3 · labelPadding: <code>sm (12px)</code> · 하단 1px <code>Divider</code>(<code>outlineVariant.alpha(strong)</code>) · 배경 = ColoredBox(scaffoldBackgroundColor).</td></tr>
+        <tr><td>—</td><td>Tab body (SingleChildScrollView)</td><td>column start · full-width scroll</td><td>모든 탭 padding: <code>spacing-medium (16px)</code>. Tab2만 bottom padding에 <code>MediaQuery.paddingOf(context).bottom</code> 추가 (safe-area · #1830).</td></tr>
+        <tr><td>—</td><td>MinglitEditableSection (Tab2/Tab3)</td><td>InkWell + Container(pad: medium) · 헤더(title + edit pencil) + child</td><td>section 간 gap: Tab2는 <code>large (24px)</code>, Tab3는 <code>xlarge (32px)</code>. 내부 title↔child gap: <code>small (8px)</code>. edit icon 16px (outline).</td></tr>
+        <tr><td>—</td><td>RecurrenceRuleSummaryCard (Tab1)</td><td>Card + InkWell · h-pad medium · v-pad small</td><td>아이콘 20px · 텍스트 column · trailing chevron. <code>RecurrenceStatus.cancelled</code> 또는 null이면 <code>SizedBox.shrink</code>.</td></tr>
+        <tr><td>—</td><td>EventCard / AddActionCard (Tab1)</td><td>Column · 카드 사이 <code>spacing-small (8px)</code></td><td>AddActionCard는 dashed border (partner primary).</td></tr>
+        <tr><td>—</td><td>PartyEntryGroupListItem (Tab3)</td><td>Container border + radius-card · row layout</td><td>카드 사이 <code>spacing-small</code>. 빈 상태 = 32px icon centered + 라벨.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">3 탭 × 데이터 분기 + async lifecycle. baseline = Tab1 with-events (가장 많이 보는 화면).</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      <strong>State 분기 기준</strong>: 활성 탭(이벤트 관리 / 파티 정보 / 입장 그룹 및 티켓), 각 탭의 데이터 유무, 파티의 활성 / 비활성 / 비공개 여부에 따라 6가지 변형. 진입 직후 데이터를 가져오는 동안엔 로딩 상태가 잠시 노출된다.
+    </p>
+
+    <!-- ========================================================
+         State 1: Tab1 baseline · with events + recurrence
+         ======================================================== -->
+    <table class="ref state-mini is-baseline-tint">
+      <thead>
+        <tr><th colspan="3"><strong>Tab1 · 이벤트 관리 (with events)</strong> 🎯 <small>baseline · 활성 운영 중인 파티의 이벤트 탭</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="pd-appbar">
+                <div class="pd-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="pd-appbar__title">금요일의 위스키 살롱</div>
+                <div class="pd-appbar__more"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></div>
+              </div>
+              <div class="pd-tabbar">
+                <div class="pd-tab pd-tab--active">이벤트 관리</div>
+                <div class="pd-tab">파티 정보</div>
+                <div class="pd-tab">입장 그룹 및 티켓</div>
+              </div>
+              <div class="pd-body">
+                <div class="pd-body__padding">
+                  <div class="pd-recurrence">
+                    <svg class="pd-recurrence__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                    <div class="pd-recurrence__body">
+                      <div class="pd-recurrence__text">매주 금 · 19:30</div>
+                      <span class="pd-tag pd-tag--active">활성</span>
+                    </div>
+                    <svg class="pd-recurrence__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                  </div>
+                  <div class="pd-text-title">이벤트</div>
+                  <div class="pd-event-card">
+                    <div class="pd-event-card__date">2026.05.08 · 금 · 19:30</div>
+                    <div class="pd-event-card__title">5월 8일 위스키 살롱</div>
+                  </div>
+                  <div class="pd-event-card">
+                    <div class="pd-event-card__date">2026.05.15 · 금 · 19:30</div>
+                    <div class="pd-event-card__title">5월 15일 위스키 살롱</div>
+                  </div>
+                  <div class="pd-add-card">
+                    <div class="pd-add-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+                    <div class="pd-add-card__body">
+                      <div class="pd-add-card__title">이벤트 생성</div>
+                      <div class="pd-add-card__sub">새 이벤트 인스턴스를 추가합니다.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>파티 데이터가 도착했고, 활성 탭은 "이벤트 관리"이며, 이벤트가 한 개 이상 있고, 반복 규칙이 활성 상태로 설정되어 있는 일반적인 운영 모습.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>다른 탭 헤더 탭 또는 좌우 스와이프</strong> — "파티 정보" / "입장 그룹 및 티켓" 탭으로 부드럽게 전환.<br>
+            ② <strong>AppBar 우상단 점 세 개 아이콘 탭</strong> — 오버플로우 메뉴(아래 State 6)가 열림.<br>
+            ③ <strong>반복 카드 탭</strong> — 반복 규칙 관리 화면으로 이동.<br>
+            ④ <strong>이벤트 카드 탭</strong> — 해당 이벤트 상세 화면으로 이동.<br>
+            ⑤ <strong>"이벤트 생성" 카드 탭</strong> — 새 이벤트 만들기 화면으로 이동.<br>
+            ⑥ <strong>뒤로가기</strong> — 파티 목록으로 복귀.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 반복 규칙이 설정되지 않은 파티는 반복 카드 자체가 보이지 않음.<br>
+            · 반복 규칙을 가져오는 중이거나 실패한 경우에도 깜빡임 방지를 위해 카드 영역은 노출되지 않음.<br>
+            · 이벤트 목록을 가져오지 못하면 이벤트 영역에만 안내 메시지가 표시되고, 상단 AppBar / 탭 헤더는 그대로 유지됨.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            · <code>SliverAppBar</code> (pinned, centerTitle) + <code>PopupMenuButton&lt;String&gt;</code> (Icons.more_vert)<br>
+            · <code>TabBar</code> (3 tabs · indicatorWeight: 3 · labelPadding: sm)<br>
+            · <code>RecurrenceRuleSummaryCard</code> (Card + InkWell + Icons.event_repeat + MinglitTag)<br>
+            · <code>PartyEventListSummary</code> + 내부 <code>EventCard</code>(파트너 EventCard) · <code>AddActionCard</code> (dashed border)<br>
+            · <code>MinglitAsyncValueWidget</code> (events 로딩/에러)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            · color: <code>color-surface</code> (Scaffold/AppBar/TabBar bg), <code>color-background</code> (Card bg), <code>color-partner-primary</code> (TabBar indicator/label · RecurrenceCard icon · AddActionCard border/icon · 활성 태그), <code>color-text-primary/secondary</code>, <code>color-divider</code> (TabBar 하단 divider)<br>
+            · radius: <code>radius-card</code> (16 · Card/EventCard/AddActionCard), <code>radius-badge</code> (4 · MinglitTag)<br>
+            · spacing: <code>spacing-medium</code> (16 · 콘텐츠 padding), <code>spacing-large</code> (24 · 섹션 gap), <code>spacing-small</code> (8 · 카드 사이), <code>spacing-sm</code> (12 · TabBar labelPadding)<br>
+            · typography: appBarTitle (18/600), titleMedium (16/700 · "이벤트" 헤더), bodyMedium (16/400), labelSmall (11/600 · MinglitTag)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 가장 많이 보는 화면. 다른 5개 state는 이 baseline에서 변경분만 표시.<br>
+              ⚠️ 파트너 앱은 사용자 앱과 다른 보라색을 쓴다 — 강조 색이 한 톤 차분한 인디고 계열이다. 컴포넌트를 두 앱 사이에서 재사용할 땐 색 차이를 검증해야 함.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ========================================================
+         State 2: Tab1 empty · no events yet
+         ======================================================== -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Tab1 · 이벤트 비어있음</strong> <small>파티를 갓 만들었거나 운영 중인 이벤트가 모두 마감된 직후</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="pd-appbar">
+                <div class="pd-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="pd-appbar__title">신규 위스키 모임</div>
+                <div class="pd-appbar__more"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></div>
+              </div>
+              <div class="pd-tabbar">
+                <div class="pd-tab pd-tab--active">이벤트 관리</div>
+                <div class="pd-tab">파티 정보</div>
+                <div class="pd-tab">입장 그룹 및 티켓</div>
+              </div>
+              <div class="pd-body">
+                <div class="pd-body__padding">
+                  <div class="pd-text-title">이벤트</div>
+                  <div class="pd-add-card">
+                    <div class="pd-add-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+                    <div class="pd-add-card__body">
+                      <div class="pd-add-card__title">이벤트 생성</div>
+                      <div class="pd-add-card__sub">새 이벤트 인스턴스를 추가합니다.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>이벤트가 한 개도 등록되어 있지 않고, 반복 규칙도 설정되어 있지 않은 상태.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>+ <strong>"이벤트 생성" 카드 탭</strong> — 첫 이벤트 만들기 화면으로 진입. 다른 동작은 baseline과 동일.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 이벤트도 없고 반복 규칙도 없는 경우 — 화면에는 "이벤트 생성" 카드만 노출되어 거의 빈 화면이 됨.<br>· 반복 규칙은 있는데 아직 첫 이벤트가 만들어지기 전 — 반복 카드 + "이벤트 생성" 카드 두 가지가 함께 노출됨.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>− <code>RecurrenceRuleSummaryCard</code> (rule 없음)<br>− <code>EventCard</code> × N → 0개</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>동일 (사용 토큰 종류 변동 없음)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 신규 파티 직후 또는 운영 종료된 파티의 모습. CTA가 명확하므로 별도 빈 일러스트는 사용하지 않는다.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ========================================================
+         State 3: Tab2 · 파티 정보
+         ======================================================== -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Tab2 · 파티 정보</strong> <small>기본 정보 · 인원·연락처 · 위치 세 섹션을 한 화면에서 확인·수정</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="pd-appbar">
+                <div class="pd-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="pd-appbar__title">금요일의 위스키 살롱</div>
+                <div class="pd-appbar__more"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></div>
+              </div>
+              <div class="pd-tabbar">
+                <div class="pd-tab">이벤트 관리</div>
+                <div class="pd-tab pd-tab--active">파티 정보</div>
+                <div class="pd-tab">입장 그룹 및 티켓</div>
+              </div>
+              <div class="pd-body">
+                <div class="pd-body__padding">
+                  <div class="pd-section">
+                    <div class="pd-section__header">
+                      <div class="pd-section__title">기본 정보</div>
+                      <svg class="pd-section__edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </div>
+                    <div style="font-weight:600;color:var(--color-text-primary);font-size:var(--typography-font-size-body);">금요일의 위스키 살롱</div>
+                    <div class="pd-description">매주 금요일 저녁, 위스키와 보드게임을 즐기는 30대 모임입니다…</div>
+                    <div class="pd-image-strip">
+                      <div class="pd-image-strip__thumb"></div>
+                      <div class="pd-image-strip__thumb"></div>
+                      <div class="pd-image-strip__thumb"></div>
+                    </div>
+                    <div style="margin-top:8px;"><span class="pd-tag pd-tag--private"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="12" height="12" style="vertical-align:-2px;margin-right:4px;"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>비공개</span></div>
+                  </div>
+                  <div class="pd-section">
+                    <div class="pd-section__header">
+                      <div class="pd-section__title">인원 및 연락처 설정</div>
+                      <svg class="pd-section__edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </div>
+                    <div class="pd-info-row">
+                      <svg class="pd-info-row__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                      <div class="pd-info-row__label">인원</div>
+                      <div class="pd-info-row__value">4 ~ 12명</div>
+                    </div>
+                    <div class="pd-info-row">
+                      <svg class="pd-info-row__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                      <div class="pd-info-row__label">전화</div>
+                      <div class="pd-info-row__value">010-1234-5678</div>
+                    </div>
+                  </div>
+                  <div class="pd-section">
+                    <div class="pd-section__header">
+                      <div class="pd-section__title">위치</div>
+                      <svg class="pd-section__edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </div>
+                    <div class="pd-map">📍 지도 미리보기</div>
+                    <div style="font-size:var(--typography-font-size-caption);color:var(--color-text-primary);font-weight:600;">서울 마포구 합정동</div>
+                    <div style="font-size:var(--typography-font-size-caption);color:var(--color-text-secondary);">합정역 1번 출구 도보 3분</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>활성 탭이 "파티 정보"이고, 파티의 위치 정보가 정상적으로 도착해 지도 미리보기 + 주소가 표시되는 일반 상태.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            + <strong>섹션 어디든 탭</strong> — 해당 섹션 전용 편집 화면이 열림.<br>
+            &nbsp;&nbsp;・ "기본 정보" 탭 — 제목 / 설명 / 사진 / 공개·비공개 편집 화면.<br>
+            &nbsp;&nbsp;・ "인원 및 연락처" 탭 — 최소·최대 인원 / 연락 수단 편집 화면.<br>
+            &nbsp;&nbsp;・ "위치" 탭 — 장소 편집 화면.<br>
+            상단 탭 헤더 / 점 세 개 메뉴 / 뒤로가기 동작은 baseline과 동일.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 장소가 지정되지 않았거나 위치 정보를 못 받아온 경우 — "위치" 섹션 안에 안내 placeholder가 노출되며, 섹션 헤더와 편집 진입은 그대로 유지.<br>
+            · 설명 본문이 비어 있는 파티 — 본문 영역만 비어있는 상태로 노출됨.<br>
+            · 공개 파티 — "비공개" 뱃지는 노출되지 않음.<br>
+            · 마지막 섹션 아래에는 홈 인디케이터에 가리지 않을 정도의 여백이 확보됨.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            ↔ Tab body → <code>PartyInfoTab</code><br>
+            + <code>MinglitEditableSection</code> × 3 (InkWell · title + 16px edit pencil + child)<br>
+            + <code>PartyBasicInfoSummary</code> (title + Quill description + image strip + status MinglitTag)<br>
+            + <code>PartyCapacitySummary</code> + <code>PartyContactSummary</code> (icon + label + value rows)<br>
+            + <code>PartyLocationSummary</code> + <code>MinglitAsyncValueWidget</code><br>
+            + 조건부 <code>MinglitTag</code>("비공개", Icons.lock, error color) when <code>party.isPrivate</code>
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            ↔ 섹션 bg → <code>colorScheme.surfaceContainerLowest.withAlpha(strong)</code> (light 테마에서 거의 white) · spec mockup은 <code>color-background</code>로 근사<br>
+            + <code>spacing-large</code> (24 · Tab2 섹션 간 SizedBox)<br>
+            + <code>color-error</code> (비공개 MinglitTag · 16px lock icon)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 화면 하단 여백은 홈 인디케이터에 마지막 섹션이 가리지 않을 정도로 추가 확보됨.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ========================================================
+         State 4: Tab3 · 입장 그룹 및 티켓
+         ======================================================== -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Tab3 · 입장 그룹 및 티켓</strong> <small>입장 조건과 발행한 티켓을 한 화면에서 관리</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="pd-appbar">
+                <div class="pd-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="pd-appbar__title">금요일의 위스키 살롱</div>
+                <div class="pd-appbar__more"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></div>
+              </div>
+              <div class="pd-tabbar">
+                <div class="pd-tab">이벤트 관리</div>
+                <div class="pd-tab">파티 정보</div>
+                <div class="pd-tab pd-tab--active">입장 그룹 및 티켓</div>
+              </div>
+              <div class="pd-body">
+                <div class="pd-body__padding">
+                  <div class="pd-section">
+                    <div class="pd-section__header">
+                      <div class="pd-section__title">입장 조건</div>
+                      <svg class="pd-section__edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </div>
+                    <div class="pd-entry-group">
+                      <div class="pd-entry-group__name">기본 그룹</div>
+                      <div class="pd-entry-group__count">최대 12명</div>
+                    </div>
+                    <div class="pd-entry-group">
+                      <div class="pd-entry-group__name">VIP 멤버</div>
+                      <div class="pd-entry-group__count">최대 4명</div>
+                    </div>
+                  </div>
+                  <div style="height:32px;"></div>
+                  <div class="pd-text-title">입장권</div>
+                  <div class="pd-ticket">
+                    <div class="pd-ticket__title">얼리버드 티켓</div>
+                    <div class="pd-ticket__meta">25,000원 · 5/8 까지</div>
+                  </div>
+                  <div class="pd-ticket">
+                    <div class="pd-ticket__title">일반 티켓</div>
+                    <div class="pd-ticket__meta">35,000원 · VIP 멤버 전용</div>
+                  </div>
+                  <div class="pd-add-card">
+                    <div class="pd-add-card__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+                    <div class="pd-add-card__body">
+                      <div class="pd-add-card__title">티켓 생성</div>
+                      <div class="pd-add-card__sub">템플릿을 추가합니다.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>활성 탭이 "입장 그룹 및 티켓"이고, 한 개 이상의 입장 그룹과 한 개 이상의 티켓이 등록되어 있는 일반 상태.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            + <strong>"입장 조건" 섹션 탭</strong> — 입장 그룹 관리 화면이 열림.<br>
+            + <strong>티켓 행 탭</strong> — 해당 티켓 편집 화면으로 이동.<br>
+            + <strong>"티켓 생성" 카드 탭</strong> — 새 티켓 만들기 화면이 열리고, 저장하고 돌아오면 티켓 목록에 즉시 반영됨.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 입장 그룹이 한 개도 없는 경우 — "입장 조건" 섹션 안에 작은 아이콘 + 안내 라벨의 빈 안내가 노출됨.<br>
+            · 티켓이 없는 경우 — 티켓 행이 보이지 않고 "티켓 생성" 카드만 노출.<br>
+            · 티켓 목록을 못 가져온 경우 — 티켓 영역에만 안내 메시지가 표시되고 입장 조건 영역은 그대로 노출.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            ↔ Tab body → <code>PartyRuleManagementTab</code><br>
+            + <code>MinglitEditableSection</code> ("입장 조건")<br>
+            + <code>PartyEntranceConditionSummary</code> (entry group list / 빈 placeholder)<br>
+            + Plain <code>Text("입장권", titleMedium)</code> (이 섹션은 EditableSection 아닌 plain title)<br>
+            + <code>PartyTicketsSummary</code> → 내부 <code>TicketListView</code> + AddActionCard
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ <code>spacing-xlarge</code> (32 · 입장 조건 ↔ 입장권 섹션 gap — Tab2의 large(24)와 다름)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 "입장 조건" 섹션은 헤더 자체에 편집 펜 아이콘이 붙는 편집 가능한 섹션이지만, "입장권" 섹션은 같은 형식의 헤더가 아닌 단순 타이틀이라 시각 일관성이 살짝 부족 — 후속 정리 후보. 티켓 편집은 카드 행 탭과 "티켓 생성" 카드 두 경로로 진입.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ========================================================
+         State 5: Loading
+         ======================================================== -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Loading</strong> <small>화면 진입 직후 파티 정보를 가져오는 동안</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport" style="background:var(--color-surface);">
+              <div class="pd-fullpage">
+                <div class="pd-spinner"></div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>화면 진입 직후, 파티 정보가 도착하기 전까지의 짧은 대기 구간.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>이 시점에는 시스템 뒤로가기로만 이탈 가능. 화면 안에는 스피너 외 별도 컨트롤이 없음.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>가져오기 실패 시 — 빈 AppBar 위에 가운데 정렬 안내 메시지가 뜨는 단순한 오류 화면으로 전환.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            ↔ <code>NestedScrollView</code> 전체 → <code>MinglitAsyncValueWidget</code> 기본 loading (CircularProgressIndicator)<br>
+            − AppBar / TabBar / 모든 탭 content (Scaffold body 아래에 아직 그려지지 않음)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>↔ 모든 탭 토큰 미사용. 스피너만 <code>color-partner-primary</code>(top color) + <code>color-divider</code>(track)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 데이터가 도착하기 전엔 상단 AppBar / 탭 헤더도 아직 그려지지 않은 상태. 가져오기 실패 시엔 빈 AppBar + 가운데 정렬 안내 메시지로 대체된다.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ========================================================
+         State 6: Overflow popup menu (more_vert)
+         ======================================================== -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Overflow Popup Menu</strong> <small>AppBar 우상단 점 세 개 아이콘 탭 시 열리는 메뉴</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="pd-appbar">
+                <div class="pd-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                <div class="pd-appbar__title">금요일의 위스키 살롱</div>
+                <div class="pd-appbar__more" style="background:var(--color-surface);"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></div>
+              </div>
+              <div class="pd-tabbar">
+                <div class="pd-tab pd-tab--active">이벤트 관리</div>
+                <div class="pd-tab">파티 정보</div>
+                <div class="pd-tab">입장 그룹 및 티켓</div>
+              </div>
+              <div class="pd-body" style="opacity:0.6;pointer-events:none;">
+                <div class="pd-body__padding">
+                  <div class="pd-text-title">이벤트</div>
+                  <div class="pd-event-card">
+                    <div class="pd-event-card__date">2026.05.08 · 금 · 19:30</div>
+                    <div class="pd-event-card__title">5월 8일 위스키 살롱</div>
+                  </div>
+                </div>
+              </div>
+              <div class="pd-popup">
+                <div class="pd-popup__item">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  <span>수정</span>
+                </div>
+                <div class="pd-popup__item pd-popup__item--danger">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                  <span>비활성화</span>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>이전 4개 일반 상태에서 점 세 개 아이콘을 탭한 직후. 메뉴는 항상 "수정"을 보여주며, 운영중인 파티에는 "비활성화"가, 종료된 파티에는 "활성화"가 함께 노출된다 (둘 중 하나만).</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            ① <strong>"수정" 탭</strong> — 파티 편집 위저드(생성 위저드와 같은 화면)로 이동.<br>
+            ② <strong>"비활성화" 탭</strong> — 파티 상태가 즉시 종료로 바뀌고 화면이 자동으로 갱신, 성공 안내 토스트가 잠시 노출.<br>
+            ③ <strong>"활성화" 탭</strong> — 파티 상태가 즉시 운영중으로 바뀌고 화면이 자동 갱신.<br>
+            ④ <strong>메뉴 바깥 영역 탭 / 뒤로가기</strong> — 메뉴가 닫힘.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>
+            · 상태 변경 중 네트워크 오류가 나면 안내 다이얼로그가 뜨고, 파티 상태는 변경되지 않음.<br>
+            · 알 수 없는 상태값을 가진 파티는 "수정"만 노출되고 활성화/비활성화 항목은 표시되지 않음.<br>
+            · 다른 탭(파티 정보 / 입장 그룹 및 티켓)에서도 동일하게 동작 — 메뉴는 활성 탭과 무관하게 AppBar에서 열림.
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            + <code>PopupMenuButton&lt;String&gt;</code> (Icons.more_vert)<br>
+            + <code>PopupMenuItem</code> × 2 (조건부) — 각 항목은 Row(Icon 20px + sm gap + Text)<br>
+            + 비활성화 항목은 <code>colorScheme.error</code> 컬러의 icon + bodyMedium text
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            + <code>color-error</code> ("비활성화" 행 — icon + text)<br>
+            + Material 기본 popup elevation 8 + radius-small (4)<br>
+            + <code>MinglitIconSize.small</code> (20 · popup item icon) · <code>spacing-small</code> (8 · icon↔text gap)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 활성/비활성 토글은 운영중 / 종료 두 가지 상태에 한해서만 노출되며, 그 외 상태에서는 "수정"만 보인다. 토글 결과는 즉시 화면에 반영된다.</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </section>
+</div>
+
+<!-- ============================================================
+     GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">cross-cutting — 모든 state에 적용되는 액션, motion, 글로벌 에지케이스. 각 state 한정 액션은 위 mini-table 참고.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">사용자 액션</th>
+          <th>화면에 보이는 결과</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>뒤로가기 (시스템 / AppBar back)</td>
+          <td>파티 목록 화면으로 복귀. 다시 들어오면 화면 스크롤은 처음 위치로 돌아옴.</td>
+        </tr>
+        <tr>
+          <td>탭 헤더 탭 또는 좌우 스와이프</td>
+          <td>탭 본문이 새 탭으로 부드럽게 슬라이드. 상단 AppBar / 탭 헤더는 고정. 마운트된 동안 각 탭의 스크롤 위치는 유지됨.</td>
+        </tr>
+        <tr>
+          <td>오버플로우 메뉴 — 활성화 / 비활성화 성공</td>
+          <td>화면이 자동으로 새 상태에 맞게 갱신되고, 성공 안내 토스트가 잠시 노출됨.</td>
+        </tr>
+        <tr>
+          <td>탭 안 어떤 섹션이든 편집 후 저장</td>
+          <td>편집 화면에서 빠져나오면 해당 영역이 즉시 새 값으로 갱신됨 — 기본 정보 / 인원·연락처 / 위치 / 입장 그룹 / 티켓 모두 동일한 패턴.</td>
+        </tr>
+        <tr>
+          <td>다크 모드 토글</td>
+          <td>화면 / AppBar / 탭 헤더 / 카드 배경이 다크 톤으로 전환. 탭 표시선과 라벨은 파트너 다크 톤의 보라로 자동 전환됨.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion timing</h2>
+    <p class="intro">Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code> → <code>MinglitAnimation</code></p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">Transition</th>
+          <th style="width: 200px;">Token / Duration</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>화면 진입 (목록 → 상세)</td>
+          <td>shared-axis scaled (~300ms)</td>
+          <td>들어오는 화면이 살짝 확대되며 자연스럽게 들어오는 표준 전환.</td>
+        </tr>
+        <tr>
+          <td>탭 슬라이드</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>탭 본문이 좌우로 슬라이드되며 표시선이 따라 이동.</td>
+        </tr>
+        <tr>
+          <td>Loading → 데이터 표시</td>
+          <td>cut (no animation)</td>
+          <td>별도 전환 없이 즉시 교체.</td>
+        </tr>
+        <tr>
+          <td>오버플로우 메뉴 열기 / 닫기</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>점 세 개 위치에서 자연스럽게 페이드 + 살짝 확대되며 열림.</td>
+        </tr>
+        <tr>
+          <td>섹션 편집 화면 진입</td>
+          <td><code>MinglitAnimation.medium</code> (350ms)</td>
+          <td>우→좌 슬라이드 기본 푸시.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>파티 정보 로드 실패</strong> — 본문이 빈 AppBar + 가운데 정렬 안내 메시지의 단순한 오류 화면으로 대체. 이 경우 탭 헤더는 그려지지 않는다.</li>
+      <li><strong>활성화 / 비활성화 처리 중</strong> — 화면 전체에 잠시 풀스크린 로딩 오버레이가 노출되며, 실패하면 안내 다이얼로그가 뜨고 상태는 변경되지 않는다.</li>
+      <li><strong>탭 진입은 항상 첫 번째 탭에서</strong> — 외부에서 특정 탭으로 직접 진입하는 길은 없으며, 화면을 다시 들어오면 항상 "이벤트 관리" 탭에서 시작.</li>
+      <li><strong>반복 카드 가시성</strong> — 반복 규칙이 없거나 정리되었거나, 잠시 가져오는 중·실패한 경우 모두 카드가 보이지 않음. 사용자 입장에서는 동일하게 일회성 파티처럼 보인다.</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">implementation source + 인접 화면. Components / Tokens는 위 mini-table 참고.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <tbody>
+        <tr><th style="width: 200px;">Widget</th><td><code>PartyDetailPage</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/party/detail/party_detail_page.dart"><code>apps/app_partner/lib/src/features/party/detail/party_detail_page.dart</code></a></td></tr>
+        <tr><th>Tabs</th><td><code>PartyEventManagementTab</code> · <code>PartyInfoTab</code> · <code>PartyRuleManagementTab</code> — <a href="https://github.com/Mark-Yun/minglit/tree/dev/apps/app_partner/lib/src/features/party/detail/tabs"><code>apps/app_partner/lib/src/features/party/detail/tabs/</code></a></td></tr>
+        <tr><th>Coordinator</th><td><code>PartyDetailCoordinator</code> (<code>partyDetailCoordinatorProvider</code>) — edit modal push + activate/deactivate + sub-route navigation</td></tr>
+        <tr><th>Route</th><td><code>PartyDetailRoute</code> · <code>/more/parties/:partyId</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
+        <tr><th>Provider</th><td><code>partyDetailProvider(partyId)</code> · <code>partyEventsProvider(partyId)</code> · <code>partyTicketsProvider(partyId)</code> · <code>locationDetailProvider(locationId)</code> · <code>partyRecurrenceRuleProvider(partyId)</code></td></tr>
+        <tr><th>Repository</th><td><code>partyRepository</code> (status / capacity / location / entry groups update) · <code>ticketRepository</code> (template create) · <code>locationRepository</code></td></tr>
+        <tr><th>Theme</th><td><code>MinglitTheme.partnerTheme</code> (light) / <code>partnerThemeDark</code> (dark) — primary = <code>MinglitPartnerColors.primary</code> (#6c3ce1) · spec var: <code>--color-partner-primary</code></td></tr>
+        <tr><th>⚠️ 알려진 drift / 의문점</th><td>
+          · Tab3에서 "입장 조건"은 <code>MinglitEditableSection</code>(InkWell + edit pencil)이지만 "입장권"은 plain <code>Text(titleMedium)</code> — 일관성 부족.<br>
+          · Tab1의 "이벤트" 헤더도 plain Text. EditableSection 미적용 — 의도된 차이인지 검토 대상.<br>
+          · party_create_wizard_page spec은 <code>--color-primary</code>(user purple)을 사용 — partner indigo로 마이그레이션 후속 권장.
+        </td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/party_create_wizard_page/index.html"><code>PartyCreateWizardPage</code></a></td>
+          <td>이 화면의 상위(파티 생성) + <code>PartyEditRoute</code>가 같은 wizard로 진입 (편집 모드).</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_detail_page/index.html"><code>EventDetailPage</code></a></td>
+          <td>Tab1의 EventCard 탭 → 이 spec으로 이동. 단, 그 spec은 user-app 화면 — partner의 EventDetailPage는 별도(같은 라우트 이름, 다른 위젯).</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/settlement_detail_page/index.html"><code>SettlementDetailPage</code></a></td>
+          <td>이 파티의 매출이 정산되는 하류 화면. 동일 partner 앱.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+</body>
+</html>

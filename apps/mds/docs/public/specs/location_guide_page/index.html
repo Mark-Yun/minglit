@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — LocationGuidePage (app_partner · LocationGuideRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   LocationGuidePage-specific atoms.
+   Partner brand override — page is in app_partner, so MinglitPartnerColors.primary
+   (#6c3ce1, indigo) replaces the default user purple. Scoped via .viewport so
+   docs chrome stays neutral.
+   ============================================================ */
+.viewport {
+  --color-primary: var(--color-partner-primary);   /* #6c3ce1 */
+  --spec-blueprint-rgb: 108, 60, 225;
+}
+body.dark-mode .viewport {
+  --color-primary: var(--color-partner-dark-primary);
+}
+
+/* AppBar — simpleAppBar(title: '장소선정 가이드'), matches scaffold gray, no border */
+.lg-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-xsmall);
+  background: var(--color-surface);
+}
+.lg-appbar__back {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+}
+.lg-appbar__back svg { width: 22px; height: 22px; color: var(--color-text-primary); }
+.lg-appbar__title {
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-left: var(--spacing-xsmall);
+}
+
+/* Body — SingleChildScrollView · Scaffold bg = surface light gray */
+.lg-body {
+  position: absolute;
+  top: 56px; left: 0; right: 0; bottom: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: var(--spacing-medium);
+  background: var(--color-surface);
+}
+.lg-body::-webkit-scrollbar { display: none; }
+
+/* Card · Card(elevation: 0, color: surfaceContainerHighest) — proxy via divider tone */
+.lg-card {
+  background: var(--color-divider);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-large);
+  margin-bottom: var(--spacing-medium);
+}
+.lg-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+  margin-bottom: var(--spacing-medium);
+}
+.lg-card__head svg { width: 20px; height: 20px; flex-shrink: 0; }
+.lg-card__head svg.is-primary { color: var(--color-primary); }
+.lg-card__head svg.is-secondary { color: var(--color-secondary); }
+.lg-card__head svg.is-error { color: var(--color-error); }
+.lg-card__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+/* Bullet item · '•  ' + bodyMedium */
+.lg-bullet {
+  display: flex;
+  align-items: flex-start;
+  padding: var(--spacing-xsmall) 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+}
+.lg-bullet__dot { margin-right: 6px; }
+
+/* Step item · circle({step}) + bodyMedium */
+.lg-step {
+  display: flex;
+  align-items: flex-start;
+  padding: var(--spacing-xsmall) 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+}
+.lg-step__num {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-right: var(--spacing-small);
+}
+.lg-step__text { padding-top: 2px; }
+
+/* Loading spinner mock */
+.lg-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface);
+}
+.lg-spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--color-divider);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<header>
+  <h1>장소선정 가이드</h1>
+</header>
+
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr><th style="width: 140px;">Status</th><td><strong>✅ 디자인완료</strong></td></tr>
+      <tr><th>App</th><td><code>app_partner</code></td></tr>
+      <tr><th>Category</th><td>home · guide</td></tr>
+      <tr><th>Route / Surface</th><td><code>LocationGuideRoute</code></td></tr>
+      <tr><th>Path</th><td><code>/location-guide</code></td></tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="/specs/partner_home_page/index.html"><code>PartnerHomePage</code></a> (location banner CTA로 진입)<br>
+          <strong>Children</strong>: <em>—</em>
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          파트너가 이벤트 장소를 등록하기 전에 좋은 장소의 조건 · 등록 절차 · 주의사항을 한눈에 이해할 수 있도록 안내한다.
+          정적 read-only 가이드 화면으로, 입력/제출 동작은 없고 학습 + 외부 흐름(장소 관리 메뉴)으로의 진입 유도가 목적이다.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: PartnerHomePage 상단 location banner ("장소를 등록해 주세요") 탭 · 신규 파트너 온보딩 흐름.<br>
+          <strong>Exit points</strong>: AppBar back → PartnerHomePage 복귀. 장소 관리 메뉴는 본 화면에서 직접 진입 동선 제공 안 함 (Step 안내만).
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          파트너가 처음 장소를 등록할 때 흔히 놓치는 항목(접근성, 예약 가능성, 사진 일치 등)을
+          앱이 사전에 명시해 운영 분쟁과 cancel 사유를 줄인다. UI 입력보다 학습 가치가 우선이라
+          Form이 아닌 정적 information card stack으로 설계.
+        </td>
+      </tr>
+      <tr><th>Frequency</th><td>온보딩 1-2회 / 이벤트 생성 전 참고용으로 가끔.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="doc">
+  <h2>History</h2>
+  <table class="ref">
+    <thead>
+      <tr><th style="width: 110px;">Date</th><th style="width: 80px;">Version</th><th style="width: 120px;">Author</th><th>Changes</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>v1.4 template으로 신규 작성. 정적 가이드 화면이라 state는 Default 단일 + Loading(스크롤 진입 직전 짧은 비어있음 상태) 정도. 3개 SectionCard 구조 (조건 / 등록방법 / 주의사항).</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#global-behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">simpleAppBar + 단일 SingleChildScrollView. body는 3개의 SectionCard가 수직 스택으로 쌓임.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      AppBar (h56) + 스크롤 body. body는 padding all 16, Column(crossAxis: stretch). 3개 카드가 spacing-medium gap으로 배치되고 마지막에 spacing-large 하단 여백.
+    </p>
+
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region" style="top:0; left:0; right:0; bottom:0; border-style:solid; border-color: rgba(var(--spec-blueprint-rgb), 0.18);"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:0; left:0; right:0; height:56px;">
+          <span class="blueprint__region-label">① AppBar · h=56</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:72px; left:16px; right:16px; height:200px;">
+          <span class="blueprint__region-label">② SectionCard · 좋은 장소의 조건</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:288px; left:16px; right:16px; height:180px;">
+          <span class="blueprint__region-label">③ SectionCard · 장소 등록 방법</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:484px; left:16px; right:16px; height:180px;">
+          <span class="blueprint__region-label">④ SectionCard · 주의사항</span>
+        </div>
+        <div class="blueprint__region" style="top:680px; left:16px; right:16px; height:24px;">
+          <span class="blueprint__region-label">⑤ Bottom spacer · spacing-large</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+└─ <b>AppBar</b> = MinglitTheme.simpleAppBar     ← ①
+│  └─ title: "장소선정 가이드"
+└─ <b>SingleChildScrollView</b>
+   └─ <b>Padding</b>(<code>spacing-medium (16px)</code> all)
+      └─ <b>Column</b>(crossAxis: stretch)
+         ├─ <em>SectionCard #1</em>             ← ②
+         │  · icon: check_circle_outline · color: primary
+         │  · title: "좋은 장소의 조건"
+         │  · 5 BulletItems
+         ├─ Gap: <code>spacing-medium (16px)</code>
+         │
+         ├─ <em>SectionCard #2</em>             ← ③
+         │  · icon: edit_note · color: secondary
+         │  · title: "장소 등록 방법"
+         │  · 4 StepItems (1~4)
+         ├─ Gap: <code>spacing-medium (16px)</code>
+         │
+         ├─ <em>SectionCard #3</em>             ← ④
+         │  · icon: warning_amber_rounded · color: error
+         │  · title: "주의사항"
+         │  · 4 BulletItems
+         │
+         └─ Gap: <code>spacing-large (24px)</code> ← ⑤</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 60px;">#</th><th style="width: 200px;">Region</th><th style="width: 220px;">Alignment</th><th>Spacing</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>Outer body padding</td><td>—</td><td>all <code>spacing-medium (16px)</code></td></tr>
+        <tr><td>①</td><td>AppBar</td><td>title leading aligned (back arrow + title)</td><td>height: 56</td></tr>
+        <tr><td>②③④</td><td>SectionCard</td><td>crossAxis: stretch · 풀폭</td><td>card 사이 gap: <code>spacing-medium (16px)</code></td></tr>
+        <tr><td>⑤</td><td>Bottom spacer</td><td>—</td><td>height: <code>spacing-large (24px)</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ① — SectionCard</h2>
+    <p class="intro">
+      Card(elevation 0 · surfaceContainerHighest · radius-card · padding spacing-large all). 내부는 Row(icon + title) → spacing-medium gap → 자식 children Column.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 220px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:24px;left:24px;right:24px;height:24px;">
+          <span class="blueprint__region-label">㉠ icon (20) + title</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:64px;left:24px;right:24px;bottom:24px;">
+          <span class="blueprint__region-label">㉡ children (BulletItem 또는 StepItem 반복)</span>
+        </div>
+      </div>
+      <div class="layout-tree"><b>Card</b>(elevation: 0)
+   bg: <code>surfaceContainerHighest</code>
+   radius: <code>radius-card (16px)</code>
+└─ <b>Padding</b>(<code>spacing-large (24px)</code> all)
+   └─ <b>Column</b>(crossAxis: start)
+      ├─ <b>Row</b>                              ← ㉠
+      │  ├─ <b>Icon</b>(size: 20, color: section)
+      │  ├─ Gap: <code>spacing-small (8px)</code>
+      │  └─ <b>Text</b>(titleSmall · w700)
+      ├─ Gap: <code>spacing-medium (16px)</code>
+      │
+      └─ <em>...children</em>                    ← ㉡</div>
+    </div>
+    <table class="ref" style="margin-top: 16px;">
+      <thead><tr><th style="width: 60px;">#</th><th style="width: 180px;">Region</th><th style="width: 220px;">Alignment</th><th>Spacing / tokens</th></tr></thead>
+      <tbody>
+        <tr><td>㉠</td><td>Header row</td><td>icon + title baseline</td><td>icon↔title: <code>spacing-small (8px)</code></td></tr>
+        <tr><td>㉡</td><td>Children list</td><td>crossAxis: start</td><td>item 사이: <code>spacing-xsmall (4px)</code> v-padding (BulletItem/StepItem 자체 패딩)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ② — BulletItem &amp; StepItem</h2>
+    <p class="intro">
+      BulletItem: '• ' + Expanded(Text). StepItem: 24px primary 동그라미(흰색 숫자) + spacing-small + Expanded(Text). 둘 다 bodyMedium · padding vertical xsmall.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 200px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;right:16px;height:32px;">
+          <span class="blueprint__region-label">㉠ BulletItem · '•  ' + text</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:80px;left:16px;right:16px;height:32px;">
+          <span class="blueprint__region-label">㉡ StepItem · 동그라미(24) + text</span>
+        </div>
+      </div>
+      <div class="layout-tree"><b>BulletItem</b> (㉠)
+└─ <b>Padding</b>(v: <code>spacing-xsmall (4px)</code>)
+   └─ <b>Row</b>(crossAxis: start)
+      ├─ <b>Text</b>('•  ', bodyMedium)
+      └─ <b>Expanded</b>(<b>Text</b>(text, bodyMedium))
+
+<b>StepItem</b> (㉡)
+└─ <b>Padding</b>(v: <code>spacing-xsmall (4px)</code>)
+   └─ <b>Row</b>(crossAxis: start)
+      ├─ <b>Container</b>(24×24, circle, primary)
+      │  └─ <b>Text</b>('1', labelSmall · w700 · onPrimary)
+      ├─ Gap: <code>spacing-small (8px)</code>
+      └─ <b>Expanded</b>(<b>Padding</b>(top: <code>xxsmall (2px)</code>) + Text)</div>
+    </div>
+    <table class="ref" style="margin-top: 16px;">
+      <thead><tr><th style="width: 60px;">#</th><th style="width: 180px;">Region</th><th style="width: 220px;">Alignment</th><th>Spacing / tokens</th></tr></thead>
+      <tbody>
+        <tr><td>㉠</td><td>BulletItem</td><td>start aligned · '•' inline</td><td>v-padding: <code>spacing-xsmall (4px)</code></td></tr>
+        <tr><td>㉡</td><td>StepItem</td><td>circle + text baseline 보정 (Padding top: 2px)</td><td>circle 24×24 · gap <code>spacing-small (8px)</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">정적 가이드라 state 분기가 거의 없음. Default(전체 카드 풀 렌더) + 짧은 진입 직후 화면 전환 프레임 정도.</span>
+  </div>
+
+  <section class="doc">
+    <h2>States gallery</h2>
+    <p class="intro">
+      외부 데이터 조회가 없는 정적 가이드 화면이라 빈 상태 / 에러 / 로딩 분기가 없다. 모든 내용이 화면에 즉시 노출.
+    </p>
+
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- Default (baseline) -->
+      <table class="ref state-mini is-baseline-tint">
+        <thead>
+          <tr><th colspan="3"><strong>Default — 진입 직후 (top of scroll)</strong> 🎯 <small>baseline · static</small></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="viewport">
+                <div class="lg-appbar">
+                  <div class="lg-appbar__back">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                  </div>
+                  <div class="lg-appbar__title">장소선정 가이드</div>
+                </div>
+                <div class="lg-body">
+                  <div class="lg-card">
+                    <div class="lg-card__head">
+                      <svg class="is-primary" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                      <div class="lg-card__title">좋은 장소의 조건</div>
+                    </div>
+                    <div class="lg-bullet"><span class="lg-bullet__dot">•</span><span>대중교통 접근성이 좋은 곳 (역세권 도보 10분 이내)</span></div>
+                    <div class="lg-bullet"><span class="lg-bullet__dot">•</span><span>주차 공간이 확보된 곳</span></div>
+                    <div class="lg-bullet"><span class="lg-bullet__dot">•</span><span>소음이 적고 대화하기 편한 환경</span></div>
+                    <div class="lg-bullet"><span class="lg-bullet__dot">•</span><span>단체 예약이 가능한 공간</span></div>
+                    <div class="lg-bullet"><span class="lg-bullet__dot">•</span><span>참여자 수에 맞는 적절한 크기</span></div>
+                  </div>
+                  <div class="lg-card">
+                    <div class="lg-card__head">
+                      <svg class="is-secondary" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                      <div class="lg-card__title">장소 등록 방법</div>
+                    </div>
+                    <div class="lg-step"><div class="lg-step__num">1</div><div class="lg-step__text">파트너 프로필에서 "장소 관리" 메뉴 진입</div></div>
+                    <div class="lg-step"><div class="lg-step__num">2</div><div class="lg-step__text">주소 검색으로 장소 위치 설정</div></div>
+                    <div class="lg-step"><div class="lg-step__num">3</div><div class="lg-step__text">상세 주소 및 찾아오는 길 안내 입력</div></div>
+                    <div class="lg-step"><div class="lg-step__num">4</div><div class="lg-step__text">등록 완료 후 이벤트 생성 시 장소 선택</div></div>
+                  </div>
+                </div>
+                <span class="annotation" style="top:8px;left:120px;">simpleAppBar (transparent · scaffold gray)</span>
+                <span class="annotation" style="top:120px;left:8px;">padding all 16</span>
+                <span class="callout" style="top:80px;right:8px;">ⓐ</span>
+                <span class="callout" style="top:312px;right:8px;">ⓑ</span>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>화면 진입 직후. 정적 가이드라 데이터 조회 없이 즉시 렌더. 스크롤 위치는 가장 위 — 첫 카드부터 보임.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>스크롤 ↕ → 3개 카드 차례로 노출. AppBar back 탭 → 파트너 홈으로 복귀. 카드 자체는 탭 동작 없음 (정적 텍스트).</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td><strong>긴 텍스트 줄바꿈</strong> — bullet/step 텍스트는 자연 wrap. <strong>한 화면을 넘는 길이</strong> — 스크롤로 처리.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td><code>MinglitTheme.simpleAppBar</code> · <code>Scaffold</code> · <code>SingleChildScrollView</code> · <code>Card</code>(elevation 0) · <code>Icon</code> (3종: check_circle_outline ⓐ, edit_note ⓑ, warning_amber_rounded) · <code>_BulletItem</code> · <code>_StepItem</code></td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>
+              <code>spacing-medium (16px)</code> · <code>spacing-large (24px)</code> · <code>spacing-small (8px)</code> · <code>spacing-xsmall (4px)</code> · <code>spacing-xxsmall (2px)</code>
+              · <code>radius-card (16px)</code>
+              · color: <code>colorScheme.surfaceContainerHighest</code> (card bg) · <code>colorScheme.primary</code> (Section 1 + StepItem circle) · <code>colorScheme.secondary</code> (Section 2) · <code>colorScheme.error</code> (Section 3)
+              · typography <code>titleSmall</code> (card title · w700) · <code>bodyMedium</code> (bullet/step text) · <code>labelSmall</code> (step number · w700)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 본 화면 전용 컴포넌트(섹션 카드, bullet, step) — 다른 화면 재사용 의도 없음. 아이콘 색은 컬러 스킴에서 자동 매핑되어 partner 브랜드(indigo)에서도 자연스럽게 적응.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Initial frame (transient) -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3"><strong>Initial frame</strong> <span class="tag tag--mute">transient</span></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="viewport">
+                <div class="lg-appbar">
+                  <div class="lg-appbar__back">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                  </div>
+                  <div class="lg-appbar__title">장소선정 가이드</div>
+                </div>
+                <div class="lg-loading">
+                  <div class="lg-spinner" style="border-top-color: transparent; opacity: 0.4;"></div>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>화면 진입 직후 첫 프레임 — 화면 전환 애니메이션이 끝나기 전(~150ms).</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>탭 무반응 (전환 중)</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>—</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>동일 (전환 페이드 인만)</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>동일</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 데이터 조회가 없어 별도 로딩 분기는 아님 — 기본 화면 전환 애니메이션만.</td></tr>
+        </tbody>
+      </table>
+
+    </div>
+  </section>
+</div>
+
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">정적 가이드라 cross-cutting 동작이 매우 단순. 뒤로 가기 + 스크롤만.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr></thead>
+      <tbody>
+        <tr><td>뒤로 가기 (OS back / AppBar back)</td><td>파트너 홈으로 복귀 — 기본 reverse transition (~250ms)</td></tr>
+        <tr><td>스크롤 ↕</td><td>body 영역만 스크롤되고 AppBar는 고정. iOS는 바운스, Android는 overscroll glow.</td></tr>
+        <tr><td>아래로 당기기</td><td>동작 없음 — 정적 컨텐츠라 새로고침 비활성.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion &amp; timing</h2>
+    <table class="ref" style="margin-bottom: 16px;">
+      <thead><tr><th style="width: 200px;">Token</th><th style="width: 80px;">Value</th><th>Use case</th></tr></thead>
+      <tbody>
+        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>route push/pop · Material 기본 transition</td></tr>
+      </tbody>
+    </table>
+    <table class="ref">
+      <thead><tr><th style="width: 220px;">Transition</th><th style="width: 140px;">Duration (token)</th><th>Curve / notes</th></tr></thead>
+      <tbody>
+        <tr><td>화면 진입 (PartnerHome → 본 화면)</td><td><code>fast</code> (200ms)</td><td>Material slide from right (Android) / iOS-style horizontal push</td></tr>
+        <tr><td>화면 이탈 (back)</td><td><code>fast</code> (200ms)</td><td>reverse transition</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>다크 모드</strong> — 카드 배경과 아이콘 색상이 다크 스킴에 맞춰 자동 어두워짐.</li>
+      <li><strong>접근성</strong> — 섹션 헤더 + bullet 텍스트는 리스트 구조로 읽힘. 큰 글씨 모드에선 카드 내부가 자연 줄바꿈.</li>
+      <li><strong>다국어</strong> — 본 화면은 현재 한국어 고정. 다국어 도입 시 문자열 외부화 필요.</li>
+    </ul>
+  </section>
+</div>
+
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">Implementation source + 인접 화면.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 200px;">항목</th><th>Path / Reference</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Widget class</strong></td><td><code>LocationGuidePage</code> (StatelessWidget)</td></tr>
+        <tr><td><strong>File path</strong></td><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/home/guide/location_guide_page.dart"><code>apps/app_partner/lib/src/features/home/guide/location_guide_page.dart</code></a></td></tr>
+        <tr><td><strong>Controller / Provider</strong></td><td><em>—</em> (정적 화면 · 외부 상태 없음)</td></tr>
+        <tr><td><strong>Route</strong></td><td><code>LocationGuideRoute</code> · path: <code>/location-guide</code></td></tr>
+        <tr><td><strong>Internal widgets</strong></td><td><code>_SectionCard</code> · <code>_BulletItem</code> · <code>_StepItem</code> (private, 같은 파일)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr><td><a href="/specs/partner_home_page/index.html"><code>PartnerHomePage</code></a></td><td>Parent — location banner CTA로 진입.</td></tr>
+        <tr><td><a href="/specs/partner_welcome_page/index.html"><code>PartnerWelcomePage</code></a></td><td>온보딩 흐름 — 신규 파트너가 환영 → 가이드 순서로 학습.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>

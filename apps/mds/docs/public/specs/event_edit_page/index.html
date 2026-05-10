@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — EventEditPage (app_partner · EventEditRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   EventEditPage-specific atoms.
+
+   Partner app theme:
+   - Page (Scaffold) bg = light gray (var(--color-surface))
+   - Cards / form rows = white (var(--color-background))
+   - AppBar matches scaffold (light gray, no border-bottom)
+   - Brand primary = MinglitPartnerColors.primary (#6c3ce1)
+     scoped via .viewport so docs chrome stays neutral.
+   ============================================================ */
+.viewport {
+  --color-primary: var(--color-partner-primary);
+  --spec-blueprint-rgb: 108, 60, 225;
+}
+body.dark-mode .viewport {
+  --color-primary: var(--color-partner-dark-primary);
+}
+
+/* --- App bar --- */
+.ee-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  background: var(--color-surface);
+  position: relative;
+}
+.ee-appbar__back {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-primary);
+}
+.ee-appbar__back svg { width: 22px; height: 22px; }
+.ee-appbar__title {
+  flex: 1;
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* --- Body (between appbar and submit bar) --- */
+.ee-body {
+  position: absolute;
+  top: 56px;
+  left: 0; right: 0; bottom: 80px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  background: var(--color-surface);
+}
+.ee-body::-webkit-scrollbar { display: none; }
+
+/* --- Lock banner (확정자 ≥1명일 때 body 최상단) --- */
+.ee-lockbanner {
+  margin: var(--spacing-medium) var(--spacing-screen-edge) 0;
+  padding: var(--spacing-medium);
+  background: rgba(108, 60, 225, 0.08);
+  border: 1px solid rgba(108, 60, 225, 0.25);
+  border-radius: var(--radius-card);
+  display: flex;
+  gap: var(--spacing-small);
+  align-items: flex-start;
+}
+.ee-lockbanner svg {
+  width: 18px; height: 18px;
+  color: var(--color-partner-primary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.ee-lockbanner__body { flex: 1; }
+.ee-lockbanner__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 2px;
+}
+.ee-lockbanner__sub {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+/* --- Section header --- */
+.ee-section-header {
+  font-size: var(--typography-font-size-body);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  padding: var(--spacing-medium) var(--spacing-screen-edge) var(--spacing-small);
+}
+
+/* --- Form field row --- */
+.ee-field {
+  margin: 0 var(--spacing-screen-edge) var(--spacing-small);
+  padding: var(--spacing-medium);
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-divider);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xsmall);
+}
+.ee-field__label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xsmall);
+}
+.ee-field__label svg {
+  width: 12px; height: 12px;
+  color: var(--color-text-secondary);
+}
+.ee-field__value {
+  font-size: 15px;
+  color: var(--color-text-primary);
+}
+.ee-field__hint {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+.ee-field__hint--warn {
+  color: var(--color-partner-primary);
+  font-weight: 500;
+}
+.ee-field__hint--error {
+  color: var(--color-error);
+  font-weight: 500;
+}
+.ee-field--locked {
+  opacity: 0.7;
+  background: var(--color-divider-faint, var(--color-surface));
+}
+.ee-field--locked .ee-field__value {
+  color: var(--color-text-secondary);
+}
+.ee-field--changed {
+  border-color: var(--color-partner-primary);
+  border-width: 1.5px;
+}
+
+/* --- Lock chip on a field --- */
+.ee-lockchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  background: rgba(108, 60, 225, 0.12);
+  color: var(--color-partner-primary);
+  border-radius: var(--radius-small);
+  font-size: 10px;
+  font-weight: 600;
+  margin-left: auto;
+}
+.ee-lockchip svg { width: 10px; height: 10px; }
+
+/* --- Bottom submit bar --- */
+.ee-submitbar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 80px;
+  padding: var(--spacing-medium);
+  background: var(--color-surface);
+  box-shadow: 0 -4px 10px rgba(0,0,0,0.06);
+  box-sizing: border-box;
+}
+.ee-submit {
+  width: 100%;
+  height: 48px;
+  border-radius: var(--radius-button);
+  background: var(--color-partner-primary);
+  color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: var(--typography-font-size-button);
+  font-weight: 600;
+  gap: var(--spacing-small);
+}
+.ee-submit--disabled {
+  background: var(--color-divider);
+  color: var(--color-text-secondary);
+}
+.ee-submit--loading { opacity: 0.85; }
+.btn-spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* --- Cancel link (이벤트 취소 진입) --- */
+.ee-cancel-link {
+  margin: var(--spacing-large) var(--spacing-screen-edge);
+  text-align: center;
+  font-size: 13px;
+  color: var(--color-error);
+  font-weight: 500;
+  padding: var(--spacing-small);
+}
+
+/* --- Reason dialog (일정·장소 변경 시) --- */
+.ee-dialog-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 5;
+}
+.ee-dialog {
+  width: 88%;
+  max-width: 320px;
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-large);
+  display: flex; flex-direction: column;
+  gap: var(--spacing-medium);
+}
+.ee-dialog__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.ee-dialog__body {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+.ee-dialog__before-after {
+  display: flex; flex-direction: column;
+  gap: 4px;
+  padding: var(--spacing-small);
+  background: var(--color-surface);
+  border-radius: var(--radius-small);
+  font-size: 12px;
+}
+.ee-dialog__before { color: var(--color-text-secondary); }
+.ee-dialog__after { color: var(--color-partner-primary); font-weight: 600; }
+.ee-dialog__textarea {
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-input);
+  padding: var(--spacing-small);
+  min-height: 56px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.ee-dialog__notice {
+  font-size: 11px;
+  color: var(--color-partner-primary);
+  background: rgba(108, 60, 225, 0.08);
+  padding: var(--spacing-small);
+  border-radius: var(--radius-small);
+  display: flex; gap: 6px; align-items: flex-start;
+}
+.ee-dialog__notice svg { width: 12px; height: 12px; flex-shrink: 0; margin-top: 1px; }
+.ee-dialog__actions {
+  display: flex; gap: var(--spacing-small);
+  justify-content: flex-end;
+}
+.ee-dialog__btn {
+  height: 36px;
+  padding: 0 var(--spacing-medium);
+  border-radius: var(--radius-button);
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex; align-items: center;
+}
+.ee-dialog__btn--ghost { color: var(--color-text-secondary); }
+.ee-dialog__btn--primary {
+  background: var(--color-partner-primary);
+  color: white;
+}
+
+/* --- Snackbar --- */
+.snackbar {
+  position: absolute;
+  bottom: 96px; left: 16px; right: 16px;
+  background: #323232;
+  color: white;
+  border-radius: var(--radius-small);
+  padding: 12px 16px;
+  font-size: 13px;
+  display: flex; align-items: center; gap: 8px;
+}
+.snackbar svg { width: 18px; height: 18px; flex-shrink: 0; }
+.snackbar--success { background: #14532d; }
+.snackbar--success svg { color: #86efac; }
+.snackbar--error svg { color: var(--color-error); }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header>
+  <h1>Event Edit</h1>
+</header>
+
+<!-- ============================================================
+     OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>📝 신규작성</strong> <em style="color: var(--color-text-secondary);">— v1 초안 (확정자 0명 / ≥1명 / 변경 사유 다이얼로그 / 정원 감소 검증 / 저장 = 5 state)</em></td>
+      </tr>
+      <tr>
+        <th>App</th>
+        <td><code>app_partner</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>party · event · edit (existing occurrence)</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>EventEditRoute</code> · widget: <code>EventEditPage</code></td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td><code>/more/parties/:partyId/events/:eventId/edit</code></td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="/specs/partner_event_detail_page/index.html"><code>EventDetailPage</code></a> (운영 관리 탭의 Hero "일정" 영역 탭 시 진입)<br>
+          <strong>Children</strong>: <em>—</em> <em style="color: var(--color-text-secondary);">(이벤트 취소 진입 시 별도 destructive flow — 본 spec 범위 밖)</em>
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          파트너가 기존 이벤트의 정보를 수정한다. 확정 참가자(<em>승인</em> 또는 <em>결제 완료</em>) 수에 따라 필드별 잠금 정책이 적용되며, 통지 의무가 있는 필드(일정·장소)는 변경 시 사유 입력 + 자동 알림 발송이 강제된다. 확정자 0명일 때는 모든 필드 자유 수정 가능.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: 이벤트 상세(<a href="/specs/partner_event_detail_page/index.html">EventDetailPage</a>)의 Hero "일정" 영역 탭.<br>
+          <strong>Exit points</strong>: 저장 성공 → 화면 닫히며 EventDetailPage로 복귀, 성공 snackbar 노출. 일정/장소 변경 시 → 알림 발송 안내 snackbar 추가.
+          뒤로가기 → 변경사항 있으면 confirm 다이얼로그 + "변경사항을 버리시겠습니까?", 없으면 즉시 닫힘.
+          이벤트 취소 → 본문 하단 "이벤트 취소하기" 텍스트 링크 → 별도 destructive flow.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          <code>EventCreateRoute</code>(신규 회차 생성)와 분리한 이유: 수정 흐름은 "확정 참가자 보호 + 통지 의무"라는 다른 도메인 규칙을 가진다. 가격 인상 시 신규 신청자만 새 가격이 적용되고 확정자는 원래 가격이 유지되는 등 DB 레벨 정책이 별도로 동작하며, UI는 이를 명시적으로 안내한다.
+          잠금 매트릭스의 단일 진실은 본 spec — 운영자 화면 / 이메일 안내 / SMS 알림이 모두 같은 정책을 참조한다.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>이벤트당 평균 1~3회. 주 케이스: 만든 직후 오타·정보 보강(다수), 가격·정원 미세 조정(중), 확정자 발생 후 긴급 일정·장소 변경(소수, 통지 의무 발생).</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">
+    이 spec의 주요 변경 이력. 최신 항목 위.
+  </p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">날짜</th>
+        <th style="width: 120px;">버전</th>
+        <th>변경 사항</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-03</td>
+        <td>v1 (initial)</td>
+        <td>초안 작성. 확정자 0명/≥1명 두 모드 + 일정·장소 변경 사유 다이얼로그 + 정원 감소 검증(확정자 수 ≥ 새 정원이면 인라인 에러) + 가격 인상 시 "신규 신청자만 적용" 안내 + 저장 성공 시 EventDetailPage로 복귀.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      <code>Scaffold</code> — AppBar(title only, 좌측 정렬) + body(SingleChildScrollView with form sections) + bottom Container(SafeArea + ElevatedButton "저장"). TabBar 없음 — 단일 스크롤 폼.
+      확정자 ≥1명이면 body 최상단에 <strong>잠금 안내 배너</strong>가 추가되며 일정·정원·가격 필드에 lock chip이 붙는다.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- AppBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">① AppBar — back + '이벤트 수정' (left-aligned)</span>
+        </div>
+
+        <!-- Lock banner (확정자 ≥1명 only) -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:72px;left:16px;right:16px;height:56px;">
+          <span class="blueprint__region-label" style="font-size:9px;">② Lock banner (확정자 ≥1명 only)<br>'확정 참가자 N명 — 일정·장소 변경 시 자동 알림'</span>
+        </div>
+
+        <!-- Form: 기본 정보 -->
+        <div class="blueprint__region" style="top:144px;left:0;right:0;height:140px;">
+          <span class="blueprint__region-label">③ 기본 정보 — 제목 / 설명 / 태그 (자유)</span>
+        </div>
+
+        <!-- Form: 일정 · 장소 -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:300px;left:0;right:0;height:120px;">
+          <span class="blueprint__region-label">④ 일정 · 장소 — 통지 의무 필드<br>변경 시 사유 입력 다이얼로그 trigger</span>
+        </div>
+
+        <!-- Form: 가격 · 정원 -->
+        <div class="blueprint__region" style="top:436px;left:0;right:0;height:120px;">
+          <span class="blueprint__region-label">⑤ 가격 · 정원 — 정원 감소는 확정자 수 검증, 가격 인상은 신규에만 적용 안내</span>
+        </div>
+
+        <!-- Form: 추가 정보 -->
+        <div class="blueprint__region" style="top:572px;left:0;right:0;height:80px;">
+          <span class="blueprint__region-label">⑥ 추가 정보 — 이미지 · 호스트 · 카테고리 (자유)</span>
+        </div>
+
+        <!-- Cancel link -->
+        <div class="blueprint__region" style="top:668px;left:0;right:0;height:48px;border-style:dashed;border-color:rgba(255,80,80,0.5);">
+          <span class="blueprint__region-label" style="color:var(--color-error);">⑦ '이벤트 취소하기' 링크 (별도 destructive flow)</span>
+        </div>
+
+        <!-- Bottom submit -->
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:0;left:0;right:0;height:80px;">
+          <span class="blueprint__region-label">⑧ Bottom submit — SafeArea + ElevatedButton('저장')<br>shadow Offset(0,-4)</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">screen-edge pad 16</div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+├─ <b>appBar</b>: <b>AppBar</b>                                  ← ①
+│  ├─ leading: BackButton (auto · onPressed: confirm-if-dirty)
+│  └─ title: Text('이벤트 수정') · centerTitle: false
+├─ <b>body</b>: <code>MinglitAsyncValueWidget&lt;Event&gt;</code>
+│  ├─ loading: <code>MinglitCircularProgressIndicator</code>
+│  ├─ error:   Centered text ('이벤트 로드 실패')
+│  └─ data: <b>SingleChildScrollView</b>
+│     └─ Column [
+│        ├─ if confirmedCount &gt;= 1:                          ← ②
+│        │   <b>_LockBanner</b>(confirmedCount,
+│        │     locked: ['일정', '장소'],
+│        │     constrained: ['정원', '가격 인상'])
+│        ├─ <em>Section "기본 정보"</em>                         ← ③
+│        │  ├─ <b>_TextField</b>(label: '제목', maxLines: 1,
+│        │  │     unlocked: 항상)
+│        │  ├─ <b>_TextField</b>(label: '설명', maxLines: 6,
+│        │  │     unlocked: 항상)
+│        │  └─ <b>_TagsInput</b>(label: '태그', unlocked: 항상)
+│        ├─ <em>Section "일정 · 장소"</em>                       ← ④
+│        │  ├─ <b>_DateTimeField</b>(label: '일정',
+│        │  │     onChange: <em>if confirmed≥1 → showReasonDialog</em>)
+│        │  └─ <b>_LocationField</b>(label: '장소',
+│        │        onChange: <em>if confirmed≥1 → showReasonDialog</em>)
+│        ├─ <em>Section "가격 · 정원"</em>                       ← ⑤
+│        │  ├─ <b>_PriceField</b>(label: '가격',
+│        │  │     hint: '인상 시 신규 신청자만 적용')
+│        │  └─ <b>_CapacityField</b>(label: '정원',
+│        │        validator: <em>newCapacity &gt;= confirmedCount</em>)
+│        ├─ <em>Section "추가 정보"</em>                         ← ⑥
+│        │  ├─ <b>_ImagePicker</b>(unlocked: 항상)
+│        │  ├─ <b>_HostInfoFields</b>(unlocked: 항상)
+│        │  └─ <b>_CategoryDropdown</b>(unlocked: 항상)
+│        └─ <b>_CancelEventLink</b>('이벤트 취소하기')           ← ⑦
+│           · onTap: push EventCancelRoute (별도 flow)
+│     ]
+└─ <b>bottomNavigationBar</b>: <b>Container</b>(shadow -4)      ← ⑧
+   └─ <b>SafeArea</b>
+      └─ <b>ElevatedButton</b>(
+           onPressed: <em>!isDirty || isLoading ? null : _submit</em>,
+           child: isLoading ? '저장 중...' : '저장')</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>①</td><td>AppBar</td><td>title left-aligned · 56px · back btn 좌측</td><td>centerTitle: false · h-pad <code>spacing-screen-edge</code> · bg <code>color-surface</code></td></tr>
+        <tr><td>②</td><td>Lock banner</td><td>full-width inside screen-edge · row(icon + body) crossAxis start</td><td>margin top <code>spacing-medium</code> · margin h <code>spacing-screen-edge</code> · padding <code>spacing-medium</code> all · bg <code>color-primary @ 8%</code> · border 1px <code>color-primary @ 25%</code> · radius <code>radius-card</code></td></tr>
+        <tr><td>③④⑤⑥</td><td>Form section</td><td>section header(좌측 라벨) + 카드 stack 수직 배치</td><td>섹션 헤더 padding: <code>spacing-medium</code> screen-edge / <code>spacing-small</code> bottom · 카드 사이 <code>spacing-small (8)</code> · 섹션 사이 <code>spacing-large (24)</code></td></tr>
+        <tr><td>—</td><td>Form field card</td><td>full-width with screen-edge h-margin · column(label / value / hint)</td><td>padding <code>spacing-medium</code> all · radius <code>radius-card</code> · border 1px <code>color-divider</code> · bg <code>color-background</code> · 잠금 시 opacity 0.7 + bg dim · 변경 감지 시 border <code>color-primary</code> 1.5px</td></tr>
+        <tr><td>—</td><td>Lock chip (필드 우측)</td><td>row trailing · label 같은 줄</td><td>padding 2px 6px · bg <code>color-primary @ 12%</code> · color <code>color-primary</code> · radius <code>radius-small</code> · font-size 10px w600 · gap 3px (icon + text)</td></tr>
+        <tr><td>⑦</td><td>Cancel link</td><td>centered · 단독 한 줄</td><td>margin top <code>spacing-large</code> / margin h <code>spacing-screen-edge</code> · color <code>color-error</code> · font-size 13px · w500 · padding <code>spacing-small</code></td></tr>
+        <tr><td>⑧</td><td>Bottom submit</td><td>SafeArea + Padding(<code>spacing-medium</code>) · button 풀폭</td><td>Container shadow Offset(0,-4) blur 10 alpha <code>tintFill</code> · button height 48 · radius <code>radius-button</code> · isDirty || isLoading 아닐 때 <code>color-divider</code> bg + secondary text (disabled tone)</td></tr>
+        <tr><td>—</td><td>Reason dialog</td><td>centered overlay · max-width 320 · column gap <code>spacing-medium</code></td><td>overlay bg rgba(0,0,0,0.45) · dialog padding <code>spacing-large</code> · radius <code>radius-card</code> · before/after row bg <code>color-surface</code> radius <code>radius-small</code> padding <code>spacing-small</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">시각 변형 5종. baseline = 확정자 0명, 나머지는 추가 조건 또는 사용자 액션에 따른 분기.</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      <strong>State 식별 기준</strong>:
+      (1) 확정 참가자 수 — 0명이면 모든 필드 자유 수정, ≥1명이면 잠금 배너 + 일정·장소·정원 잠금 정책 발동.
+      (2) 사용자 액션 — 일정/장소 값 변경 시 사유 입력 다이얼로그 등장, 정원 감소 시 확정자 수 미달이면 인라인 에러, 저장 시 진행/성공/실패.
+      이 화면은 항상 <em>기존 이벤트 수정</em> 흐름이며 신규 생성 모드는 없다(<a href="/specs/event_create_page/index.html">EventCreatePage</a>가 별도 담당).
+    </p>
+
+    <!-- =================================================
+         STATE 1 — 확정자 0명 (baseline · 자유 수정)
+         ================================================= -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>State 1 · 확정자 0명 (baseline)</strong> 🎯 <span class="tag tag--mute">default</span> · <small>모든 필드 자유 수정</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td rowspan="6" class="state-mini__mock"><div class="viewport">
+            <div class="ee-appbar">
+              <div class="ee-appbar__back">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+              </div>
+              <div class="ee-appbar__title">이벤트 수정</div>
+            </div>
+            <div class="ee-body">
+              <div class="ee-section-header">기본 정보</div>
+              <div class="ee-field">
+                <div class="ee-field__label">제목</div>
+                <div class="ee-field__value">금요일 와인 클래스</div>
+              </div>
+              <div class="ee-field">
+                <div class="ee-field__label">설명</div>
+                <div class="ee-field__value" style="font-size:13px;color:var(--color-text-secondary);line-height:1.4;">매주 금요일 저녁, 강남 와인바에서 진행되는 소셜 와인 클래스입니다...</div>
+              </div>
+
+              <div class="ee-section-header">일정 · 장소</div>
+              <div class="ee-field">
+                <div class="ee-field__label">📅 일정</div>
+                <div class="ee-field__value">2026.05.15 (금) 오후 7:30~9:30</div>
+              </div>
+              <div class="ee-field">
+                <div class="ee-field__label">📍 장소</div>
+                <div class="ee-field__value">강남 와인바 · 서울 강남구 ...</div>
+              </div>
+
+              <div class="ee-section-header">가격 · 정원</div>
+              <div class="ee-field">
+                <div class="ee-field__label">가격</div>
+                <div class="ee-field__value">35,000원</div>
+              </div>
+              <div class="ee-field">
+                <div class="ee-field__label">정원</div>
+                <div class="ee-field__value">20명</div>
+              </div>
+
+              <div class="ee-cancel-link">이벤트 취소하기</div>
+            </div>
+            <div class="ee-submitbar">
+              <div class="ee-submit ee-submit--disabled">저장</div>
+            </div>
+          </div></td>
+          <td class="state-mini__aspect">조건</td>
+          <td>이벤트 데이터 로드 완료 · 확정 참가자(approved 또는 paid) <strong>0명</strong> · 변경된 필드 없음.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            · <strong>모든 필드 자유 수정</strong> — 일정·장소·정원·가격 모두 잠금 배너 / lock chip 없이 직접 편집 가능<br>
+            · <strong>저장</strong> 버튼은 dirty(변경 감지) 전까지 disabled, 1개라도 변경되면 활성<br>
+            · <strong>저장 탭</strong> → API 성공 후 EventDetailPage로 복귀 + "이벤트 정보가 저장되었습니다" snackbar<br>
+            · <strong>뒤로가기</strong> → dirty 없으면 즉시 닫힘
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>· 이벤트 로드 실패 → body 자리에 에러 텍스트 + retry 버튼<br>· 동시에 다른 운영자가 같은 이벤트 수정 → 저장 시 충돌 감지 → 별도 안내 (재로드 권장)</td></tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            <code>Scaffold</code> · <code>AppBar</code>(left title) · <code>SingleChildScrollView</code> · <code>MinglitAsyncValueWidget&lt;Event&gt;</code> · <code>_TextField</code> · <code>_DateTimeField</code> · <code>_LocationField</code> · <code>_PriceField</code> · <code>_CapacityField</code> · <code>_ImagePicker</code> · <code>_CancelEventLink</code> · 하단 <code>ElevatedButton</code>
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            <code>color-primary</code>(partner #6c3ce1 — 저장 버튼 / 변경 감지 border) · <code>color-text-primary</code>(field value) · <code>color-text-secondary</code>(label / hint) · <code>color-divider</code>(field border) · <code>color-surface</code>(scaffold) · <code>color-background</code>(field card bg) · <code>color-error</code>(취소 링크) · <code>radius-card (16)</code> · <code>radius-button (12)</code> · <code>spacing-screen-edge (16)</code> · <code>spacing-medium (16)</code> · <code>spacing-small (8)</code> · typography 11px w700(label) / 15px(value) / 11px(hint)
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 가장 깔끔한 상태 — 신규 이벤트 직후 또는 신청자가 한 명도 없는 시점. 운영자는 이때 가능한 한 모든 정보를 마무리하는 게 권장된다.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- =================================================
+         STATE 2 — 확정자 ≥1명 (잠금 배너 + lock chip)
+         ================================================= -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>State 2 · 확정자 ≥1명</strong> <span class="tag tag--mute">restricted</span> · <small>잠금 배너 + 일정·장소·정원·가격에 lock chip / 검증</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td rowspan="6" class="state-mini__mock"><div class="viewport">
+            <div class="ee-appbar">
+              <div class="ee-appbar__back">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+              </div>
+              <div class="ee-appbar__title">이벤트 수정</div>
+            </div>
+            <div class="ee-body">
+              <div class="ee-lockbanner">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <div class="ee-lockbanner__body">
+                  <div class="ee-lockbanner__title">확정 참가자 8명</div>
+                  <div class="ee-lockbanner__sub">일정 / 장소 변경 시 자동 알림 발송. 정원은 확정자 수 이하로 줄일 수 없음. 가격 인상은 신규 신청자에게만 적용됨.</div>
+                </div>
+              </div>
+
+              <div class="ee-section-header">기본 정보</div>
+              <div class="ee-field">
+                <div class="ee-field__label">제목</div>
+                <div class="ee-field__value">금요일 와인 클래스</div>
+              </div>
+
+              <div class="ee-section-header">일정 · 장소</div>
+              <div class="ee-field">
+                <div class="ee-field__label">
+                  📅 일정
+                  <div class="ee-lockchip">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    변경 시 알림
+                  </div>
+                </div>
+                <div class="ee-field__value">2026.05.15 (금) 오후 7:30~9:30</div>
+                <div class="ee-field__hint ee-field__hint--warn">⚠️ 변경 시 사유 입력 + 8명에게 자동 알림</div>
+              </div>
+              <div class="ee-field">
+                <div class="ee-field__label">
+                  📍 장소
+                  <div class="ee-lockchip">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    변경 시 알림
+                  </div>
+                </div>
+                <div class="ee-field__value">강남 와인바 · 서울 강남구 ...</div>
+                <div class="ee-field__hint ee-field__hint--warn">⚠️ 변경 시 사유 입력 + 8명에게 자동 알림</div>
+              </div>
+
+              <div class="ee-section-header">가격 · 정원</div>
+              <div class="ee-field">
+                <div class="ee-field__label">가격</div>
+                <div class="ee-field__value">35,000원</div>
+                <div class="ee-field__hint">ℹ️ 인상 시 신규 신청자에게만 적용됨 (확정자 8명은 원래 가격 유지)</div>
+              </div>
+              <div class="ee-field">
+                <div class="ee-field__label">
+                  정원
+                  <div class="ee-lockchip">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    8명 이하 불가
+                  </div>
+                </div>
+                <div class="ee-field__value">20명</div>
+                <div class="ee-field__hint">ℹ️ 확정자 8명 이하로는 줄일 수 없음</div>
+              </div>
+            </div>
+            <div class="ee-submitbar">
+              <div class="ee-submit ee-submit--disabled">저장</div>
+            </div>
+          </div></td>
+          <td class="state-mini__aspect">조건</td>
+          <td>이벤트 데이터 로드 완료 · 확정 참가자(approved 또는 paid) <strong>≥1명</strong> · 아직 변경된 필드 없음.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            · <strong>제목 / 설명 / 태그 / 이미지 / 호스트 / 카테고리 수정</strong> → 자유 (잠금 표시 없음)<br>
+            · <strong>일정 또는 장소 변경 시도</strong> → State 3 (사유 입력 다이얼로그)로 이동<br>
+            · <strong>정원을 확정자 수 이하로 변경</strong> → State 4 (인라인 에러)<br>
+            · <strong>가격 인상</strong> → 자유 (단 hint 텍스트로 "신규 신청자만 적용" 안내)<br>
+            · <strong>저장</strong> → State 5 (성공 / 실패 처리)
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>· 잠금 배너 텍스트는 확정자 수에 따라 동적 ("확정 참가자 N명") · maxLines 2까지 줄바꿈<br>· lock chip은 라벨이 길어지면 라벨 ellipsis 후 chip은 그대로 우측 노출<br>· 이벤트 시작 24시간 전부터는 일정 변경 자체 차단 (banner 톤이 빨강으로 강조 — 별도 변형으로 추후 spec)</td></tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            State 1 + <code>_LockBanner</code>(confirmedCount, locked, constrained) · <code>_LockChip</code>(label · variant: <em>'변경 시 알림' / 'N명 이하 불가'</em>) · <code>_FieldHint</code>(variant: <em>warn / info / error</em>)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            추가: <code>color-primary @ 8%</code>(banner bg) / <code>@ 25%</code>(banner border) / <code>@ 12%</code>(lock chip bg) · <code>radius-small (8)</code>(lock chip / hint pill) · 11px w500(hint warn) / 11px(hint info) · 10px w600(lock chip text)
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">노트</td><td>🔒 핵심 변형. 잠금 배너 + lock chip + hint 텍스트 3중으로 잠금 정책을 명시 — 운영자가 어떤 필드가 왜 제약되는지 읽지 않고도 알 수 있어야 함.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- =================================================
+         STATE 3 — 일정/장소 변경 사유 입력 다이얼로그
+         ================================================= -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>State 3 · 변경 사유 입력 다이얼로그</strong> <span class="tag tag--mute">modal</span> · <small>일정 또는 장소 값 변경 직후 자동 등장</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td rowspan="6" class="state-mini__mock"><div class="viewport" style="position: relative;">
+            <div class="ee-appbar">
+              <div class="ee-appbar__back">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+              </div>
+              <div class="ee-appbar__title">이벤트 수정</div>
+            </div>
+            <div class="ee-body" style="filter: blur(0.6px);">
+              <div class="ee-section-header">일정 · 장소</div>
+              <div class="ee-field ee-field--changed">
+                <div class="ee-field__label">📍 장소</div>
+                <div class="ee-field__value">신촌 와인바 · 서울 서대문구 ...</div>
+              </div>
+            </div>
+            <div class="ee-dialog-overlay">
+              <div class="ee-dialog">
+                <div class="ee-dialog__title">장소를 변경합니까?</div>
+                <div class="ee-dialog__before-after">
+                  <div class="ee-dialog__before">기존: 강남 와인바 · 서울 강남구 ...</div>
+                  <div class="ee-dialog__after">변경: 신촌 와인바 · 서울 서대문구 ...</div>
+                </div>
+                <div class="ee-dialog__textarea">변경 사유 (예: 원래 장소 폐업으로 인한 부득이한 이전)</div>
+                <div class="ee-dialog__notice">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  저장하면 확정 참가자 8명에게 변경 내용 + 사유가 자동 알림(앱 푸시 + SMS)으로 발송됩니다.
+                </div>
+                <div class="ee-dialog__actions">
+                  <div class="ee-dialog__btn ee-dialog__btn--ghost">취소</div>
+                  <div class="ee-dialog__btn ee-dialog__btn--primary">변경 확정</div>
+                </div>
+              </div>
+            </div>
+          </div></td>
+          <td class="state-mini__aspect">조건</td>
+          <td>State 2(확정자 ≥1명) · 사용자가 일정 또는 장소 필드를 새 값으로 바꾼 직후. 다이얼로그가 즉시 등장하며 다른 영역은 dim + blur 처리.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            · <strong>변경 사유 입력</strong> → 다이얼로그 textarea에 1~200자. 비어있으면 "변경 확정" disabled<br>
+            · <strong>변경 확정 탭</strong> → 다이얼로그 닫힘 + 필드는 변경 감지(border <code>color-primary</code>) 상태 유지 + 사유는 폼 state에 보관 (저장 시 함께 전송)<br>
+            · <strong>취소 탭</strong> → 다이얼로그 닫힘 + 필드 값 원래대로 롤백 + 변경 감지 해제<br>
+            · <strong>오버레이 외곽 탭</strong> → "취소"와 동일 동작
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>· 일정과 장소를 동시에 바꾸려는 경우 → 두 다이얼로그를 동시에 띄우지 않음. 첫 변경 후 닫힌 뒤 두 번째 필드 변경 시 두 번째 다이얼로그 등장 (순차 처리)<br>· 변경 후 다시 원래 값으로 되돌리면 → 다이얼로그 안 뜨고 변경 감지 해제<br>· 사유 입력 도중 키보드 dismiss 시 textarea 포커스만 해제 — 다이얼로그는 유지</td></tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            <code>showDialog</code> · <code>AlertDialog</code> 또는 <code>Dialog</code> custom child · <code>_BeforeAfterRow</code> · <code>TextField</code>(maxLines: 3, maxLength: 200) · <code>_NoticeBanner</code>(앱 푸시 + SMS 안내) · 액션 row(취소 · 변경 확정)
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            overlay bg <code>rgba(0,0,0,0.45)</code> · dialog bg <code>color-background</code> · radius <code>radius-card</code> · padding <code>spacing-large (24)</code> · before/after pill bg <code>color-surface</code> · 변경된 값 텍스트 <code>color-primary</code> w600 · notice banner bg <code>color-primary @ 8%</code> · primary action <code>color-primary</code>
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📣 통지 의무를 시각적으로 강제하는 핵심 다이얼로그. before/after를 명시해 운영자가 자기가 무엇을 바꿨는지 한 번 더 확인하도록 유도. 사유 텍스트는 알림 본문에 그대로 인용된다.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- =================================================
+         STATE 4 — 정원 감소 시 확정자 수 미달 (인라인 에러)
+         ================================================= -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>State 4 · 정원 감소 검증 실패</strong> <span class="tag tag--mute">inline-error</span> · <small>정원을 확정자 수 이하로 입력 시</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td rowspan="6" class="state-mini__mock"><div class="viewport">
+            <div class="ee-appbar">
+              <div class="ee-appbar__back">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+              </div>
+              <div class="ee-appbar__title">이벤트 수정</div>
+            </div>
+            <div class="ee-body">
+              <div class="ee-section-header">가격 · 정원</div>
+              <div class="ee-field">
+                <div class="ee-field__label">가격</div>
+                <div class="ee-field__value">35,000원</div>
+              </div>
+              <div class="ee-field ee-field--changed" style="border-color: var(--color-error);">
+                <div class="ee-field__label" style="color: var(--color-error);">정원</div>
+                <div class="ee-field__value" style="color: var(--color-error); font-weight: 600;">5명</div>
+                <div class="ee-field__hint ee-field__hint--error">❌ 확정 참가자 8명 이하로는 정원을 줄일 수 없습니다.</div>
+              </div>
+            </div>
+            <div class="ee-submitbar">
+              <div class="ee-submit ee-submit--disabled">저장</div>
+            </div>
+          </div></td>
+          <td class="state-mini__aspect">조건</td>
+          <td>State 2(확정자 ≥1명) · 사용자가 정원을 confirmedCount(예: 8) 이하 값으로 입력. 검증은 입력값 onChange 시 즉시 실행 (debounce 200ms).</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            · <strong>정원을 confirmedCount 이상 값으로 정정</strong> → 인라인 에러 사라짐 + 변경 감지 색만 유지 + 저장 가능<br>
+            · <strong>정원을 원래 값(원본)으로 되돌림</strong> → 변경 감지 해제 (저장 disabled로 복귀)<br>
+            · <strong>저장 시도</strong> → 인라인 에러 있는 동안 저장 버튼은 disabled — 탭해도 동작 X<br>
+            · <strong>다른 필드 수정</strong> → 정원 검증과 무관하게 가능 (단, 저장은 모든 필드가 valid해야 활성)
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>· 확정자 수가 도중에 바뀌어도 (다른 운영자 승인 동시 진행) 폼 state는 진입 시점 confirmedCount 기준 — 저장 시 서버에서 재검증 + 충돌 시 안내<br>· 정원을 0으로 비우면 → "정원을 입력해주세요" 다른 톤 에러<br>· 숫자 외 문자 입력은 키보드 number-only로 차단</td></tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            <code>_CapacityField</code>(confirmedCount, validator) · <code>_FieldHint</code>(variant: error) · field card border 색이 <code>color-error</code>로 전환 · 라벨 / 값 색도 동일 톤
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            field error border <code>color-error</code> 1.5px · field error bg 그대로(<code>color-background</code>) · 라벨/값 <code>color-error</code> · hint <code>color-error</code> w500 11px · 저장 버튼은 <code>color-divider</code> bg + <code>color-text-secondary</code> 텍스트(disabled tone)
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">노트</td><td>⚠️ 클라이언트 검증은 빠른 피드백용. 서버 검증이 단일 진실 — race condition 가능성 때문에 저장 응답에서도 같은 검증을 반드시 수행하고 실패 시 snackbar로 안내한다.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- =================================================
+         STATE 5 — 저장 진행 / 성공 (snackbar + 복귀)
+         ================================================= -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>State 5 · 저장 진행 → 성공</strong> <span class="tag tag--mute">submit</span> · <small>저장 버튼 탭 후 EventDetailPage 복귀까지</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td rowspan="6" class="state-mini__mock"><div class="viewport">
+            <div class="ee-appbar">
+              <div class="ee-appbar__back">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+              </div>
+              <div class="ee-appbar__title">이벤트 수정</div>
+            </div>
+            <div class="ee-body">
+              <div class="ee-section-header">기본 정보</div>
+              <div class="ee-field ee-field--changed">
+                <div class="ee-field__label">제목</div>
+                <div class="ee-field__value">금요일 와인 클래스 (시즌 2)</div>
+              </div>
+            </div>
+            <div class="snackbar snackbar--success">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>이벤트 정보가 저장되었습니다.<br><span style="font-size:11px;opacity:0.85;">확정 참가자 8명에게 변경 알림이 발송되었습니다.</span></span>
+            </div>
+            <div class="ee-submitbar">
+              <div class="ee-submit ee-submit--loading">
+                <div class="btn-spinner"></div>
+                저장 중...
+              </div>
+            </div>
+          </div></td>
+          <td class="state-mini__aspect">조건</td>
+          <td>저장 버튼 탭 → API 호출 진행. 일정/장소가 변경됐으면 사유 + 알림 발송 트리거 함께. 성공 응답 후 EventDetailPage로 복귀하면서 success snackbar 노출.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>
+            · <strong>로딩 중</strong> → 저장 버튼이 spinner + "저장 중..." 으로 전환, 다른 필드는 read-only로 일시 잠김 (포커스 빠짐)<br>
+            · <strong>성공</strong> → 본 화면 자동 close + 부모(EventDetailPage)의 데이터 invalidate + success snackbar 3.5초 노출<br>
+            · &nbsp;&nbsp;일정/장소 변경 포함이면 snackbar 본문에 "확정 참가자 N명에게 알림 발송" 부가 텍스트 추가<br>
+            · <strong>실패</strong> → 화면 유지 + error snackbar (서버 메시지 그대로 또는 "저장에 실패했어요. 잠시 후 다시 시도해주세요.")<br>
+            · <strong>네트워크 끊김</strong> → 동일하게 실패 snackbar + 폼 state 유지 (재시도 가능)
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>· 저장 도중 뒤로가기 → 막힘 (loading 상태에선 back 무시 + 가벼운 진동 / 흔들림 hint)<br>· 서버 검증 실패(예: 정원 race condition) → snackbar에 사유 명시 + 폼은 유지 + 해당 필드에 인라인 에러 표시<br>· 알림 발송 자체는 서버 비동기 — 응답엔 "발송 큐에 적재됨"까지만 확인. snackbar 메시지는 그 가정 위에서 표현</td></tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>
+            <code>ElevatedButton</code>(loading variant) · <code>btn-spinner</code> · <code>SnackBar</code>(<code>showMinglitSuccess</code> / <code>showMinglitError</code>) · <code>ref.invalidate(eventDetailProvider(eventId))</code> · <code>Navigator.pop()</code>
+          </td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>
+            success snackbar bg <code>#14532d</code> · check icon <code>#86efac</code> · 폰트 13px / 11px(부가 텍스트, opacity 0.85) · 위치 bottom 96 (submit bar 위) · radius <code>radius-small</code> · padding 12 / 16
+          </td>
+        </tr>
+        <tr><td class="state-mini__aspect">노트</td><td>✅ 사유 입력이 있었던 경우 snackbar 텍스트가 길어진다 → maxLines 2까지 허용. 알림 발송 결과 자체(성공/실패 N명)는 별도 운영자 활동 로그에서 확인 가능 (본 화면 책임 아님).</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">모든 state에 동일하게 적용되는 동작 — 잠금 매트릭스, 변경 감지, 알림 정책, 변경 이력.</span>
+  </div>
+
+  <section class="doc">
+    <h2>잠금 매트릭스 (필드별 정책)</h2>
+    <p class="intro">
+      이 매트릭스가 단일 진실. UI / 서버 검증 / 이메일·SMS 알림 모두 같은 정책을 참조.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 180px;">필드</th>
+          <th style="width: 180px;">확정자 0명</th>
+          <th>확정자 ≥1명</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>제목</td><td>자유</td><td>자유</td></tr>
+        <tr><td>설명 / 안내문</td><td>자유</td><td>자유</td></tr>
+        <tr><td>이미지 / 태그 / 카테고리</td><td>자유</td><td>자유</td></tr>
+        <tr><td>호스트 정보</td><td>자유</td><td>자유</td></tr>
+        <tr><td>가격 (인하)</td><td>자유</td><td>자유</td></tr>
+        <tr><td>가격 (인상)</td><td>자유</td><td>자유 — DB 레벨에서 신규 신청자만 새 가격 적용 / 확정자는 원래 가격 보호. UI에 hint 안내.</td></tr>
+        <tr><td>정원 (증가)</td><td>자유</td><td>자유</td></tr>
+        <tr><td>정원 (감소)</td><td>자유</td><td><strong>새 정원 ≥ 확정자 수</strong>여야 허용. 미달 시 인라인 에러 + 저장 disabled (State 4).</td></tr>
+        <tr><td><strong>일정 (날짜/시간)</strong></td><td>자유</td><td><strong>변경 사유 입력 다이얼로그 + 자동 알림</strong> (State 3). 사유는 알림 본문에 인용.</td></tr>
+        <tr><td><strong>장소</strong></td><td>자유</td><td>일정과 동일 — 사유 다이얼로그 + 알림.</td></tr>
+        <tr><td>이벤트 취소</td><td>자유 (소프트 삭제)</td><td><strong>별도 destructive flow</strong> — 본 spec 범위 밖. 일괄 환불 + 취소 안내 알림 발송.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>변경 감지 (dirty state)</h2>
+    <ul>
+      <li>각 필드 컨트롤러는 <em>원본 값</em>을 보관. 현재 값이 원본과 다르면 <strong>field card border가 <code>color-primary</code> 1.5px</strong>로 강조.</li>
+      <li>필드 1개 이상이 dirty이고 모든 검증이 valid이면 <strong>저장 버튼 활성</strong>.</li>
+      <li>뒤로가기 / 외곽 탭 시 dirty이면 "변경사항을 버리시겠습니까?" 확인 다이얼로그 (Material AlertDialog · 취소 / 버리기).</li>
+      <li>저장 성공 후 폼 state는 즉시 폐기되며 EventDetailPage로 복귀 — 다음 진입 시 서버 fresh fetch.</li>
+    </ul>
+  </section>
+
+  <section class="doc">
+    <h2>알림 발송 정책</h2>
+    <ul>
+      <li>일정 또는 장소 변경 + 확정자 ≥1명 → 저장 시 <strong>앱 푸시 + SMS 동시 발송</strong>. 본문은 <em>"[이벤트명] 변경 안내: {필드}이(가) {기존} → {변경}으로 변경되었습니다. 사유: {사유}"</em>.</li>
+      <li>발송은 서버 비동기 큐 — UI는 "발송 큐에 적재됨" 시점까지만 확인. 실제 전송 결과는 운영자 활동 로그에서 사후 확인.</li>
+      <li>같은 이벤트가 짧은 시간 내(예: 30분) 여러 번 변경되면 알림은 <strong>최신 변경 1건으로 합산</strong> — 운영자가 사유를 묶어서 입력하도록 권장.</li>
+      <li>알림 비용은 운영자 부담 — 변경 사유 다이얼로그에 "발송됨" 안내로 비용 발생을 인지하도록 설계.</li>
+    </ul>
+  </section>
+
+  <section class="doc">
+    <h2>변경 이력 로그</h2>
+    <ul>
+      <li>저장 성공 시 <code>event_change_log</code> 테이블에 <em>변경 필드 / 기존 값 / 새 값 / 사유 / 운영자 ID / 시각</em>을 기록.</li>
+      <li>이력은 운영자 측 별도 화면(향후 spec)에서 조회 가능. 분쟁 시 단일 진실 자료.</li>
+      <li>본 화면은 <em>이력 작성</em> 책임만 — 조회 / 노출은 다른 화면 책임.</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">🔗</span>
+    <h2>Reference</h2>
+    <span class="lede">관련 라우트 · 화면 · 구현 소스.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <tbody>
+        <tr><td style="width: 160px;"><strong>Route</strong></td><td><code>EventEditRoute</code></td></tr>
+        <tr><td><strong>Path</strong></td><td><code>/more/parties/:partyId/events/:eventId/edit</code></td></tr>
+        <tr><td><strong>Widget class</strong></td><td><code>EventEditPage</code> (+ <code>_LockBanner</code> · <code>_LockChip</code> · <code>_DateTimeField</code> · <code>_LocationField</code> · <code>_CapacityField</code> · <code>_PriceField</code> · <code>_TextField</code> internal widgets)</td></tr>
+        <tr><td><strong>App</strong></td><td><code>app_partner</code></td></tr>
+        <tr><td><strong>Source (예상)</strong></td><td><code>apps/app_partner/lib/src/features/party/event/edit/event_edit_page.dart</code> + <code>apps/app_partner/lib/src/features/party/event/edit/widgets/*</code></td></tr>
+        <tr><td><strong>Provider</strong></td><td><code>eventDetailProvider(eventId)</code> 로 fresh fetch · 저장은 <code>eventEditCoordinator(eventId)</code> 통해 mutate + invalidate</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 220px;">Spec</th><th>관계</th></tr></thead>
+      <tbody>
+        <tr><td><a href="/specs/partner_event_detail_page/index.html"><code>EventDetailPage</code></a></td><td>Parent. Hero "일정" 영역 탭 → 본 화면 push. 저장 성공 시 본 화면 close + parent invalidate.</td></tr>
+        <tr><td><a href="/specs/event_create_page/index.html"><code>EventCreatePage</code></a></td><td>Sibling. 신규 회차 생성 흐름 — 본 화면(수정)과 별도. 잠금 정책 / 통지 의무 없음.</td></tr>
+        <tr><td><a href="/specs/ticket_edit_page/index.html"><code>TicketEditPage</code></a></td><td>Sibling. 동일 이벤트의 입장권 수정. 본 화면이 다루지 않는 티켓 도메인 — 별도 화면.</td></tr>
+        <tr><td><em>EventCancelRoute (예정)</em></td><td>Child of "이벤트 취소하기" 링크. 별도 destructive flow — 일괄 환불 + 취소 알림. 본 spec 범위 밖.</td></tr>
+        <tr><td><em>event_change_log (DB 테이블)</em></td><td>저장 시 변경 필드 / 사유 / 운영자 ID 기록. 분쟁 시 단일 진실.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+</body>
+</html>

@@ -316,76 +316,76 @@ const KNOWN_SPEC_FILES: { user: ReadonlySet<string>; partner: ReadonlySet<string
 
 /** Routes that share specs or use non-default basenames. */
 const ROUTE_DESIGN_OVERRIDES: Record<string, string> = {
-  'partner-HomeRoute':            '/specs/partner_home_page.html',
-  'partner-PartyCreateRoute':     '/specs/party_create_wizard_page.html',
-  'partner-PartyEditRoute':       '/specs/party_create_wizard_page.html', // shares spec
+  'partner-HomeRoute':            '/specs/partner_home_page/index.html',
+  'partner-PartyCreateRoute':     '/specs/party_create_wizard_page/index.html',
+  'partner-PartyEditRoute':       '/specs/party_create_wizard_page/index.html', // shares spec
   // PartyTicketEditRoute hosts the same TicketEditPage widget as TicketEditRoute,
   // but with eventId='' (template mode). Default rule for TicketEditRoute already
   // resolves to ticket_edit_page; override the party-scoped variant explicitly.
-  'partner-PartyTicketEditRoute': '/specs/ticket_edit_page.html',
-  'partner-SettlementDetailRoute':'/specs/settlement_detail_page.html',
+  'partner-PartyTicketEditRoute': '/specs/ticket_edit_page/index.html',
+  'partner-SettlementDetailRoute':'/specs/settlement_detail_page/index.html',
   // Partner EventDetailRoute → partner-side EventDetailPage (운영 관리 + 참가 신청 탭).
   // Default rule yields 'event_detail_page' which would point to the user-side spec —
   // override to the partner-specific spec.
-  'partner-EventDetailRoute':     '/specs/partner_event_detail_page.html',
+  'partner-EventDetailRoute':     '/specs/partner_event_detail_page/index.html',
   // AccountManagementPage → kit-shared widget. Default rule for user yields
   // 'account_management_page' (already matches), but partner's
   // PartnerAccountManagementRoute would derive 'partner_account_management_page'
   // — override both routes to the shared spec basename.
-  'user-AccountManagementRoute':         '/specs/account_management_page.html',
-  'partner-PartnerAccountManagementRoute':'/specs/account_management_page.html',
+  'user-AccountManagementRoute':         '/specs/account_management_page/index.html',
+  'partner-PartnerAccountManagementRoute':'/specs/account_management_page/index.html',
   // NotificationCenterRoute → kit-shared NotificationListScreen widget. Default rule
   // would derive 'notification_center_page', but the spec basename matches the widget.
-  'user-NotificationCenterRoute':    '/specs/notification_list_screen.html',
-  'partner-NotificationCenterRoute': '/specs/notification_list_screen.html',
+  'user-NotificationCenterRoute':    '/specs/notification_list_screen/index.html',
+  'partner-NotificationCenterRoute': '/specs/notification_list_screen/index.html',
   // NotificationSettingsRoute → kit-shared NotificationSettingsScreen widget. Default
   // rule yields 'notification_settings_page', but the spec basename matches the widget.
-  'user-NotificationSettingsRoute':    '/specs/notification_settings_screen.html',
-  'partner-NotificationSettingsRoute': '/specs/notification_settings_screen.html',
+  'user-NotificationSettingsRoute':    '/specs/notification_settings_screen/index.html',
+  'partner-NotificationSettingsRoute': '/specs/notification_settings_screen/index.html',
   // ApplicationListRoute → default rule yields 'application_list_page', but the
   // actual widget is EventApplicationManagePage. Override to its real spec.
-  'partner-ApplicationListRoute':    '/specs/event_application_manage_page.html',
+  'partner-ApplicationListRoute':    '/specs/event_application_manage_page/index.html',
   // EventApplicationRoute → default rule yields 'event_application_page', but
   // the widget is EventApplicationWizardPage. Override to its real spec.
-  'user-EventApplicationRoute':      '/specs/event_application_wizard_page.html',
+  'user-EventApplicationRoute':      '/specs/event_application_wizard_page/index.html',
   // EventResultsRoute → default rule yields 'event_results_page', but the
   // routed bottom-sheet widget is EventResultsScreen. Override to its real spec.
-  'user-EventResultsRoute':          '/specs/event_results_screen.html',
+  'user-EventResultsRoute':          '/specs/event_results_screen/index.html',
   // EventCheckInRoute → default rule yields 'event_check_in_page', but the
   // routed bottom-sheet widget is EventCheckInScreen (kit-shared). Override.
-  'user-EventCheckInRoute':          '/specs/event_check_in_screen.html',
+  'user-EventCheckInRoute':          '/specs/event_check_in_screen/index.html',
   // EventCheckedInRoute → default rule yields 'event_checked_in_page', but the
   // routed bottom-sheet widget is EventCheckedInScreen (kit-shared). Override.
-  'user-EventCheckedInRoute':        '/specs/event_checked_in_screen.html',
+  'user-EventCheckedInRoute':        '/specs/event_checked_in_screen/index.html',
   // EventReviewRoute → default rule yields 'event_review_page', but the
   // routed bottom-sheet widget is EventReviewScreen. Override to its real spec.
-  'user-EventReviewRoute':           '/specs/event_review_screen.html',
+  'user-EventReviewRoute':           '/specs/event_review_screen/index.html',
   // EventMatchingRoute → default rule yields 'event_matching_page', but the
   // routed bottom-sheet widget is EventMatchingScreen (matching/matchingReady
   // states share the same route). Override to its real spec.
-  'user-EventMatchingRoute':         '/specs/event_matching_screen.html',
+  'user-EventMatchingRoute':         '/specs/event_matching_screen/index.html',
   // CertificationRoute (user) → kit-shared IdentityVerificationScreen. Default
   // rule yields 'certification_page', override to the widget-named spec basename.
-  'user-CertificationRoute':         '/specs/identity_verification_screen.html',
+  'user-CertificationRoute':         '/specs/identity_verification_screen/index.html',
   // TicketQRRoute → widget is TicketQRScreen. Default rule yields 'ticket_qr_page'.
-  'user-TicketQRRoute':              '/specs/ticket_qr_screen.html',
+  'user-TicketQRRoute':              '/specs/ticket_qr_screen/index.html',
   // Partner LoginRoute → PartnerLoginPage (NOT the user app's LoginPage). Default
   // rule yields 'login_page', which would point to the user spec — override to
   // the partner-specific spec.
-  'partner-LoginRoute':              '/specs/partner_login_page.html',
+  'partner-LoginRoute':              '/specs/partner_login_page/index.html',
   // CheckinRoute → CheckinPlaceholderPage. Default rule yields 'checkin_page'.
-  'partner-CheckinRoute':            '/specs/checkin_placeholder_page.html',
+  'partner-CheckinRoute':            '/specs/checkin_placeholder_page/index.html',
   // ApplicationDetailRoute (partner) → PartnerApplicationDetailPage (admin-side
   // partner application review). Distinct from EventApplicationDetailRoute.
-  'partner-ApplicationDetailRoute':  '/specs/partner_application_detail_page.html',
+  'partner-ApplicationDetailRoute':  '/specs/partner_application_detail_page/index.html',
   // MemberListRoute → PartnerMemberListPage. Default rule yields 'member_list_page'.
-  'partner-MemberListRoute':         '/specs/partner_member_list_page.html',
+  'partner-MemberListRoute':         '/specs/partner_member_list_page/index.html',
   // MemberPermissionRoute → PartnerMemberPermissionPage. Default would be
   // 'member_permission_page'.
-  'partner-MemberPermissionRoute':   '/specs/partner_member_permission_page.html',
+  'partner-MemberPermissionRoute':   '/specs/partner_member_permission_page/index.html',
   // RecurrenceManagementRoute → RecurrenceManagementScreen. Default would be
   // 'recurrence_management_page'.
-  'partner-RecurrenceManagementRoute':'/specs/recurrence_management_screen.html',
+  'partner-RecurrenceManagementRoute':'/specs/recurrence_management_screen/index.html',
 };
 
 /**

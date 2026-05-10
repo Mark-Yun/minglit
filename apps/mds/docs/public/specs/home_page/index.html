@@ -1,0 +1,1788 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — HomePage (app_user · HomeRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   HomePage-specific atoms.
+   ============================================================ */
+
+/* --- App Bar --- */
+.home-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-small) 0 var(--spacing-screen-edge);
+  background: var(--color-background);
+  border-bottom: 1px solid var(--color-divider);
+  gap: var(--spacing-small);
+}
+.home-appbar__logo {
+  height: 36px;
+  width: auto;
+  flex: 0 0 auto;
+  display: block;
+}
+.home-appbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-left: auto;
+}
+.home-appbar__icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  border-radius: 50%;
+}
+.home-appbar__icon svg {
+  width: 22px; height: 22px;
+}
+.home-appbar__avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--color-divider);
+}
+.home-appbar__avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+/* --- Filter chip bar --- */
+.chip-bar {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+  padding: 0 var(--spacing-medium);
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+.chip-bar::-webkit-scrollbar { display: none; }
+.chip-bar__divider {
+  width: 1px; height: 20px;
+  background: var(--color-divider);
+  flex-shrink: 0;
+  margin: 0 var(--spacing-small);
+}
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xsmall);
+  height: 32px;
+  padding: 0 var(--spacing-sm);
+  border-radius: var(--radius-chip);
+  border: 1px solid var(--color-divider);
+  background: var(--color-background);
+  font-size: var(--typography-font-size-chip-label);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.filter-chip--active {
+  background: rgba(var(--spec-blueprint-rgb), 0.08);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+.filter-chip svg { width: 14px; height: 14px; }
+
+/* --- Tag chip bar (featured) --- */
+.tag-chip-bar {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+  padding: 0 var(--spacing-medium);
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+.tag-chip-bar::-webkit-scrollbar { display: none; }
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 var(--spacing-small);
+  border-radius: var(--radius-chip);
+  background: rgba(var(--spec-blueprint-rgb), 0.08);
+  font-size: var(--typography-font-size-chip-label);
+  font-weight: 500;
+  color: var(--color-primary);
+  white-space: nowrap;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* --- Event card (MinglitEventCard) ---
+   Edge-to-edge feed card. Image is 2:1 with overlays (partner top-left,
+   participant gauge + D-Day top-right). Body has title + meta row
+   (location · date · price inline) + optional tag chips. State variants:
+   today (secondary border), soldOut (scrim+badge), ended (grayscale). */
+.event-card {
+  position: relative;
+  background: var(--color-background);
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  border-bottom: 1px solid var(--color-divider);
+}
+.event-card:last-child { border-bottom: none; }
+
+/* Image area — 2:1 aspect ratio (Fix #1382) */
+.event-card__image {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  background: var(--color-surface);
+  overflow: hidden;
+}
+.event-card__image--ended {
+  filter: saturate(0); /* grayscale */
+}
+.event-card__image-bg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  font-size: var(--typography-font-size-caption);
+  opacity: 0.5;
+}
+.event-card__image-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 45%, rgba(17, 24, 39, 0.5) 100%);
+  pointer-events: none;
+}
+
+/* Partner overlay — top-left on image */
+.event-card__partner-overlay {
+  position: absolute;
+  top: var(--spacing-small);
+  left: var(--spacing-small);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xsmall2);
+  padding: var(--spacing-xsmall) var(--spacing-small);
+  background: rgba(17, 24, 39, 0.5);
+  border-radius: var(--radius-small);
+}
+.event-card__partner-avatar {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: white;
+}
+.event-card__partner-avatar svg { width: 12px; height: 12px; }
+.event-card__partner-name {
+  font-size: var(--typography-font-size-chip-label);
+  color: white;
+  font-weight: 400;
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Participant + D-Day overlay — top-right on image */
+.event-card__participant-overlay {
+  position: absolute;
+  top: var(--spacing-small);
+  right: var(--spacing-small);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: var(--spacing-xsmall) var(--spacing-small);
+  background: rgba(17, 24, 39, 0.5);
+  border-radius: var(--radius-small);
+  color: white;
+}
+.event-card__participant-overlay svg {
+  width: 13px; height: 13px;
+  color: white;
+}
+.event-card__gauge {
+  display: inline-flex;
+  gap: var(--spacing-xxsmall);
+  margin: 0 3px;
+}
+.event-card__gauge-segment {
+  width: 10px; height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.event-card__gauge-segment--low  { background: var(--color-secondary); }
+.event-card__gauge-segment--mid  { background: var(--color-tertiary); }
+.event-card__gauge-segment--high { background: var(--color-primary); }
+.event-card__gauge-segment--empty { background: rgba(255,255,255,0.2); }
+.event-card__overlay-text {
+  font-size: var(--typography-font-size-chip-label);
+  color: white;
+  font-weight: 400;
+}
+.event-card__overlay-text--today {
+  color: var(--color-secondary);
+  font-weight: 600;
+}
+.event-card__overlay-sep {
+  color: rgba(255,255,255,0.5);
+  margin: 0 var(--spacing-xsmall);
+}
+.event-card__overlay-soldout {
+  color: var(--color-secondary);
+  font-weight: 600;
+  margin-left: var(--spacing-xsmall);
+}
+
+/* SoldOut scrim + center badge */
+.event-card__soldout-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.event-card__soldout-badge {
+  padding: var(--spacing-small) var(--spacing-medium);
+  background: rgba(0,0,0,0.5);
+  border-radius: var(--radius-small);
+  color: white;
+  font-weight: 700;
+  font-size: var(--typography-font-size-button); /* ~ titleMedium */
+}
+
+/* Body — title + meta row (location · date · price inline) + optional tags */
+.event-card__body {
+  padding: var(--spacing-small) var(--spacing-medium);
+  display: flex;
+  flex-direction: column;
+}
+.event-card__title {
+  font-size: var(--typography-font-size-button); /* titleMedium */
+  font-weight: 700;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+.event-card__meta-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: var(--spacing-xxsmall);
+}
+.event-card__meta-row .loc-icon {
+  width: 13px; height: 13px;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+.event-card__meta-text {
+  flex: 1;
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.event-card__price {
+  font-size: var(--typography-font-size-body); /* titleSmall */
+  font-weight: 700;
+  color: var(--color-secondary);
+  flex-shrink: 0;
+  margin-left: var(--spacing-small);
+}
+/* Tags overlay on image bottom — adopted as the canonical card layout.
+   Chips sit over the existing dark gradient with translucent dark fill +
+   white text + thin white outline + backdrop blur for readability.
+   This replaces the older "tags inside body" layout from the initial
+   Dart draft — design decision, see "Tags overlay rationale" in Visual. */
+.event-card__tags {
+  position: absolute;
+  bottom: var(--spacing-small);
+  left: var(--spacing-medium);
+  right: var(--spacing-medium);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xsmall);
+  z-index: 2;
+}
+.event-card__tag {
+  padding: var(--spacing-xxsmall) var(--spacing-small);
+  background: rgba(0, 0, 0, 0.45);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  border-radius: var(--radius-chip);
+  font-size: var(--typography-font-size-caption);
+  font-weight: 500;
+}
+
+/* --- Dark mode for visual galleries ---
+   `_spec.css` only flips `.viewport` containers; the Event card / EventNowBar
+   visual galleries live in `.doc` sections so we extend the same scope here. */
+body.dark-mode .visual-gallery {
+  --color-background: #0f0f0f;
+  --color-surface: #212121;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #aaaaaa;
+  --color-divider: #3d3d3d;
+  --color-primary: #aa33ff;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+body.dark-mode .visual-gallery p { color: var(--color-text-secondary); }
+body.dark-mode .visual-gallery .event-card {
+  background: var(--color-background);
+  color: var(--color-text-primary);
+}
+body.dark-mode .visual-gallery .event-card__title {
+  color: var(--color-text-primary);
+}
+body.dark-mode .visual-gallery .event-card__meta-text,
+body.dark-mode .visual-gallery .loc-icon {
+  color: var(--color-text-secondary);
+}
+/* Ended-state participant overlay scrim — slightly stronger in dark for legibility */
+body.dark-mode .visual-gallery .event-card__image--ended ~ .event-card__participant-overlay,
+body.dark-mode .visual-gallery .event-card__image--ended .event-card__participant-overlay {
+  background: rgba(40, 40, 40, 0.85);
+}
+/* AppBar — bg/border follow tokens already; only avatar tint needs explicit override
+   so light-mode #f5f5f5 surface doesn't shine through in dark. */
+body.dark-mode .visual-gallery .home-appbar {
+  background: var(--color-background);
+  border-bottom-color: var(--color-divider);
+}
+body.dark-mode .visual-gallery .home-appbar__icon { color: var(--color-text-primary); }
+body.dark-mode .visual-gallery .home-appbar__avatar {
+  background: var(--color-surface);
+  border-color: var(--color-divider);
+}
+/* Filter chip bar — chip default bg/border/text via tokens; active variant uses
+   hardcoded rgba(var(--spec-blueprint-rgb), ...) tint, so dark needs explicit primary-mixed bg. */
+body.dark-mode .visual-gallery .filter-chip {
+  background: var(--color-background);
+  border-color: var(--color-divider);
+  color: var(--color-text-secondary);
+}
+body.dark-mode .visual-gallery .filter-chip--active {
+  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+body.dark-mode .visual-gallery .chip-bar__divider {
+  background: var(--color-divider);
+}
+
+/* --- EventNowBar --- */
+.event-now-bar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 64px;
+  background: var(--color-surface);
+  border-top-left-radius: var(--radius-card);
+  border-top-right-radius: var(--radius-card);
+  /* Elevation — bar lifts from the underlying feed (top border replaced
+     with shadow alone for clean rounded-corner alignment). */
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08), 0 -1px 4px rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: center;
+  padding: 10px var(--spacing-screen-edge) 0;  /* top room for chevron */
+  gap: var(--spacing-sm);
+  cursor: pointer;
+}
+/* Up-chevron expand affordance — signals "tap to open bottom sheet".
+   Pure CSS using two adjacent borders rotated -45deg.
+   Sits at the top center, small 7×7 area with 1.5px stroke. */
+.event-now-bar::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  margin-left: -3.5px;
+  border-top: 1.5px solid var(--color-text-secondary);
+  border-right: 1.5px solid var(--color-text-secondary);
+  transform: rotate(-45deg);
+  pointer-events: none;
+}
+.event-now-bar--action::before {
+  border-top-color: var(--color-primary);
+  border-right-color: var(--color-primary);
+}
+
+/* Action-required variant — applied to checkInReady, matchingReady, results.
+   Stronger primary bg tint to grab attention (border removed for clean
+   rounded-corner alignment — emphasis comes from tint + dot pulse + halo
+   + bold primary status + chevron blink). */
+.event-now-bar--action {
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--color-primary) 10%, var(--color-surface)) 0%,
+    color-mix(in srgb, var(--color-primary) 2%, var(--color-surface)) 100%
+  );
+}
+.event-now-bar--action .event-now-bar__status {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.event-now-bar__dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  position: relative;
+}
+.event-now-bar__dot--gray { background: var(--color-text-secondary); }
+.event-now-bar__dot--primary { background: var(--color-primary); }
+.event-now-bar__dot--success { background: var(--color-success); }
+.event-now-bar__dot--secondary { background: var(--color-secondary); }
+
+/* Pulse-with-halo dot — applied to action states (checkInReady,
+   matchingReady, results). Two animations stacked: opacity blink on
+   dot itself + expanding halo ring. */
+.event-now-bar__dot--pulse {
+  animation: now-bar-dot-pulse 1.4s ease-in-out infinite;
+}
+.event-now-bar__dot--pulse::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: inherit;
+  z-index: -1;
+  animation: now-bar-halo 1.6s ease-out infinite;
+}
+/* Simple blink — applied to non-action passive states' dots so they
+   feel alive but don't compete with the action-state halos.
+   Just opacity pulse on the dot, no halo, no bg tint. */
+.event-now-bar__dot--blink {
+  animation: now-bar-dot-pulse 1.8s ease-in-out infinite;
+}
+@keyframes now-bar-dot-pulse {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+@keyframes now-bar-halo {
+  0%   { transform: scale(1);   opacity: 0.45; }
+  80%  { transform: scale(2.6); opacity: 0; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+/* Chevron blink — applied alongside --action variant so the up-arrow
+   pulses too, drawing attention to the "tap to expand" affordance. */
+.event-now-bar--action::before {
+  animation: now-bar-chevron-blink 1.4s ease-in-out infinite;
+}
+@keyframes now-bar-chevron-blink {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 1; }
+}
+
+.event-now-bar__title {
+  /* bodyMedium (14/400) — matches theme.textTheme.bodyMedium without copyWith
+     in apps/app_user/lib/src/features/home/widgets/event_now_bar.dart:161 */
+  font-size: var(--typography-font-size-body);
+  font-weight: 400;
+  color: var(--color-text-primary);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.event-now-bar__status {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+.event-now-bar__trailing {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+/* EventNowBar tap의 결과는 5개 phase routed bottom-sheet screen 중 하나로
+   navigation. 각 screen 스펙은 event_*_sheet.html에서 별도로 다룬다. */
+
+/* --- Body scroll area --- */
+.home-body {
+  position: absolute;
+  top: 56px; left: 0; right: 0;
+  bottom: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.home-body::-webkit-scrollbar { display: none; }
+.home-body__feed {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: var(--spacing-small) 0 var(--spacing-medium);
+}
+
+/* --- Empty state --- */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--spacing-xxlarge) var(--spacing-large);
+  gap: var(--spacing-sm);
+}
+.empty-state__icon {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-secondary);
+}
+.empty-state__icon svg { width: 28px; height: 28px; }
+.empty-state__title {
+  font-size: var(--typography-font-size-body);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.empty-state__sub {
+  font-size: var(--typography-font-size-caption);
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+}
+
+/* --- Skeleton rows --- */
+.skeleton-bar {
+  border-radius: var(--radius-card);
+  background: linear-gradient(90deg, var(--color-surface) 25%, var(--color-divider) 50%, var(--color-surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+/* Loading skeleton — matches new event card layout (edge-to-edge, 2:1 image, body) */
+.skeleton-card {
+  border-bottom: 1px solid var(--color-divider);
+  overflow: hidden;
+}
+.skeleton-card__img {
+  width: 100%; aspect-ratio: 2/1;
+  border-radius: 0;
+}
+.skeleton-card__body {
+  padding: var(--spacing-small) var(--spacing-medium);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xsmall);
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports + visual galleries flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     📍 HEADER
+     ============================================================ -->
+<header>
+  <h1>Home</h1>
+</header>
+
+<!-- ============================================================
+     🎯 OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 5 page-level state · 2 sub-component spec(EventCard / EventNowBar) 분리</em></td>
+      </tr>
+      <tr>
+        <th>App</th>
+        <td><code>app_user</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>home · feed · entry hub</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>HomeRoute</code> · widget: <code>HomePage</code></td>
+      </tr>
+      <tr>
+        <th>Path</th>
+        <td><code>/</code></td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <em>— (top-level screen — 앱의 기본 진입 화면)</em><br>
+          <strong>Children</strong>:
+          <a href="/specs/event_card/index.html"><code>MinglitEventCard</code></a> (피드 cell — 4 state) ·
+          <a href="/specs/event_now_bar/index.html"><code>EventNowBar</code></a> (Scaffold.bottomSheet — 7 visible state · 5 routed sheet 진입점)
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          인증된 사용자가 추천 이벤트를 탐색하고, 관심 있는 이벤트 상세 페이지로 진입하는
+          앱의 중심 허브. 필터·태그·피드를 통해 원하는 모임을 빠르게 발견하도록 돕는다.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: 로그인 성공 후 자동 이동 / 하단 탭 홈 버튼 탭 / 앱 재진입.<br>
+          <strong>Exit points</strong>: 이벤트 카드 탭 → EventDetailPage / 검색 아이콘 → SearchPage /
+          알림 아이콘 → NotificationCenter / 프로필 아이콘 → MyPage /
+          EventNowBar 탭 → phase별 routed sheet (check-in / matching / results / review) / 태그 칩 탭 → TagEventListPage.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          밍글릿의 핵심 가치인 "Verified Vibe" 탐색 경험을 실현하는 화면.
+          추천 피드는 pgvector 기반 개인화 알고리즘으로 구성되며,
+          필터(추천순·마감임박·가까운날짜)와 위치 기반 근거리 토글로 세밀하게 조정 가능.
+          오늘 참여 중인 이벤트가 있을 때에만 하단에 EventNowBar가 고정 표시되어
+          실시간 이벤트 상태를 빠르게 확인할 수 있다.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>매일 여러 번 — 앱의 기본 진입 화면.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     🕐 HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">
+    이 spec의 주요 변경 이력. 최신 항목 위.
+  </p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-01</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>
+          v1.4 template으로 마이그레이션. <strong>EventCard / EventNowBar sub-anatomy 및 visual gallery 분리</strong> →
+          <a href="/specs/event_card/index.html">event_card.html</a> · <a href="/specs/event_now_bar/index.html">event_now_bar.html</a>로 별도 spec.
+          home_page는 page-level scaffold (AppBar + Filter chip bar + Feed + bottomSheet 슬롯)에 집중.
+          5 page-level state → mini-table per state (default · guest · loading · feed empty · error). additive diff 패턴.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Anchor nav -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      Floating SliverAppBar(snap+floating) + 고정 chip 바 2단 + 무한 피드(SliverList, edge-to-edge).
+      오늘 활성 이벤트가 있으면 하단에 64px EventNowBar가 bottomSheet으로 고정.
+      전체 스크롤은 CustomScrollView — AppBar만 floating.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- AppBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;">
+          <span class="blueprint__region-label">① SliverAppBar — logo + icons<br>floating · snap</span>
+        </div>
+        <!-- Filter chip bar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:56px;left:0;right:0;height:44px;">
+          <span class="blueprint__region-label">② ExploreFilterChipBar<br>h=36 + spacing-small top</span>
+        </div>
+        <!-- Featured tag chip bar -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:100px;left:0;right:0;height:44px;">
+          <span class="blueprint__region-label">③ FeaturedTagChipBar<br>h=36 + spacing-small top</span>
+        </div>
+        <!-- Feed list -->
+        <div class="blueprint__region" style="top:144px;left:0;right:0;bottom:64px;">
+          <span class="blueprint__region-label">④ SliverList — MinglitEventCard<br>edge-to-edge · bottom border-divider</span>
+        </div>
+        <!-- EventNowBar -->
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:0;left:0;right:0;height:64px;">
+          <span class="blueprint__region-label">⑤ EventNowBar — bottomSheet 64px<br>visible when active events &gt; 0</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">floating + snap</div>
+        <div class="blueprint__align-marker" style="bottom:60px;right:8px;">conditional</div>
+      </div>
+
+      <div class="layout-tree"><b>Scaffold</b>
+├─ <em>floatingActionButton</em>: <b>BugReportFab</b> (dev-only)
+├─ <em>bottomSheet</em>: <b>EventNowBar</b> (h=64)          ← ⑤  <i>(conditional)</i>
+└─ <b>body</b>: <b>RefreshIndicator</b>
+   └─ <b>CustomScrollView</b>
+      ├─ <b>SliverAppBar</b>(floating, snap)              ← ①
+      │  ├─ title: <b>Logo</b> (h=36 · tap → scroll-to-top)
+      │  ├─ actions: <b>BugReportAction</b> (dev)
+      │  │           <b>IconButton</b> search
+      │  │           <b>IconButton</b> notifications  <i>(authenticated)</i>
+      │  │           <b>CircleAvatar</b> 28px profile  <i>(authenticated)</i>
+      │  │           <b>IconButton</b> person_outline  <i>(unauthenticated)</i>
+      │  └─ backgroundColor: surface
+      │
+      ├─ <b>SliverToBoxAdapter</b>                        ← ②
+      │  └─ <b>ExploreFilterChipBar</b> (h=36, padding-top: <i>spacing-small=8px</i>)
+      │     ├─ FilterChip: 추천순 · 마감임박 · 가까운날짜  <i>(sort, single-select)</i>
+      │     ├─ VerticalDivider
+      │     └─ FilterChip: 가까운 거리 · 참여 가능  <i>(toggle)</i>
+      │
+      ├─ <b>SliverToBoxAdapter</b>                        ← ③
+      │  └─ <b>FeaturedTagChipBar</b> (h=36, padding-top: <i>spacing-small</i>)
+      │     └─ TagChip(#태그이름) × N  <i>(hidden if empty)</i>
+      │
+      └─ <em>Feed content</em>                            ← ④
+         ├─ [loading] <b>SliverFillRemaining</b> → <b>MinglitCircularProgressIndicator</b>
+         ├─ [empty]   <b>SliverFillRemaining</b> → <b>MinglitEmptyState</b>
+         ├─ [error]   <b>SliverFillRemaining</b> → error Text + TextButton 재시도
+         └─ [data]    <b>SliverList</b>
+            └─ <b>MinglitEventCard</b> × N (edge-to-edge, bottom border-divider)
+               padding-bottom: (EventNowBar height + safe area + <i>spacing-medium</i>)</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>AppBar 좌우 여백</td><td>—</td><td>left: <code>spacing-screen-edge (16px)</code> · right: <code>spacing-small (8px)</code> (icon trailing)</td></tr>
+        <tr><td>①</td><td>SliverAppBar</td><td>crossAxis: stretch · height 56px</td><td>titleSpacing: 0 (logo 직접 배치)</td></tr>
+        <tr><td>②</td><td>ExploreFilterChipBar</td><td>crossAxis: center · horizontal scroll</td><td>h-padding: <code>spacing-medium (16px)</code> · chip gap: <code>spacing-small (8px)</code> · top: <code>spacing-small (8px)</code></td></tr>
+        <tr><td>③</td><td>FeaturedTagChipBar</td><td>crossAxis: center · horizontal scroll</td><td>h-padding: <code>spacing-medium (16px)</code> · chip gap: <code>spacing-small (8px)</code> · top: <code>spacing-small (8px)</code></td></tr>
+        <tr><td>④</td><td>Feed (SliverList)</td><td>column stretch · 카드 edge-to-edge 풀폭</td><td>per-card h-margin 없음 — bottom border-divider로 카드 분리. top: <code>spacing-small</code> · bottom: EventNowBar+safeArea+<code>spacing-medium</code></td></tr>
+        <tr><td>⑤</td><td>EventNowBar</td><td>crossAxis: center · bottomSheet 고정</td><td>h-padding: <code>spacing-screen-edge (16px)</code> · dot↔title: <code>spacing-sm (12px)</code> · status↔trailing: <code>spacing-small (8px)</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>AppBar anatomy (ⓐ)</h2>
+    <p class="intro">
+      상단 56px SliverAppBar — 로고 + trailing 액션 아이콘 그룹. floating + snap (스크롤 시 즉시 숨김/노출).
+      Material AppBar의 기본 titleSpacing(16px)을 사용 — 로고가 좌측 가장자리에서 정확히 16px 떨어진 위치에 정렬됨.
+      액션 아이콘은 우측 끝까지 채워 배치 (margin-left: auto로 push) — 로고와 액션 사이 빈 공간이 생긴다.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 343px; height: 90px;">
+        <!-- Outer -->
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- Left padding (screen-edge) -->
+        <div class="blueprint__align-marker" style="top:8px;left:0;">left: spacing-screen-edge (16px)</div>
+
+        <!-- Logo region -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:10px;left:16px;width:121px;height:36px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉠ Logo<br>h=36 · 자연 너비 (≈121px)</span>
+        </div>
+
+        <!-- Spacer (margin-left auto) -->
+        <div class="blueprint__region" style="top:14px;left:137px;right:128px;height:28px;border-style:dashed;border-color:rgba(var(--spec-blueprint-rgb), 0.3);">
+          <span class="blueprint__region-label" style="font-size:9px;">flex grow (남는 공간)</span>
+        </div>
+
+        <!-- Actions trailing -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:8px;right:8px;width:120px;height:40px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉡ Actions — 40×40 IconButton × 3</span>
+        </div>
+
+        <!-- Bottom border -->
+        <div class="blueprint__align-marker" style="bottom:8px;left:8px;">bottom: 1px color-divider</div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:0;">right: spacing-small (8px)</div>
+      </div>
+
+      <div class="layout-tree"><b>SliverAppBar</b>(floating: true, snap: true, height: 56)
+└─ Row(crossAxis: center)
+   ├─ Padding(left: <i>spacing-screen-edge = 16px</i>)
+   │
+   ├─ <em>Logo</em>                                       ← ㉠
+   │  └─ <b>SVG image</b>(height: 36, 자연 너비 ≈121)
+   │     · onTap → 스크롤 top
+   │     · 좌측 가장자리에서 spacing-screen-edge(16px) 떨어진 곳에 정렬
+   │
+   ├─ <b>Spacer</b> (flex: grow)
+   │   <i>로고 ↔ 액션 사이 빈 공간 — 화면 너비 따라 가변</i>
+   │
+   ├─ <em>Actions</em>                                    ← ㉡
+   │  ├─ [dev] <b>BugReportAction</b> (visibleForTesting)
+   │  ├─ <b>IconButton</b>(Icons.search, 22) — 40×40 hit zone
+   │  ├─ <b>IconButton</b>(Icons.notifications_outlined, 22) <i>— authenticated only</i>
+   │  └─ <b>CircleAvatar</b>(28) <i>or</i> <b>IconButton</b>(person_outline, 22)
+   │     <i>— authenticated → 프로필 사진 / unauthenticated → 사람 아이콘</i>
+   │
+   └─ Padding(right: <i>spacing-small = 8px</i>)
+
+<em>Bottom border:</em> 1px solid <i>color-divider</i> (하단 1px 라인)
+<em>Background:</em> <i>color-background</i> (light) / <i>color-dark-background</i> (dark)</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>AppBar 외부</td><td>height 56 · 풀폭</td><td>left: <code>spacing-screen-edge (16px)</code> · right: <code>spacing-small (8px)</code> · bottom: <code>1px color-divider</code></td></tr>
+        <tr><td>㉠</td><td>Logo</td><td>좌측 정렬 · 자연 너비 (flex 0)</td><td>height: 36px · width: auto · 좌측 가장자리에서 16px</td></tr>
+        <tr><td>—</td><td>Spacer</td><td>flex grow (남는 공간 흡수)</td><td>로고 우측 끝 ↔ 액션 좌측 끝 사이 가변 폭</td></tr>
+        <tr><td>㉡</td><td>Actions</td><td>우측 끝 정렬 · margin-left: auto로 push</td><td>icon 사이 gap: 0 (각 IconButton의 40×40 hit zone에 자체 padding) · icon 시각 사이즈: 22 · avatar: 28</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Filter chip bar anatomy (ⓑ)</h2>
+    <p class="intro">
+      AppBar 바로 아래 36px 가로 스크롤 영역. 정렬(추천순 · 마감임박 · 가까운날짜) — 단일 선택. VerticalDivider — 토글(가까운 거리 · 참여 가능) — 다중 선택.
+      모든 칩은 leading 아이콘 + 라벨 구조. 좌우 가장자리 padding은 <code>spacing-medium (16px)</code>.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 343px; height: 60px;">
+        <!-- Outer -->
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- Sort chips group (left) -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:12px;left:16px;width:155px;height:32px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉠ Sort chips · 단일 선택</span>
+        </div>
+        <!-- Vertical divider -->
+        <div class="blueprint__region" style="top:18px;left:179px;width:1px;height:20px;background:var(--color-divider);">
+        </div>
+        <!-- Toggle chips group (right) -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:12px;left:188px;width:140px;height:32px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉡ Toggle chips · 다중 선택</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">→ scroll</div>
+      </div>
+
+      <div class="layout-tree"><b>SliverToBoxAdapter</b>
+└─ <b>SizedBox</b>(height: 36)
+   └─ <b>ListView.scrollable</b>(horizontal, padding: <i>spacing-medium = 16</i>)
+      ├─ <em>Sort chips group</em>                       ← ㉠
+      │  ├─ <b>MinglitFilterChip</b>(label: '추천순', icon: local_fire_department, isSelected: sortType==recommended)
+      │  ├─ Gap: <i>spacing-small = 8</i>
+      │  ├─ <b>MinglitFilterChip</b>(label: '마감임박', icon: hourglass_bottom)
+      │  ├─ Gap: <i>spacing-small</i>
+      │  └─ <b>MinglitFilterChip</b>(label: '가까운날짜', icon: event)
+      │
+      ├─ <b>VerticalDivider</b>(width 1, indent 8, h-padding spacing-small)
+      │
+      └─ <em>Toggle chips group</em>                     ← ㉡
+         ├─ <b>MinglitFilterChip</b>(label: '가까운 거리', icon: near_me_outlined)
+         │  · onTap → 위치 권한 요청 → 활성
+         ├─ Gap: <i>spacing-small</i>
+         └─ <b>MinglitFilterChip</b>(label: '참여 가능', icon: check_circle_outline)
+            · onTap → 즉시 토글
+
+<em>Chip 내부 구조 (MinglitFilterChip):</em>
+height 32 · radius-chip (100px pill) · border 1px color-divider
+padding: 0 <i>spacing-sm (12)</i> h
+icon 14 + Gap <i>xsmall (4)</i> + label (chipLabel · w500)
+active 상태: bg=primary 0.08 · border=primary · color=primary · w600</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>Bar 외부</td><td>height 36 · 가로 스크롤</td><td>h-padding: <code>spacing-medium (16px)</code> · top: <code>spacing-small (8px)</code></td></tr>
+        <tr><td>㉠</td><td>Sort chips (3개)</td><td>row · 단일 선택 (선택 시 다른 sort 자동 해제)</td><td>chip 사이 gap: <code>spacing-small (8px)</code></td></tr>
+        <tr><td>—</td><td>VerticalDivider</td><td>중앙 정렬 · width 1px · indent 8</td><td>좌우 padding: <code>spacing-small (8px)</code></td></tr>
+        <tr><td>㉡</td><td>Toggle chips (2개)</td><td>row · 다중 선택 (각자 독립적 토글)</td><td>chip 사이 gap: <code>spacing-small (8px)</code></td></tr>
+        <tr><td>—</td><td>Chip 내부</td><td>row · crossAxis center</td><td>padding: <code>0 spacing-sm (12px)</code> · icon↔label: <code>spacing-xsmall (4px)</code> · icon size: 14</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Event card anatomy (ⓓ)</h2>
+    <p class="intro">
+      별도 spec으로 분리 — <a href="/specs/event_card/index.html"><code>MinglitEventCard</code></a> 참고.
+      4 visible state (normal · today · soldOut · ended), 각 state의 anatomy / 토큰 / 동작은 child spec에 있음.
+      <br><br>
+      <em style="color: var(--color-text-secondary);">⚠️ 이전 inline anatomy / spacing rules 표는 child spec으로 이전됨 (2026-05-01).</em>
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>EventNowBar anatomy (ⓔ)</h2>
+    <p class="intro">
+      별도 spec으로 분리 — <a href="/specs/event_now_bar/index.html"><code>EventNowBar</code></a> 참고.
+      Scaffold의 <code>bottomSheet</code> 슬롯에 부착되는 64px persistent bar. 7 visible state + 3 hidden state + 5 routed-sheet 진입점은 child spec에 있음.
+      <br><br>
+      <em style="color: var(--color-text-secondary);">⚠️ 이전 inline anatomy / state table / routed-sheet 매핑은 child spec으로 이전됨 (2026-05-01).</em>
+    </p>
+  </section>
+</div>
+
+<!-- ============================================================
+     VISUAL
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">시각 변형 5종 (page-level). baseline = Default 로그인. EventCard / EventNowBar 자체 state 변형은 child spec 참고.</span>
+  </div>
+
+  <section class="doc">
+    <p class="intro">
+      <strong>State 식별 기준</strong>: 인증 여부 + 피드 로딩 상태 + 결과 유무에 따라 5가지 page-level 변형. EventCard / EventNowBar 자체 state는 child spec 참고.
+    </p>
+
+      <!-- State 1: Default — authenticated, data loaded, EventNowBar active -->
+      
+    <table class="ref state-mini is-baseline-tint">
+      <thead>
+        <tr><th colspan="3"><strong>Default · 로그인 + 피드 로드됨 + 이벤트 진행 중</strong> 🎯</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+                      <!-- AppBar -->
+                      <div class="home-appbar">
+                        <img class="home-appbar__logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                        <div class="home-appbar__actions">
+                          <div class="home-appbar__icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                          </div>
+                          <div class="home-appbar__icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                          </div>
+                          <div class="home-appbar__icon">
+                            <div class="home-appbar__avatar">
+                              <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Scrollable body -->
+                      <div class="home-body">
+                        <!-- Filter chip bar -->
+                        <div style="height:8px;"></div>
+                        <div class="chip-bar">
+                          <div class="filter-chip filter-chip--active">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></svg>
+                            추천순
+                          </div>
+                          <div class="filter-chip">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 22h12v-7l-4-4 4-4V2H6v5l4 4-4 4zM8 6.5V4h8v2.5l-4 4-4-4z"/></svg>
+                            마감임박
+                          </div>
+                          <div class="filter-chip">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            가까운날짜
+                          </div>
+                          <div class="chip-bar__divider"></div>
+                          <div class="filter-chip">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                            가까운 거리
+                          </div>
+                          <div class="filter-chip">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>
+                            참여 가능
+                          </div>
+                        </div>
+
+                        <!-- Featured tag chip bar -->
+                        <div style="height:8px;"></div>
+                        <div class="tag-chip-bar">
+                          <div class="tag-chip">#루프탑파티</div>
+                          <div class="tag-chip">#소규모모임</div>
+                          <div class="tag-chip">#아트</div>
+                          <div class="tag-chip">#야외</div>
+                          <div class="tag-chip">#와인</div>
+                        </div>
+
+                        <!-- Feed -->
+                        <div class="home-body__feed">
+                          <!-- Card 1: today state (yellow secondary border, D-day "오늘") -->
+                          <div class="event-card">
+                            <div class="event-card__image" style="background: linear-gradient(135deg, #f0e6ff 0%, #ffe8d6 100%);">
+                              <div class="event-card__image-bg">2:1 이미지</div>
+                              <div class="event-card__image-gradient"></div>
+                              <!-- Partner overlay (top-left) -->
+                              <div class="event-card__partner-overlay">
+                                <div class="event-card__partner-avatar">
+                                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                                </div>
+                                <span class="event-card__partner-name">Skybar Seoul</span>
+                              </div>
+                              <!-- Participant + D-Day overlay (top-right) -->
+                              <div class="event-card__participant-overlay">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
+                                <span class="event-card__gauge">
+                                  <span class="event-card__gauge-segment event-card__gauge-segment--mid"></span>
+                                  <span class="event-card__gauge-segment event-card__gauge-segment--mid"></span>
+                                  <span class="event-card__gauge-segment event-card__gauge-segment--empty"></span>
+                                </span>
+                                <span class="event-card__overlay-text">12/20</span>
+                                <span class="event-card__overlay-sep">·</span>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+                                <span class="event-card__overlay-text event-card__overlay-text--today">오늘</span>
+                              </div>
+                              <!-- Tag chips overlaid on image bottom -->
+                              <div class="event-card__tags">
+                                <span class="event-card__tag">#루프탑파티</span>
+                                <span class="event-card__tag">#와인</span>
+                                <span class="event-card__tag">#소규모</span>
+                              </div>
+                            </div>
+                            <div class="event-card__body">
+                              <div class="event-card__title">강남 루프탑 소셜 파티 — Verified Vibe</div>
+                              <div class="event-card__meta-row">
+                                <svg class="loc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                <span class="event-card__meta-text">강남구 · 4월 29일 (수) 19:30</span>
+                                <span class="event-card__price">20,000원~</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Card 2: normal future state (D-4) -->
+                          <div class="event-card">
+                            <div class="event-card__image" style="background: linear-gradient(135deg, #e6f0ff 0%, #d6e8ff 100%);">
+                              <div class="event-card__image-bg">2:1 이미지</div>
+                              <div class="event-card__image-gradient"></div>
+                              <div class="event-card__partner-overlay">
+                                <div class="event-card__partner-avatar">
+                                  <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+                                </div>
+                                <span class="event-card__partner-name">보드게임바 플레이</span>
+                              </div>
+                              <div class="event-card__participant-overlay">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
+                                <span class="event-card__gauge">
+                                  <span class="event-card__gauge-segment event-card__gauge-segment--low"></span>
+                                  <span class="event-card__gauge-segment event-card__gauge-segment--empty"></span>
+                                  <span class="event-card__gauge-segment event-card__gauge-segment--empty"></span>
+                                </span>
+                                <span class="event-card__overlay-text">3/12</span>
+                                <span class="event-card__overlay-sep">·</span>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+                                <span class="event-card__overlay-text">D-4</span>
+                              </div>
+                              <div class="event-card__tags">
+                                <span class="event-card__tag">#보드게임</span>
+                                <span class="event-card__tag">#실내</span>
+                              </div>
+                            </div>
+                            <div class="event-card__body">
+                              <div class="event-card__title">보드게임 소모임 — 2인 이상 즉시 참여</div>
+                              <div class="event-card__meta-row">
+                                <svg class="loc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                <span class="event-card__meta-text">마포구 · 5월 3일 (토) 14:00</span>
+                                <span class="event-card__price">10,000원~</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Card 3: soldOut state (scrim + 마감 badge) -->
+                          <div class="event-card">
+                            <div class="event-card__image" style="background: linear-gradient(135deg, #ffe6e6 0%, #ffd6d6 100%);">
+                              <div class="event-card__image-bg">2:1 이미지</div>
+                              <div class="event-card__image-gradient"></div>
+                              <div class="event-card__partner-overlay">
+                                <div class="event-card__partner-avatar">
+                                  <svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+                                </div>
+                                <span class="event-card__partner-name">레드와인하우스</span>
+                              </div>
+                              <div class="event-card__participant-overlay">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
+                                <span class="event-card__gauge">
+                                  <span class="event-card__gauge-segment event-card__gauge-segment--high"></span>
+                                  <span class="event-card__gauge-segment event-card__gauge-segment--high"></span>
+                                  <span class="event-card__gauge-segment event-card__gauge-segment--high"></span>
+                                </span>
+                                <span class="event-card__overlay-text">8/8</span>
+                                <span class="event-card__overlay-soldout">만석</span>
+                                <span class="event-card__overlay-sep">·</span>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+                                <span class="event-card__overlay-text">D-2</span>
+                              </div>
+                              <!-- SoldOut scrim -->
+                              <div class="event-card__soldout-scrim">
+                                <div class="event-card__soldout-badge">마감</div>
+                              </div>
+                            </div>
+                            <div class="event-card__body">
+                              <div class="event-card__title">와인 페어링 디너 — 8인 한정</div>
+                              <div class="event-card__meta-row">
+                                <svg class="loc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                <span class="event-card__meta-text">용산구 · 5월 1일 (목) 19:00</span>
+                                <span class="event-card__price">75,000원~</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- (EventNowBar 영역 — Scaffold.bottomSheet으로 부착, 별도 spec) -->
+                      </div>
+
+                      <!-- Spec-mode annotations -->
+                      <span class="annotation" style="top:8px;left:8px;">color-background — surface</span>
+                      <span class="annotation" style="top:56px;left:8px;">spacing-small — chip bar top gap</span>
+                      <span class="annotation" style="top:96px;right:8px;">spacing-medium — h-padding</span>
+                      <span class="annotation" style="top:335px;left:8px;">spacing-screen-edge — card h-margin</span>
+                      <span class="annotation" style="bottom:66px;right:8px;">primary tint gradient — action bg</span>
+
+                      <!-- Callouts -->
+                      <span class="callout" style="top:16px;left:56px;">ⓐ</span>
+                      <span class="callout" style="top:65px;left:30px;">ⓑ</span>
+                      <span class="callout" style="top:108px;left:30px;">ⓒ</span>
+                      <span class="callout" style="top:200px;right:24px;">ⓓ</span>
+                      <span class="callout" style="bottom:72px;left:30px;">ⓔ</span>
+
+                      <!-- Type specs -->
+                      <span class="type-spec" style="top:24px;left:140px;">logo h=36 SVG</span>
+                      <span class="type-spec" style="top:70px;left:140px;">13 / 500 / 1 — chip</span>
+                      <span class="type-spec" style="top:280px;left:200px;">14 / 600 / 1.4 — card title</span>
+                      <span class="type-spec" style="top:360px;left:200px;">14 / 700 / 1 — price</span>
+                      <span class="type-spec" style="bottom:78px;left:120px;">14 / 400 / 1.45 — bar title</span>
+                      <span class="type-spec" style="bottom:48px;right:90px;">12 / 700 — action status (primary)</span>
+                    </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>로그인된 사용자가 추천 피드를 받았고, 오늘 참여 중인 이벤트가 있어 하단 EventNowBar가 액션 안내를 노출하는 상태.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>① <strong>스크롤</strong> → 카드 차례 노출 · 끝에 다다르면 다음 결과가 자동으로 이어짐<br>
+        ② <strong>EventCard 탭</strong> → <a href="/specs/event_detail_page/index.html">EventDetailPage</a>로 이동<br>
+        ③ <strong>FilterChip 탭</strong> → 필터 적용 (추천순 · 마감임박 · 가까운날짜) → 피드 갱신<br>
+        ④ <strong>"근처" 토글</strong> → 위치 권한 요청 (필요 시) → 위치 기반 정렬<br>
+        ⑤ <strong>TagChip 탭</strong> → <a href="/specs/tag_event_list_page/index.html">TagEventListPage</a>로 이동<br>
+        ⑥ <strong>AppBar 검색 아이콘</strong> → SearchPage / <strong>알림</strong> → NotificationCenter / <strong>아바타</strong> → MyPage<br>
+        ⑦ <strong>EventNowBar 탭</strong> → 단계별 시트 (<a href="/specs/event_now_bar/index.html">child spec</a>)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 스크롤 마지막에 도달 → "더 이상 결과 없음" 메시지 (피드 끝)<br>
+        · 위치 권한 거부 후 "근처" 토글 시도 → 권한 다이얼로그 재요청 안내<br>
+        · 동시 활성 이벤트가 여러 건 → EventNowBar에는 가장 임박한 1건만 노출</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>· <code>MinglitAppBar</code> (검색 · 알림 · 아바타 3개 액션 아이콘)<br>
+        · <code>FilterChipBar</code> (추천순 · 마감임박 · 가까운날짜 · "근처" 토글)<br>
+        · <a href="/specs/event_card/index.html"><code>MinglitEventCard</code></a> 피드 (edge-to-edge · normal/today/soldOut/ended state — child spec)<br>
+        · <a href="/specs/event_now_bar/index.html"><code>EventNowBar</code></a> (Scaffold.bottomSheet · 7 visible state — child spec)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>· color: <code>color-background</code>, <code>color-surface</code>, <code>color-text-primary</code>, <code>color-text-secondary</code>, <code>color-divider</code>, <code>color-primary</code> (active chip · location icon)<br>
+        · radius: <code>radius-card</code> (16 · EventNowBar top corners), <code>radius-chip</code> (filter chips)<br>
+        · spacing: <code>spacing-screen-edge</code> (16 · h-padding), <code>spacing-medium</code> (16 · feed top), <code>spacing-small</code> (8 · 카드 간 시각 분리), 64+safeArea+spacing-medium (피드 하단 — bar clearance)<br>
+        · typography: appBarTitle (18/600), bodyMedium · bodySmall · labelSmall (chips)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 가장 많이 쓰이는 page state — 다른 4 state는 이 baseline에서 변경분만. EventCard / EventNowBar 자체 state 변형은 child spec mini-table 참고.</td>
+        </tr>
+      </tbody>
+    </table>
+
+
+      <!-- State 2: Default — unauthenticated -->
+      
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Default · 비로그인</strong></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+                      <div class="home-appbar">
+                        <img class="home-appbar__logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                        <div class="home-appbar__actions">
+                          <div class="home-appbar__icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                          </div>
+                          <div class="home-appbar__icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="home-body">
+                        <div style="height:8px;"></div>
+                        <div class="chip-bar">
+                          <div class="filter-chip filter-chip--active"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></svg>추천순</div>
+                          <div class="filter-chip"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 22h12v-7l-4-4 4-4V2H6v5l4 4-4 4zM8 6.5V4h8v2.5l-4 4-4-4z"/></svg>마감임박</div>
+                          <div class="filter-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>가까운날짜</div>
+                          <div class="chip-bar__divider"></div>
+                          <div class="filter-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>가까운 거리</div>
+                          <div class="filter-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>참여 가능</div>
+                        </div>
+                        <div style="height:8px;"></div>
+                        <div class="tag-chip-bar">
+                          <div class="tag-chip">#루프탑파티</div>
+                          <div class="tag-chip">#소규모모임</div>
+                          <div class="tag-chip">#아트</div>
+                        </div>
+                        <div class="home-body__feed">
+                          <div class="event-card">
+                            <div class="event-card__image" style="background: linear-gradient(135deg, #f0e6ff 0%, #ffe8d6 100%);">
+                              <div class="event-card__image-gradient"></div>
+                              <div class="event-card__partner-overlay">
+                                <div class="event-card__partner-avatar"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></div>
+                                <span class="event-card__partner-name">Skybar Seoul</span>
+                              </div>
+                              <div class="event-card__participant-overlay">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
+                                <span class="event-card__gauge">
+                                  <span class="event-card__gauge-segment event-card__gauge-segment--low"></span>
+                                  <span class="event-card__gauge-segment event-card__gauge-segment--empty"></span>
+                                  <span class="event-card__gauge-segment event-card__gauge-segment--empty"></span>
+                                </span>
+                                <span class="event-card__overlay-text">5/20</span>
+                                <span class="event-card__overlay-sep">·</span>
+                                <span class="event-card__overlay-text">D-1</span>
+                              </div>
+                            </div>
+                            <div class="event-card__body">
+                              <div class="event-card__title">강남 루프탑 소셜 파티</div>
+                              <div class="event-card__meta-row">
+                                <svg class="loc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                <span class="event-card__meta-text">강남구 · 4월 30일 (화) 19:30</span>
+                                <span class="event-card__price">20,000원~</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <!-- No EventNowBar since guest has no active events -->
+                    </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>로그인되지 않은 상태로 화면에 진입한 경우.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>+ <strong>"로그인하고 시작하기" 탭</strong> → <a href="/specs/login_page/index.html">LoginPage</a>로 이동<br>− 그 외 액션은 모두 막힘 (피드 / 칩 / 하단 바 모두 노출되지 않음)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 로그인이 완료되면 자동으로 default 상태로 전환.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ AppBar 우측 아이콘 → <em>없음</em> (검색 · 알림 · 아바타 모두 hidden)<br>↔ Body → 중앙 정렬 login prompt + "로그인하고 시작하기" CTA<br>− FilterChipBar<br>− Feed (EventCards)<br>− EventNowBar</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>동일 (단, primary CTA 버튼은 <code>color-primary</code> 강조)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 "Verified Vibe" 컨셉상 비인증은 모든 콘텐츠 차단 — feed/discovery 자체가 보호된 기능.</td>
+        </tr>
+      </tbody>
+    </table>
+
+
+      <!-- State 3: Loading skeleton -->
+      
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Loading · 피드 로드 중</strong></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+                      <div class="home-appbar">
+                        <img class="home-appbar__logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                      </div>
+                      <div class="home-body">
+                        <div style="height:8px;"></div>
+                        <div class="chip-bar">
+                          <div class="filter-chip filter-chip--active"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></svg>추천순</div>
+                          <div class="filter-chip"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 22h12v-7l-4-4 4-4V2H6v5l4 4-4 4zM8 6.5V4h8v2.5l-4 4-4-4z"/></svg>마감임박</div>
+                          <div class="filter-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>가까운날짜</div>
+                          <div class="chip-bar__divider"></div>
+                          <div class="filter-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>가까운 거리</div>
+                        </div>
+                        <div style="height: 8px;"></div>
+                        <!-- Skeleton cards — edge-to-edge, matches event-card layout -->
+                        <div class="home-body__feed">
+                          <div class="skeleton-card">
+                            <div class="skeleton-bar skeleton-card__img" style="border-radius:0;"></div>
+                            <div class="skeleton-card__body">
+                              <div class="skeleton-bar" style="height:16px;width:85%;border-radius:6px;"></div>
+                              <div class="skeleton-bar" style="height:12px;width:60%;border-radius:6px;"></div>
+                            </div>
+                          </div>
+                          <div class="skeleton-card">
+                            <div class="skeleton-bar skeleton-card__img" style="border-radius:0;"></div>
+                            <div class="skeleton-card__body">
+                              <div class="skeleton-bar" style="height:16px;width:80%;border-radius:6px;"></div>
+                              <div class="skeleton-bar" style="height:12px;width:55%;border-radius:6px;"></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>피드를 불러오는 중. 진입 직후 또는 풀-다운 새로고침 직후.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>· AppBar 액션은 가능 (검색 · 알림 · 아바타)<br>· 풀-다운 새로고침으로 다시 트리거 가능 (이미 진행 중이면 무반응)<br>− 피드 / 칩 액션 (스켈레톤 표시 — 미인터랙티브)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 응답이 길어지면 스켈레톤이 그대로 유지됨. 별도 타임아웃 없음.<br>· 빠르게 응답이 오면 곧바로 결과 화면으로 전환 (fade 없이 cut).</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ Feed → 카드 자리 표시(스켈레톤) × 5장 (이미지 자리 회색 + 본문 라인)<br>↔ EventNowBar → 노출되지 않음</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ <code>color-divider</code> (skeleton 라인) + shimmer animation (1.5s linear infinite gradient sweep)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 AppBar / FilterChipBar는 loading 중에도 그대로 표시 — Skeleton는 피드 영역만.</td>
+        </tr>
+      </tbody>
+    </table>
+
+
+      <!-- State 4: Empty -->
+      
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Empty · 추천 이벤트 없음</strong></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+                      <div class="home-appbar">
+                        <img class="home-appbar__logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                      </div>
+                      <div class="home-body">
+                        <div style="height:8px;"></div>
+                        <div class="chip-bar">
+                          <div class="filter-chip filter-chip--active"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></svg>추천순</div>
+                          <div class="filter-chip"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 22h12v-7l-4-4 4-4V2H6v5l4 4-4 4zM8 6.5V4h8v2.5l-4 4-4-4z"/></svg>마감임박</div>
+                          <div class="filter-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>가까운날짜</div>
+                          <div class="chip-bar__divider"></div>
+                          <div class="filter-chip filter-chip--active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>가까운 거리</div>
+                          <div class="filter-chip filter-chip--active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>참여 가능</div>
+                        </div>
+                        <div style="height:8px;"></div>
+                        <div class="tag-chip-bar"><div class="tag-chip">#루프탑파티</div></div>
+                        <div style="height:100px;"></div>
+                        <div class="empty-state">
+                          <div class="empty-state__icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><path d="M2 12l10-10 10 10"/><path d="M5 9v11h14V9"/></svg>
+                          </div>
+                          <div class="empty-state__title">추천 이벤트가 없습니다</div>
+                          <div class="empty-state__sub">주변 지역이나 다른 카테고리를 탐색해 보세요</div>
+                        </div>
+                      </div>
+                    </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>피드 로드는 완료됐지만 표시할 이벤트가 0건이고 필터도 적용되지 않은 상태.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>+ <strong>"필터 초기화" 탭</strong> → 필터를 리셋하고 다시 받아옴<br>+ <strong>"검색하기" 탭</strong> → SearchPage로 이동</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 필터 적용 후 결과가 0건이면 안내 문구가 다름 ("이 필터로 보이는 이벤트가 없어요").<br>· 비로그인 상태에서는 이 상태에 도달하지 않음.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ Feed → 안내 박스 (아이콘 + 타이틀 + 본문 + 액션 버튼 2개)<br>↔ EventNowBar → 노출되지 않음<br>− EventCard, FilterChipBar(필터가 비어있는 상태)는 그대로</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ <code>color-text-secondary</code> (empty 아이콘 / 메시지)<br>+ <code>spacing-large</code> (icon ↔ title gap)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 추천 알고리즘이 결과 0개를 낼 가능성은 낮음 — 신규 사용자 또는 데이터 부족 지역에서만.</td>
+        </tr>
+      </tbody>
+    </table>
+
+
+      <!-- State 5: Error -->
+      
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Error · 피드 로드 실패</strong></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+                      <div class="home-appbar">
+                        <img class="home-appbar__logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                      </div>
+                      <div class="home-body">
+                        <div style="height:8px;"></div>
+                        <div class="chip-bar">
+                          <div class="filter-chip filter-chip--active"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></svg>추천순</div>
+                          <div class="filter-chip"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 22h12v-7l-4-4 4-4V2H6v5l4 4-4 4zM8 6.5V4h8v2.5l-4 4-4-4z"/></svg>마감임박</div>
+                          <div class="filter-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>가까운날짜</div>
+                          <div class="chip-bar__divider"></div>
+                          <div class="filter-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>가까운 거리</div>
+                          <div class="filter-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>참여 가능</div>
+                        </div>
+                        <div style="height:160px;"></div>
+                        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:24px;">
+                          <div style="color:var(--color-text-secondary);font-size:14px;">피드를 불러오지 못했습니다</div>
+                          <div style="background:transparent;border:none;color:var(--color-primary);font-size:14px;font-weight:600;padding:8px 16px;border-radius:8px;border:1px solid var(--color-primary);">다시 시도</div>
+                        </div>
+                      </div>
+                    </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>피드를 받아오지 못한 상태. 네트워크 끊김 / 서버 오류 / 타임아웃.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>+ <strong>"다시 시도" 탭</strong> → 피드를 다시 불러옴 (Loading 상태로 전환)<br>+ <strong>"새로고침" 탭</strong> → 화면 전체를 다시 불러옴</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 재시도 시 같은 오류가 반복되면 동일 화면 유지.<br>· 네트워크 회복만으로 자동 재시도되지 않음 — 사용자 액션 필요.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>↔ Feed → 안내 박스 (아이콘 + 타이틀 + 본문 + "다시 시도" 버튼)<br>↔ EventNowBar → 노출되지 않음</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>+ <code>color-error</code> (icon · "다시 시도" 버튼 강조)<br>+ <code>spacing-large</code> (icon ↔ title gap)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 에러 메시지는 generic ("이벤트를 불러오지 못했습니다") — 구체 사유는 dev console에만.</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </section>
+
+  <!-- ============================================================
+       Page-atom zoom-ins — AppBar / Filter chip bar 시각 디테일.
+       EventCard / EventNowBar는 각각 child spec으로 분리.
+       ============================================================ -->
+
+  <section class="doc">
+    <h2>AppBar — visual</h2>
+    <p class="intro">
+      56px 고정 AppBar. 좌측 16px 안쪽에 brand SVG 로고, 우측 끝에 액션 아이콘 3개 (search · notifications · 프로필).
+      배경 <code>color-background</code>, 하단 1px <code>color-divider</code> 라인.
+    </p>
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 24px; border-radius: var(--radius-card); display: flex; justify-content: center;">
+      <div style="width: 375px; background: var(--color-background); border: 1px solid var(--color-divider); border-radius: 8px; overflow: hidden;">
+        <div class="home-appbar">
+          <img class="home-appbar__logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+          <div class="home-appbar__actions">
+            <div class="home-appbar__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+            <div class="home-appbar__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+            <div class="home-appbar__icon"><div class="home-appbar__avatar"><svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="intro" style="margin-top:12px;margin-bottom:0;">
+      ※ 인증 상태에 따라 우측 마지막 슬롯이 바뀜: 로그인 시 28px 원형 아바타(프로필 사진), 비로그인 시 person_outline 아이콘.
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Filter chip bar — visual</h2>
+    <p class="intro">
+      AppBar 바로 아래 36px 가로 스크롤 영역. 정렬(추천순 · 마감임박 · 가까운날짜) — 단일 선택. VerticalDivider — 토글(가까운 거리 · 참여 가능) — 다중 선택.
+      모든 칩은 <strong>아이콘 + 라벨</strong> 구조 (mds_icons.dart 직접 참조). active 상태는 primary tint 배경 + primary 보더.
+    </p>
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 24px; border-radius: var(--radius-card); display: flex; justify-content: center;">
+      <div style="width: 375px; background: var(--color-background); border: 1px solid var(--color-divider); border-radius: 8px; padding: 8px 0;">
+        <div class="chip-bar" style="height:36px;">
+          <div class="filter-chip filter-chip--active"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></svg>추천순</div>
+          <div class="filter-chip"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 22h12v-7l-4-4 4-4V2H6v5l4 4-4 4zM8 6.5V4h8v2.5l-4 4-4-4z"/></svg>마감임박</div>
+          <div class="filter-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>가까운날짜</div>
+          <div class="chip-bar__divider"></div>
+          <div class="filter-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>가까운 거리</div>
+          <div class="filter-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>참여 가능</div>
+        </div>
+      </div>
+    </div>
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr><th style="width: 140px;">Chip</th><th style="width: 200px;">Icon</th><th>역할</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>추천순</td><td>local_fire_department (불꽃)</td><td>정렬 — 단일 선택 (default active)</td></tr>
+        <tr><td>마감임박</td><td>hourglass_bottom (모래시계)</td><td>정렬 — 단일 선택</td></tr>
+        <tr><td>가까운날짜</td><td>event (캘린더)</td><td>정렬 — 단일 선택</td></tr>
+        <tr><td>가까운 거리</td><td>near_me_outlined (위치 화살표)</td><td>토글 — 위치 권한 요청 후 활성</td></tr>
+        <tr><td>참여 가능</td><td>check_circle_outline (체크 동그라미)</td><td>토글 — 사용자 참여 자격 필터</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+
+</div>
+
+<!-- ============================================================
+     BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">cross-cutting — 모든 page state에 적용. EventCard / EventNowBar 내부 액션은 child spec 참고.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">사용자 액션</th>
+          <th>화면에 보이는 결과</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>AppBar 로고 탭</td>
+          <td>피드 스크롤 최상단으로 부드럽게 이동 (<code>MinglitAnimation.medium</code> · easeOut). 이미 최상단이면 무반응.</td>
+        </tr>
+        <tr>
+          <td>Pull-to-refresh</td>
+          <td>RefreshIndicator 스피너 → 피드 전체 reload. 완료 후 최신 결과 표시.</td>
+        </tr>
+        <tr>
+          <td>피드 하단 도달 (200px 전)</td>
+          <td>다음 페이지 자동 로드 — 하단에 spinner 표시. 로드 완료 후 카드 추가.</td>
+        </tr>
+        <tr>
+          <td>다크 모드 토글</td>
+          <td>모든 viewport · visual-gallery가 dark 토큰으로 전환. 로고 SVG light/dark 분기. 필터 칩 active 보라 유지.</td>
+        </tr>
+        <tr>
+          <td>OS back button</td>
+          <td>HomePage에서는 별도 처리 없음 — Android는 앱 종료 confirm, iOS는 무반응.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion timing</h2>
+    <p class="intro">
+      Source: <code>shared/packages/mds/core/lib/src/theme/minglit_design_tokens.dart</code>. EventNowBar 자체 attention-loop 모션은 <a href="/specs/event_now_bar/index.html">child spec</a> 참고.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">Transition</th>
+          <th style="width: 200px;">Token / Duration</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>화면 진입 (로그인 후 / 탭 전환)</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>표준 페이지 전환 slide/fade. 캐시된 피드는 즉시 표시.</td>
+        </tr>
+        <tr>
+          <td>AppBar logo 탭 → 스크롤 top</td>
+          <td><code>MinglitAnimation.medium</code> (350ms)</td>
+          <td>easeOut · 자연스러운 감속.</td>
+        </tr>
+        <tr>
+          <td>필터 칩 active 전환</td>
+          <td><code>MinglitAnimation.micro</code> (100ms)</td>
+          <td>배경색 fade — 즉각 피드백.</td>
+        </tr>
+        <tr>
+          <td>피드 카드 → 상세 화면</td>
+          <td><code>MinglitAnimation.fast</code> (200ms)</td>
+          <td>GoRouter 좌→우 slide.</td>
+        </tr>
+        <tr>
+          <td>Pull-to-refresh 스피너</td>
+          <td>OS default</td>
+          <td>Material RefreshIndicator 기본.</td>
+        </tr>
+        <tr>
+          <td>EventNowBar phase route push</td>
+          <td><code>MinglitAnimation.medium</code> (350ms)</td>
+          <td>ModalBottomSheetRoute slide-up + scrim fade.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>FeaturedTagChipBar 비어있음</strong> — 태그 칩 바 height 0으로 접힘. 다음 컨텐츠가 즉시 위로.</li>
+      <li><strong>클라이언트 필터(근거리/참여가능) 후 첫 페이지 모두 걸러짐</strong> — 빈 목록 대신 로딩 인디케이터 유지 + 다음 페이지 자동 fetch. 더 이상 페이지 없으면 Empty state로 전환.</li>
+      <li><strong>무한 스크롤 중 추가 오류</strong> — 하단 스피너 사라지고 조용히 실패. 스낵바 없음 (pull-to-refresh로 재시도 유도).</li>
+      <li><strong>위치 권한 거부 후 "근처" 칩</strong> — 권한 다이얼로그 재요청. 거부 유지 시 스낵바 + 칩 비활성.</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">implementation source + 인접 화면. Components / Tokens는 위 mini-table + child spec 참고.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <tbody>
+        <tr><th style="width: 200px;">Widget</th><td><code>HomePage</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/home/home_page.dart"><code>apps/app_user/lib/src/features/home/home_page.dart</code></a></td></tr>
+        <tr><th>Route</th><td><code>HomeRoute</code> · <code>/</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
+        <tr><th>Feed provider</th><td><code>recommendationFeedProvider</code> — pgvector 기반 개인화 (loading / data / error AsyncValue 분기 — 5 page state로 노출)</td></tr>
+        <tr><th>Auth gate</th><td><code>currentUserProvider</code> — null 시 guest state 노출</td></tr>
+        <tr><th>Sub-component widgets</th><td>
+          · <a href="/specs/event_card/index.html"><code>MinglitEventCard</code></a> (피드 cell — kit-shared)<br>
+          · <a href="/specs/event_now_bar/index.html"><code>EventNowBar</code></a> (Scaffold.bottomSheet 슬롯 — app_user 한정)
+        </td></tr>
+        <tr><th>Page atoms</th><td><code>MinglitAppBar</code> · <code>FilterChipBar</code> · <code>FeaturedTagChipBar</code> · <code>RefreshIndicator</code> · <code>MinglitCircularProgressIndicator</code> · <code>MinglitEmptyState</code> · <code>MinglitErrorState</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/event_card/index.html"><code>MinglitEventCard</code></a></td>
+          <td>피드의 반복 cell — sub-component spec.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_now_bar/index.html"><code>EventNowBar</code></a></td>
+          <td>하단 persistent bar — sub-component spec. 5 routed sheet 진입점은 child spec 참고.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_detail_page/index.html"><code>EventDetailPage</code></a></td>
+          <td>EventCard 탭 시 이동하는 상세 화면.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/login_page/index.html"><code>LoginPage</code></a></td>
+          <td>비로그인 state에서 진입.</td>
+        </tr>
+        <tr>
+          <td><a href="/foundations/layout">Layout foundations</a></td>
+          <td>CustomScrollView 기반 단독 scaffold — 하단 탭바 없음 (tab은 Navigator 상위 레이어).</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+</body>
+</html>

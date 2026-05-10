@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — EventMatchingResultsScreen (app_user · EventMatchingResultsRoute · TBD)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   EventMatchingResultsScreen — TBD placeholder.
+
+   Phase 6 results 화면 — 좋아요 commit 이후 매치 reveal
+   (mutual likes만 양쪽에 노출 · 연락처 교환). 본 spec은
+   별도 디자인 라운드에서 채워질 예정이며, 현재는 cross-ref
+   링크 깨짐 방지를 위한 stub.
+   ============================================================ */
+.viewport.tbd-viewport {
+  background: var(--color-background);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-large);
+  text-align: center;
+  gap: var(--spacing-medium);
+}
+body.dark-mode .viewport.tbd-viewport { background: var(--color-dark-background); }
+.tbd-icon {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  display: grid;
+  place-items: center;
+}
+.tbd-icon svg { width: 36px; height: 36px; }
+.tbd-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.tbd-sub {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  max-width: 280px;
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<header>
+  <h1>매칭 결과 화면 <small style="font-weight: 400; color: var(--color-text-secondary);">(TBD)</small></h1>
+</header>
+
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr><th style="width: 140px;">Status</th><td><strong>📝 TBD — 별도 디자인 라운드 예정</strong></td></tr>
+      <tr><th>App</th><td><code>app_user</code></td></tr>
+      <tr><th>Category</th><td>matching (Phase 6 — results)</td></tr>
+      <tr><th>Route / Surface</th><td><code>EventMatchingResultsScreen</code> · <code>/event/:id/matching/results</code> <em>(예정 · 확정 전)</em></td></tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="/specs/my_tickets_page/index.html"><code>MyTicketsPage</code></a> 또는 <a href="/specs/event_matching_screen/index.html"><code>EventMatchingScreen</code></a> phase 전환 진입.<br>
+          <strong>Children</strong>: <em>—</em>
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          좋아요 commit 이후 매칭 결과(mutual likes)를 reveal하는 화면. 서로 좋아요를 보낸 페어의 연락처를 양쪽에 공개.
+          <strong>본 spec은 stub</strong> — 디자인은 별도 라운드에서 진행되며, 본 페이지는 cross-reference 링크 깨짐 방지용.
+        </td>
+      </tr>
+      <tr>
+        <th>Related spec</th>
+        <td>
+          입력 측: <a href="/specs/event_matching_screen/index.html"><code>EventMatchingScreen</code></a> — 좋아요 선택 + commit.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="doc">
+  <h2>History</h2>
+  <table class="ref">
+    <thead>
+      <tr><th style="width: 110px;">Date</th><th style="width: 80px;">Version</th><th style="width: 120px;">Author</th><th>Changes</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-03</td>
+        <td>0.1</td>
+        <td>mark-yun</td>
+        <td>Stub 생성 — EventMatchingScreen v2.0의 cross-reference 깨짐 방지. 실제 디자인은 후속 라운드.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<nav class="perspective-nav">
+  <a href="#placeholder"><span class="glyph">📝</span> Placeholder</a>
+  <a href="#scope"><span class="glyph">🧭</span> 예상 스코프</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<div class="perspective" id="placeholder">
+  <div class="perspective__header">
+    <span class="glyph">📝</span>
+    <h2>Placeholder</h2>
+    <span class="lede">디자인 미확정 — 본 화면은 후속 디자인 라운드에서 채워집니다.</span>
+  </div>
+
+  <section class="doc">
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card);">
+      <div class="viewport tbd-viewport">
+        <div class="tbd-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+        </div>
+        <div class="tbd-title">매칭 결과 화면 — 디자인 예정</div>
+        <div class="tbd-sub">좋아요 commit 이후 mutual matches를 reveal하는 phase 6 결과 화면. 별도 디자인 라운드에서 정의됩니다.</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="perspective" id="scope">
+  <div class="perspective__header">
+    <span class="glyph">🧭</span>
+    <h2>예상 스코프</h2>
+    <span class="lede">디자인 라운드에서 다룰 항목 — 변경 가능.</span>
+  </div>
+
+  <section class="doc">
+    <table class="ref">
+      <thead><tr><th style="width: 200px;">항목</th><th>설명</th></tr></thead>
+      <tbody>
+        <tr><td>매치 reveal 시퀀스</td><td>Mutual likes 페어를 어떻게 점진적으로 노출할지 — 단순 리스트 vs 한 명씩 reveal vs 카드 flip 등.</td></tr>
+        <tr><td>연락처 교환 방식</td><td>인앱 채팅 vs 전화번호 노출 vs SNS 핸들 — privacy / safety 고려.</td></tr>
+        <tr><td>매치 0건 케이스</td><td>좋아요는 보냈으나 mutual이 없는 경우의 메시지 톤.</td></tr>
+        <tr><td>비공개 정보 공개 정책</td><td>EventMatchingScreen에서 "비공개"였던 직업 / 나이를 매치 시 공개할지 여부.</td></tr>
+        <tr><td>사후 액션</td><td>리포트 / 차단 / 다시 만남 신청 등 follow-up 액션 노출 위치.</td></tr>
+        <tr><td>이벤트 종료와의 관계</td><td>이벤트 종료 직후 자동 진입 vs 사용자가 직접 진입 vs 푸시 알림 후 진입.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">Implementation 미정 + 인접 화면.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <tbody>
+        <tr><th style="width: 200px;">Widget class</th><td><em>—</em> (TBD)</td></tr>
+        <tr><th>File path</th><td><em>—</em> (TBD)</td></tr>
+        <tr><th>Provider</th><td><em>—</em> (TBD)</td></tr>
+        <tr><th>Route</th><td><em>—</em> (TBD)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr><td><a href="/specs/event_matching_screen/index.html"><code>EventMatchingScreen</code></a></td><td>Sibling — 좋아요 선택 + commit (입력 단계). 본 화면은 그 결과 단계.</td></tr>
+        <tr><td><a href="/specs/my_tickets_page/index.html"><code>MyTicketsPage</code></a></td><td>진입 hub — 매칭 종료 이후 결과 진입점이 될 가능성.</td></tr>
+        <tr><td><a href="/specs/event_ongoing_banner/index.html"><code>EventOngoingBanner</code></a></td><td>Lifecycle hub — phase 5 → phase 6 전환 시 이 화면으로 라우팅 후보.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>
