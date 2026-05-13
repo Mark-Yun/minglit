@@ -1,0 +1,56 @@
+name: Graphify Auto-Update
+
+on:
+  push:
+    branches: [dev]
+    paths-ignore:
+      - 'graphify-out/**'
+  schedule:
+    - cron: '0 4 * * *'  # 04:00 UTC = 13:00 KST, daily safety net
+  workflow_dispatch:
+
+concurrency:
+  group: graphify-update
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: dev
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT_VERSION_BUMP }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+
+      - name: Cache pip
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-graphifyy-0.4.23
+
+      - name: Install graphify
+        run: pip install graphifyy==0.4.23
+
+      - name: Update graph
+        run: graphify update . --no-viz
+
+      - name: Commit & push if changed
+        run: |
+          if [[ -n "$(git status --porcelain graphify-out/)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add graphify-out/
+            git commit -m "chore(graphify): auto-update [skip ci]"
+            git push origin dev
+          else
+            echo "No graph changes"
+          fi

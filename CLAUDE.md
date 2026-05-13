@@ -259,12 +259,12 @@ git push
 
 ## graphify
 
-This project has a graphify knowledge graph at graphify-out/.
+This project has a graphify knowledge graph at graphify-out/. 자동 갱신은 `.github/workflows/graphify-update.yml` 워크플로우가 담당한다 (상세: `docs/infra/graphify/`).
 
 Rules:
 - Before answering architecture or codebase questions, read graphify-out/GRAPH_REPORT.md for god nodes and community structure
 - If graphify-out/wiki/index.md exists, navigate it instead of reading raw files
 - For cross-module "how does X relate to Y" questions, prefer `graphify query "<question>"`, `graphify path "<A>" "<B>"`, or `graphify explain "<concept>"` over grep — these traverse the graph's EXTRACTED + INFERRED edges instead of scanning files
-- After modifying code files in this session, run `graphify update .` to keep the graph current (AST-only, no API cost)
-- `graphify-out/` 안 파일이 commit/checkout/merge 직후 dirty 로 남으면 post-commit hook 부산물 — 사용자 작업이 아님. `git checkout HEAD -- graphify-out/` 또는 `git stash` 로 자유롭게 정리 가능 (별도 승인 불필요). 새 commit 에 포함 필요한 변경(코드 수정으로 인한 그래프 변화)이면 `git add graphify-out/` 로 묶어 커밋
-- 머지 충돌이 `graphify-out/` 파일에서만 발생하면 `git checkout --theirs graphify-out/` + `graphify update .` 로 재생성하여 해결 (사용자 작업이 아닌 hook 산출물이므로 어느 쪽이든 안전)
+- 로컬에서 수동으로 `graphify update .` 하거나 `graphify-out/` 을 커밋할 필요 없다. GitHub Actions 가 dev push 와 daily schedule 로 자동 갱신한다.
+- 옛 `post-commit` hook 이 설치되어 있다면 제거한다 (`graphify hook uninstall` 또는 `rm .git/hooks/post-commit`). 상세: `docs/infra/graphify/local-setup.md`.
+- 머지 충돌이 `graphify-out/` 파일에서만 발생하면 `git checkout --theirs graphify-out/` 로 해결한다 (자동화 산출물이라 어느 쪽을 택해도 안전, 다음 워크플로우 실행에서 재계산됨).
