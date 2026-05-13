@@ -293,6 +293,71 @@ void main() {
       },
     );
 
+    // Fix #2374 regression guard: accessibility semantics wiring
+    testWidgets('헤더 스트립: semantic label "Minglit 보딩패스 입장권" 존재', (tester) async {
+      await tester.pumpWidget(
+        _wrap(token: _makeToken(), eventMeta: _makeMeta()),
+      );
+      await tester.pump();
+
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is Semantics && w.properties.label == 'Minglit 보딩패스 입장권',
+        ),
+        findsOneWidget,
+        reason: 'Fix #2374: _HeaderStrip에 semantic label 없으면 스크린리더가 헤더 인식 불가',
+      );
+    });
+
+    testWidgets('이벤트 정보: semantic label에 날짜·장소·이벤트명 포함', (tester) async {
+      final meta = _makeMeta(
+        title: '와인 테이스팅',
+        dateTime: DateTime(2026, 4, 15, 19),
+        venue: '강남 라운지',
+        ticketName: null,
+      );
+      await tester.pumpWidget(_wrap(token: _makeToken(), eventMeta: meta));
+      await tester.pump();
+
+      expect(
+        find.byWidgetPredicate(
+          (w) =>
+              w is Semantics &&
+              w.properties.label != null &&
+              w.properties.label!.contains('이벤트 정보') &&
+              w.properties.label!.contains('강남 라운지') &&
+              w.properties.label!.contains('와인 테이스팅'),
+        ),
+        findsOneWidget,
+        reason: 'Fix #2374: _EventInfoSection semantic label 없으면 이벤트 정보 접근성 누락',
+      );
+    });
+
+    testWidgets('티켓 번호/상태 행: semantic label에 티켓번호·상태 포함', (tester) async {
+      final futureMeta = _makeMeta(
+        dateTime: DateTime.now().add(const Duration(days: 7)),
+      );
+      await tester.pumpWidget(
+        _wrap(
+          token: _makeToken(ticketId: 'abcd1234'),
+          eventMeta: futureMeta,
+        ),
+      );
+      await tester.pump();
+
+      expect(
+        find.byWidgetPredicate(
+          (w) =>
+              w is Semantics &&
+              w.properties.label != null &&
+              w.properties.label!.contains('티켓 번호') &&
+              w.properties.label!.contains('예약 확정'),
+        ),
+        findsOneWidget,
+        reason: 'Fix #2374: 티켓 번호+상태 행 semantic label 없으면 접근성 누락',
+      );
+    });
+
     // Fix #1931 regression guard: _NotchCircle must not use hardcoded
     // MinglitColors.surface in dark mode (causes bright circles on dark page).
     testWidgets(

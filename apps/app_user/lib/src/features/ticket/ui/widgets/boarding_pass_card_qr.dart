@@ -196,41 +196,46 @@ class _QRStubSection extends StatelessWidget {
 
           const SizedBox(height: MinglitSpacing.medium),
 
-          // TICKET NO. / STATUS row
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Left: ticket number
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const _MetaLabel('TICKET NO.'),
-                  const SizedBox(height: 2),
-                  Text(
-                    _formatTicketNo(token.ticketId),
-                    style: const TextStyle(
-                      color: MinglitColors.textPrimary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.5,
+          // Fix #2374: 티켓 번호 + 상태 행 — semantic label 병합 (장식적 TICKET NO./STATUS 라벨 제외)
+          Semantics(
+            label:
+                '티켓 번호: ${_formatTicketNo(token.ticketId)}. 상태: ${status.semanticLabel}',
+            excludeSemantics: true,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Left: ticket number
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const _MetaLabel('TICKET NO.'),
+                    const SizedBox(height: 2),
+                    Text(
+                      _formatTicketNo(token.ticketId),
+                      style: const TextStyle(
+                        color: MinglitColors.textPrimary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const Spacer(),
-              // Right: status badge
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  const _MetaLabel('STATUS'),
-                  const SizedBox(height: 2),
-                  _StatusBadge(
-                    status: status,
-                    pulseAnimation: pulseAnimation,
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+                const Spacer(),
+                // Right: status badge
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const _MetaLabel('STATUS'),
+                    const SizedBox(height: 2),
+                    _StatusBadge(
+                      status: status,
+                      pulseAnimation: pulseAnimation,
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
