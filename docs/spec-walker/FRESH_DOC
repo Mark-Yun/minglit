@@ -1,0 +1,6 @@
+cycle: 7d
+priority: P3-low
+last_verified: 2026-05-13
+refresh_method: |
+  spec-walker 워커를 실행하여 results/ 의 스크린샷과 walk-log 를 갱신한다.
+  flow 파일은 피쳐 오너가 작성하며, 워커는 비교 없이 실행만 수행한다.
