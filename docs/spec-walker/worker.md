@@ -1,6 +1,6 @@
 # 워커 동작
 
-spec-walker 워커는 `flows/` 의 각 `.md` 파일을 읽고 디바이스에서 실행하여 `results/<name>/` 를 갱신한다.
+spec-walker 워커는 `flows/` 의 각 `.md` 파일을 읽고 디바이스에서 실행하여 `screenshot/<name>/` 를 갱신한다.
 
 ## 책임 범위
 
@@ -11,7 +11,7 @@ spec-walker 워커는 `flows/` 의 각 `.md` 파일을 읽고 디바이스에서
 | 스크린샷 캡처 | 변경 사유 분석 |
 | `walk-log.md` 에 실행 결과 기록 | 이슈 자동 파일링 |
 
-비교·판단은 사람이 PR 리뷰 또는 `results/` 디렉토리 변경 사항을 보고 수행한다.
+비교·판단은 사람이 PR 리뷰 또는 `screenshot/` 디렉토리 변경 사항을 보고 수행한다.
 
 ## 실행 단계
 
@@ -19,9 +19,9 @@ spec-walker 워커는 `flows/` 의 각 `.md` 파일을 읽고 디바이스에서
 2. **순회** — 각 flow 마다:
    1. Setup 섹션의 사전 조건을 만족하는지 확인 (불가능하면 그 flow skip + 로그)
    2. Steps 의 각 단계를 순서대로 실행
-   3. `스크린샷: yes` 인 단계마다 `results/<name>/screenshots/step{N}-<route>.png` 저장
-   4. 모든 단계 완료 또는 실패 시 `results/<name>/walk-log.md` 갱신
-3. **직접 푸시** — 결과를 `dev` 브랜치에 직접 push (`chore(spec-walker): refresh results [skip ci]`)
+   3. `스크린샷: yes` 인 단계마다 `screenshot/<name>/step{N}-<route>.png` 저장
+   4. 모든 단계 완료 또는 실패 시 `screenshot/<name>/walk-log.md` 갱신
+3. **직접 푸시** — 결과를 `dev` 브랜치에 직접 push (`chore(spec-walker): refresh screenshot [skip ci]`)
 
 ## walk-log.md 형식
 
@@ -36,8 +36,8 @@ spec-walker 워커는 `flows/` 의 각 `.md` 파일을 읽고 디바이스에서
 
 ## 단계별
 
-1. [OK] 로그인 화면 진입 — screenshots/step1-login.png
-2. [OK] 이메일 입력 — screenshots/step2-login-filled.png
+1. [OK] 로그인 화면 진입 — step1-login.png
+2. [OK] 이메일 입력 — step2-login-filled.png
 3. [SKIP] 사전 조건 미충족 — OAuth 콜백 외부 의존
 4. [FAIL] 홈 카드 탭 — UI 요소 찾기 3회 실패 (좌표 추론 실패)
 
