@@ -110,7 +110,7 @@ priority: P2-medium
 last_verified: 2026-05-13
 recursive: false
 exclude:
-  - "mds-*-plan.md"
+  - "draft-*.md"
 refresh_method: |
   - 신규 테이블·Edge Function 을 backend.md 에 반영
   - 신규 feature 디렉토리를 client.md 에 반영
