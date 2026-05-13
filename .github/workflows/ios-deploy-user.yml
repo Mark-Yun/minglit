@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   ios-deploy:
-    runs-on: macos-latest
+    runs-on: macos-15  # Fix #2371: connectivity_plus 7.1.1 requires NWPath.isUltraConstrained (iOS 18 SDK / Xcode 16+)
     timeout-minutes: 60
     environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
     steps:
