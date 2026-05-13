@@ -65,8 +65,6 @@ jobs:
       app_partner: ${{ steps.filter.outputs.app_partner }}
       minglit_kit: ${{ steps.filter.outputs.minglit_kit }}
       mds_core: ${{ steps.filter.outputs.mds_core }}
-      mds_storybook: ${{ steps.filter.outputs.mds_storybook }}
-      mds_storybook_or_mds: ${{ steps.filter.outputs.mds_storybook == 'true' || steps.filter.outputs.mds_core == 'true' }}
       app_user_or_kit: ${{ steps.filter.outputs.app_user == 'true' || steps.filter.outputs.minglit_kit == 'true' || steps.filter.outputs.mds_core == 'true' }}
       app_partner_or_kit: ${{ steps.filter.outputs.app_partner == 'true' || steps.filter.outputs.minglit_kit == 'true' || steps.filter.outputs.mds_core == 'true' }}
       kit_or_mds: ${{ steps.filter.outputs.minglit_kit == 'true' || steps.filter.outputs.mds_core == 'true' }}
@@ -91,8 +89,6 @@ jobs:
             - 'shared/packages/**'
           mds_core:
             - 'shared/packages/mds/core/**'
-          mds_storybook:
-            - 'apps/mds/storybook/**'
           landing_user:
             - 'apps/landing_user/**'
             - 'shared/web/**'
@@ -112,7 +108,7 @@ jobs:
   test-flutter-apps:
     name: test-app-unit-widget-golden
     needs: changes
-    if: ${{ needs.changes.outputs.app_user == 'true' || needs.changes.outputs.app_partner == 'true' || needs.changes.outputs.minglit_kit == 'true' || needs.changes.outputs.mds_core == 'true' || needs.changes.outputs.mds_storybook == 'true' }}
+    if: ${{ needs.changes.outputs.app_user == 'true' || needs.changes.outputs.app_partner == 'true' || needs.changes.outputs.minglit_kit == 'true' || needs.changes.outputs.mds_core == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -148,13 +144,6 @@ jobs:
             report_name: 'MDS Core Tests'
             artifact_name: mds-core-coverage
             coverage_flag: mds-core
-            coverage_flag_logic: ''
-          - app: mds_storybook
-            change_key: mds_storybook_or_mds
-            directory: apps/mds/storybook
-            report_name: 'MDS Storybook Tests'
-            artifact_name: mds-storybook-coverage
-            coverage_flag: mds-storybook
             coverage_flag_logic: ''
     steps:
       - uses: actions/checkout@v6
