@@ -86,8 +86,6 @@ apps/app_partner/lib/src/features/
 | `minglit_iamport_v1` | `shared/packages/minglit_iamport_v1/` | Iamport V1 API 결제 연동 래퍼 |
 | `minglit_lints` | `shared/packages/minglit_lints/` | 모노레포 공통 린트 규칙 |
 
-> `mds_storybook` (`apps/mds/storybook/`)는 MDS 컴포넌트 Widgetbook 스토리 앱으로, 패키지가 아닌 앱으로 분류됩니다.
-
 ### 2.2 Coordinator Pattern (Navigation)
 **UI는 "어디로 갈지" 모릅니다.** 단순히 Coordinator에게 "이 버튼이 눌렸다"고 알릴 뿐입니다.
 
@@ -131,7 +129,6 @@ Supabase SDK를 직접 UI에서 호출하지 않습니다. `Repository` 클래�
 | 컴포넌트 spec | `apps/mds/docs/src/components/specs/*Spec.tsx` | Next.js 시각 playground (~14k LOC) |
 
 - UI 변경 PR은 본문에 관련 spec 파일 경로 + 섹션을 **반드시 인용**한다 (CLAUDE.md "UI 변경 게이트").
-- `apps/mds/storybook/`은 Widgetbook 런타임 카탈로그 (Flutter) — 시각 playground 용.
 - `apps/mds/docs/`는 시각/IA spec 카탈로그 (Next.js) — 권위 source.
 - spec 자체는 Mark(디자인 시스템 오너)만 수정한다. SWE/에이전트는 read-only.
 

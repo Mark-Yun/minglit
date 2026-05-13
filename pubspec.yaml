@@ -6,7 +6,6 @@ environment:
 workspace:
   - apps/app_partner
   - apps/app_user
-  - apps/mds/storybook
   - shared/packages/mds/core
   - shared/packages/mds/icons
   - shared/packages/mds/tokens
