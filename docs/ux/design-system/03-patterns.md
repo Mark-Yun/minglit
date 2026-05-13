@@ -172,10 +172,6 @@ MinglitEmptyState.inline(
 )
 ```
 
-### Wireframe
-
-- [empty-state-variants-wireframe.html](../../features/design-pattern-catalog/empty-state-variants-wireframe.html)
-
 ---
 
 ## 5. Loading State
