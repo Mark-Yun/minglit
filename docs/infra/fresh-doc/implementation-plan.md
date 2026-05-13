@@ -9,7 +9,7 @@
 3. **`docs/standards/FRESH_DOC`** — 엔지니어링 원칙 류. cycle 기반 (`90d`) 으로 충분하다.
 4. **그 외** — 필요 시 추가.
 
-`docs/decisions/`, `docs/reports/` 등 plan / report 류만 있는 디렉토리는 도입 불필요하다. 한번 작성하면 archive 대상이다.
+`docs/reports/` 등 report / archive 류 디렉토리는 도입 불필요하다. 한번 작성하면 archive 대상이다.
 
 ## 후속 작업 (별도 PR)
 
