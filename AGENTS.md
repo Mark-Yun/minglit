@@ -133,7 +133,7 @@ CREATE POLICY "users_can_insert" ON public.new_table FOR INSERT TO authenticated
 
 ### 상세 마이그레이션 계획
 
-`docs/features/rls-write-strategy-migration.md` 참고.
+`docs/architecture/rls-write-strategy-migration.md` 참고.
 
 ## Supabase Migration Rules
 
