@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   patrol-e2e-app-user:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6

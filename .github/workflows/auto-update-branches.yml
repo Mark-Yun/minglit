@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   update-branches:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     # Fix #1972: job-level permissions — only what update-branch needs
     permissions:
       contents: write

@@ -12,7 +12,7 @@ concurrency:
 jobs:
   seed-and-simulate:
     name: Seed and Simulate
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
@@ -84,7 +84,7 @@ jobs:
 
   client-cuj-test:
     needs: seed-and-simulate
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6
@@ -134,7 +134,7 @@ jobs:
 
   partner-cuj-test:
     needs: seed-and-simulate
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6
