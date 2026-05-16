@@ -62,7 +62,6 @@ dependencies:
   url_launcher: ^6.3.2  # iOS: LSApplicationQueriesSchemes (Info.plist)
 
 dev_dependencies:
-  alchemist: ^0.14.0
   allure_report: ^1.0.0
   build_runner: ^2.10.4
   custom_lint: 0.8.1
