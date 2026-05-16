@@ -122,6 +122,18 @@ Deno.test({
 });
 
 Deno.test({
+  // Fix #1660: apply-event EF 가 무료 이벤트(price=0) + 검증 없음 케이스에서 status='approved' 로
+  // application 생성 (payment_id NULL). 정상 apply 결과로 인정해야 함.
+  name: "UserActionApplyEvent.assertDBState - passes when row exists with status=approved (free event path)",
+  fn: async () => {
+    const mock = mockWithApplication({ id: "app-1", status: "approved" });
+    const result = await newAction().assertDBState(mock as unknown as SupabaseClient);
+    assertEquals(result.passed, true);
+    assertEquals(result.details.includes("approved"), true);
+  },
+});
+
+Deno.test({
   name: "UserActionApplyEvent.assertDBState - fails when application row missing",
   fn: async () => {
     const mock = mockWithApplication(null);
@@ -134,7 +146,8 @@ Deno.test({
 Deno.test({
   name: "UserActionApplyEvent.assertDBState - fails on unexpected application status",
   fn: async () => {
-    for (const status of ["cancelled", "refunded", "rejected", "approved"]) {
+    // 'approved' 는 Fix #1660 으로 유효 상태에 포함됨 — 본 케이스에서 제외
+    for (const status of ["cancelled", "refunded", "rejected"]) {
       const mock = mockWithApplication({ id: "app-1", status });
       const result = await newAction().assertDBState(mock as unknown as SupabaseClient);
       assertEquals(result.passed, false, `status=${status} must fail apply assertion`);

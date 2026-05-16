@@ -75,12 +75,15 @@ export class UserActionApplyEvent extends SimAction {
         };
       }
 
-      const validStatuses = ["paid", "pending_review"];
+      // Fix #1660: apply-event EF 가 무료 이벤트(price=0) + 검증 없음 케이스에서
+      // status를 'approved'로 박음 (paid 가 아님 — payment_id NULL). 검증 있는 무료/유료는
+      // 'pending_review'/'paid'. 세 상태 모두 정상 apply 결과로 인정.
+      const validStatuses = ["paid", "pending_review", "approved"];
       if (!validStatuses.includes(data.status as string)) {
         return {
           passed: false,
           name: "apply_db_status",
-          details: `expected status in (paid, pending_review), got '${data.status}'`,
+          details: `expected status in (paid, pending_review, approved), got '${data.status}'`,
         };
       }
 
