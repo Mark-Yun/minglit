@@ -1,0 +1,6 @@
+cycle: 14d
+priority: P3-low
+last_verified: 2026-05-16
+refresh_method: |
+  FEATURE_REPORT.md 의 각 피쳐 상태(phase, owner, 최근 활동)를 갱신한다.
+  소스: 각 feature/spec.md frontmatter, GitHub issues/PR (라벨 feature/admin-*), 최근 30일 커밋.
