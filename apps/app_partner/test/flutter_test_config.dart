@@ -1,35 +1,16 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:alchemist/alchemist.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Global test configuration — runs once before all tests in this package.
 ///
-/// 1. Loads NotoSansKR font for Korean text rendering
-/// 2. Configures Alchemist for CI/platform golden separation
-// Fix #449: NotoSansKR 폰트를 로드하여 한국어 텍스트 렌더링 보장
-// Fix #572: CI/로컬 골든 분리를 위해 AlchemistConfig 설정
+/// Loads NotoSansKR font for Korean text rendering in widget tests.
 Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   TestWidgetsFlutterBinding.ensureInitialized();
-
-  final isCI =
-      const bool.fromEnvironment('CI') || Platform.environment['CI'] == 'true';
-
-  // CI: Ahem 폰트만 사용 (플랫폼 차이 없음, Alchemist CI 골든용)
-  // Local: NotoSansKR 로드 (한글 렌더링, platform 골든용)
-  if (!isCI) {
-    await _loadNotoSansKR();
-  }
-  return AlchemistConfig.runWithConfig(
-    config: AlchemistConfig(
-      platformGoldensConfig: PlatformGoldensConfig(
-        enabled: !isCI,
-      ),
-    ),
-    run: testMain,
-  );
+  await _loadNotoSansKR();
+  await testMain();
 }
 
 Future<void> _loadNotoSansKR() async {

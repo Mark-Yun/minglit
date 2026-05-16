@@ -64,7 +64,6 @@ dependencies:
   web: ^1.1.1
 
 dev_dependencies:
-  alchemist: ^0.14.0
   integration_test:
     sdk: flutter
   allure_report: ^1.0.0
