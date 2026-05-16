@@ -1,7 +1,7 @@
-# Graph Report - /_work/minglit-runner-1-oZoKLU33PXPst/minglit/minglit  (2026-05-16)
+# Graph Report - /_work/minglit-runner-1-fOlCK3opSNaYN/minglit/minglit  (2026-05-16)
 
 ## Corpus Check
-- 1208 files · ~3,796,545 words
+- 1208 files · ~3,796,476 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -437,10 +437,10 @@
 ## Surprising Connections (you probably didn't know these)
 - `minglit_kit (shared models: Event, Ticket, Party, etc.)` --references--> `Flutter & Riverpod 3.0 Standard`  [INFERRED]
   /Users/mark/workspace/minglit-graphify-init/shared/packages/minglit_kit/lib/minglit_kit.dart → /Users/mark/workspace/minglit-graphify-init/docs/standards/flutter-riverpod-3.0.md
-- `NotificationSettingsController` --semantically_similar_to--> `NotificationList (controller)`  [INFERRED] [semantically similar]
-  /Users/mark/workspace/minglit-graphify-init/apps/app_user/test/src/features/notification/logic/notification_settings_controller_test.dart → /Users/mark/workspace/minglit-graphify-init/shared/packages/minglit_kit/lib/src/features/notification/notification_list_controller.dart
-- `StorageRepository` --semantically_similar_to--> `PartyRepository`  [INFERRED] [semantically similar]
-  /Users/mark/workspace/minglit-graphify-init/shared/packages/minglit_kit/test/src/data/repositories/storage_repository_test.dart → /Users/mark/workspace/minglit-graphify-init/shared/packages/minglit_kit/test/src/data/repositories/party_repository_test.dart
+- `NotificationList (controller)` --semantically_similar_to--> `NotificationSettingsController`  [INFERRED] [semantically similar]
+  /Users/mark/workspace/minglit-graphify-init/shared/packages/minglit_kit/lib/src/features/notification/notification_list_controller.dart → /Users/mark/workspace/minglit-graphify-init/apps/app_user/test/src/features/notification/logic/notification_settings_controller_test.dart
+- `PartyRepository` --semantically_similar_to--> `StorageRepository`  [INFERRED] [semantically similar]
+  /Users/mark/workspace/minglit-graphify-init/shared/packages/minglit_kit/test/src/data/repositories/party_repository_test.dart → /Users/mark/workspace/minglit-graphify-init/shared/packages/minglit_kit/test/src/data/repositories/storage_repository_test.dart
 - `PartyRepository` --semantically_similar_to--> `TicketRepository`  [INFERRED] [semantically similar]
   /Users/mark/workspace/minglit-graphify-init/shared/packages/minglit_kit/test/src/data/repositories/party_repository_test.dart → /Users/mark/workspace/minglit-graphify-init/shared/packages/minglit_kit/test/src/data/repositories/ticket_repository_test.dart
 - `AuthController` --semantically_similar_to--> `auth_provider_utils`  [INFERRED] [semantically similar]
@@ -2945,11 +2945,11 @@ _Questions this graph is uniquely positioned to answer:_
 - **What is the exact relationship between `Architecture Audit #1092 — 2026-04-06` and `AI Basic Law Compliance (Korea 2026)`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **Why does `package:flutter/material.dart` connect `Community 1` to `Community 32`, `Community 0`, `Community 2`, `Community 35`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 11`, `Community 12`, `Community 14`, `Community 15`, `Community 16`, `Community 23`, `Community 27`, `Community 29`?**
-  _High betweenness centrality (0.154) - this node is a cross-community bridge._
+  _High betweenness centrality (0.180) - this node is a cross-community bridge._
 - **Why does `Log` connect `Community 3` to `Community 20`, `Community 31`?**
-  _High betweenness centrality (0.142) - this node is a cross-community bridge._
+  _High betweenness centrality (0.167) - this node is a cross-community bridge._
 - **Why does `LocationMap (web/JS Interop)` connect `Community 20` to `Community 3`?**
-  _High betweenness centrality (0.141) - this node is a cross-community bridge._
+  _High betweenness centrality (0.166) - this node is a cross-community bridge._
 - **Are the 25 inferred relationships involving `handler()` (e.g. with `from` and `errorResponse`) actually correct?**
   _`handler()` has 25 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `MinglitQuillTheme`, `toolbarConfig`, `QuillSimpleToolbarConfig` to the rest of the system?**
