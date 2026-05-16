@@ -14,7 +14,7 @@ concurrency:
 jobs:
   # Migration version 중복 검사 (항상 실행 — path filter 없음)
   check-migration-versions:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v6
       - name: Check duplicate migration versions
@@ -48,7 +48,7 @@ jobs:
 
   # env-manifest.json ↔ EnvKeyStore drift 검사 (항상 실행 — path filter 없음)
   check-env-manifest-sync:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v6
       - name: Check env-manifest.json / EnvKeyStore sync
@@ -56,7 +56,7 @@ jobs:
 
   # 변경 사항 감지 Job
   changes:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
       pull-requests: read
@@ -109,7 +109,7 @@ jobs:
     name: test-app-unit-widget-golden
     needs: changes
     if: ${{ needs.changes.outputs.app_user == 'true' || needs.changes.outputs.app_partner == 'true' || needs.changes.outputs.minglit_kit == 'true' || needs.changes.outputs.mds_core == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: write
       checks: write
@@ -290,7 +290,7 @@ jobs:
     name: lint-and-build-landing-user
     needs: changes
     if: ${{ needs.changes.outputs.landing_user == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     defaults:
       run:
         working-directory: ./apps/landing_user
@@ -311,7 +311,7 @@ jobs:
     name: lint-and-build-landing-partner
     needs: changes
     if: ${{ needs.changes.outputs.landing_partner == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     defaults:
       run:
         working-directory: ./apps/landing_partner
@@ -332,7 +332,7 @@ jobs:
     name: lint-and-build-mds-docs
     needs: changes
     if: ${{ needs.changes.outputs.mds_docs == 'true' || needs.changes.outputs.mds_tokens == 'true' || needs.changes.outputs.mds_icons == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     defaults:
       run:
         working-directory: ./apps/mds/docs
@@ -354,7 +354,7 @@ jobs:
     name: lint-mds-icons
     needs: changes
     if: ${{ needs.changes.outputs.mds_icons == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     defaults:
       run:
         working-directory: ./shared/packages/mds/icons
@@ -386,7 +386,7 @@ jobs:
     name: test-pgtap
     needs: changes
     if: ${{ needs.changes.outputs.supabase == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v6
       - uses: supabase/setup-cli@v2
@@ -415,7 +415,7 @@ jobs:
     name: test-deno-ef
     needs: changes
     if: ${{ needs.changes.outputs.supabase == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v6
       - uses: denoland/setup-deno@v2
@@ -468,7 +468,7 @@ jobs:
 
   # Workflow YAML 파싱 검증 (항상 실행 — db-invariants #1593 회귀 방지)
   check-workflow-yaml:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v6
       - name: Validate all workflow YAML files
@@ -493,7 +493,7 @@ jobs:
   # runner와 orchestrator는 동일 major.minor 계열이어야 함 (1.5.x↔1.5.x, 1.6.x↔1.6.x)
   # Gradle consistent resolution이 혼용 시 빌드 실패를 발생시키므로 PR 단계에서 사전 차단.
   check-android-test-deps:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v6
       - name: Verify androidx.test runner/orchestrator version alignment
@@ -518,7 +518,7 @@ jobs:
 
   # Fix #1872: block new cross-feature imports; existing violations are grandfathered in baseline
   check-cross-feature-imports:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v6
       - name: Check cross-feature imports
@@ -527,7 +527,7 @@ jobs:
   ci-result:
     needs: [check-migration-versions, check-env-manifest-sync, check-workflow-yaml, check-android-test-deps, check-cross-feature-imports, test-flutter-apps, lint-landing-user, lint-landing-partner, lint-mds-docs, lint-mds-icons, test-supabase, test-edge-functions]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Check CI results
         env:
