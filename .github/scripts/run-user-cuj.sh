@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
-cd apps/app_partner
+cd apps/app_user
 
 # CUJ tests — emulator 기반 행위 검증.
-# 대응 BLUEDOC: apps/app_partner/integration_test/cuj/BLUEDOC.md
+# 대응 BLUEDOC: apps/app_user/integration_test/cuj/BLUEDOC.md
 CUJ_DIR="integration_test/cuj"
 
 if [ ! -d "$CUJ_DIR" ]; then

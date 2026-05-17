@@ -1,0 +1,111 @@
+name: monitor-cuj-coverage
+
+# spec.md CUJ 테이블 ↔ integration_test/cuj/<feature>_test.dart 의 cujGroup
+# 차이를 매일 체크. 100% 미만 시 GitHub Issue 생성/갱신.
+
+on:
+  schedule:
+    - cron: '30 0 * * *'  # UTC 00:30 = KST 09:30 (mds-render 와 30분 차이)
+  workflow_dispatch:
+
+concurrency:
+  group: monitor-cuj-coverage
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  coverage:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Run coverage report (JSON)
+        id: cov
+        run: |
+          set +e
+          dart run scripts/cuj_coverage.dart --json > /tmp/cuj_cov.json
+          EXIT=$?
+          set -e
+          cat /tmp/cuj_cov.json
+          echo "exit_code=$EXIT" >> "$GITHUB_OUTPUT"
+          # 사람 친화 출력도 로그에
+          dart run scripts/cuj_coverage.dart || true
+
+      - name: Manage GitHub Issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PCT=$(jq -r '.coverage_pct' /tmp/cuj_cov.json)
+          COVERED=$(jq -r '.covered_cujs' /tmp/cuj_cov.json)
+          SPEC=$(jq -r '.spec_cujs' /tmp/cuj_cov.json)
+          UNCOVERED_COUNT=$(jq -r '[.uncovered_features[].uncovered | length] | add // 0' /tmp/cuj_cov.json)
+          ORPHAN_COUNT=$(jq -r '[.orphan_features[].orphan | length] | add // 0' /tmp/cuj_cov.json)
+
+          ISSUE_TITLE_PREFIX="[cuj-coverage]"
+
+          # 기존 open 이슈 찾기
+          EXISTING=$(gh issue list \
+            --search "$ISSUE_TITLE_PREFIX in:title state:open" \
+            --json number,title \
+            --jq '.[0].number // empty')
+
+          if [ "${{ steps.cov.outputs.exit_code }}" = "0" ]; then
+            # 100% 달성 → 기존 이슈 close
+            if [ -n "$EXISTING" ]; then
+              gh issue close "$EXISTING" \
+                --comment "✅ Coverage 100% achieved on $(date -u +%Y-%m-%d). Auto-closed by monitor-cuj-coverage."
+              echo "closed issue #$EXISTING"
+            else
+              echo "100% — no open issue to close"
+            fi
+            exit 0
+          fi
+
+          # 100% 미만 → 이슈 본문 생성
+          BODY=$(cat <<EOF
+          > 자동 갱신: $(date -u +%Y-%m-%dT%H:%M:%SZ) by monitor-cuj-coverage
+
+          ## Summary
+          - CUJ 커버리지: **${PCT}%** (${COVERED}/${SPEC})
+          - Uncovered CUJs: **${UNCOVERED_COUNT}**
+          - Orphan tests (spec 에 없음): **${ORPHAN_COUNT}**
+
+          ## Uncovered CUJs (spec.md 에 있으나 테스트 없음)
+          \`\`\`
+          $(jq -r '.uncovered_features[] | "\(.category)/\(.feature): \(.uncovered | join(", "))"' /tmp/cuj_cov.json)
+          \`\`\`
+
+          ## Orphan test CUJs (테스트에 있으나 spec.md 에 없음)
+          \`\`\`
+          $(jq -r '.orphan_features[] | "\(.category)/\(.feature): \(.orphan | join(", "))"' /tmp/cuj_cov.json)
+          \`\`\`
+
+          ## Per-feature
+          \`\`\`
+          $(jq -r '.per_feature[] | select(.spec > 0 or .tested > 0) | "\(.category)/\(.feature): \(.tested)/\(.spec)"' /tmp/cuj_cov.json)
+          \`\`\`
+
+          ## 다음 액션
+          - 새 CUJ 테스트: \`apps/app_user/integration_test/cuj/<category>/<feature>_test.dart\` 에 \`cujGroup('<id>', ...)\` 추가
+          - spec.md 마이그레이션: \`docs/features/<cat>/<feat>/spec.md\` 가 5섹션 골격(CUJs/FR/NFR/Edge/Open Q) 가 아니면 빈 카운트 (0/0) — \`docs/features/BLUEDOC.md\` 컨벤션 참고
+          - 상세: \`apps/app_user/integration_test/cuj/BLUEDOC.md\`
+          EOF
+          )
+
+          if [ -n "$EXISTING" ]; then
+            gh issue edit "$EXISTING" --body "$BODY"
+            echo "updated issue #$EXISTING"
+          else
+            gh issue create \
+              --title "$ISSUE_TITLE_PREFIX ${UNCOVERED_COUNT} CUJ tests missing (${PCT}%)" \
+              --label "docs,P3-low" \
+              --body "$BODY"
+          fi
