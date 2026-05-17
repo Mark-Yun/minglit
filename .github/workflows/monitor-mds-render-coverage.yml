@@ -27,10 +27,6 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Get pub deps (registry import 해결용)
-        working-directory: apps/app_user
-        run: flutter pub get
-
       - name: Run coverage report (JSON)
         id: cov
         run: |
