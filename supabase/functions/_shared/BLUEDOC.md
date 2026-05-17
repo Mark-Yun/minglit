@@ -35,9 +35,13 @@
 ### Pure 도메인 코어
 - `domains/` — 도메인별 pure 비즈니스 로직 (IO 없음). [domains/BLUEDOC.md](domains/BLUEDOC.md)
   - `domains/payment/` — application status 분류, 환불 정책
+  - `domains/event/` — event status / capacity / 시작 시각 / participant
 
 ### AI
 - `ai/` — AI 어댑터 추상화 (OpenAI embedding / LLM)
+
+### Test 인프라
+- `_testing/` — L3 EF handler unit test (`fakeSupabase` + `makeCtx` + fixtures). [_testing/BLUEDOC.md](_testing/BLUEDOC.md)
 
 ### Tests
 각 `*.ts` 의 `*_test.ts` 동반.
