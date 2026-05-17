@@ -623,6 +623,24 @@ jobs:
           # upload to avoid the rootDirectory/file mismatch error.
           GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
 
+  # BLUEDOC freshness: 새 파일/폴더 추가 또는 파일 삭제 시 가장 가까운 ancestor BLUEDOC.md
+  # 갱신 강제. 통과: 이정표 표 갱신 또는 BLUEDOC 의 '_Reviewed_' 날짜 bump.
+  # Format: 모든 BLUEDOC.md 가 '_Reviewed: YYYY-MM-DD HH:MM_' 줄 포함.
+  check-bluedoc-freshness:
+    runs-on: [self-hosted, ephemeral]
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0  # diff 비교에 history 필요
+      - name: Run BLUEDOC freshness check
+        env:
+          BASE_REF: origin/${{ github.event.pull_request.base.ref || 'dev' }}
+        run: |
+          git fetch origin "${BASE_REF#origin/}" --depth=50 || true
+          bash .github/scripts/check-bluedoc-freshness.sh
+
   # CUJ integration tests on emulator — reusable workflow.
   # Engine + BLUEDOC: apps/<app>/integration_test/cuj/BLUEDOC.md
   # Manual debug: `gh workflow run shared-cuj-integration.yml -f app-name=user --ref <branch>`
@@ -645,7 +663,7 @@ jobs:
     secrets: inherit
 
   ci-result:
-    needs: [check-migration-versions, check-env-manifest-sync, check-workflow-yaml, check-android-test-deps, check-cross-feature-imports, gitleaks, test-flutter-apps, test-integration-app-user-cuj, test-integration-app-partner-cuj, lint-landing-user, lint-landing-partner, lint-mds-docs, lint-mds-icons, test-supabase, test-edge-functions, test-ef-integration]
+    needs: [check-migration-versions, check-env-manifest-sync, check-workflow-yaml, check-android-test-deps, check-cross-feature-imports, gitleaks, check-bluedoc-freshness, test-flutter-apps, test-integration-app-user-cuj, test-integration-app-partner-cuj, lint-landing-user, lint-landing-partner, lint-mds-docs, lint-mds-icons, test-supabase, test-edge-functions, test-ef-integration]
     if: always()
     runs-on: [self-hosted, ephemeral]
     steps:

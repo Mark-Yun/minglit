@@ -24,3 +24,6 @@
 - [`apps/mds/docs/`](../../../../../../apps/mds/docs/) — 시각 spec 카탈로그 (Next.js)
 - [`shared/packages/mds/`](../../../../mds/) — Design System 모노레포 패키지 (core / tokens / icons)
 - [minglit_kit/architecture.md](../../architecture.md) — 5 계층 개요
+
+---
+_Reviewed: 2026-05-17 22:32_

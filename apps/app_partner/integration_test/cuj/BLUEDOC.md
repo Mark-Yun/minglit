@@ -35,3 +35,6 @@ integration_test/cuj/
 ```
 
 현재는 엔진만 — 첫 partner CUJ 추가 시 spec.md ↔ 테스트 매핑.
+
+---
+_Reviewed: 2026-05-17 22:32_

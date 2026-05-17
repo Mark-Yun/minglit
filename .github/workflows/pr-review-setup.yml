@@ -30,7 +30,8 @@ jobs:
     steps:
       - name: Enable squash auto-merge
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Branch protection active 후 GITHUB_TOKEN 으론 enablePullRequestAutoMerge / 라벨 부여 권한 부족 ("Resource not accessible by integration"). PAT 사용.
+          GH_TOKEN: ${{ secrets.GH_PAT_VERSION_BUMP }}
         run: |
           gh pr merge "${{ github.event.pull_request.number }}" \
             --auto --squash \
@@ -45,7 +46,8 @@ jobs:
     steps:
       - name: Add needs-review label when PR is review-ready
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Branch protection active 후 GITHUB_TOKEN 으론 enablePullRequestAutoMerge / 라벨 부여 권한 부족 ("Resource not accessible by integration"). PAT 사용.
+          GH_TOKEN: ${{ secrets.GH_PAT_VERSION_BUMP }}
           REPO: ${{ github.repository }}
           RUN_ID: ${{ github.event.workflow_run.id }}
         run: |

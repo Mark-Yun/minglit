@@ -22,3 +22,6 @@ GitHub 통합 폴더 — CI/CD 워크플로우, composite actions, shell scripts
 
 - [CLAUDE.md](../CLAUDE.md) — PR Conventions, Branch Protection, Auto-Merge 흐름
 - [BLUEDOC 컨벤션](../docs/infra/bluedoc/BLUEDOC.md)
+
+---
+_Reviewed: 2026-05-17 22:32_
