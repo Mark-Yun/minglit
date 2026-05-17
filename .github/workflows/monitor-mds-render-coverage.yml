@@ -104,6 +104,6 @@ jobs:
           else
             gh issue create \
               --title "$ISSUE_TITLE_PREFIX ${UNCOVERED} screens uncovered (${PCT}%)" \
-              --label "documentation,P3-low" \
+              --label "docs,P3-low" \
               --body "$BODY"
           fi
