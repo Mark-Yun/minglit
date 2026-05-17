@@ -44,14 +44,15 @@ void main() {
   });
 
   List<dynamic> base() => [
-        currentUserProvider.overrideWith((_) => user),
-        authStateChangesProvider.overrideWith((_) => const Stream.empty()),
-        consentRepositoryProvider.overrideWith((_) => repo),
-        consentCoordinatorProvider.overrideWith((_) => coordinator),
-      ];
+    currentUserProvider.overrideWith((_) => user),
+    authStateChangesProvider.overrideWith((_) => const Stream.empty()),
+    consentRepositoryProvider.overrideWith((_) => repo),
+    consentCoordinatorProvider.overrideWith((_) => coordinator),
+  ];
 
   cujGroup('1-1', '필수 동의 3종 체크 후 가입', () {
-    cujCase('happy: 정상 가입',
+    cujCase(
+      'happy: 정상 가입',
       app: const SignupConsentPage(),
       overrides: base,
       body: (t) async {
@@ -78,12 +79,14 @@ void main() {
         expect(keys, equals(ConsentType.requiredTypes.toSet()));
 
         // FR-12: 가입 완료 후 HomePage 진입 (coordinator 위임)
-        verify(() => coordinator.completeSignup(from: any(named: 'from')))
-            .called(1);
+        verify(
+          () => coordinator.completeSignup(from: any(named: 'from')),
+        ).called(1);
       },
     );
 
-    cujCase('edge: 14세 미체크 → CTA 비활성',
+    cujCase(
+      'edge: 14세 미체크 → CTA 비활성',
       app: const SignupConsentPage(),
       overrides: base,
       body: (t) async {
@@ -100,12 +103,14 @@ void main() {
       },
     );
 
-    cujCase('edge: 저장 실패 → coordinator 미호출',
+    cujCase(
+      'edge: 저장 실패 → coordinator 미호출',
       app: const SignupConsentPage(),
       overrides: base,
       body: (t) async {
-        when(() => repo.saveConsents(any(), any()))
-            .thenThrow(Exception('network'));
+        when(
+          () => repo.saveConsents(any(), any()),
+        ).thenThrow(Exception('network'));
 
         await t.tap(find.text('서비스 이용약관'));
         await t.tap(find.text('개인정보 수집·이용 동의'));

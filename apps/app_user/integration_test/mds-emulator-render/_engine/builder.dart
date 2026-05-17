@@ -27,10 +27,10 @@ import 'package:minglit_kit/minglit_kit.dart';
 
 /// 모든 화면이 공유하는 root level override.
 List<dynamic> _commonRootOverrides() => [
-      currentUserProvider.overrideWith((_) => null),
-      authStateChangesProvider.overrideWith((_) => const Stream.empty()),
-      notificationInitializerProvider.overrideWith((_) {}),
-    ];
+  currentUserProvider.overrideWith((_) => null),
+  authStateChangesProvider.overrideWith((_) => const Stream.empty()),
+  notificationInitializerProvider.overrideWith((_) {}),
+];
 
 /// 화면별 builder 의 base class.
 ///

@@ -129,7 +129,7 @@ mixin _PartyEventRepository on _SupabasePartyContext {
       if (response.status != 200) {
         final error = response.data is Map
             ? (response.data as Map)['error'] ??
-                'Failed to update event metadata'
+                  'Failed to update event metadata'
             : 'Failed to update event metadata';
         throw Exception(error);
       }
