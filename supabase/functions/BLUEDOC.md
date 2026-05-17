@@ -1,6 +1,6 @@
 # Supabase Edge Functions
 
-minglit 의 backend API 진입점. 60+ EF (user / partner / system / public) + 5 underscore-prefix 공용 디렉토리.
+minglit 의 backend API 진입점. 60+ EF + 5 underscore-prefix 공용 디렉토리. EF 분류 (`callers` / `envs`) 는 [auth-manifest.json](./auth-manifest.json) 의 필드 기준.
 
 ## 디렉토리 분류
 

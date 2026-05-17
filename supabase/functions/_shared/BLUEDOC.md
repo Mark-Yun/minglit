@@ -40,7 +40,7 @@
 
 ## 변경 정책
 
-breaking change → 모든 EF 영향, 전수 회귀 필요. 신규 utility → 자유. deprecation → 단계적 (legacy 유지 → 마이그 PR → 삭제).
+breaking change → 모든 EF 영향, 전수 회귀. 신규 utility → 자유 (적절 그룹의 `*.ts` + 대응 `*_test.ts`, 사용 안 하면 cost 0). deprecation → legacy 유지 → 마이그 PR → 삭제.
 
 ## 관련
 
