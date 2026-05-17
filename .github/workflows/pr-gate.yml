@@ -529,6 +529,7 @@ jobs:
     runs-on: [self-hosted, ephemeral]
     permissions:
       contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v6
         with:
@@ -537,6 +538,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_CONFIG: .gitleaks.toml
+          # Self-hosted ephemeral runners execute as root (HOME=/root) which
+          # doesn't share a parent with GITHUB_WORKSPACE. Disable SARIF artifact
+          # upload to avoid the rootDirectory/file mismatch error.
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
 
   # CUJ integration tests on emulator — pattern: integration_test/cuj/<category>/<feature>_test.dart
   # Engine + BLUEDOC: apps/<app>/integration_test/cuj/BLUEDOC.md
