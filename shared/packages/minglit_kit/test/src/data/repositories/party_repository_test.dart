@@ -675,31 +675,72 @@ void main() {
       });
     });
 
+    // Fix #2393: updateEventStatus/Metadata now route through partner-manage-event EF.
     group('updateEventStatus', () {
-      test('completes without error', () async {
-        unawaited(mockTable(mockClient, 'events'));
+      test('invokes EF with update_status action', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-event',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true},
+          ),
+        );
 
         await expectLater(
-          repository.updateEventStatus('event_1', 'active'),
+          repository.updateEventStatus('event_1', 'cancelled'),
           completes,
         );
+
+        final captured = verify(
+          () => mockFunctions.invoke(
+            'partner-manage-event',
+            body: captureAny(named: 'body'),
+          ),
+        ).captured;
+
+        final body = captured.first as Map<String, dynamic>;
+        expect(body['action'], 'update_status');
+        expect(body['event_id'], 'event_1');
+        expect(body['status'], 'cancelled');
       });
 
-      test('throws on error', () async {
-        unawaited(
-          mockTable(mockClient, 'events', shouldThrow: Exception('error')),
+      test('throws on EF error', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-event',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 400,
+            data: {'error': 'Invalid status'},
+          ),
         );
 
         await expectLater(
-          repository.updateEventStatus('event_1', 'active'),
+          repository.updateEventStatus('event_1', 'cancelled'),
           throwsA(anything),
         );
       });
     });
 
     group('updateEventMetadata', () {
-      test('completes without error', () async {
-        unawaited(mockTable(mockClient, 'events'));
+      test('invokes EF with update action and metadata', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-event',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true},
+          ),
+        );
 
         await expectLater(
           repository.updateEventMetadata(
@@ -708,11 +749,31 @@ void main() {
           ),
           completes,
         );
+
+        final captured = verify(
+          () => mockFunctions.invoke(
+            'partner-manage-event',
+            body: captureAny(named: 'body'),
+          ),
+        ).captured;
+
+        final body = captured.first as Map<String, dynamic>;
+        expect(body['action'], 'update');
+        expect(body['event_id'], 'event_1');
+        expect((body['event'] as Map)['metadata'], {'theme': 'dark', 'capacity': 50});
       });
 
-      test('throws on error', () async {
-        unawaited(
-          mockTable(mockClient, 'events', shouldThrow: Exception('error')),
+      test('throws on EF error', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-event',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 500,
+            data: {'error': 'Server error'},
+          ),
         );
 
         await expectLater(
