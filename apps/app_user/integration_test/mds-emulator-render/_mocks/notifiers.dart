@@ -81,7 +81,8 @@ class LoadedNotificationSettingsNotifier
 /// 동의 정보 로드 실패 상태.
 class ErrorConsentController extends ConsentController {
   @override
-  FutureOr<List<UserConsent>> build() => throw Exception('Failed to load consents');
+  FutureOr<List<UserConsent>> build() =>
+      throw Exception('Failed to load consents');
 }
 
 /// 필터 (location, eligibility) 비활성화.
