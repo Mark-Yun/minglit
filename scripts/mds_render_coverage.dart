@@ -43,16 +43,34 @@ void main(List<String> args) {
     final uncovered = mdsScreens.where((s) => !cataloged.contains(s)).toList();
     final orphan = cataloged.where((c) => !mdsScreens.contains(c)).toList();
 
+    // 전체 MDS state 합산 (cataloged 여부와 무관) — 진짜 state 커버리지 분모.
+    var totalMdsStates = 0;
+    for (final screen in mdsScreens) {
+      totalMdsStates += _countPngs('$_mdsSpecsRoot/$screen', 'state_');
+    }
+
     final perScreen = <Map<String, dynamic>>[];
+    var totalCapturedStates = 0;
+    final incompleteScreens = <Map<String, dynamic>>[];
     for (final screen in cataloged) {
       final mdsStateCount = _countPngs('$_mdsSpecsRoot/$screen', 'state_');
       final capturedCount = _countPngs('$_renderRoot/$screen', 'state-');
+      final complete = capturedCount >= mdsStateCount && mdsStateCount > 0;
       perScreen.add({
         'screen': screen,
         'mds_state_pngs': mdsStateCount,
         'captured_pngs': capturedCount,
-        'complete': capturedCount >= mdsStateCount && mdsStateCount > 0,
+        'complete': complete,
       });
+      totalCapturedStates += capturedCount;
+      if (!complete && mdsStateCount > 0) {
+        incompleteScreens.add({
+          'screen': screen,
+          'captured': capturedCount,
+          'mds': mdsStateCount,
+          'missing': mdsStateCount - capturedCount,
+        });
+      }
     }
 
     final screenPct = mdsScreens.isEmpty
@@ -60,13 +78,20 @@ void main(List<String> args) {
         : (cataloged.toSet().intersection(mdsScreens.toSet()).length /
                 mdsScreens.length) *
             100;
+    final statePct = totalMdsStates == 0
+        ? 100.0
+        : (totalCapturedStates / totalMdsStates) * 100;
 
     final summary = {
       'mds_screens': mdsScreens.length,
       'cataloged_screens': cataloged.length,
       'screen_coverage_pct': screenPct.toStringAsFixed(1),
+      'mds_states': totalMdsStates,
+      'captured_states': totalCapturedStates,
+      'state_coverage_pct': statePct.toStringAsFixed(1),
       'uncovered_screens': uncovered..sort(),
       'orphan_catalogs': orphan..sort(),
+      'incomplete_screens': incompleteScreens,
       'per_screen': perScreen,
     };
 
@@ -76,7 +101,12 @@ void main(List<String> args) {
       _printHuman(summary);
     }
 
-    exit(uncovered.isEmpty && orphan.isEmpty ? 0 : 1);
+    // 성공 조건: 모든 MDS screen cataloged + orphan 없음 + 모든 cataloged
+    // screen 의 state 가 MDS state 수 이상 captured.
+    final pass = uncovered.isEmpty &&
+        orphan.isEmpty &&
+        incompleteScreens.isEmpty;
+    exit(pass ? 0 : 1);
   } catch (e, st) {
     stderr.writeln('[coverage] error: $e\n$st');
     exit(2);
@@ -113,9 +143,8 @@ void _printHuman(Map<String, dynamic> s) {
   print('═' * 60);
   print('  MDS Render Coverage');
   print('═' * 60);
-  print('  Total MDS screens     : ${s['mds_screens']}');
-  print('  Cataloged screens     : ${s['cataloged_screens']}');
-  print('  Screen coverage       : ${s['screen_coverage_pct']}%');
+  print('  MDS screens           : ${s['cataloged_screens']}/${s['mds_screens']} (${s['screen_coverage_pct']}%)');
+  print('  MDS states            : ${s['captured_states']}/${s['mds_states']} (${s['state_coverage_pct']}%)');
   print('');
   print('─── Per-screen ──────────────────────────────────────────');
   for (final p in s['per_screen'] as List) {
