@@ -348,13 +348,11 @@ void main() {
       // hasRequiredConsentsProvider를 Consumer로 읽어 guard 로직을 직접 검증
       app: Consumer(
         builder: (_, ref, __) {
-          return ref
-              .watch(hasRequiredConsentsProvider)
-              .when(
-                data: (has) => Text(has ? 'allowed' : 'blocked'),
-                loading: () => const SizedBox(),
-                error: (_, __) => const Text('error'),
-              );
+          return ref.watch(hasRequiredConsentsProvider).when(
+            data: (has) => Text(has ? 'allowed' : 'blocked'),
+            loading: () => const SizedBox(),
+            error: (_, __) => const Text('error'),
+          );
         },
       ),
       overrides: base,
@@ -368,13 +366,11 @@ void main() {
       'edge: 동의 완료 유저 → hasRequiredConsents=true (가드 통과)',
       app: Consumer(
         builder: (_, ref, __) {
-          return ref
-              .watch(hasRequiredConsentsProvider)
-              .when(
-                data: (has) => Text(has ? 'allowed' : 'blocked'),
-                loading: () => const SizedBox(),
-                error: (_, __) => const Text('error'),
-              );
+          return ref.watch(hasRequiredConsentsProvider).when(
+            data: (has) => Text(has ? 'allowed' : 'blocked'),
+            loading: () => const SizedBox(),
+            error: (_, __) => const Text('error'),
+          );
         },
       ),
       overrides: () {

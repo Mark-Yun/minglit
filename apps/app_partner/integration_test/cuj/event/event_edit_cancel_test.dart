@@ -90,7 +90,8 @@ Party _makeParty() => Party(
 FunctionResponse _okResponse() => FunctionResponse(data: {}, status: 200);
 
 /// Returns a FunctionResponse stub for a server-error EF call.
-FunctionResponse _errResponse() => FunctionResponse(data: null, status: 500);
+FunctionResponse _errResponse() =>
+    FunctionResponse(data: null, status: 500);
 
 /// Triggers a real schedule change by invoking the controller directly.
 ///
