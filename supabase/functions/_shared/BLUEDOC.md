@@ -55,3 +55,6 @@ breaking change → 모든 EF 영향, 전수 회귀 필요. 신규 utility → �
 - [edge-function-auth.md](../../../docs/architecture/edge-function-auth.md) — minglitEdgeFunction wrapper 상세
 - [edge-functions.md](../../../docs/operations/edge-functions.md) — axiom / sentry 디버깅
 - [functions/BLUEDOC.md](../BLUEDOC.md) — EF 디렉토리 진입점
+
+---
+_Reviewed: 2026-05-17 22:32_

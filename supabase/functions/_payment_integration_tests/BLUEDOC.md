@@ -39,3 +39,6 @@ await withMockedFetch(fetchMock, () => handler(authenticatedJsonRequest("http://
 - [_test_utils/BLUEDOC.md](../_test_utils/BLUEDOC.md) — mock_http / fixtures 사용
 - [_integration_tests/BLUEDOC.md](../_integration_tests/BLUEDOC.md) — 흡수 대상 layer
 - [functions/BLUEDOC.md](../BLUEDOC.md)
+
+---
+_Reviewed: 2026-05-17 22:32_

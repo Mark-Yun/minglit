@@ -23,3 +23,6 @@
 
 - [workflows/BLUEDOC.md](../workflows/BLUEDOC.md) — 어느 워크플로우가 어느 action 호출하는지
 - [.github/BLUEDOC.md](../BLUEDOC.md) — 상위 진입점
+
+---
+_Reviewed: 2026-05-17 22:32_

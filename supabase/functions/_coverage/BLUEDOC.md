@@ -40,3 +40,6 @@ deno run --allow-read --allow-write _coverage/coverage.ts \
 
 - [functions/BLUEDOC.md](../BLUEDOC.md) — EF 진입점
 - [_test_utils/BLUEDOC.md](../_test_utils/BLUEDOC.md) — 테스트 mock/fixture 인벤토리
+
+---
+_Reviewed: 2026-05-17 22:32_

@@ -28,3 +28,6 @@ Minglit 의 **사용자 대면 애플리케이션** 폴더. Flutter 모바일 �
 - [BLUEDOC 컨벤션](../docs/infra/bluedoc/BLUEDOC.md)
 - [docs/architecture/backend.md](../docs/architecture/backend.md) — Supabase 백엔드 아키텍처
 - [CLAUDE.md `## Build Defaults`](../CLAUDE.md) — flutter build 명령 / Java 17 설정
+
+---
+_Reviewed: 2026-05-17 22:32_
