@@ -7,6 +7,7 @@ import {
 } from "../_shared/response_utils.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
 import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
+import { isCheckedIn } from "../_shared/domains/event/participant.ts";
 
 export const handler = async (req: Request, { auth, supabase }: EFContext): Promise<Response> => {
   const { userId: voterId } = auth as { type: "user"; userId: string };
@@ -58,7 +59,7 @@ export const handler = async (req: Request, { auth, supabase }: EFContext): Prom
 
   if (voterError) return errorResponse("Failed to verify participant", 500);
   if (!voterParticipant) return errorResponse("이벤트 참가자가 아닙니다", 400);
-  if (voterParticipant.status !== "checked_in") {
+  if (!isCheckedIn(voterParticipant.status)) {
     return errorResponse("체크인 후 투표 가능합니다", 400);
   }
 
@@ -74,7 +75,7 @@ export const handler = async (req: Request, { auth, supabase }: EFContext): Prom
   if (!candidateParticipant) {
     return errorResponse("후보자가 이벤트 참가자가 아닙니다", 400);
   }
-  if (candidateParticipant.status !== "checked_in") {
+  if (!isCheckedIn(candidateParticipant.status)) {
     return errorResponse("후보자가 체크인하지 않았습니다", 400);
   }
 
