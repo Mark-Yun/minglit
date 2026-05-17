@@ -17,10 +17,22 @@
 
 | 축 | 현재 | 정량 |
 |---|---|---|
-| EF coverage | 손코딩 8 액션 = 8 EF | **8/50 ≈ 16%** |
-| 스키마 invariant | EF 가 어쩌다 위반 시만 잡힘 (passive) | **0 명시 invariant** |
-| 비동기 파급 | EF 직접 결과만 검증 | **0** — PGMQ enqueue/consume, trigger side effect, cron 전이 미검증 |
+| EF coverage | 손코딩 8 액션 = 8 EF | **8/~55 ≈ 15%** (전체 EF 디렉토리 59개 중 `_shared`, `_test_utils` 제외) |
+| 스키마 invariant | EF 가 어쩌다 위반 시만 잡힘 (passive) | **tick 모드 0 명시 invariant** (phase 모드의 `sim_assertions.ts` 는 settlement·participant·refund 일부 보유) |
+| 비동기 파급 / 트리거 부수 효과 | EF 직접 결과만 검증 | **0** — PGMQ enqueue/consume, DB trigger side effect, cron 전이 미검증 |
 | 규모 | hourly 5-30 액션 / 일 ~800 액션 | **데모급** — race 0건 노출 가능 |
+
+> **어휘 정합**: 본 문서의 "비동기 파급" = BLUEDOC 의 "트리거" = EF 호출 후 DB trigger / PGMQ worker / pg_cron 이 발생시키는 후속 효과. 동일 개념의 다른 표현.
+
+### 현재 운영 마일스톤 (2026-05-17 기준)
+
+| 시점 | 상태 |
+|---|---|
+| 2026-04-12 (PR #1355) | tick 모드 도입 — 0 actions / run 으로 기동 |
+| 2026-04-15 (PR #1468) | hourly 워크플로우를 tick 모드로 전환 (옛 phase hourly 와 공존) |
+| 2026-05-16 (PR #2456) | `user_event_feed` RPC 의 `pr.status` dead reference 제거 → tick 이 feed 받아 액션 생성 가능 |
+| 2026-05-16 (PR #2461) | `validStatuses` 에 `'approved'` 추가 (Fix #1660 drift) → 무료 이벤트 apply 정상 처리 |
+| 2026-05-17 시점 | tick run 당 5 actions 생성, 모두 EF 200 + DB row 생성 성공 — **본격 작동 진입** |
 
 ### 결과적 위험
 
@@ -37,7 +49,10 @@
 
 **현재**: `tick/actions/*.ts` 8개 손코딩. 신규 EF = 신규 클래스.
 
-**v2**: `auth-manifest.json` 의 각 EF 에서 자동 액션 등록.
+**v2 (선행 작업 필요)**: `auth-manifest.json` 의 각 EF 에서 자동 액션 등록. 다만 **현 manifest 스키마는 `callers`, `envs`, `description` 만 가짐** — `requestSchema` 필드가 없음. 본 축 도입은 다음 두 단계:
+
+1. **auth-manifest 확장 RFC** — 각 EF 에 `requestSchema` (JSON Schema) + `role` 필드 추가. 50+ EF 의 schema 정의는 별도 작업
+2. 자동 등록 코드:
 
 ```ts
 // 각 EF spec 의 requestSchema 로 fast-check generator 생성 → valid payload 합성
@@ -45,19 +60,21 @@ for (const [efName, spec] of Object.entries(authManifest.functions)) {
   if (!spec.envs.includes('dev')) continue;
   registerAction({
     ef: efName,
-    role: spec.role,
-    payloadGen: jsonSchemaToArbitrary(spec.requestSchema),
+    role: spec.role,                           // ← manifest 확장 필요
+    payloadGen: jsonSchemaToArbitrary(spec.requestSchema),  // ← manifest 확장 필요
   });
 }
 ```
 
-신규 EF 추가 → manifest 갱신만으로 자동 커버. **8 → ~50 EF**.
+신규 EF 추가 → manifest 갱신만으로 자동 커버. **8 → ~55 EF**.
 
 ### B. Schema Invariant Layer
 
 **현재**: per-action assertion (EF 호출 직후 row 존재 + status).
 
 **v2**: 매 tick 종료 시 전역 invariant RPC 호출.
+
+> **기존 `check_db_invariants()` 와의 관계**: 별도 layer 로 이미 존재 (`monitor-db-invariants.yml` 매시간 cron, `docs/qa/test-strategy.md` Layer 6 = "DB monitor"). 본 v2 의 `sim_check_invariants()` 는 **tick run 단위** 에서 호출되어 **시뮬 액션 직후** 상태를 검증 — `check_db_invariants()` 의 매시간 스냅샷과 시간축 / 책임이 다름. 두 RPC 가 공통 invariant 정의를 공유하면 SoT 단일화 가능 (개선 작업의 부수 효과).
 
 ```sql
 CREATE FUNCTION sim_check_invariants() RETURNS TABLE(invariant text, violations jsonb) AS $$
@@ -82,19 +99,27 @@ $$;
 
 **현재**: EF 직접 결과만 본다.
 
-**v2**: 액션 검증 단계에 PGMQ enqueue/consume assertion 추가.
+**v2**: 액션 검증 단계에 PGMQ enqueue/consume assertion 추가. 사용 함수는 PGMQ 확장의 표준 API (`pgmq.read`, `pgmq.metrics`).
 
 ```ts
 await action.execute();
-const enqueued = await supabase.rpc('pgmq_peek', { queue: 'event_pipeline' });
-assert(enqueued.some(e => e.event_type === 'application_created'));
+
+// 큐에 메시지 enqueue 됐는지 — read 후 즉시 visibility 복귀 (vt=1초)
+const messages = await supabase.schema('pgmq').rpc('read', {
+  queue_name: 'event_pipeline',
+  vt: 1,
+  qty: 10,
+});
+assert(messages.some(m => m.message.event_type === 'application_created'));
 
 await sleep(2000);  // worker 처리 대기
-const dlqSize = await supabase.rpc('pgmq_archive_size', { queue: 'event_pipeline_dlq' });
-assert(dlqSize === 0);
+
+// DLQ / queue depth 확인
+const metrics = await supabase.schema('pgmq').rpc('metrics', { queue_name: 'event_pipeline_dlq' });
+assert(metrics.queue_length === 0);
 ```
 
-worker 가 깨지거나 DLQ 가 누적되면 tick 즉시 실패.
+worker 가 깨지거나 DLQ 가 누적되면 tick 즉시 실패. 참조: [docs/architecture/global-event-pipeline.md](../../../docs/architecture/global-event-pipeline.md).
 
 ### D. 시간 가속 (cron 시나리오)
 
@@ -125,18 +150,20 @@ assert(snap.events
 
 ---
 
-## Part 3 — 7-Layer 미래 비전 (선택)
+## Part 3 — v2 Internal 7-Stack 미래 비전 (선택)
 
-위 5축이 "목적 충족" 이라면, **아키텍처 미학** 의 이상은 다음 7-layer 분리:
+> **이름 주의**: 본 7-Stack 은 **backend-simulator EF 내부 컴포넌트 적층** 을 의미. `docs/qa/test-strategy.md` 의 "7-Layer test taxonomy" (Patrol/Emulator/.../Tick simulator) 와는 별개 개념. 후자의 Layer 7 = 본 EF 전체 = 본 7-Stack 의 호스트.
+
+위 5축이 "목적 충족" 이라면, **아키텍처 미학** 의 이상은 다음 7-tier 분리:
 
 ```
-Layer 7  Differential Analyzer    (PR 단위 trajectory diff)
-Layer 6  Invariant Monitor        (safety + liveness, TLA+ 스타일)
-Layer 5  Trace Recorder           (event sourcing, replay)
-Layer 4  Scheduler                (DES, simulated clock, Poisson 도착)
-Layer 3  Policy Sampler           (pure: snapshot × actor × prng → action distribution)
-Layer 2  World Snapshot           (single RPC → frozen state, in-memory)
-Layer 1  Capability-Typed Executor (phantom type 으로 actor-action 매칭 강제)
+Tier 7  Differential Analyzer    (PR 단위 trajectory diff)
+Tier 6  Invariant Monitor        (safety + liveness, TLA+ 스타일)
+Tier 5  Trace Recorder           (event sourcing, replay)
+Tier 4  Scheduler                (DES, simulated clock, Poisson 도착)
+Tier 3  Policy Sampler           (pure: snapshot × actor × prng → action distribution)
+Tier 2  World Snapshot           (single RPC → frozen state, in-memory)
+Tier 1  Capability-Typed Executor (phantom type 으로 actor-action 매칭 강제)
 ```
 
 ### 핵심 아이디어
@@ -165,7 +192,7 @@ Layer 1  Capability-Typed Executor (phantom type 으로 actor-action 매칭 강�
 | 3 | **A — Manifest-Driven** | 2주 + manifest 정비 | 신규 EF 추가 비용 ↓ (16% → ~95%) |
 | 4 | **D — 시간 가속** | 1주 | cron 잡 검증 가능 |
 | 5 | **E — soak/spike 모드** | 2-3주 | 규모/race 검출 (다른 4개 끝난 뒤) |
-| 6 | **7-Layer 재설계** | 1-2달 | 위 1-5 완료 후 본질적 미학 추구 시 |
+| 6 | **v2 Internal 7-Stack 재설계** | 1-2달 | 위 1-5 완료 후 본질적 미학 추구 시 |
 
 ---
 
