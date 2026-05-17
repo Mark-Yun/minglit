@@ -9,6 +9,7 @@ import {
 } from "../_shared/response_utils.ts";
 import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
 import { parseAction } from "../_shared/request_utils.ts";
+import { isEventEditableByPartner } from "../_shared/domains/event/availability.ts";
 
 interface RuleInput {
   source_group_id: string;
@@ -57,8 +58,8 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
   const permCheck = await requirePartnerPermission(supabase, party.partner_id, userId, ["PARTY_MANAGE"]);
   if (permCheck) return permCheck;
 
-  // Check event status — only 'scheduled' events can have rules modified
-  if (event.status !== "scheduled") {
+  // Check event status — only 'scheduled' events can have rules modified (state machine guard)
+  if (!isEventEditableByPartner(event.status)) {
     return errorResponse(
       `Cannot modify match rules for event with status '${event.status}'`,
       400,
