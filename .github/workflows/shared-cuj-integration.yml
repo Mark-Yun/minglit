@@ -1,0 +1,92 @@
+name: shared-cuj-integration
+
+# CUJ integration tests on Android emulator — 재사용 워크플로우.
+#
+# pr-gate.yml 에서 path filter 통과 시 `uses:` 로 호출되고,
+# workflow_dispatch 로 수동 트리거도 가능 (디버깅/검증용).
+#
+# 대응 BLUEDOC: apps/<app>/integration_test/cuj/BLUEDOC.md
+
+on:
+  workflow_call:
+    inputs:
+      app-name:
+        description: 'App name (user or partner)'
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      app-name:
+        description: 'App name'
+        required: true
+        type: choice
+        options:
+          - user
+          - partner
+        default: user
+
+jobs:
+  cuj-integration:
+    runs-on: [self-hosted, android]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Create dev Flutter env file
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_DEV_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+          ENVIRONMENT: development
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN_FLUTTER }}
+          STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
+          GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_DEV_WEB_CLIENT_ID }}
+          KAKAO_LOCAL_REST_API_KEY: ${{ secrets.KAKAO_LOCAL_REST_API_KEY }}
+          KAKAO_MAP_JAVASCRIPT_KEY: ${{ secrets.KAKAO_MAP_JAVASCRIPT_KEY }}
+          JUSO_CONFIRM_KEY: ${{ secrets.JUSO_CONFIRM_KEY }}
+          IAMPORT_USER_CODE: ${{ secrets.IAMPORT_USER_CODE }}
+          MOBILE_REDIRECT_SCHEME: ${{ secrets.MOBILE_REDIRECT_SCHEME }}
+        run: bash .github/scripts/create-dev-flutter-env.sh
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      # Self-hosted runner: Flutter SDK cache dir 가 다른 user 소유 → git 거부.
+      - name: Allow git access to Flutter SDK dir
+        run: git config --global --add safe.directory '*'
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: apps/app_${{ inputs.app-name }}
+
+      - name: Enable KVM acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+
+      - name: Run CUJ tests on Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          profile: pixel_6
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          script: bash .github/scripts/run-${{ inputs.app-name }}-cuj.sh
+
+      - name: Upload test artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: cuj-integration-app-${{ inputs.app-name }}-${{ github.run_id }}
+          path: apps/app_${{ inputs.app-name }}/build/app/outputs/
+          retention-days: 14
