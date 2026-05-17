@@ -2,5 +2,7 @@ cycle: 14d
 priority: P3-low
 last_verified: 2026-05-16
 refresh_method: |
-  FEATURE_REPORT.md 의 각 피쳐 상태(phase, owner, 최근 활동)를 갱신한다.
-  소스: 각 feature/spec.md frontmatter, GitHub issues/PR (라벨 feature/event-*), 최근 30일 커밋.
+  본 카테고리 (event) 인스펙션 → feature_audit_report.md 갱신 + Action Items 마다 GitHub Issue 1건 파일링.
+  절차: docs/features/feature_audit_report_template.md 의 "AI 실행 절차" 섹션 (6 step + 명령어) 참조.
+  Findings 이슈 라벨: feature/event-*.
+  최종: 본 FRESH_DOC 의 last_verified 를 오늘 날짜로 갱신.

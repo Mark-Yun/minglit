@@ -34,6 +34,8 @@ feature 가 아닌 것:
 
 PRD 는 "왜/무엇을", spec.md 는 "테스트 가능한 단위" 로 분리. 한 feature 에 양면(user/partner) 있으면 PRD 에 Scenario 로 양쪽 다 적고, spec.md CUJ 에 actor (user/partner) 명시.
 
+**새 feature 시작**: [`_template/prd.md`](./_template/prd.md) + [`_template/spec.md`](./_template/spec.md) 복사 후 placeholder 채움. canonical 예시: [`account/signup-consent/`](./account/signup-consent/).
+
 **개발적인 내용은 docs/features/ 에 두지 않는다** — DB schema 는 migration 파일, Provider/Repository 이름은 코드, 라우트 path 는 코드. 문서에는 product behavior 와 product data 정의(consent_key 같은)까지만.
 
 UX 디자인의 SSoT 는 MDS spec (`apps/mds/docs/public/specs/`). feature 폴더의 `mds_specs.md` 는 derived view. `ui-ux-design.md` 와 `wireframe.html` 은 사용하지 않는다 (Mark 가 MDS HTML 에 작성, 워크플로우가 feature 로 grouping).
@@ -80,7 +82,9 @@ NFR 은 측정 가능해야 함 — "빨라야 함" 금지, "200ms p50 / 에뮬�
 
 ## 카테고리 폴더
 
-각 카테고리 폴더에 `BLUEDOC.md` + `FEATURE_REPORT.md` + `FRESH_DOC` 3종. inspection 절차는 [FEATURE_REPORT_TEMPLATE.md](./FEATURE_REPORT_TEMPLATE.md).
+각 카테고리 폴더에 `BLUEDOC.md` + `feature_audit_report.md` + `FRESH_DOC` 3종. inspection 절차는 [feature_audit_report_template.md](./feature_audit_report_template.md) 의 **"AI 실행 절차"** 섹션 (6 step + 정확한 명령어).
+
+`spec.md` 헤더에 본 feature 가 사용하는 MDS spec 들을 명시적으로 링크한다 (canonical: [`account/signup-consent/spec.md`](./account/signup-consent/spec.md)). `mds_specs.md` 자동 생성은 후속 워크플로우 (현재 수동 유지).
 
 ## 관련
 

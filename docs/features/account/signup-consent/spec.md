@@ -1,6 +1,12 @@
 # Spec: 회원가입 동의
 
-> PRD: [prd.md](./prd.md) · Wireframe: [wireframe-v2.html](./wireframe-v2.html)
+> **참조**
+> - PRD: [prd.md](./prd.md)
+> - MDS specs:
+>   - [`signup_consent_page`](../../../../apps/mds/docs/public/specs/signup_consent_page/) — 회원가입 약관 동의 화면 (5 states)
+>   - [`identity_verification_screen`](../../../../apps/mds/docs/public/specs/identity_verification_screen/) — 본인인증 CI/DI 동의 바텀시트
+>   - [`privacy_page`](../../../../apps/mds/docs/public/specs/privacy_page/) — 사후 동의 관리
+> - Wireframe: [wireframe-v2.html](./wireframe-v2.html)
 
 ## CUJs
 
