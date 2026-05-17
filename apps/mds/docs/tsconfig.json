@@ -21,7 +21,7 @@
     "paths": {
       "@/*": ["./src/*"],
       "@mds/icons-react": [
-        "../../../shared/packages/mds/icons/react/src/generated/index.tsx"
+        "./src/lib/mds-icons-generated.tsx"
       ]
     }
   },
