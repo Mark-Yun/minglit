@@ -60,8 +60,11 @@ jobs:
           cache: true
 
       # Self-hosted runner: Flutter SDK cache dir 가 다른 user 소유 → git 거부.
+      # safe.directory를 '*'로 열지 않고 Flutter SDK 경로만 허용 (Fix #2499).
       - name: Allow git access to Flutter SDK dir
-        run: git config --global --add safe.directory '*'
+        run: |
+          FLUTTER_SDK="$(dirname "$(dirname "$(command -v flutter)")")"
+          git config --global --add safe.directory "$FLUTTER_SDK"
 
       - name: Install dependencies
         run: flutter pub get
