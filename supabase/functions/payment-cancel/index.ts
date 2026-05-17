@@ -9,11 +9,8 @@ import {
 import { parseJsonBody } from "../_shared/request_utils.ts";
 import { log } from "../_shared/logger.ts";
 // Fix #299: 환불 로직을 shared 모듈로 추출 — user-cancel-order와 공유
-import {
-  executeRefund,
-  RefundError,
-  verifyRefundEligibility,
-} from "../_shared/refund_utils.ts";
+import { executeRefund, RefundError } from "../_shared/refund_utils.ts";
+import { verifyRefundEligibility } from "../_shared/domains/payment/refund_policy.ts";
 
 const FN = "payment-cancel";
 

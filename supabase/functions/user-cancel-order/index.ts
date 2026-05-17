@@ -7,12 +7,9 @@ import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts
 import { parseJsonBody } from "../_shared/request_utils.ts";
 import { log, withSpan } from "../_shared/logger.ts";
 import { initStatsig, logStatsigEvent } from "../_shared/statsig_utils.ts";
-import {
-  executeRefund,
-  RefundError,
-  verifyRefundEligibility,
-} from "../_shared/refund_utils.ts";
+import { executeRefund, RefundError } from "../_shared/refund_utils.ts";
 import { classifyApplicationStatus } from "../_shared/domains/payment/application_status.ts";
+import { verifyRefundEligibility } from "../_shared/domains/payment/refund_policy.ts";
 
 const FN = "user-cancel-order";
 
