@@ -127,6 +127,7 @@ void main(List<String> args) {
           'category': f.category,
           'feature': f.feature,
           'orphan': f.orphan.toList()..sort(),
+          'test_file': f.testFile,
         });
       }
     }
@@ -147,6 +148,7 @@ void main(List<String> args) {
           'spec': f.specIds.length,
           'tested': f.coveredCount,
           'has_test_file': f.testFile != null,
+          'test_file': f.testFile,
           'uncovered': f.uncovered.toList()..sort(),
           'orphan': f.orphan.toList()..sort(),
         };

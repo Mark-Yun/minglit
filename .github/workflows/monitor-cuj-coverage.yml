@@ -69,34 +69,139 @@ jobs:
             exit 0
           fi
 
-          # 100% 미만 → 이슈 본문 생성
+          # 100% 미만 → 이슈 본문 생성 (AI agent 가 읽고 액션할 포맷)
+          REPO_URL="${{ github.server_url }}/${{ github.repository }}/blob/dev"
+          PENDING_MIGRATION_COUNT=$(jq -r '[.per_feature[] | select(.spec == 0 and (.feature | startswith("_orphan_") | not))] | length' /tmp/cuj_cov.json)
           BODY=$(cat <<EOF
-          > 자동 갱신: $(date -u +%Y-%m-%dT%H:%M:%SZ) by monitor-cuj-coverage
+          ## Provenance
+
+          | 항목 | 값 |
+          |------|-----|
+          | Workflow | [\`monitor-cuj-coverage.yml\`]($REPO_URL/.github/workflows/monitor-cuj-coverage.yml) |
+          | Latest run | [#${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) |
+          | Trigger | \`${{ github.event_name }}\` |
+          | Updated at | $(date -u +%Y-%m-%dT%H:%M:%SZ) |
+
+          ## Task
+
+          CUJ coverage 100% 달성. 본 이슈를 처리하는 AI agent 는 아래 **How to resolve** 의 Option A / B / C 중 한 가지를 골라 PR 1건 생성. 모든 경로/예시/명령어는 본 issue 안에 자족적으로 포함.
+
+          ## Context (먼저 읽기)
+
+          | 파일 | 역할 |
+          |------|------|
+          | [\`docs/features/BLUEDOC.md\`]($REPO_URL/docs/features/BLUEDOC.md) | PRD + spec.md 5섹션 컨벤션, CUJ ID, 테스트 매핑 |
+          | [\`apps/app_user/integration_test/cuj/BLUEDOC.md\`]($REPO_URL/apps/app_user/integration_test/cuj/BLUEDOC.md) | CUJ test 패턴 (user) |
+          | [\`apps/app_partner/integration_test/cuj/BLUEDOC.md\`]($REPO_URL/apps/app_partner/integration_test/cuj/BLUEDOC.md) | CUJ test 패턴 (partner) |
+          | [\`docs/architecture/client.md\`]($REPO_URL/docs/architecture/client.md) | Flutter 클라이언트 아키텍처 |
+          | [\`scripts/cuj_coverage.dart\`]($REPO_URL/scripts/cuj_coverage.dart) | 본 coverage 룰 (정규식, exit code) |
+
+          ## Canonical examples (모방 대상)
+
+          | 파일 | 시연 |
+          |------|------|
+          | [\`docs/features/account/signup-consent/prd.md\`]($REPO_URL/docs/features/account/signup-consent/prd.md) | PRD 골격 (Summary/Motivation/Goals/User Journey/KPIs/Legal) |
+          | [\`docs/features/account/signup-consent/spec.md\`]($REPO_URL/docs/features/account/signup-consent/spec.md) | spec.md 5섹션 + CUJ 테이블 + Edge Cases + Open Questions |
+          | [\`apps/app_user/integration_test/cuj/_engine/cuj_test.dart\`]($REPO_URL/apps/app_user/integration_test/cuj/_engine/cuj_test.dart) | 엔진 (~70줄, cujGroup + cujCase) |
+          | [\`apps/app_user/integration_test/cuj/account/signup_consent_test.dart\`]($REPO_URL/apps/app_user/integration_test/cuj/account/signup_consent_test.dart) | cujGroup + cujCase 패턴 (happy + 2 edge case, mocktail Mock) |
 
           ## Summary
+
           - CUJ 커버리지: **${PCT}%** (${COVERED}/${SPEC})
-          - Uncovered CUJs: **${UNCOVERED_COUNT}**
-          - Orphan tests (spec 에 없음): **${ORPHAN_COUNT}**
+          - Uncovered CUJs (spec 있음, 테스트 없음): **${UNCOVERED_COUNT}**
+          - Orphan tests (테스트 있음, spec 없음): **${ORPHAN_COUNT}**
+          - Pending spec.md 마이그레이션 (5섹션 미적용): **${PENDING_MIGRATION_COUNT}**
 
-          ## Uncovered CUJs (spec.md 에 있으나 테스트 없음)
-          \`\`\`
-          $(jq -r '.uncovered_features[] | "\(.category)/\(.feature): \(.uncovered | join(", "))"' /tmp/cuj_cov.json)
-          \`\`\`
+          ## Decision rule (default action)
 
-          ## Orphan test CUJs (테스트에 있으나 spec.md 에 없음)
-          \`\`\`
-          $(jq -r '.orphan_features[] | "\(.category)/\(.feature): \(.orphan | join(", "))"' /tmp/cuj_cov.json)
-          \`\`\`
+          하나만 골라 진행:
 
-          ## Per-feature
-          \`\`\`
-          $(jq -r '.per_feature[] | select(.spec > 0 or .tested > 0) | "\(.category)/\(.feature): \(.tested)/\(.spec)"' /tmp/cuj_cov.json)
-          \`\`\`
+          1. Uncovered > 0 → **Option A** (default — 우선순위 최상)
+          2. Uncovered = 0 AND Orphan > 0 → Option B
+          3. 둘 다 0 AND Pending > 0 → Option C
 
-          ## 다음 액션
-          - 새 CUJ 테스트: \`apps/app_user/integration_test/cuj/<category>/<feature>_test.dart\` 에 \`cujGroup('<id>', ...)\` 추가
-          - spec.md 마이그레이션: \`docs/features/<cat>/<feat>/spec.md\` 가 5섹션 골격(CUJs/FR/NFR/Edge/Open Q) 가 아니면 빈 카운트 (0/0) — \`docs/features/BLUEDOC.md\` 컨벤션 참고
-          - 상세: \`apps/app_user/integration_test/cuj/BLUEDOC.md\`
+          여러 옵션 동시 처리 금지 (한 PR 한 concern).
+
+          ## Scope per PR
+
+          | 옵션 | 한 PR 의 단위 |
+          |------|--------------|
+          | A | **한 feature 의 uncovered CUJ 전부**. 다른 feature 는 별도 PR. 12 uncovered 가 3 feature 면 PR 3개. |
+          | B | 한 orphan group (한 test file) 1 PR. |
+          | C | 한 spec.md 마이그레이션 1 PR. |
+
+          PR title: \`test(cuj): add <category>/<feature> CUJ tests (<id-list>)\`. PR body 에 \`Refs #<이슈번호>\` (전부 처리 전엔 close 금지).
+
+          ## How to resolve
+
+          ### Option A — Uncovered CUJ 테스트 추가 (가장 흔한 액션)
+
+          1. Decision rule 로 feature 1개 선택 → 해당 spec.md 클릭 → uncovered CUJ ID 들의 Details / FR / NFR / Edge Cases 읽기
+          2. 해당 feature 의 \`<app>/integration_test/cuj/<category>/<feature>_test.dart\` 열기 (없으면 신규 — canonical example 참조)
+          3. **Discovery hints** (test 작성 전 필수):
+             - Page widget: \`grep -rn "class.*Page\b" apps/<app>/lib/src/features/<feature>/\`
+             - Riverpod providers: \`grep -rn "<feature>.*Provider\\b" shared/packages apps/<app>/lib/\`
+             - Coordinator: \`grep -rn "<Feature>Coordinator" apps/<app>/lib/\`
+             - Widget keys: \`grep -rn "Key('" <page-file>.dart\` — 없으면 \`find.text('<label>')\` 로 대체
+          4. uncovered CUJ ID 마다 \`cujGroup('<id>', '<name>', () { ... })\` 블록 + 그 안에:
+             - happy case 1개
+             - spec.md Edge Cases 테이블에서 해당 CUJ ID 의 row 마다 cujCase 1개
+             - Mocking: \`mocktail\` Mock + ProviderScope override (canonical example 베끼기)
+          5. **Local verification**:
+             - emulator 있는 환경:
+
+               \`\`\`bash
+               export JAVA_HOME="\$(/usr/libexec/java_home -v 17)"
+               cd apps/<app>
+               flutter test integration_test/cuj/<category>/<feature>_test.dart \\
+                 --flavor dev \\
+                 --dart-define-from-file=../../minglit_env/dev/flutter.env \\
+                 -d <device-id>
+               \`\`\`
+
+             - **emulator 없는 환경**: \`dart run scripts/cuj_coverage.dart\` 로 coverage 변화만 확인 (script 가 spec.md ↔ cujGroup ID 매칭 검증). 실 실행 검증은 pr-gate CI 에 위임.
+          6. PR 생성 → pr-gate 의 \`cuj-integration-{user,partner}\` job 통과 확인
+
+          **Uncovered list** (spec.md 링크 → CUJ ID 채울 항목):
+
+          $(jq -r --arg url "$REPO_URL" '.uncovered_features[] | "- [\(.category)/\(.feature)](\($url)/docs/features/\(.category)/\(.feature)/spec.md) ← CUJs: \(.uncovered | join(", "))"' /tmp/cuj_cov.json)
+
+          ### Option B — Orphan 해소
+
+          Orphan = test 의 \`cujGroup('<id>')\` 가 spec.md CUJ 테이블에 없음. 두 가지 선택:
+
+          - **B-1**: spec.md 작성 (없으면 신규) + CUJ 테이블 row 추가 (test 가 의도된 경우)
+          - **B-2**: test 의 cujGroup 삭제 (spec 누락 외 의도 없음)
+
+          **Orphan list** (test file 링크):
+
+          $(jq -r --arg url "$REPO_URL" '.orphan_features[] | "- \(.category)/\(.feature) → CUJs in test: \(.orphan | join(", ")) → [test file](\($url)/\(.test_file // ""))"' /tmp/cuj_cov.json)
+
+          ### Option C — spec.md 5섹션 마이그레이션
+
+          spec.md 존재하지만 CUJ 테이블 없음 (구식 포맷). [\`docs/features/BLUEDOC.md\`]($REPO_URL/docs/features/BLUEDOC.md) 의 5섹션 골격(CUJs / FR / NFR / Edge Cases / Open Questions) 으로 재작성. canonical example: [signup-consent/spec.md]($REPO_URL/docs/features/account/signup-consent/spec.md).
+
+          **개발 detail (DB schema SQL, Provider 이름, Repository 메서드) 은 spec.md 에서 제외** — 코드/migration 이 SSoT. 마이그레이션 시 dev content 드롭.
+
+          <details><summary>Pending list (${PENDING_MIGRATION_COUNT} features)</summary>
+
+          $(jq -r --arg url "$REPO_URL" '.per_feature[] | select(.spec == 0 and (.feature | startswith("_orphan_") | not)) | "- [\(.category)/\(.feature)](\($url)/docs/features/\(.category)/\(.feature)/spec.md)"' /tmp/cuj_cov.json)
+
+          </details>
+
+          ## Active features (5섹션 적용 + 부분/완전 cover)
+
+          $(jq -r --arg url "$REPO_URL" '.per_feature[] | select(.spec > 0) | "- [\(.category)/\(.feature)](\($url)/docs/features/\(.category)/\(.feature)/spec.md): \(.tested)/\(.spec)"' /tmp/cuj_cov.json)
+
+          ## Verification (PR 생성 후)
+
+          - 로컬: \`dart run scripts/cuj_coverage.dart\` → coverage 증가 + 처리한 항목 list 에서 제외 확인
+          - CI: pr-gate \`cuj-integration-{user,partner}\` job pass (자동, path filter 통과 시)
+
+          ## Closing rule
+
+          - **부분 처리** (uncovered 일부만 채움 / orphan 일부만 해소): PR body 에 \`Refs #<이슈번호>\` — 본 이슈 close 금지. 다음 cron run 이 갱신된 상태로 본 이슈 본문 업데이트.
+          - **완전 처리** (coverage 100% + orphan 0): PR body 에 \`Closes #<이슈번호>\`. 본 cron 도 100% 감지 시 \`✅ Coverage 100% achieved\` 코멘트와 함께 자동 close.
           EOF
           )
 
@@ -106,6 +211,5 @@ jobs:
           else
             gh issue create \
               --title "$ISSUE_TITLE_PREFIX ${UNCOVERED_COUNT} CUJ tests missing (${PCT}%)" \
-              --label "docs,P3-low" \
               --body "$BODY"
           fi
