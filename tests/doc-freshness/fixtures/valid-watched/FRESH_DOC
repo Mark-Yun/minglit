@@ -1,0 +1,8 @@
+watched_paths:
+  - supabase/migrations/**
+  - supabase/functions/**
+priority: P2-medium
+last_verified: 2026-05-13
+recursive: false
+refresh_method: |
+  신규 마이그레이션과 Edge Function을 문서에 반영한다.
