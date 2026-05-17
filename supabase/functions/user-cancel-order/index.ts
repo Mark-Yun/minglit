@@ -12,6 +12,7 @@ import {
   RefundError,
   verifyRefundEligibility,
 } from "../_shared/refund_utils.ts";
+import { classifyApplicationStatus } from "../_shared/domains/payment/application_status.ts";
 
 const FN = "user-cancel-order";
 
@@ -55,16 +56,12 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
       return errorResponse("해당 이벤트에 신청 내역이 없습니다", 404);
     }
 
-    // 3. Status validation
+    // 3. Status validation + classify
     const { status } = application;
-    if (status === "cancelled" || status === "rejected") {
+    const { isPaid, isPrePayment, isFinal } = classifyApplicationStatus(status);
+    if (isFinal) {
       return errorResponse("이미 취소/거절된 신청입니다", 400);
     }
-
-    // 4. Branch: pre-payment vs post-payment
-    const isPaid = status === "paid" || status === "pending_review" ||
-      status === "approved";
-    const isPrePayment = status === "pending" || status === "payment_failed";
 
     if (isPrePayment) {
       // Pre-payment cancellation: delete verification_submissions + delete application
