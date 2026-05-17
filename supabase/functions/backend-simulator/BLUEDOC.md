@@ -40,4 +40,4 @@ curl -X POST "https://<project>.supabase.co/functions/v1/backend-simulator" \
 
 ## 한계 / 개선 계획
 
-현재 구조의 본질적 한계 (EF 커버리지 15%, tick 모드 invariant 0, PGMQ 파급 미추적, 데모급 규모) 와 v2 설계 제안은 [architecture.md](./architecture.md) 참조.
+현재 구조의 본질적 한계 — EF 커버리지 15%, tick 모드 invariant 0, cross-EF 비즈니스 규칙 자동 탐색 못 함 (예: "block → refund 거부" 같은 다단계 규칙) — 와 v2 **Stochastic Cascade** 모델 (backend 를 확률적 funnel 로 모델링, invariant 1개로 N 시나리오 가드) 는 [architecture.md](./architecture.md) 참조.
