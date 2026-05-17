@@ -17,21 +17,22 @@ import '../_mocks/notifiers.dart';
 
 class HomePageBuilder extends MdsScreenBuilder<HomePage> {
   HomePageBuilder()
-      : super(
-          page: const HomePage(),
-          base: [
-            // 모든 state 에 공통인 것만. provider 충돌 방지 위해 state 별로
-            // 달라질 수 있는 것 (feed 등) 은 fluent 메서드가 명시적으로 추가.
-            homeCoordinatorProvider.overrideWithValue(MockHomeCoordinator()),
-            activeFiltersProvider.overrideWith(NoFiltersNotifier.new),
-          ],
-        );
+    : super(
+        page: const HomePage(),
+        base: [
+          // 모든 state 에 공통인 것만. provider 충돌 방지 위해 state 별로
+          // 달라질 수 있는 것 (feed 등) 은 fluent 메서드가 명시적으로 추가.
+          homeCoordinatorProvider.overrideWithValue(MockHomeCoordinator()),
+          activeFiltersProvider.overrideWith(NoFiltersNotifier.new),
+        ],
+      );
 
   /// 빈 추천 피드.
   HomePageBuilder empty() {
     addOverride(
-      recommendationFeedProvider
-          .overrideWith(EmptyRecommendationFeedNotifier.new),
+      recommendationFeedProvider.overrideWith(
+        EmptyRecommendationFeedNotifier.new,
+      ),
     );
     return this;
   }

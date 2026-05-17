@@ -760,7 +760,10 @@ void main() {
         final body = captured.first as Map<String, dynamic>;
         expect(body['action'], 'update');
         expect(body['event_id'], 'event_1');
-        expect((body['event'] as Map)['metadata'], {'theme': 'dark', 'capacity': 50});
+        expect((body['event'] as Map)['metadata'], {
+          'theme': 'dark',
+          'capacity': 50,
+        });
       });
 
       test('throws on EF error', () async {
