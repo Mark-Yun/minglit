@@ -1,0 +1,6 @@
+cycle: 30d
+priority: P3-low
+last_verified: 2026-05-13
+recursive: true
+refresh_method: |
+  하위 디렉토리를 재귀적으로 관리하되, 자체 FRESH_DOC가 있는 nested/는 제외한다.
