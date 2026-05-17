@@ -226,11 +226,11 @@ reconciliation-daily: PORTONE_V2_API_KEY
 
 ## 근본 원인 + Fix 이슈로 이관
 
-4일간 auto-recreate 되던 원인 확정 — \`supabase-deploy.yml\` 의 EF secret 주입 블록에 **PortOne key 만 누락**.
+4일간 auto-recreate 되던 원인 확정 — \`deploy-supabase.yml\` 의 EF secret 주입 블록에 **PortOne key 만 누락**.
 
 ### 원인
 - EF 코드: \`Deno.env.get("PORTONE_API_KEY")\` 등으로 9개 EF 가 PortOne env 읽음 (Vault 아님)
-- \`supabase-deploy.yml:66-88\` 에서 OPENAI, SENTRY, AXIOM 등은 \`supabase secrets set\` 으로 주입 중
+- \`deploy-supabase.yml:66-88\` 에서 OPENAI, SENTRY, AXIOM 등은 \`supabase secrets set\` 으로 주입 중
 - PortOne 만 이 리스트에서 빠져있어 EF 환경에 영원히 없음
 - \`Verify Edge Function env vars\` step 이 health 엔드포인트로 누락 감지 → 자동 이슈 생성/코멘트
 
@@ -239,7 +239,7 @@ reconciliation-daily: PORTONE_V2_API_KEY
 - GitHub Actions secrets 등록: \`PORTONE_DEV_API_KEY\`, \`PORTONE_DEV_API_SECRET\`, \`PORTONE_DEV_V2_API_KEY\`, \`PORTONE_DEV_V2_WEBHOOK_SECRET\` (minglit_env/dev/supabase.env 에서 가져와 주입)
 
 #### 이관
-- **#1683** 에서 \`supabase-deploy.yml\` 수정으로 자동 주입 블록 추가 추적. dev/main 환경별 분기 + 구체 diff 포함. needs-swe P0.
+- **#1683** 에서 \`deploy-supabase.yml\` 수정으로 자동 주입 블록 추가 추적. dev/main 환경별 분기 + 구체 diff 포함. needs-swe P0.
 
 ### Main 환경 주의
 dev 는 위 4개 secrets 등록으로 해소되지만, **main 은 \`PORTONE_MAIN_*\` 별도 등록 필요** — PortOne production credentials 입력은 관리자(너)가 해야. #1683 Phase 2 에 명시.

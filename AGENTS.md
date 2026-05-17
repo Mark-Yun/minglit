@@ -264,7 +264,7 @@ git push
 
 - Vercel 배포는 cron (2시간마다) + 수동(`workflow_dispatch`)으로 실행된다.
 - PR/push 시 Vercel auto-deploy는 `ignoreCommand`로 차단되어 있다.
-- 즉시 배포가 필요하면: GitHub Actions → Deploy to Vercel → Run workflow → branch 선택 → 실행.
+- 즉시 배포가 필요하면: GitHub Actions → `deploy-vercel` → Run workflow → branch 선택 → 실행.
 - 4개 앱(app_user, app_partner, landing_user, landing_partner) 모두 매 cron마다 deploy된다.
 
 ## Bug Fix Conventions

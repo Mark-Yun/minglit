@@ -74,11 +74,11 @@ port 5432 failed: Network is unreachable
 
 ### 왜 gai.conf 수정이 안 먹히는가
 
-`supabase-deploy.yml:96`에서 `gai.conf`에 IPv4 우선 설정을 추가하지만, `psql`이 내부적으로 `getaddrinfo()`를 호출할 때 이미 resolve된 IPv6 주소를 먼저 시도하는 경우가 있음. GitHub Actions ubuntu-latest 러너에서 `/etc/gai.conf` 변경이 즉시 반영되지 않는 환경 이슈.
+`deploy-supabase.yml:96`에서 `gai.conf`에 IPv4 우선 설정을 추가하지만, `psql`이 내부적으로 `getaddrinfo()`를 호출할 때 이미 resolve된 IPv6 주소를 먼저 시도하는 경우가 있음. GitHub Actions ubuntu-latest 러너에서 `/etc/gai.conf` 변경이 즉시 반영되지 않는 환경 이슈.
 
 ### 수정 방안 (옵션 A 구현)
 
-`supabase-deploy.yml`의 "Verify vault secrets" step에서 DNS hostname 대신 IPv4 주소를 직접 resolve하여 사용:
+`deploy-supabase.yml`의 "Verify vault secrets" step에서 DNS hostname 대신 IPv4 주소를 직접 resolve하여 사용:
 
 ```bash
 # Before (IPv6로 연결 시도 → 실패)
@@ -99,7 +99,7 @@ PGPASSWORD="${DB_PASSWORD}" psql \
 
 ### 영향 범위
 
-`supabase-deploy.yml` 1파일, "Verify vault secrets" step만 수정.
+`deploy-supabase.yml` 1파일, "Verify vault secrets" step만 수정.
 
 ### 관련
 - #669 (최초 보고, gai.conf 시도)

@@ -1,4 +1,4 @@
-name: Auto-update PR branches
+name: sync-pr-branches
 
 on:
   push:

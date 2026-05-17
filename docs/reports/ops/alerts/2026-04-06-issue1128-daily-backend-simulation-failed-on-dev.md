@@ -38,7 +38,7 @@ CI 로그:
 /usr/bin/sh: 1: Syntax error: end of file unexpected (expecting "done")
 ```
 
-워크플로우 파일 자체는 정상 (`daily-backend-simulation.yml:110-117`). `android-emulator-runner@v2`의 script 실행 방식 문제.
+워크플로우 파일 자체는 정상 (`monitor-daily-lifecycle.yml:110-117`). `android-emulator-runner@v2`의 script 실행 방식 문제.
 
 ## 영향
 
@@ -67,7 +67,7 @@ PR #1131 생성했습니다: https://github.com/Mark-Yun/minglit/pull/1131
 
 - `.github/scripts/run-client-cuj.sh` 신규 추가
 - `.github/scripts/run-partner-cuj.sh` 신규 추가
-- `daily-backend-simulation.yml` — multi-line `script:` 블록을 단일 라인 bash 파일 호출로 교체
+- `monitor-daily-lifecycle.yml` — multi-line `script:` 블록을 단일 라인 bash 파일 호출로 교체
 
 auto-merge 활성화 완료. `ci-result` 통과 시 자동 squash merge.
 

@@ -77,6 +77,6 @@ title: "🚨 Version Bump failed on dev"
 - 최근 10 run은 전부 success — 현상은 자연 해소됐으나 **race window는 그대로 남아 재발 보장**
 
 ### 해결
-`.github/workflows/version-bump.yml` push step에 pull-rebase + retry loop 추가 (#1554에 정확한 diff 포함).
+`.github/workflows/sync-version.yml` push step에 pull-rebase + retry loop 추가 (#1554에 정확한 diff 포함).
 
 실행 추적은 #1554로 이관되었으므로 이 자동 생성 ci-failure 이슈는 close합니다.

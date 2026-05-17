@@ -37,19 +37,19 @@
 |---|-------|------|------|-----------|------|
 | 4 | **pgTAP** | DB 스키마 / 트리거 / RPC / RLS 계약 | `supabase/tests/database/` | pgTAP | PR 마다 |
 | 5 | **Deno EF test** | Edge Function TypeScript 로직 단위 | `supabase/functions/**/*_test.ts` | `deno test` | PR 마다 |
-| 6 | **DB monitor** | Runtime invariant 감시 | `check_db_invariants()` RPC + `.github/workflows/db-invariants.yml` | SQL | 매시간 cron |
-| 7 | **Tick simulator** | 서버 pipeline 관통 시뮬 (시간 전진 + 파이프라인 부하) | `backend-simulator` EF + `.github/workflows/daily-backend-simulation.yml` + `hourly-user-activity.yml` | EF + HTTP | 매시간 + 매일 |
+| 6 | **DB monitor** | Runtime invariant 감시 | `check_db_invariants()` RPC + `.github/workflows/monitor-db-invariants.yml` | SQL | 매시간 cron |
+| 7 | **Tick simulator** | 서버 pipeline 관통 시뮬 (시간 전진 + 파이프라인 부하) | `backend-simulator` EF + `.github/workflows/monitor-daily-lifecycle.yml` + `hourly-user-activity.yml` | EF + HTTP | 매시간 + 매일 |
 
 ### 보조 (taxonomy 밖, 유지)
 
 | 항목 | 위치 | 성격 |
 |------|------|------|
-| Secret scan | `.github/workflows/secret-scan.yml` | 보안 |
-| Migration version check | `ci.yml` job | Pre-test gate |
-| Env manifest sync | `ci.yml` job | 환경변수 정합성 |
-| Landing lint/build | `ci.yml` job | Next.js 빌드 |
-| Allure report | `allure-report.yml` | 결과 집계 |
-| Update goldens | `update-goldens.yml` | Layer 2b 유지보수 |
+| Secret scan | `.github/workflows/triage-secret-scan.yml` | 보안 |
+| Migration version check | `pr-gate.yml` job | Pre-test gate |
+| Env manifest sync | `pr-gate.yml` job | 환경변수 정합성 |
+| Landing lint/build | `pr-gate.yml` job | Next.js 빌드 |
+| Allure report | `monitor-allure.yml` | 결과 집계 |
+| Update goldens | `tool-update-goldens.yml` | Layer 2b 유지보수 |
 
 ---
 
@@ -173,7 +173,7 @@
 | app_user | `apps/app_user/emulator_test/` | 1 | `apple_sign_in` — IntegrationTestWidgetsFlutterBinding |
 | app_partner | — | 0 | Layer 3 테스트 없음. `scenario_screenshots_test.dart` 이 PR에서 삭제됨. |
 
-**Layer 3 런타임 상태**: `patrol-e2e.yml` 복구 완료 (#1673). `app_partner` Layer 3 테스트 0건. 재가동 계획은 §6 로드맵 및 #1586 Phase D-2 참고.
+**Layer 3 런타임 상태**: `monitor-patrol-e2e.yml` 복구 완료 (#1673). `app_partner` Layer 3 테스트 0건. 재가동 계획은 §6 로드맵 및 #1586 Phase D-2 참고.
 
 ### Layer 4 — pgTAP
 
@@ -187,14 +187,14 @@
 ### Layer 6 — DB monitor
 
 - RPC: `check_db_invariants()` (supabase/migrations 에서 정의)
-- 워크플로우: `.github/workflows/db-invariants.yml` — 매시간 cron
+- 워크플로우: `.github/workflows/monitor-db-invariants.yml` — 매시간 cron
 - 상태: **구현 존재. 2026-04-15 이슈 #1549 로 재등록 확인.**
 
 ### Layer 7 — Tick simulator
 
 - EF: `supabase/functions/backend-simulator/`
 - 워크플로우:
-  - `daily-backend-simulation.yml` — 매일 (PR #1584 로 pg_cron 에서 GH Actions 로 이관)
+  - `monitor-daily-lifecycle.yml` — 매일 (PR #1584 로 pg_cron 에서 GH Actions 로 이관)
   - `hourly-user-activity.yml` — 매시간
 - 상태: **정상 동작.**
 
@@ -272,7 +272,7 @@
 
 ### 6.4 CI 연동
 
-- `patrol-e2e.yml`에 통합 (주 1회 또는 매일)
+- `monitor-patrol-e2e.yml`에 통합 (주 1회 또는 매일)
 - 스크린샷 아티팩트 업로드 → Layer 3 agent의 semantic 리뷰 입력으로 활용 (픽셀 비교 아님 — §6.0 참고)
 - 네이티브 E2E (카카오 로그인, PG 결제, 권한)는 실물 디바이스에서만 실행
 
@@ -362,7 +362,7 @@ Flutter 앱은 Skia/Impeller 엔진으로 단일 `FlutterSurfaceView` 위에 렌
 
 - **4개 배포 워크플로우** (Android/iOS × User/Partner)의 필수 Secret을 매트릭스로 정리
 - Partner 전용 Secret (`JUSO_CONFIRM_KEY`)의 `required: false` 선언 불일치 식별 → 개선 제안 포함
-- 배포 실패 알림(`notify-failure.yml`) 동작 검증 케이스 포함
+- 배포 실패 알림(`shared-notify.yml`) 동작 검증 케이스 포함
 
 ---
 
@@ -386,7 +386,7 @@ Flutter 앱은 Skia/Impeller 엔진으로 단일 `FlutterSurfaceView` 위에 렌
 
 - D-2 PoC: 2-3 CUJ Patrol 변환 + CI 돌아감 + 스크린샷 생성 (2026-04)
 - D-2 전량: CUJ 5-10 개 단위로 쪼갠 PR 병합 (15-23일 FTE 예상)
-- D-3-a: `patrol-e2e.yml` 수동 trigger 성공 1회 확인
+- D-3-a: `monitor-patrol-e2e.yml` 수동 trigger 성공 1회 확인
 - D-3-b: matrix shard 6-8 → wall-clock < 20min 달성
 - D-4: 스크린샷 git commit 파이프라인 (또는 auto-PR) 가동
 

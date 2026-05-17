@@ -1,4 +1,4 @@
-name: Slash Label Command
+name: triage-slash
 
 on:
   issue_comment:
@@ -15,7 +15,7 @@ jobs:
       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
     runs-on: self-hosted
     concurrency:
-      group: slash-label-issue-${{ github.event.issue.number }}
+      group: triage-slash-issue-${{ github.event.issue.number }}
       cancel-in-progress: false
     steps:
       - name: Extract and apply label

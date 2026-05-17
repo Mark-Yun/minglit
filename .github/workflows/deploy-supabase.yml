@@ -1,4 +1,4 @@
-name: Deploy Supabase Migrations
+name: deploy-supabase
 
 on:
   push:
@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: supabase-${{ github.ref }}
+  group: deploy-supabase-${{ github.ref }}
   cancel-in-progress: false   # DB 마이그레이션 보호 — 부분 적용 방지
 
 jobs:
@@ -354,7 +354,7 @@ jobs:
     if: always()
     permissions:
       issues: write
-    uses: ./.github/workflows/notify-failure.yml
+    uses: ./.github/workflows/shared-notify.yml
     with:
       success: ${{ needs.deploy.result == 'success' }}
       workflow_name: 'Deploy Supabase Migrations'

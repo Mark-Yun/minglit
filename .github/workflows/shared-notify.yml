@@ -1,4 +1,4 @@
-name: Notify CI Failure
+name: shared-notify
 
 on:
   workflow_call:

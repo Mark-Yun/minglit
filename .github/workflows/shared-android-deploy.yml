@@ -1,4 +1,4 @@
-name: Android Build & Deploy (Reusable)
+name: shared-android-deploy
 
 on:
   workflow_call:
@@ -170,7 +170,7 @@ jobs:
     if: always()
     permissions:
       issues: write
-    uses: ./.github/workflows/notify-failure.yml
+    uses: ./.github/workflows/shared-notify.yml
     with:
       success: ${{ needs.build.result == 'success' }}
       workflow_name: ${{ inputs.notify-workflow-name }}

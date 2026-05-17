@@ -21,8 +21,8 @@
 | 2. `GoldenCapture` 유틸 실행 | CI headless 환경에서 동작 | **런타임 skip** (PR #1539) | headless hang 방지를 위한 임시 조치 — 대체 구현 미완 |
 | 3. CUJ 테스트 실행 경로 | `apps/app_user/test/integration/` 순회 | `run-client-cuj.sh` / `run-partner-cuj.sh` 모두 `test/integration/*_test.dart` 순회 — **경로 수정 완료** (#1557) | 차단 없음 |
 | 4. 상위 파이프라인 (`client-cuj-test`, `partner-cuj-test` job) | 매일 실행 | **skip 지속** | `needs: seed-and-simulate` 의존 — #1553 (CLOSED) / PR #1556 (MERGED 2026-04-18) 으로 선결 해소. 재가동 확인 필요 |
-| 5. Patrol E2E (`patrol-e2e.yml`) | weekly cron | **run 이력 0건** | 한 번도 trigger되지 않음. 수동 실행도 없음 |
-| 6. 아티팩트 업로드 | 생성된 png 보존 | `patrol-e2e.yml:66`은 `if: failure()` + build outputs만 업로드 (스크린샷 아님). `ci.yml`은 golden 실패 / coverage / allure만 업로드 | Tier B 용 retention 경로 미구축 |
+| 5. Patrol E2E (`monitor-patrol-e2e.yml`) | weekly cron | **run 이력 0건** | 한 번도 trigger되지 않음. 수동 실행도 없음 |
+| 6. 아티팩트 업로드 | 생성된 png 보존 | `monitor-patrol-e2e.yml:66`은 `if: failure()` + build outputs만 업로드 (스크린샷 아님). `pr-gate.yml`은 golden 실패 / coverage / allure만 업로드 | Tier B 용 retention 경로 미구축 |
 
 ### 3-Tier 스크린샷 아키텍처
 
@@ -60,7 +60,7 @@
 
 - **캡처는 "비교"가 아니라 "증거 사진"** — Tier C AI agent 의 semantic 리뷰 입력용.
 - 따라서 아티팩트 저장 요구사항이 Tier A (골든 픽셀 비교) 와 다름:
-  - ❌ PR 실패 시에만 업로드 (현재 `patrol-e2e.yml:66` 패턴)
+  - ❌ PR 실패 시에만 업로드 (현재 `monitor-patrol-e2e.yml:66` 패턴)
   - ✅ **매일 성공 run 에서도 전량 저장**, retention 14 일 이상, Tier C agent 가 접근 가능한 경로
 - 따라서 이 문서의 매핑은 "픽셀 고정"이 아니라 **"뭘 촬영할지"** 를 정의하는 쇼트 리스트로 해석.
 

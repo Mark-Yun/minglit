@@ -1,4 +1,4 @@
-name: review-presence
+name: triage-review
 
 on:
   pull_request:

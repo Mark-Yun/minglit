@@ -22,7 +22,7 @@ title: "⚠️ TPM Report — 2026-03-29: iOS 배포 워크플로우 연속 실�
 ## 분석
 
 ### 트리거
-- `ios-deploy-user.yml` / `ios-deploy-partner.yml`이 **매일 cron (UTC 10:00, KST 19:00)**으로 default branch(dev)에서 실행
+- `deploy-ios-user.yml` / `deploy-ios-partner.yml`이 **매일 cron (UTC 10:00, KST 19:00)**으로 default branch(dev)에서 실행
 - push to main (경로 필터) 및 workflow_dispatch도 트리거 가능
 
 ### 실패 패턴

@@ -86,10 +86,10 @@ title: "⚠️ TPM Report — 2026-03-27: iOS deploy 100% 실패 + 이슈 소화
 
 ### 실제 iOS 빌드는 정상
 
-caller 워크플로우(`ios-deploy-user.yml`, `ios-deploy-partner.yml`)는 schedule(매일 KST 19:00)로 정상 실행 중:
+caller 워크플로우(`deploy-ios-user.yml`, `deploy-ios-partner.yml`)는 schedule(매일 KST 19:00)로 정상 실행 중:
 
 ```
-# ios-deploy-user.yml (실제 빌드)
+# deploy-ios-user.yml (실제 빌드)
 23590169924 success event=schedule branch=dev
 23536855113 success event=schedule branch=dev
 23485345999 success event=schedule branch=dev

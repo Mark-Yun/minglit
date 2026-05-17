@@ -78,7 +78,7 @@ title: "⚠️ TPM Report — 2026-03-28: iOS deploy 지속 실패 + ci-failure 
 ### 1. iOS deploy 100% 실패 → phantom run (실제 문제 아님)
 
 #488 분석과 동일. `ios-deploy-reusable.yml`이 push 이벤트에 phantom run 생성.
-- 실제 caller(`ios-deploy-user.yml`, `ios-deploy-partner.yml`)는 schedule로 **정상 실행 중**
+- 실제 caller(`deploy-ios-user.yml`, `deploy-ios-partner.yml`)는 schedule로 **정상 실행 중**
 - 근본 해결: #550 (composite action 전환)에서 처리 예정
 
 ### 2. Daily Backend Simulation 실패 → 수정 완료

@@ -1,4 +1,4 @@
-name: MDS Spec Change → Issue
+name: triage-mds-issue
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       - 'apps/mds/docs/src/components/specs/**'
 
 concurrency:
-  group: mds-spec-change-issue-${{ github.ref }}
+  group: triage-mds-issue-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:

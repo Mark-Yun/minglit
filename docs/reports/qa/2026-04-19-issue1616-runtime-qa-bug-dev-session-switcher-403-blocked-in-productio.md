@@ -60,7 +60,7 @@ Supabase Edge Function에서 서버 사이드로 production 체크를 하고 있
 이 버그는 이미 커밋 `dd08f6bda`에서 수정되었습니다.
 
 **근본 원인**: `dev-session-switch`의 dev-only guard가 `"local" | "development"`만 허용하고 `"dev"`를 차단함.
-`supabase-deploy.yml`이 Supabase dev 프로젝트에 `ENVIRONMENT=dev`를 설정하므로, 배포된 dev 환경에서 호출 시 403 반환.
+`deploy-supabase.yml`이 Supabase dev 프로젝트에 `ENVIRONMENT=dev`를 설정하므로, 배포된 dev 환경에서 호출 시 403 반환.
 
 **수정 내용** (`supabase/functions/dev-session-switch/index.ts`):
 ```

@@ -261,7 +261,7 @@ cd apps/app_user && flutter test test/integration/cuj_signup_to_apply_test.dart
 # Layer 3 (Patrol) — 로컬 emulator 필요
 cd apps/app_user && patrol test --target patrol_test/permission_grant_test.dart
 # 여러 파일: --target 반복 또는 --targets 콤마 구분
-# CI 에서는 patrol-e2e.yml 워크플로우
+# CI 에서는 monitor-patrol-e2e.yml 워크플로우
 
 # Layer 4 pgTAP
 supabase test db
@@ -274,7 +274,7 @@ deno test --allow-all supabase/functions/payment-verify/
 psql -c "SELECT * FROM check_db_invariants();"
 
 # Layer 7 — workflow_dispatch 로 수동 trigger
-gh workflow run daily-backend-simulation.yml --ref dev
+gh workflow run monitor-daily-lifecycle.yml --ref dev
 ```
 
 ---
@@ -301,7 +301,7 @@ gh workflow run daily-backend-simulation.yml --ref dev
 
 ## 8. CI 파이프라인 연동
 
-`.github/workflows/ci.yml` 이 PR 마다 Layer 1 / 2a / 2b / 4 / 5 를 실행.
+`.github/workflows/pr-gate.yml` 이 PR 마다 Layer 1 / 2a / 2b / 4 / 5 를 실행.
 
 | 변경 영역 | 실행 Layer |
 |----------|-----------|
@@ -312,9 +312,9 @@ gh workflow run daily-backend-simulation.yml --ref dev
 | `apps/landing_*/**` | npm lint + build |
 
 추가 워크플로우:
-- `patrol-e2e.yml` — Layer 3 (주 1회 예정, 현재 런 0건)
-- `db-invariants.yml` — Layer 6 (매시간)
-- `daily-backend-simulation.yml` / `hourly-user-activity.yml` — Layer 7
+- `monitor-patrol-e2e.yml` — Layer 3 (주 1회 예정, 현재 런 0건)
+- `monitor-db-invariants.yml` — Layer 6 (매시간)
+- `monitor-daily-lifecycle.yml` / `hourly-user-activity.yml` — Layer 7
 
 ---
 

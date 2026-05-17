@@ -1,4 +1,4 @@
-name: iOS Partner App Deploy
+name: deploy-ios-partner
 
 on:
   push:
@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ios-partner-${{ github.ref }}
+  group: deploy-ios-partner-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -54,7 +54,7 @@ jobs:
     if: always()
     permissions:
       issues: write
-    uses: ./.github/workflows/notify-failure.yml
+    uses: ./.github/workflows/shared-notify.yml
     with:
       success: ${{ needs.ios-deploy.result == 'success' }}
       workflow_name: 'iOS Deploy Partner'

@@ -1,4 +1,4 @@
-name: Deploy to Vercel
+name: deploy-vercel
 
 # NOTE: Consider adding status badges to README.
 
@@ -17,7 +17,7 @@ on:
           - main
 
 concurrency:
-  group: vercel-${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
+  group: deploy-vercel-${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
@@ -222,7 +222,7 @@ jobs:
     if: always()
     permissions:
       issues: write
-    uses: ./.github/workflows/notify-failure.yml
+    uses: ./.github/workflows/shared-notify.yml
     with:
       success: ${{ !contains(needs.*.result, 'failure') }}
       workflow_name: 'Vercel Deploy'

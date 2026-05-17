@@ -112,7 +112,7 @@ adb -s adb-R3CX803P2ND-8btuuD._adb-tls-connect._tcp install -r build/app/outputs
 ## Branch Rebase Rules
 
 - `shared/packages/**`를 수정하는 PR을 생성하기 전에 반드시 `git rebase origin/dev`를 수행한다.
-  ci.yml의 paths filter가 업데이트될 수 있으며, stale branch에서는 새 패키지가 CI 트리거에서 누락될 수 있다.
+  pr-gate.yml의 paths filter가 업데이트될 수 있으며, stale branch에서는 새 패키지가 CI 트리거에서 누락될 수 있다.
 
 ## Branch Protection
 
@@ -168,8 +168,10 @@ adb -s adb-R3CX803P2ND-8btuuD._adb-tls-connect._tcp install -r build/app/outputs
 | CodeRabbit 리뷰 | PR only | `ci-result` job 내에서 최대 30분 대기 |
 
 별도 워크플로우 (required check 아님, 참고용):
-- **Auto Format PR**: PR 시 `dart fix --apply` + `dart format` 자동 적용. 포맷 변경이 있으면 자동 커밋.
-- **Secret Scanning**: PR 시 Gitleaks로 시크릿 유출 검사.
+- **`sync-format`**: PR 시 `dart fix --apply` + `dart format` 자동 적용. 포맷 변경이 있으면 자동 커밋.
+- **`triage-secret-scan`**: PR 시 Gitleaks로 시크릿 유출 검사.
+
+→ 전체 워크플로우 prefix 컨벤션은 [`.github/workflows/BLUEDOC.md`](.github/workflows/BLUEDOC.md) 참고.
 
 ### PR 케어 (생성 → 머지 완료까지)
 
@@ -235,7 +237,7 @@ git push
 
 - Vercel 배포는 cron (2시간마다) + 수동(`workflow_dispatch`)으로 실행된다.
 - PR/push 시 Vercel auto-deploy는 `ignoreCommand`로 차단되어 있다.
-- 즉시 배포가 필요하면: GitHub Actions → Deploy to Vercel → Run workflow → branch 선택 → 실행.
+- 즉시 배포가 필요하면: GitHub Actions → `deploy-vercel` → Run workflow → branch 선택 → 실행.
 - 4개 앱(app_user, app_partner, landing_user, landing_partner) 모두 매 cron마다 deploy된다.
 
 ## Bug Fix Conventions

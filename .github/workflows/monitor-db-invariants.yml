@@ -1,4 +1,4 @@
-name: "Hourly: DB Invariant Monitor"
+name: monitor-db-invariants
 
 on:
   schedule:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: db-invariant-monitor
+  group: monitor-db-invariants
   cancel-in-progress: false
 
 jobs:

@@ -42,8 +42,8 @@ Minglit의 모든 Edge Function (EF) 인증/인가 모델을 기술한다.
 
 ```
 GH Secret (SUPABASE_*_SECRET_KEY)
-  ├─→ EF env (Supabase 플랫폼 자동 주입 — supabase-deploy.yml 의 supabase secrets set 안 거침)
-  └─→ Vault (CI sync — supabase-deploy.yml 의 Sync Vault secrets step)
+  ├─→ EF env (Supabase 플랫폼 자동 주입 — deploy-supabase.yml 의 supabase secrets set 안 거침)
+  └─→ Vault (CI sync — deploy-supabase.yml 의 Sync Vault secrets step)
         └─→ cron 이 SELECT 하여 Bearer 헤더에 사용
 ```
 
@@ -579,7 +579,7 @@ EFContext
     # done
 ```
 
-`ci.yml` 의 `test-edge-functions` job 에 dependency 추가하여 `ci-result` 게이트 합류.
+`pr-gate.yml` 의 `test-edge-functions` job 에 dependency 추가하여 `ci-result` 게이트 합류.
 
 `#3` 활성화 시점: Phase 4 (모든 EF 마이그레이션 완료 후).
 `#4` 활성화 시점: Phase 5 (옛 헬퍼 제거 후).

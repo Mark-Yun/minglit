@@ -1,4 +1,4 @@
-name: Version Bump
+name: sync-version
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
     branches: [dev, main]
 
 concurrency:
-  group: version-bump-${{ github.base_ref }}
+  group: sync-version-${{ github.base_ref }}
   cancel-in-progress: false
 
 permissions:
@@ -108,7 +108,7 @@ jobs:
     if: always()
     permissions:
       issues: write
-    uses: ./.github/workflows/notify-failure.yml
+    uses: ./.github/workflows/shared-notify.yml
     with:
       success: ${{ needs.bump.result == 'success' || needs.bump.result == 'skipped' }}
       workflow_name: 'Version Bump'
