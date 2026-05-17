@@ -524,8 +524,138 @@ jobs:
       - name: Check cross-feature imports
         run: bash scripts/check-cross-feature-imports.sh
 
+  # CUJ integration tests on emulator — pattern: integration_test/cuj/<category>/<feature>_test.dart
+  # Engine + BLUEDOC: apps/<app>/integration_test/cuj/BLUEDOC.md
+  test-integration-app-user-cuj:
+    name: cuj-integration-user
+    needs: changes
+    if: needs.changes.outputs.app_user_or_kit == 'true'
+    runs-on: [self-hosted, android]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Create dev Flutter env file
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_DEV_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+          ENVIRONMENT: development
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN_FLUTTER }}
+          STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
+          GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_DEV_WEB_CLIENT_ID }}
+          KAKAO_LOCAL_REST_API_KEY: ${{ secrets.KAKAO_LOCAL_REST_API_KEY }}
+          KAKAO_MAP_JAVASCRIPT_KEY: ${{ secrets.KAKAO_MAP_JAVASCRIPT_KEY }}
+          JUSO_CONFIRM_KEY: ${{ secrets.JUSO_CONFIRM_KEY }}
+          IAMPORT_USER_CODE: ${{ secrets.IAMPORT_USER_CODE }}
+          MOBILE_REDIRECT_SCHEME: ${{ secrets.MOBILE_REDIRECT_SCHEME }}
+        run: bash .github/scripts/create-dev-flutter-env.sh
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: apps/app_user
+
+      - name: Enable KVM acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+
+      - name: Run CUJ tests on Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          profile: pixel_6
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          script: bash .github/scripts/run-user-cuj.sh
+
+      - name: Upload test artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: cuj-integration-app-user-${{ github.run_id }}
+          path: apps/app_user/build/app/outputs/
+          retention-days: 14
+
+  test-integration-app-partner-cuj:
+    name: cuj-integration-partner
+    needs: changes
+    if: needs.changes.outputs.app_partner_or_kit == 'true'
+    runs-on: [self-hosted, android]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Create dev Flutter env file
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_DEV_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+          ENVIRONMENT: development
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN_FLUTTER }}
+          STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
+          GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_DEV_WEB_CLIENT_ID }}
+          KAKAO_LOCAL_REST_API_KEY: ${{ secrets.KAKAO_LOCAL_REST_API_KEY }}
+          KAKAO_MAP_JAVASCRIPT_KEY: ${{ secrets.KAKAO_MAP_JAVASCRIPT_KEY }}
+          JUSO_CONFIRM_KEY: ${{ secrets.JUSO_CONFIRM_KEY }}
+          IAMPORT_USER_CODE: ${{ secrets.IAMPORT_USER_CODE }}
+          MOBILE_REDIRECT_SCHEME: ${{ secrets.MOBILE_REDIRECT_SCHEME }}
+        run: bash .github/scripts/create-dev-flutter-env.sh
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: apps/app_partner
+
+      - name: Enable KVM acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+
+      - name: Run CUJ tests on Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          profile: pixel_6
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          script: bash .github/scripts/run-partner-cuj.sh
+
+      - name: Upload test artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: cuj-integration-app-partner-${{ github.run_id }}
+          path: apps/app_partner/build/app/outputs/
+          retention-days: 14
+
   ci-result:
-    needs: [check-migration-versions, check-env-manifest-sync, check-workflow-yaml, check-android-test-deps, check-cross-feature-imports, test-flutter-apps, lint-landing-user, lint-landing-partner, lint-mds-docs, lint-mds-icons, test-supabase, test-edge-functions]
+    needs: [check-migration-versions, check-env-manifest-sync, check-workflow-yaml, check-android-test-deps, check-cross-feature-imports, test-flutter-apps, test-integration-app-user-cuj, test-integration-app-partner-cuj, lint-landing-user, lint-landing-partner, lint-mds-docs, lint-mds-icons, test-supabase, test-edge-functions]
     if: always()
     runs-on: [self-hosted, ephemeral]
     steps:
