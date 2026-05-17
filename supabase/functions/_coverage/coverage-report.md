@@ -2,8 +2,71 @@
 
 # Deno EF Unit Test Coverage
 
-**Generated**: (initial — 첫 dev push 시 monitor-deno-coverage 워크플로우가 실 데이터로 덮어씀)
+**Generated**: `2026-05-17T12:36:55.237Z`
+**Overall**: 29.5% (31613/107116 lines covered across 54 EFs)
 
-본 파일은 [.github/workflows/monitor-deno-coverage.yml](../../../.github/workflows/monitor-deno-coverage.yml) 가 `supabase/functions/**` push to dev 마다 자동 갱신.
+## Per-EF Coverage (sorted by % asc — lowest first)
 
-상세는 [BLUEDOC.md](./BLUEDOC.md) 참조.
+|   | EF | Coverage | Lines | Files |
+|---|---|---|---|---|
+| 🔴 | metrics-alert | 12.6% | 13/103 | 1 |
+| 🔴 | payout-sync | 12.9% | 64/498 | 3 |
+| 🔴 | partner-manage-event | 13.4% | 1907/14220 | 30 |
+| 🔴 | user-submit-verification | 16.1% | 531/3290 | 14 |
+| 🔴 | apply-event | 17.8% | 949/5340 | 15 |
+| 🔴 | notification-worker | 19.8% | 896/4526 | 13 |
+| 🔴 | event-checkin | 22.0% | 421/1914 | 11 |
+| 🔴 | user-manage-settings | 22.6% | 583/2584 | 17 |
+| 🔴 | github-stats-sync | 23.4% | 44/188 | 2 |
+| 🔴 | user-create-order | 23.5% | 1139/4845 | 19 |
+| 🔴 | partner-review-submission | 23.9% | 619/2592 | 18 |
+| 🔴 | user-manage-social | 24.1% | 394/1632 | 12 |
+| 🔴 | partner-manage-match | 25.8% | 530/2057 | 17 |
+| 🔴 | user-cancel-order | 26.6% | 1518/5698 | 22 |
+| 🔴 | user-cancel-deletion | 27.7% | 82/296 | 4 |
+| 🔴 | partner-register | 27.7% | 2114/7620 | 30 |
+| 🔴 | dev-seed | 28.2% | 196/696 | 8 |
+| 🔴 | user-get-ticket-token | 28.4% | 145/510 | 5 |
+| 🔴 | user-manage-notification | 28.8% | 176/612 | 9 |
+| 🔴 | settlement-register-transfers | 29.0% | 169/582 | 6 |
+| 🔴 | user-cast-vote | 29.3% | 653/2232 | 18 |
+| 🔴 | ai-embed | 29.4% | 902/3069 | 14 |
+| 🔴 | cleanup-retention | 30.0% | 873/2907 | 17 |
+| 🔴 | reconciliation-daily | 30.0% | 492/1638 | 7 |
+| 🔴 | partner-approve-application | 30.3% | 707/2336 | 16 |
+| 🔴 | recurrence-cron | 30.6% | 1107/3612 | 14 |
+| 🔴 | event-matching | 31.0% | 350/1128 | 8 |
+| 🔴 | payment-webhook | 31.1% | 498/1599 | 13 |
+| 🔴 | settlement-transfer | 31.7% | 142/448 | 7 |
+| 🔴 | settlement-query | 33.1% | 111/335 | 5 |
+| 🔴 | payment-verify | 33.3% | 546/1638 | 13 |
+| 🔴 | user-update-verification | 33.8% | 201/595 | 7 |
+| 🔴 | identity-verify | 34.6% | 168/486 | 6 |
+| 🔴 | partner-review-applications | 34.7% | 233/672 | 7 |
+| 🔴 | partner-sync | 34.8% | 134/385 | 5 |
+| 🔴 | commit-match-likes | 35.7% | 307/860 | 5 |
+| 🔴 | user-delete-account | 36.3% | 459/1266 | 6 |
+| 🔴 | partner-manage-member | 36.4% | 970/2662 | 22 |
+| 🔴 | ai-extract-tags | 38.7% | 561/1451 | 9 |
+| 🔴 | partner-reject-application | 39.5% | 291/737 | 11 |
+| 🔴 | partner-manage-verification | 40.4% | 1183/2926 | 22 |
+| 🔴 | partner-manage-settlement | 43.7% | 669/1530 | 17 |
+| 🔴 | user-event-feed | 44.0% | 1023/2324 | 14 |
+| 🔴 | dev-mock-portone | 45.3% | 155/342 | 6 |
+| 🔴 | user-mark-match-results-viewed | 45.8% | 108/236 | 4 |
+| 🔴 | payment-cancel | 46.5% | 892/1918 | 14 |
+| 🔴 | cleanup-blocked-dis | 48.2% | 27/56 | 2 |
+| 🔴 | process-pending-deletions | 49.9% | 1180/2365 | 5 |
+| 🔴 | health | 65.1% | 703/1080 | 8 |
+| 🔴 | dev-session-switch | 66.7% | 28/42 | 3 |
+| 🟡 | bug-report | 70.1% | 599/855 | 9 |
+| 🟡 | recurrence-rules | 78.3% | 1014/1295 | 31 |
+| 🟡 | partner-manage-party | 78.9% | 1443/1830 | 49 |
+| 🟡 | event-flow-simulator | 86.0% | 394/458 | 16 |
+
+## Legend
+
+- 🟢 ≥90%  /  🟡 70-89%  /  🔴 <70%
+- Lines = hit/total (non-test .ts files only)
+- 본 리포트는 `supabase/functions/**` push to dev 마다 자동 갱신 (`[skip ci]`)
+- PR diff coverage (변경 라인 ≥90%) 는 `pr-gate.yml` 의 `test-edge-functions` 잡 별도 gate
