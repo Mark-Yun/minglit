@@ -6,7 +6,8 @@
 
 | 문서 | 내용 |
 |------|------|
-| [client.md](docs/architecture/client.md) | Flutter 앱 아키텍처 (Feature-first, Coordinator, Repository, Design System) |
+| [apps/BLUEDOC.md](apps/BLUEDOC.md) + [apps/architecture.md](apps/architecture.md) | Flutter 앱 공통 아키텍처 (Feature-first, Coordinator, Routing, Data Flow) — 앱별 디테일은 `apps/<app>/BLUEDOC.md` |
+| [shared/packages/minglit_kit/BLUEDOC.md](shared/packages/minglit_kit/BLUEDOC.md) + [architecture.md](shared/packages/minglit_kit/architecture.md) | 공용 클라이언트 패키지 (Repository, Provider 조직, Design System, Error Handling) |
 | [backend.md](docs/architecture/backend.md) | Supabase 백엔드 (29 테이블, Edge Functions, RLS, Triggers) |
 | [trust-and-verification.md](docs/architecture/trust-and-verification.md) | 2-layer 신뢰 모델 (Identity + Qualification) |
 | [payment-pipeline.md](docs/architecture/payment-pipeline.md) | 결제/정산 파이프라인 |
