@@ -12,7 +12,7 @@ on:
 jobs:
   seed:
     name: Run Seeder
-    runs-on: self-hosted
+    runs-on: [self-hosted, ephemeral]
     # Safety Guard 1: Only run on dev branch, or if manually triggered.
     # Also ensures the triggering workflow (migrations) was successful.
     if: >

@@ -12,7 +12,7 @@ concurrency:
 jobs:
   simulate:
     name: Run User Activity Simulation
-    runs-on: self-hosted
+    runs-on: [self-hosted, ephemeral]
     timeout-minutes: 10
     steps:
       - name: Run user activity simulation

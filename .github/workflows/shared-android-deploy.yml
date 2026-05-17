@@ -61,7 +61,7 @@ on:
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: [self-hosted, ephemeral]
     environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
     defaults:
       run:
