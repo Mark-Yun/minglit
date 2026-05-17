@@ -35,7 +35,9 @@ Widget _buildTestWidget({List<Override> extraOverrides = const []}) {
 
 void main() {
   group('SearchPage a11y — Fix #2390', () {
-    testWidgets('TextField has Semantics label for screen readers', (tester) async {
+    testWidgets('TextField has Semantics label for screen readers', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildTestWidget());
       await tester.pump();
 
@@ -46,7 +48,9 @@ void main() {
       expect(semanticsFinder, findsOneWidget);
     });
 
-    testWidgets('clear button has tooltip when text is present', (tester) async {
+    testWidgets('clear button has tooltip when text is present', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildTestWidget());
       await tester.pump();
 
@@ -62,7 +66,9 @@ void main() {
       expect(iconButton.tooltip, '입력 지우기');
     });
 
-    testWidgets('clear button is absent when text field is empty', (tester) async {
+    testWidgets('clear button is absent when text field is empty', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildTestWidget());
       await tester.pump();
 
