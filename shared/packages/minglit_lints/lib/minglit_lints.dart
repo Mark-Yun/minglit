@@ -3,6 +3,7 @@ import 'package:minglit_lints/src/no_cross_feature_imports_rule.dart';
 import 'package:minglit_lints/src/no_hardcoded_colors_rule.dart';
 import 'package:minglit_lints/src/no_hardcoded_padding_rule.dart';
 import 'package:minglit_lints/src/no_hardcoded_text_style_rule.dart';
+import 'package:minglit_lints/src/no_supabase_writes_outside_ef_rule.dart';
 import 'package:minglit_lints/src/use_minglit_async_value_widget_rule.dart';
 import 'package:minglit_lints/src/use_minglit_progress_indicator_rule.dart';
 
@@ -17,5 +18,6 @@ class _MinglitLintsPlugin extends PluginBase {
         const UseMinglitProgressIndicatorRule(),
         const UseMinglitAsyncValueWidgetRule(),
         const NoCrossFeatureImportsRule(),
+        const NoSupabaseWritesOutsideEfRule(),
       ];
 }

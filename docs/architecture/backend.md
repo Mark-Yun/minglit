@@ -392,6 +392,31 @@ protect_user_profile_fields() → trigger
 | `party-assets` | Yes | Authenticated | 전체 공개 |
 | `partner-proofs` | No | 본인 폴더만 | 본인 + 관리자 |
 
+### 5.4 Flutter Write Enforcement
+
+Flutter 앱(publishable key = anon/authenticated role)은 **READ 전용**이다.
+모든 write는 service_role을 사용하는 Edge Function 경유로만 허용한다.
+
+#### 강제 수단 (다층 방어)
+
+| 계층 | 수단 | 상태 |
+|------|------|------|
+| IDE | `no_supabase_writes_outside_ef` custom_lint 룰 | ✅ 운영 중 (`shared/packages/minglit_lints/`) |
+| CI | `dart run custom_lint` PR-gate 스텝 | 진행 중 (issue #2392) |
+| DB | `REVOKE INSERT/UPDATE/DELETE/TRUNCATE FROM anon, authenticated` | 진행 중 (issue #2393 Phase 3) |
+
+#### lint 룰: `no_supabase_writes_outside_ef`
+
+- **위치**: `shared/packages/minglit_lints/lib/src/no_supabase_writes_outside_ef_rule.dart`
+- **차단 패턴**: `.from('table').insert/update/delete/upsert(...)`
+- **허용 패턴**: `.from('table').select(...)`, `.functions.invoke(...)`, `.rpc(...)`
+- **억제 방법** (마이그레이션 과도기 한정):
+  ```dart
+  // minglit_lints: allow-supabase-write — reason: EF 마이그레이션 2026-07-01까지 예정
+  supabase.from('legacy_table').insert(data);
+  ```
+  `reason:` 필드 필수. 이유 없는 억제 주석은 lint error.
+
 ---
 
 ## 6. Key Triggers & Functions
