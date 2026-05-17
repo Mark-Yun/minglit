@@ -10,6 +10,22 @@ import 'package:riverpod/misc.dart';
 part 'event_application_manage_tab.dart';
 part 'event_application_manage_widgets.dart';
 
+// [mds-change] #2384: AppBar info icon 추가 — event_application_manage_page spec 동기화
+const _kApplicationHelpSections = [
+  HelpSection(
+    title: '신청 승인은 어떻게 하나요?',
+    body: '대기중 탭에서 신청자의 "승인" 버튼을 누르면 즉시 처리돼요. 승인된 참가자에게 티켓이 자동 발급됩니다.',
+  ),
+  HelpSection(
+    title: '거절하면 어떻게 되나요?',
+    body: '참가자에게 거절 알림이 전송되고 거절됨 탭으로 이동해요. 한번 거절한 신청은 되돌릴 수 없으니 신중하게 결정해 주세요.',
+  ),
+  HelpSection(
+    title: '신청 관리는 언제까지 가능한가요?',
+    body: '이벤트 시작 전까지 신청을 승인·거절할 수 있어요. 이벤트가 시작되면 더 이상 변경할 수 없습니다.',
+  ),
+];
+
 /// Event application management page — grouped by event with inline approve/reject.
 class EventApplicationManagePage extends ConsumerStatefulWidget {
   const EventApplicationManagePage({super.key});
@@ -44,6 +60,18 @@ class _EventApplicationManagePageState
       appBar: AppBar(
         title: const Text('신청관리'),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            iconSize: 22,
+            tooltip: '도움말',
+            onPressed: () => showMinglitHelpSheet(
+              context: context,
+              title: '신청관리 가이드',
+              sections: _kApplicationHelpSections,
+            ),
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [

@@ -16,6 +16,22 @@ import 'package:app_partner/src/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
+// [mds-change] #2384: AppBar info icon 추가 — partner_home_page spec 동기화
+const _kHomeHelpSections = [
+  HelpSection(
+    title: '대시보드에서 무엇을 할 수 있나요?',
+    body: '현재 진행 중인 이벤트, 모집 중인 이벤트, 임박한 일정을 한눈에 확인할 수 있어요.',
+  ),
+  HelpSection(
+    title: '이벤트는 어디서 만드나요?',
+    body: '하단 탭의 파티 관리에서 파티를 만든 뒤 이벤트를 추가할 수 있어요. 파티는 여러 이벤트를 묶는 단위예요.',
+  ),
+  HelpSection(
+    title: '신청자 관리는 어떻게 하나요?',
+    body: '하단 탭의 신청관리에서 대기 중인 신청을 승인하거나 거절할 수 있어요.',
+  ),
+];
+
 class PartnerHomePage extends ConsumerWidget {
   const PartnerHomePage({super.key});
 
@@ -42,6 +58,16 @@ class PartnerHomePage extends ConsumerWidget {
         centerTitle: false,
         surfaceTintColor: Colors.transparent,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            iconSize: 22,
+            tooltip: '도움말',
+            onPressed: () => showMinglitHelpSheet(
+              context: context,
+              title: '파트너 홈 가이드',
+              sections: _kHomeHelpSections,
+            ),
+          ),
           const BugReportAction(),
           Stack(
             clipBehavior: Clip.none,
