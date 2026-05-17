@@ -138,6 +138,38 @@ Deno.test({
   },
 });
 
+// ─── Recursive traversal ──────────────────────────────────────────────────────
+
+Deno.test({
+  name: "recursive: true + subdir .md files → exit 0 (files counted)",
+  fn: async () => {
+    const { code, stdout } = await runLint([`${FIXTURES}/valid-recursive/FRESH_DOC`]);
+    assertEquals(code, 0, `stdout: ${stdout}`);
+    assertEquals(stdout.includes("OK"), true, `stdout: ${stdout}`);
+  },
+});
+
+Deno.test({
+  name: "recursive: true + nested FRESH_DOC boundary → parent passes with own .md",
+  fn: async () => {
+    // recursive-with-nested/FRESH_DOC is recursive: true, has overview.md.
+    // nested/ has its own FRESH_DOC so it's excluded from parent's count.
+    const { code, stdout } = await runLint([`${FIXTURES}/recursive-with-nested/FRESH_DOC`]);
+    assertEquals(code, 0, `stdout: ${stdout}`);
+    assertEquals(stdout.includes("OK"), true, `stdout: ${stdout}`);
+  },
+});
+
+Deno.test({
+  name: "recursive: nested FRESH_DOC itself validates independently → exit 0",
+  fn: async () => {
+    const { code, stdout } = await runLint([
+      `${FIXTURES}/recursive-with-nested/nested/FRESH_DOC`,
+    ]);
+    assertEquals(code, 0, `stdout: ${stdout}`);
+  },
+});
+
 // ─── Output format ────────────────────────────────────────────────────────────
 
 Deno.test({

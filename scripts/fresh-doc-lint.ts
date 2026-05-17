@@ -9,6 +9,7 @@
 import { parse as parseYaml } from "jsr:@std/yaml@1";
 import { walkSync, expandGlobSync } from "jsr:@std/fs@1";
 import { join, resolve, relative, dirname } from "jsr:@std/path@1";
+import { globToRegExp } from "jsr:@std/path@1/glob";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -28,6 +29,20 @@ interface Diagnostic {
   field?: string;
   message: string;
   severity: Severity;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+// jsr:@std/yaml@1 parses bare YAML dates (e.g. `last_verified: 2026-05-13`)
+// as JavaScript Date objects. Normalize to YYYY-MM-DD string.
+function normalizeDate(val: unknown): string | null {
+  if (val instanceof Date) {
+    const y = val.getUTCFullYear();
+    const m = String(val.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(val.getUTCDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+  return typeof val === "string" ? val : null;
 }
 
 // ─── Validation ──────────────────────────────────────────────────────────────
@@ -50,12 +65,18 @@ function validateSchema(doc: FreshDoc): Diagnostic[] {
     });
   }
 
-  // Required: last_verified
+  // Required: last_verified — normalize Date objects produced by the YAML parser
   if (doc.last_verified === undefined || doc.last_verified === null) {
     diags.push({ field: "last_verified", message: "required field missing", severity: "error" });
   } else {
-    const lv = String(doc.last_verified);
-    if (!DATE_REGEX.test(lv)) {
+    const lv = normalizeDate(doc.last_verified);
+    if (lv === null) {
+      diags.push({
+        field: "last_verified",
+        message: `must be a date string (YYYY-MM-DD), got ${typeof doc.last_verified}`,
+        severity: "error",
+      });
+    } else if (!DATE_REGEX.test(lv)) {
       diags.push({
         field: "last_verified",
         message: `invalid date format '${lv}' (expected: YYYY-MM-DD)`,
@@ -151,21 +172,55 @@ function validateSchema(doc: FreshDoc): Diagnostic[] {
 function validateReferences(filePath: string, doc: FreshDoc, repoRoot: string): Diagnostic[] {
   const diags: Diagnostic[] = [];
   const fileAbsDir = dirname(resolve(repoRoot, filePath));
+  const isRecursive = doc.recursive === true;
 
   const excludePatterns: string[] = Array.isArray(doc.exclude)
     ? (doc.exclude as string[]).filter((p) => typeof p === "string")
     : [];
 
-  // Check that directory has ≥1 .md file after exclude
+  // When recursive, pre-collect subdirs that have their own FRESH_DOC.
+  // Files under those directories are managed by the nested FRESH_DOC, not this one.
+  const nestedBoundaries = new Set<string>();
+  if (isRecursive) {
+    try {
+      for (const entry of walkSync(fileAbsDir, { includeDirs: false })) {
+        if (entry.name === "FRESH_DOC" && entry.path !== join(fileAbsDir, "FRESH_DOC")) {
+          nestedBoundaries.add(dirname(entry.path));
+        }
+      }
+    } catch { /* not readable */ }
+  }
+
+  function isUnderNestedBoundary(absPath: string): boolean {
+    let dir = dirname(absPath);
+    while (dir.length > fileAbsDir.length && dir.startsWith(fileAbsDir)) {
+      if (nestedBoundaries.has(dir)) return true;
+      dir = dirname(dir);
+    }
+    return false;
+  }
+
+  function matchesExclude(rel: string): boolean {
+    return excludePatterns.some((pat) => {
+      try {
+        return globToRegExp(pat, { extended: true, globstar: true }).test(rel);
+      } catch {
+        return false;
+      }
+    });
+  }
+
+  // Collect .md files — depth=1 for non-recursive, unlimited for recursive
+  const walkOpts = isRecursive
+    ? { exts: [".md"], includeDirs: false }
+    : { maxDepth: 1, exts: [".md"], includeDirs: false };
+
   const mdFiles: string[] = [];
   try {
-    for (const entry of walkSync(fileAbsDir, { maxDepth: 1, exts: [".md"], includeDirs: false })) {
+    for (const entry of walkSync(fileAbsDir, walkOpts)) {
+      if (isRecursive && isUnderNestedBoundary(entry.path)) continue;
       const rel = relative(fileAbsDir, entry.path);
-      const excluded = excludePatterns.some((pat) => {
-        try { return new RegExp(`^${pat.replace(/\*/g, ".*")}$`).test(rel); }
-        catch { return false; }
-      });
-      if (!excluded) mdFiles.push(rel);
+      if (!matchesExclude(rel)) mdFiles.push(rel);
     }
   } catch {
     // Directory not readable — skip
@@ -183,14 +238,10 @@ function validateReferences(filePath: string, doc: FreshDoc, repoRoot: string): 
   for (const pat of excludePatterns) {
     let anyMatch = false;
     try {
-      for (const entry of walkSync(fileAbsDir, { maxDepth: 1, exts: [".md"], includeDirs: false })) {
+      for (const entry of walkSync(fileAbsDir, walkOpts)) {
+        if (isRecursive && isUnderNestedBoundary(entry.path)) continue;
         const rel = relative(fileAbsDir, entry.path);
-        try {
-          if (new RegExp(`^${pat.replace(/\*/g, ".*")}$`).test(rel)) {
-            anyMatch = true;
-            break;
-          }
-        } catch { /* ignore invalid pattern */ }
+        if (matchesExclude(rel)) { anyMatch = true; break; }
       }
     } catch { /* ignore walk errors */ }
 
@@ -230,10 +281,12 @@ function validateReferences(filePath: string, doc: FreshDoc, repoRoot: string): 
 
 // ─── Dry-run ──────────────────────────────────────────────────────────────────
 
-function dryRunStatus(filePath: string, doc: FreshDoc, today: Date, repoRoot: string): string {
+// filePath removed — it was unused (dead code after return)
+function dryRunStatus(doc: FreshDoc, today: Date, repoRoot: string): string {
   const hasCycle = typeof doc.cycle === "string" && CYCLE_REGEX.test(doc.cycle);
   const hasWatched = Array.isArray(doc.watched_paths);
-  const lastVerified = new Date(`${String(doc.last_verified)}T00:00:00Z`);
+  const lvStr = normalizeDate(doc.last_verified);
+  const lastVerified = lvStr ? new Date(`${lvStr}T00:00:00Z`) : new Date(NaN);
 
   if (isNaN(lastVerified.getTime())) return `UNKNOWN (invalid last_verified)`;
 
@@ -261,16 +314,15 @@ function dryRunStatus(filePath: string, doc: FreshDoc, today: Date, repoRoot: st
       const out = new TextDecoder().decode(result.stdout).trim();
       if (out.length > 0) {
         const count = out.split("\n").length;
-        return `STALE (watched_paths, ${count} commit${count > 1 ? "s" : ""} since ${String(doc.last_verified)})`;
+        return `STALE (watched_paths, ${count} commit${count > 1 ? "s" : ""} since ${lvStr})`;
       }
-      return `FRESH (watched_paths, no commits since ${String(doc.last_verified)})`;
+      return `FRESH (watched_paths, no commits since ${lvStr})`;
     } catch {
       return `UNKNOWN (git error)`;
     }
   }
 
   return `UNKNOWN (no valid trigger)`;
-  void filePath;
 }
 
 // ─── File discovery ───────────────────────────────────────────────────────────
@@ -337,7 +389,7 @@ async function main(): Promise<void> {
 
     if (allDiags.length === 0) {
       if (isDryRun) {
-        const status = dryRunStatus(filePath, doc, today, repoRoot);
+        const status = dryRunStatus(doc, today, repoRoot);
         console.log(`${filePath}: ${status}`);
       } else {
         console.log(`${filePath}: OK`);

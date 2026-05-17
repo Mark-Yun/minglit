@@ -1,0 +1,6 @@
+cycle: 30d
+priority: P3-low
+last_verified: 2026-05-13
+recursive: false
+refresh_method: |
+  nested 디렉토리를 독립적으로 관리한다.
