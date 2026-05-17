@@ -9,7 +9,7 @@
 ### 1차 목적
 > **PR 머지 전에 backend 비즈니스 규칙 위반을 잡는다.**
 
-예: "user 가 partner 를 block 한 후 refund 시도 → EF 가 거부해야 함" 같은 **여러 EF 호출이 엮여서 emerge 하는 규칙**. 단일 EF 단위 테스트로는 잡히지 않고, production 에서야 발견되는 부류.
+예: "결제 완료 (`event_applications.status='paid'`) 인데 대응 payment row 가 없는 경우" 같은 **여러 EF 호출이 엮여서 emerge 하는 정합 규칙**. 단일 EF 단위 테스트로는 잡히지 않고, production 에서야 발견되는 부류. (실 invariant set 정의는 Part 2.B 의 별도 RFC)
 
 ### 2차 목적
 - **Dev DB 의 다양한 상태 사전 준비** (paid, refunded, blocked, matched, no-show ...) — manual QA 시 발견 비용 ↓
@@ -54,28 +54,22 @@
 
 ### Cross-EF 버그가 emerge 하는 메커니즘
 
-너 예시 (`block → refund` 거부 위반) 자동 검증:
+예시 — money conservation (가설, 실 정의는 후속 RFC):
 
-1. User policy 가 매 cascade step 에서 `block_partner` (확률 ~0.05) 와 `refund` (paid 보유 시 ~0.10) 를 독립 sampling
-2. 10K simulated user × N tick 돌리면 — 통계적으로 수십 명이 "block 후 같은 partner event refund" 경로 자연 진입
-3. 만약 EF 가 잘못해서 환불 허용 → 다음 invariant 가 위반 잡음:
+1. User policy 가 매 cascade step 에서 `apply` / `pay` / `refund` 액션을 확률 sampling
+2. N tick 돌리면 — 통계적으로 일부 application 이 `paid → refunded` 흐름까지 도달
+3. 만약 어떤 EF 가 application.status 만 변경하고 payment row 갱신 누락 → 다음 invariant 가 위반 잡음:
 
 ```sql
--- invariant: blocked_partner_refund_denied
+-- 가상 invariant 예시: paid 인데 대응 payment row 없음
 SELECT a.id FROM event_applications a
-JOIN refunds r ON r.application_id = a.id
-JOIN events e ON e.id = a.event_id
-JOIN parties p ON p.id = e.party_id
-WHERE EXISTS (
-  SELECT 1 FROM social_interactions s
-   WHERE s.user_id = a.user_id
-     AND s.target_id = p.partner_id
-     AND s.interaction_type = 'block'
-     AND s.created_at < r.created_at
-)
+LEFT JOIN payments p ON p.application_id = a.id
+WHERE a.status = 'paid' AND p.id IS NULL
 ```
 
 **시나리오 따로 안 적음**. policy + invariant 만 있으면 random walk 가 자동으로 조합 탐색.
+
+> ⚠️ **진짜 invariant set 은 미정의** — minglit 의 실 비즈니스 규칙 (money conservation, settlement coverage, match integrity, participant ordering, event lifecycle, PGMQ DLQ 등) 은 각각 SQL 검증 + 실 정합 확인 필요. 본 PR 은 invariant 인프라 (`_registry.ts`) 까지만 — 실 invariant 도입은 [follow-up RFC](#).
 
 ### 확률 파라미터 철학
 
@@ -123,11 +117,9 @@ backend-simulator/
 │
 ├── invariant/            # WHY — cross-EF 비즈니스 규칙 검증
 │   ├── _registry.ts
-│   ├── money.ts          # 결제 합 ≈ 환불 + 정산 + 미정산
-│   ├── blocking.ts       # blocked partner 에 환불/매칭/notification 안 감
-│   ├── matching.ts       # mutual vote 만 match
-│   ├── lifecycle.ts      # event status 전이 규칙 (scheduled→active→ongoing→completed)
-│   └── pgmq.ts           # PGMQ 큐 무결성 (depth, DLQ, enqueue/consume balance)
+│   # 본 PR 은 _registry.ts 인프라만. 실 invariant 정의는 별도 RFC.
+│   # 후보: money conservation / settlement coverage / match integrity /
+│   # participant ordering / event lifecycle / PGMQ DLQ
 │
 └── modes/                # 호출 패턴 — params × cascade depth 조합
     ├── tick.ts           # hourly :30 — short cascade, default params
@@ -151,7 +143,7 @@ backend-simulator/
 | 1 | core 엔진 PoC | `core/policy.ts`, `core/observable.ts`, `core/cascade.ts` 작성 + 단순 cascade (apply 1단계) 동작 | 1주 | 단위 테스트 |
 | 2 | 액션 마이그 | 기존 8 SimAction → `action/*.ts` 8 파일. 기존 *_test.ts 유지 | 1주 | 기존 deno test 통과 |
 | 3 | policy + params | `policy/user.ts`, `policy/partner.ts`, `params/default.ts` 작성 | 3-4일 | small cascade run → 액션 발생 검증 |
-| 4 | invariant 초기 set | money / blocking / matching / lifecycle / pgmq 5개 invariant 정의 (SQL + JS) | 1주 | stress params 로 의도적 위반 → 잡히는지 검증 |
+| 4 | invariant 초기 set | 실 비즈니스 규칙 정의 RFC (후보: money conservation / settlement coverage / match integrity / participant ordering / event lifecycle / PGMQ DLQ) — 각 규칙은 실 코드/스키마 정합 확인 선행 필요. 가설 invariant 작성 금지 | 2-3주 | stress params 로 의도적 위반 → 잡히는지 검증 |
 | 5 | `modes/tick.ts` | 얇은 wrapper. 기존 hourly :30 cron 동작 보장 | 2일 | 1회 dispatch → 기존과 동등 결과 |
 | 6 | `modes/pr-gate.ts` + CI | PR 머지 전 cascade 실행 + invariant 위반 시 PR 차단 | 2-3일 | 의도된 회귀 PR 1개로 차단 검증 |
 | 7 | `modes/seed.ts` + phase 삭제 | dev DB 시딩 (단, 초기 fixture 는 SQL seed 사용 — EF 타임아웃 우회). 옛 phase 모드 5 파일 삭제 | 3-4일 | seed 1회 실행 후 dev 상태 다양성 측정 |

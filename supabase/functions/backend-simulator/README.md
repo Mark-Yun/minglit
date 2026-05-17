@@ -22,7 +22,7 @@ curl -X POST "https://<project>.supabase.co/functions/v1/backend-simulator" \
 - `action/` — 8 액션 (apply/refund/checkin/discover/vote/block + partner_approve/reject/create_event)
 - `policy/` — user/partner 가중 sampling
 - `params/` — 확률 데이터 (default.ts)
-- `invariant/` — cross-EF 규칙 (현재: blocking 1개, 점진 확장)
+- `invariant/` — cross-EF 규칙 registry (본 PR 인프라만, 실 invariant 정의는 follow-up RFC)
 
 ## 옛 코드와의 차이 (vs phase/tick 모드)
 

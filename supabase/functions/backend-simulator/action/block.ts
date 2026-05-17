@@ -1,8 +1,8 @@
 // action/block.ts — UserActionBlock (direct DB write — social_interactions upsert)
 //
 // 본 액션은 EF 가 아닌 client-side direct write (현 minglit 의 social_repository 패턴).
-// cascade 의 cross-EF 가드 (blocking invariant) 와 연동 — block 이 발생해야 invariant 가
-// 의미 있는 violation 탐지 가능.
+// 차단의 실제 효과는 user-event-feed RPC 의 anti-join 에서만 드러남 (다른 EF 에
+// cross-cutting 가드 없음 — block-trigger invariant 가설 금지).
 
 import type { ActionDef } from "./_registry.ts";
 import { registerAction } from "./_registry.ts";

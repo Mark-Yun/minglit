@@ -24,9 +24,9 @@ import type { Actor, ActorId } from "./core/types.ts";
 import { defaultRates } from "./params/default.ts";
 import { checkAll } from "./invariant/_registry.ts";
 
-// side-effect imports: 모든 액션 / invariant 등록
+// side-effect imports: 모든 액션 등록.
+// invariant 는 현재 인프라만 — 실 invariant set 은 별도 RFC (architecture.md Part 2.B)
 import "./action/index.ts";
-import "./invariant/blocking.ts";
 
 const FN = "backend-simulator";
 

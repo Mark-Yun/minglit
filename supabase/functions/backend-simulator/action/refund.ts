@@ -1,6 +1,6 @@
 // action/refund.ts — UserActionRefund (EF: user-cancel-order)
 //
-// Critical EF — cross-EF 가드 대상 (blocking invariant 와 연동).
+// Critical EF — confirm policy 의 negative 확률 슬라이트 ↑ 대상 (params/default.ts).
 
 import type { ActionDef } from "./_registry.ts";
 import { registerAction } from "./_registry.ts";

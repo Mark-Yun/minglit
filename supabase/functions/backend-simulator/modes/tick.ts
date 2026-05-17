@@ -7,9 +7,9 @@ import { defaultRates } from "../params/default.ts";
 import { checkAll, type InvariantViolation } from "../invariant/_registry.ts";
 import type { WorldSnapshot } from "../core/observable.ts";
 
-// side-effect import — 등록만 발생
-import "../action/apply.ts";
-import "../invariant/blocking.ts";
+// side-effect import — 액션 일괄 등록.
+// invariant 는 본 PR 인프라만 (실 invariant 정의는 별도 RFC, architecture.md Part 2.B)
+import "../action/index.ts";
 
 export interface TickModeResult {
   cascade: CascadeResult;

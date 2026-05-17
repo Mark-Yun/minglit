@@ -24,7 +24,7 @@ curl -X POST "https://<project>.supabase.co/functions/v1/backend-simulator" \
 - `action/` — 8 액션 (apply/refund/checkin/discover/vote/block + partner_approve/reject/create_event)
 - `policy/` — user/partner 가중 sampling 정책
 - `params/` — 확률 데이터 (default.ts — happy 0.85-0.95 / critical negative 0.05-0.15)
-- `invariant/` — cross-EF 규칙 (현재: blocking 1개)
+- `invariant/` — cross-EF 규칙 registry (본 PR 인프라만, 실 invariant 정의는 follow-up RFC)
 - `modes/` — 호출 패턴 wrapper (현재: tick.ts)
 
 ## 트리거 / 환경 가드
@@ -42,4 +42,4 @@ curl -X POST "https://<project>.supabase.co/functions/v1/backend-simulator" \
 
 ## 한계 / 개선 계획
 
-현재 구조의 본질적 한계 — EF 커버리지 15%, tick 모드 invariant 0, cross-EF 비즈니스 규칙 자동 탐색 못 함 (예: "block → refund 거부" 같은 다단계 규칙) — 와 v2 **Stochastic Cascade** 모델 (backend 를 확률적 funnel 로 모델링, invariant 1개로 N 시나리오 가드) 는 [architecture.md](./architecture.md) 참조.
+v2 **Stochastic Cascade** 모델 (backend 를 확률적 funnel 로 모델링, invariant 1개로 N 시나리오 자동 가드) 도입 완료. 다만 실 invariant set 은 아직 미정의 — 진짜 minglit cross-EF 규칙 (money conservation, settlement coverage, match integrity 등) 은 별도 RFC 로 도입 예정. 상세는 [architecture.md](./architecture.md).
