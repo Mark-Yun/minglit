@@ -466,6 +466,50 @@ jobs:
         run: deno test --allow-all functions/
         working-directory: supabase
 
+  # EF integration test — 빈 local Supabase + 외부 mock 으로 실 schema/trigger/RLS contract 검증
+  # 설계: supabase/functions/_integration_tests/architecture.md
+  test-ef-integration:
+    name: test-ef-integration
+    needs: changes
+    if: ${{ needs.changes.outputs.supabase == 'true' }}
+    runs-on: [self-hosted, ephemeral]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: supabase/setup-cli@v2
+        with:
+          version: latest
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Start local Supabase
+        run: supabase start
+
+      - name: Apply migrations only (db reset --no-seed)
+        run: supabase db reset --no-seed
+
+      - name: Capture supabase env
+        id: env
+        run: |
+          {
+            echo "url=$(supabase status -o env | grep '^API_URL=' | cut -d= -f2-)"
+            echo "service_role_key=$(supabase status -o env | grep '^SERVICE_ROLE_KEY=' | cut -d= -f2-)"
+            echo "anon_key=$(supabase status -o env | grep '^ANON_KEY=' | cut -d= -f2-)"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Run integration tests
+        env:
+          SUPABASE_URL: ${{ steps.env.outputs.url }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ steps.env.outputs.service_role_key }}
+          SUPABASE_ANON_KEY: ${{ steps.env.outputs.anon_key }}
+          SIM_USER_PASSWORD: ${{ secrets.SIM_USER_PASSWORD }}
+        run: deno test --allow-all supabase/functions/_integration_tests/cuj/
+
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop || true
+
   # Workflow YAML 파싱 검증 (항상 실행 — db-invariants #1593 회귀 방지)
   check-workflow-yaml:
     runs-on: [self-hosted, ephemeral]
@@ -565,7 +609,7 @@ jobs:
     secrets: inherit
 
   ci-result:
-    needs: [check-migration-versions, check-env-manifest-sync, check-workflow-yaml, check-android-test-deps, check-cross-feature-imports, gitleaks, test-flutter-apps, test-integration-app-user-cuj, test-integration-app-partner-cuj, lint-landing-user, lint-landing-partner, lint-mds-docs, lint-mds-icons, test-supabase, test-edge-functions]
+    needs: [check-migration-versions, check-env-manifest-sync, check-workflow-yaml, check-android-test-deps, check-cross-feature-imports, gitleaks, test-flutter-apps, test-integration-app-user-cuj, test-integration-app-partner-cuj, lint-landing-user, lint-landing-partner, lint-mds-docs, lint-mds-icons, test-supabase, test-edge-functions, test-ef-integration]
     if: always()
     runs-on: [self-hosted, ephemeral]
     steps:
