@@ -1,0 +1,181 @@
+name: sync-test-coverage
+
+# dev push 시 각 Flutter 프로젝트의 테스트 커버리지 (lcov.info + summary.md) 를
+# tests/_coverage/<project>/ 로 갱신·commit.
+#
+# 매트릭스로 변경된 프로젝트만 측정해서 noise 줄임. 변경 없으면 commit skip.
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - 'apps/app_user/lib/**'
+      - 'apps/app_user/test/**'
+      - 'apps/app_user/pubspec.yaml'
+      - 'apps/app_partner/lib/**'
+      - 'apps/app_partner/test/**'
+      - 'apps/app_partner/pubspec.yaml'
+      - 'shared/packages/minglit_kit/lib/**'
+      - 'shared/packages/minglit_kit/test/**'
+      - 'shared/packages/minglit_kit/pubspec.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-test-coverage-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    runs-on: [self-hosted, ephemeral]
+    permissions:
+      contents: read
+    outputs:
+      app_user: ${{ steps.filter.outputs.app_user }}
+      app_partner: ${{ steps.filter.outputs.app_partner }}
+      minglit_kit: ${{ steps.filter.outputs.minglit_kit }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            app_user:
+              - 'apps/app_user/lib/**'
+              - 'apps/app_user/test/**'
+              - 'apps/app_user/pubspec.yaml'
+              - 'shared/packages/minglit_kit/lib/**'
+            app_partner:
+              - 'apps/app_partner/lib/**'
+              - 'apps/app_partner/test/**'
+              - 'apps/app_partner/pubspec.yaml'
+              - 'shared/packages/minglit_kit/lib/**'
+            minglit_kit:
+              - 'shared/packages/minglit_kit/lib/**'
+              - 'shared/packages/minglit_kit/test/**'
+              - 'shared/packages/minglit_kit/pubspec.yaml'
+
+  coverage:
+    needs: changes
+    runs-on: [self-hosted, ephemeral]
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - project: app_user
+            directory: apps/app_user
+            change_key: app_user
+          - project: app_partner
+            directory: apps/app_partner
+            change_key: app_partner
+          - project: minglit_kit
+            directory: shared/packages/minglit_kit
+            change_key: minglit_kit
+    steps:
+      - name: Skip if project unchanged
+        if: ${{ needs.changes.outputs[matrix.change_key] != 'true' }}
+        run: echo "::notice::No changes affecting ${{ matrix.project }} — skipping coverage refresh"
+
+      - uses: actions/checkout@v6
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
+        with:
+          ref: dev
+          token: ${{ secrets.GH_PAT_VERSION_BUMP }}
+          fetch-depth: 1
+
+      - uses: subosito/flutter-action@v2
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
+        run: flutter pub get
+        working-directory: ${{ matrix.directory }}
+
+      - name: Run tests with coverage
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
+        run: flutter test --coverage --exclude-tags golden
+        working-directory: ${{ matrix.directory }}
+
+      - name: Generate summary + relocate lcov
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
+        run: |
+          set -euo pipefail
+          PROJECT="${{ matrix.project }}"
+          DIR="${{ matrix.directory }}"
+          OUT="tests/_coverage/${PROJECT}"
+          mkdir -p "${OUT}"
+
+          if [ ! -f "${DIR}/coverage/lcov.info" ]; then
+            echo "::error::${DIR}/coverage/lcov.info not produced"
+            exit 1
+          fi
+          cp "${DIR}/coverage/lcov.info" "${OUT}/lcov.info"
+
+          # Parse lcov.info → summary.md
+          python3 - <<'PY' "${OUT}/lcov.info" "${OUT}/summary.md" "${PROJECT}"
+          import sys, datetime
+          lcov_path, out_path, project = sys.argv[1], sys.argv[2], sys.argv[3]
+          total_lf = total_lh = file_count = 0
+          per_file = []
+          current = {}
+          with open(lcov_path) as f:
+              for line in f:
+                  line = line.strip()
+                  if line.startswith('SF:'):
+                      current = {'path': line[3:], 'lf': 0, 'lh': 0}
+                      file_count += 1
+                  elif line.startswith('LF:'):
+                      current['lf'] = int(line[3:])
+                  elif line.startswith('LH:'):
+                      current['lh'] = int(line[3:])
+                  elif line == 'end_of_record':
+                      total_lf += current.get('lf', 0)
+                      total_lh += current.get('lh', 0)
+                      lf, lh = current.get('lf', 0), current.get('lh', 0)
+                      pct = (100.0 * lh / lf) if lf else 0.0
+                      per_file.append((current['path'], lh, lf, pct))
+                      current = {}
+          overall = (100.0 * total_lh / total_lf) if total_lf else 0.0
+          lowest = sorted([p for p in per_file if p[2] >= 10], key=lambda p: p[3])[:10]
+          with open(out_path, 'w') as f:
+              f.write(f'# {project} — test coverage\n\n')
+              f.write(f'_Generated: {datetime.datetime.utcnow().isoformat(timespec="seconds")}Z_\n\n')
+              f.write(f'**Overall: {overall:.2f}%** ({total_lh:,} / {total_lf:,} lines, {file_count} files)\n\n')
+              f.write('## Lowest 10 (≥10 lines)\n\n')
+              f.write('| File | Hit / Total | % |\n|---|---|---|\n')
+              for path, lh, lf, pct in lowest:
+                  f.write(f'| `{path}` | {lh}/{lf} | {pct:.1f}% |\n')
+          print(f'overall: {overall:.2f}%  files: {file_count}  lines: {total_lh}/{total_lf}')
+          PY
+
+      - name: Commit & push if changed
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
+        env:
+          GH_PAT: ${{ secrets.GH_PAT_VERSION_BUMP }}
+          PROJECT: ${{ matrix.project }}
+        run: |
+          OUT="tests/_coverage/${PROJECT}"
+          if git diff --quiet "${OUT}/"; then
+            echo "::notice::No coverage changes for ${PROJECT}"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "${OUT}/lcov.info" "${OUT}/summary.md"
+          git commit -m "chore(coverage): refresh ${PROJECT} [skip ci]"
+          git remote set-url origin "https://x-access-token:${GH_PAT}@github.com/${GITHUB_REPOSITORY}.git"
+          # Fix race: rebase + retry
+          for i in 1 2 3; do
+            git pull --rebase origin dev 2>/dev/null || true
+            git push origin HEAD:dev && break
+            echo "push attempt $i failed, retrying..."
+            sleep 5
+          done
+          git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
