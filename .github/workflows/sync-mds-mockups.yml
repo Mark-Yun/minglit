@@ -1,4 +1,4 @@
-name: Render MDS spec mockups
+name: sync-mds-mockups
 
 on:
   push:
@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: render-spec-mockups
+  group: sync-mds-mockups
   cancel-in-progress: true
 
 permissions:

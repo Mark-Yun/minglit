@@ -59,7 +59,7 @@ Branch protection required check `review-presence`가 **여전히 활성화되�
 
 **추천: B (근본 수정)**.
 
-`review-presence.yml` 의 check 로직 (formalReviews 또는 reviewer completion comment 검사)을 `ci-result.yml` 의 한 step으로 이식하고, `review-presence` 워크플로우는 삭제하거나 informational로 강등. 이후 branch protection에서 `review-presence` required 제거 (Admin 권한 필요).
+`triage-review.yml` 의 check 로직 (formalReviews 또는 reviewer completion comment 검사)을 `ci-result.yml` 의 한 step으로 이식하고, `review-presence` 워크플로우는 삭제하거나 informational로 강등. 이후 branch protection에서 `review-presence` required 제거 (Admin 권한 필요).
 
 **즉시 조치**: 현재 BLOCKED 상태의 approved PR이 또 있으면 TPM이 주기적으로 `gh run rerun` 실행. (오늘 #1767, #1766, #1764 에 대해 조치 완료 → #1767, #1764 머지됨)
 

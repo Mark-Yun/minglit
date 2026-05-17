@@ -1,4 +1,4 @@
-name: "Daily: Allure Test Report Aggregation"
+name: monitor-allure
 
 on:
   schedule:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: allure-report
+  group: monitor-allure
   cancel-in-progress: true
 
 jobs:
@@ -24,7 +24,7 @@ jobs:
       - name: Download Allure Results (app_user)
         uses: dawidd6/action-download-artifact@v21
         with:
-          workflow: ci.yml
+          workflow: pr-gate.yml
           name: allure-results-app_user
           path: allure-results/
           if_no_artifact_found: warn
@@ -33,7 +33,7 @@ jobs:
       - name: Download Allure Results (app_partner)
         uses: dawidd6/action-download-artifact@v21
         with:
-          workflow: ci.yml
+          workflow: pr-gate.yml
           name: allure-results-app_partner
           path: allure-results/
           if_no_artifact_found: warn
@@ -42,7 +42,7 @@ jobs:
       - name: Download Allure Results (minglit_kit)
         uses: dawidd6/action-download-artifact@v21
         with:
-          workflow: ci.yml
+          workflow: pr-gate.yml
           name: allure-results-minglit_kit
           path: allure-results/
           if_no_artifact_found: warn
@@ -52,7 +52,7 @@ jobs:
       - name: Download Coverage (app_user)
         uses: dawidd6/action-download-artifact@v21
         with:
-          workflow: ci.yml
+          workflow: pr-gate.yml
           name: app-user-coverage
           path: coverage/app_user/
           if_no_artifact_found: warn
@@ -61,7 +61,7 @@ jobs:
       - name: Download Coverage (app_partner)
         uses: dawidd6/action-download-artifact@v21
         with:
-          workflow: ci.yml
+          workflow: pr-gate.yml
           name: app-partner-coverage
           path: coverage/app_partner/
           if_no_artifact_found: warn
@@ -70,7 +70,7 @@ jobs:
       - name: Download Coverage (minglit_kit)
         uses: dawidd6/action-download-artifact@v21
         with:
-          workflow: ci.yml
+          workflow: pr-gate.yml
           name: minglit-kit-coverage
           path: coverage/minglit_kit/
           if_no_artifact_found: warn

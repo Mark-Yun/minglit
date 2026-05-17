@@ -41,11 +41,11 @@ title: "🚨 Daily Backend Simulation failed on dev"
 
 ### 요약
 - 에러: \`psql ... FATAL: (ENOTFOUND) tenant/user postgres.*** not found\` — host \`aws-0-ap-northeast-2.pooler.supabase.com\`
-- \`.github/workflows/daily-backend-simulation.yml:29\` 에 pooler host가 옛 \`aws-0\`로 하드코딩됨
+- \`.github/workflows/monitor-daily-lifecycle.yml:29\` 에 pooler host가 옛 \`aws-0\`로 하드코딩됨
 - **#1499/#1553과 완전히 동일한 원인** (Supabase pooler 인프라 `aws-0` → `aws-1` 이전 미대응)
 - 영향: 2026-04-10부터 매일 scheduled run 10일 연속 실패
 
 ### 조치
-#1553의 스코프를 `supabase-deploy.yml` + `daily-backend-simulation.yml` 두 파일로 확장했습니다. 하나의 fix(`aws-0` → `aws-1`) + 하드코딩 제거 장기안으로 양쪽 동시 해소됩니다.
+#1553의 스코프를 `deploy-supabase.yml` + `monitor-daily-lifecycle.yml` 두 파일로 확장했습니다. 하나의 fix(`aws-0` → `aws-1`) + 하드코딩 제거 장기안으로 양쪽 동시 해소됩니다.
 
 실행 추적은 #1553으로 이관되었으므로 이 자동 생성 ci-failure 이슈는 close합니다.

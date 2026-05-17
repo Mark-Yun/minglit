@@ -93,6 +93,6 @@ Co-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.
 - 증거: 에러 로그 `ENOTFOUND tenant/user postgres.***`, 대시보드 Connection pooling 표기, `supabase/.temp/pooler-url` CLI 생성 값 모두 `aws-1` 일치
 
 ### 해결
-`.github/workflows/supabase-deploy.yml:132` 한 줄 수정 + 하드코딩 제거 장기안은 #1553 참고.
+`.github/workflows/deploy-supabase.yml:132` 한 줄 수정 + 하드코딩 제거 장기안은 #1553 참고.
 
 실행 추적은 #1553으로 이관되었으므로 이 자동 생성 ci-failure 이슈는 close합니다.

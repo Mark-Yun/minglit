@@ -49,7 +49,7 @@ docs/standards/FRESH_DOC: FRESH (cycle 90d, 45d elapsed)
 
 ## CI 통합
 
-`.github/workflows/ci.yml` 에 job 추가:
+`.github/workflows/pr-gate.yml` 에 job 추가:
 
 - 트리거: `docs/**/FRESH_DOC` 또는 `scripts/fresh-doc-lint.ts` 변경
 - 단계: validator 실행. 1·2 단계 실패 시 CI fail.

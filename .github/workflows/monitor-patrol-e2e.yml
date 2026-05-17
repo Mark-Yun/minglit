@@ -9,7 +9,7 @@
 #
 # Fix #1673: patrol_cli 4.x requires patrol_test/ directory — moved tests from integration_test/
 
-name: "Weekly: Emulator Test (Patrol native surface)"
+name: monitor-patrol-e2e
 
 on:
   schedule:
@@ -18,7 +18,7 @@ on:
 
 # Fix #1457: schedule + manual 실행 겹침 시 병렬 실행 방지
 concurrency:
-  group: patrol-e2e
+  group: monitor-patrol-e2e
   cancel-in-progress: false
 
 jobs:
@@ -30,7 +30,7 @@ jobs:
 
       # Fix: CI checkout does not include the private minglit_env submodule.
       # Rebuild the dev Flutter env file from Actions secrets before running Patrol.
-      # Same pattern as daily-backend-simulation.yml (Fix #1169).
+      # Same pattern as monitor-daily-lifecycle.yml (Fix #1169).
       - name: Create dev Flutter env file
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_DEV_URL }}

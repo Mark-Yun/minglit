@@ -41,7 +41,7 @@ Vercel Deploy 워크플로우가 **20시간+** 연속으로 성공하지 못하�
 
 ## 근본 원인 분석
 
-`deploy.yml`의 `concurrency.cancel-in-progress: true` + 2시간 cron 간격에서 deploy 시간이 2시간을 초과하면:
+`deploy-vercel.yml`의 `concurrency.cancel-in-progress: true` + 2시간 cron 간격에서 deploy 시간이 2시간을 초과하면:
 1. cron이 새 run을 시작
 2. concurrency 설정이 이전 run을 cancel
 3. 새 run도 2시간 내 완료 못함

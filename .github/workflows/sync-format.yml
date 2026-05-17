@@ -1,4 +1,4 @@
-name: Auto Format PR
+name: sync-format
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
     types: [opened, synchronize, reopened]
 
 concurrency:
-  group: auto-format-${{ github.event.pull_request.number }}
+  group: sync-format-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:
@@ -75,7 +75,7 @@ jobs:
     if: ${{ always() && needs.auto-format.result == 'failure' }}
     permissions:
       issues: write
-    uses: ./.github/workflows/notify-failure.yml
+    uses: ./.github/workflows/shared-notify.yml
     with:
       success: false
       workflow_name: 'Auto Format'

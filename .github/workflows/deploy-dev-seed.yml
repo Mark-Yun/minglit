@@ -1,9 +1,9 @@
-name: Seed Dev Database
+name: deploy-dev-seed
 
 on:
   workflow_dispatch: # Manual trigger
   workflow_run:      # Auto-trigger after migration
-    workflows: ["Deploy Supabase Migrations"]
+    workflows: ["deploy-supabase"]
     types:
       - completed
     branches:
@@ -63,7 +63,7 @@ jobs:
     if: ${{ always() && needs.seed.result == 'failure' }}
     permissions:
       issues: write
-    uses: ./.github/workflows/notify-failure.yml
+    uses: ./.github/workflows/shared-notify.yml
     with:
       success: ${{ needs.seed.result == 'success' }}
       workflow_name: 'Seed Dev'

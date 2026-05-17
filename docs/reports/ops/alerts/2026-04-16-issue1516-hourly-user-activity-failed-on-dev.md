@@ -35,7 +35,7 @@ title: "🚨 Hourly User Activity failed on dev"
 `backend-simulator` EF의 **tick mode가 `SIM_USER_PASSWORD` 환경변수 미설정으로 즉시 throw** → \`curl\` exit 22 (HTTP 5xx). `hourly-user-activity.yml:20`에서 `{\"mode\":\"tick\"}` POST 호출이 실패한 것.
 
 ### 영구 fix (대기 중)
-커밋 **`f2032dd3e` (\"fix(ci): SIM_USER_PASSWORD secret 추가 — tick simulator 500 해소\")** 가 \`supabase-deploy.yml\`에 \`supabase secrets set SIM_USER_PASSWORD=...\` 한 줄을 추가하여 deploy 시 자동 주입.
+커밋 **`f2032dd3e` (\"fix(ci): SIM_USER_PASSWORD secret 추가 — tick simulator 500 해소\")** 가 \`deploy-supabase.yml\`에 \`supabase secrets set SIM_USER_PASSWORD=...\` 한 줄을 추가하여 deploy 시 자동 주입.
 
 - 현재 브랜치 `fix/deploy-seed-cli`에 존재, **dev 미머지**
 - 이 fix가 실제 효과 보려면 **#1553 (pooler host 수정)으로 Deploy Supabase Migrations가 먼저 성공해야 함** — deploy 자체가 깨져있는 동안에는 secret이 EF에 push되지 않음

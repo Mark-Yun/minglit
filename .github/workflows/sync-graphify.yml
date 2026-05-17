@@ -1,4 +1,4 @@
-name: Graphify Auto-Update
+name: sync-graphify
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: graphify-update
+  group: sync-graphify
   cancel-in-progress: false
 
 permissions:

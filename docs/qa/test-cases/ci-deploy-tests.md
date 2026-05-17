@@ -9,9 +9,9 @@
 
 ## 1. 배포 워크플로우별 필수 Secret 매트릭스
 
-### 1.1 Android 배포 (Reusable: `android-deploy-reusable.yml`)
+### 1.1 Android 배포 (Reusable: `shared-android-deploy.yml`)
 
-| Secret | User (`android-deploy.yml`) | Partner (`android-deploy-partner.yml`) | 용도 |
+| Secret | User (`deploy-android-user.yml`) | Partner (`deploy-android-partner.yml`) | 용도 |
 |--------|:---:|:---:|------|
 | `ANDROID_KEYSTORE_BASE64` | **필수** | **필수** | 서명용 keystore (base64) |
 | `ANDROID_KEYSTORE_PASSWORD` | **필수** | **필수** | keystore 비밀번호 |
@@ -31,7 +31,7 @@
 
 ### 1.2 iOS 배포 (Action: `.github/actions/ios-deploy/`)
 
-| Secret | User (`ios-deploy-user.yml`) | Partner (`ios-deploy-partner.yml`) | 용도 |
+| Secret | User (`deploy-ios-user.yml`) | Partner (`deploy-ios-partner.yml`) | 용도 |
 |--------|:---:|:---:|------|
 | `APPLE_CERTIFICATE_BASE64` | **필수** | **필수** | Apple 서명 인증서 |
 | `APPLE_CERTIFICATE_PASSWORD` | **필수** | **필수** | 인증서 비밀번호 |
@@ -67,9 +67,9 @@ Secret 추가/변경 시 아래 체크리스트로 검증한다:
 
 | # | 워크플로우 | 스텝 | 트리거 조건 | 기대 동작 | 실패 시 |
 |---|-----------|------|-----------|-----------|---------|
-| CD-V01 | `android-deploy-reusable.yml` | `Validate JUSO key for partner` | `app-name == 'partner'` | `JUSO_CONFIRM_KEY` 비어있으면 exit 1 | 빌드 중단 + 에러 메시지 |
+| CD-V01 | `shared-android-deploy.yml` | `Validate JUSO key for partner` | `app-name == 'partner'` | `JUSO_CONFIRM_KEY` 비어있으면 exit 1 | 빌드 중단 + 에러 메시지 |
 | CD-V02 | `.github/actions/ios-deploy/` | `Validate JUSO key for partner` | `app-name == 'partner'` | 동일 | 빌드 중단 + 에러 메시지 |
-| CD-V03 | `android-deploy-reusable.yml` | `Decode Keystore` | 항상 | keystore base64 디코딩 성공 | 서명 실패 → 빌드 에러 |
+| CD-V03 | `shared-android-deploy.yml` | `Decode Keystore` | 항상 | keystore base64 디코딩 성공 | 서명 실패 → 빌드 에러 |
 | CD-V04 | `ios-deploy` action | `Import signing certificate` | 항상 | 인증서 임포트 성공 | codesign 실패 |
 | CD-V05 | `ios-deploy` action | `Install provisioning profile` | 항상 | UUID 추출 + 설치 성공 | 아카이브 실패 |
 
@@ -77,8 +77,8 @@ Secret 추가/변경 시 아래 체크리스트로 검증한다:
 
 | # | 시나리오 | 트리거 | 기대 결과 |
 |---|----------|--------|-----------|
-| CD-N01 | Android Partner 빌드 실패 | `build` job 실패 | `notify-failure.yml` → 이슈 자동 생성 |
-| CD-N02 | iOS Partner 빌드 실패 | `ios-deploy` job 실패 | `notify-failure.yml` → 이슈 자동 생성 |
+| CD-N01 | Android Partner 빌드 실패 | `build` job 실패 | `shared-notify.yml` → 이슈 자동 생성 |
+| CD-N02 | iOS Partner 빌드 실패 | `ios-deploy` job 실패 | `shared-notify.yml` → 이슈 자동 생성 |
 | CD-N03 | Android User 빌드 성공 | `build` job 성공 | 알림 이슈 미생성 |
 | CD-N04 | iOS User 빌드 성공 | `ios-deploy` job 성공 | 알림 이슈 미생성 |
 
@@ -140,7 +140,7 @@ Secret 추가/변경 시 아래 체크리스트로 검증한다:
 | # | 취약점 | 영향 | 제안 |
 |---|--------|------|------|
 | CD-I01 | `JUSO_CONFIRM_KEY`가 reusable workflow에서 `required: false` | Partner 빌드 시 런타임 실패 (빌드 스텝까지 가야 발견) | `required: true`로 변경하거나, partner workflow에서 전달 전 검증 |
-| CD-I02 | User 앱에 `JUSO_CONFIRM_KEY` 전달 안 됨 (android-deploy.yml) | User 앱에서 주소 검색 기능 사용 시 빈 값 → 런타임 에러 가능 | User 앱에서 JUSO API 사용 여부 확인 후 필요 시 추가 |
+| CD-I02 | User 앱에 `JUSO_CONFIRM_KEY` 전달 안 됨 (deploy-android-user.yml) | User 앱에서 주소 검색 기능 사용 시 빈 값 → 런타임 에러 가능 | User 앱에서 JUSO API 사용 여부 확인 후 필요 시 추가 |
 | CD-I03 | Secret 만료 모니터링 없음 | Apple 인증서/프로비저닝 만료 시 배포 중단 | 인증서 만료일 체크 워크플로우 추가 (월 1회 cron) |
 
 ---

@@ -44,7 +44,7 @@ and not in import map from ".../supabase/functions/_shared/supabase_client.ts"
 - `db push` (마이그레이션)는 성공 추정 — `functions deploy`에서 실패
 
 **권장 조치**:
-- [ ] `version: latest` → 직전 성공 버전으로 pin (`.github/workflows/supabase-deploy.yml` L29)
+- [ ] `version: latest` → 직전 성공 버전으로 pin (`.github/workflows/deploy-supabase.yml` L29)
 - [ ] 또는 Supabase CLI changelog 확인 후 import map 형식 업데이트
 
 **판단 요청**: `version: latest` 정책을 pin으로 전환하는 것이 적절한지 확인 부탁드립니다. SWE가 바로 수정 가능하도록 #1357에 needs-swe 라우팅 완료.
@@ -90,7 +90,7 @@ and not in import map from ".../supabase/functions/_shared/supabase_client.ts"
 
 ### Supabase Deploy 10연속 실패
 이미 진단 완료 + 수정 이슈 존재:
-- **#1228** — \`supabase-deploy.yml\` verification 스텝을 pooler 엔드포인트로 전환
+- **#1228** — \`deploy-supabase.yml\` verification 스텝을 pooler 엔드포인트로 전환
 - **Root cause**: \`db.{ref}.supabase.co\`의 A(IPv4) 레코드 제거됨 → GitHub runner에서 DNS 해석 불가
 - **실제 migration 배포는 정상** — \`supabase db push\`(CLI)는 내부적으로 pooler 사용하므로 성공. verification 스텝만 실패해서 workflow red 표시
 - \`supabase migration list --linked\`로 dev DB에 모든 migration 반영 확인됨

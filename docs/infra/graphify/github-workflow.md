@@ -1,6 +1,6 @@
 # Graphify 자동 갱신 워크플로우
 
-`.github/workflows/graphify-update.yml` 이 `graphify-out/` 을 자동으로 갱신한다. 로컬 hook 을 대체한다.
+`.github/workflows/sync-graphify.yml` 이 `graphify-out/` 을 자동으로 갱신한다. 로컬 hook 을 대체한다.
 
 ## 트리거
 
@@ -32,7 +32,7 @@
 ## 권한
 
 - `contents: write` — graphify-out 갱신 커밋용
-- `GH_PAT_VERSION_BUMP` 시크릿 — 보호된 `dev` 에 직접 push (version-bump.yml 과 동일 패턴)
+- `GH_PAT_VERSION_BUMP` 시크릿 — 보호된 `dev` 에 직접 push (sync-version.yml 과 동일 패턴)
 
 ## 실패 시 동작
 

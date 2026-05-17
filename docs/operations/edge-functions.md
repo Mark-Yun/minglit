@@ -114,7 +114,7 @@ supabase functions list --project-ref <project-ref>
 Edge Function 배포는 CI를 통해서만 한다 (직접 `supabase functions deploy` 금지).
 
 ```
-feature branch → PR → dev 머지 → supabase-deploy.yml 자동 실행
+feature branch → PR → dev 머지 → deploy-supabase.yml 자동 실행
 ```
 
 `supabase/functions/**` 경로 변경 시 자동 트리거.
@@ -230,7 +230,7 @@ Assertion 실패 시 GitHub 이슈가 자동 생성되며, 이슈에 Axiom 쿼�
 
 ### Edge Function 배포가 안 될 때
 
-1. CI 워크플로우 확인: `gh run list --workflow=supabase-deploy.yml`
+1. CI 워크플로우 확인: `gh run list --workflow=deploy-supabase.yml`
 2. `supabase/functions/**` 경로 변경이 포함되었는지 확인
 3. `workflow_dispatch`로 수동 트리거 가능
 

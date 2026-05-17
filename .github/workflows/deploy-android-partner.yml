@@ -1,4 +1,4 @@
-name: Android Build & Deploy (Partner)
+name: deploy-android-partner
 
 on:
   push:
@@ -12,12 +12,12 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: android-partner-${{ github.ref }}
+  group: deploy-android-partner-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   deploy:
-    uses: ./.github/workflows/android-deploy-reusable.yml
+    uses: ./.github/workflows/shared-android-deploy.yml
     with:
       app-name: partner
       app-directory: apps/app_partner
