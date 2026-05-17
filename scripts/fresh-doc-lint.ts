@@ -9,7 +9,7 @@
 import { parse as parseYaml } from "jsr:@std/yaml@1";
 import { walkSync, expandGlobSync } from "jsr:@std/fs@1";
 import { join, resolve, relative, dirname } from "jsr:@std/path@1";
-import { globToRegExp } from "jsr:@std/path@1/glob";
+import { globToRegExp } from "jsr:@std/path@1/glob-to-regexp";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -329,7 +329,7 @@ function dryRunStatus(doc: FreshDoc, today: Date, repoRoot: string): string {
 
 function findFreshDocFiles(repoRoot: string): string[] {
   const files: string[] = [];
-  for (const entry of walkSync(repoRoot, { includeDirs: false, skip: [/\.git/, /node_modules/, /\.claude/] })) {
+  for (const entry of walkSync(repoRoot, { includeDirs: false, skip: [/\.git/, /node_modules/, /\.claude/, /tests[/\\]doc-freshness[/\\]fixtures/] })) {
     if (entry.name === "FRESH_DOC") {
       files.push(relative(repoRoot, entry.path));
     }
