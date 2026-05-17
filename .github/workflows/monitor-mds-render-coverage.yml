@@ -1,0 +1,123 @@
+name: monitor-mds-render-coverage
+
+# MDS 77 화면 ↔ cataloged 화면 (apps/app_user/integration_test/mds-emulator-render/)
+# 차이를 매일 체크하여 100% 미만 시 GitHub Issue 생성/갱신.
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # UTC 자정 = KST 09:00
+  workflow_dispatch:
+
+concurrency:
+  group: monitor-mds-render-coverage
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  coverage:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Run coverage report (JSON)
+        id: cov
+        run: |
+          set +e
+          dart run scripts/mds_render_coverage.dart --json > /tmp/cov.json
+          EXIT=$?
+          set -e
+          cat /tmp/cov.json
+          echo "exit_code=$EXIT" >> "$GITHUB_OUTPUT"
+          # 사람 친화 출력도 로그에
+          dart run scripts/mds_render_coverage.dart || true
+
+      - name: Manage GitHub Issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # cov.json 파싱
+          SCREEN_PCT=$(jq -r '.screen_coverage_pct' /tmp/cov.json)
+          STATE_PCT=$(jq -r '.state_coverage_pct' /tmp/cov.json)
+          CATALOGED=$(jq -r '.cataloged_screens' /tmp/cov.json)
+          MDS_SCREENS=$(jq -r '.mds_screens' /tmp/cov.json)
+          CAPTURED_STATES=$(jq -r '.captured_states' /tmp/cov.json)
+          MDS_STATES=$(jq -r '.mds_states' /tmp/cov.json)
+          UNCOVERED=$(jq -r '.uncovered_screens | length' /tmp/cov.json)
+          ORPHAN=$(jq -r '.orphan_catalogs | length' /tmp/cov.json)
+          INCOMPLETE=$(jq -r '.incomplete_screens | length' /tmp/cov.json)
+
+          ISSUE_TITLE_PREFIX="[mds-render-coverage]"
+
+          # 기존 open 이슈 찾기
+          EXISTING=$(gh issue list \
+            --search "$ISSUE_TITLE_PREFIX in:title state:open" \
+            --json number,title \
+            --jq '.[0].number // empty')
+
+          if [ "${{ steps.cov.outputs.exit_code }}" = "0" ]; then
+            # 100% 달성 → 기존 이슈 close
+            if [ -n "$EXISTING" ]; then
+              gh issue close "$EXISTING" \
+                --comment "✅ Coverage 100% achieved on $(date -u +%Y-%m-%d). Auto-closed by monitor-mds-render-coverage."
+              echo "closed issue #$EXISTING"
+            else
+              echo "100% — no open issue to close"
+            fi
+            exit 0
+          fi
+
+          # 100% 미만 → 이슈 본문 생성
+          BODY=$(cat <<EOF
+          > 자동 갱신: $(date -u +%Y-%m-%dT%H:%M:%SZ) by monitor-mds-render-coverage
+
+          ## Summary
+          - 화면 커버리지: **${SCREEN_PCT}%** (${CATALOGED}/${MDS_SCREENS})
+          - State 커버리지: **${STATE_PCT}%** (${CAPTURED_STATES}/${MDS_STATES})
+          - Uncovered MDS screens: **${UNCOVERED}**
+          - Incomplete screens (state 부족): **${INCOMPLETE}**
+          - Orphan catalogs (MDS 에 없음): **${ORPHAN}**
+
+          ## Uncovered screens (전혀 cataloged 안 됨)
+          \`\`\`
+          $(jq -r '.uncovered_screens | .[]' /tmp/cov.json)
+          \`\`\`
+
+          ## Incomplete screens (cataloged 됐지만 state 부족)
+          \`\`\`
+          $(jq -r '.incomplete_screens[] | "\(.screen): captured \(.captured) / mds \(.mds) (missing \(.missing))"' /tmp/cov.json)
+          \`\`\`
+
+          ## Orphan catalogs (MDS 에 대응 spec 없음 — 컴포넌트 dir 일 가능성)
+          \`\`\`
+          $(jq -r '.orphan_catalogs | .[]' /tmp/cov.json)
+          \`\`\`
+
+          ## Per-screen state count
+          \`\`\`
+          $(jq -r '.per_screen[] | "\(.screen): \(.captured_pngs)/\(.mds_state_pngs)"' /tmp/cov.json)
+          \`\`\`
+
+          ## 다음 액션
+          - 새 화면 추가: \`apps/app_user/integration_test/mds-emulator-render/home_page/\` 패턴 복제
+          - state 추가: 해당 화면의 \`<screen>_test.dart\` 의 catalog states list 에 entry 추가
+          - 상세: \`apps/app_user/integration_test/mds-emulator-render/architecture.md\`
+          EOF
+          )
+
+          if [ -n "$EXISTING" ]; then
+            gh issue edit "$EXISTING" --body "$BODY"
+            echo "updated issue #$EXISTING"
+          else
+            gh issue create \
+              --title "$ISSUE_TITLE_PREFIX ${UNCOVERED} screens + ${INCOMPLETE} incomplete (${STATE_PCT}% states)" \
+              --label "docs,P3-low" \
+              --body "$BODY"
+          fi

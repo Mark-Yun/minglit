@@ -28,6 +28,15 @@ class _FakeSettlementDashboardController extends SettlementDashboardController {
   );
 }
 
+// Fix #2415: error state fake — returns AsyncError so the UI renders the error branch
+class _FakeErrorDashboardController extends SettlementDashboardController {
+  @override
+  SettlementDashboardState build() => SettlementDashboardState(
+    selectedMonth: DateTime(2026, 4),
+    status: AsyncValue.error(Exception('서버 오류'), StackTrace.empty),
+  );
+}
+
 class _FakeSettlementListController extends SettlementListController {
   @override
   SettlementListState build() => const SettlementListState();
@@ -156,6 +165,44 @@ void main() {
 
         expect(permissions, contains('SETTLEMENT_EDIT'));
         expect(permissions, contains('SETTLEMENT_VIEW'));
+      },
+    );
+  });
+
+  // Fix #2415 regression guard: dashboard error state must use MinglitEmptyState,
+  // not inline Column+Text — and must NOT expose raw error.toString() to users.
+  group('SettlementPage — Fix #2415: dashboard error state', () {
+    testWidgets(
+      '대시보드 오류 시 MinglitEmptyState가 표시된다',
+      (tester) async {
+        final mockRouter = MockGoRouter();
+        when(() => mockRouter.push(any())).thenAnswer((_) => Future.value());
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              currentMemberPermissionsProvider.overrideWith(
+                (ref) async => ['SETTLEMENT_VIEW'],
+              ),
+              currentPartnerInfoProvider.overrideWith(
+                (ref) async => const Partner(id: 'p1', name: 'Test'),
+              ),
+              settlementDashboardControllerProvider.overrideWith(
+                _FakeErrorDashboardController.new,
+              ),
+              settlementListControllerProvider.overrideWith(
+                _FakeSettlementListController.new,
+              ),
+              goRouterProvider.overrideWithValue(mockRouter),
+            ],
+            child: const MaterialApp(home: SettlementPage()),
+          ),
+        );
+        await tester.pump();
+
+        expect(find.byType(MinglitEmptyState), findsOneWidget);
+        // Fix #2415: raw error.toString() must NOT be shown to users
+        expect(find.textContaining('Exception'), findsNothing);
       },
     );
   });

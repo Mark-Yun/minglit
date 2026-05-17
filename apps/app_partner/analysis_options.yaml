@@ -11,3 +11,21 @@ linter:
   rules:
     public_member_api_docs: false
 
+custom_lint:
+  rules:
+    # Temporarily disabled: ~17 .when() callsites need refactoring to MinglitAsyncValueWidget.
+    # Track migration in follow-up issue.
+    - use_minglit_async_value_widget: false
+    # Temporarily disabled: ~29 CircularProgressIndicator usages need replacing with MinglitCircularProgressIndicator.
+    # Track migration in follow-up issue.
+    - use_minglit_progress_indicator: false
+    # Temporarily disabled: ~24 TextStyle() usages need migration to textTheme tokens.
+    # Track migration in follow-up issue.
+    - minglit_no_hardcoded_text_style: false
+    # Temporarily disabled: ~11 Colors.X usages need migration to MinglitColors tokens.
+    # Track migration in follow-up issue.
+    - minglit_no_hardcoded_colors: false
+    # Temporarily disabled: 500+ EdgeInsets usages need migration to MinglitSpacing tokens.
+    # Large-scale migration tracked in follow-up issue.
+    - no_hardcoded_padding: false
+

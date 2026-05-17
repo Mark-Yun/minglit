@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   patrol-e2e-app-user:
-    runs-on: self-hosted
+    runs-on: [self-hosted, android]
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6

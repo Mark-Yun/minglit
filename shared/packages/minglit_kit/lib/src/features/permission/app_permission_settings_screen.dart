@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mds/src/theme/minglit_theme.dart';
+import 'package:mds/src/ui/widgets/common/loading_indicator.dart';
 import 'package:mds/src/ui/widgets/common/minglit_list_tile.dart';
 
 /// Fix #186: App permission settings screen showing current
@@ -164,7 +165,8 @@ class _AppPermissionSettingsScreenState
     return Scaffold(
       appBar: AppBar(title: const Text('권한 설정')),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          // Fix #2392: replaced bare CircularProgressIndicator with design system widget
+          ? const Center(child: MinglitCircularProgressIndicator())
           : ListView(
               children: [
                 Padding(

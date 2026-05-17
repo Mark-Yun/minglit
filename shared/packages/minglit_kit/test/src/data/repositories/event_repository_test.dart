@@ -199,6 +199,57 @@ void main() {
           throwsA(anything),
         );
       });
+
+      // Fix #2394: response.data가 null이면 CastError로 크래시 발생했던 버그 재발 방지
+      test('throws MinglitUserException when response.data is null', () async {
+        when(
+          () => mockFunctions.invoke(
+            'user-cancel-order',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(status: 200, data: null),
+        );
+
+        await expectLater(
+          repository.cancelOrder(eventId: 'event_1'),
+          throwsA(isA<MinglitUserException>()),
+        );
+      });
+
+      test('throws MinglitUserException when response.data is not a Map', () async {
+        when(
+          () => mockFunctions.invoke(
+            'user-cancel-order',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(status: 200, data: 'ok'),
+        );
+
+        await expectLater(
+          repository.cancelOrder(eventId: 'event_1'),
+          throwsA(isA<MinglitUserException>()),
+        );
+      });
+
+      test('returns refunded result with refundAmount', () async {
+        when(
+          () => mockFunctions.invoke(
+            'user-cancel-order',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'type': 'refunded', 'data': {'refund_amount': 30000}},
+          ),
+        );
+
+        final result = await repository.cancelOrder(eventId: 'event_1');
+        expect(result.type, 'refunded');
+        expect(result.refundAmount, 30000);
+      });
     });
 
     group('confirmPayment', () {

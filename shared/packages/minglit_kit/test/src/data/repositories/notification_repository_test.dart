@@ -168,78 +168,97 @@ void main() {
       });
     });
 
-    group('markAsRead', () {
-      test('completes without error', () async {
-        unawaited(mockTable(mockClient, 'user_notifications'));
+    // Helper: stub user-manage-notification EF with given status.
+    void stubNotifEf({int status = 200}) {
+      when(
+        () => mockFunctions.invoke(
+          'user-manage-notification',
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer(
+        (_) async => FunctionResponse(
+          status: status,
+          data: jsonEncode({'success': true}),
+        ),
+      );
+    }
 
-        await expectLater(
-          repository.markAsRead('notif_1'),
-          completes,
-        );
+    // Fix #2393: markAsRead now routes through user-manage-notification EF.
+    group('markAsRead', () {
+      test('invokes EF with mark_read action', () async {
+        stubNotifEf();
+
+        await expectLater(repository.markAsRead('notif_1'), completes);
+
+        final captured = verify(
+          () => mockFunctions.invoke(
+            'user-manage-notification',
+            body: captureAny(named: 'body'),
+          ),
+        ).captured;
+
+        final body = captured.first as Map<String, dynamic>;
+        expect(body['action'], 'mark_read');
+        expect(body['notification_id'], 'notif_1');
       });
 
       // Fix #1955: swallows error so read-state mutations don't crash the UI.
-      test('swallows error — does not throw on failure', () async {
-        unawaited(
-          mockTable(
-            mockClient,
-            'user_notifications',
-            shouldThrow: Exception('db error'),
-          ),
-        );
-
+      test('swallows EF error — does not throw on failure', () async {
+        stubNotifEf(status: 500);
         await expectLater(repository.markAsRead('notif_1'), completes);
       });
     });
 
+    // Fix #2393: markAllAsRead now routes through user-manage-notification EF.
     group('markAllAsRead', () {
-      test('completes without error', () async {
-        unawaited(mockTable(mockClient, 'user_notifications'));
+      test('invokes EF with mark_all_read action', () async {
+        stubNotifEf();
 
-        await expectLater(
-          repository.markAllAsRead('user_1'),
-          completes,
-        );
+        await expectLater(repository.markAllAsRead('user_1'), completes);
+
+        final captured = verify(
+          () => mockFunctions.invoke(
+            'user-manage-notification',
+            body: captureAny(named: 'body'),
+          ),
+        ).captured;
+
+        final body = captured.first as Map<String, dynamic>;
+        expect(body['action'], 'mark_all_read');
+        // userId param is NOT forwarded to the EF — EF uses JWT.
+        expect(body.containsKey('user_id'), isFalse);
       });
 
       // Fix #1955: swallows error so read-state mutations don't crash the UI.
-      test('swallows error — does not throw on failure', () async {
-        unawaited(
-          mockTable(
-            mockClient,
-            'user_notifications',
-            shouldThrow: Exception('db error'),
-          ),
-        );
-
+      test('swallows EF error — does not throw on failure', () async {
+        stubNotifEf(status: 500);
         await expectLater(repository.markAllAsRead('user_1'), completes);
       });
     });
 
+    // Fix #2393: deleteNotification now routes through user-manage-notification EF.
     group('deleteNotification', () {
-      test('completes without error', () async {
-        unawaited(mockTable(mockClient, 'user_notifications'));
+      test('invokes EF with delete action', () async {
+        stubNotifEf();
 
-        await expectLater(
-          repository.deleteNotification('notif_1'),
-          completes,
-        );
+        await expectLater(repository.deleteNotification('notif_1'), completes);
+
+        final captured = verify(
+          () => mockFunctions.invoke(
+            'user-manage-notification',
+            body: captureAny(named: 'body'),
+          ),
+        ).captured;
+
+        final body = captured.first as Map<String, dynamic>;
+        expect(body['action'], 'delete');
+        expect(body['notification_id'], 'notif_1');
       });
 
       // Fix #1955: swallows error so delete failures don't crash the UI.
-      test('swallows error — does not throw on failure', () async {
-        unawaited(
-          mockTable(
-            mockClient,
-            'user_notifications',
-            shouldThrow: Exception('db error'),
-          ),
-        );
-
-        await expectLater(
-          repository.deleteNotification('notif_1'),
-          completes,
-        );
+      test('swallows EF error — does not throw on failure', () async {
+        stubNotifEf(status: 500);
+        await expectLater(repository.deleteNotification('notif_1'), completes);
       });
     });
 

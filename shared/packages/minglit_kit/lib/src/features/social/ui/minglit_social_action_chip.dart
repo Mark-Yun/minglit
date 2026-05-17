@@ -59,6 +59,7 @@ class MinglitSocialActionChip extends ConsumerWidget {
       ),
     );
 
+    // ignore: use_minglit_async_value_widget -- chip builds its own loading/error states via _buildChip
     return asyncState.when(
       data: (isActive) => _buildChip(context, ref, isActive: isActive),
       loading: () => _buildChip(context, ref, isLoading: true),

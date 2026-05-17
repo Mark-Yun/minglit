@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   generate-report:
-    runs-on: self-hosted
+    runs-on: [self-hosted, ephemeral]
     permissions:
       contents: write
     steps:

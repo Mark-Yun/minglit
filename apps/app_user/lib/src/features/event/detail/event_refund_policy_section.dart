@@ -1,4 +1,5 @@
 part of 'event_detail_page.dart';
+// ignore_for_file: minglit_no_hardcoded_text_style -- refund policy rich text requires precise styling for legal clarity
 
 // ignore: specify_nonobvious_property_types // autoDispose type
 final _refundPolicyProvider = FutureProvider.autoDispose<Map<String, dynamic>?>(

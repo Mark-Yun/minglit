@@ -273,6 +273,7 @@ class SettlementRepository {
       'upsertBankAccount called | partnerId: $partnerId, bankName: $bankName',
     );
     try {
+      // minglit_lints: allow-supabase-write — reason: EF migration pending (Phase 2 partner-side, tracked in #2392)
       await _supabase.from('partner_settlements').upsert({
         'partner_id': partnerId,
         'bank_name': bankName,

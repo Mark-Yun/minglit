@@ -40,6 +40,7 @@ mixin _PartyEventRepository on _SupabasePartyContext {
         final groupsJson = eventGroups
             .map((g) => g.copyWith(eventId: createdEvent.id).toDbJson())
             .toList();
+        // minglit_lints: allow-supabase-write — reason: EF migration pending (Phase 2 partner-side, tracked in #2392)
         await supabaseClient.from('entry_groups').insert(groupsJson);
       }
 
@@ -50,6 +51,7 @@ mixin _PartyEventRepository on _SupabasePartyContext {
             .map((t) => t.toDbJson(eventId: createdEvent.id))
             .toList();
 
+        // minglit_lints: allow-supabase-write — reason: EF migration pending (Phase 2 partner-side, tracked in #2392)
         await supabaseClient.from('tickets').insert(ticketsJson);
       }
 
@@ -84,13 +86,24 @@ mixin _PartyEventRepository on _SupabasePartyContext {
   }
 
   /// Updates only the status of an event.
+  // Fix #2393: route through partner-manage-event EF.
   Future<void> updateEventStatus(String eventId, String status) async {
     Log.d('updateEventStatus called | eventId: $eventId, status: $status');
     try {
-      await supabaseClient
-          .from('events')
-          .update({'status': status})
-          .eq('id', eventId);
+      final response = await supabaseClient.functions.invoke(
+        'partner-manage-event',
+        body: {
+          'action': 'update_status',
+          'event_id': eventId,
+          'status': status,
+        },
+      );
+      if (response.status != 200) {
+        final error = response.data is Map
+            ? (response.data as Map)['error'] ?? 'Failed to update event status'
+            : 'Failed to update event status';
+        throw Exception(error);
+      }
       Log.d('updateEventStatus success');
     } catch (e, st) {
       Log.e('❌ [PartyRepo] updateEventStatus Error', e, st);
@@ -99,15 +112,27 @@ mixin _PartyEventRepository on _SupabasePartyContext {
   }
 
   /// Updates the metadata of an event.
+  // Fix #2393: route through partner-manage-event EF.
   Future<void> updateEventMetadata(
     String eventId,
     Map<String, dynamic> metadata,
   ) async {
     try {
-      await supabaseClient
-          .from('events')
-          .update({'metadata': metadata})
-          .eq('id', eventId);
+      final response = await supabaseClient.functions.invoke(
+        'partner-manage-event',
+        body: {
+          'action': 'update',
+          'event_id': eventId,
+          'event': {'metadata': metadata},
+        },
+      );
+      if (response.status != 200) {
+        final error = response.data is Map
+            ? (response.data as Map)['error'] ??
+                'Failed to update event metadata'
+            : 'Failed to update event metadata';
+        throw Exception(error);
+      }
       Log.d('updateEventMetadata success');
     } catch (e, st) {
       Log.e('❌ [PartyRepo] updateEventMetadata Error', e, st);
