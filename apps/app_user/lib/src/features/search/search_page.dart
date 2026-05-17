@@ -54,24 +54,32 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: TextField(
-          controller: _controller,
-          autofocus: true,
-          onChanged: _onSearchChanged,
-          decoration: InputDecoration(
-            hintText: '이벤트 검색',
-            border: InputBorder.none,
-            suffixIcon: ValueListenableBuilder<TextEditingValue>(
-              valueListenable: _controller,
-              builder: (_, value, _) => value.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () {
-                        _controller.clear();
-                        ref.read(searchQueryProvider.notifier).clear();
-                      },
-                    )
-                  : const SizedBox.shrink(),
+        // Fix #2390: Wrap with Semantics so Android contentDescription is set
+        // for the TextField (hintText alone leaves content-desc="" → NAF=true).
+        title: Semantics(
+          label: '이벤트 검색 입력',
+          textField: true,
+          child: TextField(
+            controller: _controller,
+            autofocus: true,
+            onChanged: _onSearchChanged,
+            decoration: InputDecoration(
+              hintText: '이벤트 검색',
+              border: InputBorder.none,
+              suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _controller,
+                builder: (_, value, _) => value.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        // Fix #2390: tooltip sets Android contentDescription → NAF 해소
+                        tooltip: '입력 지우기',
+                        onPressed: () {
+                          _controller.clear();
+                          ref.read(searchQueryProvider.notifier).clear();
+                        },
+                      )
+                    : const SizedBox.shrink(),
+              ),
             ),
           ),
         ),
