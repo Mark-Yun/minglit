@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:mds/src/theme/minglit_theme.dart';
 import 'package:mds/src/ui/widgets/common/minglit_async_value_widget.dart';
+import 'package:mds/src/ui/widgets/common/minglit_empty_state.dart';
 import 'package:minglit_kit/src/features/notification/notification_list_controller.dart';
 
 /// Displays the list of user notifications.
@@ -37,8 +38,13 @@ class NotificationListScreen extends ConsumerWidget {
       body: MinglitAsyncValueWidget(
         value: notificationState,
         data: (notifications) {
+          // Fix #2414: replace plain Text with canonical MinglitEmptyState
           if (notifications.isEmpty) {
-            return const Center(child: Text('알림이 없습니다.'));
+            return const MinglitEmptyState(
+              icon: Icons.notifications_none_outlined,
+              title: '알림이 없습니다',
+              subtitle: '새 알림이 오면 여기에 표시됩니다.',
+            );
           }
 
           return RefreshIndicator(
@@ -134,7 +140,14 @@ class NotificationListScreen extends ConsumerWidget {
             ),
           );
         },
-        error: (err, stack) => Center(child: Text('에러: $err')),
+        // Fix #2413: remove raw err.toString() exposure; use canonical error UI
+        error: (_, _) => MinglitEmptyState(
+          icon: Icons.error_outline,
+          title: '알림을 불러오지 못했습니다',
+          subtitle: '잠시 후 다시 시도해 주세요.',
+          actionLabel: '다시 시도',
+          onAction: () => ref.invalidate(notificationListProvider),
+        ),
       ),
     );
   }
