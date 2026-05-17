@@ -54,8 +54,7 @@ Map<String, dynamic> _makeNotification({
     'body': body,
     'is_read': isRead,
     'deep_link': deepLink,
-    'created_at':
-        createdAt ?? DateTime.now().toUtc().toIso8601String(),
+    'created_at': createdAt ?? DateTime.now().toUtc().toIso8601String(),
     'category': category,
   };
 }
@@ -77,7 +76,10 @@ void main() {
     repo = _MockNotificationRepository();
     // Default: empty list
     when(
-      () => repo.getNotifications(limit: any(named: 'limit'), offset: any(named: 'offset')),
+      () => repo.getNotifications(
+        limit: any(named: 'limit'),
+        offset: any(named: 'offset'),
+      ),
     ).thenAnswer((_) async => []);
     when(() => repo.markAsRead(any())).thenAnswer((_) async {});
     when(() => repo.markAllAsRead(any())).thenAnswer((_) async {});
@@ -407,8 +409,7 @@ void main() {
           id: '1',
           title: '로컬 시간 테스트',
           // UTC time — controller calls .toLocal() before formatting
-          createdAt:
-              DateTime.utc(2025, 1, 15, 10, 0, 0).toIso8601String(),
+          createdAt: DateTime.utc(2025, 1, 15, 10, 0, 0).toIso8601String(),
         ),
       ]),
       body: (t) async {
