@@ -4,7 +4,7 @@
 
 ## 배경
 
-기존 파일명·`name:` 규칙이 제각각이었다 (`auto-format.yml`, `Deploy to Vercel`, `Hourly: DB Invariant Monitor`, ...). PR Checks 화면에서 *"이게 머지를 막는 건지 / 배포인지 / 단순 자동화인지"* 한눈에 안 잡힘. **"빨갛게 뜨면 무슨 일이 일어나나"** 를 축으로 8 개 prefix 로 통일했다.
+기존 파일명·`name:` 규칙이 제각각이었다 (`auto-format.yml`, `Deploy to Vercel`, `Hourly: DB Invariant Monitor`, ...). PR Checks 화면에서 *"이게 머지를 막는 건지 / 배포인지 / 단순 자동화인지"* 한눈에 안 잡힘. **"빨갛게 뜨면 무슨 일이 일어나나"** 를 축으로 9 개 prefix 로 통일했다.
 
 ## Prefix
 
@@ -24,7 +24,7 @@
 
 - **파일명 = workflow `name:` 필드** (소문자 kebab, 확장자 제외). 예: `deploy-vercel.yml` 의 `name: deploy-vercel`.
 - prefix 다음은 *대상*만 적는다. 액션 동사는 prefix 가 이미 함의함 (`deploy-vercel` ◯ / `deploy-to-vercel` ✗).
-- 새 워크플로우는 위 8 prefix 중 하나에 반드시 속해야 한다. 어디에도 안 맞으면 새 prefix 추가 PR 을 먼저 낸다.
+- 새 워크플로우는 위 9 prefix 중 하나에 반드시 속해야 한다. 어디에도 안 맞으면 새 prefix 추가 PR 을 먼저 낸다.
 - `pr-setup-` vs `pr-review-setup-` vs `sync-` vs `triage-` 의 기준:
   - `pr-setup-` = PR push 마다 PR 브랜치를 mutate (현재는 `pr-setup-format` 만 — dart format + commit push)
   - `pr-review-setup-` = PR 의 "리뷰 준비 단계" 자동화 (auto-merge enable, `needs-review` 라벨 부여)
