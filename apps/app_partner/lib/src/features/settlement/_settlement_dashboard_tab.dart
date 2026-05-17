@@ -31,30 +31,17 @@ class _DashboardTab extends ConsumerWidget {
                 _StatusSummaryGrid(data: dashState.dashboardData),
               ],
               loading: () => [const Center(child: CircularProgressIndicator())],
-              error: (error, _) => [
-                Center(
-                  child: Column(
-                    children: [
-                      Text(
-                        '오류가 발생했습니다',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: MinglitSpacing.small),
-                      Text(
-                        error.toString(),
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      const SizedBox(height: MinglitSpacing.medium),
-                      FilledButton(
-                        onPressed: () => ref
-                            .read(
-                              settlementDashboardControllerProvider.notifier,
-                            )
-                            .loadDashboard(),
-                        child: const Text('다시 시도'),
-                      ),
-                    ],
-                  ),
+              // Fix #2415: replace inline Column+Text with MinglitEmptyState — aligns with
+              // list tab's canonical error pattern; removes raw error.toString() from UI.
+              error: (_, _) => [
+                MinglitEmptyState(
+                  icon: Icons.error_outline,
+                  title: '대시보드를 불러오지 못했습니다',
+                  subtitle: '잠시 후 다시 시도해 주세요.',
+                  actionLabel: '다시 시도',
+                  onAction: () => ref
+                      .read(settlementDashboardControllerProvider.notifier)
+                      .loadDashboard(),
                 ),
               ],
             ),
