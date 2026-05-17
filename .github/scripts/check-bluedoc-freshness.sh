@@ -42,7 +42,8 @@ if [ -n "${CHANGES}" ]; then
 
             if git cat-file -e "${BASE_REF}:${parent}" 2>/dev/null; then
                 bluedoc="${parent}/BLUEDOC.md"
-                if [ -f "${bluedoc}" ]; then
+                # BASE_REF 기준으로 BLUEDOC 존재 확인 (working copy 가 아닌 — PR 에서 BLUEDOC 삭제했더라도 BASE 에 있던 게 ancestor)
+                if git cat-file -e "${BASE_REF}:${bluedoc}" 2>/dev/null; then
                     if ! echo "${CHANGED_BLUEDOCS}" | grep -qx "${bluedoc}"; then
                         FRESHNESS_VIOLATIONS+=("${path} → ${bluedoc} not updated")
                     fi

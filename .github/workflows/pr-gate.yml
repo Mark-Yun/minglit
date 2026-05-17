@@ -618,9 +618,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_CONFIG: .gitleaks.toml
+          # Self-hosted ephemeral runners execute as root (HOME=/root) which
+          # doesn't share a parent with GITHUB_WORKSPACE. Disable SARIF artifact
+          # upload to avoid the rootDirectory/file mismatch error.
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
 
-  # BLUEDOC freshness: 새 파일/폴더 추가 또는 파일 삭제 시 가장 가까운 ancestor BLUEDOC.md 갱신 강제.
-  # 예외: commit message 에 `EXEMPT_FRESH_BLUEDOC=<reason>` 한 줄.
+  # BLUEDOC freshness: 새 파일/폴더 추가 또는 파일 삭제 시 가장 가까운 ancestor BLUEDOC.md
+  # 갱신 강제. 통과: 이정표 표 갱신 또는 BLUEDOC 의 '_Reviewed_' 날짜 bump.
+  # Format: 모든 BLUEDOC.md 가 '_Reviewed: YYYY-MM-DD HH:MM_' 줄 포함.
   check-bluedoc-freshness:
     runs-on: [self-hosted, ephemeral]
     permissions:
@@ -628,17 +633,13 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          fetch-depth: 0  # commit message + diff 비교에 history 필요
+          fetch-depth: 0  # diff 비교에 history 필요
       - name: Run BLUEDOC freshness check
         env:
           BASE_REF: origin/${{ github.event.pull_request.base.ref || 'dev' }}
         run: |
           git fetch origin "${BASE_REF#origin/}" --depth=50 || true
           bash .github/scripts/check-bluedoc-freshness.sh
-          # Self-hosted ephemeral runners execute as root (HOME=/root) which
-          # doesn't share a parent with GITHUB_WORKSPACE. Disable SARIF artifact
-          # upload to avoid the rootDirectory/file mismatch error.
-          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
 
   # CUJ integration tests on emulator — reusable workflow.
   # Engine + BLUEDOC: apps/<app>/integration_test/cuj/BLUEDOC.md
