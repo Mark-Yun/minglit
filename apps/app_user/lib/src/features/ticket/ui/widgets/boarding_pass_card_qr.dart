@@ -1,4 +1,5 @@
 part of 'boarding_pass_card.dart';
+// ignore_for_file: minglit_no_hardcoded_text_style -- boarding pass requires precise typography for QR/print fidelity
 
 // ---------------------------------------------------------------------------
 // Section 3: Perforation Line

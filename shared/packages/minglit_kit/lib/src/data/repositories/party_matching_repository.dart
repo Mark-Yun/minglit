@@ -27,6 +27,7 @@ mixin _PartyMatchingRepository on _SupabasePartyContext {
           )
           .toList();
 
+      // minglit_lints: allow-supabase-write — reason: EF migration pending (Phase 2 partner-side, tracked in #2392)
       await supabaseClient.from('entry_group_templates').insert(groupsJson);
       Log.d('replaceEntryGroupTemplates success');
     } catch (e, st) {
