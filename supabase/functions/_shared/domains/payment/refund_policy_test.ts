@@ -2,7 +2,39 @@
 // pure unit tests — mock 0, IO 0
 
 import { assertEquals } from "jsr:@std/assert@1";
-import { verifyRefundEligibility } from "./refund_policy.ts";
+import { parseRefundPolicy, verifyRefundEligibility } from "./refund_policy.ts";
+
+// ─── parseRefundPolicy ─────────────────────────────────────────────────────────
+
+Deno.test("parseRefundPolicy — 정상 값 → 그대로 사용", () => {
+  assertEquals(
+    parseRefundPolicy({ grace_period_hours: 4, cutoff_days: 14 }),
+    { gracePeriodHours: 4, cutoffDays: 14 },
+  );
+});
+
+Deno.test("parseRefundPolicy — 누락 / 빈 객체 → 기본값 (2h / 7d)", () => {
+  assertEquals(parseRefundPolicy({}), { gracePeriodHours: 2, cutoffDays: 7 });
+  assertEquals(parseRefundPolicy(null), { gracePeriodHours: 2, cutoffDays: 7 });
+  assertEquals(parseRefundPolicy(undefined), { gracePeriodHours: 2, cutoffDays: 7 });
+});
+
+Deno.test("parseRefundPolicy — 깨진 타입 / 음수 → 기본값으로 폴백", () => {
+  assertEquals(
+    parseRefundPolicy({ grace_period_hours: "4", cutoff_days: -1 }),
+    { gracePeriodHours: 2, cutoffDays: 7 },
+  );
+});
+
+Deno.test("parseRefundPolicy — 부분 누락 → 누락된 쪽만 기본값", () => {
+  assertEquals(
+    parseRefundPolicy({ grace_period_hours: 6 }),
+    { gracePeriodHours: 6, cutoffDays: 7 },
+  );
+});
+
+// ─── verifyRefundEligibility ───────────────────────────────────────────────────
+
 
 const GRACE_HOURS = 2;
 const CUTOFF_DAYS = 7;

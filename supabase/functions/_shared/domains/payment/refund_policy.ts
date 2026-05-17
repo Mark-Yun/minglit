@@ -7,6 +7,31 @@
 //
 // 둘 중 하나라도 만족하면 eligible.
 
+/** 정책 RPC 가 반환하는 raw record 가 깨졌을 때 사용할 기본값 */
+const DEFAULT_GRACE_PERIOD_HOURS = 2;
+const DEFAULT_CUTOFF_DAYS = 7;
+
+export interface RefundPolicy {
+  gracePeriodHours: number;
+  cutoffDays: number;
+}
+
+/**
+ * `get_current_policy('refund')` RPC 결과를 typed 정책으로 변환.
+ * 누락 / 깨진 값은 안전한 기본값 (2시간 grace, 7일 cutoff) 으로 폴백.
+ *
+ * 두 EF (user-cancel-order / payment-cancel) 가 동일한 default 를 따로 두던 것을 통합.
+ */
+export function parseRefundPolicy(raw: unknown): RefundPolicy {
+  const record = (raw && typeof raw === "object") ? raw as Record<string, unknown> : {};
+  const grace = record.grace_period_hours;
+  const cutoff = record.cutoff_days;
+  return {
+    gracePeriodHours: typeof grace === "number" && grace >= 0 ? grace : DEFAULT_GRACE_PERIOD_HOURS,
+    cutoffDays: typeof cutoff === "number" && cutoff >= 0 ? cutoff : DEFAULT_CUTOFF_DAYS,
+  };
+}
+
 export interface RefundEligibilityParams {
   paidAt: string | null;
   eventStartTime: string;

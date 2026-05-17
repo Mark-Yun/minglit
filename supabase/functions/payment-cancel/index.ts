@@ -10,7 +10,10 @@ import { parseJsonBody } from "../_shared/request_utils.ts";
 import { log } from "../_shared/logger.ts";
 // Fix #299: 환불 로직을 shared 모듈로 추출 — user-cancel-order와 공유
 import { executeRefund, RefundError } from "../_shared/refund_utils.ts";
-import { verifyRefundEligibility } from "../_shared/domains/payment/refund_policy.ts";
+import {
+  parseRefundPolicy,
+  verifyRefundEligibility,
+} from "../_shared/domains/payment/refund_policy.ts";
 
 const FN = "payment-cancel";
 
@@ -89,23 +92,17 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
     }
 
     // Fix #299: 환불 적격성 검증을 shared 모듈로 위임
-    {
-      const policy = policyResult.data as Record<string, number>;
-      const gracePeriodHours = policy.grace_period_hours ?? 2;
-      const cutoffDays = policy.cutoff_days ?? 7;
+    const policy = parseRefundPolicy(policyResult.data);
+    const eligibility = verifyRefundEligibility({
+      paidAt: application.paid_at as string | null,
+      eventStartTime: eventResult.data.start_time,
+      ...policy,
+    });
 
-      const eligibility = verifyRefundEligibility({
-        paidAt: application.paid_at as string | null,
-        eventStartTime: eventResult.data.start_time,
-        gracePeriodHours,
-        cutoffDays,
+    if (!eligibility.eligible) {
+      return errorResponse("refund_not_eligible", 400, {
+        reason: eligibility.reason,
       });
-
-      if (!eligibility.eligible) {
-        return errorResponse("refund_not_eligible", 400, {
-          reason: eligibility.reason,
-        });
-      }
     }
 
     // Fix #299: PortOne 환불 실행을 shared 모듈로 위임

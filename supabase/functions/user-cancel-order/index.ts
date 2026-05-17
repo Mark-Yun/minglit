@@ -8,8 +8,15 @@ import { parseJsonBody } from "../_shared/request_utils.ts";
 import { log, withSpan } from "../_shared/logger.ts";
 import { initStatsig, logStatsigEvent } from "../_shared/statsig_utils.ts";
 import { executeRefund, RefundError } from "../_shared/refund_utils.ts";
-import { classifyApplicationStatus } from "../_shared/domains/payment/application_status.ts";
-import { verifyRefundEligibility } from "../_shared/domains/payment/refund_policy.ts";
+import {
+  classifyApplicationStatus,
+  isEventStarted,
+  isFreeApplication,
+} from "../_shared/domains/payment/application_status.ts";
+import {
+  parseRefundPolicy,
+  verifyRefundEligibility,
+} from "../_shared/domains/payment/refund_policy.ts";
 
 const FN = "user-cancel-order";
 
@@ -107,7 +114,7 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
       }
 
       // Free event (payment_amount === 0): verify event hasn't started, then cancel.
-      if (paymentAmount === 0) {
+      if (isFreeApplication(paymentAmount)) {
         const { data: eventData, error: eventError } = await withSpan(
           "db.query.events.free_cancel",
           "db.query",
@@ -129,7 +136,7 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
           return errorResponse("이벤트 정보를 가져올 수 없습니다", 500);
         }
 
-        if (new Date(eventData.start_time) <= new Date()) {
+        if (isEventStarted(eventData.start_time)) {
           return errorResponse("refund_not_eligible", 400, {
             reason: "event_already_started",
           });
@@ -210,15 +217,11 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
         return errorResponse("Failed to verify refund eligibility", 500);
       }
 
-      const policy = policyResult.data as Record<string, number>;
-      const gracePeriodHours = policy.grace_period_hours ?? 2;
-      const cutoffDays = policy.cutoff_days ?? 7;
-
+      const policy = parseRefundPolicy(policyResult.data);
       const eligibility = verifyRefundEligibility({
         paidAt: application.paid_at as string | null,
         eventStartTime: eventResult.data.start_time,
-        gracePeriodHours,
-        cutoffDays,
+        ...policy,
       });
 
       if (!eligibility.eligible) {
