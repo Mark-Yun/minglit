@@ -35,13 +35,13 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-graphifyy-0.4.23
+          key: ${{ runner.os }}-pip-graphifyy-0.8.8
 
       - name: Install graphify
-        run: pip install graphifyy==0.4.23
+        run: pip install graphifyy==0.8.8
 
       - name: Update graph
-        run: graphify update . --no-viz
+        run: graphify update .
 
       - name: Commit & push if changed
         run: |
