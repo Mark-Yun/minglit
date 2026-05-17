@@ -25,15 +25,23 @@
 - `iamport_client.ts` — Iamport (구) PortOne v1 client
 - `portone_client.ts` — PortOne v2 client
 
-### 도메인 helper
+### 도메인 helper (IO 포함)
 - `partner_permissions.ts` — partner_members role 검증
-- `refund_utils.ts` — 환불 정책 (#2131 cutoff 등)
+- `refund_utils.ts` — PortOne 환불 IO (`executeRefund`, `RefundError`). 정책은 `domains/payment/refund_policy.ts` 로 이동
 - `temporal_utils.ts` — 시간/timezone 유틸
 - `validation_utils.ts` — 입력 검증
 - `worker_utils.ts` — PGMQ worker 패턴
 
+### Pure 도메인 코어
+- `domains/` — 도메인별 pure 비즈니스 로직 (IO 없음). [domains/BLUEDOC.md](domains/BLUEDOC.md)
+  - `domains/payment/` — application status 분류, 환불 정책
+  - `domains/event/` — event status / capacity / 시작 시각 / participant
+
 ### AI
 - `ai/` — AI 어댑터 추상화 (OpenAI embedding / LLM)
+
+### Test 인프라
+- `_testing/` — L3 EF handler unit test (`fakeSupabase` + `makeCtx` + fixtures). [_testing/BLUEDOC.md](_testing/BLUEDOC.md)
 
 ### Tests
 각 `*.ts` 의 `*_test.ts` 동반.
