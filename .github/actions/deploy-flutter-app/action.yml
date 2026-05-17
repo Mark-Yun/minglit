@@ -77,6 +77,11 @@ runs:
           cp -r ${{ inputs.working-directory }}/api/. ${{ inputs.working-directory }}/build/web/api/
         fi
 
+    # Fix #2382: self-hosted ephemeral runners don't have Node.js pre-installed
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
     - name: Deploy to Vercel
       id: vercel-deploy
       shell: bash
