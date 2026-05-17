@@ -43,3 +43,6 @@ assertMatchesSchema(sample, schema);
 
 - [functions/BLUEDOC.md](../BLUEDOC.md) — EF 진입점
 - 사용처: 각 EF 의 `*_test.ts`, `_payment_integration_tests/`, `_contract_tests/`
+
+---
+_Reviewed: 2026-05-17 22:32_

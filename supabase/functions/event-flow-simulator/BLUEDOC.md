@@ -43,3 +43,6 @@ curl -X POST "https://<project>.supabase.co/functions/v1/event-flow-simulator" \
 ## 한계 / 개선 계획
 
 v2 **Stochastic Cascade** 모델 (backend 를 확률적 funnel 로 모델링, invariant 1개로 N 시나리오 자동 가드) 도입 완료. 다만 실 invariant set 은 아직 미정의 — 진짜 minglit cross-EF 규칙 (money conservation, settlement coverage, match integrity 등) 은 별도 RFC 로 도입 예정. 상세는 [architecture.md](./architecture.md).
+
+---
+_Reviewed: 2026-05-17 22:32_

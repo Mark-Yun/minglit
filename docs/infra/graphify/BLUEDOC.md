@@ -14,3 +14,6 @@
 ## 관련 컨벤션
 
 - [BLUEDOC](../bluedoc/BLUEDOC.md) — 본 폴더가 따르는 진입점 컨벤션
+
+---
+_Reviewed: 2026-05-17 22:32_

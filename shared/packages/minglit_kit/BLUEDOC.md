@@ -43,3 +43,6 @@ Minglit 의 **공용 클라이언트 패키지**. `app_user` 와 `app_partner` �
 - [docs/architecture/trust-and-verification.md](../../../docs/architecture/trust-and-verification.md) — 2-layer 신뢰 모델
 - [README.md](./README.md) — 패키지 사용 가이드
 - [BLUEDOC 컨벤션](../../../docs/infra/bluedoc/BLUEDOC.md)
+
+---
+_Reviewed: 2026-05-17 22:32_
