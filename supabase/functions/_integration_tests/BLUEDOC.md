@@ -31,6 +31,7 @@ _integration_tests/
 2. **외부 API mock** — PortOne 은 `dev-mock-portone` 로 redirect, Statsig 은 key 미설정으로 no-op
 3. **실 EF runtime** — Supabase CLI 의 Edge Runtime → 실 schema/trigger/RLS 동작
 4. **CUJ ID 추적** — spec.md 의 CUJs 표 ID 를 Deno.test 이름에 prefix → coverage notification 가 매핑
+5. **CUJ binary 검증** — 각 cujTest = 1 CUJ 충족 여부 통과/실패. assertion 작성 자유 (helper 는 필요 시 자연 발생, tier 설계 X)
 
 ## 인접 layer 와의 관계
 
