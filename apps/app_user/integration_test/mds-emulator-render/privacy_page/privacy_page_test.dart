@@ -17,7 +17,7 @@ final catalog = MdsCatalog<PrivacyPageBuilder>(
   builder: PrivacyPageBuilder.new,
   states: [
     MdsState('state-data', (b) => b, mdsIndex: 1),
-    MdsState('state-error', (b) => b.error()),
+    MdsState('state-error', (b) => b.error(), mdsIndex: 3),
     MdsState('state-dark', (b) => b.dark()),
   ],
 );

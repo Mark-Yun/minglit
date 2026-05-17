@@ -16,7 +16,7 @@ final catalog = MdsCatalog<MyPageBuilder>(
   mdsSpec: 'apps/mds/docs/public/specs/my_page/',
   builder: MyPageBuilder.new,
   states: [
-    MdsState('state-not-logged-in', (b) => b, mdsIndex: 1),
+    MdsState('state-not-logged-in', (b) => b, mdsIndex: 2),
     MdsState('state-dark', (b) => b.dark()),
   ],
 );
