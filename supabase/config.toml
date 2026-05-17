@@ -498,11 +498,11 @@ enabled = true
 verify_jwt = false
 import_map = "./deno.json"
 entrypoint = "./functions/reconciliation-daily/index.ts"
-[functions.backend-simulator]
+[functions.event-flow-simulator]
 enabled = true
 verify_jwt = false  # dev-only, protected by isProduction() guard
 import_map = "./deno.json"
-entrypoint = "./functions/backend-simulator/index.ts"
+entrypoint = "./functions/event-flow-simulator/index.ts"
 
 [functions.event-checkin]
 enabled = true

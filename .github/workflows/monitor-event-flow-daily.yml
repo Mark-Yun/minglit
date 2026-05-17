@@ -1,0 +1,78 @@
+name: monitor-event-flow-daily
+
+# KST 07:00 매일 — SQL seed 초기화 후 긴 cascade 실행 (data 다양성 + 회귀 가드)
+# 1차 fixture 는 supabase/seed.dev.sql 로 박음 (Fix #1413 — EF 시딩 timeout 회피).
+# Patrol CUJ 테스트는 monitor-patrol-e2e.yml 이 별도 담당.
+
+on:
+  schedule:
+    - cron: '0 22 * * *'    # UTC 22:00 = KST 07:00
+  workflow_dispatch:
+
+concurrency:
+  group: monitor-event-flow-dev
+  cancel-in-progress: false
+
+jobs:
+  seed-and-simulate:
+    name: Seed + event-flow cascade (daily)
+    runs-on: self-hosted
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      # Fix #1413: psql 직접 실행 — 560명 시딩 ~3초 (EF 시딩은 timeout 위험)
+      - name: Seed users/partners via SQL
+        env:
+          DB_PASSWORD: ${{ secrets.SUPABASE_DEV_DB_PASSWORD }}
+          PROJECT_ID: ${{ secrets.SUPABASE_DEV_PROJECT_ID }}
+          # Fix #1553: aws-0 → aws-1 인프라 이전
+          POOLER_HOST: aws-1-ap-northeast-2.pooler.supabase.com
+        run: |
+          PGPASSWORD="${DB_PASSWORD}" psql \
+            "postgresql://postgres.${PROJECT_ID}:${DB_PASSWORD}@${POOLER_HOST}:5432/postgres?sslmode=require" \
+            -v ON_ERROR_STOP=1 \
+            -f supabase/seed.dev.sql
+
+      - name: Upload seed images (dev-seed EF)
+        run: |
+          # Fix #1635: -s + 수동 status 검사 — error body 로깅 보장
+          http_code=$(curl -s -o /tmp/seed_response.json -w "%{http_code}" -X POST \
+            "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/dev-seed?mode=images-only" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
+            --max-time 60)
+          cat /tmp/seed_response.json
+          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+            echo "::error::dev-seed images-only returned HTTP $http_code"
+            exit 1
+          fi
+
+      - name: Run event-flow cascade (long)
+        run: |
+          # daily 는 데이터 다양성 ↑ 위해 ticks/users 늘림
+          http_code=$(curl -s -o /tmp/sim_response.json -w "%{http_code}" -X POST \
+            "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/event-flow-simulator" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"ticks": 3, "usersPerTick": 20}' \
+            --max-time 600)
+          cat /tmp/sim_response.json
+          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+            echo "::error::event-flow-simulator returned HTTP $http_code"
+            exit 1
+          fi
+          jq -e '.success == true' /tmp/sim_response.json
+
+  notify-failure:
+    needs: [seed-and-simulate]
+    if: always()
+    permissions:
+      issues: write
+    uses: ./.github/workflows/shared-notify.yml
+    with:
+      success: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
+      workflow_name: 'monitor-event-flow-daily'
+    secrets: inherit

@@ -266,7 +266,7 @@
       "envs": ["dev", "production"],
       "description": "PGMQ q_tags LLM 태그 추출 워커 (Fix #1489: system caller 전용)"
     },
-    "backend-simulator": {
+    "event-flow-simulator": {
       "callers": ["public"],
       "envs": ["local", "development", "dev"],
       "description": "E2E/시나리오 시뮬레이터 — dev 전용 (wrapper의 auth-manifest envs 게이팅으로 dev-only 보장)"

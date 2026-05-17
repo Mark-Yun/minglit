@@ -92,7 +92,7 @@ jobs:
           # Fix #1508: GitHub Secret 경유로 주입 — 평문 하드코딩 제거 (dev 시뮬레이터 전용)
           if [ "${{ steps.env.outputs.ENV }}" = "dev" ]; then
             if [ -z "$SIM_USER_PASSWORD" ]; then
-              echo "::error::SIM_USER_PASSWORD is required for dev backend-simulator deploys"
+              echo "::error::SIM_USER_PASSWORD is required for dev event-flow-simulator deploys"
               exit 1
             fi
             supabase secrets set SIM_USER_PASSWORD=$SIM_USER_PASSWORD
