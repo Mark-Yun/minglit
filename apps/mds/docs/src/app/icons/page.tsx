@@ -1,39 +1,7 @@
-import fs from 'fs';
-import path from 'path';
 import { MdsIcons, type MdsIconName } from '@/lib/mds-icons-react';
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-interface IconEntry {
-  name: string;   // snake_case, e.g. "chevron_right"
-  camel: string;  // lowerCamelCase, e.g. "chevronRight"
-  viewBox: string;
-  svgContent: string; // raw SVG string for inline browser preview
-}
-
-// ---------------------------------------------------------------------------
-// Read manifest + inline SVG content at build time (Server Component)
-// ---------------------------------------------------------------------------
-function getIcons(): IconEntry[] {
-  const MANIFEST_PATH = path.resolve(
-    process.cwd(),
-    '../../../shared/packages/mds/icons/manifest.json',
-  );
-  const ICONS_DIR = path.resolve(
-    process.cwd(),
-    '../../../shared/packages/mds/icons/icons',
-  );
-
-  const raw = fs.readFileSync(MANIFEST_PATH, 'utf-8');
-  const entries = JSON.parse(raw) as Array<{ name: string; camel: string; viewBox: string }>;
-
-  return entries.map((entry) => {
-    const svgPath = path.join(ICONS_DIR, `${entry.name}.svg`);
-    const svgContent = fs.readFileSync(svgPath, 'utf-8');
-    return { ...entry, svgContent };
-  });
-}
+// Fix #2537: Vercel 빌드는 apps/mds/docs/ 만 업로드해서 shared/ 접근 불가.
+// manifest.json + SVG를 vendor 파일로 정적 포함 (npm run icons:sync-data 로 갱신).
+import { MDS_ICONS_DATA, type IconEntry } from '@/lib/mds-icons-data';
 
 // ---------------------------------------------------------------------------
 // Icon card component
@@ -70,7 +38,7 @@ function IconCard({ icon }: { icon: IconEntry }) {
 // Page (Server Component — reads files at build time)
 // ---------------------------------------------------------------------------
 export default function IconsPage() {
-  const icons = getIcons();
+  const icons = MDS_ICONS_DATA;
 
   return (
     <div className="max-w-5xl space-y-16">
