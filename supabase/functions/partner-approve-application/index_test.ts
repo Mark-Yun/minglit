@@ -1,4 +1,7 @@
 // partner-approve-application/index_test.ts — handler unit tests (L3, fake supabase)
+//
+// Lazy-loads the handler via dynamic import with Deno.serve stubbed to prevent
+// a real HTTP server from being started (same pattern as payment-webhook/index_test.ts).
 
 import { assertEquals } from "jsr:@std/assert@1";
 import {
@@ -7,8 +10,28 @@ import {
   makeCtx,
   readJson,
   runHandler,
+  type Handler,
 } from "../_shared/_testing/mod.ts";
-import { handler } from "./index.ts";
+
+let _handler: Handler | null = null;
+async function getHandler(): Promise<Handler> {
+  if (_handler) return _handler;
+  const denoAsAny = Deno as unknown as { serve: (...args: unknown[]) => Deno.HttpServer };
+  const origServe = denoAsAny.serve;
+  denoAsAny.serve = () => ({ shutdown() {}, finished: Promise.resolve() } as Deno.HttpServer);
+  const origSetInterval = globalThis.setInterval;
+  const origClearInterval = globalThis.clearInterval;
+  globalThis.setInterval = ((_cb: () => void) => 0 as unknown as ReturnType<typeof setInterval>) as typeof setInterval;
+  globalThis.clearInterval = ((_id?: ReturnType<typeof setInterval>) => {}) as typeof clearInterval;
+  try {
+    _handler = (await import(`./index.ts?unit=${crypto.randomUUID()}`)).handler as Handler;
+  } finally {
+    denoAsAny.serve = origServe;
+    globalThis.setInterval = origSetInterval;
+    globalThis.clearInterval = origClearInterval;
+  }
+  return _handler!;
+}
 
 // ─── helpers ───────────────────────────────────────────────────────────────
 
@@ -37,6 +60,7 @@ function ownerPermScript(sb: ReturnType<typeof fakeSupabase>) {
 // ─── action routing ────────────────────────────────────────────────────────
 
 Deno.test("partner-approve-application :: missing action field → 400", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase({ strict: false });
   const res = await runHandler(handler, {
     body: { application_id: VALID_APP_ID },
@@ -48,6 +72,7 @@ Deno.test("partner-approve-application :: missing action field → 400", async (
 });
 
 Deno.test("partner-approve-application :: unknown action → 400", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase({ strict: false });
   const res = await runHandler(handler, {
     body: { action: "reject" },
@@ -59,6 +84,7 @@ Deno.test("partner-approve-application :: unknown action → 400", async () => {
 // ─── approve (single) ──────────────────────────────────────────────────────
 
 Deno.test("partner-approve-application :: approve :: missing application_id → 400", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase({ strict: false });
   const res = await runHandler(handler, {
     body: { action: "approve" },
@@ -70,6 +96,7 @@ Deno.test("partner-approve-application :: approve :: missing application_id → 
 });
 
 Deno.test("partner-approve-application :: approve :: invalid UUID format → 400", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase({ strict: false });
   const res = await runHandler(handler, {
     body: { action: "approve", application_id: "not-a-uuid" },
@@ -81,6 +108,7 @@ Deno.test("partner-approve-application :: approve :: invalid UUID format → 400
 });
 
 Deno.test("partner-approve-application :: approve :: application not found → 404", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase().on("event_applications", "select", { data: null });
   const res = await runHandler(handler, {
     body: { action: "approve", application_id: VALID_APP_ID },
@@ -92,6 +120,7 @@ Deno.test("partner-approve-application :: approve :: application not found → 4
 });
 
 Deno.test("partner-approve-application :: approve :: DB fetch error → 500", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase().on("event_applications", "select", {
     error: { message: "connection error", code: "08006" },
   });
@@ -103,6 +132,7 @@ Deno.test("partner-approve-application :: approve :: DB fetch error → 500", as
 });
 
 Deno.test("partner-approve-application :: approve :: partner permission denied (no matching permission) → 403", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase()
     .on("event_applications", "select", { data: buildAppRow() })
     .on("partner_member_permissions", "select", {
@@ -118,6 +148,7 @@ Deno.test("partner-approve-application :: approve :: partner permission denied (
 });
 
 Deno.test("partner-approve-application :: approve :: non-approvable status (cancelled) → 400", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase()
     .on("event_applications", "select", { data: buildAppRow({ status: "cancelled" }) })
     .on("partner_member_permissions", "select", {
@@ -133,6 +164,7 @@ Deno.test("partner-approve-application :: approve :: non-approvable status (canc
 });
 
 Deno.test("partner-approve-application :: approve :: event_full → 409 EVENT_FULL", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase()
     .on("event_applications", "select", { data: buildAppRow() });
   ownerPermScript(sb);
@@ -149,6 +181,7 @@ Deno.test("partner-approve-application :: approve :: event_full → 409 EVENT_FU
 });
 
 Deno.test("partner-approve-application :: approve :: already_processed → 409", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase()
     .on("event_applications", "select", { data: buildAppRow() });
   ownerPermScript(sb);
@@ -163,6 +196,7 @@ Deno.test("partner-approve-application :: approve :: already_processed → 409",
 });
 
 Deno.test("partner-approve-application :: approve :: happy path → 200 + approved=1", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase()
     .on("event_applications", "select", { data: buildAppRow() });
   ownerPermScript(sb);
@@ -182,6 +216,7 @@ Deno.test("partner-approve-application :: approve :: happy path → 200 + approv
 // ─── bulk_approve ──────────────────────────────────────────────────────────
 
 Deno.test("partner-approve-application :: bulk_approve :: missing event_id → 400", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase({ strict: false });
   const res = await runHandler(handler, {
     body: { action: "bulk_approve" },
@@ -193,6 +228,7 @@ Deno.test("partner-approve-application :: bulk_approve :: missing event_id → 4
 });
 
 Deno.test("partner-approve-application :: bulk_approve :: event not found → 404", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase().on("events", "select", { data: null });
   const res = await runHandler(handler, {
     body: { action: "bulk_approve", event_id: VALID_EVENT_ID },
@@ -204,6 +240,7 @@ Deno.test("partner-approve-application :: bulk_approve :: event not found → 40
 });
 
 Deno.test("partner-approve-application :: bulk_approve :: happy path → 200 + approved count", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase()
     .on("events", "select", {
       data: { id: VALID_EVENT_ID, party_id: "party-1", parties: { partner_id: PARTNER_ID } },

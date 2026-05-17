@@ -3,6 +3,9 @@
 // Pattern mirrors user-cancel-order/index_test.ts:
 //   fakeSupabase() scripts DB responses, runHandler() calls the exported handler directly.
 //   PortOne HTTP calls (executeRefund) are intercepted via withMockedFetch + withEnv.
+//
+// Lazy-loads the handler via dynamic import with Deno.serve stubbed to prevent
+// a real HTTP server from being started (same pattern as payment-webhook/index_test.ts).
 
 import { assertEquals } from "@std/assert";
 import {
@@ -10,6 +13,7 @@ import {
   makeCtx,
   readJson,
   runHandler,
+  type Handler,
 } from "../_shared/_testing/mod.ts";
 import {
   createFetchMock,
@@ -17,7 +21,26 @@ import {
   withEnv,
   withMockedFetch,
 } from "../_test_utils/mock_http.ts";
-import { handler } from "./index.ts";
+
+let _handler: Handler | null = null;
+async function getHandler(): Promise<Handler> {
+  if (_handler) return _handler;
+  const denoAsAny = Deno as unknown as { serve: (...args: unknown[]) => Deno.HttpServer };
+  const origServe = denoAsAny.serve;
+  denoAsAny.serve = () => ({ shutdown() {}, finished: Promise.resolve() } as Deno.HttpServer);
+  const origSetInterval = globalThis.setInterval;
+  const origClearInterval = globalThis.clearInterval;
+  globalThis.setInterval = ((_cb: () => void) => 0 as unknown as ReturnType<typeof setInterval>) as typeof setInterval;
+  globalThis.clearInterval = ((_id?: ReturnType<typeof setInterval>) => {}) as typeof clearInterval;
+  try {
+    _handler = (await import(`./index.ts?unit=${crypto.randomUUID()}`)).handler as Handler;
+  } finally {
+    denoAsAny.serve = origServe;
+    globalThis.setInterval = origSetInterval;
+    globalThis.clearInterval = origClearInterval;
+  }
+  return _handler!;
+}
 
 // ── Shared time fixtures ──────────────────────────────────────────────────────
 const nowMs = Date.now();
@@ -61,6 +84,7 @@ function makeApp(overrides: Record<string, unknown> = {}): Record<string, unknow
 
 // 1. Missing payment_id → 400
 Deno.test("payment-cancel :: missing payment_id → 400", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase({ strict: false });
   const res = await runHandler(handler, {
     body: { reason: "no id" },
@@ -73,6 +97,7 @@ Deno.test("payment-cancel :: missing payment_id → 400", async () => {
 
 // 2. Application not found (DB returns error) → 404
 Deno.test("payment-cancel :: application not found → 404", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase().on("event_applications", "select", {
     error: { message: "no rows", code: "PGRST116" },
   });
@@ -87,6 +112,7 @@ Deno.test("payment-cancel :: application not found → 404", async () => {
 
 // 3. Application belongs to a different user → 403
 Deno.test("payment-cancel :: wrong user → 403", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase().on("event_applications", "select", {
     data: makeApp({ user_id: "other-user" }),
   });
@@ -101,6 +127,7 @@ Deno.test("payment-cancel :: wrong user → 403", async () => {
 
 // 4. Already refunded (refund_status ≠ "none") → 400
 Deno.test("payment-cancel :: already refunded → 400", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase().on("event_applications", "select", {
     data: makeApp({ refund_status: "completed" }),
   });
@@ -115,6 +142,7 @@ Deno.test("payment-cancel :: already refunded → 400", async () => {
 
 // 5. Event fetch fails → 500
 Deno.test("payment-cancel :: event fetch error → 500", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase()
     .on("event_applications", "select", { data: makeApp() })
     .on("events", "select", { error: { message: "connection timeout" } })
@@ -131,6 +159,7 @@ Deno.test("payment-cancel :: event fetch error → 500", async () => {
 
 // 6. Policy RPC fails → 500
 Deno.test("payment-cancel :: policy rpc error → 500", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase()
     .on("event_applications", "select", { data: makeApp() })
     .on("events", "select", { data: { start_time: FAR_FUTURE_EVENT } })
@@ -147,6 +176,7 @@ Deno.test("payment-cancel :: policy rpc error → 500", async () => {
 
 // 7. Refund ineligible — event already started → 400
 Deno.test("payment-cancel :: event already started → 400 refund_not_eligible", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase()
     .on("event_applications", "select", {
       data: makeApp({ paid_at: ELIGIBLE_PAID_AT }),
@@ -165,6 +195,7 @@ Deno.test("payment-cancel :: event already started → 400 refund_not_eligible",
 
 // 8. Refund ineligible — outside grace + outside cutoff → 400
 Deno.test("payment-cancel :: outside grace and cutoff window → 400 refund_not_eligible", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase()
     .on("event_applications", "select", {
       data: makeApp({ paid_at: INELIGIBLE_PAID_AT }), // 3h ago — outside 2h grace
@@ -183,6 +214,7 @@ Deno.test("payment-cancel :: outside grace and cutoff window → 400 refund_not_
 
 // 9. PortOne credentials missing → 500 (RefundError from executeRefund)
 Deno.test("payment-cancel :: missing portone credentials → 500", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase()
     .on("event_applications", "select", { data: makeApp() })
     .on("events", "select", { data: { start_time: FAR_FUTURE_EVENT } })
@@ -205,6 +237,7 @@ Deno.test("payment-cancel :: missing portone credentials → 500", async () => {
 
 // 10. Happy path — within grace period → 200, DB updated with refund_status=completed
 Deno.test("payment-cancel :: happy path (within grace) → 200 + refund_status=completed", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase()
     .on("event_applications", "select", {
       data: makeApp({ paid_at: ELIGIBLE_PAID_AT }),
@@ -238,6 +271,7 @@ Deno.test("payment-cancel :: happy path (within grace) → 200 + refund_status=c
 
 // 11. Happy path — paidAt null but within cutoff → 200
 Deno.test("payment-cancel :: paidAt=null + within cutoff → 200", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase()
     .on("event_applications", "select", {
       data: makeApp({ paid_at: null }),
@@ -261,6 +295,7 @@ Deno.test("payment-cancel :: paidAt=null + within cutoff → 200", async () => {
 
 // 12. PortOne token failure → 502 (RefundError wrapped by executeRefund)
 Deno.test("payment-cancel :: portone token failure → 502", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase()
     .on("event_applications", "select", { data: makeApp() })
     .on("events", "select", { data: { start_time: FAR_FUTURE_EVENT } })
@@ -288,6 +323,7 @@ Deno.test("payment-cancel :: portone token failure → 502", async () => {
 
 // 13. DB update error after successful refund — non-fatal, still 200
 Deno.test("payment-cancel :: DB update error is non-fatal → 200", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase()
     .on("event_applications", "select", { data: makeApp() })
     .on("events", "select", { data: { start_time: FAR_FUTURE_EVENT } })

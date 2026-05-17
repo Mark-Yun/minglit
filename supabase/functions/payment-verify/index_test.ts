@@ -7,6 +7,9 @@
 //
 // The module-level guard `if (!IMP_KEY || !IMP_SECRET) throw` fires at import time, so we
 // must set the env vars BEFORE importing the handler via dynamic import.
+//
+// Lazy-loads the handler via dynamic import with Deno.serve stubbed to prevent
+// a real HTTP server from being started (same pattern as payment-webhook/index_test.ts).
 
 Deno.env.set("PORTONE_API_KEY", "test-key");
 Deno.env.set("PORTONE_API_SECRET", "test-secret");
@@ -21,10 +24,30 @@ import {
   makeCtx,
   readJson,
   runHandler,
+  type Handler,
 } from "../_shared/_testing/mod.ts";
 
-// Dynamic import ensures env vars are set before the module throws.
-const { handler } = await import("./index.ts");
+// Lazy-load to stub Deno.serve before the module fires minglitEdgeFunction (which calls Deno.serve).
+// Env vars above are set synchronously at module init, so they're available when getHandler() runs.
+let _handler: Handler | null = null;
+async function getHandler(): Promise<Handler> {
+  if (_handler) return _handler;
+  const denoAsAny = Deno as unknown as { serve: (...args: unknown[]) => Deno.HttpServer };
+  const origServe = denoAsAny.serve;
+  denoAsAny.serve = () => ({ shutdown() {}, finished: Promise.resolve() } as Deno.HttpServer);
+  const origSetInterval = globalThis.setInterval;
+  const origClearInterval = globalThis.clearInterval;
+  globalThis.setInterval = ((_cb: () => void) => 0 as unknown as ReturnType<typeof setInterval>) as typeof setInterval;
+  globalThis.clearInterval = ((_id?: ReturnType<typeof setInterval>) => {}) as typeof clearInterval;
+  try {
+    _handler = (await import(`./index.ts?unit=${crypto.randomUUID()}`)).handler as Handler;
+  } finally {
+    denoAsAny.serve = origServe;
+    globalThis.setInterval = origSetInterval;
+    globalThis.clearInterval = origClearInterval;
+  }
+  return _handler!;
+}
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -89,6 +112,7 @@ function makePortOneFetch(paymentOverrides: Record<string, unknown> = {}) {
 // ── tests ─────────────────────────────────────────────────────────────────────
 
 Deno.test("payment-verify :: missing imp_uid → 400", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase({ strict: false });
   const res = await runHandler(handler, {
     body: { merchant_uid: ORDER_ID },
@@ -100,6 +124,7 @@ Deno.test("payment-verify :: missing imp_uid → 400", async () => {
 });
 
 Deno.test("payment-verify :: missing merchant_uid → 400", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase({ strict: false });
   const res = await runHandler(handler, {
     body: { imp_uid: IMP_UID },
@@ -111,6 +136,7 @@ Deno.test("payment-verify :: missing merchant_uid → 400", async () => {
 });
 
 Deno.test("payment-verify :: order not found (DB error) → 404", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase().on("event_applications", "select", {
     error: { message: "no rows", code: "PGRST116" },
   });
@@ -124,6 +150,7 @@ Deno.test("payment-verify :: order not found (DB error) → 404", async () => {
 });
 
 Deno.test("payment-verify :: order belongs to different user → 403", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase().on("event_applications", "select", {
     data: buildOrder({ user_id: "other-user-999" }),
   });
@@ -137,6 +164,7 @@ Deno.test("payment-verify :: order belongs to different user → 403", async () 
 });
 
 Deno.test("payment-verify :: order already approved → 200 (idempotent early return)", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase().on("event_applications", "select", {
     data: buildOrder({ status: "approved" }),
   });
@@ -151,6 +179,7 @@ Deno.test("payment-verify :: order already approved → 200 (idempotent early re
 });
 
 Deno.test("payment-verify :: order already paid → 200 (idempotent early return)", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase().on("event_applications", "select", {
     data: buildOrder({ status: "paid" }),
   });
@@ -165,6 +194,7 @@ Deno.test("payment-verify :: order already paid → 200 (idempotent early return
 });
 
 Deno.test("payment-verify :: PortOne payment status != paid → 400", async () => {
+  const handler = await getHandler();
   const origFetch = globalThis.fetch;
   globalThis.fetch = makePortOneFetch({ status: "ready" }) as typeof fetch;
   try {
@@ -184,6 +214,7 @@ Deno.test("payment-verify :: PortOne payment status != paid → 400", async () =
 });
 
 Deno.test("payment-verify :: PortOne amount mismatch → 400 (cancel triggered)", async () => {
+  const handler = await getHandler();
   const origFetch = globalThis.fetch;
   // PortOne returns amount=999 but order expects 10000
   globalThis.fetch = makePortOneFetch({ status: "paid", amount: 999 }) as typeof fetch;
@@ -206,6 +237,7 @@ Deno.test("payment-verify :: PortOne amount mismatch → 400 (cancel triggered)"
 });
 
 Deno.test("payment-verify :: happy path → 200 + DB updated to approved", async () => {
+  const handler = await getHandler();
   const origFetch = globalThis.fetch;
   globalThis.fetch = makePortOneFetch() as typeof fetch;
   try {
@@ -233,6 +265,7 @@ Deno.test("payment-verify :: happy path → 200 + DB updated to approved", async
 });
 
 Deno.test("payment-verify :: happy path with paid_at=null → approved with no paid_at in patch", async () => {
+  const handler = await getHandler();
   const origFetch = globalThis.fetch;
   // paid_at=null means payment gateway didn't supply timestamp
   globalThis.fetch = makePortOneFetch({ paid_at: null }) as typeof fetch;
@@ -258,6 +291,7 @@ Deno.test("payment-verify :: happy path with paid_at=null → approved with no p
 });
 
 Deno.test("payment-verify :: DB update fails after payment verified → 500", async () => {
+  const handler = await getHandler();
   const origFetch = globalThis.fetch;
   globalThis.fetch = makePortOneFetch() as typeof fetch;
   try {
@@ -280,6 +314,7 @@ Deno.test("payment-verify :: DB update fails after payment verified → 500", as
 });
 
 Deno.test("payment-verify :: PortOne getToken network failure → 500 (catch block)", async () => {
+  const handler = await getHandler();
   const origFetch = globalThis.fetch;
   globalThis.fetch = (_input: unknown, _init?: unknown): Promise<Response> => {
     return Promise.resolve(new Response("Iamport down", { status: 503 }));

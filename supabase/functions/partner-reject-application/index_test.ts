@@ -1,4 +1,7 @@
 // partner-reject-application/index_test.ts — handler unit tests (L3, fake supabase)
+//
+// Lazy-loads the handler via dynamic import with Deno.serve stubbed to prevent
+// a real HTTP server from being started (same pattern as payment-webhook/index_test.ts).
 
 import { assertEquals } from "jsr:@std/assert@1";
 import {
@@ -7,8 +10,28 @@ import {
   makeCtx,
   readJson,
   runHandler,
+  type Handler,
 } from "../_shared/_testing/mod.ts";
-import { handler } from "./index.ts";
+
+let _handler: Handler | null = null;
+async function getHandler(): Promise<Handler> {
+  if (_handler) return _handler;
+  const denoAsAny = Deno as unknown as { serve: (...args: unknown[]) => Deno.HttpServer };
+  const origServe = denoAsAny.serve;
+  denoAsAny.serve = () => ({ shutdown() {}, finished: Promise.resolve() } as Deno.HttpServer);
+  const origSetInterval = globalThis.setInterval;
+  const origClearInterval = globalThis.clearInterval;
+  globalThis.setInterval = ((_cb: () => void) => 0 as unknown as ReturnType<typeof setInterval>) as typeof setInterval;
+  globalThis.clearInterval = ((_id?: ReturnType<typeof setInterval>) => {}) as typeof clearInterval;
+  try {
+    _handler = (await import(`./index.ts?unit=${crypto.randomUUID()}`)).handler as Handler;
+  } finally {
+    denoAsAny.serve = origServe;
+    globalThis.setInterval = origSetInterval;
+    globalThis.clearInterval = origClearInterval;
+  }
+  return _handler!;
+}
 
 // Shared UUID for valid application_id values
 const APP_ID = "11111111-1111-1111-8111-111111111111";
@@ -37,6 +60,7 @@ const NO_PERM = { role: "member", permissions: [] };
 // ── 1. Method guard ──────────────────────────────────────────────────────────
 
 Deno.test("partner-reject-application :: GET method → 405", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase({ strict: false });
   const res = await runHandler(handler, {
     method: "GET",
@@ -49,6 +73,7 @@ Deno.test("partner-reject-application :: GET method → 405", async () => {
 // ── 2. Input validation ──────────────────────────────────────────────────────
 
 Deno.test("partner-reject-application :: missing application_id → 400", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase({ strict: false });
   const res = await runHandler(handler, {
     body: { reason: "Not a fit" },
@@ -60,6 +85,7 @@ Deno.test("partner-reject-application :: missing application_id → 400", async 
 });
 
 Deno.test("partner-reject-application :: invalid UUID application_id → 400", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase({ strict: false });
   const res = await runHandler(handler, {
     body: { application_id: "not-a-uuid", reason: "Not a fit" },
@@ -71,6 +97,7 @@ Deno.test("partner-reject-application :: invalid UUID application_id → 400", a
 });
 
 Deno.test("partner-reject-application :: missing reason → 400", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase({ strict: false });
   const res = await runHandler(handler, {
     body: { application_id: APP_ID },
@@ -84,6 +111,7 @@ Deno.test("partner-reject-application :: missing reason → 400", async () => {
 // ── 3. Application fetch branches ───────────────────────────────────────────
 
 Deno.test("partner-reject-application :: application not found → 404", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase().on("event_applications", "select", { data: null });
   const res = await runHandler(handler, {
     body: { application_id: APP_ID, reason: "Not a fit" },
@@ -95,6 +123,7 @@ Deno.test("partner-reject-application :: application not found → 404", async (
 });
 
 Deno.test("partner-reject-application :: DB error on fetch → 500", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase().on("event_applications", "select", {
     error: { message: "connection timeout", code: "08000" },
   });
@@ -110,6 +139,7 @@ Deno.test("partner-reject-application :: DB error on fetch → 500", async () =>
 // ── 4. Status guard ──────────────────────────────────────────────────────────
 
 Deno.test("partner-reject-application :: status=paid (non-rejectable) → 400", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase().on("event_applications", "select", {
     data: buildAppRow("paid"),
   });
@@ -123,6 +153,7 @@ Deno.test("partner-reject-application :: status=paid (non-rejectable) → 400", 
 });
 
 Deno.test("partner-reject-application :: status=rejected (already rejected) → 400", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase().on("event_applications", "select", {
     data: buildAppRow("rejected"),
   });
@@ -136,6 +167,7 @@ Deno.test("partner-reject-application :: status=rejected (already rejected) → 
 // ── 5. Permission check ──────────────────────────────────────────────────────
 
 Deno.test("partner-reject-application :: insufficient permissions → 403", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase()
     .on("event_applications", "select", { data: buildAppRow("pending") })
     .on("partner_member_permissions", "select", { data: NO_PERM });
@@ -151,6 +183,7 @@ Deno.test("partner-reject-application :: insufficient permissions → 403", asyn
 // ── 6. Concurrent update race (409) ─────────────────────────────────────────
 
 Deno.test("partner-reject-application :: concurrent update (empty rows) → 409", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase()
     .on("event_applications", "select", { data: buildAppRow("pending") })
     .on("partner_member_permissions", "select", { data: OWNER_PERM })
@@ -167,6 +200,7 @@ Deno.test("partner-reject-application :: concurrent update (empty rows) → 409"
 // ── 7. DB error on update ────────────────────────────────────────────────────
 
 Deno.test("partner-reject-application :: DB error on update → 500", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase()
     .on("event_applications", "select", { data: buildAppRow("pending") })
     .on("partner_member_permissions", "select", { data: OWNER_PERM })
@@ -183,6 +217,7 @@ Deno.test("partner-reject-application :: DB error on update → 500", async () =
 // ── 8. Success paths ─────────────────────────────────────────────────────────
 
 Deno.test("partner-reject-application :: status=pending + owner role → 200", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase()
     .on("event_applications", "select", { data: buildAppRow("pending") })
     .on("partner_member_permissions", "select", { data: OWNER_PERM })
@@ -204,6 +239,7 @@ Deno.test("partner-reject-application :: status=pending + owner role → 200", a
 });
 
 Deno.test("partner-reject-application :: status=pending_review + member with APPLICATION_MANAGE → 200", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase()
     .on("event_applications", "select", { data: buildAppRow("pending_review") })
     .on("partner_member_permissions", "select", { data: MEMBER_PERM })

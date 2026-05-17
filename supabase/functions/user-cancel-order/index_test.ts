@@ -1,4 +1,7 @@
 // user-cancel-order/index_test.ts — handler unit tests (L3, fake supabase)
+//
+// Lazy-loads the handler via dynamic import with Deno.serve stubbed to prevent
+// a real HTTP server from being started (same pattern as payment-webhook/index_test.ts).
 
 import { assertEquals } from "jsr:@std/assert@1";
 import {
@@ -7,10 +10,31 @@ import {
   makeCtx,
   readJson,
   runHandler,
+  type Handler,
 } from "../_shared/_testing/mod.ts";
-import { handler } from "./index.ts";
+
+let _handler: Handler | null = null;
+async function getHandler(): Promise<Handler> {
+  if (_handler) return _handler;
+  const denoAsAny = Deno as unknown as { serve: (...args: unknown[]) => Deno.HttpServer };
+  const origServe = denoAsAny.serve;
+  denoAsAny.serve = () => ({ shutdown() {}, finished: Promise.resolve() } as Deno.HttpServer);
+  const origSetInterval = globalThis.setInterval;
+  const origClearInterval = globalThis.clearInterval;
+  globalThis.setInterval = ((_cb: () => void) => 0 as unknown as ReturnType<typeof setInterval>) as typeof setInterval;
+  globalThis.clearInterval = ((_id?: ReturnType<typeof setInterval>) => {}) as typeof clearInterval;
+  try {
+    _handler = (await import(`./index.ts?unit=${crypto.randomUUID()}`)).handler as Handler;
+  } finally {
+    denoAsAny.serve = origServe;
+    globalThis.setInterval = origSetInterval;
+    globalThis.clearInterval = origClearInterval;
+  }
+  return _handler!;
+}
 
 Deno.test("user-cancel-order :: application not found → 404", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase().on("event_applications", "select", {
     error: { message: "no rows", code: "PGRST116" },
   });
@@ -22,6 +46,7 @@ Deno.test("user-cancel-order :: application not found → 404", async () => {
 });
 
 Deno.test("user-cancel-order :: missing event_id → 400", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase();
   const res = await runHandler(handler, {
     body: {},
@@ -31,6 +56,7 @@ Deno.test("user-cancel-order :: missing event_id → 400", async () => {
 });
 
 Deno.test("user-cancel-order :: status=cancelled (final) → 400", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase().on("event_applications", "select", {
     data: buildApplication({ status: "cancelled" }),
   });
@@ -42,6 +68,7 @@ Deno.test("user-cancel-order :: status=cancelled (final) → 400", async () => {
 });
 
 Deno.test("user-cancel-order :: status=pending (pre-payment) → 200 + 2 deletes", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase()
     .on("event_applications", "select", { data: buildApplication({ status: "pending" }) })
     .on("verification_submissions", "delete", { error: null })
@@ -60,6 +87,7 @@ Deno.test("user-cancel-order :: status=pending (pre-payment) → 200 + 2 deletes
 });
 
 Deno.test("user-cancel-order :: free event (paid + amount=0 + 이벤트 미시작) → 200 + status update", async () => {
+  const handler = await getHandler();
   const futureEvent = "2099-12-31T18:00:00Z";
   const sb = fakeSupabase()
     .on("event_applications", "select", {
@@ -86,6 +114,7 @@ Deno.test("user-cancel-order :: free event (paid + amount=0 + 이벤트 미시�
 });
 
 Deno.test("user-cancel-order :: free event but 이벤트 이미 시작 → 400 (event_already_started)", async () => {
+  const handler = await getHandler();
   const pastEvent = "2020-01-01T00:00:00Z";
   const sb = fakeSupabase()
     .on("event_applications", "select", {
@@ -103,6 +132,7 @@ Deno.test("user-cancel-order :: free event but 이벤트 이미 시작 → 400 (
 });
 
 Deno.test("user-cancel-order :: paid + refund_status=completed → 400 (already_refunded)", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase().on("event_applications", "select", {
     data: buildApplication({
       status: "paid",
@@ -118,6 +148,7 @@ Deno.test("user-cancel-order :: paid + refund_status=completed → 400 (already_
 });
 
 Deno.test("user-cancel-order :: paid + payment_amount=null (damaged data) → 400", async () => {
+  const handler = await getHandler();
   const sb = fakeSupabase().on("event_applications", "select", {
     data: buildApplication({ status: "paid", payment_amount: null }),
   });
