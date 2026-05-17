@@ -9,7 +9,7 @@ class MdsCatalog<B extends MdsScreenBuilder<dynamic>> {
   const MdsCatalog({
     required this.screen,
     required this.mdsSpec,
-    required this.builderFactory,
+    required this.builder,
     required this.states,
   });
 
@@ -23,7 +23,7 @@ class MdsCatalog<B extends MdsScreenBuilder<dynamic>> {
 
   /// 새 builder 인스턴스 생성 함수.
   /// 각 state 마다 fresh builder 가 만들어져야 override 누적 방지.
-  final B Function() builderFactory;
+  final B Function() builder;
 
   /// 이 화면의 모든 state.
   final List<MdsState<B>> states;

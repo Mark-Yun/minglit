@@ -2,6 +2,26 @@
 
 77 MDS 화면 × 평균 4 state = **300+ 케이스**를 단순 test 가 아니라 **선언적 render catalog** 로 다룬다. 데이터(catalog) 와 코드(engine) 의 분리, 합성(composition) 가능한 state, 자동 manifest, 인스펙션-친화적 페어링이 핵심.
 
+## 구현 상태 (Phase 1 / Phase 2)
+
+본 문서는 **목표 설계** + **현재 구현 상태** 를 함께 명시한다. 미구현 항목은 시도하면 compile error. 추가 작업은 follow-up PR.
+
+| 영역 | Phase 1 (현재 구현됨) | Phase 2 (TODO, 후속 PR) |
+|------|--------------------|-------------------------|
+| `_engine/state.dart` | `MdsState` 클래스 (name + setup + mdsIndex + tags) | `MdsState.compose([...])` 자동 합성 |
+| `_engine/builder.dart` | `MdsScreenBuilder<W>` base, `useDarkTheme()`, `addOverride()` | provider slot dedup (`setSlot`), `requiredSlots` 검증 |
+| `_engine/catalog.dart` | `MdsCatalog` (screen + mdsSpec + builder + states) | — |
+| `_engine/runner.dart` | catalog → testWidgets per state | `decorators:` 파라미터 (cross-cutting) |
+| `_engine/decorator.dart` | (없음) | `WithKoreanLocale`, `WithViewport`, `WithTimezone` 등 |
+| `_engine/primitive.dart` | (없음) | `Primitive.empty()`, `Primitive.loading()`, `Primitive.error()` 공용 factory |
+| `_engine/manifest.dart` | (없음) | `_manifest.yaml` writer (mds_index, builder hash, setup chain) |
+| `_registry.dart` | (없음) | 모든 catalog 자동 발견 + shard 실행 |
+| `scripts/mds_render_coverage.dart` | (없음) | MDS ↔ catalog gap report (CLI) |
+| `scripts/scaffold_mds_render.dart` | (없음) | 새 screen 자동 폴더+빌더+test 생성 |
+| `.github/workflows/monitor-mds-render-coverage.yml` | (없음) | daily cron, 100% 미만 시 이슈 |
+
+**현재 상태**: Phase 1 만 사용 가능. 신규 화면 추가는 `home_page/` 패턴 그대로 복제하면 됨.
+
 ## 데이터 흐름
 
 ```

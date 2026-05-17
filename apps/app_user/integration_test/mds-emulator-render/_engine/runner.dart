@@ -24,7 +24,7 @@ class MdsRenderEngine {
 
     for (final state in catalog.states) {
       testWidgets(state.name, (tester) async {
-        final builder = state.setup(catalog.builderFactory());
+        final builder = state.setup(catalog.builder());
         await tester.pumpWidget(builder.build());
         await tester.pumpAndSettle();
 

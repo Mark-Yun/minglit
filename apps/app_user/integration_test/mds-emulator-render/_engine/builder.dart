@@ -11,9 +11,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
-// NOTE: List<Override> 대신 List<dynamic> + .cast() 패턴 사용 — Riverpod 의
-// Override 타입이 외부 import 가 까다로워서 (alchemist 의 GoldenPageWrapper
-// 와 동일 우회). 런타임엔 동일.
+// NOTE: List<dynamic> + .cast() 패턴은 의도된 선택 (style choice 아님).
+// Riverpod 3.x 의 `Override` 와 `ProviderListenable` 는 sealed class /
+// internal interface 로 public export 가 없어, 외부 코드가 직접 type 으로
+// 사용 불가. ProviderScope.overrides 가 받는 type 자체가 internal `Override`.
+// alchemist 의 GoldenPageWrapper 도 동일 우회 (List<dynamic>).
+// 런타임 동작은 strict type 과 동일 — cast 가 실패 시 즉시 throw.
+//
+// ⚠ 함정 — provider override 중복:
+// Riverpod 는 같은 provider 가 두 번 override 되면 build 시점에 throw
+// ("Tried to override a provider twice"). 같은 provider 를 set 하는 fluent
+// 메서드가 2개라면 (예: `empty()` 와 `withEvents()`) state setup 에서 한쪽만
+// 호출하도록 author 가 책임진다. base 에 mutable provider 를 두지 않는 것이
+// 안전한 default (모든 state 가 명시적 호출).
 
 /// 모든 화면이 공유하는 root level override.
 List<dynamic> _commonRootOverrides() => [

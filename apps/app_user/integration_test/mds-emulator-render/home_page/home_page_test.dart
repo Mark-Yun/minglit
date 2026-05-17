@@ -11,7 +11,7 @@ import 'builder.dart';
 final catalog = MdsCatalog<HomePageBuilder>(
   screen: 'home_page',
   mdsSpec: 'apps/mds/docs/public/specs/home_page/',
-  builderFactory: HomePageBuilder.new,
+  builder: HomePageBuilder.new,
   states: [
     MdsState('state-empty', (b) => b.empty(), mdsIndex: 1),
     MdsState('state-with-events', (b) => b.withEvents(3), mdsIndex: 2),
