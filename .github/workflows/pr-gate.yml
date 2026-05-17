@@ -576,6 +576,10 @@ jobs:
           channel: 'stable'
           cache: true
 
+      # Fix self-hosted runner: Flutter SDK cache dir owned by different user → git refuses ops.
+      - name: Allow git access to Flutter SDK dir
+        run: git config --global --add safe.directory '*'
+
       - name: Install dependencies
         run: flutter pub get
         working-directory: apps/app_user
@@ -639,6 +643,10 @@ jobs:
         with:
           channel: 'stable'
           cache: true
+
+      # Fix self-hosted runner: Flutter SDK cache dir owned by different user → git refuses ops.
+      - name: Allow git access to Flutter SDK dir
+        run: git config --global --add safe.directory '*'
 
       - name: Install dependencies
         run: flutter pub get
