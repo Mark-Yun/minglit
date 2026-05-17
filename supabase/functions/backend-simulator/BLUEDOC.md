@@ -2,12 +2,9 @@
 
 유저·파트너 트래픽을 시뮬레이션해 dev EF/스키마/트리거를 자동 검증하는 Supabase Edge Function.
 
-## 두 모드 (`index.ts` 의 `mode` 분기)
+## 단일 모드 — Stochastic Cascade
 
-| 모드 | 호출 | 동작 |
-|---|---|---|
-| `phase` (default) | `{"phase": "create|approve|refund|run|settle|verify"}` 또는 빈 body | 6 단계 직렬 시뮬 (옛, **2026-04-26 deprecated** — PR #1355 의 2주 안정 운영 시한 경과) |
-| `tick` | `{"mode": "tick"}` | DB 상태 기반 행위자(actor) 시뮬 — 매 호출마다 partner/user 가 자율 액션 생성·실행 |
+옛 phase / tick 분기는 v2 cascade 로 통합 삭제. 매 호출 = cascade 1회 실행.
 
 ## 호출 예시
 
@@ -15,15 +12,20 @@
 curl -X POST "https://<project>.supabase.co/functions/v1/backend-simulator" \
   -H "Authorization: Bearer <SERVICE_ROLE_KEY>" \
   -H "Content-Type: application/json" \
-  -d '{"mode":"tick"}'
+  -d '{"ticks": 3, "usersPerTick": 10}'
 ```
+
+응답 = `{ success, run_id, actors, trace_summary, violations, github_issue_url }`. 실패 시 reporter 가 자동 GH 이슈 생성.
 
 ## 폴더 구조
 
-- `index.ts` — EF 진입점 (mode 분기)
-- `sim_{auth,reporter,assertions,types}.ts` — 공용
-- `sim_{create,approve,refund,event,settle}.ts` — Phase 모드 모듈
-- `tick/` — Tick 모드 (`sim_tick.ts` orchestrator + `action_runner.ts` + `sim_action.ts` 베이스 + `actions/` 8종 + `factories/` partner/user)
+- `index.ts` — EF 진입점 (cascade 호출)
+- `core/` — 엔진 (cascade, observable, trace, transport, snapshot, reporter, auth, types)
+- `action/` — 8 액션 (apply/refund/checkin/discover/vote/block + partner_approve/reject/create_event)
+- `policy/` — user/partner 가중 sampling 정책
+- `params/` — 확률 데이터 (default.ts — happy 0.85-0.95 / critical negative 0.05-0.15)
+- `invariant/` — cross-EF 규칙 (현재: blocking 1개)
+- `modes/` — 호출 패턴 wrapper (현재: tick.ts)
 
 ## 트리거 / 환경 가드
 
