@@ -18,3 +18,6 @@ Flutter integration test 의 entry point. 에뮬레이터(또는 디바이스)�
 - (예정) `mds-emulator-render.yml` — 본 폴더 테스트 실행 → 실제 PNG
 
 두 워크플로우의 PNG 비교가 GUI drift 감지의 1차 신호.
+
+---
+_Reviewed: 2026-05-17 22:32_

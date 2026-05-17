@@ -24,3 +24,6 @@ Supabase 테이블·RPC 접근의 단일 출처. Repository 클래스가 UI 와 
 - [minglit_kit/architecture.md](../../architecture.md) — kit 전체 아키텍처 개요
 - [minglit_kit/BLUEDOC.md](../../BLUEDOC.md)
 - [apps/architecture.md](../../../../../apps/architecture.md) — kit 사용 측 (Flutter 앱)
+
+---
+_Reviewed: 2026-05-17 22:32_

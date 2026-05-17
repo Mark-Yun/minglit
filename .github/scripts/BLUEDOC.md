@@ -9,6 +9,7 @@
 | [`create-dev-flutter-env.sh`](./create-dev-flutter-env.sh) | Actions secrets → `minglit_env/dev/flutter.env` 재생성 (CI 가 private submodule `minglit_env/` 를 받지 못해서 필요, Fix #1169) | `shared-cuj-integration`, `monitor-patrol-e2e` |
 | [`run-user-cuj.sh`](./run-user-cuj.sh) | `apps/app_user/integration_test/cuj/` 의 CUJ 테스트 실행 (emulator) | `shared-cuj-integration` (app-name=user 일 때) |
 | [`run-partner-cuj.sh`](./run-partner-cuj.sh) | `apps/app_partner/integration_test/cuj/` CUJ 실행 | `shared-cuj-integration` (app-name=partner 일 때) |
+| [`check-bluedoc-freshness.sh`](./check-bluedoc-freshness.sh) | PR 에서 새/삭제 파일에 대해 가장 가까운 ancestor BLUEDOC.md 갱신 강제. 통과: 이정표 표 갱신 또는 BLUEDOC 의 `_Reviewed_` 날짜 bump. + 모든 BLUEDOC.md 의 Reviewed 형식 검증 | `pr-gate.check-bluedoc-freshness` (required check) |
 
 ## 핵심 컨벤션
 
@@ -23,3 +24,6 @@
 - [workflows/BLUEDOC.md](../workflows/BLUEDOC.md) — 호출하는 워크플로우 컨벤션
 - [actions/BLUEDOC.md](../actions/BLUEDOC.md) — script 가 자라면 composite 로 승격
 - [.github/BLUEDOC.md](../BLUEDOC.md) — 상위 진입점
+
+---
+_Reviewed: 2026-05-17 22:50_

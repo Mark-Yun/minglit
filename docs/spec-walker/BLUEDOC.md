@@ -20,3 +20,6 @@
 
 - [BLUEDOC](../infra/bluedoc/BLUEDOC.md) — 진입점 컨벤션
 - [FRESH_DOC](../infra/fresh-doc/BLUEDOC.md) — 워커 트리거 메커니즘
+
+---
+_Reviewed: 2026-05-17 22:32_
