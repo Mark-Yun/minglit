@@ -168,8 +168,8 @@ adb -s adb-R3CX803P2ND-8btuuD._adb-tls-connect._tcp install -r build/app/outputs
 | CodeRabbit 리뷰 | PR only | `ci-result` job 내에서 최대 30분 대기 |
 
 별도 워크플로우 (required check 아님, 참고용):
-- **`sync-format`**: PR 시 `dart fix --apply` + `dart format` 자동 적용. 포맷 변경이 있으면 자동 커밋.
-- **`triage-secret-scan`**: PR 시 Gitleaks로 시크릿 유출 검사.
+- **`pr-setup-format`**: PR 시 `dart fix --apply` + `dart format` 자동 적용. 포맷 변경이 있으면 자동 커밋.
+- **`pr-setup-secret-scan`**: PR 시 Gitleaks로 시크릿 유출 검사.
 
 → 전체 워크플로우 prefix 컨벤션은 [`.github/workflows/BLUEDOC.md`](.github/workflows/BLUEDOC.md) 참고.
 

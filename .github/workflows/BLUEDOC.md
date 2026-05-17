@@ -4,17 +4,18 @@
 
 ## 배경
 
-기존 파일명·`name:` 규칙이 제각각이었다 (`auto-format.yml`, `Deploy to Vercel`, `Hourly: DB Invariant Monitor`, ...). PR Checks 화면에서 *"이게 머지를 막는 건지 / 배포인지 / 단순 자동화인지"* 한눈에 안 잡힘. **"빨갛게 뜨면 무슨 일이 일어나나"** 를 축으로 7 개 prefix 로 통일했다.
+기존 파일명·`name:` 규칙이 제각각이었다 (`auto-format.yml`, `Deploy to Vercel`, `Hourly: DB Invariant Monitor`, ...). PR Checks 화면에서 *"이게 머지를 막는 건지 / 배포인지 / 단순 자동화인지"* 한눈에 안 잡힘. **"빨갛게 뜨면 무슨 일이 일어나나"** 를 축으로 8 개 prefix 로 통일했다.
 
 ## Prefix
 
 | Prefix | 빨갛게 뜨면 = | 예시 파일 |
 |---|---|---|
 | `pr-gate-` | **머지 못 함** (required check) | `pr-gate.yml` |
+| `pr-setup-` | PR 받자마자 도는 자동 셋업 (포맷·라벨·시크릿 검사·dependabot auto-merge) | `pr-setup-format`, `pr-setup-label`, `pr-setup-secret-scan`, `pr-setup-dependabot` |
 | `deploy-` | 사용자·dev 환경에 코드·스키마·시드가 안 갔음 | `deploy-vercel`, `deploy-supabase`, `deploy-android-user`, `deploy-ios-user`, `deploy-dev-seed` |
-| `monitor-` | 운영·테스트 시스템 헬스 이상 (스케줄) | `monitor-db-invariants`, `monitor-tick-user`, `monitor-daily-lifecycle`, `monitor-allure` |
-| `sync-` | repo 에 자동 commit/push 가 실패함 | `sync-format`, `sync-version`, `sync-graphify`, `sync-mds-mockups`, `sync-pr-branches` |
-| `triage-` | PR·이슈 라벨·머지·검증 자동화 실패 (commit 없음) | `triage-label`, `triage-secret-scan`, `triage-review`, `triage-dependabot`, `triage-mds-issue` |
+| `monitor-` | 운영·테스트 시스템 헬스 이상 (스케줄) | `monitor-db-invariants`, `monitor-event-flow-hourly`, `monitor-event-flow-daily`, `monitor-mds-render-coverage`, `monitor-patrol-e2e`, `monitor-allure` |
+| `sync-` | repo 에 자동 commit/push 가 실패함 (dev push 또는 merge 기반) | `sync-version`, `sync-graphify`, `sync-mds-mockups`, `sync-pr-branches` |
+| `triage-` | PR·이슈 검증·이슈 생성·슬래시 명령 (commit 없음) | `triage-review`, `triage-mds-issue`, `triage-slash` |
 | `tool-` | (수동으로 부를 때만 도는 도구) | (현재 없음 — 새 수동 도구 추가 시 prefix) |
 | `shared-` | (다른 워크플로우의 부품 — 단독 실행 X) | `shared-notify`, `shared-android-deploy` |
 
@@ -22,8 +23,11 @@
 
 - **파일명 = workflow `name:` 필드** (소문자 kebab, 확장자 제외). 예: `deploy-vercel.yml` 의 `name: deploy-vercel`.
 - prefix 다음은 *대상*만 적는다. 액션 동사는 prefix 가 이미 함의함 (`deploy-vercel` ◯ / `deploy-to-vercel` ✗).
-- 새 워크플로우는 위 7 prefix 중 하나에 반드시 속해야 한다. 어디에도 안 맞으면 새 prefix 추가 PR 을 먼저 낸다.
-- `sync-` vs `triage-` 의 기준: **repo 에 commit 이 들어가나** = `sync-`, 라벨·이슈·검증만 = `triage-`.
+- 새 워크플로우는 위 8 prefix 중 하나에 반드시 속해야 한다. 어디에도 안 맞으면 새 prefix 추가 PR 을 먼저 낸다.
+- `pr-setup-` vs `sync-` vs `triage-` 의 기준:
+  - `pr-setup-` = PR 라이프사이클 초기에 자동으로 도는 셋업 (포맷·라벨·검사·머지 자동화)
+  - `sync-` = dev push 또는 merge 기반으로 repo 에 commit 을 자동 push
+  - `triage-` = 검증·이슈 생성·슬래시 명령 (commit 없음, PR 외 컨텍스트에서도 동작)
 
 ## 관련
 

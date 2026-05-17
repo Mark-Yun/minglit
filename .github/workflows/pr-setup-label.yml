@@ -1,4 +1,4 @@
-name: triage-label
+name: pr-setup-label
 
 on:
   pull_request:

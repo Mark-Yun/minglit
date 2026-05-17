@@ -1,4 +1,4 @@
-name: triage-dependabot
+name: pr-setup-dependabot
 
 on:
   pull_request:

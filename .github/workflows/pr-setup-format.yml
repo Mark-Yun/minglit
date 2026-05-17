@@ -1,4 +1,4 @@
-name: sync-format
+name: pr-setup-format
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
     types: [opened, synchronize, reopened]
 
 concurrency:
-  group: sync-format-${{ github.event.pull_request.number }}
+  group: pr-setup-format-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:
@@ -78,6 +78,6 @@ jobs:
     uses: ./.github/workflows/shared-notify.yml
     with:
       success: false
-      workflow_name: 'Auto Format'
+      workflow_name: 'pr-setup-format'
       # Fix #976: PR-triggered workflows should not create P0 noise issues
       create_issue: false

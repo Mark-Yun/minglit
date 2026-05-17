@@ -44,7 +44,7 @@
 
 | 항목 | 위치 | 성격 |
 |------|------|------|
-| Secret scan | `.github/workflows/triage-secret-scan.yml` | 보안 |
+| Secret scan | `.github/workflows/pr-setup-secret-scan.yml` | 보안 |
 | Migration version check | `pr-gate.yml` job | Pre-test gate |
 | Env manifest sync | `pr-gate.yml` job | 환경변수 정합성 |
 | Landing lint/build | `pr-gate.yml` job | Next.js 빌드 |
