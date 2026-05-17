@@ -14,7 +14,7 @@
 |--------|----------|------|
 | "integration" 4중 의미 | `apps/*/test/integration/` (위젯 플로우) + `apps/*/integration_test/` (Patrol) + `tests/backend_integration/` (DB — 이미 이관) + `tests/client_cuj_integration/` (삭제) | 계층 이름에 `integration` 범람 |
 | "Golden" 스크린샷 vs "시나리오" 스크린샷 | 동일 단어 "스크린샷"이 Alchemist 픽셀 비교 / CUJ 증거 사진 / AI agent 리뷰 3가지를 지칭 | Layer 정의 부재 |
-| "E2E" 의미 불명 | "Patrol e2e" + "client-cuj-test" + "backend-simulator" 모두 E2E 로 불림 | 범위가 서로 다름 |
+| "E2E" 의미 불명 | "Patrol e2e" + "client-cuj-test" + "event-flow-simulator" 모두 E2E 로 불림 | 범위가 서로 다름 |
 
 **해결**: 테스트 대상/프레임워크/주기 기준으로 7-layer 로 정규화. 이하 모든 문서/워크플로우/폴더명은 이 이름을 따른다.
 
@@ -38,7 +38,7 @@
 | 4 | **pgTAP** | DB 스키마 / 트리거 / RPC / RLS 계약 | `supabase/tests/database/` | pgTAP | PR 마다 |
 | 5 | **Deno EF test** | Edge Function TypeScript 로직 단위 | `supabase/functions/**/*_test.ts` | `deno test` | PR 마다 |
 | 6 | **DB monitor** | Runtime invariant 감시 | `check_db_invariants()` RPC + `.github/workflows/monitor-db-invariants.yml` | SQL | 매시간 cron |
-| 7 | **Tick simulator** | 서버 pipeline 관통 시뮬 (시간 전진 + 파이프라인 부하) | `backend-simulator` EF + `.github/workflows/monitor-daily-lifecycle.yml` + `hourly-user-activity.yml` | EF + HTTP | 매시간 + 매일 |
+| 7 | **Tick simulator** | 서버 pipeline 관통 시뮬 (시간 전진 + 파이프라인 부하) | `event-flow-simulator` EF + `.github/workflows/monitor-daily-lifecycle.yml` + `hourly-user-activity.yml` | EF + HTTP | 매시간 + 매일 |
 
 ### 보조 (taxonomy 밖, 유지)
 
@@ -192,7 +192,7 @@
 
 ### Layer 7 — Tick simulator
 
-- EF: `supabase/functions/backend-simulator/`
+- EF: `supabase/functions/event-flow-simulator/`
 - 워크플로우:
   - `monitor-daily-lifecycle.yml` — 매일 (PR #1584 로 pg_cron 에서 GH Actions 로 이관)
   - `hourly-user-activity.yml` — 매시간

@@ -1,6 +1,6 @@
-# backend-simulator Architecture
+# event-flow-simulator Architecture
 
-본 문서는 `backend-simulator` EF 의 **목적**, **추상화 모델 (v2)**, **폴더 구조**, **마이그레이션 단계** 를 담는다. 진입점은 [BLUEDOC.md](./BLUEDOC.md).
+본 문서는 `event-flow-simulator` EF 의 **목적**, **추상화 모델 (v2)**, **폴더 구조**, **마이그레이션 단계** 를 담는다. 진입점은 [BLUEDOC.md](./BLUEDOC.md).
 
 ---
 
@@ -83,7 +83,7 @@ WHERE a.status = 'paid' AND p.id IS NULL
 ## Part 3 — 폴더 구조 (v2 목표 상태)
 
 ```
-backend-simulator/
+event-flow-simulator/
 ├── index.ts              # EF 진입점 (mode → runtime 호출)
 ├── BLUEDOC.md
 ├── architecture.md

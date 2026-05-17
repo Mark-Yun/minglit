@@ -1,0 +1,46 @@
+name: monitor-event-flow-hourly
+
+# 매시 :30 — event-flow-simulator 짧은 cascade 실행 (스모크)
+# 길이가 긴 cascade + SQL seed 는 monitor-event-flow-daily 가 담당.
+
+on:
+  schedule:
+    - cron: '30 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: monitor-event-flow-dev
+  cancel-in-progress: false
+
+jobs:
+  simulate:
+    name: Run event-flow cascade (hourly smoke)
+    runs-on: self-hosted
+    timeout-minutes: 10
+    steps:
+      - name: Invoke event-flow-simulator
+        run: |
+          # Fix #1635: -s + 수동 status 검사 — error body 로깅 보장
+          http_code=$(curl -s -o /tmp/sim_response.json -w "%{http_code}" -X POST \
+            "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/event-flow-simulator" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"ticks": 1, "usersPerTick": 10}' \
+            --max-time 180)
+          cat /tmp/sim_response.json
+          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+            echo "::error::event-flow-simulator returned HTTP $http_code"
+            exit 1
+          fi
+          jq -e '.success == true' /tmp/sim_response.json
+
+  notify-failure:
+    needs: [simulate]
+    if: always()
+    permissions:
+      issues: write
+    uses: ./.github/workflows/shared-notify.yml
+    with:
+      success: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
+      workflow_name: 'monitor-event-flow-hourly'
+    secrets: inherit

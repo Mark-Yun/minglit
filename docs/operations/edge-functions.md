@@ -193,11 +193,11 @@ deno test --allow-all --config supabase/deno.json supabase/functions/payment-ver
 | `captureServeHandler()` | 동일 | Deno.serve 핸들러 캡처 |
 | `createMockSupabaseClient()` | `_test_utils/mock_supabase_client.ts` | Supabase 클라이언트 mock |
 
-### 시나리오 테스트 (backend-simulator)
+### 시나리오 테스트 (event-flow-simulator)
 
 ```bash
 # Dev 서버에서 전체 6-phase 시뮬레이션
-curl -X POST ".../functions/v1/backend-simulator" \
+curl -X POST ".../functions/v1/event-flow-simulator" \
   -H "Authorization: Bearer <SERVICE_ROLE_KEY>" \
   -H "Content-Type: application/json"
 
@@ -226,7 +226,7 @@ Assertion 실패 시 GitHub 이슈가 자동 생성되며, 이슈에 Axiom 쿼�
 
 1. `ENVIRONMENT`가 `local`이면 Axiom 비활성 → dev/prod에서 확인
 2. `AXIOM_API_TOKEN` 미설정 확인: `supabase secrets list --project-ref <ref>`
-3. `debugStatus()` 호출하여 상태 확인 (backend-simulator verify phase에서 `_axiom_debug` 필드)
+3. `debugStatus()` 호출하여 상태 확인 (event-flow-simulator verify phase에서 `_axiom_debug` 필드)
 
 ### Edge Function 배포가 안 될 때
 

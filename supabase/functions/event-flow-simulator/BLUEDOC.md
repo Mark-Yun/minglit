@@ -1,4 +1,4 @@
-# backend-simulator
+# event-flow-simulator
 
 유저·파트너 트래픽을 시뮬레이션해 dev EF/스키마/트리거를 자동 검증하는 Supabase Edge Function.
 
@@ -9,7 +9,7 @@
 ## 호출 예시
 
 ```bash
-curl -X POST "https://<project>.supabase.co/functions/v1/backend-simulator" \
+curl -X POST "https://<project>.supabase.co/functions/v1/event-flow-simulator" \
   -H "Authorization: Bearer <SERVICE_ROLE_KEY>" \
   -H "Content-Type: application/json" \
   -d '{"ticks": 3, "usersPerTick": 10}'
@@ -38,7 +38,7 @@ curl -X POST "https://<project>.supabase.co/functions/v1/backend-simulator" \
 - `[E2E]` prefix 파티 + `user_` prefix 유저만 시뮬 대상 (실데이터 격리)
 - 모든 쓰기 = EF 경유 (직접 DB DML 0건) — 실 트래픽 경로 충실 재현
 - 액션 실패 시 `sim_reporter` 가 자동 GH 이슈 생성
-- 단위 테스트: `cd supabase/functions && deno test backend-simulator/`
+- 단위 테스트: `cd supabase/functions && deno test event-flow-simulator/`
 
 ## 한계 / 개선 계획
 

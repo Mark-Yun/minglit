@@ -1,4 +1,4 @@
-// index.ts — backend-simulator EF 진입점 (v2 Stochastic Cascade)
+// index.ts — event-flow-simulator EF 진입점 (v2 Stochastic Cascade)
 //
 // 옛 phase/tick 분기 제거. 단일 cascade 엔진 호출.
 // 상세: ./architecture.md (Stochastic Cascade 모델)
@@ -28,7 +28,7 @@ import { checkAll } from "./invariant/_registry.ts";
 // invariant 는 현재 인프라만 — 실 invariant set 은 별도 RFC (architecture.md Part 2.B)
 import "./action/index.ts";
 
-const FN = "backend-simulator";
+const FN = "event-flow-simulator";
 
 export const handler = async (req: Request, _ctx: EFContext): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
@@ -176,7 +176,7 @@ export const handler = async (req: Request, _ctx: EFContext): Promise<Response> 
     try {
       await flush();
     } catch (e) {
-      console.error("[backend-simulator] flush failed", e);
+      console.error("[event-flow-simulator] flush failed", e);
     }
   }
 };

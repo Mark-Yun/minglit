@@ -1,4 +1,4 @@
-# backend-simulator
+# event-flow-simulator
 
 Stochastic Cascade 모델 기반 백엔드 시뮬레이터. 진입점 / 모드 / 컨벤션은 [BLUEDOC.md](./BLUEDOC.md), 아키텍처 상세는 [architecture.md](./architecture.md).
 
@@ -9,7 +9,7 @@ Stochastic Cascade 모델 기반 백엔드 시뮬레이터. 진입점 / 모드 /
 deno test action/ core/ policy/ invariant/ --allow-all
 
 # EF 호출 (dev)
-curl -X POST "https://<project>.supabase.co/functions/v1/backend-simulator" \
+curl -X POST "https://<project>.supabase.co/functions/v1/event-flow-simulator" \
   -H "Authorization: Bearer <SERVICE_ROLE_KEY>" \
   -H "Content-Type: application/json" \
   -d '{"ticks": 3, "usersPerTick": 10}'

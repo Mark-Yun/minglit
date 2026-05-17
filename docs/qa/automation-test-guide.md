@@ -23,7 +23,7 @@
 ├── 디자인 토큰 / 시각 회귀 감지?             → Layer 2b (Alchemist golden)
 ├── repository / controller / util / model?   → Layer 1 (unit)
 ├── 매시간 실 DB 데이터 이상 감시?            → Layer 6 (DB monitor RPC)
-└── 파이프라인 연쇄 동작 (tick) 감시?         → Layer 7 (backend-simulator)
+└── 파이프라인 연쇄 동작 (tick) 감시?         → Layer 7 (event-flow-simulator)
 ```
 
 **복수 Layer 필요 사례**:
@@ -227,7 +227,7 @@ void main() {
 | 4 (pgTAP) | `supabase/tests/database/*.sql` | 80 |
 | 5 (Deno EF) | `supabase/functions/**/*_test.ts` | 75 |
 | 6 (DB monitor) | `check_db_invariants()` RPC | 1 RPC (매시간) |
-| 7 (tick simulator) | `backend-simulator` EF + 2 workflows | 매시간 + 매일 |
+| 7 (tick simulator) | `event-flow-simulator` EF + 2 workflows | 매시간 + 매일 |
 
 **핵심 갭**:
 - 🔴 **Layer 3 CUJ 이관 0%** — 37 widget flow 를 Patrol 로 전환 필요 (#1586 Phase D-2)

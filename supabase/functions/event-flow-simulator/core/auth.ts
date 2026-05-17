@@ -1,4 +1,4 @@
-// sim_auth.ts — Auth helper for backend-simulator: user JWT acquisition + EF calls
+// core/auth.ts — Auth helper for event-flow-simulator: user JWT acquisition + EF calls
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
