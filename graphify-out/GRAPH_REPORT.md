@@ -1,4 +1,4 @@
-# Graph Report - /_work/minglit-runner-1-fOlCK3opSNaYN/minglit/minglit  (2026-05-16)
+# Graph Report - /_work/minglit-runner-1-oT69eOv0AzDJ1/minglit/minglit  (2026-05-17)
 
 ## Corpus Check
 - 1208 files · ~3,796,476 words
@@ -2945,11 +2945,11 @@ _Questions this graph is uniquely positioned to answer:_
 - **What is the exact relationship between `Architecture Audit #1092 — 2026-04-06` and `AI Basic Law Compliance (Korea 2026)`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **Why does `package:flutter/material.dart` connect `Community 1` to `Community 32`, `Community 0`, `Community 2`, `Community 35`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 11`, `Community 12`, `Community 14`, `Community 15`, `Community 16`, `Community 23`, `Community 27`, `Community 29`?**
-  _High betweenness centrality (0.180) - this node is a cross-community bridge._
+  _High betweenness centrality (0.143) - this node is a cross-community bridge._
 - **Why does `Log` connect `Community 3` to `Community 20`, `Community 31`?**
-  _High betweenness centrality (0.167) - this node is a cross-community bridge._
+  _High betweenness centrality (0.139) - this node is a cross-community bridge._
 - **Why does `LocationMap (web/JS Interop)` connect `Community 20` to `Community 3`?**
-  _High betweenness centrality (0.166) - this node is a cross-community bridge._
+  _High betweenness centrality (0.135) - this node is a cross-community bridge._
 - **Are the 25 inferred relationships involving `handler()` (e.g. with `from` and `errorResponse`) actually correct?**
   _`handler()` has 25 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `MinglitQuillTheme`, `toolbarConfig`, `QuillSimpleToolbarConfig` to the rest of the system?**
