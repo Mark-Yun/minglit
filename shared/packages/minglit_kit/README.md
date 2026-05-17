@@ -1,56 +1,29 @@
-# 📦 Minglit Kit
+# minglit_kit — 빌드·테스트 명령
 
-> Minglit 프로젝트의 **공용 비즈니스 로직**과 **UI 컴포넌트**를 담고 있는 핵심 패키지입니다.
-> `app_user`와 `app_partner`는 이 패키지를 import하여 사용합니다.
+> 폴더 구조·아키텍처는 [`BLUEDOC.md`](./BLUEDOC.md), [`architecture.md`](./architecture.md) 참고. 본 패키지는 단독 실행되지 않고 `app_user`/`app_partner` 에서 import.
 
----
+## 테스트·분석·포맷
 
-## 📂 Structure
-
-```text
-lib/
-├── minglit_kit.dart        # 메인 진입점 (Export)
-├── minglit_core.dart       # 핵심 유틸리티 (Logger 등)
-├── minglit_data.dart       # 데이터 레이어 (Repositories, Models)
-├── minglit_logic.dart      # 로직 레이어 (Providers)
-├── minglit_ui.dart         # UI 레이어 (Widgets)
-└── src/
-    ├── data/
-    │   ├── models/         # Freezed Data Models
-    │   └── repositories/   # Supabase Access Repositories
-    ├── logic/
-    │   └── providers/      # Global Providers (Auth 등)
-    └── widgets/            # Common UI Widgets (LoginScreen 등)
+```bash
+flutter pub get
+flutter analyze --no-fatal-infos
+flutter test                           # unit + widget
+flutter test --tags golden             # golden (kit 의 공용 위젯)
+dart format .
 ```
 
----
+## 의존 앱에서 변경 검증
 
-## 🛠️ Key Components
+`minglit_kit` 변경 시 두 앱 모두 영향. 변경 후 양쪽에서 확인:
 
-### Repositories (`src/data/repositories/`)
-*   **`AuthRepository`**: 로그인, 로그아웃, 세션 관리.
-*   **`PartnerRepository`**: 파트너 입점, 멤버 관리 DB 로직.
-*   **`VerificationRepository`**: 인증 제출 및 심사 로직.
+```bash
+cd ../../../../apps/app_user && flutter test && flutter analyze
+cd ../../../../apps/app_partner && flutter test && flutter analyze
+```
 
-### Providers (`src/logic/providers/`)
-*   **`AuthController`**: 로그인 액션의 상태(Loading/Error)를 관리하는 Riverpod Controller.
+CI 의 `pr-gate.test-flutter-apps` matrix job 이 `minglit_kit` 변경 감지 시 두 앱 + kit 모두 자동 검증.
 
-### Widgets (`src/widgets/`)
-*   **`MinglitLoginScreen`**: 공용 로그인 UI.
-*   **`DevScreenList`**: 개발용 화면 목록 위젯.
+## CI 에서 자동으로 도는 것
 
----
-
-## 📝 Development Guide
-
-1.  **Code Generation**:
-    ```bash
-    dart run build_runner build --delete-conflicting-outputs
-    ```
-    모델이나 Provider를 수정하면 반드시 실행하세요.
-
-2.  **Linting**:
-    ```bash
-    flutter analyze
-    ```
-    Zero Warning을 유지해주세요.
+- `pr-gate.test-flutter-apps` (matrix: app_user / app_partner / minglit_kit / mds_core)
+- 자세한 워크플로우는 [`.github/workflows/BLUEDOC.md`](../../../.github/workflows/BLUEDOC.md)

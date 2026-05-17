@@ -9,7 +9,7 @@
 밍릿 파트너 앱의 디자인 시스템은 파트너(사장님)가 매장·파티·이벤트를 효율적으로 운영할 수 있도록 신뢰감과 사용성을 강조합니다. Material 3 기반 위에 3-Layer 테마 구조를 적용합니다.
 
 - **참조 문서**:
-  - [클라이언트 아키텍처](../../architecture/client.md) — Feature-first 구조, Coordinator 패턴, Repository 패턴
+  - [클라이언트 아키텍처](../../../apps/architecture.md) — Feature-first 구조, Coordinator 패턴, Repository 패턴
   - [화면 카탈로그](./screen-catalog.md) — 파트너 앱 전체 화면 목록
 - **소스 경로**: `shared/packages/minglit_kit/lib/src/theme/`
 - **테마 진입점**: `minglit_theme.dart` (part 파일 3개 포함)
@@ -362,7 +362,7 @@ Material 3 기반 컴포넌트들을 밍릿 스타일로 커스터마이징한 �
 
 - [화면 카탈로그](screen-catalog.md) — 전체 화면 목록, 사이트맵, 네비게이션 구조
 - [사용자 플로우](user-flows.md) — 주요 사용자 여정 플로우차트
-- [클라이언트 아키텍처](../../architecture/client.md) — Feature-first 구조, Coordinator 패턴 등 기술 아키텍처
+- [클라이언트 아키텍처](../../../apps/architecture.md) — Feature-first 구조, Coordinator 패턴 등 기술 아키텍처
 
 ---
 
