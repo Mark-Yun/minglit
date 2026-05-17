@@ -6,7 +6,7 @@ import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
-const ROOT = resolve(__dir, '../../../../..');
+const ROOT = resolve(__dir, '../../../..');
 const MANIFEST = resolve(ROOT, 'shared/packages/mds/icons/manifest.json');
 const ICONS_DIR = resolve(ROOT, 'shared/packages/mds/icons/icons');
 const OUT = resolve(__dir, '../src/lib/mds-icons-data.ts');
