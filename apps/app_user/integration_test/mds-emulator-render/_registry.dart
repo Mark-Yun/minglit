@@ -8,17 +8,21 @@ import '_engine/catalog.dart';
 import '_engine/builder.dart';
 import 'home_page/home_page_test.dart' as home_page;
 import 'login_page/login_page_test.dart' as login_page;
+import 'my_page/my_page_test.dart' as my_page;
 import 'notification_list_screen/notification_list_screen_test.dart'
     as notification_list_screen;
 import 'notification_settings_screen/notification_settings_screen_test.dart'
     as notification_settings_screen;
+import 'privacy_page/privacy_page_test.dart' as privacy_page;
 import 'search_page/search_page_test.dart' as search_page;
 
 /// 모든 cataloged 화면의 명시적 list. 새 화면 추가 시 본 list 에 추가.
 final List<MdsCatalog<MdsScreenBuilder<dynamic>>> allCatalogs = [
   home_page.catalog,
   login_page.catalog,
+  my_page.catalog,
   notification_list_screen.catalog,
   notification_settings_screen.catalog,
+  privacy_page.catalog,
   search_page.catalog,
 ];
