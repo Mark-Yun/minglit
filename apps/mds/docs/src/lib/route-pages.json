@@ -99,6 +99,22 @@
     "TagEventListRoute": {
       "widget": "TagEventListPage",
       "file": "apps/app_user/lib/src/features/tag/ui/tag_event_list_page.dart"
+    },
+    "EventMatchingRoute": {
+      "widget": "EventMatchingScreen",
+      "file": "apps/app_user/lib/src/features/event/matching/ui/event_matching_screen.dart"
+    },
+    "EventApplicationConfirmationRoute": {
+      "widget": "MinglitConfirmationPage",
+      "file": "shared/packages/minglit_kit/lib/src/components/feedback/minglit_confirmation_page.dart"
+    },
+    "PurchaseHistoryDetailRoute": {
+      "widget": "PurchaseHistoryDetailPage",
+      "file": "apps/app_user/lib/src/features/payment/ui/purchase_history_detail_page.dart"
+    },
+    "EventApplicationReviewRoute": {
+      "widget": "EventApplicationReviewPage",
+      "file": "apps/app_user/lib/src/features/payment/ui/event_application_review_page.dart"
     }
   },
   "partner": {
@@ -245,6 +261,10 @@
     "PartnerAccountManagementRoute": {
       "widget": "AccountManagementPage",
       "file": "shared/packages/minglit_kit/lib/src/ui/pages/account_management_page.dart"
+    },
+    "VerificationReviewRoute": {
+      "widget": "ReviewVerificationScreen",
+      "file": "apps/app_partner/lib/src/features/verification/review/review_verification_screen.dart"
     }
   }
 }
