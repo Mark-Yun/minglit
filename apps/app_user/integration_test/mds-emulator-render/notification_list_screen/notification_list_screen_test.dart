@@ -14,7 +14,11 @@ final catalog = MdsCatalog<NotificationListScreenBuilder>(
   builder: NotificationListScreenBuilder.new,
   states: [
     MdsState('state-empty', (b) => b, mdsIndex: 1),
-    MdsState('state-with-notifications', (b) => b.withNotifications(), mdsIndex: 2),
+    MdsState(
+      'state-with-notifications',
+      (b) => b.withNotifications(),
+      mdsIndex: 2,
+    ),
     MdsState('state-dark', (b) => b.dark()),
   ],
 );
