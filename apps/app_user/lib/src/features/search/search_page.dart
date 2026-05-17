@@ -208,8 +208,18 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             loading: () => const Center(
               child: MinglitCircularProgressIndicator(),
             ),
-            error: (e, _) => const Center(
-              child: Text('검색 중 오류가 발생했습니다'),
+            // Fix #2408: spec — bodyMedium · onSurfaceVariant · padding-xlarge
+            error: (_, _) => Center(
+              child: Padding(
+                padding: const EdgeInsets.all(MinglitSpacing.xlarge),
+                child: Text(
+                  '검색 중 오류가 발생했습니다',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
             ),
           );
         },
