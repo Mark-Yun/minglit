@@ -279,6 +279,8 @@ class _DisabledFooterButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Fix #2285: height 44 is spec-specified; no MinglitButtonSize token exists
+    // for this value (small=36, medium=48). Awaiting MDS token addition.
     return SizedBox(
       width: double.infinity,
       height: 44,
