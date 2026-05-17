@@ -1,0 +1,184 @@
+name: doc-freshness
+
+# 전체 레포의 모든 FRESH_DOC 을 매일 스캔. stale 시 GitHub Issue 1개 생성.
+# spec: docs/infra/fresh-doc/github-workflow.md
+# 관련: docs/infra/fresh-doc/{BLUEDOC,schema,implementation-plan}.md, Fix #2434 Step 2
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # UTC 00:00 = KST 09:00 (spec 명시)
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Force issue creation for ALL FRESH_DOCs regardless of stale (bootstrap mode)'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: doc-freshness
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  scan:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0  # watched_paths 분기에서 git log --since 필요
+
+      - name: Setup Python (YAML parsing)
+        run: |
+          which python3 || sudo apt-get install -y python3
+          python3 -c "import yaml" 2>/dev/null || pip3 install pyyaml
+
+      - name: Scan FRESH_DOCs + create issues
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORCE: ${{ inputs.force }}
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}/blob/dev
+          TRIGGER: ${{ github.event_name }}
+        run: |
+          set -e
+          TODAY=$(date -u +%Y-%m-%d)
+          TODAY_EPOCH=$(date -u -d "$TODAY" +%s 2>/dev/null || date -u -j -f "%Y-%m-%d" "$TODAY" +%s)
+
+          # Find all FRESH_DOC files (exclude worktrees / git / node_modules / fixtures)
+          mapfile -t FRESH_DOCS < <(find . -name FRESH_DOC \
+            -not -path './.git/*' \
+            -not -path './.claude/*' \
+            -not -path './node_modules/*' \
+            -not -path '*/node_modules/*' \
+            -not -path './tests/doc-freshness/fixtures/*' \
+            | sort)
+
+          echo "Found ${#FRESH_DOCS[@]} FRESH_DOC files"
+
+          for FRESH_DOC in "${FRESH_DOCS[@]}"; do
+            DIR=$(dirname "$FRESH_DOC" | sed 's|^\./||')
+            echo ""
+            echo "── $DIR ──"
+
+            # Parse YAML via python (multi-field extract)
+            eval "$(python3 -c "
+          import yaml, sys
+          with open('$FRESH_DOC') as f:
+              d = yaml.safe_load(f)
+          print(f'CYCLE={d.get(\"cycle\", \"\")}')
+          print(f'WATCHED_PATHS_JSON={repr(d.get(\"watched_paths\", []))}')
+          print(f'PRIORITY={d.get(\"priority\", \"\")}')
+          print(f'LAST_VERIFIED={d.get(\"last_verified\", \"\")}')
+          print(f'RECURSIVE={str(d.get(\"recursive\", False)).lower()}')
+          print(f'EXCLUDE_JSON={repr(d.get(\"exclude\", []))}')
+          print(f'REFRESH_METHOD={repr(d.get(\"refresh_method\", \"\"))}')
+            ")"
+
+            STALE="false"
+            TRIGGER_DETAIL=""
+
+            if [ -n "$CYCLE" ]; then
+              # cycle: 14d / 30d etc.
+              CYCLE_DAYS=$(echo "$CYCLE" | sed 's/d$//')
+              LV_EPOCH=$(date -u -d "$LAST_VERIFIED" +%s 2>/dev/null || date -u -j -f "%Y-%m-%d" "$LAST_VERIFIED" +%s)
+              DAYS_SINCE=$(( (TODAY_EPOCH - LV_EPOCH) / 86400 ))
+              if [ "$DAYS_SINCE" -ge "$CYCLE_DAYS" ]; then STALE="true"; fi
+              TRIGGER_DETAIL="**cycle**: \`${CYCLE}\` · **last_verified**: \`${LAST_VERIFIED}\` · **days_since**: \`${DAYS_SINCE}\` · **stale**: \`${STALE}\`"
+              echo "  cycle: ${CYCLE} / last_verified: ${LAST_VERIFIED} / days_since: ${DAYS_SINCE} / stale: ${STALE}"
+            elif [ "$WATCHED_PATHS_JSON" != "[]" ]; then
+              # watched_paths: glob list → git log --since=<last_verified> 매칭 commit 있나
+              PATHS=$(echo "$WATCHED_PATHS_JSON" | python3 -c "import sys,ast; print(' '.join(ast.literal_eval(sys.stdin.read())))")
+              COMMITS=$(git log --since="$LAST_VERIFIED" --pretty=format:%h -- $PATHS 2>/dev/null | head -10)
+              if [ -n "$COMMITS" ]; then STALE="true"; fi
+              COMMITS_LIST=$(echo "$COMMITS" | sed 's/^/- /')
+              TRIGGER_DETAIL="**watched_paths**: \`${PATHS}\` · **commits since last_verified**: $(echo "$COMMITS" | wc -l | tr -d ' ')"
+              echo "  watched_paths: ${PATHS} / commits: $(echo "$COMMITS" | wc -l) / stale: ${STALE}"
+            else
+              echo "  ⚠ FRESH_DOC 에 cycle/watched_paths 둘 다 없음 — skip"
+              continue
+            fi
+
+            if [ "$STALE" != "true" ] && [ "$FORCE" != "true" ]; then
+              echo "  ⏭ not stale, skip"
+              continue
+            fi
+
+            # Dedup
+            TITLE="[doc-refresh] ${DIR} — 문서 검토 필요"
+            EXISTING=$(gh issue list --search "${TITLE} in:title state:open" --json number --jq '.[0].number // empty')
+            if [ -n "$EXISTING" ]; then
+              echo "  ⏭ open issue #${EXISTING} exists, skip"
+              continue
+            fi
+
+            # 검토 대상 .md 목록 (exclude 적용)
+            if [ "$RECURSIVE" = "true" ]; then
+              MD_FILES=$(find "$DIR" -name '*.md' -type f 2>/dev/null | sort)
+            else
+              MD_FILES=$(find "$DIR" -maxdepth 1 -name '*.md' -type f 2>/dev/null | sort)
+            fi
+            # exclude glob (rough — basename match)
+            if [ "$EXCLUDE_JSON" != "[]" ]; then
+              EXCLUDES=$(echo "$EXCLUDE_JSON" | python3 -c "import sys,ast; print(' '.join(ast.literal_eval(sys.stdin.read())))")
+              for E in $EXCLUDES; do
+                MD_FILES=$(echo "$MD_FILES" | grep -v "$E" || true)
+              done
+            fi
+            MD_LIST=$(echo "$MD_FILES" | sed "s|^|- [\`|; s|$|\`](${REPO_URL}/&)|" | sed "s|](${REPO_URL}/- \[\`|](${REPO_URL}/|g")
+            # Simpler — re-render cleanly
+            MD_LIST=""
+            while IFS= read -r f; do
+              [ -z "$f" ] && continue
+              MD_LIST+="- [\`${f}\`](${REPO_URL}/${f})"$'\n'
+            done <<< "$MD_FILES"
+
+            # Issue body (spec: 4 sections)
+            BODY=$(cat <<EOF
+          > Generated by [\`doc-freshness.yml\`](${REPO_URL}/.github/workflows/doc-freshness.yml) · [run #${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) · trigger: \`${TRIGGER}\` · ${TODAY}
+
+          ## 대상 디렉토리
+
+          [\`${DIR}/\`](${REPO_URL}/${DIR})
+
+          ## 트리거 정보
+
+          ${TRIGGER_DETAIL}
+
+          $(if [ -n "$COMMITS" ]; then
+            echo "트리거 커밋 (watched_paths 기반):"
+            echo ""
+            echo '\`\`\`'
+            echo "$COMMITS"
+            echo '\`\`\`'
+          fi)
+
+          ## 검토 대상 \`.md\` 파일 ($(echo "$MD_FILES" | grep -c . | tr -d ' '))
+
+          ${MD_LIST}
+
+          ## refresh_method (FRESH_DOC 본문)
+
+          ${REFRESH_METHOD}
+
+          ---
+
+          ## 처리 후
+
+          - 문서 갱신 시: 수정 사항과 함께 [\`${FRESH_DOC#./}\`](${REPO_URL}/${FRESH_DOC#./}) 의 \`last_verified\` 를 PR 머지 예정일로 갱신
+          - 검토 결과 변경 불필요 시: \`last_verified\` 만 갱신하는 verified-only PR
+
+          관련 컨벤션: [\`docs/infra/fresh-doc/\`](${REPO_URL}/docs/infra/fresh-doc/)
+          EOF
+          )
+
+            # Label: priority 만 (P3-low / P2-medium / ...). Spec 의 'documentation' 라벨은 사용자 정책상 생략 (이전 결정)
+            if [ -n "$PRIORITY" ]; then
+              gh issue create --title "$TITLE" --body "$BODY" --label "$PRIORITY"
+            else
+              gh issue create --title "$TITLE" --body "$BODY"
+            fi
+            echo "  ✓ created issue"
+          done
