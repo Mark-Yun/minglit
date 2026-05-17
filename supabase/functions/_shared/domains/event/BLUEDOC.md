@@ -8,6 +8,8 @@
 |---|---|
 | `availability.ts` | event status (`isEventOpenForApplication` / `isEventEditableByPartner`), capacity (`isEventFull` / `isTicketSoldOut`), 시작 시각 (`isEventStarted`) |
 | `availability_test.ts` | pure unit tests (mock 0) |
+| `participant.ts` | event_participants 분류 (`isCheckedIn`). 매칭 / 투표 EF 의 자격 가드 |
+| `participant_test.ts` | pure unit tests (mock 0) |
 
 ## 두 status predicate 의 의미 차이 (중요)
 

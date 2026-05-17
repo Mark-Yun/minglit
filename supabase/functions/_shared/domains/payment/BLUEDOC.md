@@ -10,7 +10,7 @@ Hexagonal 의 도메인 코어를 nested EF 폴더에 못 둠 (Supabase CLI Issu
 
 | 파일 | 역할 |
 |---|---|
-| `application_status.ts` | application status 분류 (`isPaid` / `isPrePayment` / `isFinal`) + `isFreeApplication`. 모든 payment EF 가 사용 |
+| `application_status.ts` | application status 분류 (`isPaid` / `isPrePayment` / `isFinal`) + `isFreeApplication` + `blocksReapplication` (중복 신청 가드). 모든 payment / apply EF 가 사용 |
 | `application_status_test.ts` | pure unit tests (mock 0) |
 | (관련 도메인) `_shared/domains/event/availability.ts` | `isEventStarted` (refund cutoff 등에서 사용) |
 | `refund_policy.ts` | `verifyRefundEligibility` — grace period + cutoff + 이벤트 시작 가드 (Fix #1235) |

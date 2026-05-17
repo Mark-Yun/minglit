@@ -9,6 +9,7 @@ import {
   isEventFull,
   isTicketSoldOut,
 } from "../_shared/domains/event/availability.ts";
+import { blocksReapplication } from "../_shared/domains/payment/application_status.ts";
 
 type VerifItem = { verification_id: string; data: Record<string, unknown> };
 
@@ -209,10 +210,7 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
       .eq("user_id", userId)
       .maybeSingle();
 
-    if (
-      existingApp && existingApp.status !== "cancelled" &&
-      existingApp.status !== "payment_failed"
-    ) {
+    if (existingApp && blocksReapplication(existingApp.status)) {
       return errorResponse("Already applied to this event", 409);
     }
 

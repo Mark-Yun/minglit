@@ -50,3 +50,15 @@ export function classifyApplicationStatus(status: string): StatusClassification 
 export function isFreeApplication(paymentAmount: number | null): boolean {
   return paymentAmount === 0;
 }
+
+/**
+ * 동일 (event, user) 에 이미 application 이 있을 때, **재신청을 차단해야 하는가**.
+ *
+ * cancelled / payment_failed 만 재신청 허용. 그 외 (pending / paid / approved /
+ * pending_review / rejected) 는 자리 차지 중 → 재신청 거절.
+ *
+ * user-create-order, apply-event 의 중복 신청 가드 공용.
+ */
+export function blocksReapplication(status: string): boolean {
+  return status !== "cancelled" && status !== "payment_failed";
+}

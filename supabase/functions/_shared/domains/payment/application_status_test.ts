@@ -3,6 +3,7 @@
 
 import { assertEquals } from "jsr:@std/assert@1";
 import {
+  blocksReapplication,
   classifyApplicationStatus,
   isFreeApplication,
 } from "./application_status.ts";
@@ -62,6 +63,19 @@ Deno.test("isFreeApplication — 0 → true, 양수 → false, null → false", 
   assertEquals(isFreeApplication(0), true);
   assertEquals(isFreeApplication(15000), false);
   assertEquals(isFreeApplication(null), false);   // damaged data, not free
+});
+
+// ─── blocksReapplication ───────────────────────────────────────────────────────
+
+Deno.test("blocksReapplication — cancelled / payment_failed → false (재신청 허용)", () => {
+  assertEquals(blocksReapplication("cancelled"), false);
+  assertEquals(blocksReapplication("payment_failed"), false);
+});
+
+Deno.test("blocksReapplication — pending / paid / pending_review / approved / rejected → true (차단)", () => {
+  for (const s of ["pending", "paid", "pending_review", "approved", "rejected"]) {
+    assertEquals(blocksReapplication(s), true, `${s} must block reapplication`);
+  }
 });
 
 // isEventStarted → moved to `_shared/domains/event/availability.ts`

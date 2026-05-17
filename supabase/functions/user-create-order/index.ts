@@ -13,6 +13,7 @@ import {
   isEventStarted,
   isTicketSoldOut,
 } from "../_shared/domains/event/availability.ts";
+import { blocksReapplication } from "../_shared/domains/payment/application_status.ts";
 
 const FN = "user-create-order";
 
@@ -230,10 +231,7 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
           .single(),
     );
 
-    if (
-      existingApp && existingApp.status !== "cancelled" &&
-      existingApp.status !== "payment_failed"
-    ) {
+    if (existingApp && blocksReapplication(existingApp.status)) {
       return errorResponse("이미 신청한 이벤트입니다.", 400, {
         code: "ALREADY_APPLIED",
       });
