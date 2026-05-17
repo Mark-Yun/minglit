@@ -47,9 +47,14 @@ export class UserActionFactory {
     if (myAppsError) throw new Error(`Failed to fetch applications: ${myAppsError.message}`);
 
     const appliedIds = new Set((myApps ?? []).map((a) => a.event_id as string));
-    let activeAppCount = (myApps ?? []).filter(
-      (a) => (a.status as string) !== "cancelled",
-    ).length;
+    // Fix #2410: exclude completed events from activeAppCount — accumulated completed
+    // events were blocking new applications by maxing out maxAppsPerUser.
+    let activeAppCount = (myApps ?? []).filter((a) => {
+      if ((a.status as string) === "cancelled") return false;
+      const ev = a.events as unknown as { status: string } | null;
+      if (ev?.status === "completed") return false;
+      return true;
+    }).length;
 
     // 3. Apply to un-applied events from feed (up to maxAppsPerUser)
     for (const event of feedEvents) {
