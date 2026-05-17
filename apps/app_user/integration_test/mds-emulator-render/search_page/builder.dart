@@ -16,13 +16,21 @@ class SearchPageBuilder extends MdsScreenBuilder<SearchPage> {
         page: const SearchPage(),
         base: [
           searchCoordinatorProvider.overrideWithValue(MockSearchCoordinator()),
-          // 기본: 빈 쿼리 (키워드 제안 노출).
-          searchQueryProvider.overrideWith(
-            () => LockedSearchQueryNotifier(''),
-          ),
-          searchResultsProvider.overrideWith((_) async => <Event>[]),
         ],
       );
+
+  /// 빈 쿼리 (키워드 제안 노출).
+  SearchPageBuilder withEmpty() {
+    addOverride(
+      searchQueryProvider.overrideWith(
+        () => LockedSearchQueryNotifier(''),
+      ),
+    );
+    addOverride(
+      searchResultsProvider.overrideWith((_) async => <Event>[]),
+    );
+    return this;
+  }
 
   /// 검색 결과 [count]건 표시 (쿼리 "test" 고정).
   SearchPageBuilder withResults([int count = 3]) {

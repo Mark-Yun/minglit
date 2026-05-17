@@ -10,12 +10,18 @@ class NotificationListScreenBuilder
   NotificationListScreenBuilder()
     : super(
         page: const NotificationListScreen(),
-        base: [
-          notificationListProvider.overrideWith(
-            EmptyNotificationListNotifier.new,
-          ),
-        ],
+        base: [],
       );
+
+  /// 알림 없음 (빈 상태).
+  NotificationListScreenBuilder withEmpty() {
+    addOverride(
+      notificationListProvider.overrideWith(
+        EmptyNotificationListNotifier.new,
+      ),
+    );
+    return this;
+  }
 
   /// 알림 2건 표시.
   NotificationListScreenBuilder withNotifications() {
