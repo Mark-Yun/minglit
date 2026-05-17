@@ -182,6 +182,7 @@ class TicketRepository {
   Future<void> deleteTicketTemplate(String id) async {
     Log.d('deleteTicketTemplate called | id: $id');
     try {
+      // minglit_lints: allow-supabase-write — reason: EF migration pending (Phase 2 partner-side, tracked in #2392)
       await _supabase.from('ticket_templates').delete().eq('id', id);
       Log.d('deleteTicketTemplate success | id: $id');
     } catch (e, st) {
