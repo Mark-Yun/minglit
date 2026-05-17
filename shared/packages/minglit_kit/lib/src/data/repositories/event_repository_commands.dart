@@ -73,8 +73,13 @@ mixin _EventRepositoryCommands on _SupabaseEventContext {
         throw MinglitUserException(errorMsg);
       }
 
-      final data = response.data as Map<String, dynamic>;
-      final type = data['type'] as String;
+      // Fix #2394: response.data가 null이거나 Map이 아닐 때 CastError로 크래시.
+      final rawData = response.data;
+      if (rawData is! Map) {
+        throw const MinglitUserException('취소 요청에 실패했습니다.');
+      }
+      final data = Map<String, dynamic>.from(rawData);
+      final type = (data['type'] as String?) ?? 'cancelled';
       int? refundAmount;
       if (type == 'refunded') {
         final refundData = data['data'] as Map<String, dynamic>?;
