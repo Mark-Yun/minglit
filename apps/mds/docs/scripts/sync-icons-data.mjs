@@ -29,7 +29,7 @@ const lines = [
 ];
 
 for (const entry of entries) {
-  const svg = readFileSync(resolve(ICONS_DIR, `${entry.name}.svg`), 'utf-8');
+  const svg = readFileSync(resolve(ICONS_DIR, `${entry.name}.svg`), 'utf-8').trimEnd();
   lines.push(`  {`);
   lines.push(`    name: '${entry.name}',`);
   lines.push(`    camel: '${entry.camel}',`);
