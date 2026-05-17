@@ -31,3 +31,6 @@ Flutter 프로젝트별 **테스트 커버리지 아티팩트 저장소**. `.git
 - [.github/workflows/sync-test-coverage.yml](../../.github/workflows/sync-test-coverage.yml) — 자동 갱신 워크플로우
 - [.github/workflows/BLUEDOC.md](../../.github/workflows/BLUEDOC.md) — workflow prefix 컨벤션
 - [BLUEDOC 컨벤션](../../docs/infra/bluedoc/BLUEDOC.md)
+
+---
+_Reviewed: 2026-05-17 22:32_
