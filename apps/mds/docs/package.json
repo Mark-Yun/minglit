@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "tokens:sync": "cp ../../../shared/packages/mds/tokens/lib/generated/tokens.css public/tokens.css",
+    "icons:sync": "cp ../../../shared/packages/mds/icons/react/src/generated/index.tsx src/lib/mds-icons-generated.tsx",
     "predev": "npm run tokens:sync",
     "prebuild": "npm run tokens:sync",
     "dev": "next dev -p 3003",
