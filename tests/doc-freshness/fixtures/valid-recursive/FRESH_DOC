@@ -1,0 +1,6 @@
+cycle: 30d
+priority: P3-low
+last_verified: 2026-05-13
+recursive: true
+refresh_method: |
+  재귀적으로 하위 디렉토리의 모든 문서를 관리한다.

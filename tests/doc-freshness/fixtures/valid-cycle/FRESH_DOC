@@ -1,0 +1,8 @@
+cycle: 30d
+priority: P3-low
+last_verified: 2026-05-13
+recursive: false
+exclude:
+  - "*-plan.md"
+refresh_method: |
+  관련 코드/스키마 변경을 확인하고 문서를 갱신한다.
