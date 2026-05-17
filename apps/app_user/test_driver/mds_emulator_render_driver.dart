@@ -36,7 +36,8 @@ void _logErr(String msg) {
 }
 
 Future<void> main() => integrationDriver(
-      onScreenshot: (
+  onScreenshot:
+      (
         String name,
         List<int> bytes, [
         Map<String, Object?>? args,
@@ -71,4 +72,4 @@ Future<void> main() => integrationDriver(
           return false;
         }
       },
-    );
+);

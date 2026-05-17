@@ -217,21 +217,24 @@ void main() {
         );
       });
 
-      test('throws MinglitUserException when response.data is not a Map', () async {
-        when(
-          () => mockFunctions.invoke(
-            'user-cancel-order',
-            body: any(named: 'body'),
-          ),
-        ).thenAnswer(
-          (_) async => FunctionResponse(status: 200, data: 'ok'),
-        );
+      test(
+        'throws MinglitUserException when response.data is not a Map',
+        () async {
+          when(
+            () => mockFunctions.invoke(
+              'user-cancel-order',
+              body: any(named: 'body'),
+            ),
+          ).thenAnswer(
+            (_) async => FunctionResponse(status: 200, data: 'ok'),
+          );
 
-        await expectLater(
-          repository.cancelOrder(eventId: 'event_1'),
-          throwsA(isA<MinglitUserException>()),
-        );
-      });
+          await expectLater(
+            repository.cancelOrder(eventId: 'event_1'),
+            throwsA(isA<MinglitUserException>()),
+          );
+        },
+      );
 
       test('returns refunded result with refundAmount', () async {
         when(
@@ -242,7 +245,10 @@ void main() {
         ).thenAnswer(
           (_) async => FunctionResponse(
             status: 200,
-            data: {'type': 'refunded', 'data': {'refund_amount': 30000}},
+            data: {
+              'type': 'refunded',
+              'data': {'refund_amount': 30000},
+            },
           ),
         );
 

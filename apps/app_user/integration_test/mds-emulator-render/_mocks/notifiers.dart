@@ -28,8 +28,8 @@ class StaticRecommendationFeedNotifier extends RecommendationFeedNotifier {
 
   @override
   Future<RecommendationFeedState> build() async => RecommendationFeedState(
-        events: _events,
-        serverOffset: _events.length,
-        hasMore: false,
-      );
+    events: _events,
+    serverOffset: _events.length,
+    hasMore: false,
+  );
 }

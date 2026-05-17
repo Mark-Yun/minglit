@@ -31,11 +31,12 @@ void main() {
   });
 
   List<dynamic> base() => [
-        accountDeletionCoordinatorProvider.overrideWithValue(coordinator),
-      ];
+    accountDeletionCoordinatorProvider.overrideWithValue(coordinator),
+  ];
 
   cujGroup('1-1', '탈퇴 사유 선택 후 다음 단계 진입', () {
-    cujCase('happy: 사유 선택 → 다음 → pushInfo(reason: ...)',
+    cujCase(
+      'happy: 사유 선택 → 다음 → pushInfo(reason: ...)',
       app: const DeletionReasonPage(),
       overrides: base,
       body: (t) async {
@@ -51,12 +52,14 @@ void main() {
         await t.tap(find.text('다음'));
         await t.pumpAndSettle();
 
-        verify(() => coordinator.pushInfo(reason: any(named: 'reason')))
-            .called(1);
+        verify(
+          () => coordinator.pushInfo(reason: any(named: 'reason')),
+        ).called(1);
       },
     );
 
-    cujCase('happy: 선택 없이 계속하기 → pushInfo(reason: null)',
+    cujCase(
+      'happy: 선택 없이 계속하기 → pushInfo(reason: null)',
       app: const DeletionReasonPage(),
       overrides: base,
       body: (t) async {
@@ -68,7 +71,8 @@ void main() {
       },
     );
 
-    cujCase('edge: 사유 미선택 → 다음 비활성',
+    cujCase(
+      'edge: 사유 미선택 → 다음 비활성',
       app: const DeletionReasonPage(),
       overrides: base,
       body: (t) async {

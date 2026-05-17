@@ -6,9 +6,10 @@
 import 'builder.dart';
 
 /// builder 에 state 셋업을 적용하는 함수.
-typedef MdsStateSetup<B extends MdsScreenBuilder<dynamic>> = B Function(
-  B builder,
-);
+typedef MdsStateSetup<B extends MdsScreenBuilder<dynamic>> =
+    B Function(
+      B builder,
+    );
 
 /// 한 화면의 한 state.
 ///
