@@ -19,6 +19,8 @@ export function cujTest(
 ): void {
   Deno.test({
     name: `[CUJ ${id}] (scenario=${scenario})`,
+    // Fix: env vars 없는 coverage 환경에서 uncaught error 대신 ignore 처리
+    ignore: ctx.disabled,
     async fn() {
       await applyScenario(scenario, ctx.db);
       try {
