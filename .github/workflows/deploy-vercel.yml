@@ -22,7 +22,7 @@ concurrency:
 
 jobs:
   deploy-app_user:
-    runs-on: self-hosted
+    runs-on: [self-hosted, ephemeral]
     environment: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' && 'production' || 'preview' }}
     outputs:
       accessible-url: ${{ steps.deploy.outputs.accessible-url }}
@@ -51,7 +51,7 @@ jobs:
           STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
 
   deploy-landing_user:
-    runs-on: self-hosted
+    runs-on: [self-hosted, ephemeral]
     environment: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' && 'production' || 'preview' }}
     outputs:
       accessible-url: ${{ steps.deploy.outputs.accessible-url }}
@@ -71,7 +71,7 @@ jobs:
           deploy-branch: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
 
   deploy-landing_partner:
-    runs-on: self-hosted
+    runs-on: [self-hosted, ephemeral]
     environment: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' && 'production' || 'preview' }}
     outputs:
       accessible-url: ${{ steps.deploy.outputs.accessible-url }}
@@ -91,7 +91,7 @@ jobs:
           deploy-branch: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
 
   deploy-app_partner:
-    runs-on: self-hosted
+    runs-on: [self-hosted, ephemeral]
     environment: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' && 'production' || 'preview' }}
     outputs:
       accessible-url: ${{ steps.deploy.outputs.accessible-url }}
@@ -125,7 +125,7 @@ jobs:
   # 3. Add GitHub Actions secret: VERCEL_MDS_DOCS_PROJECT_ID = <project-id>
   # The VERCEL_TOKEN and VERCEL_ORG_ID secrets are already shared.
   deploy-mds_docs:
-    runs-on: self-hosted
+    runs-on: [self-hosted, ephemeral]
     environment: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' && 'production' || 'preview' }}
     outputs:
       accessible-url: ${{ steps.deploy.outputs.accessible-url }}
@@ -147,7 +147,7 @@ jobs:
   smoke-test:
     needs: [deploy-app_user, deploy-landing_user, deploy-landing_partner, deploy-app_partner, deploy-mds_docs]
     if: success()
-    runs-on: self-hosted
+    runs-on: [self-hosted, ephemeral]
     env:
       IS_PROD: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' }}
     steps:

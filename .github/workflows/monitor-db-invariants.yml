@@ -12,7 +12,7 @@ concurrency:
 jobs:
   check:
     name: Run DB invariant checks
-    runs-on: self-hosted
+    runs-on: [self-hosted, ephemeral]
     permissions:
       contents: read
       issues: write

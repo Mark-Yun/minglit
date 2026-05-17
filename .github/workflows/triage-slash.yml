@@ -13,7 +13,7 @@ jobs:
       github.event.issue.pull_request == null &&
       contains(github.event.comment.body, '/needs-') &&
       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
-    runs-on: self-hosted
+    runs-on: [self-hosted, ephemeral]
     concurrency:
       group: triage-slash-issue-${{ github.event.issue.number }}
       cancel-in-progress: false

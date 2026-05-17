@@ -24,7 +24,7 @@ on:
 
 jobs:
   notify:
-    runs-on: self-hosted
+    runs-on: [self-hosted, ephemeral]
     permissions:
       issues: write
     steps:
