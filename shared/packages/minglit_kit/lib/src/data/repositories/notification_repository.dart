@@ -12,6 +12,9 @@ class NotificationRepository {
 
   static const _efName = 'user-manage-settings';
 
+  // Fix #2393: notification write operations routed through EF.
+  static const _efNotification = 'user-manage-notification';
+
   /// FCM 토큰을 서버에 등록하거나 갱신합니다.
   Future<void> upsertToken({
     required String userId,
@@ -72,13 +75,15 @@ class NotificationRepository {
   ///
   /// Fix #1955: swallows errors — read-state mutation failure must not
   /// crash the UI; logged for debuggability.
+  /// Fix #2393: routed through user-manage-notification EF.
   Future<void> markAsRead(String notificationId) async {
     try {
-      await _client
-          .from('user_notifications')
-          .update({'is_read': true})
-          .eq('id', notificationId);
-    } catch (e, st) {
+      final response = await _client.functions.invoke(
+        _efNotification,
+        body: {'action': 'mark_read', 'notification_id': notificationId},
+      );
+      _ensureSuccess(response);
+    } on Object catch (e, st) {
       Log.e('❌ [NotificationRepo] markAsRead Error', e, st);
     }
   }
@@ -87,13 +92,17 @@ class NotificationRepository {
   ///
   /// Fix #1955: swallows errors — read-state mutation failure must not
   /// crash the UI; logged for debuggability.
+  /// Fix #2393: routed through user-manage-notification EF.
+  /// [userId] is retained for API compatibility but not used in the EF call;
+  /// the EF derives the user from the JWT.
   Future<void> markAllAsRead(String userId) async {
     try {
-      await _client
-          .from('user_notifications')
-          .update({'is_read': true})
-          .eq('user_id', userId);
-    } catch (e, st) {
+      final response = await _client.functions.invoke(
+        _efNotification,
+        body: {'action': 'mark_all_read'},
+      );
+      _ensureSuccess(response);
+    } on Object catch (e, st) {
       Log.e('❌ [NotificationRepo] markAllAsRead Error', e, st);
     }
   }
@@ -102,13 +111,15 @@ class NotificationRepository {
   ///
   /// Fix #1955: swallows errors — delete failure must not crash the UI;
   /// logged for debuggability.
+  /// Fix #2393: routed through user-manage-notification EF.
   Future<void> deleteNotification(String notificationId) async {
     try {
-      await _client
-          .from('user_notifications')
-          .delete()
-          .eq('id', notificationId);
-    } catch (e, st) {
+      final response = await _client.functions.invoke(
+        _efNotification,
+        body: {'action': 'delete', 'notification_id': notificationId},
+      );
+      _ensureSuccess(response);
+    } on Object catch (e, st) {
       Log.e('❌ [NotificationRepo] deleteNotification Error', e, st);
     }
   }

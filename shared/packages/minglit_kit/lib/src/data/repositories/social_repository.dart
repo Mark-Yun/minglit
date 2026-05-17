@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:minglit_kit/src/data/models/social_interaction.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -88,17 +90,17 @@ class SocialRepository {
     }
   }
 
+  // Fix #2393: Route block/unblock/report through EF to enforce write-via-EF rule.
+  static const _efSocial = 'user-manage-social';
+
   /// Blocks the given partner for the current user.
   Future<void> blockPartner(String partnerId) async {
-    final userId = _supabase.auth.currentUser?.id;
-    if (userId == null) throw Exception('User not authenticated');
     try {
-      await _supabase.from('social_interactions').upsert({
-        'user_id': userId,
-        'target_id': partnerId,
-        'target_type': SocialTargetType.partner.name,
-        'interaction_type': SocialInteractionType.block.name,
-      });
+      final response = await _supabase.functions.invoke(
+        _efSocial,
+        body: {'action': 'block', 'target_id': partnerId},
+      );
+      _ensureSuccess(response);
     } on Object catch (e, st) {
       Log.e('blockPartner Error', e, st);
       rethrow;
@@ -107,15 +109,12 @@ class SocialRepository {
 
   /// Unblocks a previously blocked partner.
   Future<void> unblockPartner(String partnerId) async {
-    final userId = _supabase.auth.currentUser?.id;
-    if (userId == null) throw Exception('User not authenticated');
     try {
-      await _supabase
-          .from('social_interactions')
-          .delete()
-          .eq('user_id', userId)
-          .eq('target_id', partnerId)
-          .eq('interaction_type', SocialInteractionType.block.name);
+      final response = await _supabase.functions.invoke(
+        _efSocial,
+        body: {'action': 'unblock', 'target_id': partnerId},
+      );
+      _ensureSuccess(response);
     } on Object catch (e, st) {
       Log.e('unblockPartner Error', e, st);
       rethrow;
@@ -123,31 +122,41 @@ class SocialRepository {
   }
 
   /// Reports a partner with a reason and optional description.
+  ///
+  /// Delegates to `user-manage-social` EF which atomically blocks the partner,
+  /// records the report interaction, and inserts report_details.
   Future<void> reportPartner({
     required String partnerId,
     required String reason,
     String? description,
   }) async {
-    final userId = _supabase.auth.currentUser?.id;
-    if (userId == null) throw Exception('User not authenticated');
     try {
-      await blockPartner(partnerId);
-      await _supabase.from('social_interactions').upsert({
-        'user_id': userId,
-        'target_id': partnerId,
-        'target_type': SocialTargetType.partner.name,
-        'interaction_type': SocialInteractionType.report.name,
-      });
-      await _supabase.from('report_details').insert({
-        'user_id': userId,
-        'target_id': partnerId,
-        'target_type': SocialTargetType.partner.name,
-        'reason': reason,
-        'description': ?description,
-      });
+      final response = await _supabase.functions.invoke(
+        _efSocial,
+        body: {
+          'action': 'report',
+          'target_id': partnerId,
+          'reason': reason,
+          if (description != null) 'description': description,
+        },
+      );
+      _ensureSuccess(response);
     } on Object catch (e, st) {
       Log.e('reportPartner Error', e, st);
       rethrow;
+    }
+  }
+
+  void _ensureSuccess(FunctionResponse response) {
+    if (response.status != 200) {
+      final body = response.data is String
+          ? response.data as String
+          : jsonEncode(response.data);
+      throw FunctionException(
+        status: response.status,
+        details: body,
+        reasonPhrase: 'Edge function error',
+      );
     }
   }
 
