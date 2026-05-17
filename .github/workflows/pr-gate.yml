@@ -462,9 +462,45 @@ jobs:
           fi
           echo "✅ No legacy auth helpers found"
         working-directory: supabase
-      - name: Test (edge functions)
-        run: deno test --allow-all functions/
+      - name: Test (edge functions) — with coverage
+        run: deno test --allow-all --coverage=cov_profile functions/
         working-directory: supabase
+
+      - name: Generate LCOV
+        run: deno coverage --lcov cov_profile > coverage.lcov
+        working-directory: supabase
+
+      - name: Fetch base branch for diff
+        if: github.event_name == 'pull_request'
+        run: git fetch origin ${{ github.base_ref }} --depth=200
+
+      - name: Diff coverage gate (≥90% on changed lines)
+        if: github.event_name == 'pull_request'
+        run: |
+          python3 -m pip install --quiet --user diff-cover
+          export PATH="$HOME/.local/bin:$PATH"
+          diff-cover supabase/coverage.lcov \
+            --compare-branch=origin/${{ github.base_ref }} \
+            --fail-under=90 \
+            --markdown-report=diff-cover.md \
+            --include 'supabase/functions/**/*.ts' \
+            --exclude 'supabase/functions/**/*_test.ts'
+
+      - name: Upload diff-cover report
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diff-cover-report
+          path: diff-cover.md
+          if-no-files-found: ignore
+
+      - name: Post coverage comment on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          path: diff-cover.md
+          header: deno-diff-coverage
+        continue-on-error: true
 
   # EF integration test — 빈 local Supabase + 외부 mock 으로 실 schema/trigger/RLS contract 검증
   # 설계: supabase/functions/_integration_tests/architecture.md

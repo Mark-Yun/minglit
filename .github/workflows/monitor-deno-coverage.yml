@@ -1,0 +1,59 @@
+name: monitor-deno-coverage
+
+# dev push 시 supabase/functions/** 변경 감지 → deno coverage → markdown 리포트 자동 갱신
+# coverage.ts 자체는 제외 (self-loop 방지)
+# 같은 동작 PR 마다는 pr-gate 의 test-edge-functions 잡이 diff-cover 로 별도 처리
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - 'supabase/functions/**'
+      - '!supabase/functions/_coverage/**'
+  workflow_dispatch:
+
+concurrency:
+  group: monitor-deno-coverage
+  cancel-in-progress: false   # 누락 없이 직렬화
+
+jobs:
+  coverage:
+    runs-on: [self-hosted, ephemeral]
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT_FOR_BUG_REPORT }}     # 자동 commit 푸시용 PAT
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Run deno tests with coverage
+        run: deno test --allow-all --coverage=cov_profile functions/
+        working-directory: supabase
+
+      - name: Generate LCOV
+        run: deno coverage --lcov cov_profile > coverage.lcov
+        working-directory: supabase
+
+      - name: Generate markdown report
+        run: |
+          deno run --allow-read --allow-write functions/_coverage/coverage.ts \
+            --lcov=coverage.lcov \
+            --out=functions/_coverage/coverage-report.md
+        working-directory: supabase
+
+      - name: Commit + push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet supabase/functions/_coverage/coverage-report.md; then
+            echo "no coverage delta — skip commit"
+            exit 0
+          fi
+          git add supabase/functions/_coverage/coverage-report.md
+          git commit -m "chore(coverage): update deno coverage report [skip ci]"
+          git push
