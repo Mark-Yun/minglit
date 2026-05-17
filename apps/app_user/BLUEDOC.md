@@ -46,3 +46,6 @@ Minglit 의 **일반 사용자 Flutter 앱**. 파티 탐색·참여 신청·결�
 - [minglit_kit/BLUEDOC.md](../../shared/packages/minglit_kit/BLUEDOC.md) — 공용 패키지
 - [README.md](./README.md) — 빌드·실행 명령
 - [integration_test/BLUEDOC.md](./integration_test/BLUEDOC.md) — 통합 테스트
+
+---
+_Reviewed: 2026-05-17 22:32_

@@ -90,3 +90,6 @@ NFR 은 측정 가능해야 함 — "빨라야 함" 금지, "200ms p50 / 에뮬�
 
 - [BLUEDOC](../infra/bluedoc/BLUEDOC.md), [FRESH_DOC](../infra/fresh-doc/BLUEDOC.md), [spec-walker](../spec-walker/BLUEDOC.md)
 - [MDS flow](../../apps/mds/docs/src/lib/flow-data.ts) — 카테고리 매핑 근거
+
+---
+_Reviewed: 2026-05-17 22:32_

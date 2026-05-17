@@ -24,3 +24,6 @@
 - [../data/BLUEDOC.md](../data/BLUEDOC.md) — Repository 와 함께 사용
 - [minglit_kit/architecture.md](../../architecture.md) — 5 계층 개요
 - [apps/architecture.md](../../../../../apps/architecture.md) — feature-local controller 와의 분리
+
+---
+_Reviewed: 2026-05-17 22:32_

@@ -162,3 +162,6 @@ flutter test integration_test/cuj/ \
 - 엔진 코드: [`_engine/cuj_test.dart`](./_engine/cuj_test.dart)
 - spec 컨벤션: [`docs/features/BLUEDOC.md`](../../../../docs/features/BLUEDOC.md)
 - 시각 회귀: [`mds-emulator-render/BLUEDOC.md`](../mds-emulator-render/BLUEDOC.md)
+
+---
+_Reviewed: 2026-05-17 22:32_
