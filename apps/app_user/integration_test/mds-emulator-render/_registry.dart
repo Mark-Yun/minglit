@@ -1,0 +1,14 @@
+// Catalog registry — 모든 화면 catalog 의 명시적 import.
+//
+// 새 화면을 추가하면 본 파일에 import + allCatalogs list 에 등록한다.
+// (filesystem 자동 스캔 대신 explicit list 사용 — coverage script /
+// CI shard 가 빌드 없이 list 를 읽을 수 있도록.)
+
+import '_engine/catalog.dart';
+import '_engine/builder.dart';
+import 'home_page/home_page_test.dart' as home_page;
+
+/// 모든 cataloged 화면의 명시적 list. 새 화면 추가 시 본 list 에 추가.
+final List<MdsCatalog<MdsScreenBuilder<dynamic>>> allCatalogs = [
+  home_page.catalog,
+];
