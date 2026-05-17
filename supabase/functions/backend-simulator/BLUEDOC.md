@@ -1,0 +1,43 @@
+# backend-simulator
+
+유저·파트너 트래픽을 시뮬레이션해 dev EF/스키마/트리거를 자동 검증한다.
+
+## 두 모드 (`index.ts` 의 `mode` 분기)
+
+| 모드 | 호출 | 동작 |
+|---|---|---|
+| `phase` (default) | `{"phase": "create|approve|refund|run|settle|verify"}` 또는 빈 body | 6 단계 직렬 시뮬 (옛, deprecation 예정) |
+| `tick` | `{"mode": "tick"}` | DB 상태 기반 행위자(actor) 시뮬 — 매 호출마다 partner/user 가 자율 액션 생성·실행 |
+
+## 폴더 구조
+
+```
+backend-simulator/
+├── BLUEDOC.md              ← 본 문서 (진입점)
+├── architecture.md         ← 현재 한계 + v2 설계 제안
+├── index.ts                ← EF 진입점 (mode 분기)
+├── sim_{auth,reporter,assertions,types}.ts  ← 공용
+├── sim_{create,approve,refund,event,settle}.ts  ← Phase 모드
+└── tick/                   ← Tick 모드
+    ├── sim_tick.ts         ← orchestrator
+    ├── action_runner.ts    ← EF 호출 + 검증
+    ├── sim_action.ts       ← 추상 베이스
+    ├── tick_types.ts
+    ├── actions/            ← 8 액션 (partner: create/approve/reject, user: apply/checkin/discover/refund/vote)
+    └── factories/          ← partner/user 액션 의사결정
+```
+
+## 트리거
+
+- `.github/workflows/monitor-tick-user.yml` — 매시 :30 `mode=tick` 자동 호출
+- `.github/workflows/monitor-daily-lifecycle.yml` — KST 07:00 phase 모드 6단계 직렬
+
+## 핵심 컨벤션
+
+- `[E2E]` prefix 파티 + `user_` prefix 유저만 시뮬 대상 (실데이터 격리)
+- 모든 쓰기 = EF 경유 (직접 DB DML 0건) — 실 트래픽 경로 충실 재현
+- 액션 실패 시 `sim_reporter` 가 자동 GH 이슈 생성
+
+## 한계 / 개선 계획
+
+현재 구조의 본질적 한계 (EF 커버리지 16%, 스키마 invariant 미검증, PGMQ 파급 미추적, 데모급 규모) 와 v2 설계 제안은 [architecture.md](./architecture.md) 참조.
