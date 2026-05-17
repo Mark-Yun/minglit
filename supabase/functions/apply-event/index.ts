@@ -5,6 +5,10 @@ import {
 } from "../_shared/response_utils.ts";
 import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
+import {
+  isEventFull,
+  isTicketSoldOut,
+} from "../_shared/domains/event/availability.ts";
 
 type VerifItem = { verification_id: string; data: Record<string, unknown> };
 
@@ -151,14 +155,16 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
     }
 
     // 2. 이벤트 상태 확인 — scheduled 상태여야 신청 가능
+    // NOTE: user-create-order 는 scheduled OR active 허용 (Fix #998). 이 EF 는 scheduled only —
+    // 정합성 이슈 → `_shared/domains/event/BLUEDOC.md` 의 "알려진 정합성 이슈" 참조.
     if (event.status !== "scheduled") {
       return errorResponse("Event is not accepting applications", 409, {
         status: event.status,
       });
     }
 
-    // 3. capacity guard — current_participants >= max_participants
-    if (event.current_participants >= event.max_participants) {
+    // 3. capacity guard
+    if (isEventFull(event.current_participants, event.max_participants)) {
       return errorResponse("Event is at full capacity", 409, {
         current: event.current_participants,
         max: event.max_participants,
@@ -190,8 +196,8 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
       });
     }
 
-    // 티켓 capacity guard — sold_count >= quantity
-    if (ticket.sold_count >= ticket.quantity) {
+    // 티켓 capacity guard
+    if (isTicketSoldOut(ticket.sold_count, ticket.quantity)) {
       return errorResponse("Ticket is sold out", 409);
     }
 

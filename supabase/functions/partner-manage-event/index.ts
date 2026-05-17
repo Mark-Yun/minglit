@@ -10,6 +10,7 @@ import {
 } from "../_shared/response_utils.ts";
 import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
 import { parseAction } from "../_shared/request_utils.ts";
+import { isEventEditableByPartner } from "../_shared/domains/event/availability.ts";
 
 const VALID_EVENT_STATUSES = ["scheduled", "cancelled", "completed"];
 const _VALID_GENDERS = ["male", "female"];
@@ -460,8 +461,8 @@ async function handleUpdateStatus(
   if (fetchError) return errorResponse("Failed to load event", 500);
   if (!event) return errorResponse("Event not found", 404);
 
-  // Only scheduled → cancelled is allowed
-  if (event.status !== "scheduled") {
+  // Only scheduled → cancelled is allowed (state machine guard)
+  if (!isEventEditableByPartner(event.status)) {
     return errorResponse(
       `Cannot change status from ${event.status} to ${status}`,
       400,

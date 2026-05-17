@@ -11,6 +11,7 @@ Hexagonal 의 도메인 코어는 보통 EF 안 nested 폴더에 두지만, Supa
 | 도메인 | 설명 | BLUEDOC |
 |---|---|---|
 | `payment/` | application status 분류, 환불 정책 (grace period + cutoff), 정책 파싱 | [payment/BLUEDOC.md](payment/BLUEDOC.md) |
+| `event/` | event status 가드 (신청 가능 / 편집 가능), capacity, 시작 시각 | [event/BLUEDOC.md](event/BLUEDOC.md) |
 
 ## 새 도메인 추가 가이드
 

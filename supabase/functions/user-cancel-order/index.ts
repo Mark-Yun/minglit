@@ -10,13 +10,13 @@ import { initStatsig, logStatsigEvent } from "../_shared/statsig_utils.ts";
 import { executeRefund, RefundError } from "../_shared/refund_utils.ts";
 import {
   classifyApplicationStatus,
-  isEventStarted,
   isFreeApplication,
 } from "../_shared/domains/payment/application_status.ts";
 import {
   parseRefundPolicy,
   verifyRefundEligibility,
 } from "../_shared/domains/payment/refund_policy.ts";
+import { isEventStarted } from "../_shared/domains/event/availability.ts";
 
 const FN = "user-cancel-order";
 

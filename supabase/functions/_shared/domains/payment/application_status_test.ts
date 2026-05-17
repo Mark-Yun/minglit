@@ -4,7 +4,6 @@
 import { assertEquals } from "jsr:@std/assert@1";
 import {
   classifyApplicationStatus,
-  isEventStarted,
   isFreeApplication,
 } from "./application_status.ts";
 
@@ -65,17 +64,4 @@ Deno.test("isFreeApplication — 0 → true, 양수 → false, null → false", 
   assertEquals(isFreeApplication(null), false);   // damaged data, not free
 });
 
-// ─── isEventStarted ────────────────────────────────────────────────────────────
-
-Deno.test("isEventStarted — 과거 → true, 미래 → false, 정확히 동일 → true (boundary)", () => {
-  const now = new Date("2026-01-01T12:00:00Z");
-  assertEquals(isEventStarted(new Date("2025-12-31T23:59:59Z"), now), true);
-  assertEquals(isEventStarted(new Date("2026-01-01T12:00:01Z"), now), false);
-  assertEquals(isEventStarted(now, now), true);  // boundary: 동일 시각 = 시작됨
-});
-
-Deno.test("isEventStarted — string ISO 도 동일 동작", () => {
-  const now = new Date("2026-01-01T12:00:00Z");
-  assertEquals(isEventStarted("2025-12-31T23:59:59Z", now), true);
-  assertEquals(isEventStarted("2026-01-01T12:00:01Z", now), false);
-});
+// isEventStarted → moved to `_shared/domains/event/availability.ts`

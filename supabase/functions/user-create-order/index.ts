@@ -7,6 +7,12 @@ import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts
 import { parseJsonBody } from "../_shared/request_utils.ts";
 import { log, withSpan } from "../_shared/logger.ts";
 import { initStatsig, logStatsigEvent } from "../_shared/statsig_utils.ts";
+import {
+  isEventFull,
+  isEventOpenForApplication,
+  isEventStarted,
+  isTicketSoldOut,
+} from "../_shared/domains/event/availability.ts";
 
 const FN = "user-create-order";
 
@@ -56,14 +62,14 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
       return errorResponse("이벤트를 찾을 수 없습니다.", 404);
     }
 
-    // Fix #998: active 상태 이벤트도 신청 허용 (apply_event RPC가 scheduled/active 모두 허용)
-    if (event.status !== "scheduled" && event.status !== "active") {
+    // Fix #998: active 상태 이벤트도 신청 허용
+    if (!isEventOpenForApplication(event.status)) {
       return errorResponse("이벤트가 마감되었습니다.", 400, {
         code: "EVENT_CLOSED",
       });
     }
 
-    if (new Date(event.start_time) <= new Date()) {
+    if (isEventStarted(event.start_time)) {
       return errorResponse("이벤트가 마감되었습니다.", 400, {
         code: "EVENT_NOT_SCHEDULED",
       });
@@ -92,14 +98,14 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
     }
 
     // 4. Check ticket availability
-    if (ticket.sold_count >= ticket.quantity) {
+    if (isTicketSoldOut(ticket.sold_count, ticket.quantity)) {
       return errorResponse("티켓이 매진되었습니다.", 400, {
         code: "TICKET_SOLD_OUT",
       });
     }
 
     // 5. Check event capacity
-    if (event.current_participants >= event.max_participants) {
+    if (isEventFull(event.current_participants, event.max_participants)) {
       return errorResponse("정원이 초과되었습니다.", 400, {
         code: "EVENT_FULL",
       });

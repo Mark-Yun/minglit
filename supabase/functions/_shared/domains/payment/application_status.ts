@@ -50,9 +50,3 @@ export function classifyApplicationStatus(status: string): StatusClassification 
 export function isFreeApplication(paymentAmount: number | null): boolean {
   return paymentAmount === 0;
 }
-
-/** 이벤트 시작 시각 vs 기준 시각 — 시작 이후면 true */
-export function isEventStarted(startTime: string | Date, now: Date = new Date()): boolean {
-  const start = typeof startTime === "string" ? new Date(startTime) : startTime;
-  return start.getTime() <= now.getTime();
-}
