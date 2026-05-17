@@ -169,7 +169,9 @@ adb -s adb-R3CX803P2ND-8btuuD._adb-tls-connect._tcp install -r build/app/outputs
 
 별도 워크플로우 (required check 아님, 참고용):
 - **`pr-setup-format`**: PR 시 `dart fix --apply` + `dart format` 자동 적용. 포맷 변경이 있으면 자동 커밋.
-- **`pr-setup-secret-scan`**: PR 시 Gitleaks로 시크릿 유출 검사.
+- **`pr-review-setup`**: PR 열리면 auto-merge 활성화 + pr-gate 통과·브랜치 up-to-date·auto-merge enabled 모두 충족되면 `needs-review` 라벨 부여.
+
+> Gitleaks 시크릿 검사는 `pr-gate.yml` 내 `gitleaks` job 으로 흡수됨 (required check 안에서 차단).
 
 → 전체 워크플로우 prefix 컨벤션은 [`.github/workflows/BLUEDOC.md`](.github/workflows/BLUEDOC.md) 참고.
 
