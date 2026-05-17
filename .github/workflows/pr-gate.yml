@@ -618,6 +618,23 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_CONFIG: .gitleaks.toml
+
+  # BLUEDOC freshness: 새 파일/폴더 추가 또는 파일 삭제 시 가장 가까운 ancestor BLUEDOC.md 갱신 강제.
+  # 예외: commit message 에 `EXEMPT_FRESH_BLUEDOC=<reason>` 한 줄.
+  check-bluedoc-freshness:
+    runs-on: [self-hosted, ephemeral]
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0  # commit message + diff 비교에 history 필요
+      - name: Run BLUEDOC freshness check
+        env:
+          BASE_REF: origin/${{ github.event.pull_request.base.ref || 'dev' }}
+        run: |
+          git fetch origin "${BASE_REF#origin/}" --depth=50 || true
+          bash .github/scripts/check-bluedoc-freshness.sh
           # Self-hosted ephemeral runners execute as root (HOME=/root) which
           # doesn't share a parent with GITHUB_WORKSPACE. Disable SARIF artifact
           # upload to avoid the rootDirectory/file mismatch error.
@@ -645,7 +662,7 @@ jobs:
     secrets: inherit
 
   ci-result:
-    needs: [check-migration-versions, check-env-manifest-sync, check-workflow-yaml, check-android-test-deps, check-cross-feature-imports, gitleaks, test-flutter-apps, test-integration-app-user-cuj, test-integration-app-partner-cuj, lint-landing-user, lint-landing-partner, lint-mds-docs, lint-mds-icons, test-supabase, test-edge-functions, test-ef-integration]
+    needs: [check-migration-versions, check-env-manifest-sync, check-workflow-yaml, check-android-test-deps, check-cross-feature-imports, gitleaks, check-bluedoc-freshness, test-flutter-apps, test-integration-app-user-cuj, test-integration-app-partner-cuj, lint-landing-user, lint-landing-partner, lint-mds-docs, lint-mds-icons, test-supabase, test-edge-functions, test-ef-integration]
     if: always()
     runs-on: [self-hosted, ephemeral]
     steps:

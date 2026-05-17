@@ -38,3 +38,6 @@ EF 호출 시 `_test_utils/mock_http.ts` 의 `captureServeHandler` + `createFetc
 - `shared/schemas/` — schema / sample 저장소
 - [_test_utils/BLUEDOC.md](../_test_utils/BLUEDOC.md) — schema_validator / mock_http 사용
 - [functions/BLUEDOC.md](../BLUEDOC.md)
+
+---
+_Reviewed: 2026-05-17 22:32_

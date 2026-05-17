@@ -46,3 +46,6 @@ minglit 의 backend API 진입점. 60+ EF (user / partner / system / public) + 5
 - [edge-function-auth.md](../../docs/architecture/edge-function-auth.md) — minglitEdgeFunction wrapper + manifest
 - [edge-functions.md](../../docs/operations/edge-functions.md) — 디버깅 / Axiom / Sentry
 - [test-strategy.md](../../docs/qa/test-strategy.md) — 7-Layer test taxonomy
+
+---
+_Reviewed: 2026-05-17 22:32_
