@@ -149,7 +149,7 @@ jobs:
 
       - name: Upload to Firebase App Distribution (Dev)
         if: github.ref == 'refs/heads/dev'
-        uses: w9jds/firebase-action@d0c951464c912d53fdc73770a5711c96c5a88671 # v15.17.0
+        uses: w9jds/firebase-action@0a4f77dac6df6028b126dd9635acbb7ec0b714cc # v15.18.0
         with:
           args: appdistribution:distribute ${{ inputs.app-directory }}/build/app/outputs/flutter-apk/app-dev-release.apk --app ${{ secrets.FIREBASE_APP_ID_ANDROID }} --release-notes Dev-Build-${{ github.run_number }} --groups testers
         env:
