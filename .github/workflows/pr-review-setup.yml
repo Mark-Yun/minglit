@@ -1,0 +1,84 @@
+name: pr-review-setup
+
+# PR 라이프사이클의 "리뷰 준비" 자동화.
+#   1. enable-auto-merge: PR 가 열리면 squash auto-merge 활성화
+#   2. add-needs-review:  pr-gate 통과 + 브랜치 up-to-date + auto-merge 세팅됨 → `needs-review` 라벨 부여
+# `needs-review` 라벨은 외부 시스템(OMC scheduler / 사람 리뷰)이 소비하는 "리뷰 준비 완료" 시그널.
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+  workflow_run:
+    workflows: [pr-gate]
+    types: [completed]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+concurrency:
+  group: pr-review-setup-${{ github.event.pull_request.number || github.event.workflow_run.id }}
+  cancel-in-progress: false
+
+jobs:
+  enable-auto-merge:
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.fork == false
+    runs-on: [self-hosted, ephemeral]
+    steps:
+      - name: Enable squash auto-merge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr merge "${{ github.event.pull_request.number }}" \
+            --auto --squash \
+            --repo "${{ github.repository }}"
+
+  add-needs-review:
+    if: >-
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request'
+    runs-on: [self-hosted, ephemeral]
+    steps:
+      - name: Add needs-review label when PR is review-ready
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          PR_NUM=$(gh api "/repos/${REPO}/actions/runs/${RUN_ID}" --jq '.pull_requests[0].number // empty')
+          if [ -z "$PR_NUM" ]; then
+            echo "::notice::No PR associated with workflow_run ${RUN_ID}"
+            exit 0
+          fi
+
+          INFO=$(gh pr view "$PR_NUM" --repo "$REPO" --json mergeStateStatus,autoMergeRequest,labels,state)
+          STATE=$(echo "$INFO" | jq -r '.state')
+          MERGE_STATE=$(echo "$INFO" | jq -r '.mergeStateStatus')
+          AUTO_MERGE=$(echo "$INFO" | jq -r '.autoMergeRequest != null')
+          HAS_LABEL=$(echo "$INFO" | jq -r '(.labels | map(.name) | index("needs-review")) != null')
+
+          echo "PR #${PR_NUM}: state=${STATE} mergeState=${MERGE_STATE} autoMerge=${AUTO_MERGE} hasLabel=${HAS_LABEL}"
+
+          if [ "$STATE" != "OPEN" ]; then
+            echo "::notice::PR #${PR_NUM} is not OPEN — skip"
+            exit 0
+          fi
+          if [ "$MERGE_STATE" = "BEHIND" ]; then
+            echo "::notice::PR #${PR_NUM} branch is BEHIND base — skip (sync-pr-branches will rebase, then pr-gate retriggers)"
+            exit 0
+          fi
+          if [ "$AUTO_MERGE" != "true" ]; then
+            echo "::notice::PR #${PR_NUM} has no auto-merge enabled — skip"
+            exit 0
+          fi
+          if [ "$HAS_LABEL" = "true" ]; then
+            echo "::notice::PR #${PR_NUM} already has needs-review — skip"
+            exit 0
+          fi
+
+          gh pr edit "$PR_NUM" --repo "$REPO" --add-label needs-review
+          echo "::notice::Added needs-review to PR #${PR_NUM}"

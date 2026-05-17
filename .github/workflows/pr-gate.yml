@@ -524,6 +524,20 @@ jobs:
       - name: Check cross-feature imports
         run: bash scripts/check-cross-feature-imports.sh
 
+  # Gitleaks secret scan — formerly pr-setup-secret-scan.yml, absorbed into pr-gate as a required check
+  gitleaks:
+    runs-on: [self-hosted, ephemeral]
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+
   # CUJ integration tests on emulator — pattern: integration_test/cuj/<category>/<feature>_test.dart
   # Engine + BLUEDOC: apps/<app>/integration_test/cuj/BLUEDOC.md
   test-integration-app-user-cuj:
@@ -655,7 +669,7 @@ jobs:
           retention-days: 14
 
   ci-result:
-    needs: [check-migration-versions, check-env-manifest-sync, check-workflow-yaml, check-android-test-deps, check-cross-feature-imports, test-flutter-apps, test-integration-app-user-cuj, test-integration-app-partner-cuj, lint-landing-user, lint-landing-partner, lint-mds-docs, lint-mds-icons, test-supabase, test-edge-functions]
+    needs: [check-migration-versions, check-env-manifest-sync, check-workflow-yaml, check-android-test-deps, check-cross-feature-imports, gitleaks, test-flutter-apps, test-integration-app-user-cuj, test-integration-app-partner-cuj, lint-landing-user, lint-landing-partner, lint-mds-docs, lint-mds-icons, test-supabase, test-edge-functions]
     if: always()
     runs-on: [self-hosted, ephemeral]
     steps:
