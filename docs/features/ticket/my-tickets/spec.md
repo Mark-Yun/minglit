@@ -1,207 +1,166 @@
-# 내 티켓 (My Tickets) 스펙
+# Spec: 내 티켓 (My Tickets)
 
-## 개요
+> **참조**
+> - PRD: [prd.md](./prd.md)
+> - MDS specs:
+>   - [`my_tickets_page`](../../../../apps/mds/docs/public/specs/my_tickets_page/) — 내 티켓 화면 (배너 + 다가오는/지난 섹션)
+>   - [`ticket_qr_screen`](../../../../apps/mds/docs/public/specs/ticket_qr_screen/) — "입장 QR" 진입 대상
+>   - [`my_page`](../../../../apps/mds/docs/public/specs/my_page/) — 진입점 (메뉴 라우팅 정정)
+>   - [`event_ongoing_banner`](../../../../apps/mds/docs/public/specs/event_ongoing_banner/) — 오늘 이벤트 배너 패턴 참고
+> - Wireframe: [wireframe.html](./wireframe.html)
 
-"내 티켓"은 유저가 다가오는 이벤트 티켓을 시간순으로 빠르게 확인하고, QR 입장권에 한 탭으로 접근할 수 있는 화면이다.
+## CUJs
 
-기존 "구매 내역"과 역할을 분리한다:
+| ID  | Priority | CUJ Name | Details | FR | NFR |
+|-----|----------|----------|---------|----|----|
+| 1-1 | P0 | 오늘 이벤트 D-Day 배너 노출 | • 내 티켓 진입 시 오늘 시작 이벤트 감지<br>• 상단 배너에 이벤트명 + "오늘 HH:mm 시작" + "입장 QR" 버튼<br>• 2개 이상이면 가장 임박한 1개만 | FR-1, FR-2 | NFR-1 |
+| 1-2 | P0 | 배너에서 한 탭으로 QR 진입 | • 배너 우측 "입장 QR" 버튼 탭<br>• 입장 QR 화면(이벤트/티켓 컨텍스트 전달)으로 이동 | FR-2, FR-3 | NFR-2 |
+| 1-3 | P1 | 오늘 이벤트 없을 때 배너 숨김 | • 오늘 시작 이벤트 0건<br>• 배너 자체 미렌더 (높이 차지 없음) | FR-1 | NFR-1 |
+| 2-1 | P0 | 다가오는 이벤트 시간순 정렬 | • 이벤트 시작 시각 가까운 순으로 정렬<br>• 각 카드에 D-Day 칩 + 상태 배지 + 썸네일 + 일시/장소 | FR-4, FR-5 | NFR-1 |
+| 2-2 | P0 | 티켓 카드에서 QR 버튼 탭 | • 카드 하단 "입장 QR" 보조 강조 버튼<br>• 입장 QR 화면 이동 | FR-3, FR-5 | NFR-2 |
+| 2-3 | P1 | 카드 본문 탭 시 이벤트 상세 | • 카드 본문(QR 버튼 외) 탭<br>• 이벤트 상세 화면 이동 | FR-6 | NFR-1 |
+| 2-4 | P1 | D-Day 칩 / 상태 배지 표시 | • D-Day, D-1, ..., D-N 칩 (primary 색)<br>• 결제 완료 → "결제완료", 승인 → "승인됨" 배지 | FR-5 | NFR-1 |
+| 3-1 | P1 | 지난 이벤트 섹션 muted 표시 | • 다가오는 이벤트 아래 "지난 이벤트" 섹션<br>• 카드 opacity 0.55 + "종료" 라벨<br>• QR 버튼 비노출 | FR-7, FR-8 | NFR-1 |
+| 3-2 | P1 | 지난 이벤트 최근 종료 순 + 20개 제한 | • 종료 시각 최근 순 정렬<br>• 최대 20개 표시 (오래된 것은 구매내역에서) | FR-7 | NFR-1 |
+| 3-3 | P1 | 지난 이벤트 카드 탭 → 상세 | • 카드 탭 가능<br>• 이벤트 상세 화면 이동 | FR-6 | NFR-1 |
+| 4-1 | P1 | 빈 상태 안내 + CTA | • 티켓 0건일 때 일러스트 + "아직 티켓이 없어요" + "이벤트에 참여하고 티켓을 받아보세요"<br>• "이벤트 둘러보기" 버튼 → 홈 | FR-9 | NFR-1 |
+| 4-2 | P2 | 로딩/에러 표준 처리 | • 로딩: shimmer<br>• 에러: 재시도 인라인 | FR-10 | NFR-1 |
+| 4-3 | P0 | 마이 페이지 → 내 티켓 메뉴 라우팅 정정 | • 기존 버그(구매 내역으로 이동) 수정<br>• 정상적으로 내 티켓 화면으로 이동 | FR-11 | NFR-2 |
 
-| 화면 | 목적 | 정렬 | 대상 |
-|------|------|------|------|
-| **내 티켓** | 다가오는 이벤트 확인 + 입장 | `event.startTime ASC` (가까운 순) | 유효 티켓 (paid, approved) |
-| **구매 내역** | 전체 결제 이력 조회 + 환불 | `created_at DESC` (최신 순) | 모든 신청 (전 상태) |
+## Functional Requirements
 
-### 핵심 원칙
+- **FR-1**: 내 티켓 진입 시 본인의 유효 티켓(결제 완료 또는 승인 상태) 중 시작일이 오늘인 이벤트를 감지. 존재 시 상단 강조 배너 노출, 없으면 미노출.
+- **FR-2**: D-Day 배너는 이벤트명(1줄 ellipsis) + "오늘 HH:mm 시작" + 우측 "입장 QR" 버튼. 2건 이상이면 가장 임박한 1개만 표시.
+- **FR-3**: "입장 QR" 액션은 입장 QR 화면으로 이동 (이벤트/티켓 컨텍스트 전달).
+- **FR-4**: 다가오는 이벤트 섹션은 본인의 유효 티켓(결제 완료 또는 승인) 중 시작 시각이 현재 이후인 것을 가까운 순으로 표시.
+- **FR-5**: 티켓 카드 구성 — D-Day 칩(좌상) + 상태 배지(우상) + 80×80 썸네일(좌) + 이벤트명/일시/장소(우) + 구분선 + 티켓명(좌하) + "입장 QR" 버튼(우하).
+- **FR-6**: 카드 본문(QR 버튼 영역 제외) 탭 시 이벤트 상세 화면으로 이동. 지난 이벤트 카드도 동일.
+- **FR-7**: 지난 이벤트 섹션은 시작 시각이 현재 이전인 본인의 유효 티켓을 최근 종료 순으로 최대 20개 표시.
+- **FR-8**: 지난 이벤트 카드는 D-Day 칩 대신 "종료" 라벨 + opacity 0.55 + QR 버튼 비노출.
+- **FR-9**: 티켓 0건일 때 빈 상태 화면 — 티켓 아이콘(64px) + "아직 티켓이 없어요" + 보조 안내 + "이벤트 둘러보기" 버튼 → 홈.
+- **FR-10**: 로딩은 shimmer, 에러는 인라인 재시도 버튼 (표준 비동기 로딩/에러 패턴 활용).
+- **FR-11**: 마이 페이지의 "내 티켓" 메뉴 라우팅을 구매 내역에서 내 티켓 화면으로 정정.
 
-1. **시간 기반 정렬** — 가장 임박한 이벤트가 최상단
-2. **한 탭 QR** — 티켓 카드에서 바로 QR 화면 진입
-3. **오늘 이벤트 강조** — D-Day 배너로 현장 접근성 극대화
-4. **지난 이벤트 보존** — 참석 기록을 아래쪽에 회색 처리로 보여줌
+## Non-Functional Requirements
 
-### 참고 앱
+- **NFR-1**: 내 티켓 첫 페이지 first paint 800ms 이내 (에뮬레이터 baseline, p50 기준). 리스트는 단일 쿼리 후 클라이언트 정렬.
+- **NFR-2**: "입장 QR" 탭 → 입장 QR 화면 first paint 600ms 이내 (p50). QR 토큰 캐시 활용.
+- **NFR-3**: 접근성 — 카드 전체 + QR 버튼 각각 별도 스크린리더 라벨. 최소 터치 영역 48dp.
+- **NFR-4**: 지난 이벤트 카드 opacity 0.55 적용 시에도 텍스트 contrast WCAG AA 충족.
+- **NFR-5**: 내 티켓 화면은 인증 필요 — 비인증 진입 시 로그인 화면으로 리디렉트.
 
-- **Eventbrite**: 전용 Tickets 탭, Apple/Google Wallet 연동, QR 직접 표시
-- **NOL 티켓 (인터파크)**: 당일 퀵 배너, 수집용 티켓 이미지, 모바일 QR 2종
-- **Fever**: 앱+이메일 듀얼 QR 접근, 전용 Tickets 섹션
+## Edge Cases
 
-## 구성 요소
+| CUJ ID | 케이스 | 기대 동작 |
+|--------|--------|----------|
+| 1-1 | 오늘 이벤트가 자정 직후 시작 | 자정 기준 "오늘"로 판정. 페이지 재진입 시 상태 갱신 |
+| 1-1 | 오늘 이벤트가 이미 시작됨 | 배너 유지(이벤트 종료 시각 전까지). 종료 후 지난 이벤트로 이동 |
+| 1-2 | 배너에서 QR 진입 도중 네트워크 끊김 | 입장 QR 화면의 캐시 토큰 사용. 캐시 없으면 에러 UI |
+| 1-3 | 오늘 이벤트가 환불/취소된 직후 | 다음 fetch 부터 배너 미노출 |
+| 2-1 | 같은 시각에 다른 이벤트 2건 | 둘 다 표시. 순서는 안정적 정렬(보조 키로 신청 생성 시각 사용) |
+| 2-2 | 신청 상태가 심사 대기 | 본 화면 미노출(구매 내역에서만). 표시 대상은 결제 완료 또는 승인 상태만 |
+| 2-3 | 이벤트 상세 진입 도중 이벤트 삭제 | 이벤트 상세에서 빈 상태 또는 에러. 본 화면에서는 다음 갱신 시 제거 |
+| 2-4 | 상태가 취소로 변경됨 | 다음 갱신부터 리스트 제외 |
+| 3-1 | 지난 이벤트가 21개 이상 | 최대 20개만. 추가 안내 "더 오래된 티켓은 구매 내역에서 확인" |
+| 3-2 | 지난 이벤트 0개 | 섹션 자체 숨김 |
+| 3-3 | 지난 이벤트 카드 탭 시 이벤트 상세가 종료 안내 | 정상 동작 — 이벤트 상세의 종료 상태 노출 |
+| 4-1 | 빈 상태에서 "이벤트 둘러보기" 탭 | 홈 라우트 push (replace 아님) — 백 동작은 내 티켓 복귀 |
+| 4-2 | 네트워크 단절 | 에러 + 재시도. 향후 오프라인 캐시로 확장 |
+| 4-3 | 마이 페이지 메뉴 다중 탭 | 기존 라우팅이 중첩 push 를 방지하는지 검증 |
 
-### 1. AppBar
+## Open Questions
 
-- 타이틀: "내 티켓"
-- 뒤로가기 버튼 (← MyPage)
+- [ ] **검색/필터링** — V1 시간 정렬만으로 충분한가? 키워드 검색 필요한가?
+- [ ] **지난 이벤트 20개 제한** — 적정한가? Wallet 식 무한 스크롤이 더 나은가?
+- [ ] **오프라인 캐시** — 오프라인 티켓 저장소 활용 시점과 freshness 정책
+- [ ] **D-Day 배너 디자인 토큰** — `event_ongoing_banner` 와 동일 패턴 재사용 vs 별도?
+- [ ] **이벤트 진행 중 상태** — 시작 후 종료 전 — 배너 카피 변경 필요? ("진행 중" vs "오늘 HH:mm 시작")
+- [ ] **양도/공유 진입점** — V1 비포함이나 미래 확장 시 어디에 둘지?
+- [ ] **심사 대기 상태 노출 여부** — 본 화면 노출 여부 정책 재확인
 
-### 2. 오늘 이벤트 배너 (조건부)
+---
 
-오늘 시작하는 이벤트가 있을 때만 상단에 강조 배너 표시.
+## 화면 구성 (참고)
 
-- **배경**: `primary` (#9900FF) at 8% opacity
-- **좌측**: 캘린더 아이콘 (primary color)
-- **중앙**: 이벤트명 (1줄, ellipsis) + "오늘 HH:mm 시작"
-- **우측**: "입장 QR" 버튼 → TicketQRScreen 이동
-- 오늘 이벤트가 2개 이상이면 가장 임박한 것 1개만 표시
-- 조건: `event.startTime`이 오늘 날짜 AND status가 paid/approved
-
-### 3. 다가오는 이벤트 섹션
-
-"다가오는 이벤트" 서브헤더 + 티켓 카드 리스트.
-
-#### 티켓 카드 구성
+### 화면 1: 내 티켓 (MyTicketsPage)
 
 ```
 ┌─────────────────────────────────────┐
-│ [D-3]                    [승인됨]   │  ← D-Day 카운트 + 상태 배지
+│ ← 내 티켓                            │
+├─────────────────────────────────────┤
+│  📅 와인 테이스팅 모임                │  ← 오늘 이벤트 배너 (조건부)
+│     오늘 19:00 시작        [입장 QR]│
+├─────────────────────────────────────┤
+│ 다가오는 이벤트                      │
 │                                     │
-│ [80x80 썸네일]  이벤트 제목          │  ← 이벤트 정보
-│                 3월 31일 (화) 19:00  │
-│                 강남 라운지바         │
+│ ┌─────────────────────────────────┐│
+│ │ [D-3]                  [승인됨] ││
+│ │ [썸네일]  이벤트 제목            ││
+│ │           3월 31일 (화) 19:00   ││
+│ │           강남 라운지바           ││
+│ │ ──────────────────────────────  ││
+│ │ 일반 입장권          [입장 QR]  ││
+│ └─────────────────────────────────┘│
 │                                     │
-│ ─────────────────────────────────── │
-│ 일반 입장권              [입장 QR]   │  ← 티켓명 + QR 버튼
+│ ┌─────────────────────────────────┐│
+│ │ [D-7]                  [결제완료]││
+│ │ ...                              ││
+│ └─────────────────────────────────┘│
+│                                     │
+├─────────────────────────────────────┤
+│ 지난 이벤트                          │
+│                                     │
+│ ┌─────────────────────────────────┐│
+│ │ [종료]                  [승인됨] ││  ← opacity 0.55
+│ │ ...                              ││
+│ │ ──────────────────────────────  ││
+│ │ 일반 입장권              (없음)  ││  ← QR 버튼 비노출
+│ └─────────────────────────────────┘│
+│                                     │
 └─────────────────────────────────────┘
 ```
 
-- **D-Day 카운트**: D-Day, D-1, D-2, ... D-N (primary color chip)
-- **상태 배지**: 기존 `_StatusBadge` 재사용 (paid → "결제완료", approved → "승인됨")
-- **썸네일**: 80×80, 8px radius, `MinglitImage`
-- **이벤트명**: `titleMedium` bold, 1줄 ellipsis
-- **일시**: `bodySmall`, `DateFormat('M월 d일 (E) HH:mm', 'ko_KR')`
-- **장소**: `bodySmall`, `onSurfaceVariant` color
-- **티켓명**: `bodyMedium`
-- **입장 QR 버튼**: `FilledButton.tonal` → TicketQRScreen(eventId, ticketId)
-- **카드 탭**: 전체 카드 탭 → EventDetailPage(eventId) 이동
+### 화면 2: 빈 상태
 
-#### 필터 조건
-
-- `status` IN ('paid', 'approved')
-- `event.startTime >= now()` (미래 이벤트만)
-- 정렬: `event.startTime ASC` (가까운 순)
-
-### 4. 지난 이벤트 섹션
-
-"지난 이벤트" 서브헤더 + 지난 티켓 카드 리스트.
-
-- 동일한 카드 레이아웃이지만:
-  - D-Day 카운트 대신 "종료" 라벨 (gray chip)
-  - 카드 전체 opacity 0.55 (muted)
-  - QR 버튼 없음 (이벤트 종료)
-  - 카드 탭 → EventDetailPage(eventId) 이동은 유지
-- 필터: `status` IN ('paid', 'approved') AND `event.startTime < now()`
-- 정렬: `event.startTime DESC` (최근 종료 순)
-- 최대 20개 표시 (오래된 것은 구매내역에서 확인)
-
-### 5. 빈 상태
-
-티켓이 하나도 없을 때:
-
-- 아이콘: `confirmation_number_outlined` (64px, `onSurfaceVariant`)
-- 텍스트: "아직 티켓이 없어요"
-- 서브텍스트: "이벤트에 참여하고 티켓을 받아보세요"
-- CTA 버튼: "이벤트 둘러보기" → HomeRoute(/)
-
-## 데이터 소스
-
-### 새 Repository 메서드
-
-`EventRepository`에 추가:
-
-```dart
-/// 내 티켓 목록 조회 (유효 티켓만, 이벤트 시작시간 기준 정렬)
-Future<List<EventApplication>> getMyTickets(String userId) async {
-  final response = await _client
-      .from('event_applications')
-      .select('*, event:events(*, party:parties(*, location:locations(*))), ticket:tickets(*)')
-      .eq('user_id', userId)
-      .inFilter('status', ['paid', 'approved'])
-      .order('created_at', ascending: false);
-  return response.map(EventApplication.fromJson).toList();
-}
+```
+┌─────────────────────────────────────┐
+│ ← 내 티켓                            │
+├─────────────────────────────────────┤
+│                                     │
+│           [티켓 아이콘]              │
+│                                     │
+│         아직 티켓이 없어요           │
+│                                     │
+│   이벤트에 참여하고 티켓을 받아보세요  │
+│                                     │
+│      [ 이벤트 둘러보기 ]             │
+│                                     │
+└─────────────────────────────────────┘
 ```
 
-> 참고: Supabase PostgREST에서 관계 테이블(`events.start_time`) 기준 정렬이 불가하므로,
-> 클라이언트에서 `event.startTime` 기준으로 upcoming/past 분리 + 정렬한다.
+### 화면 비교 (참고)
 
-### 클라이언트 분리 로직
+| 화면 | 목적 | 정렬 | 대상 |
+|------|------|------|------|
+| **내 티켓** | 다가오는 이벤트 확인 + 입장 | `event.startTime ASC` | 유효 티켓(`paid`/`approved`) |
+| **구매 내역** | 전체 결제 이력 조회 + 환불 | `created_at DESC` | 모든 신청(전 상태) |
 
-```dart
-// Controller에서 처리
-final now = DateTime.now();
-final upcoming = tickets
-    .where((a) => a.event != null && a.event!.startTime.isAfter(now))
-    .toList()
-  ..sort((a, b) => a.event!.startTime.compareTo(b.event!.startTime)); // ASC
+### 데이터 정의 (참고)
 
-final past = tickets
-    .where((a) => a.event != null && a.event!.startTime.isBefore(now))
-    .toList()
-  ..sort((a, b) => b.event!.startTime.compareTo(a.event!.startTime)); // DESC
+| 항목 | key | 설명 |
+|------|-----|------|
+| 신청 | `event_applications` | 본인 신청 (`user_id = auth.uid()`) |
+| 노출 대상 상태 | `status` | `paid`, `approved` 만 |
+| 정렬 키 (upcoming) | `event.startTime ASC` | 가까운 순 |
+| 정렬 키 (past) | `event.startTime DESC` | 최근 종료 순 |
+| 과거 표시 제한 | 20 | 초과는 구매 내역으로 안내 |
+| 라우트 | `/tickets/my` | protectedPrefixes 등록 |
 
-final todayEvent = upcoming.where((a) =>
-    a.event!.startTime.year == now.year &&
-    a.event!.startTime.month == now.month &&
-    a.event!.startTime.day == now.day
-).firstOrNull;
-```
-
-### 기존 인프라 재사용
-
-| 컴포넌트 | 용도 |
-|----------|------|
-| `TicketQRScreen` | QR 코드 표시 (기존 구현) |
-| `TicketWalletRepository` | 오프라인 티켓 저장 (기존 구현) |
-| `TicketToken` | QR 서명 토큰 (기존 모델) |
-| `_StatusBadge` | 상태 배지 위젯 (purchase_history에서 추출 or 공유) |
-| `MinglitImage` | 이미지 위젯 (기존) |
-| `MinglitAsyncValueWidget` | 비동기 상태 처리 (기존) |
-
-## 라우트 변경
-
-### 신규 라우트
-
-```dart
-@TypedGoRoute<MyTicketsRoute>(path: '/tickets/my')
-class MyTicketsRoute extends GoRouteData {
-  const MyTicketsRoute();
-
-  @override
-  Widget build(BuildContext context, GoRouterState state) =>
-      const MyTicketsPage();
-}
-```
-
-> `/tickets/my`는 이미 `protectedPrefixes`에 등록되어 있으므로 인증 가드 추가 불필요.
-
-### MyPage 수정
-
-```dart
-// Before (버그)
-onTap: homeCoordinator.pushPurchaseHistory,
-
-// After
-onTap: homeCoordinator.pushMyTickets,
-```
-
-### HomeCoordinator 추가
-
-```dart
-void pushMyTickets() => _router.push('/tickets/my');
-```
-
-## 에러/로딩 상태
+### 빈/에러/로딩 상태 (참고)
 
 | 상태 | 처리 |
 |------|------|
-| 로딩 | `MinglitAsyncValueWidget` 기본 로딩 (shimmer) |
-| 에러 | `MinglitAsyncValueWidget` 기본 에러 + 재시도 |
-| 빈 상태 | 섹션 5 참고 |
-| 네트워크 오프라인 | 로컬 `TicketWalletRepository` 캐시 표시 (향후 확장) |
-
-## 구현 이슈 분할 (예상)
-
-| # | 제목 | 의존성 | 설명 |
-|---|------|--------|------|
-| 1 | `getMyTickets` Repository 메서드 추가 | 없음 | EventRepository에 쿼리 추가 |
-| 2 | MyTicketsController 생성 | #1 | upcoming/past 분리, 오늘 이벤트 감지 |
-| 3 | MyTicketsPage UI 구현 | #2 | 카드, 배너, 빈 상태 |
-| 4 | 라우트 등록 + MyPage 연결 | #3 | GoRouter 라우트, coordinator 메서드 |
-| 5 | StatusBadge 공유 모듈 추출 | 없음 | purchase_history → 공통 위젯 |
+| 로딩 | `MinglitAsyncValueWidget` 기본 (shimmer) |
+| 에러 | 인라인 에러 + 재시도 |
+| 빈 상태 | "이벤트 둘러보기" CTA → 홈 |
+| 오프라인 | (향후) `TicketWalletRepository` 캐시 |
