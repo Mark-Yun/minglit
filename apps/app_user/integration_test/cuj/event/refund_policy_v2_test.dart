@@ -75,8 +75,9 @@ void main() {
 
   setUp(() {
     mockPolicyRepo = _MockPolicyRepository();
-    when(() => mockPolicyRepo.getRefundPolicy())
-        .thenAnswer((_) async => _defaultPolicy());
+    when(
+      () => mockPolicyRepo.getRefundPolicy(),
+    ).thenAnswer((_) async => _defaultPolicy());
   });
 
   List<dynamic> base() => [
@@ -192,7 +193,9 @@ void main() {
       app: RefundPolicySection(event: _futureEvent()),
       overrides: () {
         final repo = _MockPolicyRepository();
-        when(() => repo.getRefundPolicy()).thenThrow(Exception('network error'));
+        when(
+          () => repo.getRefundPolicy(),
+        ).thenThrow(Exception('network error'));
         return [policyRepositoryProvider.overrideWith((_) => repo)];
       },
       body: (t) async {
