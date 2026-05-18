@@ -53,4 +53,4 @@ if (!isEventEditableByPartner(event.status)) return errorResponse(...);
 - [payment/BLUEDOC.md](../payment/BLUEDOC.md) — paid 후 처리 흐름
 
 ---
-_Reviewed: 2026-05-18 16:36_
+_Reviewed: 2026-05-18 03:45_
