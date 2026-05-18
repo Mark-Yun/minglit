@@ -41,4 +41,4 @@ if (isPaid) { /* paid 분기 */ }
 - [Issue #3676](https://github.com/supabase/cli/issues/3676) — nested entrypoint 미지원 (본 구조 선택 이유)
 
 ---
-_Reviewed: 2026-05-18 11:19_
+_Reviewed: 2026-05-18 03:45_
