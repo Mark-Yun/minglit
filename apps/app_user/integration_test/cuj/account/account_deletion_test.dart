@@ -6,6 +6,8 @@
 import 'dart:async';
 
 import 'package:app_user/src/features/account_deletion/logic/account_deletion_coordinator.dart';
+import 'package:app_user/src/features/account_deletion/ui/deletion_complete_page.dart';
+import 'package:app_user/src/features/account_deletion/ui/deletion_info_page.dart';
 import 'package:app_user/src/features/account_deletion/ui/deletion_reason_page.dart';
 import 'package:app_user/src/features/account_deletion/ui/deletion_verify_page.dart';
 import 'package:flutter/material.dart';
@@ -95,8 +97,8 @@ void main() {
 
   cujGroup('1-1', '탈퇴 사유 선택 후 안내 화면 진입', () {
     List<dynamic> base() => [
-      accountDeletionCoordinatorProvider.overrideWithValue(coordinator),
-    ];
+          accountDeletionCoordinatorProvider.overrideWithValue(coordinator),
+        ];
 
     cujCase(
       'happy: 사유 선택 → 다음 → pushInfo(reason: ...)',
@@ -152,6 +154,42 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
+  // CUJ 1-2: 안내 화면에서 손실/보존 정보 확인 후 진행
+  // ---------------------------------------------------------------------------
+
+  cujGroup('1-2', '안내 화면에서 계속 진행 → pushVerify', () {
+    List<dynamic> base() => [
+          accountDeletionCoordinatorProvider.overrideWithValue(coordinator),
+        ];
+
+    cujCase(
+      'happy: 탈퇴 전 확인 화면 렌더 + 계속 진행 → pushVerify 호출 (FR-3)',
+      app: const DeletionInfoPage(),
+      overrides: base,
+      body: (t) async {
+        expect(find.text('탈퇴 전 확인'), findsOneWidget);
+
+        await t.tap(find.text('계속 진행'));
+        await t.pumpAndSettle();
+
+        verify(
+          () => coordinator.pushVerify(reason: any(named: 'reason')),
+        ).called(1);
+      },
+    );
+
+    cujCase(
+      'happy: 사유 있는 경우 선택한 탈퇴 사유 섹션 표시 (FR-3)',
+      app: const DeletionInfoPage(reasonCode: 'privacy_concern'),
+      overrides: base,
+      body: (t) async {
+        expect(find.text('선택한 탈퇴 사유'), findsOneWidget);
+        expect(find.text('계속 진행'), findsOneWidget);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
   // CUJ 1-3: 소셜/비밀번호 본인 확인 흐름
   // ---------------------------------------------------------------------------
 
@@ -163,18 +201,18 @@ void main() {
     });
 
     List<dynamic> socialBase() => [
-      currentUserProvider.overrideWith((_) => _socialUser()),
-      authStateChangesProvider.overrideWith((_) => const Stream.empty()),
-      accountRepositoryProvider.overrideWithValue(repo),
-      accountDeletionCoordinatorProvider.overrideWithValue(coordinator),
-    ];
+          currentUserProvider.overrideWith((_) => _socialUser()),
+          authStateChangesProvider.overrideWith((_) => const Stream.empty()),
+          accountRepositoryProvider.overrideWithValue(repo),
+          accountDeletionCoordinatorProvider.overrideWithValue(coordinator),
+        ];
 
     List<dynamic> passwordBase() => [
-      currentUserProvider.overrideWith((_) => _passwordUser()),
-      authStateChangesProvider.overrideWith((_) => const Stream.empty()),
-      accountRepositoryProvider.overrideWithValue(repo),
-      accountDeletionCoordinatorProvider.overrideWithValue(coordinator),
-    ];
+          currentUserProvider.overrideWith((_) => _passwordUser()),
+          authStateChangesProvider.overrideWith((_) => const Stream.empty()),
+          accountRepositoryProvider.overrideWithValue(repo),
+          accountDeletionCoordinatorProvider.overrideWithValue(coordinator),
+        ];
 
     cujCase(
       'happy: 소셜 유저 → 소셜 재인증 안내 표시 (FR-4)',
@@ -230,11 +268,11 @@ void main() {
     });
 
     List<dynamic> base() => [
-      currentUserProvider.overrideWith((_) => _passwordUser()),
-      authStateChangesProvider.overrideWith((_) => const Stream.empty()),
-      accountRepositoryProvider.overrideWithValue(repo),
-      accountDeletionCoordinatorProvider.overrideWithValue(coordinator),
-    ];
+          currentUserProvider.overrideWith((_) => _passwordUser()),
+          authStateChangesProvider.overrideWith((_) => const Stream.empty()),
+          accountRepositoryProvider.overrideWithValue(repo),
+          accountDeletionCoordinatorProvider.overrideWithValue(coordinator),
+        ];
 
     cujCase(
       'happy: 비밀번호 입력 → 탈퇴 요청 탭 → 다이얼로그 표시 (FR-6)',
@@ -281,6 +319,27 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
+  // CUJ 1-5: 탈퇴 완료 화면 렌더링
+  // ---------------------------------------------------------------------------
+
+  cujGroup('1-5', '탈퇴 완료 화면 렌더링', () {
+    List<dynamic> base() => [
+          authControllerProvider.overrideWith(_FakeAuthController.new),
+        ];
+
+    cujCase(
+      'happy: 체크 아이콘 + 안내 문구 + 확인 버튼 렌더 (FR-9)',
+      app: const DeletionCompletePage(),
+      overrides: base,
+      body: (t) async {
+        expect(find.text('탈퇴 요청이 완료됐어요'), findsOneWidget);
+        expect(find.text('확인'), findsOneWidget);
+        expect(find.byIcon(Icons.check_circle_rounded), findsOneWidget);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
   // CUJ 3-1: 유예 기간 중 재로그인하면 복구 다이얼로그
   // ---------------------------------------------------------------------------
 
@@ -301,11 +360,11 @@ void main() {
     });
 
     List<dynamic> base() => [
-      authStateChangesProvider.overrideWith((_) => authController.stream),
-      accountRepositoryProvider.overrideWithValue(repo),
-      currentUserProvider.overrideWith((_) => _socialUser()),
-      authControllerProvider.overrideWith(_FakeAuthController.new),
-    ];
+          authStateChangesProvider.overrideWith((_) => authController.stream),
+          accountRepositoryProvider.overrideWithValue(repo),
+          currentUserProvider.overrideWith((_) => _socialUser()),
+          authControllerProvider.overrideWith(_FakeAuthController.new),
+        ];
 
     cujCase(
       'happy: signedIn + 탈퇴 대기 상태 → 복구 다이얼로그 노출 (FR-14)',
