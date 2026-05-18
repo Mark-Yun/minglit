@@ -163,7 +163,8 @@ void main() {
             reason: any(named: 'reason'),
           ),
         ).thenAnswer(
-          (_) async => const CancelOrderResult(type: 'refunded', refundAmount: 50000),
+          (_) async =>
+              const CancelOrderResult(type: 'refunded', refundAmount: 50000),
         );
         return withApp(app);
       },
