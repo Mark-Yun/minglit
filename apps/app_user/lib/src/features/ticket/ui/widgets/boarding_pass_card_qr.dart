@@ -10,7 +10,7 @@ part of 'boarding_pass_card.dart';
 /// Renders a dashed line with semicircle notches at the card left/right edges.
 // Fix #1526: PerforationPainter — "진짜 티켓" 느낌의 핵심 디테일
 class _PerforationLine extends StatelessWidget {
-  const _PerforationLine();
+  const _PerforationLine({super.key});
 
   static const double _notchDiameter = 28;
   static const double _notchRadius = _notchDiameter / 2;

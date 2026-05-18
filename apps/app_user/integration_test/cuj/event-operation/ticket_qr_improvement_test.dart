@@ -270,12 +270,15 @@ void main() {
 
   cujGroup('1-4', '절취선/노치 렌더링', () {
     cujCase(
-      'happy: 절취선 영역(_PerforationLine) 렌더 — CustomPaint 존재',
+      'happy: 절취선 영역(_PerforationLine) 렌더 — key로 존재 검증',
       app: _BoardingPassWrapper(token: _makeToken(), eventMeta: _todayMeta()),
       body: (t) async {
-        // FR-4: CustomPaint draws the dashed line; its presence confirms
-        // the perforation section rendered without error.
-        expect(find.byType(CustomPaint), findsAtLeast(1));
+        // Fix #2591: ValueKey('perforation-line') added to _PerforationLine so
+        // the assertion is specific — removing _PerforationLine will fail this test.
+        expect(
+          find.byKey(const ValueKey('perforation-line')),
+          findsOneWidget,
+        );
       },
     );
 
@@ -284,9 +287,11 @@ void main() {
       app: _BoardingPassWrapper(token: _makeToken(), eventMeta: _todayMeta()),
       body: (t) async {
         // Perforation renders (no crash); notch circles use scaffold background.
-        // We can only verify structural render, not the pixel color in unit tests.
         expect(find.byType(BoardingPassCard), findsOneWidget);
-        expect(find.byType(CustomPaint), findsAtLeast(1));
+        expect(
+          find.byKey(const ValueKey('perforation-line')),
+          findsOneWidget,
+        );
       },
     );
   });
@@ -492,11 +497,10 @@ void main() {
           findsNothing,
         );
         // FR-8: card has Opacity wrapper at 0.55
+        // Fix #2591: use ValueKey('used-card-opacity') to avoid ambiguity
+        // when multiple Opacity widgets exist inside BoardingPassCard.
         final opacity = t.widget<Opacity>(
-          find.descendant(
-            of: find.byType(BoardingPassCard),
-            matching: find.byType(Opacity),
-          ),
+          find.byKey(const ValueKey('used-card-opacity')),
         );
         expect(opacity.opacity, closeTo(0.55, 0.01));
       },
