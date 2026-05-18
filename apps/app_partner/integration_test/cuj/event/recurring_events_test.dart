@@ -60,18 +60,17 @@ RecurrenceRule _makeRule({
   RecurrencePattern pattern = RecurrencePattern.weekly,
   RecurrenceStatus status = RecurrenceStatus.active,
   List<int> daysOfWeek = const [1],
-}) =>
-    RecurrenceRule(
-      id: id,
-      partyId: partyId,
-      pattern: pattern,
-      startTime: '20:00',
-      endTime: '22:00',
-      createdAt: _epoch,
-      updatedAt: _epoch,
-      status: status,
-      daysOfWeek: daysOfWeek,
-    );
+}) => RecurrenceRule(
+  id: id,
+  partyId: partyId,
+  pattern: pattern,
+  startTime: '20:00',
+  endTime: '22:00',
+  createdAt: _epoch,
+  updatedAt: _epoch,
+  status: status,
+  daysOfWeek: daysOfWeek,
+);
 
 // ---------------------------------------------------------------------------
 // Main
