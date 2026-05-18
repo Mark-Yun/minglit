@@ -1,5 +1,5 @@
 cycle: 14d
-priority: P3-low
+priority: P2-medium
 last_verified: 2026-05-16
 refresh_method: |
   본 카테고리 (ticket) 인스펙션 → feature_audit_report.md 갱신 + Action Items 마다 GitHub Issue 1건 파일링.
