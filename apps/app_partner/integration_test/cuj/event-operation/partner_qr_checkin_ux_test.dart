@@ -5,20 +5,60 @@
 //
 // Refs #2589: partner-qr-checkin-ux CUJ integration test 신규 작성
 
+import 'package:app_partner/src/features/checkin/checkin_controller.dart';
 import 'package:app_partner/src/features/checkin/manual/checkin_participant.dart';
 import 'package:app_partner/src/features/checkin/manual/manual_checkin_controller.dart';
 import 'package:app_partner/src/features/checkin/manual/manual_checkin_sheet.dart';
+import 'package:app_partner/src/features/checkin/stats/checkin_stats_controller.dart';
+import 'package:app_partner/src/features/checkin/stats/entry_group_checkin_stats_controller.dart';
+import 'package:app_partner/src/features/checkin/widgets/checkin_scanner_overlay.dart';
 import 'package:app_partner/src/features/checkin/widgets/checkin_summary_card.dart';
+import 'package:app_partner/src/features/checkin/widgets/entry_group_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../_engine/cuj_test.dart';
 
 // ---------------------------------------------------------------------------
 // Fakes for provider isolation
 // ---------------------------------------------------------------------------
+
+class _FakeEntryGroupStatsController
+    extends EntryGroupCheckinStatsController {
+  _FakeEntryGroupStatsController(this._groups);
+  final List<EntryGroupCheckinStats> _groups;
+
+  @override
+  Future<List<EntryGroupCheckinStats>> build(String eventId) async =>
+      _groups;
+}
+
+class _ErrorEntryGroupStatsController
+    extends EntryGroupCheckinStatsController {
+  @override
+  Future<List<EntryGroupCheckinStats>> build(String eventId) async {
+    throw Exception('RPC 실패');
+  }
+}
+
+class _FakeCheckinStatsController extends CheckinStatsController {
+  _FakeCheckinStatsController(this._initial);
+  final CheckinStats _initial;
+
+  @override
+  Future<CheckinStats> build(String eventId) async => _initial;
+}
+
+// MobileScannerController.toggleTorch() 는 하드웨어 접근 — no-op 으로 override.
+// setState(() => _flashOn = ...) 는 toggleTorch() 호출 전에 실행되므로
+// 이 stub 이 없어도 아이콘 변경은 동작하지만, Future 오류를 방지하기 위해 사용.
+class _NoOpScannerController extends MobileScannerController {
+  @override
+  Future<void> toggleTorch() async {}
+}
 
 class _FakeManualCheckinController extends ManualCheckinController {
   _FakeManualCheckinController(this._participants);
@@ -277,6 +317,338 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
+  // CUJ 2-1: 엔트리 그룹 하단 시트 헤더 노출 (FR-6, FR-7)
+  // ---------------------------------------------------------------------------
+
+  cujGroup('2-1', '엔트리 그룹 하단 시트 헤더 노출', () {
+    cujCase(
+      'happy: 그룹 있음 → 헤더 "엔트리 그룹별 현황" 노출',
+      app: Scaffold(
+        body: EntryGroupBottomSheet(eventId: 'evt-groups'),
+      ),
+      overrides: () => [
+        entryGroupCheckinStatsControllerProvider('evt-groups').overrideWith(
+          () => _FakeEntryGroupStatsController([
+            const EntryGroupCheckinStats(
+              id: 'g1', label: '남 20대', total: 14, checkedIn: 4,
+            ),
+          ]),
+        ),
+      ],
+      body: (t) async {
+        await t.pumpAndSettle();
+        // FR-6: 하단 시트 헤더 타이틀 노출
+        expect(find.text('엔트리 그룹별 현황'), findsOneWidget);
+      },
+    );
+
+    cujCase(
+      'edge: 그룹 없음 → 시트 섹션 자체 숨김 (FR-7)',
+      app: Scaffold(
+        body: EntryGroupBottomSheet(eventId: 'evt-no-groups'),
+      ),
+      overrides: () => [
+        entryGroupCheckinStatsControllerProvider(
+          'evt-no-groups',
+        ).overrideWith(() => _FakeEntryGroupStatsController([])),
+      ],
+      body: (t) async {
+        await t.pumpAndSettle();
+        // 그룹 없으면 SizedBox.shrink() — 헤더 없음
+        expect(find.text('엔트리 그룹별 현황'), findsNothing);
+      },
+    );
+
+    cujCase(
+      'edge: 그룹 RPC 실패 → 헤더만 + "불러오기 실패" 서브타이틀',
+      app: Scaffold(
+        body: EntryGroupBottomSheet(eventId: 'evt-err'),
+      ),
+      overrides: () => [
+        entryGroupCheckinStatsControllerProvider('evt-err').overrideWith(
+          () => _ErrorEntryGroupStatsController(),
+        ),
+      ],
+      body: (t) async {
+        await t.pumpAndSettle();
+        // 헤더는 표시, 서브타이틀에 에러 문구
+        expect(find.text('엔트리 그룹별 현황'), findsOneWidget);
+        expect(find.textContaining('불러오기 실패'), findsOneWidget);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 2-2: pull-up 으로 그룹 시트 확장 + 그룹별 현황 표시 (FR-6, FR-8)
+  // ---------------------------------------------------------------------------
+
+  cujGroup('2-2', 'pull-up 으로 그룹 시트 확장 + 그룹별 현황 표시', () {
+    cujCase(
+      'happy: 3개 그룹 → 드래그 후 라벨 + 진행률 표시',
+      app: Scaffold(
+        body: EntryGroupBottomSheet(eventId: 'evt-expand'),
+      ),
+      overrides: () => [
+        entryGroupCheckinStatsControllerProvider('evt-expand').overrideWith(
+          () => _FakeEntryGroupStatsController([
+            // 0~50% → primary color (FR-8)
+            const EntryGroupCheckinStats(
+              id: 'g1', label: '남 20대', total: 14, checkedIn: 4,
+            ),
+            // 50~90% → warning color (FR-8)
+            const EntryGroupCheckinStats(
+              id: 'g2', label: '여 20대', total: 14, checkedIn: 9,
+            ),
+            // 90%+ → error color (FR-8)
+            const EntryGroupCheckinStats(
+              id: 'g3', label: '남 30대', total: 10, checkedIn: 10,
+            ),
+          ]),
+        ),
+      ],
+      body: (t) async {
+        await t.pumpAndSettle();
+
+        // 축소 헤더 확인
+        expect(find.text('엔트리 그룹별 현황'), findsOneWidget);
+
+        // pull-up 드래그로 시트 확장
+        await t.drag(
+          find.text('엔트리 그룹별 현황'),
+          const Offset(0, -400),
+        );
+        await t.pumpAndSettle();
+
+        // FR-8: 그룹 라벨 노출
+        expect(find.text('남 20대'), findsOneWidget);
+        expect(find.text('여 20대'), findsOneWidget);
+        expect(find.text('남 30대'), findsOneWidget);
+        // LinearProgressIndicator 3개 (그룹당 1개)
+        expect(find.byType(LinearProgressIndicator), findsNWidgets(3));
+      },
+    );
+
+    cujCase(
+      'edge: 100% 도달 그룹 → "N/N" 표시 + error 색상 프로그레스',
+      app: Scaffold(
+        body: EntryGroupBottomSheet(eventId: 'evt-full'),
+      ),
+      overrides: () => [
+        entryGroupCheckinStatsControllerProvider('evt-full').overrideWith(
+          () => _FakeEntryGroupStatsController([
+            const EntryGroupCheckinStats(
+              id: 'g1', label: '전체', total: 50, checkedIn: 50,
+            ),
+          ]),
+        ),
+      ],
+      body: (t) async {
+        await t.pumpAndSettle();
+        expect(find.text('엔트리 그룹별 현황'), findsOneWidget);
+
+        await t.drag(
+          find.text('엔트리 그룹별 현황'),
+          const Offset(0, -400),
+        );
+        await t.pumpAndSettle();
+
+        expect(find.text('전체'), findsOneWidget);
+        // LinearProgressIndicator value=1.0 (clamped)
+        expect(find.byType(LinearProgressIndicator), findsOneWidget);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 4-1: 카메라 플래시 토글 (FR-12)
+  // ---------------------------------------------------------------------------
+
+  cujGroup('4-1', '카메라 플래시 토글 (어두운 현장)', () {
+    cujCase(
+      'happy: 플래시 FAB 탭 → 아이콘 flash_off→flash_on 전환',
+      app: Scaffold(
+        body: CheckinScannerOverlay(
+          scannerController: _NoOpScannerController(),
+          state: const CheckinState(result: CheckinResult.idle),
+          onManualCheckin: () {},
+        ),
+      ),
+      body: (t) async {
+        await t.pumpAndSettle();
+
+        // 초기: 플래시 OFF
+        expect(find.byIcon(Icons.flash_off), findsOneWidget);
+        expect(find.byIcon(Icons.flash_on), findsNothing);
+
+        // 플래시 FAB 탭
+        await t.tap(find.byIcon(Icons.flash_off));
+        await t.pump();
+
+        // 전환 후: 플래시 ON
+        expect(find.byIcon(Icons.flash_on), findsOneWidget);
+        expect(find.byIcon(Icons.flash_off), findsNothing);
+      },
+    );
+
+    cujCase(
+      'edge: 재탭 → flash_on→flash_off 복귀',
+      app: Scaffold(
+        body: CheckinScannerOverlay(
+          scannerController: _NoOpScannerController(),
+          state: const CheckinState(result: CheckinResult.idle),
+          onManualCheckin: () {},
+        ),
+      ),
+      body: (t) async {
+        await t.pumpAndSettle();
+
+        await t.tap(find.byIcon(Icons.flash_off));
+        await t.pump();
+        expect(find.byIcon(Icons.flash_on), findsOneWidget);
+
+        // 다시 탭 → 복귀
+        await t.tap(find.byIcon(Icons.flash_on));
+        await t.pump();
+        expect(find.byIcon(Icons.flash_off), findsOneWidget);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 4-2: Realtime 다른 디바이스 체크인 자동 반영 (FR-13, P1)
+  // ---------------------------------------------------------------------------
+
+  cujGroup('4-2', 'Realtime 다른 디바이스 체크인 자동 반영', () {
+    late _FakeCheckinStatsController statsController;
+
+    cujCase(
+      'happy: Realtime 업데이트 → 요약 카드 갱신 (23→24)',
+      app: const _RealtimeStatCard(eventId: 'evt-rt'),
+      overrides: () {
+        statsController = _FakeCheckinStatsController(
+          const CheckinStats(total: 50, checkedIn: 23),
+        );
+        return [
+          checkinStatsControllerProvider('evt-rt').overrideWith(
+            () => statsController,
+          ),
+        ];
+      },
+      afterPump: _kSummaryCardPump,
+      body: (t) async {
+        await t.pump(_kSummaryCardPump);
+
+        // 초기 상태: 23/50
+        expect(find.text('23'), findsOneWidget);
+        expect(find.text('/50'), findsOneWidget);
+
+        // Realtime 체크인 이벤트 수신 시뮬레이션 (다른 디바이스 +1)
+        statsController.state = const AsyncData(
+          CheckinStats(total: 50, checkedIn: 24),
+        );
+        await t.pump();
+        await t.pump(_kSummaryCardPump);
+
+        // 갱신 후: 24/50
+        expect(find.text('24'), findsOneWidget);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 5-1: 중복 체크인 시 메시지 확장 (FR-14)
+  // ---------------------------------------------------------------------------
+
+  cujGroup('5-1', '중복 체크인 시 메시지 확장', () {
+    cujCase(
+      'happy: alreadyCheckedIn → "이미 체크인된 참가자" + 입장 시각',
+      app: Scaffold(
+        body: CheckinResultBanner(
+          state: const CheckinState(
+            result: CheckinResult.alreadyCheckedIn,
+            message: '14:30 입장',
+          ),
+        ),
+      ),
+      body: (t) async {
+        await t.pumpAndSettle();
+
+        // FR-14: "이미 체크인된 참가자" 타이틀
+        expect(find.text('이미 체크인된 참가자'), findsOneWidget);
+        // 입장 시각 서브타이틀
+        expect(find.text('14:30 입장'), findsOneWidget);
+      },
+    );
+
+    cujCase(
+      'edge: 시각 정보 미수신 → "이미 체크인된 참가자" 기본 메시지',
+      app: const Scaffold(
+        body: CheckinResultBanner(
+          state: CheckinState(result: CheckinResult.alreadyCheckedIn),
+        ),
+      ),
+      body: (t) async {
+        await t.pumpAndSettle();
+
+        // message == null → subtitle 공란 (fallback)
+        expect(find.text('이미 체크인된 참가자'), findsOneWidget);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 5-2: 다른 이벤트 티켓 스캔 시 차단 (FR-14)
+  // ---------------------------------------------------------------------------
+
+  cujGroup('5-2', '다른 이벤트 티켓 스캔 시 차단', () {
+    cujCase(
+      'happy: invalid + "다른 이벤트 티켓입니다" → 입장 불가 배너',
+      app: Scaffold(
+        body: CheckinResultBanner(
+          state: const CheckinState(
+            result: CheckinResult.invalid,
+            message: '다른 이벤트 티켓입니다',
+          ),
+        ),
+      ),
+      body: (t) async {
+        await t.pumpAndSettle();
+
+        // FR-14: "입장 불가" 타이틀
+        expect(find.text('입장 불가'), findsOneWidget);
+        // 사유 서브타이틀
+        expect(find.text('다른 이벤트 티켓입니다'), findsOneWidget);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 5-3: 환불된 티켓 스캔 시 차단 (FR-14)
+  // ---------------------------------------------------------------------------
+
+  cujGroup('5-3', '환불된 티켓 스캔 시 차단', () {
+    cujCase(
+      'happy: invalid + "환불된 티켓" → 입장 불가 배너',
+      app: Scaffold(
+        body: CheckinResultBanner(
+          state: const CheckinState(
+            result: CheckinResult.invalid,
+            message: '환불된 티켓',
+          ),
+        ),
+      ),
+      body: (t) async {
+        await t.pumpAndSettle();
+
+        expect(find.text('입장 불가'), findsOneWidget);
+        expect(find.text('환불된 티켓'), findsOneWidget);
+        // error 아이콘 표시
+        expect(find.byIcon(Icons.error), findsOneWidget);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
   // CUJ 5-4: 참가자 0명 이벤트 — 요약 카드 "아직 발급된 티켓이 없습니다" (FR-2, FR-15)
   // ---------------------------------------------------------------------------
 
@@ -310,6 +682,34 @@ void main() {
       },
     );
   });
+}
+
+// ---------------------------------------------------------------------------
+// ConsumerWidget wrapper for CUJ 4-2 (Realtime stats update simulation)
+// ---------------------------------------------------------------------------
+
+class _RealtimeStatCard extends ConsumerWidget {
+  const _RealtimeStatCard({required this.eventId});
+  final String eventId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final statsAsync = ref.watch(checkinStatsControllerProvider(eventId));
+    return statsAsync.when(
+      loading: () => const Scaffold(
+        body: CheckinSummaryCard(checkedIn: 0, total: 0, isLoading: true),
+      ),
+      error: (_, __) => const Scaffold(
+        body: CheckinSummaryCard(checkedIn: 0, total: 0),
+      ),
+      data: (stats) => Scaffold(
+        body: CheckinSummaryCard(
+          checkedIn: stats.checkedIn,
+          total: stats.total,
+        ),
+      ),
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------
