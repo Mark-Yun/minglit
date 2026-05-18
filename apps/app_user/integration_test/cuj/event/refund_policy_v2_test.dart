@@ -1,24 +1,14 @@
-// CUJ tests — event / refund-policy-v2 (app_user) — grace period flow
+// CUJ tests — event / refund-policy-v2 (app_user)
 //
 // 대응 spec: docs/features/event/refund-policy-v2/spec.md
 // CUJ 추가 시 본 파일에 `cujGroup` 블록 추가 (새 파일 X).
 //
 // 커버 범위:
-//   - CUJ 1-1: grace period(3시간) 내 자동 환불 — 결제 1h 후, 이벤트 30d 후 (P0)
+//   - CUJ 1-1: grace period 내 자동 환불 (P0)
 //   - CUJ 1-2: grace period 내 다이얼로그에서 돌아가기 (P0)
-//   - CUJ 1-3: 환불 완료 후 "환불 정보" 카드 표시 (P1)
-//
-// 설계 결정:
-//   - PurchaseHistoryDetailPage 를 직접 렌더.
-//   - purchaseHistoryDetailProvider(applicationId) overrideWith 로 캐시 체인 우회.
-//   - policyRepositoryProvider 미목업 → catch 블록 기본값(2h/7d) 사용.
-//   - RefundCalculator.calculate 로직:
-//     * withinGracePeriod = paidAt 기준 2h 이내
-//     * withinCutoff = eventStartTime 기준 7일 이상 남음
-//     * isRefundable = withinGracePeriod || withinCutoff
-//   - CUJ 1-1/1-2: paidAt=1h ago + eventStartTime=30d → withinGracePeriod=true → confirmRefund
-//   - CUJ 1-3: refundStatus='completed' → 환불 정보 카드 표시 (예매 취소 버튼 미노출)
-
+//   - CUJ 1-3: 환불 완료 후 라벨 표시 (P1)
+//   - CUJ 2-1: cutoff(7일) 전 자동 환불 — grace 초과, cutoff 전 (P0)
+//   - CUJ 3-1: 자동 환불 불가 — grace + cutoff 모두 초과 (P0)
 import 'package:app_user/src/features/payment/logic/'
     'purchase_history_detail_controller.dart';
 import 'package:app_user/src/features/payment/ui/'
@@ -292,6 +282,188 @@ void main() {
         await t.pumpAndSettle();
 
         // 재취소 버튼 없음 → cancelOrder 호출 경로 자체가 없음
+        verifyNever(
+          () => mockRepo.cancelOrder(
+            eventId: any(named: 'eventId'),
+            reason: any(named: 'reason'),
+          ),
+        );
+      },
+    );
+  });
+
+  // ===========================================================================
+  // CUJ 2-1: cutoff(7일) 전 자동 환불
+  // grace 초과(paidAt 4h) + cutoff 전(eventStartTime 30일 후) → 동일한 자동 환불 다이얼로그
+  // ===========================================================================
+  cujGroup('2-1', 'cutoff(7일) 전 자동 환불', () {
+    // paidAt=4h ago, eventStartTime=30d → withinGracePeriod=false, withinCutoff=true
+    // → isRefundable=true → confirmRefund 다이얼로그 표시
+
+    cujCase(
+      'happy: 결제 4시간 후(grace 초과) + 이벤트 30일 후(cutoff 전) → 예매 취소 버튼 활성',
+      app: const PurchaseHistoryDetailPage(applicationId: 'app-cutoff'),
+      overrides: () {
+        final app = _makeApplication(
+          id: 'app-cutoff',
+          paidAt: _now.subtract(const Duration(hours: 4)),
+          eventStartTime: _now.add(const Duration(days: 30)),
+        );
+        return withApp(app);
+      },
+      body: (t) async {
+        await t.pumpAndSettle();
+
+        // canCancel=true (withinCutoff=true)
+        final cancelBtn = t.widget<ElevatedButton>(
+          find.widgetWithText(ElevatedButton, '예매 취소'),
+        );
+        expect(cancelBtn.onPressed, isNotNull);
+      },
+    );
+
+    cujCase(
+      'happy: 취소 다이얼로그 → 취소하기 → cancelOrder 호출 (FR-3: PortOne 자동 처리)',
+      app: const PurchaseHistoryDetailPage(applicationId: 'app-cutoff'),
+      overrides: () {
+        final app = _makeApplication(
+          id: 'app-cutoff',
+          paidAt: _now.subtract(const Duration(hours: 4)),
+          eventStartTime: _now.add(const Duration(days: 30)),
+        );
+        when(
+          () => mockRepo.cancelOrder(
+            eventId: any(named: 'eventId'),
+            reason: any(named: 'reason'),
+          ),
+        ).thenAnswer(
+          (_) async => const CancelOrderResult(
+            type: 'refunded',
+            refundAmount: 50000,
+          ),
+        );
+        return withApp(app);
+      },
+      body: (t) async {
+        await t.pumpAndSettle();
+
+        await t.tap(find.widgetWithText(ElevatedButton, '예매 취소'));
+        await t.pumpAndSettle();
+
+        // 자동 환불 다이얼로그 표시 (FR-2)
+        expect(find.textContaining('원이 환불됩니다'), findsOneWidget);
+
+        await t.tap(find.text('취소하기'));
+        await t.pumpAndSettle();
+
+        verify(
+          () => mockRepo.cancelOrder(
+            eventId: 'event-1',
+            reason: any(named: 'reason'),
+          ),
+        ).called(1);
+      },
+    );
+
+    cujCase(
+      'edge: 다이얼로그에서 "아니오" → cancelOrder 미호출',
+      app: const PurchaseHistoryDetailPage(applicationId: 'app-cutoff'),
+      overrides: () {
+        final app = _makeApplication(
+          id: 'app-cutoff',
+          paidAt: _now.subtract(const Duration(hours: 4)),
+          eventStartTime: _now.add(const Duration(days: 30)),
+        );
+        return withApp(app);
+      },
+      body: (t) async {
+        await t.pumpAndSettle();
+
+        await t.tap(find.widgetWithText(ElevatedButton, '예매 취소'));
+        await t.pumpAndSettle();
+
+        await t.tap(find.text('아니오'));
+        await t.pumpAndSettle();
+
+        verifyNever(
+          () => mockRepo.cancelOrder(
+            eventId: any(named: 'eventId'),
+            reason: any(named: 'reason'),
+          ),
+        );
+      },
+    );
+  });
+
+  // ===========================================================================
+  // CUJ 3-1: 자동 환불 불가 (grace + cutoff 모두 초과)
+  // ===========================================================================
+  cujGroup('3-1', '자동 환불 불가 — grace + cutoff 모두 초과', () {
+    // paidAt=4h ago (grace 2h 초과) + eventStartTime=3d (cutoff 7일 미달)
+    // → withinGracePeriod=false, withinCutoff=false → isRefundable=false
+    // → showNotEligible() → "환불 기간이 지났습니다." 경고
+
+    cujCase(
+      'happy: 결제 4시간 후(grace 초과) + 이벤트 3일 후(cutoff 미달) → 예매 취소 버튼 활성',
+      app: const PurchaseHistoryDetailPage(applicationId: 'app-ineligible'),
+      overrides: () {
+        final app = _makeApplication(
+          id: 'app-ineligible',
+          paidAt: _now.subtract(const Duration(hours: 4)),
+          eventStartTime: _now.add(const Duration(days: 3)),
+        );
+        return withApp(app);
+      },
+      body: (t) async {
+        await t.pumpAndSettle();
+
+        // canCancel=true (상태는 paid이지만 환불 불가 상태)
+        final cancelBtn = t.widget<ElevatedButton>(
+          find.widgetWithText(ElevatedButton, '예매 취소'),
+        );
+        expect(cancelBtn.onPressed, isNotNull);
+      },
+    );
+
+    cujCase(
+      'happy: 취소 버튼 탭 → "환불 기간이 지났습니다." 경고 (FR-5: showNotEligible)',
+      app: const PurchaseHistoryDetailPage(applicationId: 'app-ineligible'),
+      overrides: () {
+        final app = _makeApplication(
+          id: 'app-ineligible',
+          paidAt: _now.subtract(const Duration(hours: 4)),
+          eventStartTime: _now.add(const Duration(days: 3)),
+        );
+        return withApp(app);
+      },
+      body: (t) async {
+        await t.pumpAndSettle();
+
+        await t.tap(find.widgetWithText(ElevatedButton, '예매 취소'));
+        await t.pumpAndSettle();
+
+        // showNotEligible → MinglitWarning 스낵바
+        expect(find.textContaining('환불 기간이 지났습니다'), findsOneWidget);
+      },
+    );
+
+    cujCase(
+      'edge: 환불 불가 상태에서 cancelOrder 미호출 (자동 환불 로직 우회 없음)',
+      app: const PurchaseHistoryDetailPage(applicationId: 'app-ineligible'),
+      overrides: () {
+        final app = _makeApplication(
+          id: 'app-ineligible',
+          paidAt: _now.subtract(const Duration(hours: 4)),
+          eventStartTime: _now.add(const Duration(days: 3)),
+        );
+        return withApp(app);
+      },
+      body: (t) async {
+        await t.pumpAndSettle();
+
+        await t.tap(find.widgetWithText(ElevatedButton, '예매 취소'));
+        await t.pumpAndSettle();
+
         verifyNever(
           () => mockRepo.cancelOrder(
             eventId: any(named: 'eventId'),
