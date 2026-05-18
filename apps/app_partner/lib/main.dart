@@ -114,6 +114,12 @@ Future<void> main() async {
 
 @riverpod
 Future<void> appStartup(Ref ref) async {
+  await initializeDateFormatting('ko_KR');
+
+  // P3: demo flavor short-circuits all network SDK init. See
+  // docs/infra/app_demo/architecture.md "부팅 흐름".
+  if (EnvKeyStore.isDemo) return;
+
   const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
   const supabasePublishableKey = String.fromEnvironment(
     'SUPABASE_PUBLISHABLE_KEY',
@@ -127,30 +133,19 @@ Future<void> appStartup(Ref ref) async {
 
   try {
     await Future.wait([
-      initializeDateFormatting('ko_KR'),
-      Supabase.initialize(url: supabaseUrl, anonKey: supabasePublishableKey),
+      _initSupabase(supabaseUrl, supabasePublishableKey),
       _initFirebase(),
-
-      // Initialize Kakao Map SDK
-      () async {
-        const kakaoMapKey = String.fromEnvironment('KAKAO_MAP_JAVASCRIPT_KEY');
-        if (kakaoMapKey.isNotEmpty) {
-          kakao.AuthRepository.initialize(appKey: kakaoMapKey);
-        } else {
-          Log.w('Kakao Map Key is missing in environment variables');
-        }
-      }(),
+      _initKakao(),
     ]);
   } on Exception catch (e) {
     Log.e('App startup warning', e);
   }
 
-  const statsigClientKey = String.fromEnvironment('STATSIG_CLIENT_KEY');
   const environment = String.fromEnvironment(
     'ENVIRONMENT',
     defaultValue: 'local',
   );
-  await StatsigAnalytics.initialize(statsigClientKey, tier: environment);
+  await _initStatsig(environment);
   StatsigAnalytics.logEvent(MingLitEvent.appOpened);
 
   // Sync Statsig user context with auth state changes
@@ -166,6 +161,26 @@ Future<void> appStartup(Ref ref) async {
       }
     });
   });
+}
+
+// P3: composable init helpers. Each can be invoked independently in tests
+// and is bypassed entirely in demo flavor via the early return above.
+
+Future<void> _initSupabase(String url, String anonKey) =>
+    Supabase.initialize(url: url, anonKey: anonKey);
+
+Future<void> _initKakao() async {
+  const kakaoMapKey = String.fromEnvironment('KAKAO_MAP_JAVASCRIPT_KEY');
+  if (kakaoMapKey.isNotEmpty) {
+    kakao.AuthRepository.initialize(appKey: kakaoMapKey);
+  } else {
+    Log.w('Kakao Map Key is missing in environment variables');
+  }
+}
+
+Future<void> _initStatsig(String environment) async {
+  const statsigClientKey = String.fromEnvironment('STATSIG_CLIENT_KEY');
+  await StatsigAnalytics.initialize(statsigClientKey, tier: environment);
 }
 
 class MinglitPartnerApp extends StatelessWidget {

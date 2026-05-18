@@ -13,6 +13,16 @@ import 'package:minglit_kit/src/utils/log.dart';
 class EnvKeyStore {
   EnvKeyStore._();
 
+  /// True when the app is built with `--dart-define=IS_DEMO=true`.
+  ///
+  /// Demo flavor (`apps/app_user/lib/main_demo.dart`,
+  /// `apps/app_partner/lib/main_demo.dart`) short-circuits all network SDK
+  /// init (Supabase / Firebase / Statsig / Kakao) based on this flag. Data
+  /// comes from `minglit_demo` ProviderScope overrides instead.
+  ///
+  /// See docs/infra/app_demo/architecture.md "부팅 흐름" / "Dependency Rules".
+  static const bool isDemo = bool.fromEnvironment('IS_DEMO');
+
   // ── manifest.flutter.required ──
   static const _supabaseUrl = String.fromEnvironment('SUPABASE_URL');
   static const _supabasePublishableKey = String.fromEnvironment(
