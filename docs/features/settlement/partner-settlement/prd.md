@@ -51,11 +51,12 @@
 
 ## Technical Approach
 
-- **상태 머신**:
+- **상태 머신** (`transition_settlement_status` DB 함수의 허용 매트릭스 기준):
   - 정상 지급: `PENDING → READY → PROCESSING → COMPLETED`
-  - 체크섬 실패/비재시도 오류: `PENDING/PROCESSING → HOLD`
-  - 지급 재시도: `PROCESSING → FAILED (재시도 가능, max 8회) → HOLD`
-  - 이벤트 취소: `PENDING|READY|PROCESSING|FAILED|HOLD → CANCELED` (terminal, 운영 전환)
+  - 체크섬 실패 (READY 전환 전): `PENDING → HOLD`
+  - 지급 실패 재시도: `PROCESSING → FAILED → READY → PROCESSING` (max 8회 지수 백오프)
+  - 비재시도 오류 (PROCESSING 중): `PROCESSING → FAILED → HOLD` (PROCESSING에서 HOLD 직접 전환 불가)
+  - 이벤트 취소: `PENDING|READY|FAILED|HOLD → CANCELED` (PROCESSING은 FAILED 경유 후 CANCELED 가능)
 - **저장 (활성)**: `settlement_items`, `payouts`, `payout_transfers`, `settlement_histories`, `adjustment_items`
 - **저장 (레거시/읽기전용)**: `settlements` — 이전 아키텍처 아카이브. 쓰기 경로 없음. 호환성 유지 목적으로만 보존.
 - **EF**: `partner-manage-settlement`, `settlement-query`, `settlement-register-transfers`, `settlement-transfer`
@@ -79,7 +80,7 @@ nightly cron이 14일 경과한 PENDING 레코드를 READY로 전환 → 배치 
 
 ### Scenario 4: 정산 실패 재시도 (CUJ 4-x)
 
-지급 실행 중 PortOne 오류 → FAILED 전환 → 지수 백오프 재시도 (최대 8회). 비재시도 오류는 HOLD 전환 + 운영팀 알림.
+지급 실행 중 PortOne 오류 → FAILED 전환 → 지수 백오프 재시도 (최대 8회). 비재시도 오류는 FAILED → HOLD 전환 + 운영팀 알림 (PROCESSING에서 HOLD 직접 전환 불가).
 
 ### Scenario 5: 파트너가 계좌 정보 등록/변경 (CUJ 5-x)
 
@@ -97,7 +98,7 @@ nightly cron이 14일 경과한 PENDING 레코드를 READY로 전환 → 배치 
 
 ### Scenario 2
 
-pg_cron (03:00 KST) → 14일 경과 PENDING 조회 → 체크섬 검증 → READY 전환 → 배치 지급 → PortOne API → COMPLETED/FAILED/HOLD
+pg_cron (03:00 KST) → 14일 경과 PENDING 조회 → 체크섬 검증 → READY 전환 → 배치 지급 → PortOne API → COMPLETED 또는 FAILED (재시도 가능) 또는 FAILED→HOLD (비재시도)
 
 ### Scenario 3
 
