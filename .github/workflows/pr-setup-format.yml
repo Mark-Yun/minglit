@@ -4,6 +4,13 @@ on:
   pull_request:
     branches: ["main", "dev"]
     types: [opened, synchronize, reopened]
+    # auto-format only runs `dart format` on apps/* and shared/packages/minglit_kit.
+    # PRs that don't touch .dart files (docs, workflow YAML, mds-render specs,
+    # graphify output, migration SQL, ...) had nothing to format and were
+    # spending ~3min on Flutter setup + pub get + zero-diff format. Filter
+    # at the trigger level so we skip the runner entirely.
+    paths:
+      - '**/*.dart'
 
 concurrency:
   group: pr-setup-format-${{ github.event.pull_request.number }}
