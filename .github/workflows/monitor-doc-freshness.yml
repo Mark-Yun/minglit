@@ -162,21 +162,32 @@ jobs:
               continue
             fi
 
-            # 검토 대상 .md 목록 (exclude 적용)
-            if [ "$RECURSIVE" = "true" ]; then
+            # 검토 대상 파일 목록 (schema별 분기)
+            if [ "$SCHEMA_VERSION" = "v2" ]; then
+              # v2: target_files 글로브를 DIR 기준으로 확장 (RECURSIVE/EXCLUDE 무시)
+              TARGET_GLOBS=$(echo "$TARGET_FILES_JSON" | python3 -c "import sys,ast; print(' '.join(ast.literal_eval(sys.stdin.read())))")
+              MD_FILES=""
+              for GLOB in $TARGET_GLOBS; do
+                cd "$DIR"
+                for F in $(ls $GLOB 2>/dev/null); do
+                  [ -f "$F" ] || continue
+                  MD_FILES+="${DIR}/${F#./}"$'\n'
+                done
+                cd - >/dev/null
+              done
+              MD_FILES=$(printf '%s' "$MD_FILES" | sort -u)
+            elif [ "$RECURSIVE" = "true" ]; then
               MD_FILES=$(find "$DIR" -name '*.md' -type f 2>/dev/null | sort)
             else
               MD_FILES=$(find "$DIR" -maxdepth 1 -name '*.md' -type f 2>/dev/null | sort)
             fi
-            # exclude glob (rough — basename match)
-            if [ "$EXCLUDE_JSON" != "[]" ]; then
+            # exclude glob (rough — basename match, v1 전용)
+            if [ "$SCHEMA_VERSION" != "v2" ] && [ "$EXCLUDE_JSON" != "[]" ]; then
               EXCLUDES=$(echo "$EXCLUDE_JSON" | python3 -c "import sys,ast; print(' '.join(ast.literal_eval(sys.stdin.read())))")
               for E in $EXCLUDES; do
                 MD_FILES=$(echo "$MD_FILES" | grep -v "$E" || true)
               done
             fi
-            MD_LIST=$(echo "$MD_FILES" | sed "s|^|- [\`|; s|$|\`](${REPO_URL}/&)|" | sed "s|](${REPO_URL}/- \[\`|](${REPO_URL}/|g")
-            # Simpler — re-render cleanly
             MD_LIST=""
             while IFS= read -r f; do
               [ -z "$f" ] && continue
@@ -215,8 +226,13 @@ jobs:
 
           ## 처리 후
 
-          - 문서 갱신 시: 수정 사항과 함께 [\`${FRESH_DOC#./}\`](${REPO_URL}/${FRESH_DOC#./}) 의 \`last_verified\` 를 PR 머지 예정일로 갱신
-          - 검토 결과 변경 불필요 시: \`last_verified\` 만 갱신하는 verified-only PR
+          $(if [ "$SCHEMA_VERSION" = "v2" ]; then
+            echo "- **v2**: \`target_files\` 에 나열된 파일이 갱신되면 freshness 가 자동으로 reset됩니다 — \`last_verified\` 필드는 v2에 없으므로 직접 수정하지 마세요."
+            echo "- 내용 변경 불필요 시: \`target_files\` 중 하나에 최소 변경을 포함한 verified-only PR"
+          else
+            echo "- 문서 갱신 시: 수정 사항과 함께 [\`${FRESH_DOC#./}\`](${REPO_URL}/${FRESH_DOC#./}) 의 \`last_verified\` 를 PR 머지 예정일로 갱신"
+            echo "- 검토 결과 변경 불필요 시: \`last_verified\` 만 갱신하는 verified-only PR"
+          fi)
 
           관련 컨벤션: [\`docs/infra/fresh-doc/\`](${REPO_URL}/docs/infra/fresh-doc/)
           EOF
