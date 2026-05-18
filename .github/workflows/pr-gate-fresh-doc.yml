@@ -1,0 +1,66 @@
+name: pr-gate-fresh-doc
+
+# PR 의 FRESH_DOC 변경 시 schema + reference 검증.
+# spec: docs/infra/fresh-doc/schema.md
+# validator: scripts/fresh-doc-lint.ts
+
+on:
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - '**/FRESH_DOC'
+      - 'scripts/fresh-doc-lint.ts'
+
+concurrency:
+  group: pr-gate-fresh-doc-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  validate:
+    runs-on: [self-hosted, ephemeral]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Find changed FRESH_DOC files
+        id: changed
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          CHANGED=$(git diff --name-only --diff-filter=ACMR "$BASE_SHA" "$HEAD_SHA" -- '**/FRESH_DOC' || true)
+          if [ -z "$CHANGED" ]; then
+            echo "No FRESH_DOC files changed — validator runs on full repo as sanity check."
+            echo "files=" >> "$GITHUB_OUTPUT"
+          else
+            echo "Changed FRESH_DOC files:"
+            echo "$CHANGED"
+            {
+              echo "files<<EOF"
+              echo "$CHANGED"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Validate changed FRESH_DOC files (or full repo)
+        run: |
+          set -e
+          FILES="${{ steps.changed.outputs.files }}"
+          if [ -z "$FILES" ]; then
+            # No FRESH_DOC changes — but scripts/fresh-doc-lint.ts may have changed.
+            # Run on full repo to catch any regression.
+            deno run --allow-read --allow-run scripts/fresh-doc-lint.ts
+          else
+            # Targeted check: only changed FRESH_DOC files
+            deno run --allow-read --allow-run scripts/fresh-doc-lint.ts $FILES
+          fi

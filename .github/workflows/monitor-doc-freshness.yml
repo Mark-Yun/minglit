@@ -63,7 +63,7 @@ jobs:
             echo ""
             echo "── $DIR ──"
 
-            # Parse YAML via python (multi-field extract)
+            # Parse YAML via python (multi-field extract — supports v1 + v2)
             eval "$(python3 -c "
           import yaml, sys
           with open('$FRESH_DOC') as f:
@@ -71,31 +71,79 @@ jobs:
           print(f'CYCLE={d.get(\"cycle\", \"\")}')
           print(f'WATCHED_PATHS_JSON={repr(d.get(\"watched_paths\", []))}')
           print(f'PRIORITY={d.get(\"priority\", \"\")}')
+          # v2 field
+          print(f'TARGET_FILES_JSON={repr(d.get(\"target_files\", []))}')
+          # v1 fields (backward compat)
           print(f'LAST_VERIFIED={d.get(\"last_verified\", \"\")}')
           print(f'RECURSIVE={str(d.get(\"recursive\", False)).lower()}')
           print(f'EXCLUDE_JSON={repr(d.get(\"exclude\", []))}')
           print(f'REFRESH_METHOD={repr(d.get(\"refresh_method\", \"\"))}')
             ")"
 
+            # Schema version detection
+            SCHEMA_VERSION="unknown"
+            if [ "$TARGET_FILES_JSON" != "[]" ] && [ -n "$LAST_VERIFIED" ]; then
+              echo "  ⚠ ambiguous schema (both target_files and last_verified) — skip"
+              continue
+            elif [ "$TARGET_FILES_JSON" != "[]" ]; then
+              SCHEMA_VERSION="v2"
+            elif [ -n "$LAST_VERIFIED" ]; then
+              SCHEMA_VERSION="v1"
+            fi
+
+            # Derive last_verified
+            DERIVED_LV=""
+            DERIVED_LV_EPOCH=0
+            if [ "$SCHEMA_VERSION" = "v2" ]; then
+              # v2: max(git log -1 --format=%ct -- <target_file>) for all expanded target_files
+              TARGET_GLOBS=$(echo "$TARGET_FILES_JSON" | python3 -c "import sys,ast; print(' '.join(ast.literal_eval(sys.stdin.read())))")
+              MAX_TS=0
+              for GLOB in $TARGET_GLOBS; do
+                # Expand glob relative to FRESH_DOC dir
+                cd "$DIR"
+                for F in $(ls $GLOB 2>/dev/null; find . -path "*/$GLOB" -type f 2>/dev/null | head); do
+                  [ -f "$F" ] || continue
+                  TS=$(git log -1 --format=%ct -- "$F" 2>/dev/null || echo 0)
+                  if [ "$TS" -gt "$MAX_TS" ]; then MAX_TS=$TS; fi
+                done
+                cd - >/dev/null
+              done
+              if [ "$MAX_TS" -gt 0 ]; then
+                DERIVED_LV_EPOCH=$MAX_TS
+                DERIVED_LV=$(date -u -r "$MAX_TS" +%Y-%m-%d 2>/dev/null || date -u -d "@$MAX_TS" +%Y-%m-%d)
+              else
+                DERIVED_LV="(no git history)"
+              fi
+            elif [ "$SCHEMA_VERSION" = "v1" ]; then
+              DERIVED_LV="$LAST_VERIFIED"
+              DERIVED_LV_EPOCH=$(date -u -d "$LAST_VERIFIED" +%s 2>/dev/null || date -u -j -f "%Y-%m-%d" "$LAST_VERIFIED" +%s)
+            else
+              echo "  ⚠ no schema identifier (need target_files [v2] or last_verified [v1]) — skip"
+              continue
+            fi
+
             STALE="false"
             TRIGGER_DETAIL=""
 
             if [ -n "$CYCLE" ]; then
-              # cycle: 14d / 30d etc.
               CYCLE_DAYS=$(echo "$CYCLE" | sed 's/d$//')
-              LV_EPOCH=$(date -u -d "$LAST_VERIFIED" +%s 2>/dev/null || date -u -j -f "%Y-%m-%d" "$LAST_VERIFIED" +%s)
-              DAYS_SINCE=$(( (TODAY_EPOCH - LV_EPOCH) / 86400 ))
-              if [ "$DAYS_SINCE" -ge "$CYCLE_DAYS" ]; then STALE="true"; fi
-              TRIGGER_DETAIL="**cycle**: \`${CYCLE}\` · **last_verified**: \`${LAST_VERIFIED}\` · **days_since**: \`${DAYS_SINCE}\` · **stale**: \`${STALE}\`"
-              echo "  cycle: ${CYCLE} / last_verified: ${LAST_VERIFIED} / days_since: ${DAYS_SINCE} / stale: ${STALE}"
+              if [ "$DERIVED_LV_EPOCH" -gt 0 ]; then
+                DAYS_SINCE=$(( (TODAY_EPOCH - DERIVED_LV_EPOCH) / 86400 ))
+                if [ "$DAYS_SINCE" -ge "$CYCLE_DAYS" ]; then STALE="true"; fi
+              else
+                DAYS_SINCE="?"
+                STALE="true"  # no git history → treat as stale
+              fi
+              TRIGGER_DETAIL="**schema**: \`${SCHEMA_VERSION}\` · **cycle**: \`${CYCLE}\` · **last_verified** (${SCHEMA_VERSION}): \`${DERIVED_LV}\` · **days_since**: \`${DAYS_SINCE}\` · **stale**: \`${STALE}\`"
+              echo "  $SCHEMA_VERSION / cycle: ${CYCLE} / last_verified: ${DERIVED_LV} / days_since: ${DAYS_SINCE} / stale: ${STALE}"
             elif [ "$WATCHED_PATHS_JSON" != "[]" ]; then
-              # watched_paths: glob list → git log --since=<last_verified> 매칭 commit 있나
               PATHS=$(echo "$WATCHED_PATHS_JSON" | python3 -c "import sys,ast; print(' '.join(ast.literal_eval(sys.stdin.read())))")
-              COMMITS=$(git log --since="$LAST_VERIFIED" --pretty=format:%h -- $PATHS 2>/dev/null | head -10)
+              SINCE_ARG="$DERIVED_LV"
+              [ "$DERIVED_LV" = "(no git history)" ] && SINCE_ARG="1970-01-01"
+              COMMITS=$(git log --since="$SINCE_ARG" --pretty=format:%h -- $PATHS 2>/dev/null | head -10)
               if [ -n "$COMMITS" ]; then STALE="true"; fi
-              COMMITS_LIST=$(echo "$COMMITS" | sed 's/^/- /')
-              TRIGGER_DETAIL="**watched_paths**: \`${PATHS}\` · **commits since last_verified**: $(echo "$COMMITS" | wc -l | tr -d ' ')"
-              echo "  watched_paths: ${PATHS} / commits: $(echo "$COMMITS" | wc -l) / stale: ${STALE}"
+              TRIGGER_DETAIL="**schema**: \`${SCHEMA_VERSION}\` · **watched_paths**: \`${PATHS}\` · **last_verified** (${SCHEMA_VERSION}): \`${DERIVED_LV}\` · **commits since**: $(echo "$COMMITS" | grep -c . | tr -d ' ')"
+              echo "  $SCHEMA_VERSION / watched_paths: ${PATHS} / commits since ${DERIVED_LV}: $(echo "$COMMITS" | grep -c .) / stale: ${STALE}"
             else
               echo "  ⚠ FRESH_DOC 에 cycle/watched_paths 둘 다 없음 — skip"
               continue
