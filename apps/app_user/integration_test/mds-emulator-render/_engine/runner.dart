@@ -26,11 +26,20 @@ class MdsRenderEngine {
       testWidgets(state.name, (tester) async {
         final builder = state.setup(catalog.builder());
         await tester.pumpWidget(builder.build());
-        await tester.pumpAndSettle();
+        // Fix #2590: repeat() 애니메이션은 pumpAndSettle이 timeout — 고정 pump 사용.
+        if (state.infiniteAnimation) {
+          await tester.pump(const Duration(milliseconds: 300));
+        } else {
+          await tester.pumpAndSettle();
+        }
 
         // Android: Flutter surface → image 변환 후 캡처 필요.
         await binding.convertFlutterSurfaceToImage();
-        await tester.pumpAndSettle();
+        if (state.infiniteAnimation) {
+          await tester.pump(const Duration(milliseconds: 100));
+        } else {
+          await tester.pumpAndSettle();
+        }
 
         await binding.takeScreenshot('${catalog.screen}__${state.name}');
       });
