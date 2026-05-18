@@ -51,8 +51,13 @@
 
 ## Technical Approach
 
-- **상태 머신**: `PENDING → HOLD → CANCELED / READY → PROCESSING → COMPLETED / FAILED (재시도 가능, max 8회 → HOLD)`
-- **저장**: `settlement_items` + `payouts` + `payout_transfers` + `settlement_histories` + `adjustment_items`
+- **상태 머신**:
+  - 정상 지급: `PENDING → READY → PROCESSING → COMPLETED`
+  - 체크섬 실패/비재시도 오류: `PENDING/PROCESSING → HOLD`
+  - 지급 재시도: `PROCESSING → FAILED (재시도 가능, max 8회) → HOLD`
+  - 이벤트 취소: `PENDING|READY|PROCESSING|FAILED|HOLD → CANCELED` (terminal, 운영 전환)
+- **저장 (활성)**: `settlement_items`, `payouts`, `payout_transfers`, `settlement_histories`, `adjustment_items`
+- **저장 (레거시/읽기전용)**: `settlements` — 이전 아키텍처 아카이브. 쓰기 경로 없음. 호환성 유지 목적으로만 보존.
 - **EF**: `partner-manage-settlement`, `settlement-query`, `settlement-register-transfers`, `settlement-transfer`
 - **배치**: pg_cron nightly (PENDING→READY), 지급 배치 (READY→PROCESSING)
 - **UI**: `settlement_page.dart` (대시보드/목록/상세 탭) + `bank_account_page.dart`
@@ -80,6 +85,10 @@ nightly cron이 14일 경과한 PENDING 레코드를 READY로 전환 → 배치 
 
 파트너가 정산 계좌를 최초 등록하거나 변경한다. 변경 후에는 다음 배치부터 새 계좌로 지급.
 
+### Scenario 6: 이벤트 취소 → 정산 CANCELED (CUJ 6-x)
+
+이벤트가 운영 정책 또는 파트너 요청으로 취소되어 지급 대상에서 제외됨. 개별 참가자의 결제 취소는 이 경로와 무관: 이벤트 완료 전 취소 → `event_applications` 환불 처리 후 정산 집계에서 자동 제외, 완료·지급 이후 차지백 → `adjustment_items`로 사후 반영. CANCELED는 terminal 상태이며 이후 지급 불가.
+
 ## Data Flow
 
 ### Scenario 1
@@ -97,7 +106,7 @@ pg_cron (03:00 KST) → 14일 경과 PENDING 조회 → 체크섬 검증 → REA
 
 ## KPIs / Success Metrics
 
-- **정산 완료율**: COMPLETED / (COMPLETED + FAILED terminal) ≥ 99.5%
+- **정산 완료율**: COMPLETED / (COMPLETED + CANCELED) ≥ 99.5% — FAILED는 재시도 가능(non-terminal) 상태이므로 분모에서 제외. 종결 상태는 COMPLETED·CANCELED만 해당.
 - **지급 지연**: READY 전환 후 배치 지급 ≤ 24h (p95)
 - **파트너 정산 문의 감소**: CS 채널 정산 문의 ≥ 50% 감소 (런칭 후 4주)
 - **재조정 미스매치**: 0건 (daily 3-way 대사 pass)

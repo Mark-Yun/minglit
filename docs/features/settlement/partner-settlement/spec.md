@@ -26,7 +26,7 @@
 | 4-1 | P0 | 지급 실패 항목 재시도 (시스템) | • 재시도 가능 FAILED 항목<br>• `next_retry_at` 경과 시 자동 재시도<br>• max 8회 초과 시 HOLD | FR-8 | NFR-3 |
 | 5-1 | P0 | 파트너가 정산 계좌 등록 | • bank_account_page 진입<br>• 은행·계좌번호·예금주 입력<br>• 인증(PortOne 1원 인증 또는 KYC) | FR-16 | NFR-1 |
 | 5-2 | P0 | 파트너가 정산 계좌 변경 | • 기존 계좌 변경 요청<br>• 변경 후 다음 배치부터 새 계좌 적용 | FR-16 | NFR-1 |
-| 6-1 | P1 | 결제 취소 통보 → 정산 CANCELED | • PortOne 웹훅 결제 취소 통보 수신<br>• 해당 이벤트 `settlement_items` CANCELED 전환 (CAS)<br>• `settlement_histories` 감사 로그 append<br>• CANCELED는 terminal 상태 (재활성화 없음) | FR-17 | NFR-5 |
+| 6-1 | P1 | 이벤트 취소 → 정산 CANCELED | • 이벤트 운영 취소 (운영팀 또는 파트너 요청)<br>• 해당 이벤트 `settlement_items` CANCELED 전환 (CAS)<br>• `settlement_histories` 감사 로그 append<br>• CANCELED는 terminal 상태 (재활성화 없음)<br>• 개별 결제 취소는 이 경로와 무관 (아래 FR-17 참고) | FR-17 | NFR-5 |
 
 ## Functional Requirements
 
@@ -48,7 +48,7 @@
 - **FR-14**: HOLD 상태 정산에서 이의 제기 기능. 사유 필수 입력. 제출 후 운영팀 검토 진행.
 - **FR-15**: 정산 상세에서 PDF 다운로드. 정산 내역·수수료·날인 포함.
 - **FR-16**: 파트너가 정산 계좌(은행·계좌번호·예금주)를 등록·변경 가능. 변경 후 다음 배치부터 새 계좌 적용.
-- **FR-17**: PortOne 웹훅으로 결제 취소 통보 수신 시 해당 `source_id`(이벤트 ID)의 `settlement_items`를 CANCELED 상태로 전환. CAS로 중복 전환 방지. CANCELED는 terminal 상태(이후 전환 없음). 모든 전환 시 `settlement_histories`에 append-only 감사 로그 기록.
+- **FR-17**: 이벤트 취소(운영 정책 또는 파트너 요청) 시 해당 이벤트의 `settlement_items`를 CANCELED 상태로 전환. CAS로 중복 전환 방지. CANCELED는 terminal 상태(이후 전환 없음). 모든 전환 시 `settlement_histories`에 append-only 감사 로그 기록. ※ 개별 참가자 결제 취소는 이 경로와 분리: 이벤트 완료 전 취소 → `event_applications` 환불 처리 후 정산 집계에서 자동 제외, 완료·지급 이후 차지백 → `adjustment_items`로 사후 반영.
 
 ## Non-Functional Requirements
 
@@ -73,8 +73,10 @@
 | 3-3 | PROCESSING 상태 항목 조회 | 현재 처리 중 상태 + 예상 완료 시각 안내 |
 | 4-1 | `next_retry_at` 도달 전 수동 재시도 시도 (Admin) | 가드 차단 + 예약 시각 안내 |
 | 5-2 | 계좌 변경 중 진행 중인 PROCESSING 항목 | 기존 계좌로 지급 완료 후 변경 적용 |
-| 6-1 | CANCELED 항목 중복 취소 웹훅 수신 | CAS 가드 — 이미 CANCELED면 중복 전환 없이 정상 종료 |
-| 6-1 | COMPLETED 항목에 취소 웹훅 수신 | CANCELED 전환 거부 — COMPLETED는 immutable. `adjustment_items`로 사후 조정 |
+| 6-1 | 이미 CANCELED 항목에 중복 취소 요청 | CAS 가드 — 이미 CANCELED면 중복 전환 없이 정상 종료 |
+| 6-1 | COMPLETED 항목에 이벤트 취소 요청 | CANCELED 전환 거부 — COMPLETED는 immutable. `adjustment_items`로 사후 조정 |
+| 6-1 | 개별 참가자 결제 취소 (이벤트 완료 전) | `event_applications` 환불 처리 → 해당 참가자 금액이 정산 집계에서 제외 (settlement_items 상태 변경 없음) |
+| 6-1 | 개별 참가자 차지백 (이벤트 완료·지급 이후) | `adjustment_items`로 차감 반영 — 기존 정산 원장 CANCELED 전환 없음 |
 
 ## Open Questions
 
