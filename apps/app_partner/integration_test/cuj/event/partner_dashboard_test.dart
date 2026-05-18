@@ -86,21 +86,19 @@ final _epoch = DateTime(2020);
 Partner _makePartner({
   String id = 'partner-1',
   String name = '테스트 파트너',
-}) =>
-    Partner(id: id, name: name);
+}) => Partner(id: id, name: name);
 
 Party _makeParty({
   String id = 'party-1',
   String partnerId = 'partner-1',
   String title = '테스트 파티',
-}) =>
-    Party(
-      id: id,
-      partnerId: partnerId,
-      title: title,
-      createdAt: _epoch,
-      updatedAt: _epoch,
-    );
+}) => Party(
+  id: id,
+  partnerId: partnerId,
+  title: title,
+  createdAt: _epoch,
+  updatedAt: _epoch,
+);
 
 Event _makeEvent({
   String id = 'event-1',
@@ -130,16 +128,15 @@ EventApplication _makeApplication({
   String id = 'app-1',
   String eventId = 'event-1',
   String status = 'pending',
-}) =>
-    EventApplication(
-      id: id,
-      eventId: eventId,
-      ticketId: 'ticket-1',
-      userId: 'user-1',
-      status: status,
-      createdAt: _now.subtract(const Duration(hours: 1)),
-      updatedAt: _now.subtract(const Duration(hours: 1)),
-    );
+}) => EventApplication(
+  id: id,
+  eventId: eventId,
+  ticketId: 'ticket-1',
+  userId: 'user-1',
+  status: status,
+  createdAt: _now.subtract(const Duration(hours: 1)),
+  updatedAt: _now.subtract(const Duration(hours: 1)),
+);
 
 // ---------------------------------------------------------------------------
 // Provider override helpers
@@ -149,17 +146,16 @@ List<dynamic> _homeBase({
   required PartnerDashboardState dashboardState,
   required _MockPartnerHomeCoordinator coordinator,
   NotificationList Function()? notificationFactory,
-}) =>
-    [
-      partnerDashboardControllerProvider.overrideWith(
-        () => _FakeDashboardController(dashboardState),
-      ),
-      currentPartnerInfoProvider.overrideWith((ref) async => _makePartner()),
-      notificationListProvider.overrideWith(
-        notificationFactory ?? _FakeNotificationList.new,
-      ),
-      partnerHomeCoordinatorProvider.overrideWith((ref) => coordinator),
-    ];
+}) => [
+  partnerDashboardControllerProvider.overrideWith(
+    () => _FakeDashboardController(dashboardState),
+  ),
+  currentPartnerInfoProvider.overrideWith((ref) async => _makePartner()),
+  notificationListProvider.overrideWith(
+    notificationFactory ?? _FakeNotificationList.new,
+  ),
+  partnerHomeCoordinatorProvider.overrideWith((ref) => coordinator),
+];
 
 /// 이벤트가 있는 홈 기본 상태.
 PartnerDashboardState _homeStateWithEvents({
@@ -170,17 +166,16 @@ PartnerDashboardState _homeStateWithEvents({
   int totalPartyCount = 2,
   int totalAttendees = 10,
   bool hasAnyEvents = true,
-}) =>
-    PartnerDashboardState(
-      status: const AsyncValue.data(null),
-      pendingReviewCount: pendingReviewCount,
-      liveEvents: liveEvents,
-      recruitingEvents: recruitingEvents,
-      preparingEvents: preparingEvents,
-      totalPartyCount: totalPartyCount,
-      totalAttendees: totalAttendees,
-      hasAnyEvents: hasAnyEvents,
-    );
+}) => PartnerDashboardState(
+  status: const AsyncValue.data(null),
+  pendingReviewCount: pendingReviewCount,
+  liveEvents: liveEvents,
+  recruitingEvents: recruitingEvents,
+  preparingEvents: preparingEvents,
+  totalPartyCount: totalPartyCount,
+  totalAttendees: totalAttendees,
+  hasAnyEvents: hasAnyEvents,
+);
 
 // ---------------------------------------------------------------------------
 // Main
@@ -538,7 +533,7 @@ void main() {
         ),
         eventApplicationsGroupedProvider.overrideWith(
           (ref, params) async => {
-            event1: [app1]
+            event1: [app1],
           },
         ),
       ],
@@ -586,7 +581,7 @@ void main() {
           ),
           eventApplicationsGroupedProvider.overrideWith(
             (ref, params) async => {
-              event1: [app1]
+              event1: [app1],
             },
           ),
           eventRepositoryProvider.overrideWithValue(mockEventRepo),
@@ -618,7 +613,7 @@ void main() {
           ),
           eventApplicationsGroupedProvider.overrideWith(
             (ref, params) async => {
-              event1: [app1]
+              event1: [app1],
             },
           ),
           eventRepositoryProvider.overrideWithValue(mockEventRepo),
@@ -727,9 +722,13 @@ void main() {
           (ref, partnerId) async => [
             ...events,
             _makeEvent(
-                id: 'event-3', startTime: _now.add(const Duration(hours: 3))),
+              id: 'event-3',
+              startTime: _now.add(const Duration(hours: 3)),
+            ),
             _makeEvent(
-                id: 'event-4', startTime: _now.add(const Duration(hours: 4))),
+              id: 'event-4',
+              startTime: _now.add(const Duration(hours: 4)),
+            ),
           ],
         ),
       ],
