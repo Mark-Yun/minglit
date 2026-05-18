@@ -51,8 +51,8 @@
 
 ## Technical Approach
 
-- **상태 머신**: `PENDING → HOLD → CANCELED / READY → PROCESSING → COMPLETED / FAILED`
-- **저장**: `settlements` + `settlement_items` + `payouts` + `adjustment_items` + 감사 로그 테이블
+- **상태 머신**: `PENDING → HOLD → CANCELED / READY → PROCESSING → COMPLETED / FAILED (재시도 가능, max 8회 → HOLD)`
+- **저장**: `settlement_items` + `payouts` + `payout_transfers` + `settlement_histories` + `adjustment_items`
 - **EF**: `partner-manage-settlement`, `settlement-query`, `settlement-register-transfers`, `settlement-transfer`
 - **배치**: pg_cron nightly (PENDING→READY), 지급 배치 (READY→PROCESSING)
 - **UI**: `settlement_page.dart` (대시보드/목록/상세 탭) + `bank_account_page.dart`
