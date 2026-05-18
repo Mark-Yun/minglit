@@ -28,6 +28,7 @@ import 'search_page/search_page_test.dart' as search_page;
 final List<MdsCatalog<MdsScreenBuilder<dynamic>>> allCatalogs = [
   deletion_complete_page.catalog,
   deletion_info_page.catalog,
+  deletion_info_page.catalogWithReason,
   deletion_reason_page.catalog,
   deletion_verify_page.catalog,
   event_now_bar.catalog,

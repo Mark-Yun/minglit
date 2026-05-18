@@ -24,7 +24,7 @@ final catalog = MdsCatalog<DeletionInfoPageBuilder>(
 );
 
 /// 탈퇴 사유를 선택하고 진입하는 상태들.
-final _catalogWithReason = MdsCatalog<DeletionInfoWithReasonBuilder>(
+final catalogWithReason = MdsCatalog<DeletionInfoWithReasonBuilder>(
   screen: 'deletion_info_page',
   mdsSpec: 'apps/mds/docs/public/specs/deletion_info_page/',
   builder: DeletionInfoWithReasonBuilder.new,
@@ -36,5 +36,5 @@ final _catalogWithReason = MdsCatalog<DeletionInfoWithReasonBuilder>(
 
 void main() {
   MdsRenderEngine.run(catalog);
-  MdsRenderEngine.run(_catalogWithReason);
+  MdsRenderEngine.run(catalogWithReason);
 }
