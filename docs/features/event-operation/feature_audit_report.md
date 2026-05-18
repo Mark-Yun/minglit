@@ -11,7 +11,7 @@
 | P0 — Critical | 0 | — |
 | P1 — Defect / Gap | 0 | — |
 | P2 — Improvement | 2 | #2564, #2576 |
-| P3 — Low | 0 | — |
+| P3 — Low | 1 | #2588 |
 
 ## Action Items by Priority
 
@@ -19,6 +19,10 @@
 
 - [ ] **#2564** `[3-1]` `event-operation/*` — CUJ integration test 전무 (4 features, 102 CUJs). **Action**: `apps/app_user/integration_test/cuj/event-operation/` + `apps/app_partner/integration_test/cuj/event-operation/` 신규 작성. **Evidence**: 두 디렉토리 미존재. *(PR #2575 in review: event-now-bar CUJ 1-1/3-2 + partner-qr-checkin CUJ 3-1/3-2 부분 커버)*
 - [ ] **#2576** `[1-1]` `event-operation/entry-group-management` + `event-operation/party-entry-group-management` — prd.md + spec.md 부재. **Action**: `_template/prd.md` + `_template/spec.md` 기반 신규 작성. **Evidence**: `docs/features/event-operation/entry-group-management/` — `ui-ux-design.md`만 존재.
+
+### P3 — Low (여유 시)
+
+- [ ] **#2588** `[2-2]` `event-operation/*` — mds-emulator-render 카탈로그에 event-operation 관련 8 screens 미등록. **Action**: `apps/app_user/integration_test/mds-emulator-render/<screen>/` 패턴 복제로 카탈로그 등록. **Evidence**: `dart run scripts/mds_render_coverage.dart --json` → `uncovered_screens` 에 `event_now_bar`, `event_check_in_screen`, `event_checked_in_screen`, `event_bottom_ticket_bar`, `ticket_qr_screen` 등 포함.
 
 ---
 
@@ -85,26 +89,40 @@
 
 ### 2-2. 앱 render coverage
 
+`dart run scripts/mds_render_coverage.dart --json` 기준 (전체 66 MDS screens 중 cataloged 5, screen coverage 7.6%, state coverage 1.1%):
+
+| Screen | Feature | uncovered/incomplete | MDS state PNG 수 |
+|--------|---------|---------------------|------------------|
+| `event_now_bar` | event-now-bar | uncovered | 7 |
+| `event_ongoing_banner` | event-now-bar | uncovered | — |
+| `event_check_in_screen` | partner-qr-checkin-ux | uncovered | 4 |
+| `event_checked_in_screen` | partner-qr-checkin-ux | uncovered | 4 |
+| `event_bottom_ticket_bar` | ticket-qr-improvement | uncovered | 17 |
+| `ticket_qr_screen` | ticket-qr-improvement | uncovered | 5 |
+| `checkin_placeholder_page` | partner-qr-checkin-ux | uncovered | — |
+| `recurrence_management_screen` | entry-group-management | uncovered | — |
+
 | 점검 | 결과 |
 |------|------|
-| mds-emulator-render `_registry.dart` 미등록 screen (uncovered) | 모든 event-operation screen (`event_now_bar`, `event_check_in_screen` 등) — `docs/infra/mds-emulator-render/`에 home_page 외 미등록 |
+| mds-emulator-render 미등록 screen (uncovered) | event-operation 관련 8 screens (상기 표) — 카탈로그에 미등록 |
 | catalog 됐지만 state 불충분 (incomplete) | — (미등록이라 해당 없음) |
 | catalog 됐지만 MDS spec 없음 (orphan) | — |
 
-**Findings**: 없음 (emulator render 미등록은 인프라 미완성 상태 — `mds-emulator-render` 커버리지 확장은 별도 인프라 작업).
+**Findings**:
+- **#2588** — event-operation 카테고리 8 screens 가 `mds-emulator-render` 카탈로그에 미등록. Action: `apps/app_user/integration_test/mds-emulator-render/<screen>/` 패턴 복제. Severity: P3 (인프라 미완성, 점진적 확충).
 
 ### 2-3. 앱 render ↔ MDS spec drift (시각 비교)
 
-render PNG 미존재로 시각 비교 불가 (2-2 uncovered 상태).
+render PNG 미존재로 시각 비교 불가 (2-2 uncovered 상태). drift 검증은 #2588 완료 후 가능.
 
 | 항목 | 결과 |
 |------|------|
-| Color drift | — (render 없음) |
-| Layout drift | — (render 없음) |
-| Typography drift | — (render 없음) |
-| 컴포넌트 차이 | — (render 없음) |
+| Color drift | 미검증 (render 없음 — #2588 차단) |
+| Layout drift | 미검증 (render 없음 — #2588 차단) |
+| Typography drift | 미검증 (render 없음 — #2588 차단) |
+| 컴포넌트 차이 | 미검증 (render 없음 — #2588 차단) |
 
-**Findings**: 없음.
+**Findings**: 본 카테고리 drift 검증은 #2588 (render coverage) 완료에 의존. 추가 finding 없음.
 
 ---
 
@@ -143,6 +161,7 @@ render PNG 미존재로 시각 비교 불가 (2-2 uncovered 상태).
 |----|------|-----------|---------|---------|--------|
 | #2564 | 3-1 | CUJ integration test 전무 (102 CUJs, 4 features) | `apps/app_*/integration_test/cuj/event-operation/` 미존재 | P2 | M |
 | #2576 | 1-1 | entry-group-management + party-entry-group-management prd.md + spec.md 부재 | `docs/features/event-operation/{entry,party-entry}-group-management/` | P2 | M |
+| #2588 | 2-2 | event-operation 카테고리 8 screens `mds-emulator-render` 카탈로그 미등록 | `dart run scripts/mds_render_coverage.dart --json` → `uncovered_screens` | P3 | L |
 
 ---
 
@@ -162,7 +181,7 @@ render PNG 미존재로 시각 비교 불가 (2-2 uncovered 상태).
 
 ## Run Metadata
 
-- Agent: swe-sonnet-1
-- Duration: ~00:30
+- Agent: swe-sonnet-1 (Section 1, 3) + swe-opus-1 (Section 2 mds-render-coverage data + #2588 filing)
+- Duration: ~00:30 (initial) + ~00:10 (Section 2 expansion)
 - Cycle: 14d (next: 2026-06-01)
 - Template version: feature_audit_report_template.md
