@@ -455,7 +455,13 @@ void main() {
           final future = DateTime.now().add(const Duration(days: 4));
           return TicketEventMeta(
             eventTitle: '자정 파티',
-            eventDateTime: DateTime(future.year, future.month, future.day, 0, 0),
+            eventDateTime: DateTime(
+              future.year,
+              future.month,
+              future.day,
+              0,
+              0,
+            ),
           );
         }(),
       ),
