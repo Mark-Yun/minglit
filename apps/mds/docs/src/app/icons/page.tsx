@@ -81,10 +81,22 @@ export default function IconsPage() {
           in{' '}
           <code className="text-xs bg-[var(--color-surface)] px-1 rounded text-[var(--color-primary)]">
             icons/
-          </code>{' '}
-          then run{' '}
+          </code>
+          , run{' '}
           <code className="text-xs bg-[var(--color-surface)] px-1 rounded text-[var(--color-primary)]">
             npm run build
+          </code>{' '}
+          in{' '}
+          <code className="text-xs bg-[var(--color-surface)] px-1 rounded text-[var(--color-primary)]">
+            shared/packages/mds/icons
+          </code>
+          , then run{' '}
+          <code className="text-xs bg-[var(--color-surface)] px-1 rounded text-[var(--color-primary)]">
+            npm run icons:sync-data
+          </code>{' '}
+          in{' '}
+          <code className="text-xs bg-[var(--color-surface)] px-1 rounded text-[var(--color-primary)]">
+            apps/mds/docs
           </code>
           .
         </p>
