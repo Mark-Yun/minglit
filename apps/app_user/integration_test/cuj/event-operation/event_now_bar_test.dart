@@ -5,6 +5,8 @@
 //
 // Fix #2564: event-operation 카테고리 CUJ integration test 전무 해소 (event-now-bar)
 
+import 'dart:async';
+
 import 'package:app_user/src/features/home/widgets/event_now_bar.dart';
 import 'package:app_user/src/features/home/widgets/event_now_bar_controller.dart';
 import 'package:flutter/material.dart';
@@ -19,8 +21,9 @@ import '../_engine/cuj_test.dart';
 // ---------------------------------------------------------------------------
 
 class _FakeEventNowBarStateNotifier extends EventNowBarStateNotifier {
-  final EventNowBarState _state;
   _FakeEventNowBarStateNotifier(this._state);
+
+  final EventNowBarState _state;
 
   @override
   FutureOr<EventNowBarState> build(TodayActiveEvent activeEvent) => _state;
