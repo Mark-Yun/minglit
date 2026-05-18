@@ -1,0 +1,6 @@
+cycle: 30d
+priority: P2-medium
+target_files:
+  - "**/*.md"
+refresh_method: |
+  Recursive glob (v2 replaces v1 recursive: true).
