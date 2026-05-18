@@ -1,0 +1,43 @@
+name: rebase
+
+# Slash-command rebase: comment `/rebase` on a PR and this workflow rebases
+# the head branch onto its base and force-pushes the result. Saves a manual
+# `git fetch origin <base> && git rebase` round-trip when the PR has fallen
+# behind (a common state when several PRs target dev in parallel).
+#
+# Limitations (matches what git can do on its own):
+# - Trivial / fast-forward rebases: handled automatically.
+# - Real line conflicts: the rebase fails and the PR keeps its prior state.
+#   Resolve manually then re-comment `/rebase` if useful.
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  rebase:
+    # Only run on PR comments containing `/rebase`, and only when the comment
+    # author is a repo owner/collaborator/member (prevents drive-by force-pushes).
+    if: >-
+      github.event.issue.pull_request != null &&
+      contains(github.event.comment.body, '/rebase') &&
+      (
+        github.event.comment.author_association == 'OWNER' ||
+        github.event.comment.author_association == 'MEMBER' ||
+        github.event.comment.author_association == 'COLLABORATOR'
+      )
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the latest code
+        uses: actions/checkout@v6
+        with:
+          # Needs a PAT (not GITHUB_TOKEN) so the force-push triggers
+          # downstream workflows again. GH_PAT_VERSION_BUMP is the existing
+          # repo-scope PAT used by sync-graphify and the like.
+          token: ${{ secrets.GH_PAT_VERSION_BUMP }}
+          fetch-depth: 0
+
+      - name: Automatic rebase
+        uses: cirrus-actions/rebase@1.8
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT_VERSION_BUMP }}
