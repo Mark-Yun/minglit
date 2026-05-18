@@ -11,6 +11,7 @@
 | [`alchemist/`](./alchemist/) | Alchemist golden 설정·고정 골든 |
 | [`visual_qa/`](./visual_qa/) | 시각 QA 캡처 |
 | [`utils/`](./utils/) | 테스트 헬퍼 (mocks, utils, reporter integration) |
+| [`firebase_options_test.dart`](./firebase_options_test.dart) | Android 가 `UnsupportedError` throw 하는 회귀 방지 테스트 (Fix #2605) |
 | [`widget_test.dart`](./widget_test.dart) | 레거시 widget test |
 | [`flutter_test_config.dart`](./flutter_test_config.dart) | 테스트 환경 setup |
 | [`reporter.dart`](./reporter.dart) | test_reporter 통합 |
@@ -41,4 +42,4 @@ CI 자동 실행: `pr-gate.test-flutter-apps` matrix. 커버리지 dev 자동 �
 - [tests/_coverage/BLUEDOC](../../../tests/_coverage/BLUEDOC.md)
 
 ---
-_Reviewed: 2026-05-17 22:32_
+_Reviewed: 2026-05-18_

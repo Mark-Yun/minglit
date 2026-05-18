@@ -10,6 +10,7 @@
 | [`integration/`](./integration/) | Integration 테스트 (Flutter integration_test, CI 의 `pr-gate.test-integration-app-user-cuj` 가 실행) |
 | [`visual_qa/`](./visual_qa/) | 시각 QA 캡처 (`visual_qa_helper.dart` + capture artifacts) |
 | [`utils/`](./utils/) | 테스트 헬퍼 (`mocks.dart`, `test_utils.dart`, `auto_label_allure_reporter.dart`) |
+| [`firebase_options_test.dart`](./firebase_options_test.dart) | Android 가 `UnsupportedError` throw 하는 회귀 방지 테스트 (Fix #2605) |
 | [`widget_test.dart`](./widget_test.dart) | 레거시 widget test (default Flutter scaffold) |
 | [`flutter_test_config.dart`](./flutter_test_config.dart) | 테스트 환경 setup (모든 테스트가 자동 로드) |
 | [`reporter.dart`](./reporter.dart) | `test_reporter` 통합 (Allure 등 외부 리포터) |
@@ -39,4 +40,4 @@ CI 자동 실행은 `pr-gate.test-flutter-apps` (matrix). 커버리지 dev 자�
 - [tests/_coverage/BLUEDOC](../../../tests/_coverage/BLUEDOC.md) — 커버리지 저장소
 
 ---
-_Reviewed: 2026-05-17 22:32_
+_Reviewed: 2026-05-18_
