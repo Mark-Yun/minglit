@@ -39,7 +39,7 @@ Future<void> main() async {
   if (!kIsWeb && Platform.isAndroid) {
     try {
       await FlutterDisplayMode.setHighRefreshRate();
-    } catch (_) {
+    } on Object catch (_) {
       // Some devices don't support configurable display modes; fail silently.
     }
   }
