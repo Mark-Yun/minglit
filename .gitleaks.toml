@@ -24,6 +24,14 @@ title = "Minglit Gitleaks Configuration"
   regex = '''sb_secret_[A-Za-z0-9_-]+'''
   tags = ["key", "supabase"]
 
+# Refs #2541: HS256 JWT header is invariant for Supabase legacy keys (both anon and service_role).
+# Anon JWTs are technically public but should still be in env files, not committed.
+[[rules]]
+  id = "supabase-legacy-jwt"
+  description = "Supabase legacy JWT (HS256 header). Catches anon + service_role tokens; review usage."
+  regex = '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.[A-Za-z0-9_-]{60,}\.[A-Za-z0-9_-]{40,}'''
+  tags = ["key", "supabase", "jwt"]
+
 [[rules]]
   id = "portone-imp-key"
   description = "PortOne/Iamport API Key (real keys are 10+ chars after imp_)"
