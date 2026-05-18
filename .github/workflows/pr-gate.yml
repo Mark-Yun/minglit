@@ -150,6 +150,7 @@ jobs:
       mds_tokens: ${{ steps.filter.outputs.mds_tokens }}
       mds_icons: ${{ steps.filter.outputs.mds_icons }}
       supabase: ${{ steps.filter.outputs.supabase }}
+      dart_files: ${{ steps.filter.outputs.dart_files }}
     steps:
     - uses: actions/checkout@v6
     - uses: dorny/paths-filter@v4
@@ -184,6 +185,8 @@ jobs:
             - 'shared/packages/mds/icons/**'
           supabase:
             - 'supabase/**'
+          dart_files:
+            - '**/*.dart'
 
   # App CI (User + Partner)
   test-flutter-apps:
@@ -655,6 +658,29 @@ jobs:
   # check-workflow-yaml, check-android-test-deps, check-cross-feature-imports
   # consolidated into `static-checks` job at top of this file.
 
+  # Replaces the prior auto-format job from pr-setup-format.yml: that job ran
+  # `dart format` and pushed a `chore: auto-format` commit back to the PR
+  # branch via PAT, which raced against author/worker pushes and added bot
+  # commits to the PR history. The check-only variant fails CI when format is
+  # not clean and leaves the fix to the PR author (or AI worker), removing the
+  # race and the noise commits.
+  format-check:
+    needs: changes
+    if: ${{ needs.changes.outputs.dart_files == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+      - name: Verify dart format
+        run: |
+          dart format --output=none --set-exit-if-changed \
+            shared/packages/minglit_kit \
+            apps/app_user \
+            apps/app_partner
+
   # Gitleaks secret scan — formerly pr-setup-secret-scan.yml, absorbed into pr-gate as a required check.
   # Disabled 2026-05-19: post-org-transfer (Mark-Yun → team-minglit), gitleaks-action@v2 requires a
   # paid license for org repos. ci-result aggregates on "failure" only, so a "skipped" job here does
@@ -699,7 +725,7 @@ jobs:
     secrets: inherit
 
   ci-result:
-    needs: [static-checks, gitleaks, test-flutter-apps, test-integration-app-user-cuj, test-integration-app-partner-cuj, lint-landing-user, lint-landing-partner, lint-mds-docs, lint-mds-icons, test-supabase, test-edge-functions, test-ef-integration]
+    needs: [static-checks, format-check, gitleaks, test-flutter-apps, test-integration-app-user-cuj, test-integration-app-partner-cuj, lint-landing-user, lint-landing-partner, lint-mds-docs, lint-mds-icons, test-supabase, test-edge-functions, test-ef-integration]
     if: always()
     runs-on: ubuntu-latest
     steps:
