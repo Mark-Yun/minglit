@@ -24,18 +24,15 @@ jobs:
           # pub get and dart fix/format steps; injected only in the push step.
           persist-credentials: false
 
+      # Flutter SDK + pub-cache come from a host bind volume on the
+      # self-hosted runner (see minglit-github-workflow-runner:
+      # systemd/minglit-runner@.service), so the action's own
+      # `cache: true` and the explicit actions/cache@v5 for ~/.pub-cache
+      # are redundant and add round-trip latency. Default `cache: false`
+      # lets the action detect the existing toolcache and skip download.
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          cache: true
-
-      - name: Cache pub packages
-        uses: actions/cache@v5
-        with:
-          path: ~/.pub-cache
-          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pub-
 
       - name: Install dependencies
         run: flutter pub get
