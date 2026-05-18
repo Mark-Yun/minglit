@@ -35,3 +35,9 @@ custom_lint:
     # Temporarily disabled: EdgeInsets usages need migration to MinglitSpacing tokens.
     # Large-scale migration tracked in follow-up issue.
     - no_hardcoded_padding: false
+    # P0-0e (app_demo flavor): forbid direct `Supabase.instance.client` access
+    # outside Repository providers + the supabase_provider wrapper itself.
+    # Demo flavor requires every SupabaseClient read to go through
+    # supabaseClientProvider so ProviderScope.overrides can intercept.
+    # See docs/infra/app_demo/architecture.md "Dependency Rules" section.
+    - minglit_no_direct_supabase_instance: true

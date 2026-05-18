@@ -1,4 +1,5 @@
 import 'package:minglit_kit/src/data/models/user_profile.dart';
+import 'package:minglit_kit/src/logic/providers/supabase_provider.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -8,7 +9,7 @@ part 'user_repository.g.dart';
 /// Provides the [UserRepository].
 @Riverpod(keepAlive: true)
 UserRepository userRepository(Ref ref) {
-  return SupabaseUserRepository();
+  return SupabaseUserRepository(supabase: ref.watch(supabaseClientProvider));
 }
 
 /// Repository interface for user profile data.

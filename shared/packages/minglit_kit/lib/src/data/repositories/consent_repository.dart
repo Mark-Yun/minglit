@@ -1,4 +1,5 @@
 import 'package:minglit_kit/src/data/models/user_consent.dart';
+import 'package:minglit_kit/src/logic/providers/supabase_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -7,7 +8,7 @@ part 'consent_repository.g.dart';
 /// Provides the [ConsentRepository].
 @Riverpod(keepAlive: true)
 ConsentRepository consentRepository(Ref ref) {
-  return ConsentRepository(Supabase.instance.client);
+  return ConsentRepository(ref.watch(supabaseClientProvider));
 }
 
 /// Repository for user consent data from Supabase.

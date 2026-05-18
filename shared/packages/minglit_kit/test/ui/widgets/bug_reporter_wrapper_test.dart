@@ -1,7 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:minglit_kit/src/logic/providers/supabase_provider.dart';
 import 'package:minglit_kit/src/ui/widgets/bug_reporter_wrapper.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+// P0-0c: BugReporterWrapper constructs BugReportRepository via
+// ref.read(supabaseClientProvider) at initState. Unit tests must override
+// the provider with a fake SupabaseClient — otherwise the call throws
+// because Supabase.initialize() isn't invoked in test mode.
+class _FakeSupabaseClient extends Mock implements SupabaseClient {}
+
+final _testOverrides = [
+  supabaseClientProvider.overrideWith((_) => _FakeSupabaseClient()),
+];
+
+ProviderContainer _testContainer() => ProviderContainer(overrides: _testOverrides);
 
 void main() {
   group('BugReporterWrapper Widget Tests', () {
@@ -9,7 +24,8 @@ void main() {
       const testChild = Text('Test Child Widget');
 
       await tester.pumpWidget(
-        const ProviderScope(
+        ProviderScope(
+          overrides: _testOverrides,
           child: MaterialApp(
             home: Scaffold(
               body: BugReporterWrapper(
@@ -28,7 +44,8 @@ void main() {
       'BugReporterWrapper with enabled=false does not render a FAB',
       (tester) async {
         await tester.pumpWidget(
-          const ProviderScope(
+          ProviderScope(
+          overrides: _testOverrides,
             child: MaterialApp(
               home: Scaffold(
                 body: BugReporterWrapper(
@@ -47,7 +64,8 @@ void main() {
 
     testWidgets('widget builds without errors', (tester) async {
       await tester.pumpWidget(
-        const ProviderScope(
+        ProviderScope(
+          overrides: _testOverrides,
           child: MaterialApp(
             home: Scaffold(
               body: BugReporterWrapper(
@@ -66,7 +84,8 @@ void main() {
 
     testWidgets('renders RepaintBoundary with child', (tester) async {
       await tester.pumpWidget(
-        const ProviderScope(
+        ProviderScope(
+          overrides: _testOverrides,
           child: MaterialApp(
             home: Scaffold(
               body: BugReporterWrapper(
@@ -89,6 +108,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: _testOverrides,
           child: MaterialApp(
             navigatorKey: navigatorKey,
             home: Scaffold(
@@ -109,7 +129,8 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        const ProviderScope(
+        ProviderScope(
+          overrides: _testOverrides,
           child: MaterialApp(
             home: Scaffold(
               body: BugReporterWrapper(
@@ -129,7 +150,8 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        const ProviderScope(
+        ProviderScope(
+          overrides: _testOverrides,
           child: MaterialApp(
             home: Scaffold(
               body: BugReporterWrapper(
@@ -143,7 +165,8 @@ void main() {
 
       // Rebuild with empty widget — triggers dispose and observer removal
       await tester.pumpWidget(
-        const ProviderScope(
+        ProviderScope(
+          overrides: _testOverrides,
           child: MaterialApp(
             home: SizedBox(),
           ),
@@ -158,7 +181,8 @@ void main() {
       'BugReporterWrapper FAB hidden by default (provider=false)',
       (tester) async {
         await tester.pumpWidget(
-          const ProviderScope(
+          ProviderScope(
+          overrides: _testOverrides,
             child: MaterialApp(
               home: Scaffold(
                 body: BugReporterWrapper(
@@ -182,7 +206,7 @@ void main() {
       (
         tester,
       ) async {
-        final container = ProviderContainer();
+        final container = _testContainer();
         addTearDown(container.dispose);
 
         await tester.pumpWidget(
@@ -214,7 +238,7 @@ void main() {
     testWidgets('disposes cleanly with callback registered', (
       tester,
     ) async {
-      final container = ProviderContainer();
+      final container = _testContainer();
       addTearDown(container.dispose);
 
       await tester.pumpWidget(
@@ -251,7 +275,8 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        const ProviderScope(
+        ProviderScope(
+          overrides: _testOverrides,
           child: MaterialApp(
             home: Scaffold(
               floatingActionButton: BugReportFab(),
@@ -273,7 +298,7 @@ void main() {
     testWidgets('visible when provider is true and callback is set', (
       tester,
     ) async {
-      final container = ProviderContainer();
+      final container = _testContainer();
       addTearDown(container.dispose);
 
       await tester.pumpWidget(
@@ -303,7 +328,7 @@ void main() {
     testWidgets(
       'Test A: BugReporterWrapper shows FAB overlay when provider is true',
       (tester) async {
-        final container = ProviderContainer();
+        final container = _testContainer();
         addTearDown(container.dispose);
 
         await tester.pumpWidget(
@@ -335,7 +360,7 @@ void main() {
     testWidgets(
       'Test B: BugReporterWrapper hides FAB overlay when provider is false',
       (tester) async {
-        final container = ProviderContainer();
+        final container = _testContainer();
         addTearDown(container.dispose);
 
         await tester.pumpWidget(
@@ -369,7 +394,7 @@ void main() {
     testWidgets('BugReportAction tap toggles bugReportFabVisibleProvider', (
       tester,
     ) async {
-      final container = ProviderContainer();
+      final container = _testContainer();
       addTearDown(container.dispose);
 
       await tester.pumpWidget(

@@ -1,4 +1,5 @@
 import 'package:minglit_kit/src/data/models/party.dart' show Location;
+import 'package:minglit_kit/src/logic/providers/supabase_provider.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -8,7 +9,7 @@ part 'location_repository.g.dart';
 /// Provides the [LocationRepository].
 @Riverpod(keepAlive: true)
 LocationRepository locationRepository(Ref ref) {
-  return LocationRepository();
+  return LocationRepository(supabase: ref.watch(supabaseClientProvider));
 }
 
 /// Repository for location records and metadata.

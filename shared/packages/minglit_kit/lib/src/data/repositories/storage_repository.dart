@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:image_picker/image_picker.dart';
+import 'package:minglit_kit/src/logic/providers/supabase_provider.dart';
 import 'package:minglit_kit/src/utils/image_utils.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:path/path.dart' as p;
@@ -13,7 +14,7 @@ part 'storage_repository.g.dart';
 /// Provides the [StorageRepository].
 @Riverpod(keepAlive: true)
 StorageRepository storageRepository(Ref ref) {
-  return StorageRepository();
+  return StorageRepository(supabase: ref.watch(supabaseClientProvider));
 }
 
 /// **Storage Repository**

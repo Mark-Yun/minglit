@@ -1,5 +1,6 @@
 import 'package:minglit_kit/src/data/models/ticket.dart';
 import 'package:minglit_kit/src/data/models/ticket_template.dart';
+import 'package:minglit_kit/src/logic/providers/supabase_provider.dart';
 import 'package:minglit_kit/src/utils/exceptions.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -10,7 +11,7 @@ part 'ticket_repository.g.dart';
 /// Provides the [TicketRepository].
 @Riverpod(keepAlive: true)
 TicketRepository ticketRepository(Ref ref) {
-  return TicketRepository();
+  return TicketRepository(supabase: ref.watch(supabaseClientProvider));
 }
 
 /// Repository for ticket and ticket template records.

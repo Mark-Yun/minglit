@@ -5,6 +5,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart'
     show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:minglit_kit/src/logic/providers/supabase_provider.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
@@ -43,6 +44,7 @@ AuthConfig authConfig(Ref ref) {
 AuthRepository authRepository(Ref ref) {
   final config = ref.watch(authConfigProvider);
   return AuthRepository(
+    supabase: ref.watch(supabaseClientProvider),
     webClientId: config.webClientId,
     defaultRedirectUrl: config.defaultRedirectUrl,
     mobileRedirectScheme: config.mobileRedirectScheme,

@@ -17,7 +17,6 @@ import 'package:minglit_kit/src/utils/layout_dump.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:minglit_kit/src/utils/qa_bug_report_channel.dart'
     show QaBugReportChannel;
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Collects bug report data (screenshot, layout dump, environment info, logs)
 /// and submits it via [BugReportRepository].
@@ -29,30 +28,34 @@ class BugReportCollector {
   ///
   /// [boundaryKey] must be attached to a [RepaintBoundary] widget.
   ///
-  /// The optional [storage], [bugReportRepository], and
-  /// [environmentInfoCollector] parameters are for testing only — production
-  /// code should omit them.
+  /// [bugReportRepository] must be provided by the caller — typically
+  /// constructed with the SupabaseClient obtained from
+  /// `supabaseClientProvider` via Riverpod.
+  ///
+  /// The optional [storage] and [environmentInfoCollector] parameters are
+  /// for testing only — production code should omit them.
+  // P0-0c: removed Supabase.instance.client fallback — caller must supply
+  // BugReportRepository constructed via ref.read(supabaseClientProvider).
   BugReportCollector({
     required this.boundaryKey,
+    required BugReportRepository bugReportRepository,
     @visibleForTesting StorageRepository? storage,
-    @visibleForTesting BugReportRepository? bugReportRepository,
     @visibleForTesting
     Future<Map<String, dynamic>> Function()? environmentInfoCollector,
-  }) : _storage = storage,
-       _bugReportRepository = bugReportRepository,
+  }) : _bugReportRepository = bugReportRepository,
+       _storage = storage,
        _environmentInfoCollector = environmentInfoCollector;
 
   /// The key attached to the [RepaintBoundary] for screenshot capture.
   final GlobalKey boundaryKey;
 
+  final BugReportRepository _bugReportRepository;
   final StorageRepository? _storage;
-  final BugReportRepository? _bugReportRepository;
   final Future<Map<String, dynamic>> Function()? _environmentInfoCollector;
 
   StorageRepository get _storageInstance => _storage ?? StorageRepository();
 
-  BugReportRepository get _repoInstance =>
-      _bugReportRepository ?? BugReportRepository(Supabase.instance.client);
+  BugReportRepository get _repoInstance => _bugReportRepository;
 
   Future<Map<String, dynamic>> _collectEnv() =>
       _environmentInfoCollector?.call() ?? collectEnvironmentInfo();

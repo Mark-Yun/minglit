@@ -1,4 +1,5 @@
 import 'package:minglit_kit/src/config/url_config.dart';
+import 'package:minglit_kit/src/logic/providers/supabase_provider.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,6 +12,7 @@ part 'staff_repository.g.dart';
 StaffRepository staffRepository(Ref ref) {
   final urlConfig = ref.watch(minglitUrlConfigProvider);
   return StaffRepository(
+    supabase: ref.watch(supabaseClientProvider),
     redirectUrl: urlConfig.authRedirectUrl,
   );
 }

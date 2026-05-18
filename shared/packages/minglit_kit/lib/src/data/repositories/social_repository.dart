@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:minglit_kit/src/data/models/social_interaction.dart';
+import 'package:minglit_kit/src/logic/providers/supabase_provider.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -10,7 +11,7 @@ part 'social_repository.g.dart';
 /// Provider for SocialRepository.
 @Riverpod(keepAlive: true)
 SocialRepository socialRepository(Ref ref) {
-  return SocialRepository();
+  return SocialRepository(supabase: ref.watch(supabaseClientProvider));
 }
 
 /// Repository for handling social interactions (Like, Subscribe, Bookmark).

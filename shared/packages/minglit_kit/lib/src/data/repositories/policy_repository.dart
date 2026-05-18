@@ -1,3 +1,4 @@
+import 'package:minglit_kit/src/logic/providers/supabase_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -6,7 +7,7 @@ part 'policy_repository.g.dart';
 /// Provides a [PolicyRepository] instance.
 @Riverpod(keepAlive: true)
 PolicyRepository policyRepository(Ref ref) {
-  return PolicyRepository(Supabase.instance.client);
+  return PolicyRepository(ref.watch(supabaseClientProvider));
 }
 
 /// Repository for fetching app policy data from Supabase.
