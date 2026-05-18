@@ -16,7 +16,7 @@ concurrency:
 jobs:
   # Migration version 중복 검사 (항상 실행 — path filter 없음)
   check-migration-versions:
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - name: Check duplicate migration versions
@@ -50,7 +50,7 @@ jobs:
 
   # env-manifest.json ↔ EnvKeyStore drift 검사 (항상 실행 — path filter 없음)
   check-env-manifest-sync:
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - name: Check env-manifest.json / EnvKeyStore sync
@@ -58,7 +58,7 @@ jobs:
 
   # 변경 사항 감지 Job
   changes:
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: read
@@ -292,7 +292,7 @@ jobs:
     name: lint-and-build-landing-user
     needs: changes
     if: ${{ needs.changes.outputs.landing_user == 'true' }}
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./apps/landing_user
@@ -313,7 +313,7 @@ jobs:
     name: lint-and-build-landing-partner
     needs: changes
     if: ${{ needs.changes.outputs.landing_partner == 'true' }}
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./apps/landing_partner
@@ -334,7 +334,7 @@ jobs:
     name: lint-and-build-mds-docs
     needs: changes
     if: ${{ needs.changes.outputs.mds_docs == 'true' || needs.changes.outputs.mds_tokens == 'true' || needs.changes.outputs.mds_icons == 'true' }}
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./apps/mds/docs
@@ -356,7 +356,7 @@ jobs:
     name: lint-mds-icons
     needs: changes
     if: ${{ needs.changes.outputs.mds_icons == 'true' }}
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./shared/packages/mds/icons
@@ -365,9 +365,17 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          cache: true
+      - uses: actions/cache@v5
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-mds-icons-${{ hashFiles('shared/packages/mds/icons/pubspec.lock') }}
+          restore-keys: ${{ runner.os }}-pub-mds-icons-
       - uses: actions/setup-node@v6
         with:
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ./shared/packages/mds/icons/package-lock.json
       - run: npm ci
       - run: npm run build
         # Verify codegen runs cleanly and produces no diff against committed
@@ -424,7 +432,7 @@ jobs:
     name: test-deno-ef
     needs: changes
     if: ${{ needs.changes.outputs.supabase == 'true' }}
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
         with:
@@ -432,6 +440,14 @@ jobs:
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
+      - name: Cache Deno deps
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cache/deno
+            ~/.deno
+          key: ${{ runner.os }}-deno-${{ hashFiles('supabase/functions/**/deno.lock', 'supabase/functions/**/deno.json') }}
+          restore-keys: ${{ runner.os }}-deno-
       - name: Validate deno.json presence
         run: |
           missing=()
@@ -564,7 +580,7 @@ jobs:
 
   # Workflow YAML 파싱 검증 (항상 실행 — db-invariants #1593 회귀 방지)
   check-workflow-yaml:
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - name: Validate all workflow YAML files
@@ -589,7 +605,7 @@ jobs:
   # runner와 orchestrator는 동일 major.minor 계열이어야 함 (1.5.x↔1.5.x, 1.6.x↔1.6.x)
   # Gradle consistent resolution이 혼용 시 빌드 실패를 발생시키므로 PR 단계에서 사전 차단.
   check-android-test-deps:
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - name: Verify androidx.test runner/orchestrator version alignment
@@ -614,7 +630,7 @@ jobs:
 
   # Fix #1872: block new cross-feature imports; existing violations are grandfathered in baseline
   check-cross-feature-imports:
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - name: Check cross-feature imports
@@ -622,7 +638,7 @@ jobs:
 
   # Gitleaks secret scan — formerly pr-setup-secret-scan.yml, absorbed into pr-gate as a required check
   gitleaks:
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
@@ -634,16 +650,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_CONFIG: .gitleaks.toml
-          # Self-hosted ephemeral runners execute as root (HOME=/root) which
-          # doesn't share a parent with GITHUB_WORKSPACE. Disable SARIF artifact
-          # upload to avoid the rootDirectory/file mismatch error.
-          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
 
   # BLUEDOC freshness: 새 파일/폴더 추가 또는 파일 삭제 시 가장 가까운 ancestor BLUEDOC.md
   # 갱신 강제. 통과: 이정표 표 갱신 또는 BLUEDOC 의 '_Reviewed_' 날짜 bump.
   # Format: 모든 BLUEDOC.md 가 '_Reviewed: YYYY-MM-DD HH:MM_' 줄 포함.
   check-bluedoc-freshness:
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -681,7 +693,7 @@ jobs:
   ci-result:
     needs: [check-migration-versions, check-env-manifest-sync, check-workflow-yaml, check-android-test-deps, check-cross-feature-imports, gitleaks, check-bluedoc-freshness, test-flutter-apps, test-integration-app-user-cuj, test-integration-app-partner-cuj, lint-landing-user, lint-landing-partner, lint-mds-docs, lint-mds-icons, test-supabase, test-edge-functions, test-ef-integration]
     if: always()
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     steps:
       - name: Check CI results
         env:
