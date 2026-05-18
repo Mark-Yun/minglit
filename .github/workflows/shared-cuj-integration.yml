@@ -71,6 +71,14 @@ jobs:
         working-directory: apps/app_${{ inputs.app-name }}
 
       - name: Enable KVM acceleration
+        # github-hosted ubuntu runners need an udev rule to grant non-root users
+        # access to /dev/kvm. Self-hosted runners execute as root inside a
+        # container with /dev/kvm bind-mounted from the host (see
+        # minglit-github-workflow-runner: docker-compose.android.yml), so the
+        # device is already accessible and udevadm is not available in-container —
+        # leaving this step on causes `tee: /etc/udev/rules.d/99-kvm4all.rules:
+        # No such file or directory` then exit 1.
+        if: runner.environment == 'github-hosted'
         run: |
           sudo mkdir -p /etc/udev/rules.d
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
