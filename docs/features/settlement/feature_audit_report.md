@@ -51,6 +51,48 @@
 
 ---
 
+## 2. UI 완성도
+
+**Method**:
+- MDS spec (디자인 의도): `apps/mds/docs/public/specs/<screen>/state_*.png`
+- 앱 render (실 구현): `docs/infra/mds-emulator-render/<screen>/<state>.png`
+- 두 PNG 쌍을 시각 비교
+
+### 2-1. MDS spec 완성도
+
+| Screen | MDS state PNG 수 |
+|--------|-----------------|
+| `partner_home_page` | 8 |
+| `settlement_page` | 7 |
+| `settlement_detail_page` | 6 |
+
+**Findings**: 없음.
+
+### 2-2. 앱 render coverage
+
+| 점검 | 결과 |
+|------|------|
+| mds-emulator-render `_registry.dart` 미등록 screen (uncovered) | 모든 settlement screen — `docs/infra/mds-emulator-render/`에 home_page 외 미등록 |
+| catalog 됐지만 state 불충분 (incomplete) | — (미등록이라 해당 없음) |
+| catalog 됐지만 MDS spec 없음 (orphan) | — |
+
+**Findings**: 없음 (emulator render 미등록은 인프라 미완성 상태).
+
+### 2-3. 앱 render ↔ MDS spec drift (시각 비교)
+
+render PNG 미존재로 시각 비교 불가 (2-2 uncovered 상태).
+
+| 항목 | 결과 |
+|------|------|
+| Color drift | — (render 없음) |
+| Layout drift | — (render 없음) |
+| Typography drift | — (render 없음) |
+| 컴포넌트 차이 | — (render 없음) |
+
+**Findings**: 없음.
+
+---
+
 ## 3. 테스트 현황
 
 ### 3-1. app_user
