@@ -52,6 +52,16 @@ void main() {
   setUp(() {
     mockTagRepo = _MockTagRepository();
     fakeCoordinator = _FakeTagCoordinator();
+    // Default stubs — 반드시 pumpWidget 전에 등록되어야 함 (setUp에서 설정)
+    when(() => mockTagRepo.getFeaturedTags()).thenAnswer(
+      (_) async => [_makeTag('클럽'), _makeTag('요가')],
+    );
+    when(
+      () => mockTagRepo.getPartiesByTag(
+        any(),
+        offset: any(named: 'offset'),
+      ),
+    ).thenAnswer((_) async => [_makeEvent(1), _makeEvent(2)]);
   });
 
   List<dynamic> base() => [
@@ -69,16 +79,10 @@ void main() {
       app: const Scaffold(body: FeaturedTagChipBar()),
       overrides: base,
       body: (t) async {
-        when(() => mockTagRepo.getFeaturedTags()).thenAnswer(
-          (_) async => [_makeTag('클럽'), _makeTag('요가')],
-        );
+        // FeaturedTagChipBar는 태그를 '#tagName' 형식으로 렌더링
+        expect(find.text('#클럽'), findsOneWidget);
 
-        await t.pump();
-        await t.pumpAndSettle();
-
-        expect(find.text('클럽'), findsOneWidget);
-
-        await t.tap(find.text('클럽'));
+        await t.tap(find.text('#클럽'));
         await t.pumpAndSettle();
 
         expect(fakeCoordinator.calls, hasLength(1));
@@ -89,15 +93,12 @@ void main() {
     cujCase(
       'edge: 인기 태그 0건 → 칩바 숨김',
       app: const Scaffold(body: FeaturedTagChipBar()),
-      overrides: base,
+      overrides: () {
+        // edge case: 빈 목록 — overrides()는 pumpWidget 전 실행되므로 stub 덮어씀
+        when(() => mockTagRepo.getFeaturedTags()).thenAnswer((_) async => []);
+        return base();
+      },
       body: (t) async {
-        when(() => mockTagRepo.getFeaturedTags()).thenAnswer(
-          (_) async => [],
-        );
-
-        await t.pump();
-        await t.pumpAndSettle();
-
         expect(find.byType(FilterChip), findsNothing);
       },
     );
@@ -113,16 +114,6 @@ void main() {
       app: const TagEventListPage(tagId: 'tag-클럽', tagName: '클럽'),
       overrides: base,
       body: (t) async {
-        when(
-          () => mockTagRepo.getPartiesByTag(
-            any(),
-            offset: any(named: 'offset'),
-          ),
-        ).thenAnswer((_) async => [_makeEvent(1), _makeEvent(2)]);
-
-        await t.pump();
-        await t.pumpAndSettle();
-
         expect(find.text('Test Event 1'), findsOneWidget);
         expect(find.text('Test Event 2'), findsOneWidget);
       },
@@ -131,18 +122,17 @@ void main() {
     cujCase(
       'edge: 빈 상태 → 안내 메시지',
       app: const TagEventListPage(tagId: 'tag-클럽', tagName: '클럽'),
-      overrides: base,
-      body: (t) async {
+      overrides: () {
+        // edge case: 빈 이벤트 목록 — default stub 덮어씀
         when(
           () => mockTagRepo.getPartiesByTag(
             any(),
             offset: any(named: 'offset'),
           ),
         ).thenAnswer((_) async => []);
-
-        await t.pump();
-        await t.pumpAndSettle();
-
+        return base();
+      },
+      body: (t) async {
         expect(find.text('아직 이 태그의 이벤트가 없어요'), findsOneWidget);
       },
     );
