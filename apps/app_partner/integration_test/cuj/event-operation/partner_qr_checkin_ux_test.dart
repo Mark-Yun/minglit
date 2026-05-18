@@ -251,18 +251,27 @@ void main() {
 
         // _ParticipantRow: 미체크인 참가자에게 FilledButton('체크인') 렌더링
         final checkinBtn = find.widgetWithText(FilledButton, '체크인');
-        expect(checkinBtn, findsOneWidget,
-            reason: '미체크인 참가자에게 FilledButton("체크인") 있어야 함');
+        expect(
+          checkinBtn,
+          findsOneWidget,
+          reason: '미체크인 참가자에게 FilledButton("체크인") 있어야 함',
+        );
         await t.tap(checkinBtn);
         await t.pump();
         await t.pumpAndSettle();
 
         // _FakeManualCheckinController.checkin() → checked_in optimistic update.
         // UI: FilledButton("체크인") 사라지고 OutlinedButton("완료") 표시
-        expect(find.widgetWithText(FilledButton, '체크인'), findsNothing,
-            reason: '체크인 후 FilledButton("체크인") 사라져야 함');
-        expect(find.widgetWithText(OutlinedButton, '완료'), findsOneWidget,
-            reason: '체크인 완료 후 OutlinedButton("완료") 표시되어야 함');
+        expect(
+          find.widgetWithText(FilledButton, '체크인'),
+          findsNothing,
+          reason: '체크인 후 FilledButton("체크인") 사라져야 함',
+        );
+        expect(
+          find.widgetWithText(OutlinedButton, '완료'),
+          findsOneWidget,
+          reason: '체크인 완료 후 OutlinedButton("완료") 표시되어야 함',
+        );
       },
     );
   });
