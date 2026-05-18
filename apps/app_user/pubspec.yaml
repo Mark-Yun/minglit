@@ -66,6 +66,11 @@ dev_dependencies:
   build_runner: ^2.10.4
   custom_lint: 0.8.1
   flutter_lints: ^6.0.0
+  # Demo fixtures shared with mds-emulator-render builders (test-only).
+  # P4 will add `minglit_demo` as a regular dependency (under demo flavor)
+  # for main_demo.dart entry; this dev-dep declaration is for tests only.
+  minglit_demo:
+    path: ../../shared/packages/minglit_demo
   flutter_test:
     sdk: flutter
   freezed: ^3.2.3

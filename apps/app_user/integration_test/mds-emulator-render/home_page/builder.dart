@@ -9,10 +9,10 @@
 import 'package:app_user/src/features/home/home_page.dart';
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:app_user/src/logic/feed_state_provider.dart';
+import 'package:minglit_demo/minglit_demo.dart';
 
 import '../_engine/builder.dart';
 import '../_mocks/coordinators.dart';
-import '../_mocks/data.dart';
 import '../_mocks/notifiers.dart';
 
 class HomePageBuilder extends MdsScreenBuilder<HomePage> {
@@ -41,7 +41,7 @@ class HomePageBuilder extends MdsScreenBuilder<HomePage> {
   HomePageBuilder withEvents([int count = 3]) {
     addOverride(
       recommendationFeedProvider.overrideWith(
-        () => StaticRecommendationFeedNotifier(mockEvents(count: count)),
+        () => StaticRecommendationFeedNotifier(demoEvents.take(count).toList()),
       ),
     );
     return this;

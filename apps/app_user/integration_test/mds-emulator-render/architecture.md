@@ -111,10 +111,12 @@ integration_test/mds-emulator-render/
 │   ├── runner.dart
 │   └── manifest.dart
 │
-├── _mocks/                           # 공통 mock 풀
-│   ├── coordinators.dart
-│   ├── notifiers.dart
-│   └── data.dart                     # mockEvents(n), mockUser(), mockTags(n)
+├── _mocks/                           # 공통 Mocktail stubs (test-only)
+│   ├── coordinators.dart             # MockHomeCoordinator 등 (Mocktail 의존)
+│   └── notifiers.dart                # StaticRecommendationFeedNotifier 등
+│
+│   ↑ fixture 데이터는 shared/packages/minglit_demo 에 — P2 마이그됨
+│
 │
 ├── _registry.dart                    # 모든 catalog 명시적 import (수동 list)
 │
@@ -283,7 +285,7 @@ steps:
 | 새 state | catalog 의 states list 에 entry 1개 |
 | 새 cross-cutting (예: RTL, large text) | `_engine/decorator.dart` 에 `WithRTL`, `WithLargeText` 추가 |
 | 새 primitive state | `_engine/primitive.dart` 에 `Primitive.skeleton()` 등 |
-| 새 mock 데이터 | `_mocks/data.dart` 에 `mockNotifications(n)` 등 |
+| 새 fixture 데이터 | `shared/packages/minglit_demo/lib/fixtures/demo_*.dart` (P2 이후 SSoT) |
 
 화면 코드는 **builder + catalog 2개 파일만** 작성. 나머지는 engine 이 처리.
 
