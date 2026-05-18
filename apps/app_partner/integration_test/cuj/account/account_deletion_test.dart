@@ -124,20 +124,19 @@ void main() {
       int activeEvents = 0,
       int unsettled = 0,
       int pendingRefunds = 0,
-    }) =>
-        [
-          currentUserProvider.overrideWith((_) => _socialUser()),
-          authStateChangesProvider.overrideWith((_) => const Stream.empty()),
-          accountRepositoryProvider.overrideWithValue(_FakeAccountRepository()),
-          accountDeletionCoordinatorProvider.overrideWithValue(coordinator),
-          partnerAccountDeletionGuardProvider.overrideWith(
-            (_) async => PartnerAccountDeletionGuard(
-              activeEventCount: activeEvents,
-              unsettledSettlementCount: unsettled,
-              pendingRefundCount: pendingRefunds,
-            ),
-          ),
-        ];
+    }) => [
+      currentUserProvider.overrideWith((_) => _socialUser()),
+      authStateChangesProvider.overrideWith((_) => const Stream.empty()),
+      accountRepositoryProvider.overrideWithValue(_FakeAccountRepository()),
+      accountDeletionCoordinatorProvider.overrideWithValue(coordinator),
+      partnerAccountDeletionGuardProvider.overrideWith(
+        (_) async => PartnerAccountDeletionGuard(
+          activeEventCount: activeEvents,
+          unsettledSettlementCount: unsettled,
+          pendingRefundCount: pendingRefunds,
+        ),
+      ),
+    ];
 
     cujCase(
       'happy: 활성 이벤트 있음 → 탈퇴 요청 비활성 + 차단 카드 표시 (FR-10)',
