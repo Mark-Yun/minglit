@@ -45,6 +45,12 @@
 
 ---
 
+## 2. UI 완성도
+
+`admin` 카테고리 (admin-dashboard, statistics-tools)는 내부 웹 툴이며 Flutter MDS 디자인 시스템 적용 대상이 아님. 해당 없음 (N/A).
+
+---
+
 ## 3. 테스트 현황
 
 ### 3-1. app_user
