@@ -59,6 +59,10 @@ CheckinParticipant _makeParticipant({
   status: status,
 );
 
+// CheckinSummaryCard._LiveDot 는 AnimationController.repeat() 로 무한 애니메이션.
+// MinglitSkeleton 도 동일. pumpAndSettle() timeout 방지용 고정 pump duration.
+const _kSummaryCardPump = Duration(milliseconds: 100);
+
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -70,9 +74,10 @@ void main() {
     cujCase(
       'happy: checkedIn=23, total=50 → "23/50" + "46%" 표시',
       app: const Scaffold(body: CheckinSummaryCard(checkedIn: 23, total: 50)),
+      // CheckinSummaryCard._LiveDot 무한 애니메이션 → pumpAndSettle timeout 방지
+      afterPump: _kSummaryCardPump,
       body: (t) async {
-        await t.pump();
-        await t.pumpAndSettle();
+        await t.pump(_kSummaryCardPump);
 
         // 카운트 "23/50"
         expect(find.text('23'), findsOneWidget);
@@ -92,9 +97,10 @@ void main() {
           isLoading: true,
         ),
       ),
+      // MinglitSkeleton 도 AnimationController.repeat() 사용
+      afterPump: _kSummaryCardPump,
       body: (t) async {
-        await t.pump();
-        await t.pumpAndSettle();
+        await t.pump(_kSummaryCardPump);
 
         // 로딩 중에는 카운트 텍스트 없음 — skeleton만 표시
         expect(find.text('0'), findsNothing);
@@ -111,9 +117,10 @@ void main() {
     cujCase(
       'happy: checkedIn=5→6 — StatefulBuilder로 상태 변경 후 카드 갱신 확인',
       app: const _IncrementalCountCard(initialCount: 5, total: 20),
+      // _IncrementalCountCard 내부 CheckinSummaryCard._LiveDot 무한 애니메이션
+      afterPump: _kSummaryCardPump,
       body: (t) async {
-        await t.pump();
-        await t.pumpAndSettle();
+        await t.pump(_kSummaryCardPump);
 
         // 초기 상태: 5/20
         expect(find.text('5'), findsOneWidget);
@@ -121,7 +128,7 @@ void main() {
         // 스캔 성공 시뮬레이션: +1 버튼 탭 (StatefulBuilder가 카운트 올림)
         await t.tap(find.byKey(const Key('increment')));
         await t.pump();
-        await t.pumpAndSettle();
+        await t.pump(_kSummaryCardPump);
 
         // 갱신 후: 6/20
         expect(find.text('6'), findsOneWidget);
@@ -143,9 +150,10 @@ void main() {
           isOffline: true,
         ),
       ),
+      // isOffline 시에도 _LiveDot AnimationController.repeat() 는 initState에서 기동
+      afterPump: _kSummaryCardPump,
       body: (t) async {
-        await t.pump();
-        await t.pumpAndSettle();
+        await t.pump(_kSummaryCardPump);
 
         // 오프라인 배지 확인
         expect(find.text('캐시됨'), findsOneWidget);
@@ -170,7 +178,6 @@ void main() {
         ),
       ],
       body: (t) async {
-        await t.pump();
         await t.pumpAndSettle();
 
         // 시트 제목 + 참가자 이름 확인
@@ -189,7 +196,6 @@ void main() {
         ),
       ],
       body: (t) async {
-        await t.pump();
         await t.pumpAndSettle();
 
         expect(find.text('수동 체크인'), findsOneWidget);
@@ -210,7 +216,6 @@ void main() {
         ),
       ],
       body: (t) async {
-        await t.pump();
         await t.pumpAndSettle();
 
         // 검색창에 "홍" 입력
@@ -240,27 +245,24 @@ void main() {
         ),
       ],
       body: (t) async {
-        await t.pump();
         await t.pumpAndSettle();
 
         expect(find.text('홍길동'), findsOneWidget);
 
-        // 체크인 버튼 탭 (InkWell 또는 IconButton)
-        final checkinButton = find.byKey(const Key('checkin_toggle_ticket-1'));
-        if (checkinButton.evaluate().isNotEmpty) {
-          await t.tap(checkinButton);
-        } else {
-          // 버튼 키가 없으면 ElevatedButton 또는 첫 번째 탭 가능한 widget 탭
-          final buttons = find.byType(InkWell);
-          if (buttons.evaluate().isNotEmpty) {
-            await t.tap(buttons.first);
-          }
-        }
+        // _ParticipantRow: 미체크인 참가자에게 FilledButton('체크인') 렌더링
+        final checkinBtn = find.widgetWithText(FilledButton, '체크인');
+        expect(checkinBtn, findsOneWidget,
+            reason: '미체크인 참가자에게 FilledButton("체크인") 있어야 함');
+        await t.tap(checkinBtn);
         await t.pump();
         await t.pumpAndSettle();
 
-        // 체크인 완료 후 UI 갱신 확인 — '홍길동'은 여전히 보임
-        expect(find.text('홍길동'), findsOneWidget);
+        // _FakeManualCheckinController.checkin() → checked_in optimistic update.
+        // UI: FilledButton("체크인") 사라지고 OutlinedButton("완료") 표시
+        expect(find.widgetWithText(FilledButton, '체크인'), findsNothing,
+            reason: '체크인 후 FilledButton("체크인") 사라져야 함');
+        expect(find.widgetWithText(OutlinedButton, '완료'), findsOneWidget,
+            reason: '체크인 완료 후 OutlinedButton("완료") 표시되어야 함');
       },
     );
   });
@@ -275,9 +277,9 @@ void main() {
       app: const Scaffold(
         body: CheckinSummaryCard(checkedIn: 0, total: 0),
       ),
+      afterPump: _kSummaryCardPump,
       body: (t) async {
-        await t.pump();
-        await t.pumpAndSettle();
+        await t.pump(_kSummaryCardPump);
 
         expect(find.text('아직 발급된 티켓이 없습니다'), findsOneWidget);
       },
@@ -288,9 +290,9 @@ void main() {
       app: const Scaffold(
         body: CheckinSummaryCard(checkedIn: 0, total: 0),
       ),
+      afterPump: _kSummaryCardPump,
       body: (t) async {
-        await t.pump();
-        await t.pumpAndSettle();
+        await t.pump(_kSummaryCardPump);
 
         expect(find.text('0'), findsOneWidget);
         expect(find.text('/0'), findsOneWidget);
