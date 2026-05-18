@@ -15,10 +15,11 @@
 //   - CUJ 5-3: 첫 이벤트 생성 → 대시보드 전환 — 전체 라우팅 스택 필요
 //
 // 설계 결정:
-//   - PartnerHomePage: partnerDashboardControllerProvider 를 _FakeDashboardController 로 대체.
-//     네트워크 호출 없이 원하는 PartnerDashboardState 를 즉시 반환.
+//   - PartnerHomePage: partnerDashboardControllerProvider 를
+//     _FakeDashboardController 로 대체. 네트워크 호출 없이 원하는 상태를 반환.
 //   - EventActionCard / TodoSummaryChips: 상태 없는 순수 위젯이므로 직접 렌더.
-//   - EventApplicationManagePage: eventApplicationsGroupedProvider 패밀리 전체 override.
+//   - EventApplicationManagePage: eventApplicationsGroupedProvider
+//     패밀리 전체 override.
 //   - CheckinPlaceholderPage: todayEventsProvider 패밀리 전체 override.
 //   - currentPartnerInfoProvider: (ref) => partner 함수형 override.
 //   - notificationListProvider: _FakeNotificationList 로 빈 목록 반환.
@@ -260,7 +261,8 @@ void main() {
       body: (t) async {
         expect(find.text('승인 대기'), findsOneWidget);
         expect(find.text('다가오는 이벤트'), findsOneWidget);
-        expect(find.text('미답변 리뷰'), findsOneWidget);
+        // comingSoon=true 칩은 label 대신 '준비 중' 렌더 (TodoSummaryChips 구현)
+        expect(find.text('준비 중'), findsOneWidget);
         // 활성 카운트 확인
         expect(find.text('2'), findsOneWidget); // pending
         expect(find.text('1'), findsOneWidget); // upcoming
@@ -331,8 +333,9 @@ void main() {
       ),
       body: (t) async {
         // HomeOverviewBlock: 3개 stat 카운트 노출
+        // '모집 중인 이벤트'는 stat label + section header 두 곳에 렌더됨 → findsWidgets
         expect(find.text('등록된 파티'), findsOneWidget);
-        expect(find.text('모집 중인 이벤트'), findsOneWidget);
+        expect(find.text('모집 중인 이벤트'), findsWidgets);
         expect(find.text('참가예정 고객'), findsOneWidget);
       },
     );
@@ -362,7 +365,6 @@ void main() {
           pendingReviewCount: 2,
           recruitingEvents: [_makeEvent()],
           totalPartyCount: 3,
-          totalAttendees: 10,
         ),
         coordinator: coordinator,
       ),
@@ -380,7 +382,6 @@ void main() {
           pendingReviewCount: 2,
           recruitingEvents: [_makeEvent()],
           totalPartyCount: 3,
-          totalAttendees: 10,
         ),
         coordinator: coordinator,
         // 알림 provider 실패 — maybeWhen(orElse: () => 0) 으로 배지는 0 폴백
@@ -514,7 +515,8 @@ void main() {
       ),
       body: (t) async {
         // OnboardingStepGuide — 파티 있고 이벤트 없음
-        expect(find.text('첫 이벤트 만들기'), findsOneWidget);
+        // step title + CTA button 두 곳에 렌더됨 → findsWidgets
+        expect(find.text('첫 이벤트 만들기'), findsWidgets);
       },
     );
   });
@@ -782,7 +784,8 @@ void main() {
         coordinator: coordinator,
       ),
       body: (t) async {
-        expect(find.text('첫 파티 만들기'), findsOneWidget);
+        // step title + CTA button 두 곳에 렌더됨 → findsWidgets
+        expect(find.text('첫 파티 만들기'), findsWidgets);
       },
     );
 
@@ -814,7 +817,8 @@ void main() {
         coordinator: coordinator,
       ),
       body: (t) async {
-        expect(find.text('첫 이벤트 만들기'), findsOneWidget);
+        // step title + CTA button 두 곳에 렌더됨 → findsWidgets
+        expect(find.text('첫 이벤트 만들기'), findsWidgets);
       },
     );
 
