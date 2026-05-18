@@ -18,6 +18,8 @@ final catalog = MdsCatalog<EventNowBarBuilder>(
     MdsState('state-waiting', (b) => b..waiting(), mdsIndex: 1),
     MdsState('state-check-in-ready', (b) => b..checkInReady(), mdsIndex: 2),
     MdsState('state-checked-in', (b) => b..checkedIn(), mdsIndex: 3),
+    // state_4 (matchingReady): spec에 정의되나 EventNowBarState enum에 미구현.
+    // matching(state_5)이 matchingReady를 대체하는 것으로 보임. 후속 spec 정합성 검토 필요.
     MdsState('state-matching', (b) => b..matching(), mdsIndex: 5),
     // Fix #2590: results 상태는 repeat() pulse animation — pumpAndSettle 불가.
     MdsState(

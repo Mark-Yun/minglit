@@ -28,6 +28,7 @@ class MdsRenderEngine {
         await tester.pumpWidget(builder.build());
         // Fix #2590: repeat() 애니메이션은 pumpAndSettle이 timeout — 고정 pump 사용.
         if (state.infiniteAnimation) {
+          // pulse 1회분(MinglitAnimation.medium ≈ 300ms) — 시작 직후 visible 상태 캡처.
           await tester.pump(const Duration(milliseconds: 300));
         } else {
           await tester.pumpAndSettle();
@@ -36,6 +37,7 @@ class MdsRenderEngine {
         // Android: Flutter surface → image 변환 후 캡처 필요.
         await binding.convertFlutterSurfaceToImage();
         if (state.infiniteAnimation) {
+          // surface 변환 후 추가 프레임 — 렌더링 파이프라인 완료 보장.
           await tester.pump(const Duration(milliseconds: 100));
         } else {
           await tester.pumpAndSettle();
