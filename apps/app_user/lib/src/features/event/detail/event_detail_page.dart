@@ -9,8 +9,8 @@ import 'package:app_user/src/utils/share_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'package:intl/intl.dart';
 import 'package:app_user/src/features/event/detail/event_refund_policy_section.dart';
+import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 export 'package:app_user/src/features/event/detail/event_detail_now_provider.dart';

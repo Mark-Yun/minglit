@@ -34,7 +34,7 @@ Map<String, dynamic> _defaultPolicy() => {
   'cutoff_days': 7,
 };
 
-/// Event starting 14 days from now — cutoff (7d before start) is still 7 days away.
+/// Event starts in 14 days — refund cutoff is still 7 days away.
 Event _futureEvent() {
   final start = DateTime.now().add(const Duration(days: 14));
   return Event(
@@ -122,7 +122,7 @@ void main() {
       app: RefundPolicySection(event: _futureEvent()),
       overrides: () {
         final repo = _MockPolicyRepository();
-        when(() => repo.getRefundPolicy()).thenAnswer((_) async => null);
+        when(repo.getRefundPolicy).thenAnswer((_) async => null);
         return [policyRepositoryProvider.overrideWith((_) => repo)];
       },
       body: (t) async {
@@ -193,14 +193,12 @@ void main() {
       app: RefundPolicySection(event: _futureEvent()),
       overrides: () {
         final repo = _MockPolicyRepository();
-        when(
-          () => repo.getRefundPolicy(),
-        ).thenThrow(Exception('network error'));
+        when(repo.getRefundPolicy).thenThrow(Exception('network error'));
         return [policyRepositoryProvider.overrideWith((_) => repo)];
       },
       body: (t) async {
         // error path → _buildSummary(context, ref, null) with defaults
-        // Default: grace=2h, cutoff=7d. Event is 14d from now → cutoff refundable.
+        // Default: grace=2h, cutoff=7d. Event 14d from now → still refundable.
         expect(find.byIcon(Icons.check_circle_outline), findsOneWidget);
         expect(find.textContaining('이내에도 전액 환불 가능'), findsOneWidget);
       },

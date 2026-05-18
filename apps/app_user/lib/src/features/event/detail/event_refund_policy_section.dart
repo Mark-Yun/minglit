@@ -1,10 +1,9 @@
-// ignore_for_file: minglit_no_hardcoded_text_style -- refund policy rich text requires precise styling for legal clarity
+// ignore_for_file: minglit_no_hardcoded_text_style
 
 import 'dart:async';
 
 import 'package:app_user/src/features/event/detail/event_detail_now_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
