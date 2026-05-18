@@ -19,7 +19,12 @@ final catalog = MdsCatalog<EventNowBarBuilder>(
     MdsState('state-check-in-ready', (b) => b..checkInReady(), mdsIndex: 2),
     MdsState('state-checked-in', (b) => b..checkedIn(), mdsIndex: 3),
     MdsState('state-offline', (b) => b..offline()),
-    MdsState('state-dark-waiting', (b) => b..waiting()..dark()),
+    MdsState(
+      'state-dark-waiting',
+      (b) => b
+        ..waiting()
+        ..dark(),
+    ),
   ],
 );
 

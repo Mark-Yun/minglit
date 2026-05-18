@@ -65,8 +65,9 @@ class EventNowBarBuilder extends MdsScreenBuilder<Scaffold> {
 
   void _applyState(EventNowBarState state) {
     final activeEvent = _makeActiveEvent(
-      participantStatus:
-          state == EventNowBarState.checkedIn ? 'checked_in' : 'ticket_issued',
+      participantStatus: state == EventNowBarState.checkedIn
+          ? 'checked_in'
+          : 'ticket_issued',
     );
     addOverride(
       todayActiveEventsProvider.overrideWith((ref) async => [activeEvent]),
@@ -95,8 +96,9 @@ class EventNowBarBuilder extends MdsScreenBuilder<Scaffold> {
   /// 오프라인 / 에러 상태 — provider 오류 시 fallback bar.
   void offline() {
     addOverride(
-      todayActiveEventsProvider
-          .overrideWith((ref) => throw Exception('offline')),
+      todayActiveEventsProvider.overrideWith(
+        (ref) => throw Exception('offline'),
+      ),
     );
   }
 

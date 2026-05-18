@@ -31,7 +31,12 @@ final catalog = MdsCatalog<EventOngoingBannerBuilder>(
       mdsIndex: 7,
     ),
     MdsState('state-no-show', (b) => b..noShow(), mdsIndex: 8),
-    MdsState('state-dark-waiting', (b) => b..waiting()..dark()),
+    MdsState(
+      'state-dark-waiting',
+      (b) => b
+        ..waiting()
+        ..dark(),
+    ),
   ],
 );
 
