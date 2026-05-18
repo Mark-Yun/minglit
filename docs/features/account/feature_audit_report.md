@@ -57,6 +57,60 @@
 
 ---
 
+## 2. UI 완성도
+
+**Method**:
+- MDS spec (디자인 의도): `apps/mds/docs/public/specs/<screen>/state_*.png`
+- 앱 render (실 구현): `docs/infra/mds-emulator-render/<screen>/<state>.png`
+- 두 PNG 쌍을 시각 비교
+
+### 2-1. MDS spec 완성도
+
+| 점검 | 결과 |
+|------|------|
+| spec.md CUJ Details 에 언급된 상태가 MDS state PNG 로 존재 | ✓ (주요 screen 모두 커버) |
+| MDS state PNG 수가 spec.md CUJ 수에 비해 부족 | — |
+
+관련 MDS spec screen 현황:
+
+| Screen | MDS state PNG 수 |
+|--------|-----------------|
+| `deletion_reason_page` | 4 |
+| `deletion_info_page` | 2 |
+| `deletion_verify_page` | 6 |
+| `deletion_complete_page` | 2 |
+| `account_management_page` | 6 |
+| `auth_callback_page` | 3 |
+| `bank_account_page` | 6 |
+| `signup_consent_page` | 6 |
+
+**Findings**: 없음.
+
+### 2-2. 앱 render coverage
+
+| 점검 | 결과 |
+|------|------|
+| mds-emulator-render `_registry.dart` 미등록 screen (uncovered) | 모든 account screen (`deletion_*_page`, `account_management_page`, `signup_consent_page`) — `docs/infra/mds-emulator-render/`에 home_page 외 미등록 |
+| catalog 됐지만 state 불충분 (incomplete) | — (미등록이라 해당 없음) |
+| catalog 됐지만 MDS spec 없음 (orphan) | — |
+
+**Findings**: 없음 (emulator render 미등록은 인프라 미완성 상태 — `mds-emulator-render` 커버리지 확장은 별도 인프라 작업).
+
+### 2-3. 앱 render ↔ MDS spec drift (시각 비교)
+
+render PNG 미존재로 시각 비교 불가 (2-2 uncovered 상태).
+
+| 항목 | 결과 |
+|------|------|
+| Color drift | — (render 없음) |
+| Layout drift | — (render 없음) |
+| Typography drift | — (render 없음) |
+| 컴포넌트 차이 | — (render 없음) |
+
+**Findings**: 없음.
+
+---
+
 ## 3. 테스트 현황
 
 ### 3-1. app_user
