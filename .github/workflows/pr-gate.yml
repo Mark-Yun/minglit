@@ -154,19 +154,14 @@ jobs:
           # persist-credentials: false keeps the PAT out of git config during pub get,
           # analyze, and test steps; the PAT is injected only in the push step below.
           persist-credentials: false
+      # Flutter SDK + pub-cache come from a host bind volume on the
+      # self-hosted runner (toolcache + .pub-cache mounts in
+      # minglit-github-workflow-runner). The action's `cache: true` and
+      # the explicit actions/cache@v5 for ~/.pub-cache are redundant.
       - uses: subosito/flutter-action@v2
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         with:
           channel: 'stable'
-          cache: true
-      - name: Cache pub packages
-        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
-        uses: actions/cache@v5
-        with:
-          path: ~/.pub-cache
-          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pub-
       - name: Install dependencies
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         run: flutter pub get
@@ -363,7 +358,6 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          cache: true
       - uses: actions/setup-node@v6
         with:
           node-version: '20'
@@ -396,7 +390,13 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          cache: true
+      # Wipe any volume left by a prior run on this host so `supabase start`
+      # initializes a fresh DB and auto-applies all migrations from scratch.
+      # Required on shared self-hosted runners — otherwise the next start
+      # restores from the previous volume (which may pre-date schema-touching
+      # migrations like admin/) and PostgREST 503s on schema cache load.
+      - name: Reset stale Supabase state
+        run: supabase stop --no-backup 2>/dev/null || true
       - name: Start Supabase
         run: supabase start
       - name: Validate migrations (dry-run)
@@ -408,7 +408,9 @@ jobs:
         run: supabase test db
       - name: Stop Supabase
         if: always()
-        run: supabase stop
+        # --no-backup wipes volumes on stop too, so the next run on this host
+        # starts cleanly even if this run's setup step is skipped.
+        run: supabase stop --no-backup
 
   # Deno Edge Function 테스트 (supabase 불필요)
   test-edge-functions:
@@ -418,6 +420,8 @@ jobs:
     runs-on: [self-hosted, ephemeral]
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0   # diff-cover 가 base 와의 merge base 찾으려면 full history 필요
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
@@ -519,6 +523,11 @@ jobs:
         with:
           deno-version: v2.x
 
+      # Wipe stale volume from any prior run on this host so `supabase start`
+      # initializes a fresh DB. See test-pgtap above for the rationale.
+      - name: Reset stale Supabase state
+        run: supabase stop --no-backup 2>/dev/null || true
+
       - name: Start local Supabase
         run: supabase start
 
@@ -544,7 +553,7 @@ jobs:
 
       - name: Stop Supabase
         if: always()
-        run: supabase stop || true
+        run: supabase stop --no-backup || true
 
   # Workflow YAML 파싱 검증 (항상 실행 — db-invariants #1593 회귀 방지)
   check-workflow-yaml:
@@ -681,31 +690,13 @@ jobs:
           fi
           echo "✅ CI jobs passed"
 
-          # 2. Wait for CodeRabbit review (PR only, skip for dependabot)
-          # Fix #2149: check PR author (user.login), not github.actor — when a human
-          # updates a dependabot branch (merge/rebase), actor becomes that human but
-          # CodeRabbit still doesn't review dependabot PRs → 30-minute timeout.
-          if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ github.event.pull_request.user.login }}" != "dependabot[bot]" ]; then
-            SHA="${{ github.event.pull_request.head.sha }}"
-            echo ""
-            echo "Waiting for CodeRabbit review on $SHA ..."
-            for i in $(seq 1 60); do
-              STATE=$(gh api repos/${{ github.repository }}/commits/$SHA/status --jq '[.statuses[] | select(.context=="CodeRabbit") | .state][0] // ""' 2>/dev/null || echo "")
-              if [ "$STATE" = "success" ]; then
-                echo "✅ CodeRabbit review completed"
-                break
-              elif [ "$STATE" = "failure" ] || [ "$STATE" = "error" ]; then
-                echo "❌ CodeRabbit review failed: $STATE"
-                exit 1
-              fi
-              echo "  ⏳ Attempt $i/60 — state: ${STATE:-pending} — waiting 30s..."
-              sleep 30
-            done
-            if [ "$STATE" != "success" ]; then
-              echo "❌ CodeRabbit review did not complete within 30 minutes"
-              exit 1
-            fi
-          fi
+          # CodeRabbit review wait was here. Removed: required-reviewer
+          # branch protection already gates merge on human APPROVED review,
+          # so the bot-review wait was duplicate enforcement that held a
+          # self-hosted runner slot for up to 30 minutes per PR — under
+          # cascade merges, that's the single biggest source of queue backlog.
+          # CodeRabbit still posts its review as a status (visible on the PR);
+          # we just stop blocking on it here.
 
           echo ""
           echo "✅ All checks passed"
