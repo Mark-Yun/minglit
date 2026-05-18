@@ -1,5 +1,12 @@
-part of 'event_detail_page.dart';
 // ignore_for_file: minglit_no_hardcoded_text_style -- refund policy rich text requires precise styling for legal clarity
+
+import 'dart:async';
+
+import 'package:app_user/src/features/event/detail/event_detail_now_provider.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 
 // ignore: specify_nonobvious_property_types // autoDispose type
 final _refundPolicyProvider = FutureProvider.autoDispose<Map<String, dynamic>?>(
@@ -8,8 +15,8 @@ final _refundPolicyProvider = FutureProvider.autoDispose<Map<String, dynamic>?>(
   },
 );
 
-class _RefundPolicySection extends ConsumerWidget {
-  const _RefundPolicySection({required this.event});
+class RefundPolicySection extends ConsumerWidget {
+  const RefundPolicySection({required this.event, super.key});
 
   final Event event;
 

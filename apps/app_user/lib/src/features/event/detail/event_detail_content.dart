@@ -437,7 +437,7 @@ class _EventDetailContentState extends ConsumerState<_EventDetailContent>
                   padding: const EdgeInsets.only(
                     top: MinglitSpacing.sectionGap,
                   ),
-                  child: _RefundPolicySection(event: event),
+                  child: RefundPolicySection(event: event),
                 ),
               ),
 

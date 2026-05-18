@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:intl/intl.dart';
+import 'package:app_user/src/features/event/detail/event_refund_policy_section.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 export 'package:app_user/src/features/event/detail/event_detail_now_provider.dart';
@@ -22,7 +23,6 @@ part 'event_detail_tab_bar_delegate.dart';
 part 'event_entry_conditions_section.dart';
 part 'event_info_tile.dart';
 part 'event_quill_viewer.dart';
-part 'event_refund_policy_section.dart';
 part 'event_verification_section.dart';
 
 class EventDetailPage extends ConsumerWidget {
