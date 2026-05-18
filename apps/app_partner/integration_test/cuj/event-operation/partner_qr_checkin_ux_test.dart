@@ -26,18 +26,15 @@ import '../_engine/cuj_test.dart';
 // Fakes for provider isolation
 // ---------------------------------------------------------------------------
 
-class _FakeEntryGroupStatsController
-    extends EntryGroupCheckinStatsController {
+class _FakeEntryGroupStatsController extends EntryGroupCheckinStatsController {
   _FakeEntryGroupStatsController(this._groups);
   final List<EntryGroupCheckinStats> _groups;
 
   @override
-  Future<List<EntryGroupCheckinStats>> build(String eventId) async =>
-      _groups;
+  Future<List<EntryGroupCheckinStats>> build(String eventId) async => _groups;
 }
 
-class _ErrorEntryGroupStatsController
-    extends EntryGroupCheckinStatsController {
+class _ErrorEntryGroupStatsController extends EntryGroupCheckinStatsController {
   @override
   Future<List<EntryGroupCheckinStats>> build(String eventId) async {
     throw Exception('RPC 실패');
@@ -330,7 +327,10 @@ void main() {
         entryGroupCheckinStatsControllerProvider('evt-groups').overrideWith(
           () => _FakeEntryGroupStatsController([
             const EntryGroupCheckinStats(
-              id: 'g1', label: '남 20대', total: 14, checkedIn: 4,
+              id: 'g1',
+              label: '남 20대',
+              total: 14,
+              checkedIn: 4,
             ),
           ]),
         ),
@@ -393,15 +393,24 @@ void main() {
           () => _FakeEntryGroupStatsController([
             // 0~50% → primary color (FR-8)
             const EntryGroupCheckinStats(
-              id: 'g1', label: '남 20대', total: 14, checkedIn: 4,
+              id: 'g1',
+              label: '남 20대',
+              total: 14,
+              checkedIn: 4,
             ),
             // 50~90% → warning color (FR-8)
             const EntryGroupCheckinStats(
-              id: 'g2', label: '여 20대', total: 14, checkedIn: 9,
+              id: 'g2',
+              label: '여 20대',
+              total: 14,
+              checkedIn: 9,
             ),
             // 90%+ → error color (FR-8)
             const EntryGroupCheckinStats(
-              id: 'g3', label: '남 30대', total: 10, checkedIn: 10,
+              id: 'g3',
+              label: '남 30대',
+              total: 10,
+              checkedIn: 10,
             ),
           ]),
         ),
@@ -437,7 +446,10 @@ void main() {
         entryGroupCheckinStatsControllerProvider('evt-full').overrideWith(
           () => _FakeEntryGroupStatsController([
             const EntryGroupCheckinStats(
-              id: 'g1', label: '전체', total: 50, checkedIn: 50,
+              id: 'g1',
+              label: '전체',
+              total: 50,
+              checkedIn: 50,
             ),
           ]),
         ),
