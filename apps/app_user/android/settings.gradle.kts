@@ -21,6 +21,9 @@ plugins {
     id("com.android.application") version "8.9.1" apply false
     // Fix #2362: screen_brightness_android 컴파일 오류 — Kotlin 2.3.0으로 상향
     id("org.jetbrains.kotlin.android") version "2.3.0" apply false
+    // Firebase 네이티브 auto-init — src/<flavor>/google-services.json 를 build 시 처리.
+    // Dart 측 Firebase.initializeApp() 가 options 없이 호출 가능해짐.
+    id("com.google.gms.google-services") version "4.4.2" apply false
 }
 
 rootProject.name = "app_user_android"

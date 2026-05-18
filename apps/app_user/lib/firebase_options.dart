@@ -1,6 +1,9 @@
 // Firebase configuration per environment.
-// Web configs added from Firebase Console.
-// Android/iOS configs from google-services.json / GoogleService-Info.plist.
+// Android: native auto-init via `com.google.gms.google-services` Gradle plugin
+//   → `src/<flavor>/google-services.json` 가 build 시 처리.
+//   → Dart 측에선 `Firebase.initializeApp()` 을 options 없이 호출.
+// iOS: 아직 native plist 미구성 — Dart options 사용 중 (TODO: GoogleService-Info.plist).
+// Web: 항상 Dart options 필요 (google-services.json 없음).
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show TargetPlatform, defaultTargetPlatform, kIsWeb;
@@ -13,13 +16,18 @@ class DefaultFirebaseOptions {
 
   static bool get _isProduction => _environment == 'production';
 
+  /// Web / iOS 용 options. Android 는 native auto-init 이므로 호출자가 이 분기를
+  /// 피하고 `Firebase.initializeApp()` 을 options 없이 사용해야 한다.
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
       return _isProduction ? _webMain : _webDev;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
-        return _isProduction ? _androidMain : _androidDev;
+        throw UnsupportedError(
+          'Android Firebase 는 google-services Gradle plugin 으로 native auto-init. '
+          '`Firebase.initializeApp()` 을 options 인자 없이 호출하라.',
+        );
       case TargetPlatform.iOS:
         return _isProduction ? _iosMain : _iosDev;
       case TargetPlatform.fuchsia:
@@ -54,27 +62,14 @@ class DefaultFirebaseOptions {
     measurementId: 'G-4D51HCTY0N',
   );
 
-  // ── Android ────────────────────────────────────────────────────────────
-
-  static const FirebaseOptions _androidDev = FirebaseOptions(
-    apiKey: 'AIzaSyCjcktsWHHkJsi1EcTEBbrKRBODNVEPibQ',
-    appId: '1:282428044723:android:0000000000000000',
-    messagingSenderId: '282428044723',
-    projectId: 'minglit-dev-18e08',
-    storageBucket: 'minglit-dev-18e08.firebasestorage.app',
-  );
-
-  static const FirebaseOptions _androidMain = FirebaseOptions(
-    apiKey: 'AIzaSyCRLBXsd3ksbPo2QpMaSRnJYbD1gZOovpk',
-    appId: '1:687100681844:android:b9b92b523955912486fb21',
-    messagingSenderId: '687100681844',
-    projectId: 'minglit-main-13375',
-    storageBucket: 'minglit-main-13375.firebasestorage.app',
-  );
-
   // ── iOS ────────────────────────────────────────────────────────────────
+  //
+  // TODO(firebase-ios): iOS 도 Android 처럼 native plist (`GoogleService-Info.plist`)
+  // 기반 auto-init 로 마이그. 현재 appId placeholder `0000000000000000` 는
+  // 임시값 — iOS 빌드 시 Firebase init 가 hang 또는 fail 가능. iOS 작업 시
+  // Firebase console 에서 iOS app 등록 → plist 다운로드 → Runner target 에 추가 →
+  // 이 section 제거 + currentPlatform 의 iOS 분기도 `throw UnsupportedError` 로 변경.
 
-  // TODO(firebase): Add iOS apps to Firebase console and update appId values.
   static const FirebaseOptions _iosDev = FirebaseOptions(
     apiKey: 'AIzaSyCjcktsWHHkJsi1EcTEBbrKRBODNVEPibQ',
     appId: '1:282428044723:ios:0000000000000000',

@@ -30,6 +30,18 @@ const List<LocalizationsDelegate<Object>> kPartnerLocalizationsDelegates = [
   quill.FlutterQuillLocalizations.delegate,
 ];
 
+/// Android 는 `com.google.gms.google-services` Gradle plugin 으로 native auto-init
+/// (`src/<flavor>/google-services.json` 사용). iOS 는 Dart options 사용 (TODO: plist).
+/// Dart 측에서 잘못된 placeholder options 를 SDK 에 넘겨 init 가 hang 되는 문제 회피.
+Future<FirebaseApp> _initFirebase() {
+  if (!kIsWeb && Platform.isAndroid) {
+    return Firebase.initializeApp();
+  }
+  return Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+}
+
 Future<void> main() async {
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
@@ -117,7 +129,7 @@ Future<void> appStartup(Ref ref) async {
     await Future.wait([
       initializeDateFormatting('ko_KR'),
       Supabase.initialize(url: supabaseUrl, anonKey: supabasePublishableKey),
-      Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform),
+      _initFirebase(),
 
       // Initialize Kakao Map SDK
       () async {
