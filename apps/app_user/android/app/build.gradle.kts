@@ -78,6 +78,17 @@ android {
             dimension = "env"
             resValue("string", "app_name", "Minglit")
         }
+        // P4: demo flavor — zero-server-connection APK for sales demos /
+        // store screenshots / new-hire onboarding. Installable alongside dev
+        // and prod (separate applicationId via .demo suffix).
+        // Build: flutter build apk --flavor demo --target lib/main_demo.dart
+        //                          --dart-define-from-file=../../minglit_env/demo/flutter.env
+        // See docs/infra/app_demo/architecture.md.
+        create("demo") {
+            dimension = "env"
+            applicationIdSuffix = ".demo"
+            resValue("string", "app_name", "Minglit Demo")
+        }
     }
 }
 

@@ -65,6 +65,13 @@ android {
             dimension = "env"
             resValue("string", "app_name", "Minglit Partner")
         }
+        // P4: demo flavor for partner app — see app_user analog +
+        // docs/infra/app_demo/architecture.md.
+        create("demo") {
+            dimension = "env"
+            applicationIdSuffix = ".demo"
+            resValue("string", "app_name", "Minglit Partner Demo")
+        }
     }
 }
 

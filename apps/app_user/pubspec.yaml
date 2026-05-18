@@ -49,6 +49,11 @@ dependencies:
   kakao_map_plugin: ^0.4.0
   minglit_kit:
     path: ../../shared/packages/minglit_kit
+  # P4: demo flavor entry (lib/main_demo.dart) imports demoOverrides().
+  # Tree-shaking removes this from prod APK because lib/main.dart never
+  # transitively imports it. Verified by Success Metric "Prod 의존성 격리".
+  minglit_demo:
+    path: ../../shared/packages/minglit_demo
   path_provider: ^2.1.5
   qr_flutter: ^4.1.0
   riverpod: ^3.0.3
@@ -66,11 +71,8 @@ dev_dependencies:
   build_runner: ^2.10.4
   custom_lint: 0.8.1
   flutter_lints: ^6.0.0
-  # Demo fixtures shared with mds-emulator-render builders (test-only).
-  # P4 will add `minglit_demo` as a regular dependency (under demo flavor)
-  # for main_demo.dart entry; this dev-dep declaration is for tests only.
-  minglit_demo:
-    path: ../../shared/packages/minglit_demo
+  # `minglit_demo` moved to regular `dependencies` for main_demo.dart entry.
+  # Tests reach it transitively via the regular dep.
   flutter_test:
     sdk: flutter
   freezed: ^3.2.3
