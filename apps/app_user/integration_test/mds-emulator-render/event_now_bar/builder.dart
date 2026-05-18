@@ -93,6 +93,15 @@ class EventNowBarBuilder extends MdsScreenBuilder<Scaffold> {
   /// 체크인 완료 상태.
   void checkedIn() => _applyState(EventNowBarState.checkedIn);
 
+  /// 매칭 진행 중 상태 (결과 대기).
+  void matching() => _applyState(EventNowBarState.matching);
+
+  /// 매칭 결과 도착 상태.
+  void results() => _applyState(EventNowBarState.results);
+
+  /// 이벤트 종료 상태.
+  void ended() => _applyState(EventNowBarState.ended);
+
   /// 오프라인 / 에러 상태 — provider 오류 시 fallback bar.
   void offline() {
     addOverride(
