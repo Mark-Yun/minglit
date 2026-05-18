@@ -2,7 +2,8 @@ import 'package:minglit_kit/src/data/models/event.dart';
 import 'package:minglit_kit/src/data/models/event_application.dart';
 import 'package:minglit_kit/src/data/models/event_feed_type.dart';
 import 'package:minglit_kit/src/data/models/today_active_event.dart';
-import 'package:minglit_kit/src/logic/providers/supabase_provider.dart' show supabaseClientProvider;
+import 'package:minglit_kit/src/logic/providers/supabase_provider.dart'
+    show supabaseClientProvider;
 import 'package:minglit_kit/src/utils/exceptions.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';

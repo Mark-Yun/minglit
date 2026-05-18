@@ -16,7 +16,8 @@ final _testOverrides = [
   supabaseClientProvider.overrideWith((_) => _FakeSupabaseClient()),
 ];
 
-ProviderContainer _testContainer() => ProviderContainer(overrides: _testOverrides);
+ProviderContainer _testContainer() =>
+    ProviderContainer(overrides: _testOverrides);
 
 void main() {
   group('BugReporterWrapper Widget Tests', () {
@@ -45,7 +46,7 @@ void main() {
       (tester) async {
         await tester.pumpWidget(
           ProviderScope(
-          overrides: _testOverrides,
+            overrides: _testOverrides,
             child: MaterialApp(
               home: Scaffold(
                 body: BugReporterWrapper(
@@ -182,7 +183,7 @@ void main() {
       (tester) async {
         await tester.pumpWidget(
           ProviderScope(
-          overrides: _testOverrides,
+            overrides: _testOverrides,
             child: MaterialApp(
               home: Scaffold(
                 body: BugReporterWrapper(

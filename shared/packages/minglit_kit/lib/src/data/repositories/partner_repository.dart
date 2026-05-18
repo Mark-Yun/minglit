@@ -1,7 +1,8 @@
 import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:minglit_kit/src/data/models/partner.dart';
 import 'package:minglit_kit/src/data/models/partner_application.dart';
-import 'package:minglit_kit/src/logic/providers/supabase_provider.dart' show supabaseClientProvider;
+import 'package:minglit_kit/src/logic/providers/supabase_provider.dart'
+    show supabaseClientProvider;
 import 'package:minglit_kit/src/utils/exceptions.dart';
 import 'package:minglit_kit/src/utils/image_utils.dart';
 import 'package:minglit_kit/src/utils/log.dart';

@@ -1,6 +1,7 @@
 import 'package:minglit_kit/src/data/models/event.dart';
 import 'package:minglit_kit/src/data/models/tag.dart';
-import 'package:minglit_kit/src/logic/providers/supabase_provider.dart' show supabaseClientProvider;
+import 'package:minglit_kit/src/logic/providers/supabase_provider.dart'
+    show supabaseClientProvider;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 

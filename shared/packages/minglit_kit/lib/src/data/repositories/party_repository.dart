@@ -4,7 +4,8 @@ import 'package:minglit_kit/src/data/models/party.dart';
 import 'package:minglit_kit/src/data/models/party_entry_group.dart';
 import 'package:minglit_kit/src/data/models/ticket.dart';
 import 'package:minglit_kit/src/data/models/ticket_template.dart';
-import 'package:minglit_kit/src/logic/providers/supabase_provider.dart' show supabaseClientProvider;
+import 'package:minglit_kit/src/logic/providers/supabase_provider.dart'
+    show supabaseClientProvider;
 import 'package:minglit_kit/src/utils/image_utils.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:path/path.dart' as p;

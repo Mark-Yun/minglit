@@ -1,6 +1,7 @@
 import 'package:minglit_kit/src/data/models/verification.dart';
 import 'package:minglit_kit/src/data/models/verification_submission.dart';
-import 'package:minglit_kit/src/logic/providers/supabase_provider.dart' show supabaseClientProvider;
+import 'package:minglit_kit/src/logic/providers/supabase_provider.dart'
+    show supabaseClientProvider;
 import 'package:minglit_kit/src/utils/exceptions.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
