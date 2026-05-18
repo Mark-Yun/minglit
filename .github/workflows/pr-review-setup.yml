@@ -1,0 +1,53 @@
+name: pr-review-setup
+
+# PR 라이프사이클의 "리뷰 준비" 자동화.
+#   1. enable-auto-merge: PR 가 열리거나 새 commit 이 올라오면 squash auto-merge 활성화
+#   2. add-needs-review:  같은 시점에 `needs-review` 라벨 부여
+# `needs-review` 라벨은 외부 시스템(OMC scheduler / 사람 리뷰)이 소비하는 "리뷰 준비 완료" 시그널.
+#
+# Trigger note (prev iteration removed in #2614):
+#   이전 버전은 `workflow_run [pr-gate completed]` 에서 라벨을 다시 붙였는데, sync-pr-branches
+#   가 dev 머지 commit 을 push 할 때마다 pr-gate 가 재트리거되면서 label 이 반복 부여되어
+#   리뷰 재요청이 무한 발생. 이번엔 PR 자체 이벤트 (opened / reopened / ready_for_review /
+#   synchronize) 에서만 동작. `gh pr edit --add-label` 은 이미 라벨이 있으면 no-op 라
+#   같은 SHA 의 중복 trigger 는 안전.
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, synchronize]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+concurrency:
+  group: pr-review-setup-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  setup:
+    if: >-
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.fork == false
+    runs-on: [self-hosted, ephemeral]
+    steps:
+      - name: Enable squash auto-merge
+        env:
+          # Branch protection active 후 GITHUB_TOKEN 으론 enablePullRequestAutoMerge /
+          # 라벨 부여 권한 부족 ("Resource not accessible by integration"). PAT 사용.
+          GH_TOKEN: ${{ secrets.GH_PAT_VERSION_BUMP }}
+        run: |
+          # Idempotent: already-enabled is fine.
+          gh pr merge "${{ github.event.pull_request.number }}" \
+            --auto --squash \
+            --repo "${{ github.repository }}" || true
+
+      - name: Add needs-review label
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT_VERSION_BUMP }}
+          REPO: ${{ github.repository }}
+          PR_NUM: ${{ github.event.pull_request.number }}
+        run: |
+          # Idempotent: gh treats add-label on an already-present label as a no-op,
+          # so re-running on the same SHA (e.g. reopened) doesn't spam reviewers.
+          gh pr edit "$PR_NUM" --repo "$REPO" --add-label needs-review || true
