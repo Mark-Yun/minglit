@@ -397,6 +397,13 @@ jobs:
         with:
           channel: 'stable'
           cache: true
+      # Wipe any volume left by a prior run on this host so `supabase start`
+      # initializes a fresh DB and auto-applies all migrations from scratch.
+      # Required on shared self-hosted runners — otherwise the next start
+      # restores from the previous volume (which may pre-date schema-touching
+      # migrations like admin/) and PostgREST 503s on schema cache load.
+      - name: Reset stale Supabase state
+        run: supabase stop --no-backup 2>/dev/null || true
       - name: Start Supabase
         run: supabase start
       - name: Validate migrations (dry-run)
@@ -408,7 +415,9 @@ jobs:
         run: supabase test db
       - name: Stop Supabase
         if: always()
-        run: supabase stop
+        # --no-backup wipes volumes on stop too, so the next run on this host
+        # starts cleanly even if this run's setup step is skipped.
+        run: supabase stop --no-backup
 
   # Deno Edge Function 테스트 (supabase 불필요)
   test-edge-functions:
@@ -519,6 +528,11 @@ jobs:
         with:
           deno-version: v2.x
 
+      # Wipe stale volume from any prior run on this host so `supabase start`
+      # initializes a fresh DB. See test-pgtap above for the rationale.
+      - name: Reset stale Supabase state
+        run: supabase stop --no-backup 2>/dev/null || true
+
       - name: Start local Supabase
         run: supabase start
 
@@ -544,7 +558,7 @@ jobs:
 
       - name: Stop Supabase
         if: always()
-        run: supabase stop || true
+        run: supabase stop --no-backup || true
 
   # Workflow YAML 파싱 검증 (항상 실행 — db-invariants #1593 회귀 방지)
   check-workflow-yaml:
