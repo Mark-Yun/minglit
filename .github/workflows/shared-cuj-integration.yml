@@ -57,7 +57,6 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          cache: true
 
       # Self-hosted runner: Flutter SDK cache dir 가 다른 user 소유 → git 거부.
       # safe.directory를 '*'로 열지 않고 Flutter SDK 경로만 허용 (Fix #2499).
