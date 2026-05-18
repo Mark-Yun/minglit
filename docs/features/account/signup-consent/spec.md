@@ -1,12 +1,17 @@
 # Spec: 회원가입 동의
 
-> **참조**
-> - PRD: [prd.md](./prd.md)
-> - MDS specs:
->   - [`signup_consent_page`](../../../../apps/mds/docs/public/specs/signup_consent_page/) — 회원가입 약관 동의 화면 (5 states)
->   - [`identity_verification_screen`](../../../../apps/mds/docs/public/specs/identity_verification_screen/) — 본인인증 CI/DI 동의 바텀시트
->   - [`privacy_page`](../../../../apps/mds/docs/public/specs/privacy_page/) — 사후 동의 관리
-> - Wireframe: [wireframe-v2.html](./wireframe-v2.html)
+> **참조** (모든 경로는 repo-root 상대 — AI agent 가 `Read <repo>/<path>` 로 fetch)
+>
+> - PRD: `docs/features/account/signup-consent/prd.md`
+> - **MDS specs**:
+>   - `apps/mds/docs/public/specs/signup_consent_page/` — 회원가입 약관 동의 화면 (5 states)
+>   - `apps/mds/docs/public/specs/identity_verification_screen/` — 본인인증 CI/DI 동의 바텀시트
+>   - `apps/mds/docs/public/specs/privacy_page/` — 사후 동의 관리
+> - **Apps**:
+>   - app_user: `apps/app_user/lib/src/features/consent/`
+> - **Backend EFs**: (해당 없음 — Postgres RPC `save_user_consents`, `has_required_consents` 직접 호출, `shared/packages/minglit_kit/lib/src/data/repositories/consent_repository.dart`)
+> - **CUJ tests**: `apps/app_user/integration_test/cuj/account/signup_consent_test.dart`
+> - **Wireframe**: `docs/features/account/signup-consent/wireframe-v2.html`
 
 ## CUJs
 

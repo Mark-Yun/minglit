@@ -74,6 +74,26 @@ UX 디자인의 SSoT 는 MDS spec (`apps/mds/docs/public/specs/`). feature 폴�
 
 NFR 은 측정 가능해야 함 — "빨라야 함" 금지, "200ms p50 / 에뮬레이터" 처럼 환경+분산 명시.
 
+### spec.md 헤더 — 7섹션 cross-reference
+
+spec.md 최상단 `> **참조**` 블록에 모든 cross-reference 를 명시한다. AI agent 의 feature audit / cross-feature 분석에서 grep 1회로 의존 발견 가능하게.
+
+| 섹션 | 필수? | 내용 |
+|------|-------|------|
+| PRD | ✓ | 짝이 되는 prd.md 경로 |
+| MDS specs | ✓ if UI 있음 | 본 feature 가 사용하는 모든 MDS screen (`apps/mds/docs/public/specs/<name>/`) + 용도 |
+| Apps | ✓ if multi-app or non-Flutter | 구현 위치 (`apps/app_user/lib/src/features/<area>/`, `apps/landing_*` 등) |
+| Backend EFs | ✓ if EF 사용 | 사용 EF (`supabase/functions/<name>/`). 없으면 "(해당 없음 — Postgres RPC / 직접 호출)" 명시 |
+| CUJ tests | △ optional | 테스트 파일 경로 (deterministic 이지만 explicit 가독성↑) |
+| Wireframe | △ optional | legacy / 디자인 백업 |
+
+**경로 룰**: 모든 경로는 **repo-root 상대, code-formatted** (\`apps/mds/...\`), markdown 링크 없음. 이유:
+- AI agent 가 `Read <repo>/<path>` 로 직접 fetch — `/` 시작 절대 경로는 filesystem root 로 오해 위험
+- 디렉토리 깊이 무관 동일 syntax
+- 복사-붙여넣기 / refactor 안정성
+
+canonical: [`account/signup-consent/spec.md`](./account/signup-consent/spec.md) (헤더 부분 참조).
+
 **메타데이터 파이프라인**
 1. Mark 가 `apps/mds/docs/public/specs/<screen>/index.html` 에 `<meta name="features" content="cat1/name1, cat2/name2">` 추가
 2. `render-spec-mockups.js` 가 index.md 자동 생성 (feature 태그 포함)
