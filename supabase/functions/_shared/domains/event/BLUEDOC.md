@@ -51,3 +51,6 @@ if (!isEventEditableByPartner(event.status)) return errorResponse(...);
 
 - [_shared/domains/BLUEDOC.md](../BLUEDOC.md)
 - [payment/BLUEDOC.md](../payment/BLUEDOC.md) — paid 후 처리 흐름
+
+---
+_Reviewed: 2026-05-18 06:30_
