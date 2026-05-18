@@ -11,7 +11,7 @@
 | P0 — Critical | 0 | — |
 | P1 — Defect / Gap | 0 | — |
 | P2 — Improvement | 2 | #2555, #2556 |
-| P3 — Low | 0 | — |
+| P3 — Low | 1 | #2587 |
 
 ## Action Items by Priority
 
@@ -19,6 +19,10 @@
 
 - [ ] **#2555** `[3-1]` `account/account-deletion` — app_user CUJ integration test 누락 (26 CUJs 미검증). **Action**: `apps/app_user/integration_test/cuj/account/account_deletion_test.dart` 신규 작성. **Evidence**: 디렉토리 내 `signup_consent_test.dart`만 존재. *(PR #2567 in review)*
 - [ ] **#2556** `[1-1]` `account/account-management` + `account/login-dark-theme` + `account/privacy-protection` — prd.md + spec.md 부재. **Action**: `_template/prd.md` + `_template/spec.md` 기반 신규 작성 + 기존 wireframe.html / ui-ux-design.md 에서 마이그레이션. **Evidence**: 각 디렉토리에 wireframe.html 또는 ui-ux-design.md만 존재.
+
+### P3 — Low (여유 시)
+
+- [ ] **#2587** `[2-2]` `account/*` — mds-emulator-render 카탈로그에 account 관련 13 screens 미등록. **Action**: `apps/app_user/integration_test/mds-emulator-render/<screen>/` 패턴 복제로 카탈로그 등록. **Evidence**: `dart run scripts/mds_render_coverage.dart --json` → `uncovered_screens` 에 `account_management_page`, `deletion_*_page`, `signup_consent_page`, `auth_callback_page`, `bank_account_page` 등 포함.
 
 ---
 
@@ -88,26 +92,45 @@
 
 ### 2-2. 앱 render coverage
 
+`dart run scripts/mds_render_coverage.dart --json` 기준 (전체 66 MDS screens 중 cataloged 5, screen coverage 7.6%, state coverage 1.1%):
+
+| Screen | Feature | uncovered/incomplete | MDS state PNG 수 |
+|--------|---------|---------------------|------------------|
+| `account_management_page` | account-management | uncovered | 6 |
+| `auth_callback_page` | account-management | uncovered | 3 |
+| `bank_account_page` | account-management | uncovered | 6 |
+| `blocked_partners_page` | account-management | uncovered | — |
+| `deletion_complete_page` | account-deletion | uncovered | 2 |
+| `deletion_info_page` | account-deletion | uncovered | 2 |
+| `deletion_reason_page` | account-deletion | uncovered | 4 |
+| `deletion_verify_page` | account-deletion | uncovered | 6 |
+| `signup_consent_page` | signup-consent | uncovered | 6 |
+| `privacy_page` | partner-terms-privacy / privacy-protection | uncovered | — |
+| `create_verification_page` | privacy-protection | uncovered | — |
+| `identity_verification_screen` | privacy-protection | uncovered | — |
+| `verification_manage_page` | privacy-protection | uncovered | — |
+
 | 점검 | 결과 |
 |------|------|
-| mds-emulator-render `_registry.dart` 미등록 screen (uncovered) | 모든 account screen (`deletion_*_page`, `account_management_page`, `signup_consent_page`) — `docs/infra/mds-emulator-render/`에 home_page 외 미등록 |
+| mds-emulator-render 미등록 screen (uncovered) | account 관련 13 screens (상기 표) — 카탈로그에 미등록 |
 | catalog 됐지만 state 불충분 (incomplete) | — (미등록이라 해당 없음) |
 | catalog 됐지만 MDS spec 없음 (orphan) | — |
 
-**Findings**: 없음 (emulator render 미등록은 인프라 미완성 상태 — `mds-emulator-render` 커버리지 확장은 별도 인프라 작업).
+**Findings**:
+- **#2587** — account 카테고리 13 screens 가 `mds-emulator-render` 카탈로그에 미등록. Action: `apps/app_user/integration_test/mds-emulator-render/<screen>/` 패턴 복제. Severity: P3 (인프라 미완성, 점진적 확충).
 
 ### 2-3. 앱 render ↔ MDS spec drift (시각 비교)
 
-render PNG 미존재로 시각 비교 불가 (2-2 uncovered 상태).
+render PNG 미존재로 시각 비교 불가 (2-2 uncovered 상태). drift 검증은 #2587 완료 후 가능.
 
 | 항목 | 결과 |
 |------|------|
-| Color drift | — (render 없음) |
-| Layout drift | — (render 없음) |
-| Typography drift | — (render 없음) |
-| 컴포넌트 차이 | — (render 없음) |
+| Color drift | 미검증 (render 없음 — #2587 차단) |
+| Layout drift | 미검증 (render 없음 — #2587 차단) |
+| Typography drift | 미검증 (render 없음 — #2587 차단) |
+| 컴포넌트 차이 | 미검증 (render 없음 — #2587 차단) |
 
-**Findings**: 없음.
+**Findings**: 본 카테고리 drift 검증은 #2587 (render coverage) 완료에 의존. 추가 finding 없음.
 
 ---
 
@@ -147,6 +170,7 @@ render PNG 미존재로 시각 비교 불가 (2-2 uncovered 상태).
 |----|------|-----------|---------|---------|--------|
 | #2555 | 3-1 | app_user account-deletion CUJ integration test 누락 (26 CUJs) | `apps/app_user/integration_test/cuj/account/` — signup_consent_test.dart만 존재 | P2 | S |
 | #2556 | 1-1 | account-management + login-dark-theme + privacy-protection prd.md + spec.md 부재 | `docs/features/account/{account-management,login-dark-theme,privacy-protection}/` | P2 | M |
+| #2587 | 2-2 | account 카테고리 13 screens `mds-emulator-render` 카탈로그 미등록 | `dart run scripts/mds_render_coverage.dart --json` → `uncovered_screens` | P3 | L |
 
 ---
 
@@ -165,7 +189,7 @@ render PNG 미존재로 시각 비교 불가 (2-2 uncovered 상태).
 
 ## Run Metadata
 
-- Agent: swe-sonnet-1
-- Duration: ~00:20
+- Agent: swe-sonnet-1 (Section 1, 3) + swe-opus-1 (Section 2 mds-render-coverage data + #2587 filing)
+- Duration: ~00:20 (initial) + ~00:10 (Section 2 expansion)
 - Cycle: 14d (next: 2026-06-01)
 - Template version: feature_audit_report_template.md
