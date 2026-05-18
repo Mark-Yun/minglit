@@ -14,18 +14,20 @@
 //   - purchaseHistoryDetailProvider(applicationId) 를 overrideWith 로 주입하면
 //     캐시 탐색 체인(purchaseHistoryControllerProvider) 을 우회.
 //   - purchaseHistoryControllerProvider.notifier.canCancel() 는 동기 순수 함수.
-//     notifier 생성에 currentUserProvider + eventRepositoryProvider 가 필요하므로 base()에 포함.
+//     notifier 생성에 currentUserProvider + eventRepositoryProvider 가
+//     필요하므로 base()에 포함.
 //   - policyRepositoryProvider 는 mock 없이 두고 catch 블록이 기본값(2h/7d)을 사용하도록 함.
 //   - cancelOrder EF 호출은 eventRepositoryProvider mock 으로 격리.
 
-import 'package:app_user/src/features/payment/logic/purchase_history_detail_controller.dart';
-import 'package:app_user/src/features/payment/ui/purchase_history_detail_page.dart';
+import 'package:app_user/src/features/payment/logic/'
+    'purchase_history_detail_controller.dart';
+import 'package:app_user/src/features/payment/ui/'
+    'purchase_history_detail_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../_engine/cuj_test.dart';
 
@@ -120,7 +122,8 @@ void main() {
     eventRepositoryProvider.overrideWithValue(mockRepo),
   ];
 
-  // Returns overrides for PurchaseHistoryDetailPage rendering with the given application.
+  // Returns overrides for PurchaseHistoryDetailPage rendering with the
+  // given application.
   List<dynamic> withApp(EventApplication app) => [
     purchaseHistoryDetailProvider(app.id).overrideWith((_) async => app),
     ...base(),
@@ -163,8 +166,10 @@ void main() {
             reason: any(named: 'reason'),
           ),
         ).thenAnswer(
-          (_) async =>
-              const CancelOrderResult(type: 'refunded', refundAmount: 50000),
+          (_) async => const CancelOrderResult(
+            type: 'refunded',
+            refundAmount: 50000,
+          ),
         );
         return withApp(app);
       },
@@ -273,11 +278,11 @@ void main() {
       body: (t) async {
         await t.pumpAndSettle();
 
-        // status='cancelled' → canCancel=false → 버튼 비활성 (FR-1: 재취소 차단)
-        final cancelBtn = t.widget<ElevatedButton>(
+        // isRefunded=true → 취소 버튼 섹션 전체 미노출 (FR-1: 재취소 차단)
+        expect(
           find.widgetWithText(ElevatedButton, '예매 취소'),
+          findsNothing,
         );
-        expect(cancelBtn.onPressed, isNull);
 
         // 환불 정보 섹션 노출 (isRefunded=true)
         expect(find.text('환불 정보'), findsOneWidget);

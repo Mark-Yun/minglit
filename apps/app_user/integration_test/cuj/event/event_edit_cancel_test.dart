@@ -20,7 +20,6 @@
 //   - entryGroupParticipantCountsProvider 는 빈 리스트로 stubbing.
 
 import 'package:app_user/src/features/event/detail/event_detail_page.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -38,11 +37,11 @@ class _MockEventRepository extends Mock implements EventRepository {}
 // Fixtures
 // ---------------------------------------------------------------------------
 
-final _baseTime = DateTime(2026, 5, 20, 19, 0);
+final _baseTime = DateTime(2026, 5, 20, 19);
 
 Event _makeEvent({
+  required String status,
   String id = 'event-1',
-  String status = 'scheduled',
 }) {
   return Event(
     id: id,
