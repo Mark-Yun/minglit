@@ -688,31 +688,13 @@ jobs:
           fi
           echo "✅ CI jobs passed"
 
-          # 2. Wait for CodeRabbit review (PR only, skip for dependabot)
-          # Fix #2149: check PR author (user.login), not github.actor — when a human
-          # updates a dependabot branch (merge/rebase), actor becomes that human but
-          # CodeRabbit still doesn't review dependabot PRs → 30-minute timeout.
-          if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ github.event.pull_request.user.login }}" != "dependabot[bot]" ]; then
-            SHA="${{ github.event.pull_request.head.sha }}"
-            echo ""
-            echo "Waiting for CodeRabbit review on $SHA ..."
-            for i in $(seq 1 60); do
-              STATE=$(gh api repos/${{ github.repository }}/commits/$SHA/status --jq '[.statuses[] | select(.context=="CodeRabbit") | .state][0] // ""' 2>/dev/null || echo "")
-              if [ "$STATE" = "success" ]; then
-                echo "✅ CodeRabbit review completed"
-                break
-              elif [ "$STATE" = "failure" ] || [ "$STATE" = "error" ]; then
-                echo "❌ CodeRabbit review failed: $STATE"
-                exit 1
-              fi
-              echo "  ⏳ Attempt $i/60 — state: ${STATE:-pending} — waiting 30s..."
-              sleep 30
-            done
-            if [ "$STATE" != "success" ]; then
-              echo "❌ CodeRabbit review did not complete within 30 minutes"
-              exit 1
-            fi
-          fi
+          # CodeRabbit review wait was here. Removed: required-reviewer
+          # branch protection already gates merge on human APPROVED review,
+          # so the bot-review wait was duplicate enforcement that held a
+          # self-hosted runner slot for up to 30 minutes per PR — under
+          # cascade merges, that's the single biggest source of queue backlog.
+          # CodeRabbit still posts its review as a status (visible on the PR);
+          # we just stop blocking on it here.
 
           echo ""
           echo "✅ All checks passed"
