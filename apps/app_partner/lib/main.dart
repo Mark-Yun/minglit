@@ -51,7 +51,7 @@ Future<void> main() async {
   if (!kIsWeb && Platform.isAndroid) {
     try {
       await FlutterDisplayMode.setHighRefreshRate();
-    } catch (_) {
+    } on Object catch (_) {
       // Some devices don't support configurable display modes; fail silently.
     }
   }
@@ -160,8 +160,8 @@ Future<void> appStartup(Ref ref) async {
       if (userId != null) {
         unawaited(StatsigAnalytics.updateUser(userId));
       } else {
-        // Fix #155: shutdown() kills _initialized flag, blocking all future events.
-        // Reset to anonymous instead of shutting down the SDK.
+        // Fix #155: shutdown() kills _initialized flag, blocking all future
+        // events. Reset to anonymous instead of shutting down the SDK.
         unawaited(StatsigAnalytics.updateUser(''));
       }
     });
