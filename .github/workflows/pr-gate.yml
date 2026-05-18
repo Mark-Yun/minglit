@@ -8,8 +8,10 @@ on:
   merge_group:
 
 concurrency:
-  group: pr-gate-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  # merge_group 이벤트는 절대 cancel 금지 — 큐 전체가 thrash됨.
+  # PR 단계(pull_request)에서만 새 푸시 시 이전 run cancel.
+  group: pr-gate-${{ github.event.pull_request.number || github.event.merge_group.head_sha || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   # Migration version 중복 검사 (항상 실행 — path filter 없음)
@@ -79,6 +81,11 @@ jobs:
     - uses: dorny/paths-filter@v4
       id: filter
       with:
+        # merge_group 이벤트는 PR base 컨텍스트가 없어 paths-filter 가 비교 base 를
+        # 못 찾고 전체 파일을 changed 로 잡음 → 큐의 batch 효율이 무너짐.
+        # 명시적으로 큐의 base_ref(=dev) 와 비교하도록 지정.
+        # pull_request 이벤트일 때는 빈 값 → paths-filter 가 PR base 로 자동 fallback.
+        base: ${{ github.event_name == 'merge_group' && github.event.merge_group.base_ref || '' }}
         filters: |
           app_user:
             - 'apps/app_user/**'
