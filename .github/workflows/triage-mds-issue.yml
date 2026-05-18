@@ -1,12 +1,10 @@
 name: triage-mds-issue
 
+# Invoked by post-merge.yml on push to dev (paths filter applied at caller level).
+# Relies on github.event.before/head_commit; only safe under push context — caller gates with
+# `if: github.event_name == 'push'` so workflow_dispatch on the caller does not call this.
 on:
-  push:
-    branches: [dev]
-    paths:
-      - 'apps/mds/docs/public/specs/**'
-      - 'apps/mds/docs/src/lib/components.ts'
-      - 'apps/mds/docs/src/components/specs/**'
+  workflow_call:
 
 concurrency:
   group: triage-mds-issue-${{ github.ref }}
