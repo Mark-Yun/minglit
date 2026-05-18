@@ -74,4 +74,5 @@ Deno.test("<ef> :: <분기 description>", async () => {
 - [functions/BLUEDOC.md](../../BLUEDOC.md)
 - [_integration_tests/BLUEDOC.md](../../_integration_tests/BLUEDOC.md) — L4 CUJ tests (real Supabase)
 
-_Reviewed: 2026-05-18 00:00_
+---
+_Reviewed: 2026-05-18 03:45_

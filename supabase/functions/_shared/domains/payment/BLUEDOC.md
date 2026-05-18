@@ -40,4 +40,5 @@ if (isPaid) { /* paid 분기 */ }
 - [EF 아키텍처 RFC](../../../../../docs/architecture/) (예정) — 갈래 A 의 도입 배경
 - [Issue #3676](https://github.com/supabase/cli/issues/3676) — nested entrypoint 미지원 (본 구조 선택 이유)
 
-_Reviewed: 2026-05-18 00:00_
+---
+_Reviewed: 2026-05-18 03:45_

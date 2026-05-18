@@ -34,4 +34,5 @@ Hexagonal 의 도메인 코어는 보통 EF 안 nested 폴더에 두지만, Supa
 - [functions/BLUEDOC.md](../../BLUEDOC.md) — EF 디렉토리 entry
 - [Issue #3676](https://github.com/supabase/cli/issues/3676) — nested entrypoint 미지원 (본 구조 선택 이유)
 
-_Reviewed: 2026-05-18 00:00_
+---
+_Reviewed: 2026-05-18 03:45_
