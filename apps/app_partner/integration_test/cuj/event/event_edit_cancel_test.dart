@@ -87,7 +87,8 @@ Party _makeParty() => Party(
 );
 
 /// Returns a FunctionResponse stub for a successful EF call.
-FunctionResponse _okResponse() => FunctionResponse(data: {}, status: 200);
+FunctionResponse _okResponse() =>
+    FunctionResponse(data: <String, dynamic>{}, status: 200);
 
 /// Returns a FunctionResponse stub for a server-error EF call.
 FunctionResponse _errResponse() => FunctionResponse(data: null, status: 500);
