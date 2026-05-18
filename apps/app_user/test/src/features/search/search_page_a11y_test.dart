@@ -14,18 +14,21 @@ import 'package:mocktail/mocktail.dart';
 
 class _MockGoRouter extends Mock implements GoRouter {}
 
-Widget _buildTestWidget({List<Override> extraOverrides = const []}) {
+// Fix: Riverpod 3.x 에서 Override 는 sealed — List<Override> 타입 인수 불가.
+// 다른 테스트 파일들과 동일하게 List<dynamic> 으로 선언 후 cast() 사용.
+Widget _buildTestWidget({List<dynamic> extraOverrides = const []}) {
   final mockRouter = _MockGoRouter();
   when(() => mockRouter.push(any())).thenAnswer((_) async => null);
 
   return ProviderScope(
     overrides: [
-      searchResultsProvider.overrideWith((_) => const AsyncValue.data([])),
+      // Fix: overrideWith 는 FutureOr<List<Event>> 반환 필요. AsyncValue 반환 불가.
+      searchResultsProvider.overrideWith((_) async => <Event>[]),
       goRouterProvider.overrideWithValue(mockRouter),
       searchCoordinatorProvider.overrideWith(
         (ref) => SearchCoordinator(ref.read(goRouterProvider)),
       ),
-      ...extraOverrides,
+      ...extraOverrides.cast(),
     ],
     child: MaterialApp(
       home: const SearchPage(),
