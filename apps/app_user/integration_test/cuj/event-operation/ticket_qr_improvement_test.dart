@@ -43,10 +43,13 @@ class _BoardingPassWrapperState extends State<_BoardingPassWrapper>
   @override
   void initState() {
     super.initState();
+    // Fix #2591: intentionally not started (no repeat) — CUJ tests check
+    // static widget state; AnimationController.repeat() prevents pumpAndSettle
+    // from settling, causing test timeout.
     _scanning = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
+    );
   }
 
   @override
@@ -168,6 +171,7 @@ void main() {
     cujCase(
       'happy: 오늘 이벤트 → STATUS 배지 "BOARDING" 표시',
       app: _BoardingPassWrapper(token: _makeToken(), eventMeta: _todayMeta()),
+      afterPump: (t) => t.pump(const Duration(milliseconds: 50)),
       body: (t) async {
         // FR-6: STATUS badge = BOARDING (today)
         expect(find.text('BOARDING'), findsOneWidget);
@@ -197,6 +201,7 @@ void main() {
     cujCase(
       'happy: DATE/VENUE 라벨, 이벤트명, 티켓 종류 모두 노출',
       app: _BoardingPassWrapper(token: _makeToken(), eventMeta: _todayMeta()),
+      afterPump: (t) => t.pump(const Duration(milliseconds: 50)),
       body: (t) async {
         // FR-2: column header labels
         expect(find.text('DATE'), findsOneWidget);
@@ -216,6 +221,7 @@ void main() {
         token: _makeToken(),
         eventMeta: _todayMeta(eventVenue: null),
       ),
+      afterPump: (t) => t.pump(const Duration(milliseconds: 50)),
       body: (t) async {
         // Placeholder dash for missing venue
         expect(find.text('—'), findsWidgets);
@@ -237,6 +243,7 @@ void main() {
         eventMeta: _todayMeta(),
       ),
       overrides: () => withToken(_makeToken()),
+      afterPump: (t) => t.pump(const Duration(milliseconds: 50)),
       body: (t) async {
         // FR-7: anti-counterfeit notice
         expect(find.text('스크린샷은 입장에 사용할 수 없습니다'), findsOneWidget);
@@ -255,6 +262,7 @@ void main() {
         eventMeta: _todayMeta(),
       ),
       overrides: () => withToken(_makeToken()),
+      afterPump: (t) => t.pump(const Duration(milliseconds: 50)),
       body: (t) async {
         // Both card and anti-counterfeit text are in the same scrollable view
         // (a screenshot would capture both — this test confirms co-presence)
@@ -272,6 +280,7 @@ void main() {
     cujCase(
       'happy: 절취선 영역(_PerforationLine) 렌더 — key로 존재 검증',
       app: _BoardingPassWrapper(token: _makeToken(), eventMeta: _todayMeta()),
+      afterPump: (t) => t.pump(const Duration(milliseconds: 50)),
       body: (t) async {
         // Fix #2591: ValueKey('perforation-line') added to _PerforationLine so
         // the assertion is specific — removing _PerforationLine will fail this test.
@@ -285,6 +294,7 @@ void main() {
     cujCase(
       'edge: 다크 테마 없음 — 라이트 모드에서 노치 렌더 정상',
       app: _BoardingPassWrapper(token: _makeToken(), eventMeta: _todayMeta()),
+      afterPump: (t) => t.pump(const Duration(milliseconds: 50)),
       body: (t) async {
         // Perforation renders (no crash); notch circles use scaffold background.
         expect(find.byType(BoardingPassCard), findsOneWidget);
@@ -304,6 +314,7 @@ void main() {
     cujCase(
       'happy: 헤더에 "BOARDING PASS" 텍스트 및 "입장권" 부제 노출',
       app: _BoardingPassWrapper(token: _makeToken(), eventMeta: _todayMeta()),
+      afterPump: (t) => t.pump(const Duration(milliseconds: 50)),
       body: (t) async {
         // FR-3: header brand strip — text elements are excluded from semantics
         // but physically rendered; find.text works on non-semantic Text widgets.
@@ -331,6 +342,7 @@ void main() {
     cujCase(
       'happy: 오늘 이벤트 — 스캐닝 라인(ValueKey=scanning-line) 존재',
       app: _BoardingPassWrapper(token: _makeToken(), eventMeta: _todayMeta()),
+      afterPump: (t) => t.pump(const Duration(milliseconds: 50)),
       body: (t) async {
         // FR-6: scanning line widget keyed with 'scanning-line'
         expect(find.byKey(const ValueKey('scanning-line')), findsOneWidget);
@@ -549,6 +561,7 @@ void main() {
         eventMeta: _futureMeta(),
       ),
       overrides: () => withToken(_makeToken()),
+      afterPump: (t) => t.pump(const Duration(milliseconds: 50)),
       body: (t) async {
         // FR-9 success path: card is visible
         expect(find.byType(BoardingPassCard), findsOneWidget);
@@ -563,6 +576,7 @@ void main() {
         eventMeta: _futureMeta(),
       ),
       overrides: () => withToken(null),
+      afterPump: (t) => t.pump(const Duration(milliseconds: 50)),
       body: (t) async {
         // FR-9 error path: no card rendered
         expect(find.byType(BoardingPassCard), findsNothing);
