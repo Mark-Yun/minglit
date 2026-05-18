@@ -4,10 +4,11 @@
 // 를 watch 한다. currentUserProvider 가 null 이면 SizedBox.shrink() 를 반환하므로
 // 렌더 catalog 에서는 반드시 mock User 를 주입한다.
 //
-// _commonRootOverrides() 의 currentUserProvider(null) 은 state override 에서
-// 덮어쓴다 (Riverpod: 뒤에 오는 override 가 우선).
+// _commonRootOverrides() 의 currentUserProvider 중복 override 방지를 위해
+// build() 를 직접 override 함 (AccountManagementPageBuilder 패턴).
 
 import 'package:app_user/src/features/account_deletion/ui/deletion_verify_page.dart';
+import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -48,24 +49,20 @@ User _makeSocialUser() {
 
 class DeletionVerifyPageBuilder extends MdsScreenBuilder<DeletionVerifyPage> {
   DeletionVerifyPageBuilder()
-    : super(
-        page: const DeletionVerifyPage(reasonCode: 'privacy_concern'),
-        base: [
-          accountRepositoryProvider.overrideWithValue(
-            _FakeAccountRepository(),
-          ),
-        ],
-      );
+    : super(page: const DeletionVerifyPage(reasonCode: 'privacy_concern'));
+
+  User? _user;
+  Brightness _brightness = Brightness.light;
 
   /// 이메일(비밀번호) 로그인 유저 — 비밀번호 입력 필드 노출.
   DeletionVerifyPageBuilder asEmailUser() {
-    addOverride(currentUserProvider.overrideWith((_) => _makeEmailUser()));
+    _user = _makeEmailUser();
     return this;
   }
 
   /// 소셜 로그인 유저 — 재인증 안내 카드 노출.
   DeletionVerifyPageBuilder asSocialUser() {
-    addOverride(currentUserProvider.overrideWith((_) => _makeSocialUser()));
+    _user = _makeSocialUser();
     return this;
   }
 
@@ -77,6 +74,26 @@ class DeletionVerifyPageBuilder extends MdsScreenBuilder<DeletionVerifyPage> {
   /// 다크 모드 토글.
   DeletionVerifyPageBuilder dark() {
     useDarkTheme();
+    _brightness = Brightness.dark;
     return this;
+  }
+
+  @override
+  Widget build() {
+    return ProviderScope(
+      overrides: [
+        currentUserProvider.overrideWith((_) => _user),
+        authStateChangesProvider.overrideWith((_) => const Stream.empty()),
+        notificationInitializerProvider.overrideWith((_) {}),
+        accountRepositoryProvider.overrideWithValue(_FakeAccountRepository()),
+      ].cast(),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: _brightness == Brightness.dark
+            ? MinglitTheme.materialThemeDark
+            : MinglitTheme.materialTheme,
+        home: page,
+      ),
+    );
   }
 }
