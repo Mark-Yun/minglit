@@ -91,7 +91,6 @@ jobs:
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         with:
           channel: 'stable'
-          cache: true
 
       - name: Install dependencies
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
