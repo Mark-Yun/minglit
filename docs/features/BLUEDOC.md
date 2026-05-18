@@ -74,7 +74,7 @@ UX 디자인의 SSoT 는 MDS spec (`apps/mds/docs/public/specs/`). feature 폴�
 
 NFR 은 측정 가능해야 함 — "빨라야 함" 금지, "200ms p50 / 에뮬레이터" 처럼 환경+분산 명시.
 
-### spec.md 헤더 — 7섹션 cross-reference
+### spec.md 헤더 — 6섹션 cross-reference
 
 spec.md 최상단 `> **참조**` 블록에 모든 cross-reference 를 명시한다. AI agent 의 feature audit / cross-feature 분석에서 grep 1회로 의존 발견 가능하게.
 
