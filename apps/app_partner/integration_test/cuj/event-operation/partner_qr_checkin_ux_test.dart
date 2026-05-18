@@ -59,8 +59,6 @@ CheckinParticipant _makeParticipant({
   status: status,
 );
 
-
-
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
