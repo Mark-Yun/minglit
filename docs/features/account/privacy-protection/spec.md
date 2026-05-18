@@ -25,7 +25,7 @@
 | 4-2 | P1 | (Phase 2) 만료 임박 / 만료됨 시각 분기 | • 만료 임박 30 일 이내: warning 톤 + ⚠️ "D-N 곧 만료됩니다"<br>• 만료됨: 그레이 톤, 접힌 섹션 (ExpansionTile) 으로 이동 | FR-11 | NFR-1 |
 | 4-3 | P1 | (Phase 2) 빈 상태 (공유된 인증 없음) | • 활성 권한 0 건<br>• Empty State 표시 ("공유된 인증이 없습니다" + 안내문)<br>• "인증 열람 현황" 섹션 자체는 노출되지 않을 수도 있음 (Open Q) | FR-12 | NFR-1 |
 | 5-1 | P1 | (Phase 2) 권한 철회 확인 다이얼로그 | • 권한 카드 "권한 철회" 탭<br>• 2 단계 확인 다이얼로그<br>• "취소" / "철회하기" | FR-13, FR-14 | NFR-1 |
-| 5-2 | P1 | (Phase 2) 권한 철회 성공 후 SnackBar + 목록 갱신 | • "철회하기" 탭 → DELETE partner_verified_users<br>• "권한이 철회되었습니다" SnackBar (3 초)<br>• 목록 갱신, 파트너의 마지막 인증이면 파트너 카드 사라짐 | FR-13, FR-15 | NFR-2 |
+| 5-2 | P1 | (Phase 2) 권한 철회 성공 후 SnackBar + 목록 갱신 | • "철회하기" 탭 → Edge Function(user-revoke-verification-permission) 호출<br>• "권한이 철회되었습니다" SnackBar (3 초)<br>• 목록 갱신, 파트너의 마지막 인증이면 파트너 카드 사라짐 | FR-13, FR-15 | NFR-2 |
 | 6-1 | P0 | Loading state — 동의 정보 가져오는 중 | • 진입 직후 / 다시 조회 시<br>• Body 영역 중앙에 MinglitCircularProgressIndicator<br>• AppBar 는 normal 노출 | FR-16 | NFR-1 |
 | 6-2 | P0 | Error state — 동의 정보 로드 실패 | • 첫 진입에서 fetch 실패<br>• Body 영역 중앙에 "동의 정보를 불러올 수 없습니다." (bodyLarge · color-text-secondary)<br>• 재시도 버튼 없음 (Open Q — 후속 보강 후보) | FR-17 | NFR-1 |
 
@@ -84,7 +84,7 @@
 - [ ] **(Phase 2) 빈 상태 vs 만료-only 상태 분기** — 활성 0 + 만료 N 인 경우 Empty State 보여줄지 만료 섹션만 보여줄지
 - [ ] **(Phase 2) revoke 후 진행 중 이벤트** — 소급 적용 X (현재 가정) vs 안내 알림 → 법무 컨펌 필요 (signup-consent #3-2 와 동일 미해결)
 - [ ] **(Phase 2) 만료된 권한 DB 보존** — hard delete (즉시 삭제) vs soft expire (감사용 보관) 정책 결정
-- [ ] **(Phase 2) RLS DELETE 정책 텍스트** — `partner_verified_users` USING + WITH CHECK 정확한 식 검토 (auth.uid() = user_id)
+- [ ] **(Phase 2) EF revoke 실패 시 재시도 정책** — `user-revoke-verification-permission` EF 호출 실패 시 client side retry 횟수 / SnackBar 메시지 정책 결정
 
 ---
 
@@ -167,7 +167,7 @@
 |-------|------|------|
 | 4. (P2) Empty | 활성 권한 0 건 | "공유된 인증이 없습니다" + 안내문 |
 | 5. (P2) revoke 다이얼로그 | "권한 철회" 탭 후 | MinglitAlert overlay · 2-line 안내 · "취소" / "철회하기" 버튼 |
-| 6. (P2) revoke 성공 SnackBar | DELETE 성공 후 | "권한이 철회되었습니다" 3 초 · 자동 dismiss |
+| 6. (P2) revoke 성공 SnackBar | EF revoke 성공 후 | "권한이 철회되었습니다" 3 초 · 자동 dismiss |
 
 ### 동의 항목 정의 (Phase 1 · ConsentType)
 
