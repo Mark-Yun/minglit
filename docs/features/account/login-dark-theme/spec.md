@@ -105,5 +105,5 @@
 |------|------|------|
 | 라이트 golden | `login_scenarios.dart` → Brightness.light | 기존 `login_page_default.png` 유지 |
 | 다크 golden (user) | 신규 `login_scenarios.dart` → Brightness.dark | 신규 `login_page_default_dark.png` |
-| 다크 golden (partner) | partner 측 scenarios | 신규 (FR-7) |
+| 다크 golden (partner) | partner 측 scenarios | 신규 (NFR-6) |
 | 토큰 단위 unit | scaffoldBackgroundColor / OAuth 버튼 색 read 검증 | 회귀 시 즉시 fail |
