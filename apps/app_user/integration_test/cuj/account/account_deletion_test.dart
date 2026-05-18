@@ -31,6 +31,7 @@ class _FakeAccountRepository extends AccountRepository {
   bool throwOnReauth = false;
   bool throwOnDelete = false;
   DeletionStatus? statusToReturn;
+  int cancelDeletionCallCount = 0;
 
   @override
   Future<DeletionStatus?> getDeletionStatus() async => statusToReturn;
@@ -47,7 +48,9 @@ class _FakeAccountRepository extends AccountRepository {
   }
 
   @override
-  Future<void> cancelDeletion() async {}
+  Future<void> cancelDeletion() async {
+    cancelDeletionCallCount++;
+  }
 }
 
 // Fix #2555: AuthController stub — signOut no-op to avoid real Supabase call.
@@ -330,6 +333,8 @@ void main() {
         await t.tap(find.text('취소할게요'));
         await t.pumpAndSettle();
 
+        // Fix #2555: cancelDeletion()이 실제로 호출됐는지 검증 (단순 dismiss 와 구분)
+        expect(repo.cancelDeletionCallCount, 1);
         expect(find.text('탈퇴 대기 중인 계정입니다'), findsNothing);
       },
     );
