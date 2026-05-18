@@ -18,8 +18,9 @@ import '../_engine/cuj_test.dart';
 // ---------------------------------------------------------------------------
 
 class _FakeManualCheckinController extends ManualCheckinController {
-  final List<CheckinParticipant> _participants;
   _FakeManualCheckinController(this._participants);
+
+  final List<CheckinParticipant> _participants;
 
   @override
   Future<List<CheckinParticipant>> build(String eventId) async => _participants;
@@ -61,7 +62,7 @@ void main() {
       overrides: () => [
         manualCheckinControllerProvider(_testEventId).overrideWith(
           () => _FakeManualCheckinController([
-            _makeParticipant(name: '김민수'),
+            _makeParticipant(),
             _makeParticipant(id: 'p-2', name: '이지원', phoneLast4: '5678'),
           ]),
         ),
@@ -105,7 +106,7 @@ void main() {
       overrides: () => [
         manualCheckinControllerProvider(_testEventId).overrideWith(
           () => _FakeManualCheckinController([
-            _makeParticipant(name: '박서연', checked: false),
+            _makeParticipant(name: '박서연'),
           ]),
         ),
       ],
