@@ -2,62 +2,11 @@ import { IamportClient } from "./iamport_client.ts";
 import { log } from "./logger.ts";
 
 /**
- * Shared refund utilities for user-cancel-order and payment-cancel.
+ * Shared refund IO — PortOne (Iamport) 취소 호출 + 에러 타입.
  *
- * Extracted per #299 to avoid duplicating eligibility logic and PortOne calls.
+ * pure 정책 (eligibility 계산) 은 `_shared/domains/payment/refund_policy.ts` 로 이동.
+ * 이 파일은 IO + env access 가 필요한 부분만 보존.
  */
-
-export interface RefundEligibilityParams {
-  paidAt: string | null;
-  eventStartTime: string;
-  gracePeriodHours: number;
-  cutoffDays: number;
-  now?: Date;
-}
-
-export interface RefundEligibilityResult {
-  eligible: boolean;
-  reason?: string;
-}
-
-/**
- * Verify whether a refund is eligible based on grace period and cutoff policy.
- *
- * Eligible if EITHER:
- * - Within grace period (paidAt is past and within gracePeriodHours), OR
- * - Within cutoff (event starts >= cutoffDays from now)
- *
- * In all cases, the event must not have started yet.
- */
-export function verifyRefundEligibility(
-  params: RefundEligibilityParams,
-): RefundEligibilityResult {
-  const now = params.now ?? new Date();
-  const paidAt = params.paidAt ? new Date(params.paidAt) : null;
-  const eventStart = new Date(params.eventStartTime);
-
-  // Fix #1235: 이벤트 시작 후 예매 취소 요청 차단 — startTime 체크 추가
-  if (eventStart.getTime() <= now.getTime()) {
-    return { eligible: false, reason: "Event has already started" };
-  }
-
-  // Fix #133: 미래 paid_at은 음수 duration으로 grace period를 통과하므로 명시적으로 제외
-  const withinGracePeriod =
-    paidAt !== null &&
-    paidAt.getTime() <= now.getTime() &&
-    now.getTime() - paidAt.getTime() <=
-      params.gracePeriodHours * 60 * 60 * 1000;
-
-  const withinCutoff =
-    eventStart.getTime() - now.getTime() >=
-      params.cutoffDays * 24 * 60 * 60 * 1000;
-
-  if (!withinGracePeriod && !withinCutoff) {
-    return { eligible: false, reason: "Refund window has expired" };
-  }
-
-  return { eligible: true };
-}
 
 export interface ExecuteRefundParams {
   paymentId: string;
