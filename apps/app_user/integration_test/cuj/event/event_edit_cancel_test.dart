@@ -75,7 +75,7 @@ void main() {
   });
 
   // 비로그인 + cancelled event: eventAdmissionController 가 eventEnded 반환.
-  List<dynamic> base({required Event event}) => [
+  List<dynamic> base() => [
     eventRepositoryProvider.overrideWithValue(mockRepo),
     currentUserProvider.overrideWith((_) => null),
     authStateChangesProvider.overrideWith((_) => const Stream.empty()),
@@ -93,7 +93,7 @@ void main() {
         when(() => mockRepo.getEventById('event-1')).thenAnswer(
           (_) async => event,
         );
-        return base(event: event);
+        return base();
       },
       body: (t) async {
         await t.pumpAndSettle();
@@ -115,7 +115,7 @@ void main() {
         when(() => mockRepo.getEventById('event-1')).thenAnswer(
           (_) async => event,
         );
-        return base(event: event);
+        return base();
       },
       body: (t) async {
         await t.pumpAndSettle();

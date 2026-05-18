@@ -162,7 +162,9 @@ void main() {
             eventId: any(named: 'eventId'),
             reason: any(named: 'reason'),
           ),
-        ).thenAnswer((_) async {});
+        ).thenAnswer(
+          (_) async => const CancelOrderResult(type: 'refunded', refundAmount: 50000),
+        );
         return withApp(app);
       },
       body: (t) async {
@@ -322,7 +324,9 @@ void main() {
             eventId: any(named: 'eventId'),
             reason: any(named: 'reason'),
           ),
-        ).thenAnswer((_) async {});
+        ).thenAnswer(
+          (_) async => const CancelOrderResult(type: 'cancelled'),
+        );
         return withApp(app);
       },
       body: (t) async {
