@@ -246,7 +246,7 @@ void main() {
   cujGroup('1-2', '할 일 칩 3개 표시 + 탭 이동', () {
     var tapCount = 0;
     cujCase(
-      'happy: 승인대기 / 다가오는이벤트 / 리뷰 칩 3개 노출',
+      'happy: 승인대기 / 다가오는이벤트 / 리뷰 칩 3개 노출 + 탭 콜백',
       app: TodoSummaryChips(
         pendingApplications: 2,
         upcomingEvents: 1,
@@ -261,6 +261,10 @@ void main() {
         // 활성 카운트 확인
         expect(find.text('2'), findsOneWidget); // pending
         expect(find.text('1'), findsOneWidget); // upcoming
+        // 탭 → onPendingTap 콜백 호출 검증 (onPressed 연결 회귀 방지)
+        await t.tap(find.text('승인 대기'));
+        await t.pump();
+        expect(tapCount, equals(1));
       },
     );
 
@@ -635,20 +639,42 @@ void main() {
     ];
 
     cujCase(
-      'happy: 대기중 N건 — "전체 승인 (N건)" 버튼 노출',
+      'happy: 대기중 N건 — 버튼 탭 → 확인 다이얼로그 → 일괄 승인',
       app: const EventApplicationManagePage(),
-      overrides: () => [
-        currentPartnerInfoProvider.overrideWith(
-          (ref) async => _makePartner(),
-        ),
-        eventApplicationsGroupedProvider.overrideWith(
-          (ref, params) async =>
-              params.statusFilter.contains('pending') ? {event1: apps} : {},
-        ),
-      ],
+      overrides: () {
+        when(
+          () => mockEventRepo.bulkApproveApplications(
+            eventId: any(named: 'eventId'),
+          ),
+        ).thenAnswer((_) async {});
+        return [
+          currentPartnerInfoProvider.overrideWith(
+            (ref) async => _makePartner(),
+          ),
+          eventApplicationsGroupedProvider.overrideWith(
+            (ref, params) async =>
+                params.statusFilter.contains('pending') ? {event1: apps} : {},
+          ),
+          eventRepositoryProvider.overrideWithValue(mockEventRepo),
+        ];
+      },
       body: (t) async {
-        // 대기중 2건 → 하단 "전체 승인 (2건)" 버튼
+        // 대기중 2건 → 하단 "전체 승인 (2건)" 버튼 노출
         expect(find.textContaining('전체 승인 (2건)'), findsOneWidget);
+        // 버튼 탭 → MinglitAlert.showConfirm 다이얼로그
+        await t.tap(find.textContaining('전체 승인 (2건)'));
+        await t.pumpAndSettle();
+        // 확인 TextButton('전체 승인') 탭
+        await t.tap(find.widgetWithText(TextButton, '전체 승인'));
+        await t.pumpAndSettle();
+        // bulkApproveApplications 1회 호출 (event1에 대해)
+        verify(
+          () => mockEventRepo.bulkApproveApplications(
+            eventId: any(named: 'eventId'),
+          ),
+        ).called(1);
+        // 성공 스낵바
+        expect(find.textContaining('승인 완료'), findsOneWidget);
       },
     );
 
