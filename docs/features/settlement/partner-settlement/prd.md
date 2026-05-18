@@ -2,7 +2,7 @@
 
 ## Summary
 
-이벤트 결제 승인 시 정산 레코드를 자동 생성하고, 14일 환불 유예 후 검증을 거쳐 PortOne Payout API를 통해 파트너 계좌로 자동 지급하는 정산 파이프라인. 불변 원장과 7-상태 머신으로 법무/감사 요건을 충족한다.
+이벤트가 completed 상태로 전환될 때 정산 레코드를 자동 생성하고, 14일 환불 유예 후 검증을 거쳐 PortOne Payout API를 통해 파트너 계좌로 자동 지급하는 정산 파이프라인. 불변 원장과 7-상태 머신으로 법무/감사 요건을 충족한다.
 
 ## Motivation / Problem to Solve
 
@@ -23,7 +23,7 @@
 
 ### Key Goals
 
-- **P0**: 결제 승인 시 정산 레코드 자동 생성 (이중 트랙 방지 — 멱등성)
+- **P0**: 이벤트 완료 시 정산 레코드 자동 생성 (`on_event_completed` DB 트리거 — 멱등성)
 - **P0**: 14일 유예 후 PENDING → READY 자동 전환 (nightly cron)
 - **P0**: READY 배치 지급 실행 (PortOne Payout API, 지수 백오프 재시도)
 - **P0**: 7-상태 머신 (PENDING/HOLD/CANCELED/READY/PROCESSING/COMPLETED/FAILED)
@@ -60,9 +60,9 @@
 
 ## User Journey
 
-### Scenario 1: 결제 승인 → 정산 레코드 자동 생성 (CUJ 1-x)
+### Scenario 1: 이벤트 완료 → 정산 레코드 자동 생성 (CUJ 1-x)
 
-유저가 이벤트 참가비를 결제 → PortOne 결제 확인 완료 → 정산 레코드 자동 생성 (PENDING). 파트너는 앱에서 해당 이벤트의 정산이 PENDING 상태로 진입한 것을 확인한다.
+이벤트가 `completed` 상태로 전환 → DB `on_event_completed` 트리거가 `create_settlement_on_event_completion()` 실행 → 정산 레코드 PENDING 생성 (수수료율·VAT 스냅샷 포함). 파트너는 앱에서 해당 이벤트의 정산이 PENDING 상태로 진입한 것을 확인한다. 결제 승인은 이 시나리오의 선행 조건(event_participants 생성)이며 정산 직접 트리거가 아님.
 
 ### Scenario 2: 14일 후 READY 전환 + 배치 지급 (CUJ 2-x)
 
@@ -84,7 +84,7 @@ nightly cron이 14일 경과한 PENDING 레코드를 READY로 전환 → 배치 
 
 ### Scenario 1
 
-결제 승인 (앱/웹훅) → `partner-settle-on-payment` EF trigger → `settlement_items` PENDING 생성 + 율 스냅샷
+이벤트 `completed` 전환 → DB `on_event_completed` 트리거 → `create_settlement_on_event_completion()` → `settlement_items` PENDING 생성 + 수수료율·VAT 스냅샷
 
 ### Scenario 2
 
@@ -92,7 +92,8 @@ pg_cron (03:00 KST) → 14일 경과 PENDING 조회 → 체크섬 검증 → REA
 
 ### Scenario 3
 
-파트너 앱 → `partner-manage-settlement` EF → 요약/목록/상세 데이터 반환 → UI 렌더
+파트너 앱 → `settlement-query` EF → 요약/목록/상세 데이터 반환 → UI 렌더
+계좌 관리: 파트너 앱 → `partner-manage-settlement` EF → 계좌 upsert (bank_account_page)
 
 ## KPIs / Success Metrics
 
