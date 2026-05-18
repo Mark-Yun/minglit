@@ -418,6 +418,8 @@ jobs:
     runs-on: [self-hosted, ephemeral]
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0   # diff-cover 가 base 와의 merge base 찾으려면 full history 필요
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
