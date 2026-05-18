@@ -44,7 +44,7 @@
 - **FR-11** (Phase 2): D-day 컬러 — D-31+ onSurfaceVariant · D-30~D-8 warning amber · D-7~D-1 error red · D-0 이하 outline grey (만료됨, 접힌 섹션).
 - **FR-12** (Phase 2): 활성 권한 0 건이면 Empty State 표시 — "공유된 인증이 없습니다" + 안내문 ("이벤트 참여 시 파트너에게 인증을 제출하면 이곳에서 열람 권한을 관리할 수 있습니다.").
 - **FR-13** (Phase 2): "권한 철회" 버튼 탭 시 2 단계 확인 다이얼로그 — title "권한을 철회하시겠습니까?" · 본문 "{파트너명}의 {인증명} 열람 권한을 철회합니다." · "⚠️ 철회 후에는 되돌릴 수 없습니다." · 버튼 "취소" / "철회하기".
-- **FR-14** (Phase 2): "철회하기" 탭 시 revokeVerificationPermission(partnerId, verificationId) 호출 → DELETE partner_verified_users WHERE user_id = auth.uid() AND partner_id=$1 AND verification_id=$2.
+- **FR-14** (Phase 2): "철회하기" 탭 시 revokeVerificationPermission(partnerId, verificationId) 호출 → Edge Function(user-revoke-verification-permission)을 통해 서버에서 partner_verified_users 변경 처리. 클라이언트 RLS는 READ-only 유지 — DELETE는 EF service_role 경유.
 - **FR-15** (Phase 2): 철회 성공 시 (1) "권한이 철회되었습니다" SnackBar (3 초), (2) 목록 invalidate + 요약 카운트 갱신. 파트너의 마지막 인증이면 파트너 카드 자체 사라짐.
 - **FR-16**: Loading state — body 영역 중앙에 MinglitCircularProgressIndicator. AppBar 는 평소대로 노출. 뒤로 가기 정상 동작.
 - **FR-17**: Error state (첫 진입 fetch 실패) — body 영역 중앙에 Padding(spacing-large) > Text("동의 정보를 불러올 수 없습니다.", bodyLarge, color-text-secondary). 별도 재시도 버튼 없음. 이미 한 번 본문이 노출된 후 fetch 실패는 SnackBar 만 (본문 유지).
@@ -188,4 +188,4 @@
 | 만료 임박 N | 동 + valid_until ≤ now() + 30 days | count |
 | 인증 카테고리 아이콘 | verifications.category | 💼 career · 🎓 academic · 💰 asset · 🚗 vehicle · 💍 marriage · 📋 etc |
 | status 컬럼 | CASE valid_until vs now | active / expiring_soon / expired |
-| revoke API | DELETE partner_verified_users (RLS 신규 정책) | user 본인 row 만 |
+| revoke API | Edge Function (user-revoke-verification-permission) | service_role 로 partner_verified_users 변경/감사 |

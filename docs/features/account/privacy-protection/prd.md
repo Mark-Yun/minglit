@@ -51,7 +51,7 @@
 
 - **화면**: PrivacyPage (ConsumerStatefulWidget) — `/my/privacy`. AppBar + ListView (3 섹션: 동의 현황 / 약관 보기 / 계정) + 향후 4 번째 섹션 (인증 열람 권한 — Phase 2)
 - **저장 (Phase 1)**: `user_consents` (consent_key, policy_version, consented_at, withdrawn_at)
-- **저장 (Phase 2)**: `partner_verified_users` (user_id, partner_id, verification_id, verified_at, valid_until) — RLS DELETE 정책 신규 필요
+- **저장 (Phase 2)**: `partner_verified_users` (user_id, partner_id, verification_id, verified_at, valid_until) — 권한 철회는 Edge Function(service_role) 경유. 클라이언트 RLS는 READ-only 유지.
 - **외부 의존성**: consentControllerProvider (Riverpod async) · ConsentDetailSheet (DraggableScrollableSheet · 약관 본문) · accountDeletionControllerProvider (탈퇴 진행 상태)
 - **가드 / 정책**: 비로그인 유저는 도달 전 로그인 redirect
 
@@ -75,7 +75,7 @@
 
 ### Scenario 5: 인증 열람 권한 철회 (Phase 2, CUJ 5-x)
 
-권한 카드의 "권한 철회" 버튼 탭 → 확인 다이얼로그 → "철회하기" 탭 → DELETE partner_verified_users → SnackBar 피드백 → 목록 갱신.
+권한 카드의 "권한 철회" 버튼 탭 → 확인 다이얼로그 → "철회하기" 탭 → Edge Function(user-revoke-verification-permission) 호출 → SnackBar 피드백 → 목록 갱신.
 
 ## Data Flow
 
@@ -97,7 +97,7 @@ PrivacyPage 진입 → verificationRepository.getMyVerificationPermissions() →
 
 ### Scenario 5 (Phase 2)
 
-권한 카드 "철회" 탭 → 확인 다이얼로그 → revokeVerificationPermission(partnerId, verificationId) → DELETE partner_verified_users WHERE user_id = auth.uid() AND partner_id = $1 AND verification_id = $2 → 목록 invalidate + SnackBar.
+권한 카드 "철회" 탭 → 확인 다이얼로그 → revokeVerificationPermission(partnerId, verificationId) → Edge Function(user-revoke-verification-permission) 호출 → EF 내부에서 service_role로 partner_verified_users 변경 + 감사 로그 → 목록 invalidate + SnackBar.
 
 ## KPIs / Success Metrics
 
@@ -110,7 +110,7 @@ PrivacyPage 진입 → verificationRepository.getMyVerificationPermissions() →
 ## Launch Strategy
 
 Phase 1 (현재): 동의 / 약관 / 계정 — 즉시 전체 적용.
-Phase 2 (#556 인증 열람 권한): 별도 PR 로 분리 — RLS DELETE 정책 + Repository + UI + 다이얼로그.
+Phase 2 (#556 인증 열람 권한): 별도 PR 로 분리 — Edge Function(user-revoke-verification-permission) + Repository + UI + 다이얼로그. 클라이언트 RLS는 READ-only 유지 (DELETE는 EF service_role 경유).
 
 ## Legal Basis
 

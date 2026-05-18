@@ -17,8 +17,6 @@
 | 1-4 | P0 | 다크 모드에서 Kakao 노랑 고정 | • 다크 모드<br>• Kakao 버튼: bg #FEE500 (테마 무관) · near-black 글자 | FR-4 | NFR-3 |
 | 2-1 | P0 | 라이트 모드 baseline (회귀 없음) | • 시스템 라이트 모드<br>• 기존 동작 그대로 — Scaffold #F9FAFB · Google 흰 바탕 · Apple 검정 바탕 · Kakao 노랑 | FR-1, FR-2, FR-3, FR-4 | NFR-1 |
 | 3-1 | P0 | 보호 경로 redirect 시 깜빡임 제거 | • 다크 모드<br>• 보호 경로 진입 (비인증)<br>• 홈 → 로그인 redirect 시 같은 #0F0F0F 배경 유지 | FR-1, FR-5 | NFR-2 |
-| 4-1 | P0 | 다크 골든 시나리오 등록 | • `login_scenarios.dart` 에 Brightness.dark 시나리오 추가<br>• CI 에서 `login_page_default_dark.png` 검증<br>• 후속 시각 회귀 차단 | FR-6 | — |
-| 4-2 | P1 | partner 다크 골든 시나리오 등록 | • partner_login_scenarios.dart (또는 동등) 에 다크 시나리오<br>• PARTNER 배지 + 파트너 인디고가 다크 톤으로 자동 전환되는지 검증 | FR-7 | — |
 | 5-1 | P1 | 실행 중 시스템 테마 토글 시 즉시 반영 | • 로그인 화면 노출 중 OS 테마 토글<br>• Scaffold + OAuth 버튼이 즉시 다크/라이트 변형 교체 (재진입 불필요) | FR-1, FR-2, FR-3 | NFR-4 |
 
 ## Functional Requirements
@@ -28,8 +26,6 @@
 - **FR-3**: Apple OAuth 버튼은 Apple HIG 변형. 라이트: 검정 바탕 + 흰 글자. 다크: 흰 바탕 + 검정 글자 (Apple "white on dark").
 - **FR-4**: Kakao OAuth 버튼은 테마 무관 `#FEE500` 바탕 + near-black 글자. 다크 모드에서도 변경 없음 (Kakao 브랜드 가이드).
 - **FR-5**: 보호 경로 redirect 시 (홈 → 로그인) Scaffold 배경이 같은 톤을 유지 — 별도 fade / overlay 처리 없이 GoRouter 기본 전환만 사용.
-- **FR-6**: `login_scenarios.dart` 에 Brightness.dark 변형을 추가하고 `login_page_default_dark.png` golden 을 등록. CI 에서 시각 변경 시 fail.
-- **FR-7**: 동일한 다크 시나리오를 partner 변형 (MinglitLoginScreen(isPartner:true)) 에도 등록. PARTNER 배지 + "파트너 입점 문의" CTA 가 다크 톤 파트너 인디고로 자동 전환되는지 검증.
 
 ## Non-Functional Requirements
 
@@ -37,6 +33,8 @@
 - **NFR-2**: 다크 모드에서 redirect 시 별도 깜빡임 / flash 0 frames — 즉 같은 frame 에 같은 톤 배경.
 - **NFR-3**: 접근성 — 다크 / 라이트 변형 모두 OAuth 버튼 텍스트 ↔ 배경 contrast ratio ≥ 4.5:1 (WCAG AA). Kakao 도 동일 (노랑 + near-black 으로 ≥ 4.5 만족).
 - **NFR-4**: 시스템 테마 토글 후 UI 반영 100ms 이내 (Material rebuild, p50). 사용자가 토글하면 화면 떠 있는 동안에도 즉시 변형 교체.
+- **NFR-5**: `login_scenarios.dart` 에 Brightness.dark 변형을 추가하고 `login_page_default_dark.png` golden 을 등록. CI 에서 시각 변경 시 fail. (golden test 는 `test/widget/` 에 작성)
+- **NFR-6**: partner 변형(MinglitLoginScreen(isPartner:true)) 에도 다크 시나리오 golden 등록. PARTNER 배지 + 파트너 인디고가 다크 톤으로 자동 전환 검증.
 
 ## Edge Cases
 
@@ -47,7 +45,6 @@
 | 1-3 | iOS / macOS / Web 에서 Apple 버튼 노출 (다크) | white-on-dark Apple 변형 적용. Android 는 Apple 버튼 미노출 (기존 정책 유지) |
 | 1-4 | 다크 모드에서 Kakao 노랑 색약 사용자 | Kakao 브랜드 강제 — 별도 처리 X. WCAG 는 글자 색 (near-black) 으로 보장 |
 | 3-1 | 보호 경로 redirect 도중 시스템 테마 토글 | 새 테마로 즉시 redirect 도착 (race 없음 — MaterialApp 가 단일 source) |
-| 4-1 | 골든 등록 후 다크 모드에서 fontFamily 변경 | golden 재생성 필요 — PR 본문에 명시 |
 | 5-1 | 시스템 테마 토글 도중 OAuth 인증 외부 페이지 떠 있음 | OS / 외부 페이지 영역은 OS 가 처리. 복귀 시 in-app 테마는 새 모드로 반영 |
 
 ## Open Questions
