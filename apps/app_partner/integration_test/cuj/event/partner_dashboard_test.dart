@@ -68,6 +68,13 @@ class _FakeNotificationList extends NotificationList {
   Future<List<Map<String, dynamic>>> build() async => [];
 }
 
+/// 에러를 throw하는 알림 컨트롤러 — 섹션 독립 로딩 테스트용.
+class _ErrorNotificationList extends NotificationList {
+  @override
+  Future<List<Map<String, dynamic>>> build() async =>
+      throw Exception('network error');
+}
+
 // ---------------------------------------------------------------------------
 // Test fixtures
 // ---------------------------------------------------------------------------
@@ -78,19 +85,21 @@ final _epoch = DateTime(2020);
 Partner _makePartner({
   String id = 'partner-1',
   String name = '테스트 파트너',
-}) => Partner(id: id, name: name);
+}) =>
+    Partner(id: id, name: name);
 
 Party _makeParty({
   String id = 'party-1',
   String partnerId = 'partner-1',
   String title = '테스트 파티',
-}) => Party(
-  id: id,
-  partnerId: partnerId,
-  title: title,
-  createdAt: _epoch,
-  updatedAt: _epoch,
-);
+}) =>
+    Party(
+      id: id,
+      partnerId: partnerId,
+      title: title,
+      createdAt: _epoch,
+      updatedAt: _epoch,
+    );
 
 Event _makeEvent({
   String id = 'event-1',
@@ -120,15 +129,16 @@ EventApplication _makeApplication({
   String id = 'app-1',
   String eventId = 'event-1',
   String status = 'pending',
-}) => EventApplication(
-  id: id,
-  eventId: eventId,
-  ticketId: 'ticket-1',
-  userId: 'user-1',
-  status: status,
-  createdAt: _now.subtract(const Duration(hours: 1)),
-  updatedAt: _now.subtract(const Duration(hours: 1)),
-);
+}) =>
+    EventApplication(
+      id: id,
+      eventId: eventId,
+      ticketId: 'ticket-1',
+      userId: 'user-1',
+      status: status,
+      createdAt: _now.subtract(const Duration(hours: 1)),
+      updatedAt: _now.subtract(const Duration(hours: 1)),
+    );
 
 // ---------------------------------------------------------------------------
 // Provider override helpers
@@ -137,14 +147,18 @@ EventApplication _makeApplication({
 List<dynamic> _homeBase({
   required PartnerDashboardState dashboardState,
   required _MockPartnerHomeCoordinator coordinator,
-}) => [
-  partnerDashboardControllerProvider.overrideWith(
-    () => _FakeDashboardController(dashboardState),
-  ),
-  currentPartnerInfoProvider.overrideWith((ref) async => _makePartner()),
-  notificationListProvider.overrideWith(_FakeNotificationList.new),
-  partnerHomeCoordinatorProvider.overrideWith((ref) => coordinator),
-];
+  NotificationList Function()? notificationFactory,
+}) =>
+    [
+      partnerDashboardControllerProvider.overrideWith(
+        () => _FakeDashboardController(dashboardState),
+      ),
+      currentPartnerInfoProvider.overrideWith((ref) async => _makePartner()),
+      notificationListProvider.overrideWith(
+        notificationFactory ?? _FakeNotificationList.new,
+      ),
+      partnerHomeCoordinatorProvider.overrideWith((ref) => coordinator),
+    ];
 
 /// 이벤트가 있는 홈 기본 상태.
 PartnerDashboardState _homeStateWithEvents({
@@ -155,16 +169,17 @@ PartnerDashboardState _homeStateWithEvents({
   int totalPartyCount = 2,
   int totalAttendees = 10,
   bool hasAnyEvents = true,
-}) => PartnerDashboardState(
-  status: const AsyncValue.data(null),
-  pendingReviewCount: pendingReviewCount,
-  liveEvents: liveEvents,
-  recruitingEvents: recruitingEvents,
-  preparingEvents: preparingEvents,
-  totalPartyCount: totalPartyCount,
-  totalAttendees: totalAttendees,
-  hasAnyEvents: hasAnyEvents,
-);
+}) =>
+    PartnerDashboardState(
+      status: const AsyncValue.data(null),
+      pendingReviewCount: pendingReviewCount,
+      liveEvents: liveEvents,
+      recruitingEvents: recruitingEvents,
+      preparingEvents: preparingEvents,
+      totalPartyCount: totalPartyCount,
+      totalAttendees: totalAttendees,
+      hasAnyEvents: hasAnyEvents,
+    );
 
 // ---------------------------------------------------------------------------
 // Main
@@ -214,15 +229,20 @@ void main() {
     );
 
     cujCase(
-      'edge: Summary Bar 로딩 실패 — 빈 상태 렌더 (0건 폴백)',
+      'edge: Summary Bar 로딩 실패 — 에러 UI 렌더',
       app: const PartnerHomePage(),
       overrides: () => _homeBase(
-        dashboardState: _homeStateWithEvents(),
+        dashboardState: PartnerDashboardState(
+          status: AsyncValue.error(
+            Exception('network error'),
+            StackTrace.empty,
+          ),
+        ),
         coordinator: coordinator,
       ),
       body: (t) async {
-        // 에러 없이 페이지 렌더됨을 확인
-        expect(find.byType(PartnerHomePage), findsOneWidget);
+        // 에러 상태: MinglitAsyncValueWidget의 DefaultErrorView 렌더 확인
+        expect(find.text('오류가 발생했습니다.'), findsOneWidget);
       },
     );
   });
@@ -335,16 +355,41 @@ void main() {
 
   cujGroup('1-5', '섹션 독립 로딩 — 한 섹션 실패 시 나머지 정상', () {
     cujCase(
-      'happy: status AsyncData → 페이지 정상 렌더',
+      'happy: 모든 섹션 정상 로딩 — 인사/칩/성과 모두 렌더',
       app: const PartnerHomePage(),
       overrides: () => _homeBase(
-        dashboardState: _homeStateWithEvents(),
+        dashboardState: _homeStateWithEvents(
+          pendingReviewCount: 2,
+          recruitingEvents: [_makeEvent()],
+          totalPartyCount: 3,
+          totalAttendees: 10,
+        ),
         coordinator: coordinator,
       ),
       body: (t) async {
-        // 페이지가 크래시 없이 렌더됨 확인
-        expect(find.byType(PartnerHomePage), findsOneWidget);
-        expect(find.byType(CircularProgressIndicator), findsNothing);
+        expect(find.textContaining('심사 대기 2건'), findsOneWidget);
+        expect(find.text('등록된 파티'), findsOneWidget);
+      },
+    );
+
+    cujCase(
+      'edge: notificationListProvider 실패 — 메인 섹션 정상 렌더',
+      app: const PartnerHomePage(),
+      overrides: () => _homeBase(
+        dashboardState: _homeStateWithEvents(
+          pendingReviewCount: 2,
+          recruitingEvents: [_makeEvent()],
+          totalPartyCount: 3,
+          totalAttendees: 10,
+        ),
+        coordinator: coordinator,
+        // 알림 provider 실패 — maybeWhen(orElse: () => 0) 으로 배지는 0 폴백
+        notificationFactory: _ErrorNotificationList.new,
+      ),
+      body: (t) async {
+        // 알림 섹션 실패해도 메인 섹션(인사/성과) 정상 렌더
+        expect(find.textContaining('심사 대기 2건'), findsOneWidget);
+        expect(find.text('등록된 파티'), findsOneWidget);
       },
     );
   });
@@ -490,7 +535,9 @@ void main() {
           (ref) async => _makePartner(),
         ),
         eventApplicationsGroupedProvider.overrideWith(
-          (ref, params) async => {event1: [app1]},
+          (ref, params) async => {
+            event1: [app1]
+          },
         ),
       ],
       body: (t) async {
@@ -536,7 +583,9 @@ void main() {
             (ref) async => _makePartner(),
           ),
           eventApplicationsGroupedProvider.overrideWith(
-            (ref, params) async => {event1: [app1]},
+            (ref, params) async => {
+              event1: [app1]
+            },
           ),
           eventRepositoryProvider.overrideWithValue(mockEventRepo),
         ];
@@ -566,7 +615,9 @@ void main() {
             (ref) async => _makePartner(),
           ),
           eventApplicationsGroupedProvider.overrideWith(
-            (ref, params) async => {event1: [app1]},
+            (ref, params) async => {
+              event1: [app1]
+            },
           ),
           eventRepositoryProvider.overrideWithValue(mockEventRepo),
         ];
@@ -673,8 +724,10 @@ void main() {
         todayEventsProvider.overrideWith(
           (ref, partnerId) async => [
             ...events,
-            _makeEvent(id: 'event-3', startTime: _now.add(const Duration(hours: 3))),
-            _makeEvent(id: 'event-4', startTime: _now.add(const Duration(hours: 4))),
+            _makeEvent(
+                id: 'event-3', startTime: _now.add(const Duration(hours: 3))),
+            _makeEvent(
+                id: 'event-4', startTime: _now.add(const Duration(hours: 4))),
           ],
         ),
       ],
