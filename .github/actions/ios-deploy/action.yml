@@ -304,6 +304,7 @@ runs:
         NIGHTLY="nightly-ios-${APP}-${FLAVOR}"
 
         gh release create "$HIST" \
+          --target "$GIT_SHA" \
           --title "ios • app_${APP} (${FLAVOR}) v${VERSION}" \
           --notes "Built from ${GIT_SHA}" \
           --prerelease \
@@ -312,6 +313,7 @@ runs:
 
         gh release delete "$NIGHTLY" --yes --cleanup-tag --repo "$REPO" 2>/dev/null || true
         gh release create "$NIGHTLY" \
+          --target "$GIT_SHA" \
           --title "Nightly — ios • app_${APP} (${FLAVOR})" \
           --notes "Points to v${VERSION} • ${GIT_SHA}" \
           --prerelease \
