@@ -46,8 +46,7 @@ User _makeSocialUser() {
   return user;
 }
 
-class DeletionVerifyPageBuilder
-    extends MdsScreenBuilder<DeletionVerifyPage> {
+class DeletionVerifyPageBuilder extends MdsScreenBuilder<DeletionVerifyPage> {
   DeletionVerifyPageBuilder()
     : super(
         page: const DeletionVerifyPage(reasonCode: 'privacy_concern'),

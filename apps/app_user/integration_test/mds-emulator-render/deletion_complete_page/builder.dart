@@ -10,8 +10,7 @@ import '../_engine/builder.dart';
 
 class DeletionCompletePageBuilder
     extends MdsScreenBuilder<DeletionCompletePage> {
-  DeletionCompletePageBuilder()
-    : super(page: const DeletionCompletePage());
+  DeletionCompletePageBuilder() : super(page: const DeletionCompletePage());
 
   /// 다크 모드 토글.
   DeletionCompletePageBuilder dark() {

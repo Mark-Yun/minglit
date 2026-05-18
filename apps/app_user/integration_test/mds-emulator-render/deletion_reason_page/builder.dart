@@ -25,8 +25,7 @@ class _FakeDeletionCoordinator extends AccountDeletionCoordinator {
       );
 }
 
-class DeletionReasonPageBuilder
-    extends MdsScreenBuilder<DeletionReasonPage> {
+class DeletionReasonPageBuilder extends MdsScreenBuilder<DeletionReasonPage> {
   DeletionReasonPageBuilder()
     : super(
         page: const DeletionReasonPage(),
