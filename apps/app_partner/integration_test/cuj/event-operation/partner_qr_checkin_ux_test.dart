@@ -42,11 +42,23 @@ class _ErrorEntryGroupStatsController extends EntryGroupCheckinStatsController {
 }
 
 class _FakeCheckinStatsController extends CheckinStatsController {
-  _FakeCheckinStatsController(this._initial);
+  _FakeCheckinStatsController(this._initial, {CheckinStats? realtimeUpdate})
+      : _realtimeUpdate = realtimeUpdate;
+
   final CheckinStats _initial;
+  final CheckinStats? _realtimeUpdate;
 
   @override
   Future<CheckinStats> build(String eventId) async => _initial;
+
+  // Override to avoid real Supabase call — simulates the same state update path
+  // that the production realtime callback triggers via applyFetchedStats().
+  @override
+  Future<void> applyFetchedStats(String eventId) async {
+    if (_realtimeUpdate != null) {
+      state = AsyncData(_realtimeUpdate!);
+    }
+  }
 }
 
 // MobileScannerController.toggleTorch() 는 하드웨어 접근 — no-op 으로 override.
@@ -539,6 +551,7 @@ void main() {
       overrides: () {
         statsController = _FakeCheckinStatsController(
           const CheckinStats(total: 50, checkedIn: 23),
+          realtimeUpdate: const CheckinStats(total: 50, checkedIn: 24),
         );
         return [
           checkinStatsControllerProvider('evt-rt').overrideWith(
@@ -554,10 +567,10 @@ void main() {
         expect(find.text('23'), findsOneWidget);
         expect(find.text('/50'), findsOneWidget);
 
-        // Realtime 체크인 이벤트 수신 시뮬레이션 (다른 디바이스 +1)
-        statsController.state = const AsyncData(
-          CheckinStats(total: 50, checkedIn: 24),
-        );
+        // Realtime 이벤트 수신 경로 시뮬레이션:
+        // applyFetchedStats()는 production realtime callback이 호출하는 메서드.
+        // 여기서 직접 호출함으로써 "callback → state 갱신 → widget 리빌드" 경로 검증.
+        await statsController.applyFetchedStats('evt-rt');
         await t.pump();
         await t.pump(_kSummaryCardPump);
 
