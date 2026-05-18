@@ -5,6 +5,7 @@ import {
   errorResponse,
   successResponse,
 } from "../_shared/response_utils.ts";
+import { isCheckedIn } from "../_shared/domains/event/participant.ts";
 
 const MAX_LIKES_PER_COMMIT = 3;
 
@@ -80,7 +81,7 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
 
   if (voterError) return errorResponse("Failed to verify participant", 500);
   if (!voterParticipant) return errorResponse("이벤트 참가자가 아닙니다", 400);
-  if (voterParticipant.status !== "checked_in") {
+  if (!isCheckedIn(voterParticipant.status)) {
     return errorResponse("체크인 후 좋아요를 보낼 수 있습니다", 400);
   }
 
@@ -96,7 +97,7 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
   if (candidateParticipantRows.length !== normalizedCandidateIds.length) {
     return errorResponse("일부 후보를 찾을 수 없습니다", 400);
   }
-  if (candidateParticipantRows.some((row) => row.status !== "checked_in")) {
+  if (candidateParticipantRows.some((row) => !isCheckedIn(row.status))) {
     return errorResponse(
       "체크인한 참가자에게만 좋아요를 보낼 수 있습니다",
       400,

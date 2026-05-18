@@ -106,7 +106,8 @@ class _PartyListEmptyState extends StatelessWidget {
           children: [
             Icon(
               Icons.celebration_outlined,
-              size: 56,
+              // Fix #2423: spec 64×64 — was hardcoded 56
+              size: MinglitIconSize.xlarge * 2,
               color: theme.colorScheme.outlineVariant,
             ),
             const SizedBox(height: MinglitSpacing.medium),
