@@ -39,3 +39,6 @@ if (isPaid) { /* paid 분기 */ }
 - [_shared/BLUEDOC.md](../../BLUEDOC.md) — _shared 전체
 - [EF 아키텍처 RFC](../../../../../docs/architecture/) (예정) — 갈래 A 의 도입 배경
 - [Issue #3676](https://github.com/supabase/cli/issues/3676) — nested entrypoint 미지원 (본 구조 선택 이유)
+
+---
+_Reviewed: 2026-05-18 11:19_
