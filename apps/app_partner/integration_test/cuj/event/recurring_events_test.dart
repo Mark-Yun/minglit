@@ -125,8 +125,10 @@ void main() {
         await t.tap(find.text('매월'));
         await t.pumpAndSettle();
 
-        // 매월 패턴: 매월 N일 선택 UI (DropdownButton 또는 유사 위젯)
-        expect(find.text('매월'), findsWidgets);
+        // 매월: _MonthDayInput 표시 → "매월 반복일" 라벨
+        expect(find.text('매월 반복일'), findsOneWidget);
+        // 매월: _DayOfWeekChips 숨김 → "요일 선택" 없음
+        expect(find.text('요일 선택'), findsNothing);
       },
     );
 
@@ -142,8 +144,10 @@ void main() {
         await t.tap(find.text('격주'));
         await t.pumpAndSettle();
 
-        // 격주 = 요일 선택 UI 표시 (매주와 동일)
-        expect(find.text('격주'), findsOneWidget);
+        // 격주 = _DayOfWeekChips 표시 → "요일 선택" 라벨
+        expect(find.text('요일 선택'), findsOneWidget);
+        // 요일 선택 FilterChip 존재 확인
+        expect(find.byType(FilterChip), findsWidgets);
       },
     );
   });
