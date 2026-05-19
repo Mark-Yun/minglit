@@ -373,6 +373,10 @@ deno_version = 2
 
 [edge_runtime.secrets]
 OPENAI_API_KEY = "env(OPENAI_API_KEY)"
+# Fix #2650: ENVIRONMENT 가 없으면 minglitEdgeFunction wrapper init 이 throw 하여
+# 모든 EF 가 500 'Init failed' 반환. 로컬/CI 는 dev 환경과 동일한 manifest gate 를
+# 사용하므로 'dev' 하드코딩. production 배포는 `supabase secrets set ENVIRONMENT=production` 으로 override.
+ENVIRONMENT = "dev"
 
 [analytics]
 enabled = true
