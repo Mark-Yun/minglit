@@ -42,7 +42,7 @@ const APP_USER_MAIN_FLOW = `flowchart TB
   HomeRoute -->|"tap notifications"| NotificationCenterRoute
   HomeRoute -->|"tap avatar (/my)"| MyPageRoute
   HomeRoute -->|"tap event card"| EventDetailRoute
-  HomeRoute -->|"tap tag chip"| TagEventListRoute
+  HomeRoute -->|"tap tag chip (authenticated — anonymous: chip bar hidden when empty)"| TagEventListRoute
 
   %% From SearchPage (search_coordinator:18).
   SearchRoute -->|"tap result"| EventDetailRoute

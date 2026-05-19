@@ -162,26 +162,48 @@ jobs:
               continue
             fi
 
-            # 검토 대상 .md 목록 (exclude 적용)
-            if [ "$RECURSIVE" = "true" ]; then
-              MD_FILES=$(find "$DIR" -name '*.md' -type f 2>/dev/null | sort)
+            # 검토 대상 파일 목록 (schema-aware)
+            if [ "$SCHEMA_VERSION" = "v2" ]; then
+              # v2: expand target_files glob patterns relative to DIR
+              MD_FILES=$(python3 -c "
+import ast, glob, os, sys
+patterns = ast.literal_eval('''$TARGET_FILES_JSON''')
+files = []
+for p in patterns:
+    for f in sorted(glob.glob(os.path.join('$DIR', p))):
+        if os.path.isfile(f):
+            files.append(f.lstrip('./'))
+print('\n'.join(files))
+" 2>/dev/null | sort)
             else
-              MD_FILES=$(find "$DIR" -maxdepth 1 -name '*.md' -type f 2>/dev/null | sort)
+              # v1: find .md files with RECURSIVE/EXCLUDE
+              if [ "$RECURSIVE" = "true" ]; then
+                MD_FILES=$(find "$DIR" -name '*.md' -type f 2>/dev/null | sort)
+              else
+                MD_FILES=$(find "$DIR" -maxdepth 1 -name '*.md' -type f 2>/dev/null | sort)
+              fi
+              if [ "$EXCLUDE_JSON" != "[]" ]; then
+                EXCLUDES=$(echo "$EXCLUDE_JSON" | python3 -c "import sys,ast; print(' '.join(ast.literal_eval(sys.stdin.read())))")
+                for E in $EXCLUDES; do
+                  MD_FILES=$(echo "$MD_FILES" | grep -v "$E" || true)
+                done
+              fi
             fi
-            # exclude glob (rough — basename match)
-            if [ "$EXCLUDE_JSON" != "[]" ]; then
-              EXCLUDES=$(echo "$EXCLUDE_JSON" | python3 -c "import sys,ast; print(' '.join(ast.literal_eval(sys.stdin.read())))")
-              for E in $EXCLUDES; do
-                MD_FILES=$(echo "$MD_FILES" | grep -v "$E" || true)
-              done
-            fi
-            MD_LIST=$(echo "$MD_FILES" | sed "s|^|- [\`|; s|$|\`](${REPO_URL}/&)|" | sed "s|](${REPO_URL}/- \[\`|](${REPO_URL}/|g")
-            # Simpler — re-render cleanly
             MD_LIST=""
             while IFS= read -r f; do
               [ -z "$f" ] && continue
               MD_LIST+="- [\`${f}\`](${REPO_URL}/${f})"$'\n'
             done <<< "$MD_FILES"
+
+            # "처리 후" section — schema-aware (v2 auto-derives last_verified)
+            if [ "$SCHEMA_VERSION" = "v2" ]; then
+              AFTER_REVIEW="- 문서 갱신 시: \`target_files\` 에 지정된 파일을 수정하면 \`last_verified\` 가 git log 기반으로 자동 갱신됨
+- 검토 결과 변경 불필요 시: target_files 중 하나에 no-op 커밋으로 verified-only PR"
+            else
+              AFTER_REVIEW="- 문서 갱신 시: 수정 사항과 함께 [\`${FRESH_DOC#./}\`](${REPO_URL}/${FRESH_DOC#./}) 의 \`last_verified\` 를 PR 머지 예정일로 갱신
+- 검토 결과 변경 불필요 시: \`last_verified\` 만 갱신하는 verified-only PR"
+            fi
+            FILE_COUNT=$(echo "$MD_FILES" | grep -c . | tr -d ' ')
 
             # Issue body (spec: 4 sections)
             BODY=$(cat <<EOF
@@ -203,7 +225,7 @@ jobs:
             echo '\`\`\`'
           fi)
 
-          ## 검토 대상 \`.md\` 파일 ($(echo "$MD_FILES" | grep -c . | tr -d ' '))
+          ## 검토 대상 파일 (${FILE_COUNT})
 
           ${MD_LIST}
 
@@ -215,8 +237,7 @@ jobs:
 
           ## 처리 후
 
-          - 문서 갱신 시: 수정 사항과 함께 [\`${FRESH_DOC#./}\`](${REPO_URL}/${FRESH_DOC#./}) 의 \`last_verified\` 를 PR 머지 예정일로 갱신
-          - 검토 결과 변경 불필요 시: \`last_verified\` 만 갱신하는 verified-only PR
+          ${AFTER_REVIEW}
 
           관련 컨벤션: [\`docs/infra/fresh-doc/\`](${REPO_URL}/docs/infra/fresh-doc/)
           EOF
