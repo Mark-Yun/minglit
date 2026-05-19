@@ -401,31 +401,31 @@ void main() {
   // ---------------------------------------------------------------------------
 
   cujGroup('2-1', '멀티 이벤트 → 카운트 배지 표시', () {
+    // Share instances so Riverpod family key matches between app and overrides.
+    // TodayActiveEvent has no value equality → identity-based family key.
+    final e1 = _makeActiveEvent();
+    final e2 = _makeActiveEvent2();
+    final e3 = _makeActiveEvent3();
+
     cujCase(
       'happy: 2개 활성 이벤트 → 배지 "2" 표시',
       app: Scaffold(
-        body: EventNowMultiStack(
-          events: [_makeActiveEvent(), _makeActiveEvent2()],
-        ),
+        body: EventNowMultiStack(events: [e1, e2]),
       ),
-      overrides: () {
-        final activeEvent1 = _makeActiveEvent();
-        final activeEvent2 = _makeActiveEvent2();
-        return [
-          eventNowBarStateProvider(activeEvent1).overrideWith(
-            () => _FakeEventNowBarStateNotifier(EventNowBarState.waiting),
-          ),
-          eventNowBarStateProvider(activeEvent2).overrideWith(
-            () => _FakeEventNowBarStateNotifier(EventNowBarState.waiting),
-          ),
-          eventRealtimeProvider(activeEvent1.event.id).overrideWith(
-            _FakeEventRealtime.new,
-          ),
-          eventRealtimeProvider(activeEvent2.event.id).overrideWith(
-            _FakeEventRealtime.new,
-          ),
-        ];
-      },
+      overrides: () => [
+        eventNowBarStateProvider(e1).overrideWith(
+          () => _FakeEventNowBarStateNotifier(EventNowBarState.waiting),
+        ),
+        eventNowBarStateProvider(e2).overrideWith(
+          () => _FakeEventNowBarStateNotifier(EventNowBarState.waiting),
+        ),
+        eventRealtimeProvider(e1.event.id).overrideWith(
+          _FakeEventRealtime.new,
+        ),
+        eventRealtimeProvider(e2.event.id).overrideWith(
+          _FakeEventRealtime.new,
+        ),
+      ],
       body: (t) async {
         await t.pump();
         await t.pumpAndSettle();
@@ -438,39 +438,28 @@ void main() {
     cujCase(
       'edge: 활성 이벤트 3개 이상 → 배지 개수 정확히 표시',
       app: Scaffold(
-        body: EventNowMultiStack(
-          events: [
-            _makeActiveEvent(),
-            _makeActiveEvent2(),
-            _makeActiveEvent3(),
-          ],
-        ),
+        body: EventNowMultiStack(events: [e1, e2, e3]),
       ),
-      overrides: () {
-        final e1 = _makeActiveEvent();
-        final e2 = _makeActiveEvent2();
-        final e3 = _makeActiveEvent3();
-        return [
-          eventNowBarStateProvider(e1).overrideWith(
-            () => _FakeEventNowBarStateNotifier(EventNowBarState.waiting),
-          ),
-          eventNowBarStateProvider(e2).overrideWith(
-            () => _FakeEventNowBarStateNotifier(EventNowBarState.waiting),
-          ),
-          eventNowBarStateProvider(e3).overrideWith(
-            () => _FakeEventNowBarStateNotifier(EventNowBarState.waiting),
-          ),
-          eventRealtimeProvider(e1.event.id).overrideWith(
-            _FakeEventRealtime.new,
-          ),
-          eventRealtimeProvider(e2.event.id).overrideWith(
-            _FakeEventRealtime.new,
-          ),
-          eventRealtimeProvider(e3.event.id).overrideWith(
-            _FakeEventRealtime.new,
-          ),
-        ];
-      },
+      overrides: () => [
+        eventNowBarStateProvider(e1).overrideWith(
+          () => _FakeEventNowBarStateNotifier(EventNowBarState.waiting),
+        ),
+        eventNowBarStateProvider(e2).overrideWith(
+          () => _FakeEventNowBarStateNotifier(EventNowBarState.waiting),
+        ),
+        eventNowBarStateProvider(e3).overrideWith(
+          () => _FakeEventNowBarStateNotifier(EventNowBarState.waiting),
+        ),
+        eventRealtimeProvider(e1.event.id).overrideWith(
+          _FakeEventRealtime.new,
+        ),
+        eventRealtimeProvider(e2.event.id).overrideWith(
+          _FakeEventRealtime.new,
+        ),
+        eventRealtimeProvider(e3.event.id).overrideWith(
+          _FakeEventRealtime.new,
+        ),
+      ],
       body: (t) async {
         await t.pump();
         await t.pumpAndSettle();
