@@ -16,9 +16,9 @@ import '../_engine/cuj_test.dart';
 class _MockMoreCoordinator extends Mock implements MoreCoordinator {}
 
 Partner _fakePartner() => const Partner(
-      id: 'p-1',
-      name: '테스트 파트너',
-    );
+  id: 'p-1',
+  name: '테스트 파트너',
+);
 
 List<dynamic> _base() {
   final coordinator = _MockMoreCoordinator();
