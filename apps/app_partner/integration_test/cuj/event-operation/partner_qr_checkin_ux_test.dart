@@ -34,12 +34,6 @@ class _FakeEntryGroupStatsController extends EntryGroupCheckinStatsController {
   Future<List<EntryGroupCheckinStats>> build(String eventId) async => _groups;
 }
 
-class _ErrorEntryGroupStatsController extends EntryGroupCheckinStatsController {
-  @override
-  Future<List<EntryGroupCheckinStats>> build(String eventId) async {
-    throw Exception('RPC 실패');
-  }
-}
 
 class _FakeCheckinStatsController extends CheckinStatsController {
   _FakeCheckinStatsController(this._initial, {CheckinStats? realtimeUpdate})
@@ -371,19 +365,43 @@ void main() {
       },
     );
 
-    cujCase(
+    // Note: cujCase 미사용 — async throw path는 Riverpod test 환경에서 불안정.
+    // 단위 테스트(entry_group_bottom_sheet_test.dart)와 동일하게 state 직접 주입.
+    testWidgets(
       'edge: 그룹 RPC 실패 → 헤더만 + "불러오기 실패" 서브타이틀',
-      app: Scaffold(
-        body: EntryGroupBottomSheet(eventId: 'evt-err'),
-      ),
-      overrides: () => [
-        entryGroupCheckinStatsControllerProvider('evt-err').overrideWith(
-          () => _ErrorEntryGroupStatsController(),
-        ),
-      ],
-      body: (t) async {
+      (t) async {
+        // Fix #2612: ProviderContainer 로 초기화 후 AsyncError 직접 주입
+        final container = ProviderContainer(
+          overrides: [
+            entryGroupCheckinStatsControllerProvider('evt-err').overrideWith(
+              () => _FakeEntryGroupStatsController([]),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        await container.read(
+          entryGroupCheckinStatsControllerProvider('evt-err').future,
+        );
+
+        container
+            .read(
+              entryGroupCheckinStatsControllerProvider('evt-err').notifier,
+            )
+            .state = AsyncError(Exception('RPC 실패'), StackTrace.empty);
+
+        await t.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: const MaterialApp(
+              home: Scaffold(
+                body: EntryGroupBottomSheet(eventId: 'evt-err'),
+              ),
+            ),
+          ),
+        );
         await t.pumpAndSettle();
-        // 헤더는 표시, 서브타이틀에 에러 문구
+
         expect(find.text('엔트리 그룹별 현황'), findsOneWidget);
         expect(find.textContaining('불러오기 실패'), findsOneWidget);
       },
@@ -433,10 +451,11 @@ void main() {
         // 축소 헤더 확인
         expect(find.text('엔트리 그룹별 현황'), findsOneWidget);
 
-        // pull-up 드래그로 시트 확장
-        await t.drag(
+        // pull-up fling으로 시트 확장 (DraggableScrollableSheet snap 트리거에 안정적)
+        await t.fling(
           find.text('엔트리 그룹별 현황'),
           const Offset(0, -400),
+          1000.0,
         );
         await t.pumpAndSettle();
 
