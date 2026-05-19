@@ -43,7 +43,7 @@ class _ErrorEntryGroupStatsController extends EntryGroupCheckinStatsController {
 
 class _FakeCheckinStatsController extends CheckinStatsController {
   _FakeCheckinStatsController(this._initial, {CheckinStats? realtimeUpdate})
-      : _realtimeUpdate = realtimeUpdate;
+    : _realtimeUpdate = realtimeUpdate;
 
   final CheckinStats _initial;
   final CheckinStats? _realtimeUpdate;
