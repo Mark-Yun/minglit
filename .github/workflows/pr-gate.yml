@@ -193,7 +193,7 @@ jobs:
     name: test-app-unit-widget-golden
     needs: changes
     if: ${{ needs.changes.outputs.app_user == 'true' || needs.changes.outputs.app_partner == 'true' || needs.changes.outputs.minglit_kit == 'true' || needs.changes.outputs.mds_core == 'true' }}
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     permissions:
       contents: write
       checks: write
@@ -238,14 +238,19 @@ jobs:
           # persist-credentials: false keeps the PAT out of git config during pub get,
           # analyze, and test steps; the PAT is injected only in the push step below.
           persist-credentials: false
-      # Flutter SDK + pub-cache come from a host bind volume on the
-      # self-hosted runner (toolcache + .pub-cache mounts in
-      # minglit-github-workflow-runner). The action's `cache: true` and
-      # the explicit actions/cache@v5 for ~/.pub-cache are redundant.
       - uses: subosito/flutter-action@v2
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         with:
           channel: 'stable'
+          cache: true
+      - name: Cache pub packages
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
+        uses: actions/cache@v5
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
       - name: Install dependencies
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         run: flutter pub get
@@ -472,7 +477,7 @@ jobs:
     name: test-pgtap
     needs: changes
     if: ${{ needs.changes.outputs.supabase == 'true' }}
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: supabase/setup-cli@v2
@@ -482,6 +487,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          cache: true
       # Wipe any volume left by a prior run on this host so `supabase start`
       # initializes a fresh DB and auto-applies all migrations from scratch.
       # Required on shared self-hosted runners — otherwise the next start
@@ -612,7 +618,7 @@ jobs:
     name: test-ef-integration
     needs: changes
     if: ${{ needs.changes.outputs.supabase == 'true' }}
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
