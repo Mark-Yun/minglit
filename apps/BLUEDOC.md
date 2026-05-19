@@ -30,4 +30,4 @@ Minglit 의 **사용자 대면 애플리케이션** 폴더. Flutter 모바일 �
 - [CLAUDE.md `## Build Defaults`](../CLAUDE.md) — flutter build 명령 / Java 17 설정
 
 ---
-_Reviewed: 2026-05-17 22:32_
+_Reviewed: 2026-05-18 21:00_

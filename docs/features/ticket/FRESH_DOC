@@ -1,6 +1,6 @@
 cycle: 14d
 priority: P3-low
-last_verified: 2026-05-16
+last_verified: 2026-05-18
 refresh_method: |
   본 카테고리 (ticket) 인스펙션 → feature_audit_report.md 갱신 + Action Items 마다 GitHub Issue 1건 파일링.
   절차: docs/features/feature_audit_report_template.md 의 "AI 실행 절차" 섹션 (6 step + 명령어) 참조.
