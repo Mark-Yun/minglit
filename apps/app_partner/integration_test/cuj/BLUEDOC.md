@@ -21,20 +21,26 @@ flutter test integration_test/cuj/ \
   -d emulator-5554
 ```
 
-## 폴더 구조 (예정)
+## 폴더 구조
 
 ```
 integration_test/cuj/
   _engine/
     cuj_test.dart            # app_user 와 동일
-  settlement/
-    settlement_test.dart
+  account/
+    partner_terms_privacy_test.dart   # CUJ 1-1, 2-1 (Flutter 범위 내)
   event-operation/
-    application_review_test.dart
+    ...
   ...
 ```
 
-현재는 엔진만 — 첫 partner CUJ 추가 시 spec.md ↔ 테스트 매핑.
+## 커버리지 범위 (Flutter integration test)
+
+| 파일 | spec | 커버 CUJ |
+|------|------|----------|
+| `account/partner_terms_privacy_test.dart` | `docs/features/account/partner-terms-privacy/spec.md` | 1-1 (이용약관 탭+URL), 2-1 (개인정보처리방침 탭+URL) |
+
+Flutter 범위 외 CUJ (landing_partner 웹 기능 또는 미구현): 1-2, 1-3, 2-2~2-4, 3-1~3-2.
 
 ---
-_Reviewed: 2026-05-17 22:32_
+_Reviewed: 2026-05-20 00:00_
