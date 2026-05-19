@@ -1,0 +1,99 @@
+# Post-merge orchestrator — single push:dev entry point for follow-up automation that
+# previously lived in 5 separate workflows (sync-pr-branches, triage-mds-issue,
+# sync-mds-mockups, monitor-deno-coverage, sync-test-coverage). Each is now reusable
+# (workflow_call) and gated here by a coarse dorny/paths-filter so unchanged areas
+# pay zero runner time. The reusables keep their workflow_dispatch trigger for manual
+# reruns; only their push:dev trigger moved here.
+#
+# sync-graphify (independent schedule) and sync-version (pull_request: closed) are
+# deliberately NOT consolidated — different trigger semantics.
+
+name: post-merge
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+# Union of permissions needed across all called reusables; each reusable still declares
+# its own narrower permissions at job level (those take precedence).
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      mds_specs: ${{ steps.filter.outputs.mds_specs }}
+      mds_mockups: ${{ steps.filter.outputs.mds_mockups }}
+      supabase_functions: ${{ steps.filter.outputs.supabase_functions }}
+      flutter: ${{ steps.filter.outputs.flutter }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          # On workflow_dispatch with no base, paths-filter treats all files as
+          # changed → every reusable runs. Intentional: manual rerun = "run all".
+          filters: |
+            mds_specs:
+              - 'apps/mds/docs/public/specs/**'
+              - 'apps/mds/docs/src/lib/components.ts'
+              - 'apps/mds/docs/src/components/specs/**'
+            mds_mockups:
+              - 'apps/mds/docs/public/specs/**/index.html'
+              - 'apps/mds/docs/public/specs/**.css'
+              - 'apps/mds/docs/scripts/render-spec-mockups.js'
+              - 'shared/packages/mds/tokens/lib/generated/tokens.css'
+            supabase_functions:
+              - 'supabase/functions/**'
+              - '!supabase/functions/_coverage/**'
+            flutter:
+              - 'apps/app_user/lib/**'
+              - 'apps/app_user/test/**'
+              - 'apps/app_user/pubspec.yaml'
+              - 'apps/app_partner/lib/**'
+              - 'apps/app_partner/test/**'
+              - 'apps/app_partner/pubspec.yaml'
+              - 'shared/packages/minglit_kit/lib/**'
+              - 'shared/packages/minglit_kit/test/**'
+              - 'shared/packages/minglit_kit/pubspec.yaml'
+
+  # No paths gate: previously fired on every push:dev regardless of files.
+  sync-pr-branches:
+    uses: ./.github/workflows/sync-pr-branches.yml
+    secrets: inherit
+
+  # Push-event-only: reusable consumes github.event.before for diff computation, which
+  # is unset under workflow_dispatch (would diff against full tree).
+  triage-mds-issue:
+    needs: changes
+    if: github.event_name == 'push' && needs.changes.outputs.mds_specs == 'true'
+    uses: ./.github/workflows/triage-mds-issue.yml
+    secrets: inherit
+
+  # workflow_dispatch fallback: dorny/paths-filter has no usable base on manual triggers
+  # (dev vs dev = empty diff), so its outputs would be 'false' and all jobs would skip.
+  # The OR makes "manual rerun" = "run everything", which matches the prior per-workflow
+  # workflow_dispatch behavior callers will expect.
+  sync-mds-mockups:
+    needs: changes
+    if: needs.changes.outputs.mds_mockups == 'true' || github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/sync-mds-mockups.yml
+    secrets: inherit
+
+  monitor-deno-coverage:
+    needs: changes
+    if: needs.changes.outputs.supabase_functions == 'true' || github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/monitor-deno-coverage.yml
+    secrets: inherit
+
+  sync-test-coverage:
+    needs: changes
+    if: needs.changes.outputs.flutter == 'true' || github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/sync-test-coverage.yml
+    secrets: inherit

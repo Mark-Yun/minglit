@@ -18,13 +18,14 @@ permissions:
 
 jobs:
   coverage:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
 
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          cache: true
 
       - name: Run coverage report (JSON)
         id: cov
