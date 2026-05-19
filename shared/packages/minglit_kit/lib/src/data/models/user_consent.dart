@@ -31,8 +31,7 @@ enum ConsentType {
 
   /// 본인인증(CI/DI) 수집 동의
   @JsonValue('identity_verification')
-  identityVerification
-  ;
+  identityVerification;
 
   /// The required consent types for signup.
   static const List<ConsentType> requiredTypes = [
