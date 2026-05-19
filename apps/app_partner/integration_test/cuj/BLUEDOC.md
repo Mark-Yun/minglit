@@ -37,7 +37,7 @@ integration_test/cuj/
     recurring_events_test.dart       # CUJ 1-1, 1-2, 1-4, 3-1, 3-2, 3-4
     partner_dashboard_test.dart      # CUJ 1-1~1-5, 2-1~2-5, 3-1~3-3, 4-2~4-3, 5-1~5-2
   event-operation/
-    partner_qr_checkin_ux_test.dart  # CUJ 1-1, 1-2, 1-3, 3-1, 3-2, 5-4 (6/13)
+    ...
   ...
 ```
 
@@ -56,4 +56,4 @@ integration_test/cuj/
 Flutter 범위 외 CUJ (landing_partner 웹 기능 또는 미구현): 1-2, 1-3, 2-2~2-4, 3-1~3-2.
 
 ---
-_Reviewed: 2026-05-20 12:00_
+_Reviewed: 2026-05-20 09:00_
