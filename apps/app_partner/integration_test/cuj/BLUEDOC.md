@@ -30,7 +30,7 @@ integration_test/cuj/
   account/
     partner_terms_privacy_test.dart   # CUJ 1-1, 2-1 (Flutter 범위 내)
   event-operation/
-    ...
+    partner_qr_checkin_ux_test.dart  # CUJ 1-1, 1-2, 1-3, 3-1, 3-2, 5-4 (6/13)
   ...
 ```
 
@@ -39,6 +39,7 @@ integration_test/cuj/
 | 파일 | spec | 커버 CUJ |
 |------|------|----------|
 | `account/partner_terms_privacy_test.dart` | `docs/features/account/partner-terms-privacy/spec.md` | 1-1 (이용약관 탭+URL), 2-1 (개인정보처리방침 탭+URL) |
+| `event-operation/partner_qr_checkin_ux_test.dart` | `docs/features/event-operation/partner-qr-checkin-ux/spec.md` | 1-1, 1-2, 1-3, 3-1, 3-2, 5-4 (6/13) |
 
 Flutter 범위 외 CUJ (landing_partner 웹 기능 또는 미구현): 1-2, 1-3, 2-2~2-4, 3-1~3-2.
 
