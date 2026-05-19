@@ -56,7 +56,7 @@ class _FakeCheckinStatsController extends CheckinStatsController {
   @override
   Future<void> applyFetchedStats(String eventId) async {
     if (_realtimeUpdate != null) {
-      state = AsyncData(_realtimeUpdate!);
+      state = AsyncData(_realtimeUpdate);
     }
   }
 }
@@ -309,7 +309,7 @@ void main() {
         await t.pump();
         await t.pumpAndSettle();
 
-        // _FakeManualCheckinController.checkin() → checked_in optimistic update.
+        // _FakeManualCheckinController.checkin() → optimistic update.
         // UI: FilledButton("체크인") 사라지고 OutlinedButton("완료") 표시
         expect(
           find.widgetWithText(FilledButton, '체크인'),
