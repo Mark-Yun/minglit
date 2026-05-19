@@ -34,7 +34,6 @@ class _FakeEntryGroupStatsController extends EntryGroupCheckinStatsController {
   Future<List<EntryGroupCheckinStats>> build(String eventId) async => _groups;
 }
 
-
 class _FakeCheckinStatsController extends CheckinStatsController {
   _FakeCheckinStatsController(this._initial, {CheckinStats? realtimeUpdate})
     : _realtimeUpdate = realtimeUpdate;
@@ -388,7 +387,10 @@ void main() {
             .read(
               entryGroupCheckinStatsControllerProvider('evt-err').notifier,
             )
-            .state = AsyncError(Exception('RPC 실패'), StackTrace.empty);
+            .state = AsyncError(
+          Exception('RPC 실패'),
+          StackTrace.empty,
+        );
 
         await t.pumpWidget(
           UncontrolledProviderScope(
