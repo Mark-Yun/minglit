@@ -39,13 +39,16 @@ let _ctx: Ctx | null = null;
 export function suite(_featureKey: string): Ctx {
   if (_ctx) return _ctx;
 
-  const url = Deno.env.get("SUPABASE_URL");
+  const rawUrl = Deno.env.get("SUPABASE_URL");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
 
-  if (!url || !serviceKey || !anonKey) {
+  if (!rawUrl || !serviceKey || !anonKey) {
     return _DISABLED_CTX;
   }
+
+  // supabase-js 2.105+ rejects 127.0.0.1 in validateSupabaseUrl — use localhost
+  const url = rawUrl.replace("127.0.0.1", "localhost");
 
   const db = createClient(url, serviceKey, {
     auth: { persistSession: false, autoRefreshToken: false },
