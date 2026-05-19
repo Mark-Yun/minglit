@@ -78,12 +78,17 @@ void cujGroup(String id, String name, void Function() body) {
 /// 만든 mock 캡처하려면 함수 형태. 없으면 빈 list.
 ///
 /// [app] 은 ProviderScope + MaterialApp 안의 home 위젯. MinglitTheme 자동 적용.
+///
+/// [afterPump] 는 pumpWidget 직후 실행할 pump callback. null 이면 pumpAndSettle().
+/// AnimationController.repeat() 같은 무한 애니메이션이 있는 위젯은 pumpAndSettle()
+/// 이 settle 되지 않으므로 대신 고정 pump (예: `(t) => t.pump(Duration(ms: 50))`)를 전달.
 @isTest
 void cujCase(
   String name, {
   required Widget app,
   List<dynamic> Function()? overrides,
   required Future<void> Function(WidgetTester) body,
+  Future<void> Function(WidgetTester)? afterPump,
 }) {
   testWidgets(name, (tester) async {
     await tester.pumpWidget(
@@ -105,7 +110,7 @@ void cujCase(
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await (afterPump?.call(tester) ?? tester.pumpAndSettle());
     await body(tester);
   });
 }

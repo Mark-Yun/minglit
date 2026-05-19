@@ -122,6 +122,7 @@ class _BoardingPassCardState extends State<BoardingPassCard>
     final isUsed = status == BoardingPassStatus.used;
 
     return Opacity(
+      key: const ValueKey('used-card-opacity'),
       opacity: isUsed ? MinglitOpacity.overlay : 1.0,
       child: Container(
         decoration: BoxDecoration(
@@ -144,7 +145,7 @@ class _BoardingPassCardState extends State<BoardingPassCard>
             children: [
               const _HeaderStrip(),
               _EventInfoSection(eventMeta: widget.eventMeta),
-              const _PerforationLine(),
+              const _PerforationLine(key: ValueKey('perforation-line')),
               _QRStubSection(
                 token: widget.token,
                 status: status,
