@@ -22,6 +22,7 @@
 
 | Date | Version | Author | Changes |
 |---|---|---|---|
+| 2026-05-18 | 1.1 | mark-yun | Default · 비로그인 state 갱신 — "Verified Vibe = 모든 콘텐츠 차단" (deprecated) → "참여 단계에서만 인증 요구" (anonymous discovery + authenticated participation) 패턴으로 정정. Blueprint tree (L41) · AppBar anatomy ㉡ (L60) 가 이미 인코딩한 invariant 와 일치. Loading state 액션 표기도 anatomy ㉡ 위임으로 정합. flow-data.ts 의 TagChip edge label 에 anonymous 조건 명시. (close #2397) |
 | 2026-05-01 | 1.0 | mark-yun | v1.4 template으로 마이그레이션. EventCard / EventNowBar sub-anatomy 및 visual gallery 분리 → event_card.html · event_now_bar.html로 별도 spec. home_page는 page-level scaffold (AppBar + Filter chip bar + Feed + bottomSheet 슬롯)에 집중. 5 page-level state → mini-table per state (default · guest · loading · feed empty · error). additive diff 패턴. |
 
 [🧱 Layout](#layout) [🎨 States](#states) [🔄 Global Behavior](#behavior) [📖 Reference](#reference)
@@ -121,12 +122,12 @@ _⚠️ 이전 inline anatomy / state table / routed-sheet 매핑은 child spec�
 
 | 항목 | 내용 |
 |---|---|
-| 조건 | 로그인되지 않은 상태로 화면에 진입한 경우. |
-| 사용자 액션 | + "로그인하고 시작하기" 탭 → LoginPage로 이동− 그 외 액션은 모두 막힘 (피드 / 칩 / 하단 바 모두 노출되지 않음) |
-| 에지케이스 | · 로그인이 완료되면 자동으로 default 상태로 전환. |
-| 컴포넌트 | ↔ AppBar 우측 아이콘 → 없음 (검색 · 알림 · 아바타 모두 hidden)↔ Body → 중앙 정렬 login prompt + "로그인하고 시작하기" CTA− FilterChipBar− Feed (EventCards)− EventNowBar |
-| 토큰 | 동일 (단, primary CTA 버튼은 color-primary 강조) |
-| 노트 | 📝 "Verified Vibe" 컨셉상 비인증은 모든 콘텐츠 차단 — feed/discovery 자체가 보호된 기능. |
+| 조건 | 로그인되지 않은 상태로 화면에 진입. 발견(검색·피드·이벤트 상세 열람)은 익명으로 가능. 참여(신청·알림·마이) 시점에서만 인증 게이트가 작동. |
+| 사용자 액션 | ① 스크롤 → 카드 차례 노출 · 끝에 다다르면 다음 결과가 자동으로 이어짐② EventCard 탭 → EventDetailPage로 이동 (열람 가능)③ FilterChip 탭 → 필터 적용 → 피드 갱신④ "근처" 토글 → 위치 권한 요청 (필요 시) → 위치 기반 정렬⑤ AppBar 검색 아이콘 → SearchPage / AppBar person_outline 아이콘 → LoginPage (로그인 후 마이페이지 복귀)⑥ 신청 / 알림 / 마이 진입 시점 → LoginPage redirect (참여 단계 인증 게이트) |
+| 에지케이스 | · 로그인이 완료되면 자동으로 default(인증) 상태로 전환.· 알림 아이콘은 비노출 (AppBar anatomy ㉡ 참고).· FeaturedTagChipBar 는 anonymous에서 데이터가 비어 hidden — TagChip 진입 차단. |
+| 컴포넌트 | ↔ AppBar 우측 → 검색 + person_outline (마이페이지) — 알림 · 아바타 hidden↔ Body → ExploreFilterChipBar + Feed (EventCards) + FeaturedTagChipBar (hidden if empty)− EventNowBar (활성 이벤트는 인증 후에만 가능) |
+| 토큰 | 동일 (AppBar anatomy ㉡ 참고) |
+| 노트 | 📝 "Verified Vibe" = **참여 단계에서만 인증 요구**. 발견은 익명에 열어 onboarding conversion 에 유리. 신청 · 알림 · 마이 진입 시점에서 LoginPage redirect 로 게이트. (옛 "비인증 = 콘텐츠 전면 차단" 컨셉은 deprecated.) |
 
 ### Loading · 피드 로드 중
 
@@ -135,7 +136,7 @@ _⚠️ 이전 inline anatomy / state table / routed-sheet 매핑은 child spec�
 | 항목 | 내용 |
 |---|---|
 | 조건 | 피드를 불러오는 중. 진입 직후 또는 풀-다운 새로고침 직후. |
-| 사용자 액션 | · AppBar 액션은 가능 (검색 · 알림 · 아바타)· 풀-다운 새로고침으로 다시 트리거 가능 (이미 진행 중이면 무반응)− 피드 / 칩 액션 (스켈레톤 표시 — 미인터랙티브) |
+| 사용자 액션 | · AppBar 액션은 가능 (자세한 anatomy ㉡ 참고 — 인증/비인증에 따라 아이콘 분기)· 풀-다운 새로고침으로 다시 트리거 가능 (이미 진행 중이면 무반응)− 피드 / 칩 액션 (스켈레톤 표시 — 미인터랙티브) |
 | 에지케이스 | · 응답이 길어지면 스켈레톤이 그대로 유지됨. 별도 타임아웃 없음.· 빠르게 응답이 오면 곧바로 결과 화면으로 전환 (fade 없이 cut). |
 | 컴포넌트 | ↔ Feed → 카드 자리 표시(스켈레톤) × 5장 (이미지 자리 회색 + 본문 라인)↔ EventNowBar → 노출되지 않음 |
 | 토큰 | + color-divider (skeleton 라인) + shimmer animation (1.5s linear infinite gradient sweep) |
