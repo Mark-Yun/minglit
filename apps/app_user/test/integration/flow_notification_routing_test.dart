@@ -63,8 +63,8 @@ void main() {
 
       await capture.setup(tester, 1); // 빈 알림 목록
 
-      // Fix #2483 (notification_list_screen.dart:45): empty state title 은 마침표 없음
-      // ("알림이 없습니다") — MinglitEmptyState canonical title pattern.
+      // Fix #2483 (notification_list_screen.dart:45): empty state title
+      // 은 마침표 없음 ("알림이 없습니다") — MinglitEmptyState canonical title.
       expect(find.text('알림이 없습니다'), findsOneWidget);
     });
 
