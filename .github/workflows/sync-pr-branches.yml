@@ -8,9 +8,11 @@ on:
 # Fix #1972: permissions moved to job level (minimum necessary scope)
 # Workflow-level permissions removed to avoid granting write access to all jobs.
 
+# Fix #2634: cancel-in-progress causes every run to be cancelled when dev merges happen in rapid succession.
+# update-branch is idempotent — duplicate runs are safe; cancellation is harmful.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
 
 jobs:
   update-branches:
