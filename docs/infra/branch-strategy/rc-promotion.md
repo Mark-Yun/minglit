@@ -124,11 +124,9 @@ RC 는 dev-staging 에서 cut 됐지만 RC 가 사는 동안 dev-staging 이 앞
 - AI 가 resolve 후 push
 - pr-gate 통과 시 머지
 
-### Mobile cherry-pick 의 backport?
+### Mobile 의 backport 불필요
 
-Mobile release branch (`release/mobile-YYYY-MM`) 의 cherry-pick PR 은 main commit 에서 cherry-pick = dev-staging 에 이미 존재 → **backport 불필요**.
-
-긴급 mobile 직접 hotfix (release/mobile-* 에 새 PR — drop-down 룰 위반 case) → dev-staging backport 필요. 드문 case, 발생 시 수동 처리 (TBD: 자동화 여부).
+Mobile 은 release branch 없음 (main 머지 마다 `deploy-android-*, deploy-ios-*` 가 직접 build + store upload). 따라서 mobile-specific backport 흐름 없음. mobile 의 모든 hotfix 는 dev-staging → ... → rc → main 의 정상 흐름을 따라 다음 main push 시 mobile deploy workflow 들이 자동 반영.
 
 ## Supabase Staging Branch (RC 의 backend 검증용)
 
@@ -169,7 +167,7 @@ Mobile release branch (`release/mobile-YYYY-MM`) 의 cherry-pick PR 은 main com
 ## 관련
 
 - [dev-pipeline.md](./dev-pipeline.md) — rc-gate-pass status 가 rc-cut 의 source
-- [main-promotion.md](./main-promotion.md) — rc → main 머지 + 그 후 mobile-cut
+- [main-promotion.md](./main-promotion.md) — rc → main 머지 + deploy-android-*, deploy-ios-*
 - [test-strategy.md](./test-strategy.md) — rc-pr-gate 와 mobile smoke 위치
 - [branch-flow.md](./branch-flow.md) — tag 컨벤션 + protection
 

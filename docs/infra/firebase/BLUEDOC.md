@@ -8,7 +8,7 @@ minglit 의 Firebase 컴포넌트 진입점. mobile 의 crash 분석, 디바이�
 |----------|------|------|
 | **Crashlytics** | mobile crash, crash-free rate (가장 신뢰성 높은 신호) | TBD |
 | **Test Lab** | 실 디바이스 farm — `rc-gate` 일부 위임 | TBD |
-| **Remote Config** | 단순 kill switch, **version kill source (Tier 2a soft `min_version_soft` + Tier 2b hard `kill_list_hard`)** | TBD |
+| **Remote Config** | 단순 kill switch, **version kill source (Tier 2a soft `latest_version` + Tier 2b hard `kill_list_hard`)** | TBD |
 | **App Check** (TBD 도입) | request 인증 (App Attest / Play Integrity / reCAPTCHA) — 버전 kill 과 무관, 별개 보안 layer | TBD |
 | **Cloud Messaging (FCM)** | push notification | 기존 mobile 문서 |
 | **Analytics** | 사용자 행동 (보조) | TBD |

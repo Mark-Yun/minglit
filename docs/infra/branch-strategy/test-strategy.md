@@ -1,6 +1,6 @@
 # Test Strategy
 
-4-stage 모델 (`dev-staging → dev → rc → main`) + flag staged rollout 환경에서, *어떤 테스트가 어느 단계에서 도는가* 의 단일 source. 빠른 검사 = `pr-gate` (각 단계), 무거운 검사 = `rc-gate` (dev 의 post-merge), 프로덕션 검증 = `mobile-cut` + flag staged.
+4-stage 모델 (`dev-staging → dev → rc → main`) + flag staged rollout 환경에서, *어떤 테스트가 어느 단계에서 도는가* 의 단일 source. 빠른 검사 = `pr-gate` (각 단계), 무거운 검사 = `rc-gate` (dev 의 post-merge), 프로덕션 검증 = `deploy-android-*, deploy-ios-*` smoke + flag staged.
 
 ## 단계별 게이트
 
@@ -8,12 +8,12 @@
 |------|--------|------|---------|
 | dev-staging 머지 전 | `dev-staging-pr-gate` (unit · lint · analyze · pgTAP · EF test · migration check · `expand-migrate-contract` · `flag-registration` · gitleaks) | < 10분 | merge queue PR drop |
 | dev 머지 전 | `nightly-pr-gate` (dev-staging-pr-gate 와 동일 — defensive) | < 10분 | nightly-cut PR drop |
-| dev 머지 후 (자동) | `rc-gate` (full: CUJ · integration · e2e · simulator · Test Lab smoke) | 30-60분 | 자동 이슈 + AI fix flow. status 미부여 |
+| dev 머지 후 (자동) | `rc-gate` (CUJ matrix happy/unhappy/chaos · integration · e2e · Test Lab smoke) | 30-60분 | 자동 이슈 + AI fix flow via dev-staging. `rc-gate-pass` 미부여 |
 | rc 머지 전 (hotfix) | `rc-pr-gate` (pr-gate + mobile smoke) | < 15분 | hotfix PR drop |
 | main 머지 전 (rc → main) | `main-pr-gate` (pr-gate + `expand-migrate-contract` 재검증 + RC HEAD 의 `rc-gate-pass` 확인) | 분 | promotion PR 보류 |
 | rc → main PR | workflow auto-merge (모든 check 통과 시) | 분 | check 실패 시 PR hold + alert |
 | Backend/Web auto-deploy 후 | post-deploy smoke + Sentry/Crashlytics 알람 임계 | 분 | auto-rollback ([main-promotion.md](./main-promotion.md)) |
-| mobile-cut 후 | mobile-specific smoke (build + Test Lab 회귀) | 시간 | cut 차단, 직전 main commit 시도 |
+| deploy-android-*, deploy-ios-* 후 | mobile build smoke (Fastlane upload 검증) | 시간 | retry 1회 → auto-issue + mobile 팀 |
 | Flag canary (allowlist) | Statsig metric gates | 며칠 | flag flip OFF |
 | Flag staged (5/25/100%) | Statsig one-sided sequential | 48h/72h/7일 | hold or rollback |
 
@@ -83,7 +83,7 @@ RC 의 hotfix 만 받음. `pr-gate` + 추가 mobile smoke. 머지 시 `rc-post-m
 | 부하/성능 | `rc-gate` (주 1회) or staged rollout 메트릭 | 매일 무거움 |
 | backend ↔ mobile 계약 호환 | `expand-migrate-contract` CI + flag canary 메트릭 | 다층 안전망 |
 | 실 디바이스 다양성 | `rc-gate` 의 Firebase Test Lab | 시뮬레이터 한계 보완 |
-| Mobile 회귀 (cut 직후) | `mobile-cut` 의 mobile-specific smoke | app store 업로드 전 마지막 |
+| Mobile 회귀 (deploy 직후) | `deploy-android-*, deploy-ios-*` 의 build smoke | store upload 전 마지막 |
 
 ## 결정해야 할 것
 
