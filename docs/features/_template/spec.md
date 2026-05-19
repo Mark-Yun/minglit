@@ -1,13 +1,23 @@
 # Spec: `<Feature Name>`
 
-> **참조**
-> - PRD: [prd.md](./prd.md)
-> - MDS specs (UI 디자인 + state PNG): 본 feature 가 사용하는 화면 모두 나열
->   - [`<screen_name_1>`](../../../../apps/mds/docs/public/specs/<screen_name_1>/) — `<용도>`
->   - [`<screen_name_2>`](../../../../apps/mds/docs/public/specs/<screen_name_2>/) — `<용도>` (없으면 디자인 TODO 표기)
-> - Wireframe (있으면): [wireframe.html](./wireframe.html)
+> **참조** (모든 경로는 repo-root 상대, code-formatted — AI agent 가 `Read <repo>/<path>` 로 fetch)
 >
-> **사용법**: 본 파일을 `docs/features/<category>/<feature>/spec.md` 로 복사 후 `<placeholder>` 를 모두 채운다. canonical 예시: [`docs/features/account/signup-consent/spec.md`](../account/signup-consent/spec.md). 컨벤션: [`docs/features/BLUEDOC.md`](../BLUEDOC.md).
+> - PRD: `docs/features/<category>/<feature>/prd.md`
+> - **MDS specs** (UI 디자인 + state PNG — 본 feature 가 사용하는 모든 화면):
+>   - `apps/mds/docs/public/specs/<screen_name_1>/` — `<용도>`
+>   - `apps/mds/docs/public/specs/<screen_name_2>/` — `<용도>` (없으면 "디자인 TODO" 표기)
+> - **Apps** (구현 위치 — multi-app or non-Flutter 일 때 필수):
+>   - app_user: `apps/app_user/lib/src/features/<area>/`
+>   - app_partner: (해당 없음 / 또는 `apps/app_partner/lib/src/features/<area>/`)
+>   - landing_*: (Flutter 가 아니라면 명시)
+> - **Backend EFs** (사용 EF — 없으면 "(해당 없음 — Postgres RPC X / 직접 호출 Y)"):
+>   - `supabase/functions/<ef-name>/` — `<purpose>`
+> - **CUJ tests** (deterministic path 지만 명시):
+>   - `apps/app_user/integration_test/cuj/<category>/<feature>_test.dart`
+>   - `apps/app_partner/integration_test/cuj/<category>/<feature>_test.dart` (양면일 때)
+> - **Wireframe** (옵션): `docs/features/<category>/<feature>/wireframe.html`
+>
+> **사용법**: 본 파일을 `docs/features/<category>/<feature>/spec.md` 로 복사 후 `<placeholder>` 를 모두 채운다. canonical 예시: `docs/features/account/signup-consent/spec.md`. 컨벤션: `docs/features/BLUEDOC.md`.
 
 ## CUJs
 
