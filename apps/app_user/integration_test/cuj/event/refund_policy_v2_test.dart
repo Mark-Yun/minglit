@@ -1,23 +1,23 @@
-// CUJ tests — event / refund-policy-v2 (app_user) — grace period flow
+// CUJ tests — event / refund-policy-v2
 //
 // 대응 spec: docs/features/event/refund-policy-v2/spec.md
 // CUJ 추가 시 본 파일에 `cujGroup` 블록 추가 (새 파일 X).
 //
 // 커버 범위:
-//   - CUJ 1-1: grace period(3시간) 내 자동 환불 — 결제 1h 후, 이벤트 30d 후 (P0)
+//   - CUJ 1-1: grace period(3시간) 내 자동 환불 (P0)
 //   - CUJ 1-2: grace period 내 다이얼로그에서 돌아가기 (P0)
-//   - CUJ 1-3: 환불 완료 후 "환불 정보" 카드 표시 (P1)
+//   - CUJ 1-3: 환불 완료 후 라벨 표시 (P1)
+//   - CUJ 5-2: 무료 이벤트 취소 (P0)
 //
 // 설계 결정:
-//   - PurchaseHistoryDetailPage 를 직접 렌더.
-//   - purchaseHistoryDetailProvider(applicationId) overrideWith 로 캐시 체인 우회.
-//   - policyRepositoryProvider 미목업 → catch 블록 기본값(2h/7d) 사용.
-//   - RefundCalculator.calculate 로직:
-//     * withinGracePeriod = paidAt 기준 2h 이내
-//     * withinCutoff = eventStartTime 기준 7일 이상 남음
-//     * isRefundable = withinGracePeriod || withinCutoff
-//   - CUJ 1-1/1-2: paidAt=1h ago + eventStartTime=30d → withinGracePeriod=true → confirmRefund
-//   - CUJ 1-3: refundStatus='completed' → 환불 정보 카드 표시 (예매 취소 버튼 미노출)
+//   - PurchaseHistoryDetailPage 를 직접 렌더 (purchaseHistoryDetailProvider 주입).
+//   - purchaseHistoryDetailProvider(applicationId) 를 overrideWith 로 주입하면
+//     캐시 탐색 체인(purchaseHistoryControllerProvider) 을 우회.
+//   - purchaseHistoryControllerProvider.notifier.canCancel() 는 동기 순수 함수.
+//     notifier 생성에 currentUserProvider + eventRepositoryProvider 가
+//     필요하므로 base()에 포함.
+//   - policyRepositoryProvider 는 mock 없이 두고 catch 블록이 기본값(2h/7d)을 사용하도록 함.
+//   - cancelOrder EF 호출은 eventRepositoryProvider mock 으로 격리.
 
 import 'package:app_user/src/features/payment/logic/'
     'purchase_history_detail_controller.dart';
@@ -26,7 +26,6 @@ import 'package:app_user/src/features/payment/ui/'
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -47,16 +46,16 @@ class _MockUser extends Mock implements User {}
 final _now = DateTime.now();
 
 Event _makeEvent({
-  required DateTime startTime,
   String id = 'event-1',
   String status = 'scheduled',
+  DateTime? startTime,
 }) {
   return Event(
     id: id,
     partyId: 'party-1',
     title: '테스트 이벤트',
-    startTime: startTime,
-    endTime: startTime.add(const Duration(hours: 2)),
+    startTime: startTime ?? _now.add(const Duration(days: 30)),
+    endTime: _now.add(const Duration(days: 30, hours: 2)),
     createdAt: _now,
     updatedAt: _now,
     status: status,
@@ -66,13 +65,13 @@ Event _makeEvent({
 }
 
 EventApplication _makeApplication({
-  required DateTime paidAt,
-  required DateTime eventStartTime,
   String id = 'app-1',
   String status = 'paid',
   int? paymentAmount = 50000,
   String? paymentId = 'pay-1',
   String refundStatus = 'none',
+  DateTime? paidAt,
+  DateTime? eventStartTime,
 }) {
   return EventApplication(
     id: id,
@@ -83,7 +82,7 @@ EventApplication _makeApplication({
     paymentId: paymentId,
     paymentAmount: paymentAmount,
     refundStatus: refundStatus,
-    paidAt: paidAt,
+    paidAt: paidAt ?? _now.subtract(const Duration(minutes: 30)),
     createdAt: _now,
     updatedAt: _now,
     event: _makeEvent(startTime: eventStartTime),
@@ -104,12 +103,6 @@ EventApplication _makeApplication({
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  setUpAll(() async {
-    // PurchaseHistoryDetailPage 가 DateFormat('M월 d일 (E) HH:mm', 'ko_KR') 사용.
-    // 초기화 없으면 첫 pump 에서 'Locale data has not been initialized' 오류.
-    await initializeDateFormatting('ko_KR');
-  });
-
   late _MockEventRepository mockRepo;
   late _MockUser mockUser;
 
@@ -122,12 +115,15 @@ void main() {
     ).thenAnswer((_) async => []);
   });
 
+  // base overrides: controller notifier 생성에 필요한 최소 세트.
   List<dynamic> base() => [
     currentUserProvider.overrideWith((_) => mockUser),
     authStateChangesProvider.overrideWith((_) => const Stream.empty()),
     eventRepositoryProvider.overrideWithValue(mockRepo),
   ];
 
+  // Returns overrides for PurchaseHistoryDetailPage rendering with the
+  // given application.
   List<dynamic> withApp(EventApplication app) => [
     purchaseHistoryDetailProvider(app.id).overrideWith((_) async => app),
     ...base(),
@@ -135,25 +131,21 @@ void main() {
 
   // ===========================================================================
   // CUJ 1-1: grace period(3시간) 내 자동 환불
-  // paidAt=1h ago (< grace 2h) + eventStartTime=30d → withinGracePeriod=true
-  // → confirmRefund 다이얼로그 → "취소하기" → cancelOrder 호출
   // ===========================================================================
-  cujGroup('1-1', 'grace period 내 자동 환불', () {
+  cujGroup('1-1', 'grace period(3시간) 내 자동 환불', () {
     cujCase(
-      'happy: 결제 1시간 후(grace 이내) → 예매 취소 버튼 활성 (FR-1)',
-      app: const PurchaseHistoryDetailPage(applicationId: 'app-grace'),
+      'happy: 결제 30분 후 취소 → 예매 취소 버튼 활성',
+      app: const PurchaseHistoryDetailPage(applicationId: 'app-1'),
       overrides: () {
         final app = _makeApplication(
-          id: 'app-grace',
-          paidAt: _now.subtract(const Duration(hours: 1)),
-          eventStartTime: _now.add(const Duration(days: 30)),
+          paidAt: _now.subtract(const Duration(minutes: 30)),
         );
         return withApp(app);
       },
       body: (t) async {
         await t.pumpAndSettle();
 
-        // canCancel=true (refundStatus='none', status='paid', not started)
+        // 예매 취소 버튼 활성 (canCancel=true)
         final cancelBtn = t.widget<ElevatedButton>(
           find.widgetWithText(ElevatedButton, '예매 취소'),
         );
@@ -162,13 +154,11 @@ void main() {
     );
 
     cujCase(
-      'happy: 취소 다이얼로그 → 취소하기 → cancelOrder 호출 (FR-2, FR-3)',
-      app: const PurchaseHistoryDetailPage(applicationId: 'app-grace'),
+      'happy: 결제 확인 다이얼로그 → 취소하기 → cancelOrder 호출',
+      app: const PurchaseHistoryDetailPage(applicationId: 'app-1'),
       overrides: () {
         final app = _makeApplication(
-          id: 'app-grace',
-          paidAt: _now.subtract(const Duration(hours: 1)),
-          eventStartTime: _now.add(const Duration(days: 30)),
+          paidAt: _now.subtract(const Duration(minutes: 30)),
         );
         when(
           () => mockRepo.cancelOrder(
@@ -186,17 +176,18 @@ void main() {
       body: (t) async {
         await t.pumpAndSettle();
 
+        // 예매 취소 버튼 탭
         await t.tap(find.widgetWithText(ElevatedButton, '예매 취소'));
         await t.pumpAndSettle();
 
-        // FR-2: 자동 환불 가능 다이얼로그 + 환불 금액 안내
+        // 확인 다이얼로그 표시 (FR-2: 환불 금액 안내)
         expect(find.text('예매 취소'), findsWidgets);
         expect(find.textContaining('원이 환불됩니다'), findsOneWidget);
 
+        // "취소하기" 탭 → cancelOrder 호출
         await t.tap(find.text('취소하기'));
         await t.pumpAndSettle();
 
-        // FR-3: PortOne 결제 취소 호출 (cancelOrder)
         verify(
           () => mockRepo.cancelOrder(
             eventId: 'event-1',
@@ -205,21 +196,40 @@ void main() {
         ).called(1);
       },
     );
+
+    cujCase(
+      'edge: 이벤트 시작 후 → 예매 취소 버튼 비활성 (eventNotStarted=false)',
+      app: const PurchaseHistoryDetailPage(applicationId: 'app-2'),
+      overrides: () {
+        final app = _makeApplication(
+          id: 'app-2',
+          paidAt: _now.subtract(const Duration(minutes: 30)),
+          eventStartTime: _now.subtract(const Duration(hours: 1)),
+        );
+        return withApp(app);
+      },
+      body: (t) async {
+        await t.pumpAndSettle();
+
+        // eventNotStarted=false → canCancel=false → 버튼 비활성
+        final cancelBtn = t.widget<ElevatedButton>(
+          find.widgetWithText(ElevatedButton, '예매 취소'),
+        );
+        expect(cancelBtn.onPressed, isNull);
+      },
+    );
   });
 
   // ===========================================================================
   // CUJ 1-2: grace period 내 다이얼로그에서 돌아가기
-  // 동일 setup — 다이얼로그 "아니오" → cancelOrder 미호출
   // ===========================================================================
   cujGroup('1-2', 'grace period 내 다이얼로그에서 돌아가기', () {
     cujCase(
-      'happy: 취소 다이얼로그 → "아니오" → cancelOrder 미호출 (FR-2)',
-      app: const PurchaseHistoryDetailPage(applicationId: 'app-grace-back'),
+      'happy: 예매 취소 탭 → 다이얼로그 → 아니오 → 상태 유지',
+      app: const PurchaseHistoryDetailPage(applicationId: 'app-1'),
       overrides: () {
         final app = _makeApplication(
-          id: 'app-grace-back',
-          paidAt: _now.subtract(const Duration(hours: 1)),
-          eventStartTime: _now.add(const Duration(days: 30)),
+          paidAt: _now.subtract(const Duration(minutes: 30)),
         );
         return withApp(app);
       },
@@ -229,75 +239,143 @@ void main() {
         await t.tap(find.widgetWithText(ElevatedButton, '예매 취소'));
         await t.pumpAndSettle();
 
-        // 다이얼로그 등장
+        // 다이얼로그 표시
         expect(find.text('예매 취소'), findsWidgets);
 
         // "아니오" 탭 → 다이얼로그 닫힘
         await t.tap(find.text('아니오'));
         await t.pumpAndSettle();
 
-        // 상태 변경 없음 — cancelOrder 미호출
+        // cancelOrder 미호출 (FR-2: 돌아가기 = 상태 변경 없음)
         verifyNever(
           () => mockRepo.cancelOrder(
             eventId: any(named: 'eventId'),
             reason: any(named: 'reason'),
           ),
         );
+
+        // 화면 유지 (예매 취소 버튼 여전히 노출)
+        expect(find.widgetWithText(ElevatedButton, '예매 취소'), findsOneWidget);
       },
     );
   });
 
   // ===========================================================================
-  // CUJ 1-3: 환불 완료 후 "환불 정보" 카드 표시
-  // refundStatus='completed' → isRefunded=true → "환불 정보" 카드 표시
-  //                                             → "예매 취소" 버튼 미노출
+  // CUJ 1-3: 환불 완료 후 라벨 표시
   // ===========================================================================
   cujGroup('1-3', '환불 완료 후 라벨 표시', () {
     cujCase(
-      'happy: refundStatus=completed → "환불 정보" 카드 표시 (FR-1)',
-      app: const PurchaseHistoryDetailPage(applicationId: 'app-refunded'),
+      'happy: refundStatus=completed → 예매 취소 버튼 비활성 + 환불 정보 섹션',
+      app: const PurchaseHistoryDetailPage(applicationId: 'app-1'),
       overrides: () {
         final app = _makeApplication(
-          id: 'app-refunded',
-          paidAt: _now.subtract(const Duration(hours: 1)),
-          eventStartTime: _now.add(const Duration(days: 30)),
+          status: 'cancelled',
           refundStatus: 'completed',
+          paidAt: _now.subtract(const Duration(minutes: 30)),
         );
         return withApp(app);
       },
       body: (t) async {
         await t.pumpAndSettle();
 
-        // "환불 정보" 카드 표시 (결제금액 + 환불금액 섹션)
-        expect(find.text('환불 정보'), findsOneWidget);
+        // isRefunded=true → 취소 버튼 섹션 전체 미노출 (FR-1: 재취소 차단)
+        expect(
+          find.widgetWithText(ElevatedButton, '예매 취소'),
+          findsNothing,
+        );
 
-        // "예매 취소" 버튼 미노출 (isRefunded=true → 취소 정책 카드 숨김)
-        expect(find.widgetWithText(ElevatedButton, '예매 취소'), findsNothing);
+        // 환불 정보 섹션 노출 (isRefunded=true)
+        expect(find.text('환불 정보'), findsOneWidget);
+      },
+    );
+  });
+
+  // ===========================================================================
+  // CUJ 5-2: 무료 이벤트 취소
+  // ===========================================================================
+  cujGroup('5-2', '무료 이벤트 취소', () {
+    cujCase(
+      'happy: paymentAmount=0, paymentId=null → 예매 취소 버튼 활성',
+      app: const PurchaseHistoryDetailPage(applicationId: 'app-free'),
+      overrides: () {
+        final app = _makeApplication(
+          id: 'app-free',
+          paymentAmount: 0,
+          paymentId: null,
+        );
+        return withApp(app);
+      },
+      body: (t) async {
+        await t.pumpAndSettle();
+
+        // 무료 티켓도 canCancel=true (Fix #1652)
+        final cancelBtn = t.widget<ElevatedButton>(
+          find.widgetWithText(ElevatedButton, '예매 취소'),
+        );
+        expect(cancelBtn.onPressed, isNotNull);
       },
     );
 
     cujCase(
-      'edge: 환불 완료 후 재취소 시도 불가 — 버튼 자체 미노출 (FR-1 negative)',
-      app: const PurchaseHistoryDetailPage(applicationId: 'app-refunded-retry'),
+      'happy: 무료 취소 확인 다이얼로그 → 취소하기 → cancelOrder 호출',
+      app: const PurchaseHistoryDetailPage(applicationId: 'app-free'),
       overrides: () {
         final app = _makeApplication(
-          id: 'app-refunded-retry',
-          paidAt: _now.subtract(const Duration(hours: 1)),
-          eventStartTime: _now.add(const Duration(days: 30)),
-          refundStatus: 'completed',
+          id: 'app-free',
+          paymentAmount: 0,
+          paymentId: null,
+        );
+        when(
+          () => mockRepo.cancelOrder(
+            eventId: any(named: 'eventId'),
+            reason: any(named: 'reason'),
+          ),
+        ).thenAnswer(
+          (_) async => const CancelOrderResult(type: 'cancelled'),
         );
         return withApp(app);
       },
       body: (t) async {
         await t.pumpAndSettle();
 
-        // 재취소 버튼 없음 → cancelOrder 호출 경로 자체가 없음
-        verifyNever(
+        await t.tap(find.widgetWithText(ElevatedButton, '예매 취소'));
+        await t.pumpAndSettle();
+
+        // 무료 이벤트: 0원 환불 다이얼로그 (FR-14: PortOne 없이 상태만 변경)
+        expect(find.textContaining('원이 환불됩니다'), findsOneWidget);
+
+        await t.tap(find.text('취소하기'));
+        await t.pumpAndSettle();
+
+        verify(
           () => mockRepo.cancelOrder(
-            eventId: any(named: 'eventId'),
+            eventId: 'event-1',
             reason: any(named: 'reason'),
           ),
+        ).called(1);
+      },
+    );
+
+    cujCase(
+      'edge: 무료 이벤트 + 이미 취소됨 → 버튼 비활성',
+      app: const PurchaseHistoryDetailPage(applicationId: 'app-free-cancelled'),
+      overrides: () {
+        final app = _makeApplication(
+          id: 'app-free-cancelled',
+          status: 'cancelled',
+          paymentAmount: 0,
+          paymentId: null,
         );
+        return withApp(app);
+      },
+      body: (t) async {
+        await t.pumpAndSettle();
+
+        // status='cancelled' → canCancel=false (FR-1: 재취소 차단)
+        final cancelBtn = t.widget<ElevatedButton>(
+          find.widgetWithText(ElevatedButton, '예매 취소'),
+        );
+        expect(cancelBtn.onPressed, isNull);
       },
     );
   });

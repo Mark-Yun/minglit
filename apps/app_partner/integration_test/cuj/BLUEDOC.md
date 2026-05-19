@@ -29,6 +29,13 @@ integration_test/cuj/
     cuj_test.dart            # app_user 와 동일
   account/
     partner_terms_privacy_test.dart   # CUJ 1-1, 2-1 (Flutter 범위 내)
+    partner_account_deletion_test.dart
+  checkin/
+    partner_qr_checkin_ux_test.dart  # CUJ 1-1~1-4, 2-1~2-3, 3-1~3-6
+  event/
+    event_edit_cancel_test.dart      # CUJ 1-1~4-2
+    recurring_events_test.dart       # CUJ 1-1, 1-2, 1-4, 3-1, 3-2, 3-4
+    partner_dashboard_test.dart      # CUJ 1-1~1-5, 2-1~2-5, 3-1~3-3, 4-2~4-3, 5-1~5-2
   event-operation/
     partner_qr_checkin_ux_test.dart  # CUJ 1-1, 1-2, 1-3, 3-1, 3-2, 5-4 (6/13)
   ...
@@ -39,9 +46,14 @@ integration_test/cuj/
 | 파일 | spec | 커버 CUJ |
 |------|------|----------|
 | `account/partner_terms_privacy_test.dart` | `docs/features/account/partner-terms-privacy/spec.md` | 1-1 (이용약관 탭+URL), 2-1 (개인정보처리방침 탭+URL) |
+| `account/partner_account_deletion_test.dart` | `docs/features/account/partner-account-deletion/spec.md` | 탈퇴 사유 화면 |
+| `checkin/partner_qr_checkin_ux_test.dart` | `docs/features/event-operation/partner-qr-checkin-ux/spec.md` | 1-1~1-4 (스캔 결과 배너), 2-1~2-3 (체크인 탭 진입), 3-1~3-6 (수동 체크인) |
+| `event/event_edit_cancel_test.dart` | `docs/features/event/event-edit-cancel/spec.md` | 1-1~4-2 (13개 그룹) |
+| `event/recurring_events_test.dart` | `docs/features/event/recurring-events/spec.md` | 1-1, 1-2, 1-4, 3-1, 3-2, 3-4 |
+| `event/partner_dashboard_test.dart` | `docs/features/event/partner-dashboard/spec.md` | 1-1~1-5, 2-1~2-5, 3-1~3-3, 4-2~4-3, 5-1~5-2 |
 | `event-operation/partner_qr_checkin_ux_test.dart` | `docs/features/event-operation/partner-qr-checkin-ux/spec.md` | 1-1, 1-2, 1-3, 3-1, 3-2, 5-4 (6/13) |
 
 Flutter 범위 외 CUJ (landing_partner 웹 기능 또는 미구현): 1-2, 1-3, 2-2~2-4, 3-1~3-2.
 
 ---
-_Reviewed: 2026-05-20 00:00_
+_Reviewed: 2026-05-20 12:00_
