@@ -151,6 +151,12 @@ jobs:
       mds_icons: ${{ steps.filter.outputs.mds_icons }}
       supabase: ${{ steps.filter.outputs.supabase }}
       dart_files: ${{ steps.filter.outputs.dart_files }}
+      # 세분화 — 잡별 의존성에 맞춰 분리 (false positive 트리거 회피)
+      supabase_migrations: ${{ steps.filter.outputs.supabase_migrations }}
+      supabase_tests: ${{ steps.filter.outputs.supabase_tests }}
+      supabase_functions: ${{ steps.filter.outputs.supabase_functions }}
+      supabase_db_stack: ${{ steps.filter.outputs.supabase_migrations == 'true' || steps.filter.outputs.supabase_tests == 'true' }}
+      supabase_ef_stack: ${{ steps.filter.outputs.supabase_migrations == 'true' || steps.filter.outputs.supabase_functions == 'true' }}
     steps:
     - uses: actions/checkout@v6
     - uses: dorny/paths-filter@v4
@@ -187,6 +193,20 @@ jobs:
             - 'supabase/**'
           dart_files:
             - '**/*.dart'
+          # migrations + seed + config — pgTAP / ef-integration 트리거
+          supabase_migrations:
+            - 'supabase/migrations/**'
+            - 'supabase/seed*.sql'
+            - 'supabase/config.toml'
+          # pgTAP 테스트 파일 — pgTAP only
+          supabase_tests:
+            - 'supabase/tests/**'
+          # EF 소스 + deno config — deno-ef / ef-integration 트리거
+          # BLUEDOC.md / *.md 는 제외 (pure 문서, 동작 영향 0)
+          supabase_functions:
+            - 'supabase/functions/**'
+            - '!supabase/functions/**/*.md'
+            - 'supabase/deno.json'
 
   # App CI (User + Partner)
   test-flutter-apps:
@@ -485,8 +505,9 @@ jobs:
   test-supabase:
     name: test-pgtap
     needs: changes
-    if: ${{ needs.changes.outputs.supabase == 'true' }}
-    runs-on: ubuntu-latest
+    # migrations / pgTAP tests / seed / config 변경 시만. EF source 만 바뀌면 skip.
+    if: ${{ needs.changes.outputs.supabase_db_stack == 'true' }}
+    runs-on: [self-hosted, ephemeral]
     steps:
       - uses: actions/checkout@v6
       - uses: supabase/setup-cli@v2
@@ -523,8 +544,9 @@ jobs:
   test-edge-functions:
     name: test-deno-ef
     needs: changes
-    if: ${{ needs.changes.outputs.supabase == 'true' }}
-    runs-on: ubuntu-latest
+    # EF source / deno.json 변경 시만. migrations / 문서 only 면 skip.
+    if: ${{ needs.changes.outputs.supabase_functions == 'true' }}
+    runs-on: [self-hosted, ephemeral]
     steps:
       - uses: actions/checkout@v6
         with:
@@ -626,8 +648,9 @@ jobs:
   test-ef-integration:
     name: test-ef-integration
     needs: changes
-    if: ${{ needs.changes.outputs.supabase == 'true' }}
-    runs-on: ubuntu-latest
+    # migrations 또는 EF source 변경 시 (full stack 가드). 문서/pgTAP only 면 skip.
+    if: ${{ needs.changes.outputs.supabase_ef_stack == 'true' }}
+    runs-on: [self-hosted, ephemeral]
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
