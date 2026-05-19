@@ -12,7 +12,7 @@ design 문서는 운영자 관점 (cadence, role, policy). spec 문서는 구현
 |------|------|
 | [workflow-spec.md](./workflow-spec.md) | `.github/workflows/` 의 reusable + entry workflow 의 trigger / input / output / steps / call chain |
 | [branch-spec.md](./branch-spec.md) | 각 branch 의 protection rule, required check, merge method, merge queue 구현 설정값 |
-| `execution-plan.md` (예정) | 기존 workflow refactor + 신규 구현 + branch 적용 순서 |
+| [execution-plan.md](./execution-plan.md) | 현재 workflow 인벤토리, refactor / 신규 / 폐기, Phase 1~4 적용 순서 |
 
 ## 핵심 컨벤션
 
