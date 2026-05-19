@@ -41,7 +41,7 @@ void main() {
       expect(find.byType(NotificationListScreen), findsOneWidget);
     });
 
-    testWidgets('빈 알림 → "알림이 없습니다."', (tester) async {
+    testWidgets('빈 알림 → "알림이 없습니다"', (tester) async {
       setKoreanLocale(tester);
       final capture = GoldenCapture('flow_u_noti');
       final user = createMockUserForTest();
@@ -63,7 +63,9 @@ void main() {
 
       await capture.setup(tester, 1); // 빈 알림 목록
 
-      expect(find.text('알림이 없습니다.'), findsOneWidget);
+      // Fix #2483 (notification_list_screen.dart:45): empty state title 은 마침표 없음
+      // ("알림이 없습니다") — MinglitEmptyState canonical title pattern.
+      expect(find.text('알림이 없습니다'), findsOneWidget);
     });
 
     testWidgets('알림 읽음/안읽음 → 배경색 + 폰트 weight 분기', (tester) async {
