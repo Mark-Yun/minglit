@@ -6,7 +6,7 @@ Minglit 의 **파트너 사장님 Flutter 앱**. 매장 관리·멤버 초대·�
 
 | 항목 | 무엇 |
 |---|---|
-| `lib/main.dart` / `lib/dev_main.dart` | 프로덕션 / 개발용 엔트리포인트 (후자는 DevMap) |
+| `lib/main.dart` / `lib/dev_main.dart` / `lib/main_demo.dart` | 프로덕션 / 개발용 엔트리포인트 (dev_main 은 DevMap, main_demo 는 demo flavor — 자세히는 `docs/infra/app_demo/`) |
 | [`lib/src/features/`](./lib/src/features/) | 기능별 모듈 (아래 표) |
 | [`lib/src/routing/`](./lib/src/routing/) | `app_router` (auth + 권한 + 온보딩 redirect) + `app_routes` (Type-safe) |
 | [`lib/src/logic/`](./lib/src/logic/) | 앱-레벨 Provider (`current_partner_provider`, `onboarding_state_provider`, `event_application_logic`, `dashboard_refresh_notifier`) |
@@ -52,4 +52,4 @@ Minglit 의 **파트너 사장님 Flutter 앱**. 매장 관리·멤버 초대·�
 - [integration_test/mds-emulator-render/BLUEDOC.md](./integration_test/mds-emulator-render/BLUEDOC.md) — MDS 에뮬레이터 렌더 catalog
 
 ---
-_Reviewed: 2026-05-20 00:20_
+_Reviewed: 2026-05-21 03:00_

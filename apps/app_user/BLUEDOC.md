@@ -6,7 +6,7 @@ Minglit 의 **일반 사용자 Flutter 앱**. 파티 탐색·참여 신청·결�
 
 | 항목 | 무엇 |
 |---|---|
-| `lib/main.dart` / `lib/dev_main.dart` | 프로덕션 / 개발용 엔트리포인트 (후자는 DevMap) |
+| `lib/main.dart` / `lib/dev_main.dart` / `lib/main_demo.dart` | 프로덕션 / 개발용 엔트리포인트 (dev_main 은 DevMap, main_demo 는 demo flavor — 자세히는 `docs/infra/app_demo/`) |
 | [`lib/src/features/`](./lib/src/features/) | 기능별 모듈 (아래 표) |
 | [`lib/src/routing/`](./lib/src/routing/) | `app_router` (GoRouter) + `app_routes` (Type-safe) + `app_coordinator` |
 | [`lib/src/logic/`](./lib/src/logic/) | 앱-레벨 Coordinator / Provider (`event_coordinator`, `auth_coordinator`, `feed_state_provider`) |
@@ -48,4 +48,4 @@ Minglit 의 **일반 사용자 Flutter 앱**. 파티 탐색·참여 신청·결�
 - [integration_test/BLUEDOC.md](./integration_test/BLUEDOC.md) — 통합 테스트
 
 ---
-_Reviewed: 2026-05-17 22:32_
+_Reviewed: 2026-05-19 14:00_

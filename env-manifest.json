@@ -13,6 +13,9 @@
       }
     },
     "optional": {
+      "IS_DEMO": {
+        "desc": "Demo flavor flag — short-circuits all network SDK init when true"
+      },
       "SENTRY_DSN": {
         "desc": "Sentry error tracking"
       },
