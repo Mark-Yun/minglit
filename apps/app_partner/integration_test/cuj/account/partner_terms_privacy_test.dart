@@ -25,7 +25,7 @@ import '../_engine/cuj_test.dart';
 
 class _MockMoreCoordinator extends Mock implements MoreCoordinator {}
 
-// Fix #2651: mock url_launcher to verify launchUrl is called with correct URL.
+// Fix #2589: mock url_launcher to verify launchUrl is called with correct URL.
 // Set AFTER pumpWidget so dartPluginClass auto-registration does not override.
 class _FakeUrlLauncher extends Fake
     with MockPlatformInterfaceMixin
@@ -87,7 +87,7 @@ void main() {
       overrides: _base,
       body: (t) async {
         final launchedUrls = <String>[];
-        // Fix #2651: set AFTER pumpWidget — dartPluginClass auto-registration
+        // Fix #2589: set AFTER pumpWidget — dartPluginClass auto-registration
         // must not override our fake.
         UrlLauncherPlatform.instance = _FakeUrlLauncher(launchedUrls);
         expect(find.text('이용약관'), findsOneWidget);
