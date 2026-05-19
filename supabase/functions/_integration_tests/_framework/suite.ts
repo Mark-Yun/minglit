@@ -40,20 +40,21 @@ export function suite(_featureKey: string): Ctx {
   if (_ctx) return _ctx;
 
   const rawUrl = Deno.env.get("SUPABASE_URL");
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  const rawServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const rawAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
 
-  if (!rawUrl || !serviceKey || !anonKey) {
+  if (!rawUrl || !rawServiceKey || !rawAnonKey) {
     return _DISABLED_CTX;
   }
 
-  // Sanitize: strip surrounding quotes (supabase status -o env may quote values),
-  // then normalize 127.0.0.1 to localhost (supabase-js 2.105+ validateSupabaseUrl
-  // rejects raw IP addresses; localhost is accepted).
-  const url = rawUrl
-    .trim()
-    .replace(/^"(.*)"$/, "$1")
-    .replace("127.0.0.1", "localhost");
+  // supabase status -o env quotes its values: API_URL="http://..."
+  // cut -d= -f2- captures the quotes as part of the value.
+  // Strip surrounding quotes from all captured env vars.
+  const stripQuotes = (s: string) => s.trim().replace(/^"(.*)"$/, "$1");
+  // supabase-js 2.105+ validateSupabaseUrl rejects 127.0.0.1; localhost is accepted.
+  const url = stripQuotes(rawUrl).replace("127.0.0.1", "localhost");
+  const serviceKey = stripQuotes(rawServiceKey);
+  const anonKey = stripQuotes(rawAnonKey);
 
   const db = createClient(url, serviceKey, {
     auth: { persistSession: false, autoRefreshToken: false },
