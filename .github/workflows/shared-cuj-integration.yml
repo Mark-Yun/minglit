@@ -56,7 +56,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          flutter-version: '3.41.9'  # Fix #2640: flutter_quill 11.5.0 incompatible with Flutter 3.44.0
           cache: true
 
       # Self-hosted runner: Flutter SDK cache dir 가 다른 user 소유 → git 거부.

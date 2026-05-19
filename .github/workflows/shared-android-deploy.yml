@@ -84,7 +84,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          flutter-version: '3.41.9'  # Fix #2640: flutter_quill 11.5.0 incompatible with Flutter 3.44.0
           cache: true
 
       - name: Cache Gradle

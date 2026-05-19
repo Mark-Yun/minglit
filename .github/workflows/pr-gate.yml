@@ -241,7 +241,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         with:
-          channel: 'stable'
+          flutter-version: '3.41.9'  # Fix #2640: flutter_quill 11.5.0 incompatible with Flutter 3.44.0
           cache: true
       - name: Cache pub packages
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
@@ -446,7 +446,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          flutter-version: '3.41.9'  # Fix #2640: flutter_quill 11.5.0 incompatible with Flutter 3.44.0
           cache: true
       - uses: actions/cache@v5
         with:
@@ -486,7 +486,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          flutter-version: '3.41.9'  # Fix #2640: flutter_quill 11.5.0 incompatible with Flutter 3.44.0
           cache: true
       # Wipe any volume left by a prior run on this host so `supabase start`
       # initializes a fresh DB and auto-applies all migrations from scratch.
@@ -696,7 +696,7 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
       - uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          flutter-version: '3.41.9'  # Fix #2640: flutter_quill 11.5.0 incompatible with Flutter 3.44.0
           cache: true
       - name: Install dependencies
         run: flutter pub get
