@@ -2,7 +2,9 @@
 -- publishable_key(anon JWT) 사용 시 requireServiceRole() 가드에서 401 반환
 
 BEGIN;
-SELECT plan(8);
+-- Fix #2640-followup: plan(8) → plan(7) — backend-simulation cron 제거됨
+-- (20260517000002_rename_backend_simulator_to_event_flow_simulator.sql)
+SELECT plan(7);
 
 -- Helper: 특정 cron job의 Authorization 헤더가 service_role_key를 참조하는지 확인
 CREATE OR REPLACE FUNCTION _check_cron_uses_service_role(p_jobname text)
@@ -19,49 +21,43 @@ BEGIN
 END;
 $$;
 
--- 1. backend-simulation: service_role_key 사용
-SELECT ok(
-  _check_cron_uses_service_role('backend-simulation'),
-  'backend-simulation cron uses service_role_key (not publishable_key)'
-);
-
--- 2. process-notifications: service_role_key 사용
+-- 1. process-notifications: service_role_key 사용
 SELECT ok(
   _check_cron_uses_service_role('process-notifications'),
   'process-notifications cron uses service_role_key (not publishable_key)'
 );
 
--- 3. settlement-reconciliation-daily: service_role_key 사용
+-- 2. settlement-reconciliation-daily: service_role_key 사용
 SELECT ok(
   _check_cron_uses_service_role('settlement-reconciliation-daily'),
   'settlement-reconciliation-daily cron uses service_role_key (not publishable_key)'
 );
 
--- 4. settlement-register-transfers: service_role_key 사용
+-- 3. settlement-register-transfers: service_role_key 사용
 SELECT ok(
   _check_cron_uses_service_role('settlement-register-transfers'),
   'settlement-register-transfers cron uses service_role_key (not publishable_key)'
 );
 
--- 5. settlement-payout-sync: service_role_key 사용
+-- 4. settlement-payout-sync: service_role_key 사용
 SELECT ok(
   _check_cron_uses_service_role('settlement-payout-sync'),
   'settlement-payout-sync cron uses service_role_key (not publishable_key)'
 );
 
--- 6. settlement-alarm-check: service_role_key 사용
+-- 5. settlement-alarm-check: service_role_key 사용
 SELECT ok(
   _check_cron_uses_service_role('settlement-alarm-check'),
   'settlement-alarm-check cron uses service_role_key (not publishable_key)'
 );
 
--- 7. ai-extract-tags: service_role_key 사용
+-- 6. ai-extract-tags: service_role_key 사용
 SELECT ok(
   _check_cron_uses_service_role('ai-extract-tags'),
   'ai-extract-tags cron uses service_role_key (not publishable_key)'
 );
 
--- 8. sync_github_stats: service_role_key 사용
+-- 7. sync_github_stats: service_role_key 사용
 SELECT ok(
   _check_cron_uses_service_role('sync_github_stats'),
   'sync_github_stats cron uses service_role_key (not publishable_key)'
