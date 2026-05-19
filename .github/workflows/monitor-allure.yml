@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   generate-report:
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
