@@ -4,7 +4,7 @@
 // 출력: docs/infra/mds-emulator-render/ticket_qr_screen/state-*.png
 //
 // 커버리지 (spec 5개 중 3개):
-//   mdsIndex 1 (no-meta): state-with-token — token 있음, eventMeta null (deep-link)
+//   mdsIndex 1 (no-meta): state-with-token — token 있음, eventMeta null
 //   mdsIndex 5 (not-found): state-not-found — token null
 //   ※ mdsIndex 2 (with-meta): TicketQRScreen.eventMeta 가 생성자 파라미터로 주입되어
 //      builder 패턴에서 fluent 변경 불가. eventMeta provider 화 시 커버 가능.

@@ -35,11 +35,11 @@ class TicketQRScreenBuilder extends MdsScreenBuilder<TicketQRScreen> {
   // Fix #2588: token null → renders "티켓 정보를 찾을 수 없습니다" error state.
   TicketQRScreenBuilder notFound() {
     when(() => _service.getToken(any())).thenAnswer((_) async => null);
-    return this;
+    return this; // ignore: avoid_returning_this
   }
 
   TicketQRScreenBuilder dark() {
     useDarkTheme();
-    return this;
+    return this; // ignore: avoid_returning_this
   }
 }
