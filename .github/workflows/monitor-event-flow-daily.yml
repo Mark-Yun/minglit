@@ -16,7 +16,7 @@ concurrency:
 jobs:
   seed-and-simulate:
     name: Seed + event-flow cascade (daily)
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6

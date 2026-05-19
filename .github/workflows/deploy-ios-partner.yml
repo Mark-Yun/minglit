@@ -48,6 +48,7 @@ jobs:
           SENTRY_DSN_FLUTTER: ${{ secrets.SENTRY_DSN_FLUTTER }}
           SUPABASE_MAIN_URL: ${{ secrets.SUPABASE_MAIN_URL }}
           SUPABASE_MAIN_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
+          GH_PAT_VERSION_BUMP: ${{ secrets.GH_PAT_VERSION_BUMP }}
 
   notify-failure:
     needs: [ios-deploy]
