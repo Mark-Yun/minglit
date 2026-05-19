@@ -82,7 +82,8 @@ async function seedPartnerEvent(
   // 2. Party
   const { data: party, error: partyErr } = await db
     .from("parties")
-    .insert({ partner_id: partnerId, name: "Test Party" })
+    // Fix #2640-followup: parties 테이블 컬럼은 title (name 아님) — schema cache PGRST204 차단
+    .insert({ partner_id: partnerId, title: "Test Party" })
     .select("id")
     .single();
   if (partyErr || !party) throw new Error(`seedPartnerEvent party: ${partyErr?.message}`);
