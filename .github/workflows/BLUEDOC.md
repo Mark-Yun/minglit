@@ -17,6 +17,7 @@
 | `monitor-` | 운영·테스트 시스템 헬스 이상 (스케줄) | `monitor-db-invariants`, `monitor-event-flow-hourly`, `monitor-event-flow-daily`, `monitor-mds-render-coverage`, `monitor-patrol-e2e`, `monitor-allure` |
 | `sync-` | repo 에 자동 commit/push 가 실패함 (dev push 또는 merge 기반) | `sync-version`, `sync-graphify`, `sync-mds-mockups`, `sync-pr-branches`, `sync-test-coverage` |
 | `triage-` | 이슈 생성·슬래시 명령 (commit 없음) | `triage-mds-issue`, `triage-slash` |
+| `post-merge` | dev push 직후 follow-up 자동화의 단일 entry point (5 reusable orchestrator) | `post-merge` |
 | `tool-` | (수동으로 부를 때만 도는 도구) | (현재 없음 — 새 수동 도구 추가 시 prefix) |
 | `shared-` | (다른 워크플로우의 부품 — 단독 실행 X) | `shared-notify`, `shared-android-deploy` |
 
@@ -37,4 +38,4 @@
 - [CLAUDE.md](../../CLAUDE.md) `## PR Conventions` — required check (`ci-result` job = `pr-gate.yml` 내부) / auto-merge 흐름
 
 ---
-_Reviewed: 2026-05-17 22:50_
+_Reviewed: 2026-05-19 01:13_
