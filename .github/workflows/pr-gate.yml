@@ -732,24 +732,64 @@ jobs:
           fi
 
   # Gitleaks secret scan — formerly pr-setup-secret-scan.yml, absorbed into pr-gate as a required check.
-  # Disabled 2026-05-19: post-org-transfer (Mark-Yun → team-minglit), gitleaks-action@v2 requires a
-  # paid license for org repos. ci-result aggregates on "failure" only, so a "skipped" job here does
-  # not block the required check. Re-enable by removing `if: false` once a GITLEAKS_LICENSE secret
-  # is provisioned, or by switching to the raw `gitleaks` binary (no license required).
+  # Re-enabled 2026-05-20 (Fix #2541): swapped gitleaks/gitleaks-action@v2 (paid license for org repos)
+  # → raw `gitleaks` binary from upstream release. Same `.gitleaks.toml` config, same exit-code semantics.
+  # Scope: scans only the commits introduced by the PR (or merge-group / pushed range), NOT the full
+  # repo history — historical leaks that were since removed (e.g. dev_main.dart in 2025-12) stay out
+  # of the gate, while any new leak in the PR diff fails CI.
   gitleaks:
-    if: false
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write
+    env:
+      GITLEAKS_VERSION: '8.21.2'
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@v2
+      - name: Install gitleaks
+        run: |
+          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            | sudo tar -xz -C /usr/local/bin gitleaks
+          gitleaks version
+      - name: Determine scan scope
+        id: scope
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_CONFIG: .gitleaks.toml
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          MERGE_BASE_SHA: ${{ github.event.merge_group.base_sha }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          case "$EVENT_NAME" in
+            pull_request)
+              log_opts="origin/${BASE_REF}..HEAD"
+              ;;
+            merge_group)
+              log_opts="${MERGE_BASE_SHA}..HEAD"
+              ;;
+            push)
+              if [[ -z "${BEFORE_SHA:-}" || "$BEFORE_SHA" == "0000000000000000000000000000000000000000" ]]; then
+                log_opts="HEAD~1..HEAD"
+              else
+                log_opts="${BEFORE_SHA}..HEAD"
+              fi
+              ;;
+            *)
+              log_opts="HEAD~1..HEAD"
+              ;;
+          esac
+          echo "log_opts=${log_opts}" >> "$GITHUB_OUTPUT"
+          echo "::notice::gitleaks scanning commits ${log_opts}"
+      - name: Run gitleaks
+        run: |
+          gitleaks detect \
+            --config .gitleaks.toml \
+            --source . \
+            --log-opts="${{ steps.scope.outputs.log_opts }}" \
+            --no-banner \
+            --redact \
+            --verbose
 
   # check-bluedoc-freshness consolidated into `static-checks` job at top of this file.
 
