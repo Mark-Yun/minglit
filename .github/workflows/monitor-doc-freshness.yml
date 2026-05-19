@@ -165,16 +165,15 @@ jobs:
             # 검토 대상 파일 목록 (schema-aware)
             if [ "$SCHEMA_VERSION" = "v2" ]; then
               # v2: expand target_files glob patterns relative to DIR
-              MD_FILES=$(python3 -c "
-import ast, glob, os, sys
-patterns = ast.literal_eval('''$TARGET_FILES_JSON''')
-files = []
-for p in patterns:
-    for f in sorted(glob.glob(os.path.join('$DIR', p))):
-        if os.path.isfile(f):
-            files.append(f.lstrip('./'))
-print('\n'.join(files))
-" 2>/dev/null | sort)
+              MD_FILES=$(echo "$TARGET_FILES_JSON" | python3 -c "
+          import ast,glob,os,sys
+          pats=ast.literal_eval(sys.stdin.read().strip())
+          files=[]
+          for p in pats:
+              for f in sorted(glob.glob(os.path.join('$DIR',p))):
+                  if os.path.isfile(f): files.append(f.lstrip('./'))
+          print('\n'.join(files))
+          " 2>/dev/null | sort)
             else
               # v1: find .md files with RECURSIVE/EXCLUDE
               if [ "$RECURSIVE" = "true" ]; then
@@ -197,11 +196,9 @@ print('\n'.join(files))
 
             # "처리 후" section — schema-aware (v2 auto-derives last_verified)
             if [ "$SCHEMA_VERSION" = "v2" ]; then
-              AFTER_REVIEW="- 문서 갱신 시: \`target_files\` 에 지정된 파일을 수정하면 \`last_verified\` 가 git log 기반으로 자동 갱신됨
-- 검토 결과 변경 불필요 시: target_files 중 하나에 no-op 커밋으로 verified-only PR"
+              AFTER_REVIEW="- 문서 갱신 시: \`target_files\` 에 지정된 파일을 수정하면 \`last_verified\` 가 git log 기반으로 자동 갱신됨"$'\n'"- 검토 결과 변경 불필요 시: target_files 중 하나에 no-op 커밋으로 verified-only PR"
             else
-              AFTER_REVIEW="- 문서 갱신 시: 수정 사항과 함께 [\`${FRESH_DOC#./}\`](${REPO_URL}/${FRESH_DOC#./}) 의 \`last_verified\` 를 PR 머지 예정일로 갱신
-- 검토 결과 변경 불필요 시: \`last_verified\` 만 갱신하는 verified-only PR"
+              AFTER_REVIEW="- 문서 갱신 시: 수정 사항과 함께 [\`${FRESH_DOC#./}\`](${REPO_URL}/${FRESH_DOC#./}) 의 \`last_verified\` 를 PR 머지 예정일로 갱신"$'\n'"- 검토 결과 변경 불필요 시: \`last_verified\` 만 갱신하는 verified-only PR"
             fi
             FILE_COUNT=$(echo "$MD_FILES" | grep -c . | tr -d ' ')
 
