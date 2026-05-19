@@ -23,6 +23,7 @@ import 'package:app_partner/src/features/checkin/manual/manual_checkin_sheet.dar
 import 'package:app_partner/src/features/checkin/widgets/checkin_scanner_overlay.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
