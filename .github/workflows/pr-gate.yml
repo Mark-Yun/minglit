@@ -262,6 +262,14 @@ jobs:
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         run: flutter analyze --no-fatal-infos
         working-directory: ${{ matrix.directory }}
+      - name: Custom lint (minglit_kit)
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
+        run: dart run custom_lint
+        working-directory: shared/packages/minglit_kit
+      - name: Custom lint
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' && matrix.app != 'mds_core' }}
+        run: dart run custom_lint
+        working-directory: ${{ matrix.directory }}
       - name: Test
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         run: dart run test_reporter -- flutter test --coverage --exclude-tags golden --file-reporter=json:test-results.json
@@ -311,7 +319,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add '**/goldens/ci/**'
+          # || true: exit 128 when no goldens/ci/** files exist is not an error
+          git add '**/goldens/ci/**' 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "No golden changes to commit"
           else
