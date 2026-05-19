@@ -173,3 +173,58 @@ Deno.test({
     assertEquals(trace1, trace2);
   },
 });
+
+// Fix #2545: throttle 동작 검증 — EF call 사이 delay 보장
+Deno.test({
+  name: "runCascade - delayBetweenCallsMs throttles between EF calls",
+  fn: async () => {
+    clearRegistry();
+    registerAction(applyAction);
+    const { transport, calls } = recordingTransport();
+    const start = performance.now();
+    await runCascade({
+      actors: [
+        { id: "user-1", role: "user" as const },
+        { id: "user-2", role: "user" as const },
+        { id: "user-3", role: "user" as const },
+      ],
+      initialSnapshot: snapshotWithOneEvent(),
+      rates: defaultRates,
+      transport,
+      rng: createPRNG(1),
+      ticks: 1,
+      delayBetweenCallsMs: 50,
+    });
+    const elapsed = performance.now() - start;
+    // 3 호출 사이 2 delay × 50ms = 100ms 최소 (모든 actor 가 action 발생 시)
+    // policy 가 일부 skip 해도 1 call 발생하면 +50ms 보장. 최소 50ms 확인 (느슨한 lower bound).
+    assertEquals(calls.length > 0, true, "at least one EF call expected");
+    assertEquals(elapsed >= 50, true, `elapsed (${elapsed}ms) should be >= 50ms with throttle`);
+  },
+});
+
+Deno.test({
+  name: "runCascade - delayBetweenCallsMs=0 (default) no throttle",
+  fn: async () => {
+    clearRegistry();
+    registerAction(applyAction);
+    const { transport, calls } = recordingTransport();
+    const start = performance.now();
+    await runCascade({
+      actors: [
+        { id: "user-1", role: "user" as const },
+        { id: "user-2", role: "user" as const },
+        { id: "user-3", role: "user" as const },
+      ],
+      initialSnapshot: snapshotWithOneEvent(),
+      rates: defaultRates,
+      transport,
+      rng: createPRNG(1),
+      ticks: 1,
+      // delayBetweenCallsMs omitted → undefined → no delay
+    });
+    const elapsed = performance.now() - start;
+    assertEquals(calls.length > 0, true);
+    assertEquals(elapsed < 50, true, `elapsed (${elapsed}ms) should be < 50ms without throttle`);
+  },
+});
