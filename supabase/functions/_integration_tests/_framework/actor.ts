@@ -1,6 +1,6 @@
 // _framework/actor.ts — JWT 발급 + EF invoke
 
-import { createClient, type SupabaseClient } from "jsr:@supabase/supabase-js@2";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 
 export interface Actor {
   readonly id: string;
