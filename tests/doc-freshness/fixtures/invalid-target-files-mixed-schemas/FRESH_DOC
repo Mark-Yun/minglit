@@ -1,0 +1,5 @@
+cycle: 14d
+priority: P2-medium
+target_files:
+  - doc.md
+last_verified: 2026-05-13
