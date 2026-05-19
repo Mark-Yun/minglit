@@ -1,22 +1,11 @@
 // payment-verify/index_test.ts — handler unit tests (L3, fake supabase)
 //
-// NOTE: IamportClient is instantiated INSIDE the handler (new IamportClient(IMP_KEY, IMP_SECRET)),
-// so it cannot be dependency-injected. Tests that reach the PortOne call path mock globalThis.fetch
-// to intercept the Iamport token + payment endpoints. Tests that short-circuit before PortOne
-// (missing params, order not found, forbidden, already processed) need no fetch mock.
+// IamportClient 가 handler 안에서 직접 instantiated 라 DI 불가 → globalThis.fetch 를
+// mock 으로 가로채서 PortOne 호출 테스트. module top-level 의
+// `if (!IMP_KEY || !IMP_SECRET) throw` 가드 때문에 import 전에 PORTONE 키만 set 필요.
 //
-// The module-level guard `if (!IMP_KEY || !IMP_SECRET) throw` fires at import time, so we
-// must set the env vars BEFORE importing the handler via dynamic import.
-//
-// Lazy-loads the handler via dynamic import with Deno.serve stubbed to prevent
-// a real HTTP server from being started (same pattern as payment-webhook/index_test.ts).
-
-Deno.env.set("PORTONE_API_KEY", "test-key");
-Deno.env.set("PORTONE_API_SECRET", "test-secret");
-Deno.env.set("MINGLIT_EF_TEST_FN_NAME", "payment-verify");
-Deno.env.set("ENVIRONMENT", "dev");
-Deno.env.set("SUPABASE_URL", "https://supabase.test");
-Deno.env.set("SUPABASE_SERVICE_ROLE_KEY", "service-key");
+// 격리: env 는 withEnv 로 import 시점에만 set + 복원. top-level Deno.env.set 절대 금지
+// (Fix #2526: 다른 EF 의 wrapper 가 stale MINGLIT_EF_TEST_FN_NAME 읽어 wrong policy 로딩).
 
 import { assertEquals } from "jsr:@std/assert@1";
 import {
@@ -26,9 +15,13 @@ import {
   runHandler,
   type Handler,
 } from "../_shared/_testing/mod.ts";
+import { withEnv } from "../_test_utils/mock_http.ts";
 
-// Lazy-load to stub Deno.serve before the module fires minglitEdgeFunction (which calls Deno.serve).
-// Env vars above are set synchronously at module init, so they're available when getHandler() runs.
+const PORTONE_ENV = {
+  PORTONE_API_KEY: "test-key",
+  PORTONE_API_SECRET: "test-secret",
+};
+
 let _handler: Handler | null = null;
 async function getHandler(): Promise<Handler> {
   if (_handler) return _handler;
@@ -40,7 +33,10 @@ async function getHandler(): Promise<Handler> {
   globalThis.setInterval = ((_cb: () => void) => 0 as unknown as ReturnType<typeof setInterval>) as typeof setInterval;
   globalThis.clearInterval = ((_id?: ReturnType<typeof setInterval>) => {}) as typeof clearInterval;
   try {
-    _handler = (await import(`./index.ts?unit=${crypto.randomUUID()}`)).handler as Handler;
+    _handler = await withEnv(PORTONE_ENV, async () => {
+      const mod = await import(`./index.ts?unit=${crypto.randomUUID()}`);
+      return mod.handler as Handler;
+    });
   } finally {
     denoAsAny.serve = origServe;
     globalThis.setInterval = origSetInterval;
