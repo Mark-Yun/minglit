@@ -1,13 +1,8 @@
 name: sync-mds-mockups
 
+# Invoked by post-merge.yml on push to dev (paths filter applied at caller level).
 on:
-  push:
-    branches: [dev]
-    paths:
-      - 'apps/mds/docs/public/specs/**/index.html'
-      - 'apps/mds/docs/public/specs/**.css'
-      - 'apps/mds/docs/scripts/render-spec-mockups.js'
-      - 'shared/packages/mds/tokens/lib/generated/tokens.css'
+  workflow_call:
   workflow_dispatch:
 
 concurrency:
@@ -19,7 +14,7 @@ permissions:
 
 jobs:
   render:
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
         with:
