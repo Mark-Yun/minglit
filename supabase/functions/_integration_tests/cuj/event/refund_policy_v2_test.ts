@@ -126,11 +126,14 @@ async function seedPartnerEvent(
     .single();
   if (tmplErr || !tmpl) throw new Error(`seedPartnerEvent ticket_template: ${tmplErr?.message}`);
 
+  // Fix #2650: tickets 테이블에는 template_id 컬럼이 없음 — schema 상 tickets 는
+  // event-level 인스턴스로 ticket_templates 와 직접 FK 없음 (20260301000003).
+  // ticket_templates INSERT 자체는 sync_max_participants trigger 가 parties.max_participants
+  // 를 동기화하기 위해 필요하므로 유지.
   const { data: ticket, error: ticketErr } = await db
     .from("tickets")
     .insert({
       event_id: eventId,
-      template_id: (tmpl as { id: string }).id,
       name: "General",
       price: opts.paymentAmount,
       quantity: 10,
