@@ -2,6 +2,7 @@
 
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { createActor, type Actor } from "./actor.ts";
+import { normalizeSupabaseUrl, stripQuotes } from "./env_utils.ts";
 
 export interface Ctx {
   readonly disabled: boolean;          // true → env vars 없음, cujTest 가 ignore 처리
@@ -39,9 +40,11 @@ let _ctx: Ctx | null = null;
 export function suite(_featureKey: string): Ctx {
   if (_ctx) return _ctx;
 
-  const url = Deno.env.get("SUPABASE_URL");
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  // supabase status -o env quotes 한 값 + 127.0.0.1 → localhost 정규화 (supabase-js 2.105+).
+  // disabled path 에서도 normalize 호출 → diff coverage 확보.
+  const url = normalizeSupabaseUrl(Deno.env.get("SUPABASE_URL") ?? "");
+  const serviceKey = stripQuotes(Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
+  const anonKey = stripQuotes(Deno.env.get("SUPABASE_ANON_KEY") ?? "");
 
   if (!url || !serviceKey || !anonKey) {
     return _DISABLED_CTX;
