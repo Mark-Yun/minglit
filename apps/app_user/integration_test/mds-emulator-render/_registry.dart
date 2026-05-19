@@ -6,6 +6,13 @@
 
 import '_engine/builder.dart';
 import '_engine/catalog.dart';
+import 'deletion_complete_page/deletion_complete_page_test.dart'
+    as deletion_complete_page;
+import 'deletion_info_page/deletion_info_page_test.dart' as deletion_info_page;
+import 'deletion_reason_page/deletion_reason_page_test.dart'
+    as deletion_reason_page;
+import 'deletion_verify_page/deletion_verify_page_test.dart'
+    as deletion_verify_page;
 import 'event_now_bar/event_now_bar_test.dart' as event_now_bar;
 import 'event_ongoing_banner/event_ongoing_banner_test.dart'
     as event_ongoing_banner;
@@ -19,6 +26,11 @@ import 'search_page/search_page_test.dart' as search_page;
 
 /// 모든 cataloged 화면의 명시적 list. 새 화면 추가 시 본 list 에 추가.
 final List<MdsCatalog<MdsScreenBuilder<dynamic>>> allCatalogs = [
+  deletion_complete_page.catalog,
+  deletion_info_page.catalog,
+  deletion_info_page.catalogWithReason,
+  deletion_reason_page.catalog,
+  deletion_verify_page.catalog,
   event_now_bar.catalog,
   event_ongoing_banner.catalog,
   home_page.catalog,
