@@ -6,6 +6,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:minglit_kit/src/logic/providers/supabase_provider.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+// P0-0c: BugReporterWrapper constructs BugReportRepository via
+// ref.read(supabaseClientProvider) at initState. Unit tests must override
+// the provider with a fake SupabaseClient — otherwise the call throws
+// because Supabase.initialize() isn't invoked in test mode.
+class _FakeSupabaseClient extends Mock implements SupabaseClient {}
+
+List<Override> _testOverrides() => [
+  supabaseClientProvider.overrideWith((_) => _FakeSupabaseClient()),
+];
 
 void main() {
   group('BugReportFab 회귀 (#1858)', () {
@@ -15,7 +28,7 @@ void main() {
     testWidgets(
       'BugReporterWrapper 없으면 FAB toggle해도 나타나지 않는다',
       (tester) async {
-        final container = ProviderContainer();
+        final container = ProviderContainer(overrides: _testOverrides());
         addTearDown(container.dispose);
 
         await tester.pumpWidget(
@@ -40,7 +53,7 @@ void main() {
     testWidgets(
       'BugReporterWrapper 있으면 FAB toggle 시 나타난다',
       (tester) async {
-        final container = ProviderContainer();
+        final container = ProviderContainer(overrides: _testOverrides());
         addTearDown(container.dispose);
 
         await tester.pumpWidget(
@@ -66,7 +79,7 @@ void main() {
     testWidgets(
       'enabled=false 시 FAB toggle해도 나타나지 않는다',
       (tester) async {
-        final container = ProviderContainer();
+        final container = ProviderContainer(overrides: _testOverrides());
         addTearDown(container.dispose);
 
         await tester.pumpWidget(
