@@ -2,7 +2,7 @@
 -- publishable_key(anon JWT) 사용 시 requireServiceRole() 가드에서 401 반환
 
 BEGIN;
--- Fix #2640-followup: plan(8) → plan(7) — backend-simulation cron 제거됨
+-- Fix #2647: plan(8) → plan(7) — backend-simulation cron 제거됨
 -- (20260517000002_rename_backend_simulator_to_event_flow_simulator.sql)
 SELECT plan(7);
 
