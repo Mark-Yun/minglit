@@ -41,4 +41,4 @@ CI 자동 실행: `pr-gate.test-flutter-apps` matrix. 커버리지 dev 자동 �
 - [tests/_coverage/BLUEDOC](../../../tests/_coverage/BLUEDOC.md)
 
 ---
-_Reviewed: 2026-05-17 22:32_
+_Reviewed: 2026-05-20 00:05_
