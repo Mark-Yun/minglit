@@ -664,28 +664,60 @@ jobs:
   # check-workflow-yaml, check-android-test-deps, check-cross-feature-imports
   # consolidated into `static-checks` job at top of this file.
 
-  # Replaces the prior auto-format job from pr-setup-format.yml: that job ran
-  # `dart format` and pushed a `chore: auto-format` commit back to the PR
-  # branch via PAT, which raced against author/worker pushes and added bot
-  # commits to the PR history. The check-only variant fails CI when format is
-  # not clean and leaves the fix to the PR author (or AI worker), removing the
-  # race and the noise commits.
-  format-check:
+  # Runs `dart format` on .dart-touching PRs and pushes a `chore: auto-format`
+  # commit back to the PR branch when there's a diff. The format-check variant
+  # (introduced in #2627) was reverted because failing CI on format issues
+  # forced AI workers to do a second round-trip; auto-fix keeps the loop tight.
+  # Fork PRs skip (can't push back), un-formatted code there fails downstream
+  # build steps instead.
+  auto-format:
     needs: changes
-    if: ${{ needs.changes.outputs.dart_files == 'true' }}
+    if: ${{ needs.changes.outputs.dart_files == 'true' && github.event.pull_request.head.repo.fork == false }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref }}
+          # persist-credentials: false keeps the default GITHUB_TOKEN out of
+          # git config; the explicit PAT is injected only in the push step so
+          # pub get / dart format don't see it.
+          persist-credentials: false
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           cache: true
-      - name: Verify dart format
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: apps/app_user
+      - name: Minglit Kit — Format
+        run: dart format .
+        working-directory: shared/packages/minglit_kit
+      - name: App User — Format
+        run: dart format .
+        working-directory: apps/app_user
+      - name: App Partner — Format
+        run: dart format .
+        working-directory: apps/app_partner
+      - name: Commit changes if needed
+        env:
+          # PAT triggers downstream workflow re-runs on the push commit;
+          # default GITHUB_TOKEN-authored pushes don't (anti-loop protection),
+          # so a real PAT is required to keep CI in sync with the formatted tree.
+          GH_PAT: ${{ secrets.GH_PAT_VERSION_BUMP }}
         run: |
-          dart format --output=none --set-exit-if-changed \
-            shared/packages/minglit_kit \
-            apps/app_user \
-            apps/app_partner
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add -- '**/*.dart'
+            git commit -m "chore: auto-format"
+            git remote set-url origin "https://x-access-token:${GH_PAT}@github.com/${GITHUB_REPOSITORY}.git"
+            git push origin HEAD:"${GITHUB_HEAD_REF}"
+            git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          else
+            echo "No formatting changes needed"
+          fi
 
   # Gitleaks secret scan — formerly pr-setup-secret-scan.yml, absorbed into pr-gate as a required check.
   # Disabled 2026-05-19: post-org-transfer (Mark-Yun → team-minglit), gitleaks-action@v2 requires a
@@ -731,7 +763,7 @@ jobs:
     secrets: inherit
 
   ci-result:
-    needs: [static-checks, format-check, gitleaks, test-flutter-apps, test-integration-app-user-cuj, test-integration-app-partner-cuj, lint-landing-user, lint-landing-partner, lint-mds-docs, lint-mds-icons, test-supabase, test-edge-functions, test-ef-integration]
+    needs: [static-checks, auto-format, gitleaks, test-flutter-apps, test-integration-app-user-cuj, test-integration-app-partner-cuj, lint-landing-user, lint-landing-partner, lint-mds-docs, lint-mds-icons, test-supabase, test-edge-functions, test-ef-integration]
     if: always()
     runs-on: ubuntu-latest
     steps:
