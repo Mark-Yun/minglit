@@ -1,0 +1,7 @@
+{
+  "name": "@minglit/ef-integration-tests",
+  "private": true,
+  "dependencies": {
+    "@supabase/supabase-js": "^2"
+  }
+}
