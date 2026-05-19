@@ -30,6 +30,8 @@ export interface CascadeConfig {
   ticks: number;
   /** 각 tick 후 snapshot 갱신 콜백 (실 운영: 재조회 RPC). 미제공 시 snapshot 변경 X */
   refreshSnapshot?: (current: WorldSnapshot, trace: Trace) => Promise<WorldSnapshot> | WorldSnapshot;
+  /** EF 호출 후 throttle delay (ms). Supabase 의 per-trace rate limit (Fix #2545) 회피용. 기본 0 = 즉시. 실 운영 권장 200~400ms */
+  delayBetweenCallsMs?: number;
 }
 
 export interface CascadeResult {
@@ -62,6 +64,11 @@ export async function runCascade(config: CascadeConfig): Promise<CascadeResult> 
       };
       if (result.error) entry.error = result.error;
       trace.push(entry);
+
+      // Fix #2545: Supabase per-trace rate limit 회피. EF 호출 후만 sleep (skip-action 시는 즉시 다음).
+      if (config.delayBetweenCallsMs && config.delayBetweenCallsMs > 0) {
+        await new Promise((r) => setTimeout(r, config.delayBetweenCallsMs));
+      }
     }
 
     if (config.refreshSnapshot) {

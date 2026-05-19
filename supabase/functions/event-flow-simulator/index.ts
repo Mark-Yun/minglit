@@ -43,7 +43,7 @@ export const handler = async (req: Request, _ctx: EFContext): Promise<Response> 
   const supabase = createServiceClient();
 
   // optional body params
-  let body: { ticks?: number; seed?: number; usersPerTick?: number } = {};
+  let body: { ticks?: number; seed?: number; usersPerTick?: number; delayBetweenCallsMs?: number } = {};
   try {
     if (req.headers.get("content-type")?.includes("application/json")) {
       const parsed = await parseJsonBody(req);
@@ -57,12 +57,15 @@ export const handler = async (req: Request, _ctx: EFContext): Promise<Response> 
   const ticks = body.ticks ?? 1;
   const seed = body.seed ?? Date.now();
   const usersPerTick = body.usersPerTick ?? 10;
+  // Fix #2545: 기본 300ms throttle — Supabase 의 per-trace rate limit 회피.
+  // 0 으로 명시하면 disable (unit test / 빠른 dev 용).
+  const delayBetweenCallsMs = body.delayBetweenCallsMs ?? 300;
 
   log({
     function: FN,
     level: "info",
     message: "invoked",
-    metadata: { runId, ticks, seed, usersPerTick },
+    metadata: { runId, ticks, seed, usersPerTick, delayBetweenCallsMs },
   });
 
   try {
@@ -125,6 +128,7 @@ export const handler = async (req: Request, _ctx: EFContext): Promise<Response> 
       rng: createPRNG(seed),
       ticks,
       refreshSnapshot: () => buildSnapshot(supabase),
+      delayBetweenCallsMs,
     });
 
     // 4. invariant 검증
