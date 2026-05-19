@@ -9,8 +9,7 @@ enum SettlementStatus {
   completed,
   failed,
   canceled,
-  unknown
-  ;
+  unknown;
 
   static SettlementStatus fromString(String value) {
     return switch (value.toUpperCase()) {

@@ -91,7 +91,8 @@ List<dynamic> _overrides(Event event) {
       },
     ),
     eventDetailNowProvider.overrideWith(
-      (_) => () => DateTime(2026, 6, 1, 10),
+      (_) =>
+          () => DateTime(2026, 6, 1, 10),
     ),
     currentUserProvider.overrideWith((_) => null),
     authStateChangesProvider.overrideWith((_) => const Stream.empty()),
@@ -127,8 +128,10 @@ class _FakePolicy implements PolicyRepository {
   const _FakePolicy();
 
   @override
-  Future<Map<String, dynamic>?> getRefundPolicy() async =>
-      {'grace_period_hours': 2, 'cutoff_days': 7};
+  Future<Map<String, dynamic>?> getRefundPolicy() async => {
+    'grace_period_hours': 2,
+    'cutoff_days': 7,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -255,7 +258,8 @@ void main() {
             _kEventId,
           ).overrideWith((_) async => {'group-0': 10}),
           eventDetailNowProvider.overrideWith(
-            (_) => () => DateTime(2026, 6, 1, 10),
+            (_) =>
+                () => DateTime(2026, 6, 1, 10),
           ),
           currentUserProvider.overrideWith((_) => null),
           authStateChangesProvider.overrideWith((_) => const Stream.empty()),
@@ -328,7 +332,8 @@ void main() {
             _kEventId,
           ).overrideWith((_) async => {'group-0': 2}),
           eventDetailNowProvider.overrideWith(
-            (_) => () => DateTime(2026, 6, 1, 10),
+            (_) =>
+                () => DateTime(2026, 6, 1, 10),
           ),
           currentUserProvider.overrideWith((_) => null),
           authStateChangesProvider.overrideWith((_) => const Stream.empty()),
