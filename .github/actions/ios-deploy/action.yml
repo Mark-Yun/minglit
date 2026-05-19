@@ -70,6 +70,9 @@ inputs:
   SUPABASE_MAIN_PUBLISHABLE_KEY:
     description: 'Supabase main/production publishable key'
     required: true
+  GH_PAT_VERSION_BUMP:
+    description: 'PAT for GitHub Releases publish'
+    required: true
 
 runs:
   using: composite
@@ -277,6 +280,45 @@ runs:
           --dart-define=JUSO_CONFIRM_KEY=${{ inputs.JUSO_CONFIRM_KEY }} \
           --dart-define=SENTRY_DSN=${{ inputs.SENTRY_DSN_FLUTTER }} \
           --dart-define=ENVIRONMENT=production
+
+    # Publish to GitHub Releases (App Store Connect 와 별개로,
+    # 외부 공유 URL + 버전별 historical archive 제공).
+    - name: Publish IPA to Releases
+      shell: bash
+      working-directory: ./${{ inputs.app-directory }}
+      env:
+        GH_TOKEN: ${{ inputs.GH_PAT_VERSION_BUMP }}
+        REPO: ${{ github.repository }}
+        APP: ${{ inputs.app-name }}
+        GIT_REF: ${{ inputs.git-ref }}
+        GIT_SHA: ${{ github.sha }}
+      run: |
+        set -e
+        FLAVOR=$([ "$GIT_REF" = "refs/heads/main" ] && echo "main" || echo "dev")
+        VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //;s/+.*//')
+        SRC=$(ls build/ios/ipa/*.ipa | head -1)
+        ASSET="app_${APP}-ios-${FLAVOR}-v${VERSION}.ipa"
+        cp "$SRC" "/tmp/${ASSET}"
+
+        HIST="build-ios-${APP}-${FLAVOR}-v${VERSION}"
+        NIGHTLY="nightly-ios-${APP}-${FLAVOR}"
+
+        gh release create "$HIST" \
+          --target "$GIT_SHA" \
+          --title "ios • app_${APP} (${FLAVOR}) v${VERSION}" \
+          --notes "Built from ${GIT_SHA}" \
+          --prerelease \
+          --repo "$REPO" \
+          "/tmp/${ASSET}" || echo "::notice::$HIST 이미 존재 — skip"
+
+        gh release delete "$NIGHTLY" --yes --cleanup-tag --repo "$REPO" 2>/dev/null || true
+        gh release create "$NIGHTLY" \
+          --target "$GIT_SHA" \
+          --title "Nightly — ios • app_${APP} (${FLAVOR})" \
+          --notes "Points to v${VERSION} • ${GIT_SHA}" \
+          --prerelease \
+          --repo "$REPO" \
+          "/tmp/${ASSET}"
 
     - name: Upload to App Store Connect (TestFlight/App Store)
       shell: bash

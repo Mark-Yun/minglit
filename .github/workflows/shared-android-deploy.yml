@@ -58,6 +58,9 @@ on:
         required: true
       JUSO_CONFIRM_KEY:
         required: false
+      GH_PAT_VERSION_BUMP:
+        description: 'PAT for GitHub Releases publish'
+        required: true
 
 jobs:
   build:
@@ -146,6 +149,76 @@ jobs:
         with:
           name: ${{ inputs.artifact-name-aab }}
           path: ${{ inputs.app-directory }}/build/app/outputs/bundle/prodRelease/app-prod-release.aab
+
+      # Publish to GitHub Releases (Firebase App Distribution 와 별개로,
+      # 외부 공유 URL + 버전별 historical archive 제공).
+      - name: Publish APK/AAB to Releases (Dev)
+        if: github.ref == 'refs/heads/dev'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT_VERSION_BUMP }}
+          REPO: ${{ github.repository }}
+          APP: ${{ inputs.app-name }}
+          APP_DIR: ${{ inputs.app-directory }}
+        run: |
+          set -e
+          cd ../../  # back to repo root for gh release
+          VERSION=$(grep '^version:' ${APP_DIR}/pubspec.yaml | sed 's/version: //;s/+.*//')
+          SRC="${APP_DIR}/build/app/outputs/flutter-apk/app-dev-release.apk"
+          ASSET="app_${APP}-android-dev-v${VERSION}.apk"
+          cp "$SRC" "/tmp/${ASSET}"
+
+          HIST="build-android-${APP}-dev-v${VERSION}"
+          NIGHTLY="nightly-android-${APP}-dev"
+
+          # Versioned (영구, retention cron 으로 14 일 후 정리)
+          gh release create "$HIST" \
+            --title "android • app_${APP} (dev) v${VERSION}" \
+            --notes "Built from ${GITHUB_SHA}" \
+            --prerelease \
+            --repo "$REPO" \
+            "/tmp/${ASSET}" || echo "::notice::$HIST 이미 존재 — skip"
+
+          # Nightly pointer (overwrite)
+          gh release delete "$NIGHTLY" --yes --cleanup-tag --repo "$REPO" 2>/dev/null || true
+          gh release create "$NIGHTLY" \
+            --title "Nightly — android • app_${APP} (dev)" \
+            --notes "Points to v${VERSION} • ${GITHUB_SHA}" \
+            --prerelease \
+            --repo "$REPO" \
+            "/tmp/${ASSET}"
+
+      - name: Publish AAB to Releases (Main)
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT_VERSION_BUMP }}
+          REPO: ${{ github.repository }}
+          APP: ${{ inputs.app-name }}
+          APP_DIR: ${{ inputs.app-directory }}
+        run: |
+          set -e
+          cd ../../
+          VERSION=$(grep '^version:' ${APP_DIR}/pubspec.yaml | sed 's/version: //;s/+.*//')
+          SRC="${APP_DIR}/build/app/outputs/bundle/prodRelease/app-prod-release.aab"
+          ASSET="app_${APP}-android-main-v${VERSION}.aab"
+          cp "$SRC" "/tmp/${ASSET}"
+
+          HIST="build-android-${APP}-main-v${VERSION}"
+          NIGHTLY="nightly-android-${APP}-main"
+
+          gh release create "$HIST" \
+            --title "android • app_${APP} (main) v${VERSION}" \
+            --notes "Built from ${GITHUB_SHA}" \
+            --prerelease \
+            --repo "$REPO" \
+            "/tmp/${ASSET}" || echo "::notice::$HIST 이미 존재 — skip"
+
+          gh release delete "$NIGHTLY" --yes --cleanup-tag --repo "$REPO" 2>/dev/null || true
+          gh release create "$NIGHTLY" \
+            --title "Nightly — android • app_${APP} (main)" \
+            --notes "Points to v${VERSION} • ${GITHUB_SHA}" \
+            --prerelease \
+            --repo "$REPO" \
+            "/tmp/${ASSET}"
 
       - name: Upload to Firebase App Distribution (Dev)
         if: github.ref == 'refs/heads/dev'

@@ -1,0 +1,56 @@
+name: monitor-build-retention
+
+# `build-*` GitHub Releases (versioned build artifacts) 의 14 일 retention 정리.
+# nightly-* 는 overwrite 라 항상 단일 — 정리 대상 아님.
+#
+# 배포 워크플로우 (shared-android-deploy + ios-deploy composite) 가 daily cron 으로
+# 각 platform/app/flavor 당 historical 1 개 + nightly pointer 를 만든다. 14 일이 지난
+# build-* release 는 삭제 (asset + tag).
+#
+# 산정: 4 앱 (android/ios × user/partner) × 2 flavor × daily × 14d = 112 historical
+# 보관 ≈ 180MB × 112 = ~20GB 정도. 무한 증가 방지.
+
+on:
+  schedule:
+    - cron: '0 5 * * 0'  # 매주 일요일 05:00 UTC (KST 일요일 14:00)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: monitor-build-retention
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    runs-on: [self-hosted, ephemeral]
+    steps:
+      - name: Delete build-* releases older than 14 days
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT_VERSION_BUMP }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -e
+          CUTOFF=$(date -u -d '14 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          echo "Cutoff: $CUTOFF"
+          echo ""
+          echo "=== Candidates (build-* older than cutoff) ==="
+
+          DELETED=0
+          # gh release list 는 createdAt DESC 기본. --limit 500 으로 페이지네이션 회피.
+          while IFS= read -r TAG; do
+            [ -z "$TAG" ] && continue
+            echo "  - $TAG"
+            gh release delete "$TAG" --yes --cleanup-tag --repo "$REPO"
+            DELETED=$((DELETED + 1))
+          done < <(
+            gh release list --limit 500 --repo "$REPO" --json tagName,createdAt \
+              | jq -r --arg cutoff "$CUTOFF" '
+                  .[] | select(.tagName | startswith("build-"))
+                      | select(.createdAt < $cutoff)
+                      | .tagName'
+          )
+
+          echo ""
+          echo "::notice::Deleted ${DELETED} build-* releases (cutoff: $CUTOFF)"
