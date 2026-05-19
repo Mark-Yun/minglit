@@ -7,17 +7,17 @@
 
 import 'package:app_user/src/features/tickets/widgets/event_ongoing_banner.dart';
 import 'package:flutter/material.dart';
+import 'package:minglit_demo/minglit_demo.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 import '../_engine/builder.dart';
-import '../_mocks/data.dart';
 
 // ---------------------------------------------------------------------------
 // Mock data
 // ---------------------------------------------------------------------------
 
 EventApplication _mockApplication() {
-  final base = mockEventsBaseTime;
+  final base = DemoWorld.now;
   final event = Event(
     id: 'render-event-1',
     partyId: 'render-party-1',
