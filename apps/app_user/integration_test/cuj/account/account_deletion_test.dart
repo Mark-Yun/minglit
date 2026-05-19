@@ -373,6 +373,10 @@ void main() {
       body: (t) async {
         // signedIn 이벤트 발행 → 복구 다이얼로그 트리거
         authController.add(const AuthState(AuthChangeEvent.signedIn, null));
+        // Fix #2555: PendingDeletionRecoveryListener 가 unawaited() 로 비동기 체인 시작 —
+        // pumpAndSettle() 단독으로는 체인 완료 전에 settle 될 수 있어 pump 단계 추가.
+        await t.pump();
+        await t.pump(const Duration(milliseconds: 200));
         await t.pumpAndSettle();
 
         expect(find.text('탈퇴 대기 중인 계정입니다'), findsOneWidget);
@@ -387,6 +391,8 @@ void main() {
       overrides: base,
       body: (t) async {
         authController.add(const AuthState(AuthChangeEvent.signedIn, null));
+        await t.pump();
+        await t.pump(const Duration(milliseconds: 200));
         await t.pumpAndSettle();
 
         await t.tap(find.text('취소할게요'));

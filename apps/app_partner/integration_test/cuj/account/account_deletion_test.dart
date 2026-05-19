@@ -146,7 +146,8 @@ void main() {
         await t.pumpAndSettle();
 
         // 차단 항목 표시 확인 (FR-10)
-        expect(find.textContaining('활성 이벤트'), findsOneWidget);
+        // Fix: '활성 이벤트 ' (trailing space) 로 설명 텍스트 "활성 이벤트, 미정산..." 과 구분
+        expect(find.textContaining('활성 이벤트 '), findsOneWidget);
         expect(find.text('이벤트 관리로 이동'), findsOneWidget);
 
         // 탈퇴 요청 버튼 비활성 (FR-10: 하나라도 있으면 차단)
@@ -181,7 +182,8 @@ void main() {
       body: (t) async {
         await t.pumpAndSettle();
 
-        expect(find.textContaining('환불 대기 건'), findsOneWidget);
+        // Fix: '환불 대기 건 ' (trailing space) 로 설명 텍스트 "환불 대기 건이..." 와 구분
+        expect(find.textContaining('환불 대기 건 '), findsOneWidget);
         expect(find.text('신청 관리로 이동'), findsOneWidget);
 
         final submitBtn = t.widget<FilledButton>(
