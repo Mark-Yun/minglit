@@ -74,19 +74,19 @@ Event _makeEvent({
   int currentParticipants = 5,
   int maxParticipants = 20,
 }) => Event(
-      id: id,
-      partyId: 'party-1',
-      title: title,
-      startTime: _now.subtract(const Duration(minutes: 30)),
-      endTime: _now.add(const Duration(hours: 2)),
-      createdAt: _now,
-      updatedAt: _now,
-      currentParticipants: currentParticipants,
-      maxParticipants: maxParticipants,
-      status: 'ongoing',
-      tickets: const [],
-      entryGroups: const [],
-    );
+  id: id,
+  partyId: 'party-1',
+  title: title,
+  startTime: _now.subtract(const Duration(minutes: 30)),
+  endTime: _now.add(const Duration(hours: 2)),
+  createdAt: _now,
+  updatedAt: _now,
+  currentParticipants: currentParticipants,
+  maxParticipants: maxParticipants,
+  status: 'ongoing',
+  tickets: const [],
+  entryGroups: const [],
+);
 
 CheckinParticipant _makeParticipant({
   String id = 'p1',
@@ -95,12 +95,12 @@ CheckinParticipant _makeParticipant({
   String phoneLast4 = '1234',
   String status = 'ticket_issued',
 }) => CheckinParticipant(
-      id: id,
-      ticketId: ticketId,
-      name: name,
-      phoneLast4: phoneLast4,
-      status: status,
-    );
+  id: id,
+  ticketId: ticketId,
+  name: name,
+  phoneLast4: phoneLast4,
+  status: status,
+);
 
 final _mixedParticipants = [
   _makeParticipant(id: 'p1', ticketId: 't1', name: '홍길동', phoneLast4: '1234'),
