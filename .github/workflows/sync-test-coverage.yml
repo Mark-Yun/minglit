@@ -5,19 +5,11 @@ name: sync-test-coverage
 #
 # 매트릭스로 변경된 프로젝트만 측정해서 noise 줄임. 변경 없으면 commit skip.
 
+# Invoked by post-merge.yml on push to dev (paths filter applied at caller level).
+# Internal matrix still re-filters per-project via the nested `changes` job, so the outer
+# caller-level filter is intentionally coarse (any flutter file → call this workflow).
 on:
-  push:
-    branches: [dev]
-    paths:
-      - 'apps/app_user/lib/**'
-      - 'apps/app_user/test/**'
-      - 'apps/app_user/pubspec.yaml'
-      - 'apps/app_partner/lib/**'
-      - 'apps/app_partner/test/**'
-      - 'apps/app_partner/pubspec.yaml'
-      - 'shared/packages/minglit_kit/lib/**'
-      - 'shared/packages/minglit_kit/test/**'
-      - 'shared/packages/minglit_kit/pubspec.yaml'
+  workflow_call:
   workflow_dispatch:
 
 permissions:

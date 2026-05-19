@@ -1,8 +1,9 @@
 name: sync-pr-branches
 
+# Invoked by post-merge.yml on push to dev. workflow_dispatch retained for manual reruns.
 on:
-  push:
-    branches: [dev]
+  workflow_call:
+  workflow_dispatch:
 
 # Fix #1972: permissions moved to job level (minimum necessary scope)
 # Workflow-level permissions removed to avoid granting write access to all jobs.
