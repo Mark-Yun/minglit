@@ -87,10 +87,10 @@ void main() {
   });
 
   List<dynamic> base() => [
-    currentUserProvider.overrideWith((_) => user),
-    authStateChangesProvider.overrideWith((_) => const Stream.empty()),
-    notificationRepositoryProvider.overrideWith((_) => repo),
-  ];
+        currentUserProvider.overrideWith((_) => user),
+        authStateChangesProvider.overrideWith((_) => const Stream.empty()),
+        notificationRepositoryProvider.overrideWith((_) => repo),
+      ];
 
   // Helper: stub repo with given notifications, return base() overrides.
   // Must be called from `overrides:` factory (runs before pumpWidget).

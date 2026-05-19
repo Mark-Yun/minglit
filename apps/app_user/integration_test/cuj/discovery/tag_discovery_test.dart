@@ -30,14 +30,14 @@ class _MockTagRepository extends Mock implements TagRepository {}
 Tag _makeTag(String name) => Tag(id: 'tag-$name', name: name);
 
 Event _makeEvent(int index) => Event(
-  id: 'event-$index',
-  partyId: 'party-$index',
-  title: 'Test Event $index',
-  startTime: DateTime(2026, 5, index + 1),
-  endTime: DateTime(2026, 5, index + 1, 2),
-  createdAt: DateTime(2026),
-  updatedAt: DateTime(2026),
-);
+      id: 'event-$index',
+      partyId: 'party-$index',
+      title: 'Test Event $index',
+      startTime: DateTime(2026, 5, index + 1),
+      endTime: DateTime(2026, 5, index + 1, 2),
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
+    );
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -65,9 +65,9 @@ void main() {
   });
 
   List<dynamic> base() => [
-    tagRepositoryProvider.overrideWithValue(mockTagRepo),
-    tagCoordinatorProvider.overrideWithValue(fakeCoordinator),
-  ];
+        tagRepositoryProvider.overrideWithValue(mockTagRepo),
+        tagCoordinatorProvider.overrideWithValue(fakeCoordinator),
+      ];
 
   // ---------------------------------------------------------------------------
   // CUJ 1-1: 홈 인기 태그 칩 탭 → 태그 페이지 이동 (FR-1, FR-2)
