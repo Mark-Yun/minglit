@@ -13,6 +13,7 @@ design 문서는 운영자 관점 (cadence, role, policy). spec 문서는 구현
 | [workflow-spec.md](./workflow-spec.md) | `.github/workflows/` 의 reusable + entry workflow 의 trigger / input / output / steps / call chain |
 | [branch-spec.md](./branch-spec.md) | 각 branch 의 protection rule, required check, merge method, merge queue 구현 설정값 |
 | [execution-plan.md](./execution-plan.md) | 현재 workflow 인벤토리, refactor / 신규 / 폐기, Phase 1~4 적용 순서 |
+| [secret-migration-plan.md](./secret-migration-plan.md) | GH secrets → minglit_env/{stage}/.env 단일 파일 통합 plan |
 
 ## 핵심 컨벤션
 
