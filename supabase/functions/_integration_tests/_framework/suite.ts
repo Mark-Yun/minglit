@@ -1,6 +1,6 @@
 // _framework/suite.ts — local Supabase 연결 + ctx 생성
 
-import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { createClient, type SupabaseClient } from "jsr:@supabase/supabase-js@2";
 import { createActor, type Actor } from "./actor.ts";
 
 export interface Ctx {

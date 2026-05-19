@@ -4,7 +4,7 @@
 // "fresh" 외 모든 scenario 는 service role 로 직접 INSERT (RLS 우회).
 // 더 복잡한 시나리오는 본 파일에 키 추가.
 
-import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
+import type { SupabaseClient } from "jsr:@supabase/supabase-js@2";
 
 export type ScenarioFn = (db: SupabaseClient) => Promise<void>;
 
