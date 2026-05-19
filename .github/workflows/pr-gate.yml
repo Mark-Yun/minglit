@@ -677,13 +677,23 @@ jobs:
     permissions:
       contents: write
     steps:
+      # Mint a fresh 1h installation token from the minglit-agent-code-review
+      # GitHub App. Replaces the prior GH_PAT_VERSION_BUMP PAT which 403'd after
+      # the team-minglit org transfer (org policy rejects user-scoped classic
+      # PATs for write ops). App credentials don't expire — only the per-run
+      # token does, and that's minted automatically. Pushes attributed to the
+      # App identity still trigger downstream workflows (unlike default
+      # GITHUB_TOKEN-authored pushes, which GitHub anti-loop-blocks).
+      - name: Generate App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: '3672607'
+          private-key: ${{ secrets.REVIEWER_BOT_PRIVATE_KEY }}
       - uses: actions/checkout@v6
         with:
           ref: ${{ github.head_ref }}
-          # persist-credentials: false keeps the default GITHUB_TOKEN out of
-          # git config; the explicit PAT is injected only in the push step so
-          # pub get / dart format don't see it.
-          persist-credentials: false
+          token: ${{ steps.app-token.outputs.token }}
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
@@ -701,20 +711,13 @@ jobs:
         run: dart format .
         working-directory: apps/app_partner
       - name: Commit changes if needed
-        env:
-          # PAT triggers downstream workflow re-runs on the push commit;
-          # default GITHUB_TOKEN-authored pushes don't (anti-loop protection),
-          # so a real PAT is required to keep CI in sync with the formatted tree.
-          GH_PAT: ${{ secrets.GH_PAT_VERSION_BUMP }}
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git config user.name "minglit-agent-code-review[bot]"
+            git config user.email "minglit-agent-code-review[bot]@users.noreply.github.com"
             git add -- '**/*.dart'
             git commit -m "chore: auto-format"
-            git remote set-url origin "https://x-access-token:${GH_PAT}@github.com/${GITHUB_REPOSITORY}.git"
             git push origin HEAD:"${GITHUB_HEAD_REF}"
-            git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
           else
             echo "No formatting changes needed"
           fi
