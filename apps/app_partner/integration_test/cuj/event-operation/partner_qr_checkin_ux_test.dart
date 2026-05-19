@@ -325,7 +325,7 @@ void main() {
   cujGroup('2-1', '엔트리 그룹 하단 시트 헤더 노출', () {
     cujCase(
       'happy: 그룹 있음 → 헤더 "엔트리 그룹별 현황" 노출',
-      app: Scaffold(
+      app: const Scaffold(
         body: EntryGroupBottomSheet(eventId: 'evt-groups'),
       ),
       overrides: () => [
@@ -349,7 +349,7 @@ void main() {
 
     cujCase(
       'edge: 그룹 없음 → 시트 섹션 자체 숨김 (FR-7)',
-      app: Scaffold(
+      app: const Scaffold(
         body: EntryGroupBottomSheet(eventId: 'evt-no-groups'),
       ),
       overrides: () => [
@@ -417,7 +417,7 @@ void main() {
   cujGroup('2-2', 'pull-up 으로 그룹 시트 확장 + 그룹별 현황 표시', () {
     cujCase(
       'happy: 3개 그룹 → 드래그 후 라벨 + 진행률 표시',
-      app: Scaffold(
+      app: const Scaffold(
         body: EntryGroupBottomSheet(eventId: 'evt-expand'),
       ),
       overrides: () => [
@@ -457,7 +457,7 @@ void main() {
         await t.fling(
           find.text('엔트리 그룹별 현황'),
           const Offset(0, -400),
-          1000.0,
+          1000,
         );
         await t.pumpAndSettle();
 
@@ -472,7 +472,7 @@ void main() {
 
     cujCase(
       'edge: 100% 도달 그룹 → "N/N" 표시 + error 색상 프로그레스',
-      app: Scaffold(
+      app: const Scaffold(
         body: EntryGroupBottomSheet(eventId: 'evt-full'),
       ),
       overrides: () => [
@@ -608,9 +608,9 @@ void main() {
   cujGroup('5-1', '중복 체크인 시 메시지 확장', () {
     cujCase(
       'happy: alreadyCheckedIn → "이미 체크인된 참가자" + 입장 시각',
-      app: Scaffold(
+      app: const Scaffold(
         body: CheckinResultBanner(
-          state: const CheckinState(
+          state: CheckinState(
             result: CheckinResult.alreadyCheckedIn,
             message: '14:30 입장',
           ),
@@ -649,9 +649,9 @@ void main() {
   cujGroup('5-2', '다른 이벤트 티켓 스캔 시 차단', () {
     cujCase(
       'happy: invalid + "다른 이벤트 티켓입니다" → 입장 불가 배너',
-      app: Scaffold(
+      app: const Scaffold(
         body: CheckinResultBanner(
-          state: const CheckinState(
+          state: CheckinState(
             result: CheckinResult.invalid,
             message: '다른 이벤트 티켓입니다',
           ),
@@ -675,9 +675,9 @@ void main() {
   cujGroup('5-3', '환불된 티켓 스캔 시 차단', () {
     cujCase(
       'happy: invalid + "환불된 티켓" → 입장 불가 배너',
-      app: Scaffold(
+      app: const Scaffold(
         body: CheckinResultBanner(
-          state: const CheckinState(
+          state: CheckinState(
             result: CheckinResult.invalid,
             message: '환불된 티켓',
           ),
@@ -745,7 +745,7 @@ class _RealtimeStatCard extends ConsumerWidget {
       loading: () => const Scaffold(
         body: CheckinSummaryCard(checkedIn: 0, total: 0, isLoading: true),
       ),
-      error: (_, __) => const Scaffold(
+      error: (_, _) => const Scaffold(
         body: CheckinSummaryCard(checkedIn: 0, total: 0),
       ),
       data: (stats) => Scaffold(
