@@ -6,6 +6,8 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    // Firebase 네이티브 auto-init — src/<flavor>/google-services.json 처리.
+    id("com.google.gms.google-services")
 }
 
 val keystoreProperties = Properties()

@@ -20,6 +20,8 @@ plugins {
     id("dev.flutter.flutter-plugin-loader") version "1.0.0"
     id("com.android.application") version "8.9.1" apply false
     id("org.jetbrains.kotlin.android") version "2.1.0" apply false
+    // Firebase 네이티브 auto-init — src/<flavor>/google-services.json 를 build 시 처리.
+    id("com.google.gms.google-services") version "4.4.2" apply false
 }
 
 rootProject.name = "app_partner_android"
