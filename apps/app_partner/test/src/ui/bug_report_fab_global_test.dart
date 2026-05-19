@@ -6,7 +6,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:minglit_kit/src/logic/providers/supabase_provider.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -16,7 +15,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 // because Supabase.initialize() isn't invoked in test mode.
 class _FakeSupabaseClient extends Mock implements SupabaseClient {}
 
-List<Override> _testOverrides() => [
+// Riverpod 3.x: Override 는 sealed — public 으로 타입 명시 불가. dynamic + cast()
+// 우회 (cuj_test.dart, mds-emulator-render builder 와 동일 패턴).
+List<dynamic> _testOverrides() => [
   supabaseClientProvider.overrideWith((_) => _FakeSupabaseClient()),
 ];
 
@@ -28,7 +29,9 @@ void main() {
     testWidgets(
       'BugReporterWrapper 없으면 FAB toggle해도 나타나지 않는다',
       (tester) async {
-        final container = ProviderContainer(overrides: _testOverrides());
+        final container = ProviderContainer(
+          overrides: _testOverrides().cast(),
+        );
         addTearDown(container.dispose);
 
         await tester.pumpWidget(
@@ -53,7 +56,9 @@ void main() {
     testWidgets(
       'BugReporterWrapper 있으면 FAB toggle 시 나타난다',
       (tester) async {
-        final container = ProviderContainer(overrides: _testOverrides());
+        final container = ProviderContainer(
+          overrides: _testOverrides().cast(),
+        );
         addTearDown(container.dispose);
 
         await tester.pumpWidget(
@@ -79,7 +84,9 @@ void main() {
     testWidgets(
       'enabled=false 시 FAB toggle해도 나타나지 않는다',
       (tester) async {
-        final container = ProviderContainer(overrides: _testOverrides());
+        final container = ProviderContainer(
+          overrides: _testOverrides().cast(),
+        );
         addTearDown(container.dispose);
 
         await tester.pumpWidget(
