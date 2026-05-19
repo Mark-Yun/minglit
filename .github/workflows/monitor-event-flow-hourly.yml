@@ -15,7 +15,7 @@ concurrency:
 jobs:
   simulate:
     name: Run event-flow cascade (hourly smoke)
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: Invoke event-flow-simulator
