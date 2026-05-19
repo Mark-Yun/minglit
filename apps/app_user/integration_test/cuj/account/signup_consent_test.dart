@@ -53,24 +53,24 @@ void main() {
   });
 
   List<dynamic> base() => [
-        currentUserProvider.overrideWith((_) => user),
-        authStateChangesProvider.overrideWith((_) => const Stream.empty()),
-        consentRepositoryProvider.overrideWith((_) => repo),
-        consentCoordinatorProvider.overrideWith((_) => coordinator),
-      ];
+    currentUserProvider.overrideWith((_) => user),
+    authStateChangesProvider.overrideWith((_) => const Stream.empty()),
+    consentRepositoryProvider.overrideWith((_) => repo),
+    consentCoordinatorProvider.overrideWith((_) => coordinator),
+  ];
 
   List<dynamic> verificationBase() => [
-        currentUserProvider.overrideWith((_) => user),
-        authStateChangesProvider.overrideWith((_) => const Stream.empty()),
-        consentRepositoryProvider.overrideWith((_) => repo),
-        iamportRepositoryProvider.overrideWith((_) => iamportRepo),
-      ];
+    currentUserProvider.overrideWith((_) => user),
+    authStateChangesProvider.overrideWith((_) => const Stream.empty()),
+    consentRepositoryProvider.overrideWith((_) => repo),
+    iamportRepositoryProvider.overrideWith((_) => iamportRepo),
+  ];
 
   List<dynamic> privacyBase() => [
-        currentUserProvider.overrideWith((_) => user),
-        authStateChangesProvider.overrideWith((_) => const Stream.empty()),
-        consentRepositoryProvider.overrideWith((_) => repo),
-      ];
+    currentUserProvider.overrideWith((_) => user),
+    authStateChangesProvider.overrideWith((_) => const Stream.empty()),
+    consentRepositoryProvider.overrideWith((_) => repo),
+  ];
 
   // ---------------------------------------------------------------------------
   // CUJ 1-1: 필수 동의 3종 체크 후 가입 (기존)
@@ -348,7 +348,9 @@ void main() {
       // hasRequiredConsentsProvider를 Consumer로 읽어 guard 로직을 직접 검증
       app: Consumer(
         builder: (_, ref, __) {
-          return ref.watch(hasRequiredConsentsProvider).when(
+          return ref
+              .watch(hasRequiredConsentsProvider)
+              .when(
                 data: (has) => Text(has ? 'allowed' : 'blocked'),
                 loading: () => const SizedBox(),
                 error: (_, __) => const Text('error'),
@@ -366,7 +368,9 @@ void main() {
       'edge: 동의 완료 유저 → hasRequiredConsents=true (가드 통과)',
       app: Consumer(
         builder: (_, ref, __) {
-          return ref.watch(hasRequiredConsentsProvider).when(
+          return ref
+              .watch(hasRequiredConsentsProvider)
+              .when(
                 data: (has) => Text(has ? 'allowed' : 'blocked'),
                 loading: () => const SizedBox(),
                 error: (_, __) => const Text('error'),

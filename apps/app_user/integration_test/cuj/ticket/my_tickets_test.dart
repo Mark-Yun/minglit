@@ -103,11 +103,11 @@ void main() {
   });
 
   List<dynamic> base() => [
-        currentUserProvider.overrideWith((_) => user),
-        authStateChangesProvider.overrideWith((_) => const Stream.empty()),
-        eventRepositoryProvider.overrideWithValue(repo),
-        appCoordinatorProvider.overrideWithValue(coordinator),
-      ];
+    currentUserProvider.overrideWith((_) => user),
+    authStateChangesProvider.overrideWith((_) => const Stream.empty()),
+    eventRepositoryProvider.overrideWithValue(repo),
+    appCoordinatorProvider.overrideWithValue(coordinator),
+  ];
 
   // Helper: stub repo with given tickets, then return base() overrides.
   // Must be called from `overrides:` factory (lazy, runs before pumpWidget).
