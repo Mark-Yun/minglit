@@ -107,7 +107,8 @@ async function seedPartnerEvent(
   // 4. Ticket template + ticket
   const { data: tmpl, error: tmplErr } = await db
     .from("ticket_templates")
-    .insert({ party_id: partyId, name: "General", price: opts.paymentAmount })
+    // Fix #2644: ticket_templates.quantity is NOT NULL — must be provided at insert
+    .insert({ party_id: partyId, name: "General", price: opts.paymentAmount, quantity: 10 })
     .select("id")
     .single();
   if (tmplErr || !tmpl) throw new Error(`seedPartnerEvent ticket_template: ${tmplErr?.message}`);
