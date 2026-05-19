@@ -82,11 +82,11 @@ void main() {
 
         await capture.error(tester, 0); // 네트워크 에러 화면
 
-        // Fix #1746: EventDetailPage now uses MinglitErrorState with custom title
+        // Fix #1746: EventDetailPage uses MinglitErrorState with custom title
         expect(find.text('이벤트를 불러올 수 없습니다'), findsOneWidget);
         expect(find.byIcon(Icons.error_outline), findsOneWidget);
 
-        // Bottom bar should be hidden on error (AnimatedSwitcher replaces entire column)
+        // Bottom bar hidden on error (AnimatedSwitcher replaces entire column)
         expect(find.text('최저가'), findsNothing);
         expect(find.text('오류 발생'), findsNothing);
       },
