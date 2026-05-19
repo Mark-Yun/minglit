@@ -40,61 +40,38 @@ dev 머지 후 자동 발동. 통과 = "이 commit 은 RC 가능 + backend/web p
 
 매트릭스 병렬. 하나라도 실패 = rc-gate 전체 실패.
 
+매트릭스 (app × scenario) 병렬. 하나라도 실패 = rc-gate 전체 실패.
+
 | job | 대상 | 비고 |
 |-----|------|------|
-| `cuj-app-user` | `apps/app_user/patrol_test/cuj/*` | `--flavor dev --dart-define-from-file=.../dev/flutter.env` 필수 |
-| `cuj-app-partner` | `apps/app_partner/patrol_test/cuj/*` | 같음 |
+| `cuj-app-user` × {happy, unhappy, chaos} | `apps/app_user/patrol_test/cuj/*` | `--flavor dev --dart-define-from-file=.../dev/flutter.env`. scenario 별 sub-suite. chaos 미정의 시 후속 정의 (TBD) |
+| `cuj-app-partner` × {happy, unhappy, chaos} | `apps/app_partner/patrol_test/cuj/*` | 동일 |
 | `integration-backend` | `tests/backend_integration/**` | Supabase staging or ephemeral branch |
 | `integration-edge-functions` | `tests/ef_integration/**` | EF 통합 시나리오 |
-| `simulator-happy` | `tests/simulator/scenarios/happy/*` | cascade prob 0.85~0.95 |
-| `simulator-chaos` | `tests/simulator/scenarios/chaos/*` | chaos mode, 회복 검증 |
 | `test-lab-smoke` | Firebase Test Lab — 실 디바이스 4종 | 디바이스 다양성 보강 |
 
 ### 통과 시 (rc-gate-pass)
 
 ```
 1. dev HEAD commit 에 GitHub commit status `rc-gate-pass` set
-2. Auto-deploy chain workflow_call:
-   - backend-auto-deploy (EF + migration apply)
-   - web-auto-deploy (Vercel hooks 4앱)
-3. (Mobile 은 deploy 없음 — main 의 monthly cut 에서 처리)
+2. Auto-deploy chain workflow_call (parallel):
+   - deploy-supabase (EF + migration apply)
+   - deploy-vercel (Vercel hooks 4앱)
+3. (Mobile 은 별도 — main 머지 후 기존 `deploy-android-*` / `deploy-ios-*` workflow 들이 자동 발동)
 ```
 
 ### 실패 시
 
+Snapshot 모델 — **auto-revert 없음**. dev 가 broken 상태로 잠시 머묾, AI agent 가 fix PR 을 normal flow 로 처리.
+
 - Status 미부여 (`rc-gate-pass` 없음 → rc-cut 이 이 commit 안 골라잡음)
-- 자동 이슈 + `P1-high` 라벨 + 직전 `rc-gate-pass` 이후 머지된 PR 작성자들 assignee
-- Bot auto-revert + AI fix flow (다음 섹션)
+- 자동 이슈 + `P1-high` 라벨 + 직전 `rc-gate-pass` 이후 머지된 PR 작성자들 assignee (AI agent 포함)
+- AI agent 가 fix PR 을 dev-staging 으로 작성 → dev-staging-pr-gate → 다음 nightly-cut → 다음 rc-gate 가 검증
+- dev 는 *broken integration 상태* 지만 `pr-gate-core` 가 compile/unit 잡아주니 다른 PR 진입 자체는 OK
 
 ### 60분 비용 예산
 
 전체 60분 안에. 넘으면: 매트릭스 분할, selective run, weekly 로 이동. macOS matrix 필요 시 ubuntu-latest 와 병행.
-
-## Auto-revert + AI Fix Flow
-
-`rc-gate` 실패 시 정상 cadence 유지를 위한 자동화:
-
-```
-[rc-gate fail on dev commit C]
-        │
-        ├─▶ [봇이 culprit 추정]
-        │       - 휴리스틱: 실패한 test area + 그 area 변경한 PR
-        │       - AI agent 분석 (rc-gate log + diff 컨텍스트)
-        │       - 신뢰도 낮으면 직전 rc-gate-pass 이후 PR 들 모두 후보
-        │
-        ├─▶ [봇이 revert PR 자동 생성] (dev-staging 에 PR 머지)
-        │       └─ 다음 nightly-cut 에서 자동으로 dev 로 promote → 다음 rc-gate
-        │
-        └─▶ [이슈 자동 파일링]
-                  body: revert SHA + rc-gate log + 추정 원인
-                  assignee: 원래 PR 작성자 (AI agent)
-                        │
-                        └─▶ AI 가 fix PR 작성 (revert 된 코드의 forward-fix)
-                              │
-                              └─▶ dev-staging-pr-gate → 정상 flow → 다음 rc-gate 검증
-```
-
-**핵심**: revert 와 fix 는 *경쟁* 아니라 *순차*. revert = stabilization (즉시 dev 회복), fix = resolution (async AI 작업).
 
 ## Error-Backoff 정책
 
@@ -102,7 +79,7 @@ dev 머지 후 자동 발동. 통과 = "이 commit 은 RC 가능 + backend/web p
 
 | 연속 실패 | 동작 |
 |----------|------|
-| 1회 | 자동 revert + 이슈 + Slack `#nightly` |
+| 1회 | 자동 이슈 + Slack `#nightly` + AI agent assignee |
 | 2회 (같은 area) | 기존 이슈 댓글 누적, assignee reminder, 영역 owner 추가 알림 |
 | 3회 (같은 area) | `rc-gate-degraded` label + **rc-cut workflow 자동 차단** (다음 weekly cut PR 생성 안 함) + Slack `#release` |
 
@@ -110,14 +87,14 @@ dev 머지 후 자동 발동. 통과 = "이 commit 은 RC 가능 + backend/web p
 
 ## Auto-deploy 워크플로우
 
-### backend-auto-deploy
+### `deploy-supabase`
 
 - Supabase EF 배포 (deno deploy)
 - Migration apply (Supabase CLI)
 - Sentry release marker 부여 (`v{ver}-dev` 형식)
 - 실패 시: retry 1회 → 실패 시 P0 이슈 + on-call
 
-### web-auto-deploy
+### `deploy-vercel`
 
 - Vercel deploy hooks 4앱 (app_user, app_partner, landing_user, landing_partner)
 - 현재 cron 2시간 → push-event 기반으로 교체
@@ -131,8 +108,8 @@ dev 머지 후 자동 발동. 통과 = "이 commit 은 RC 가능 + backend/web p
 ## 결정해야 할 것
 
 - nightly-cut cron 시각
-- AI culprit 식별 도구 (Claude Code agent / 자체 휴리스틱)
 - backoff 임계 (3회 차단이 적정한가)
+- CUJ chaos 시나리오 정의 (현재 미정의)
 - ephemeral Supabase branch (RC 마다 새로 vs 단일 공유)
 - rc-gate selective run 도입 시점
 

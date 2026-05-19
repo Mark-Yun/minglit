@@ -9,11 +9,11 @@
 | 개발자 로컬 | LSP, analyze, unit | 컴파일/타입/단위 | 초~분 |
 | dev-staging merge queue | `dev-staging-pr-gate` (unit, lint, pgTAP, EF, migration, `expand-migrate-contract`, `flag-registration`, gitleaks) | PR 회귀, 보안, migration 충돌, flag 미등록, contract 위반 | < 10분 |
 | nightly-cut PR | `nightly-pr-gate` (defensive) | 환경 차이 회귀 | < 10분 |
-| dev 머지 후 (자동) | `rc-gate` (CUJ, integration, e2e, simulator, Test Lab) | 통합 회귀, 시나리오, 외부 의존, 디바이스 | 30-60분 |
+| dev 머지 후 (자동) | `rc-gate` (CUJ matrix happy/unhappy/chaos, integration, e2e, Test Lab) | 통합 회귀, 시나리오, 외부 의존, 디바이스 | 30-60분 |
 | Backend/Web auto-deploy | post-deploy smoke, Sentry release marker | deploy infra 회귀 | 분 |
 | rc soak (5일) | rc 의 nightly 재실행 + 내부 dogfooding | 누적 회귀, real-data 이슈 | 일 단위 |
 | main 머지 후 (auto-deploy) | smoke + Sentry/Crashlytics 알람 임계 | prod 회귀 | 분 |
-| mobile-cut 후 | mobile-specific smoke + Test Lab | mobile build 회귀 | 시간 |
+| deploy-android-*, deploy-ios-* 후 | mobile build smoke + Crashlytics dSYM/mapping 등록 | mobile build 회귀, sign 실패 | 시간 |
 | flag canary (allowlist) | Statsig metric (error rate, crash-free) | 실사용자 회귀 (canary) | 분~시간 |
 | flag staged 5/25/100% | 위 + cohort 비교 | 새 cohort 회귀 | 분~시간 |
 | 100% 운영 | uptime, on-call | infra-level, 장기 회귀 | 분~일 |
@@ -53,10 +53,10 @@
 | Detection 신호 | 누가 받음 | 어디서 | Action |
 |---------------|----------|--------|--------|
 | pr-gate 실패 (어느 단계든) | PR 작성자 | GitHub PR | 본인 fix → re-push → re-queue |
-| `rc-gate` 실패 (dev 머지 후) | 직전 rc-gate-pass 이후 머지된 PR 작성자들 | GitHub issue + Slack `#nightly` | bot auto-revert + AI fix PR ([dev-pipeline.md](./dev-pipeline.md)) |
+| `rc-gate` 실패 (dev 머지 후) | 직전 rc-gate-pass 이후 머지된 PR 작성자들 + AI agent | GitHub issue + Slack `#nightly` | AI agent fix PR via dev-staging — dev keeps moving ([dev-pipeline.md](./dev-pipeline.md)) |
 | Backend/web auto-deploy 실패 | on-call | Slack `#release` | retry → rollback ([main-promotion.md](./main-promotion.md) error-backoff) |
 | rc soak 중 회귀 | RC owner | Slack `#release` | hotfix PR → rc | 
-| mobile-cut smoke 실패 | mobile 팀 | GitHub issue | cut 차단, 직전 main commit 시도 |
+| deploy-android-*, deploy-ios-* 실패 | mobile 팀 | GitHub issue + Slack | retry + auto-issue ([main-promotion.md](./main-promotion.md) error-backoff) |
 | Sentry alert (error spike) | 영역 owner | Sentry → Slack | 영역 별 on-call 판단 |
 | Crashlytics velocity alert | mobile 팀 | Firebase → Slack | flag flip OFF 우선 |
 | Statsig metric gate | flag owner | Statsig dashboard | flag rollback ([life-of-flag.md](./life-of-flag.md)) |

@@ -152,8 +152,8 @@ Feature flag (Statsig + Firebase Remote Config) 의 생성·soak·rollout·**자
 
 | 항목 | 코드 release | 기능 release |
 |------|--------------|--------------|
-| 트리거 | backend/web: dev rc-gate-pass / mobile: monthly cut | flag ON 조작 |
-| cadence | backend/web: 시간 단위 / mobile: 월 1회 | feature 별 비동기 |
+| 트리거 | backend/web: dev rc-gate-pass / mobile: main 머지 (deploy-android-*, deploy-ios-*) | flag ON 조작 |
+| cadence | backend/web: 시간 단위 / mobile: hotfix 없으면 weekly (rc → main 주기) | feature 별 비동기 |
 | rollback | redeploy 이전 commit (분) | flag flip (즉시) |
 | 통제 권한 | 릴리즈 매니저 | feature owner |
 

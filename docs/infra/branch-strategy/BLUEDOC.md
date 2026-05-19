@@ -1,6 +1,6 @@
 # Branch Strategy
 
-4-stage (`dev-staging → dev → rc → main`) + merge queue + nightly snapshot + `rc-gate` green build picking + feature flag + 3가지 safety net. AI agent 가 dev-staging commit, backend/web 은 dev rc-gate-pass commit 마다 continuous deploy (Spotify 식), mobile 은 main 에서 월 1회 cut. 모든 cadence = target, slip 자연스러움.
+4-stage (`dev-staging → dev → rc → main`) + merge queue + nightly snapshot + `rc-gate` green build picking + feature flag + 3가지 safety net. AI agent 가 dev-staging commit, backend/web 은 dev rc-gate-pass commit 마다 continuous deploy (Spotify 식), mobile 은 main 머지마다 build/store upload (hotfix 없으면 weekly). 모든 cadence = target, slip 자연스러움.
 
 ## 4-stage 모델
 
@@ -29,9 +29,10 @@
 | [dev-staging-pipeline.md](./dev-staging-pipeline.md) | merge queue + pr-gate + safety net CI |
 | [dev-pipeline.md](./dev-pipeline.md) | nightly-cut + rc-gate + auto-deploy chain |
 | [rc-promotion.md](./rc-promotion.md) | rc-cut + soak + hotfix + backport |
-| [main-promotion.md](./main-promotion.md) | rc → main + mobile-cut + min-version |
+| [main-promotion.md](./main-promotion.md) | rc → main + deploy-android-*, deploy-ios-* + min-version |
 | [life-of-flag.md](./life-of-flag.md) | flag lifecycle |
 | [versioning.md](./versioning.md) | CalVer + tag |
+| [specs/](./specs/BLUEDOC.md) | workflow spec, branch spec, execution plan (구현 계약) |
 
 ## 역할 (workflow 가 처리 못하는 edge case 만)
 
@@ -41,7 +42,7 @@
 
 - 코드 promotion = 한 방향 PR, 기능 promotion = flag flip
 - 모든 branch linear ON — dev-staging: squash, dev/rc/main: rebase
-- dev rc-gate-pass = backend/web continuous deploy (Spotify 식); mobile = main 에서 월 1회 cut + cherry-pick 자동화 (TBD)
+- dev rc-gate-pass = backend/web continuous deploy (Spotify 식); main 머지 = mobile build/store upload (`deploy-android-*, deploy-ios-*`)
 - **Hotfix 는 rc 에서, dev-staging 으로 자동 backport** ([rc-promotion.md](./rc-promotion.md))
 - Tag regex 는 `RELEASE.md` lock (TODO)
 

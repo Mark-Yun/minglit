@@ -46,7 +46,6 @@
 | `promo/rc-YYYY-Wxx` (tag) | rc-cut 직후 | `promo/rc-2026-W20` | workflow |
 | `v{ver}` (tag) | main 머지 직후 | `v26.05.2585` | workflow |
 | `promo/main-YYYY-Wxx` (tag) | main 머지 직후 (동시) | `promo/main-2026-W20` | workflow |
-| `release/mobile-YYYY-MM` (branch) | mobile-cut | `release/mobile-2026-05` | workflow |
 
 `Wxx` = ISO week number (예: 2026-W20 = 2026년 20주차).
 

@@ -13,18 +13,20 @@
                                                               │      │
                                                               │      ├─ pass: status rc-gate-pass
                                                               │      │         │
-                                                              │      │         ├─▶ backend-auto-deploy (EF + migration)
-                                                              │      │         └─▶ web-auto-deploy (Vercel 4앱)
+                                                              │      │         ├─▶ deploy-supabase (EF + migration)
+                                                              │      │         └─▶ deploy-vercel (4앱)
                                                               │      │
-                                                              │      └─ fail: bot 자동 이슈 + AI fix PR 경로
+                                                              │      └─ fail: 자동 이슈 + AI agent fix via dev-staging (no auto-revert)
                                                               │
                                                               └─weekly rc-cut (최신 rc-gate-pass commit)──▶ rc/YYYY-Wxx
                                                                                                               │
                                                                                                               └─5일 soak (hotfix 시 시계 리셋)──▶ main
                                                                                                                                                     │
-                                                                                                                                                    └─monthly mobile-cut──▶ release/mobile-YYYY-MM
-                                                                                                                                                                                  │
-                                                                                                                                                                                  └─ App Store
+                                                                                                                                                    └─main-post-merge-promote
+                                                                                                                                                              │
+                                                                                                                                                              ├─▶ deploy-android-{user,partner} ──▶ Play Store
+                                                                                                                                                              └─▶ deploy-ios-{user,partner} ──▶ App Store Connect
+                                                                                                                                                                              (push: main trigger 로 자동, 병렬)
 ```
 
 **Hotfix backport 흐름** (rc → dev-staging):
@@ -33,7 +35,9 @@
 rc/* hotfix 머지 ──auto cherry-pick──▶ backport-branch ──PR──▶ dev-staging
 ```
 
-상세는 [rc-promotion.md](./rc-promotion.md). Mobile cherry-pick 은 backport 불필요 (main 에서 cherry-pick 한 commit 은 이미 dev-staging 에 존재).
+상세는 [rc-promotion.md](./rc-promotion.md).
+
+> Mobile cadence = hotfix 없으면 weekly (rc → main 머지 마다 자동 build/deploy). store review + staged rollout 은 외부 (workflow 밖).
 
 ## 단계별 PR 룰
 
@@ -41,9 +45,8 @@ rc/* hotfix 머지 ──auto cherry-pick──▶ backport-branch ──PR─�
 |-----------|-------------|--------|-----------|-----------|
 | feature/agent → dev-staging | `dev-staging` ← `feat/*`, `fix/*`, `chore/*`, `docs/*` | merge queue enqueue | **squash** (queue) | `dev-staging-pr-gate` |
 | dev-staging → dev | `dev` ← `dev-staging` | daily cron `nightly-cut` | merge (snapshot) | `nightly-pr-gate` |
-| feature → rc | `rc/YYYY-Wxx` ← hotfix branch | hotfix only | rebase | `rc-pr-gate` |
+| hotfix → rc | `rc/YYYY-Wxx` ← hotfix branch | hotfix only | rebase | `rc-pr-gate` |
 | rc → main | `main` ← `rc/YYYY-Wxx` | `rc-soak-check` 가 5일 무커밋 시 PR 생성 + auto-merge | rebase + ff | `main-pr-gate` + `rc-soak-passed` |
-| main → release/mobile-YYYY-MM | branch cut | monthly cron `mobile-cut` | branch 신규 생성 | mobile smoke |
 
 ## Branch Protection 설정
 
@@ -53,7 +56,6 @@ rc/* hotfix 머지 ──auto cherry-pick──▶ backport-branch ──PR─�
 | `dev` | 금지 | **ON** | `nightly-pr-gate` | merge (snapshot) |
 | `rc/YYYY-Wxx` | 금지 | **ON** | `rc-pr-gate` | rebase |
 | `main` | 금지 | **ON** | `main-pr-gate` + `rc-gate-pass` (RC HEAD) + `expand-migrate-contract` + `rc-soak-passed` | rebase |
-| `release/mobile-*` | 금지 | ON | mobile smoke | rebase (cherry-pick) |
 
 Hybrid linear history 금지 — 각 branch 내 일관 (squash or rebase 한 가지).
 
@@ -67,41 +69,53 @@ Hybrid linear history 금지 — 각 branch 내 일관 (squash or rebase 한 가
 | `v{ver}-rc-NN` (tag) | rc-cut + hotfix | `v26.05.2572-rc-01`, `v26.05.2585-rc-02` | workflow |
 | `promo/main-YYYY-Wxx` (tag) | main 머지 직후 | `promo/main-2026-W20` | workflow |
 | `v{ver}` (tag) | main 머지 직후 (동시) | `v26.05.2585` | workflow |
-| `release/mobile-YYYY-MM` (branch) | mobile-cut | `release/mobile-2026-05` | workflow |
 
-> **Tag naming regex 는 [`RELEASE.md`](../../../RELEASE.md) lock** (TODO). 외부 도구 (Sentry, Statsig, Vercel) 가 pin → rename = 모든 dashboard 깨짐.
+> **Tag naming regex 는 [`RELEASE.md`](../../../RELEASE.md) lock** (TODO). 외부 도구 (Sentry, Statsig, Vercel, App Store, Play Console) 가 pin → rename = 모든 dashboard 깨짐.
 
 조회: `git tag -l 'v*'`, `git tag -l 'promo/main-*'`, `gh api repos/.../commits/{sha}/status` (rc-gate-pass)
 
 ## Auto-deploy Chain
 
-dev 의 `rc-gate-pass` status 가 set 되는 즉시 `rc-gate` workflow 가 `workflow_call` 로 호출:
+### dev rc-gate-pass → backend/web (continuous)
 
 ```yaml
 # 개념
-trigger-deploys:
-  needs: rc-gate (green)
+rc-gate (on push to dev):
+  needs: pass
   parallel:
-    - uses: ./.github/workflows/backend-auto-deploy.yml  # EF + migration
-    - uses: ./.github/workflows/web-auto-deploy.yml      # Vercel 4앱
+    - uses: ./.github/workflows/deploy-supabase.yml  # EF + migration
+    - uses: ./.github/workflows/deploy-vercel.yml    # 4앱
 ```
 
-Mobile 은 별도 cadence — main 에서 monthly cut.
+### main push → mobile (every release)
+
+```yaml
+# 개념
+main-post-merge-promote (on push to main):
+  steps:
+    - tag v{ver} + promo/main-Wxx + Sentry marker
+    - Firebase RC `latest_version` = v{ver} 자동 update
+  parallel:
+    # (실제로는 workflow_call 아닌 push: main trigger 로 기존 deploy-* workflows 자동 발동)
+    # - deploy-android-user / deploy-android-partner
+    # - deploy-ios-user / deploy-ios-partner
+```
+
+상세: [specs/workflow-spec.md](./specs/workflow-spec.md).
 
 ## Safety Nets 위치
 
 | Safety Net | 실행 위치 |
 |------------|-----------|
-| min-version endpoint | server-side, `mobile-cut` 시점에 monthly auto-bump ([main-promotion.md](./main-promotion.md)) |
+| Version kill switch (soft/hard) | Firebase RC. soft `latest_version` = `main-post-merge-promote` 가 매 main 머지마다 자동 update / hard `kill_list_hard` = 내부 admin page manual (catastrophic only) |
 | expand-migrate-contract CI | `dev-staging-pr-gate` (destructive op 탐지) + `main-pr-gate` (재검증) |
 | flag-registration CI | `dev-staging-pr-gate` |
 
 ## 결정해야 할 것
 
 - 주간 rc-cut 요일
-- monthly mobile-cut 날짜
 - merge queue 모드 (concurrent vs serial)
-- cherry-pick 자동화 도구 선정 (Runway/Xray/자체)
+- Fastlane / store upload 설정
 - `RELEASE.md` 작성
 
 ---
