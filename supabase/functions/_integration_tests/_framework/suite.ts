@@ -47,8 +47,13 @@ export function suite(_featureKey: string): Ctx {
     return _DISABLED_CTX;
   }
 
-  // supabase-js 2.105+ rejects 127.0.0.1 in validateSupabaseUrl — use localhost
-  const url = rawUrl.replace("127.0.0.1", "localhost");
+  // Sanitize: strip surrounding quotes (supabase status -o env may quote values),
+  // then normalize 127.0.0.1 to localhost (supabase-js 2.105+ validateSupabaseUrl
+  // rejects raw IP addresses; localhost is accepted).
+  const url = rawUrl
+    .trim()
+    .replace(/^"(.*)"$/, "$1")
+    .replace("127.0.0.1", "localhost");
 
   const db = createClient(url, serviceKey, {
     auth: { persistSession: false, autoRefreshToken: false },
