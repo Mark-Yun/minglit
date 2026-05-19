@@ -31,6 +31,18 @@ flutter drive \
 
 Phase 2 (TODO, follow-up PR) — `_manifest.yaml`, coverage report, scaffold 결과는 [architecture.md](./architecture.md) 의 구현 상태 표 참고.
 
+## 등록된 화면 (카탈로그 완료)
+
+| 화면 | states |
+|------|--------|
+| `home_page` | default · guest · loading · feed-empty · error |
+| `login_page` | 기본 |
+| `notification_list_screen` | loaded · empty |
+| `notification_settings_screen` | default |
+| `search_page` | idle · results · empty |
+| `event_now_bar` | waiting · check-in-ready · checked-in · matching · results · ended · offline |
+| `event_ongoing_banner` | 8 phases + dark |
+
 ## 폴더 컨벤션
 
 MDS spec 디렉토리명과 동일 (per-screen, snake_case). 화면당 `builder.dart` + `<screen>_test.dart` 2 파일 (`home_page/` 참고).
@@ -45,4 +57,4 @@ MDS spec 디렉토리명과 동일 (per-screen, snake_case). 화면당 `builder.
 - [상위 BLUEDOC](../BLUEDOC.md) · 페어 워크플로우: `sync-mds-mockups.yml` (디자인 PNG)
 
 ---
-_Reviewed: 2026-05-18 18:15_
+_Reviewed: 2026-05-19 14:00_
