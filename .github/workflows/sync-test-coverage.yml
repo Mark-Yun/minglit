@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
   changes:
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
@@ -51,7 +51,7 @@ jobs:
 
   coverage:
     needs: changes
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     strategy:
@@ -83,6 +83,7 @@ jobs:
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         with:
           channel: 'stable'
+          cache: true
 
       - name: Install dependencies
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
