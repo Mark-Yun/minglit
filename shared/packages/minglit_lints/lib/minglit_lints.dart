@@ -1,5 +1,6 @@
 import 'package:custom_lint_builder/custom_lint_builder.dart';
 import 'package:minglit_lints/src/no_cross_feature_imports_rule.dart';
+import 'package:minglit_lints/src/no_direct_supabase_instance.dart';
 import 'package:minglit_lints/src/no_hardcoded_colors_rule.dart';
 import 'package:minglit_lints/src/no_hardcoded_padding_rule.dart';
 import 'package:minglit_lints/src/no_hardcoded_text_style_rule.dart';
@@ -19,5 +20,6 @@ class _MinglitLintsPlugin extends PluginBase {
         const UseMinglitAsyncValueWidgetRule(),
         const NoCrossFeatureImportsRule(),
         const NoSupabaseWritesOutsideEfRule(),
+        const NoDirectSupabaseInstanceRule(),
       ];
 }

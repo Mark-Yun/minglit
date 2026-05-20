@@ -96,9 +96,16 @@ class _BugReporterWrapperState extends ConsumerState<BugReporterWrapper> {
   void initState() {
     super.initState();
     // Fix #1295: QaBugReportChannel 초기화 — ADB 인텐트 기반 버그 리포트 수신
+    // P0-0c: BugReportRepository constructed via supabaseClientProvider —
+    // no Supabase.instance.client direct access.
     if (widget.enabled) {
       QaBugReportChannel.initialize(
-        BugReportCollector(boundaryKey: _boundaryKey),
+        BugReportCollector(
+          boundaryKey: _boundaryKey,
+          bugReportRepository: BugReportRepository(
+            ref.read(supabaseClientProvider),
+          ),
+        ),
       );
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {

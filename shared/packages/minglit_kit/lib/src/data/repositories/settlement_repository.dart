@@ -1,4 +1,5 @@
 import 'package:minglit_kit/src/data/models/settlement_item_detail.dart';
+import 'package:minglit_kit/src/logic/providers/supabase_provider.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -8,7 +9,7 @@ part 'settlement_repository.g.dart';
 /// Provider for [SettlementRepository].
 @Riverpod(keepAlive: true)
 SettlementRepository settlementRepository(Ref ref) {
-  return SettlementRepository();
+  return SettlementRepository(supabase: ref.watch(supabaseClientProvider));
 }
 
 /// Repository for managing settlement-related data.

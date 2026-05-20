@@ -50,6 +50,10 @@ dependencies:
   kakao_map_plugin: ^0.4.0
   minglit_kit:
     path: ../../shared/packages/minglit_kit
+  # P4: demo flavor entry (lib/main_demo.dart) imports demoOverrides().
+  # Tree-shaking removes from prod APK (main.dart never imports it).
+  minglit_demo:
+    path: ../../shared/packages/minglit_demo
   mobile_scanner: any  # iOS: camera permission
   package_info_plus: ^9.0.1  # iOS: CFBundleVersion (Info.plist)
   path: any

@@ -1,5 +1,6 @@
 import 'package:minglit_kit/src/data/models/deletion_status.dart';
 import 'package:minglit_kit/src/data/models/withdrawal_reason.dart';
+import 'package:minglit_kit/src/logic/providers/supabase_provider.dart';
 import 'package:minglit_kit/src/utils/auth_provider_utils.dart';
 import 'package:minglit_kit/src/utils/exceptions.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -12,7 +13,7 @@ const _deletionGracePeriod = Duration(days: 7);
 /// Provides the [AccountRepository].
 @Riverpod(keepAlive: true)
 AccountRepository accountRepository(Ref ref) {
-  return AccountRepository(Supabase.instance.client);
+  return AccountRepository(ref.watch(supabaseClientProvider));
 }
 
 /// Shared repository for account deletion and restoration flows.

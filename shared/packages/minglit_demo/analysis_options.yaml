@@ -1,0 +1,14 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+
+linter:
+  rules:
+    # P0-0e: this package wraps SupabaseClient access via PoisonSupabaseClient
+    # and Fake repositories — actual Supabase.instance.client direct calls
+    # must remain banned per the same lint rule applied in minglit_kit.
+    # (Lint rule lives in minglit_lints — activate here once the package
+    # rule infra accepts external consumers.)

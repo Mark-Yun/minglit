@@ -1,8 +1,8 @@
 import 'package:minglit_kit/src/data/models/social_interaction.dart';
+import 'package:minglit_kit/src/data/repositories/auth_repository.dart';
 import 'package:minglit_kit/src/data/repositories/social_repository.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'social_interaction_controller.g.dart';
 
@@ -16,7 +16,8 @@ class SocialInteractionController extends _$SocialInteractionController {
     required SocialTargetType targetType,
     required SocialInteractionType interactionType,
   }) async {
-    final user = Supabase.instance.client.auth.currentUser;
+    // P0-0c: use currentUserProvider so build() re-runs on auth changes.
+    final user = ref.watch(currentUserProvider);
     if (user == null) return false;
 
     final repository = ref.watch(socialRepositoryProvider);
@@ -28,7 +29,8 @@ class SocialInteractionController extends _$SocialInteractionController {
 
   /// Toggles the interaction state optimistically.
   Future<void> toggle() async {
-    final user = Supabase.instance.client.auth.currentUser;
+    // P0-0c: one-shot read — no rebuild needed in a mutating method.
+    final user = ref.read(currentUserProvider);
     if (user == null) return;
 
     final currentIsActive = state.asData?.value;

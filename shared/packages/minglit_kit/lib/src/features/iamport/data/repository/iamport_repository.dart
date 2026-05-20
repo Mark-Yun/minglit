@@ -1,3 +1,4 @@
+import 'package:minglit_kit/src/logic/providers/supabase_provider.dart';
 import 'package:minglit_kit/src/utils/exceptions.dart';
 import 'package:minglit_kit/src/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -8,7 +9,7 @@ part 'iamport_repository.g.dart';
 /// Provides the [IamportRepository] instance.
 @Riverpod(keepAlive: true)
 IamportRepository iamportRepository(Ref ref) {
-  return IamportRepository(Supabase.instance.client);
+  return IamportRepository(ref.watch(supabaseClientProvider));
 }
 
 /// Handles Iamport certification verification requests.

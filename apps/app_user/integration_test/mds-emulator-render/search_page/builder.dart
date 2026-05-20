@@ -3,11 +3,11 @@
 import 'package:app_user/src/features/search/logic/search_coordinator.dart';
 import 'package:app_user/src/features/search/search_page.dart';
 import 'package:app_user/src/logic/feed_state_provider.dart';
+import 'package:minglit_demo/minglit_demo.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 import '../_engine/builder.dart';
 import '../_mocks/coordinators.dart';
-import '../_mocks/data.dart';
 import '../_mocks/notifiers.dart';
 
 class SearchPageBuilder extends MdsScreenBuilder<SearchPage> {
@@ -41,7 +41,7 @@ class SearchPageBuilder extends MdsScreenBuilder<SearchPage> {
     );
     addOverride(
       searchResultsProvider.overrideWith(
-        (_) async => mockEvents(count: count),
+        (_) async => demoEvents.take(count).toList(),
       ),
     );
     return this;

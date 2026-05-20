@@ -102,6 +102,14 @@ Future<void> main() async {
 
 @riverpod
 Future<void> appStartup(Ref ref) async {
+  // Locale data is always needed (demo too — UI shows Korean dates).
+  await initializeDateFormatting('ko_KR');
+
+  // P3: demo flavor short-circuits all network SDK init. Data comes from
+  // minglit_demo ProviderScope overrides registered in main_demo.dart.
+  // See docs/infra/app_demo/architecture.md "부팅 흐름".
+  if (EnvKeyStore.isDemo) return;
+
   const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
   const supabasePublishableKey = String.fromEnvironment(
     'SUPABASE_PUBLISHABLE_KEY',
@@ -113,7 +121,6 @@ Future<void> appStartup(Ref ref) async {
     );
   }
 
-  const statsigClientKey = String.fromEnvironment('STATSIG_CLIENT_KEY');
   const environment = String.fromEnvironment(
     'ENVIRONMENT',
     defaultValue: 'local',
@@ -123,10 +130,9 @@ Future<void> appStartup(Ref ref) async {
   // splash duration. Statsig has no dependency on Firebase or Supabase.
   try {
     await Future.wait([
-      initializeDateFormatting('ko_KR'),
-      Supabase.initialize(url: supabaseUrl, anonKey: supabasePublishableKey),
+      _initSupabase(supabaseUrl, supabasePublishableKey),
       _initFirebase(),
-      StatsigAnalytics.initialize(statsigClientKey, tier: environment),
+      _initStatsig(environment),
     ]);
   } on Exception catch (e) {
     Log.e('App startup warning', e);
@@ -146,6 +152,17 @@ Future<void> appStartup(Ref ref) async {
       }
     });
   });
+}
+
+// P3: composable init helpers. Each can be invoked independently in tests
+// and is bypassed entirely in demo flavor via the early return above.
+
+Future<void> _initSupabase(String url, String anonKey) =>
+    Supabase.initialize(url: url, anonKey: anonKey);
+
+Future<void> _initStatsig(String environment) async {
+  const statsigClientKey = String.fromEnvironment('STATSIG_CLIENT_KEY');
+  await StatsigAnalytics.initialize(statsigClientKey, tier: environment);
 }
 
 class MinglitApp extends StatelessWidget {
