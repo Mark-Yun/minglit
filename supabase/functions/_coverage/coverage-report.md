@@ -2,7 +2,7 @@
 
 # Deno EF Unit Test Coverage
 
-**Generated**: `2026-05-20T10:15:00.966Z`
+**Generated**: `2026-05-20T12:37:40.767Z`
 **Overall**: 30.2% (32867/108676 lines covered across 54 EFs)
 
 ## Per-EF Coverage (sorted by % asc — lowest first)
