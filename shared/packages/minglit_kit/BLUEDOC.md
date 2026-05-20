@@ -45,4 +45,4 @@ Minglit 의 **공용 클라이언트 패키지**. `app_user` 와 `app_partner` �
 - [BLUEDOC 컨벤션](../../../docs/infra/bluedoc/BLUEDOC.md)
 
 ---
-_Reviewed: 2026-05-17 22:32_
+_Reviewed: 2026-05-20 09:41_
