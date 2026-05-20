@@ -1,11 +1,11 @@
 # Main Promotion
 
-`rc/YYYY-Wxx` 의 soak 통과 시 `main` 으로 머지, main push 직후 기존 mobile deploy workflow (`deploy-android-*`, `deploy-ios-*`) 가 자동 발동. Backend/web 의 auto-deploy 는 dev 의 rc-gate-pass 에서 이미 일어남 ([dev-pipeline.md](./dev-pipeline.md)). main 머지가 곧 mobile release (hotfix 없으면 weekly).
+`rc/YYYY-Wxx` 의 soak 통과 시 `main` 으로 머지, main push 직후 **backend + mobile 모두 prod 로 deploy**. Backend 의 staging deploy 는 dev 의 rc-gate-pass 에서 일어남 (main-staging env, [dev-pipeline.md](./dev-pipeline.md)). prod deploy 는 main 머지에서 — 사용자 서버에 검증 안 된 코드 직접 들어가지 않게 RC soak 통과 후만.
 
 ## 두 가지 이벤트
 
 1. **rc → main 머지** — `rc-soak-check` 가 자동 PR 생성 + 모든 check 통과 시 workflow auto-merge
-2. **기존 deploy-* workflow 자동 발동** — main push trigger 로 `deploy-android-{user,partner}`, `deploy-ios-{user,partner}` 가 병렬 실행. store review + staged rollout 은 store-side
+2. **main push → prod deploy chain** — backend (`deploy-supabase` target=main), web (Vercel native), mobile (`deploy-android-*`, `deploy-ios-*`) 모두 prod 로 병렬 deploy. store review + staged rollout 은 store-side
 
 ## `main-pr-gate`
 
@@ -22,7 +22,7 @@
 
 ## `main-post-merge-promote`
 
-auto-merge 직후 자동:
+auto-merge 직후 자동 (promote + prod deploy chain):
 
 ```
 1. bump-version.sh {ver}  (suffix 제거 — main 은 final version)
@@ -32,6 +32,11 @@ auto-merge 직후 자동:
 5. git push (tags + commit)
 6. Sentry release marker 부여 (v{ver})
 7. Firebase RC `latest_version` = v{ver} (Admin SDK)
+8. parallel deploy chain (모두 target=main):
+   - deploy-supabase (prod Supabase: migration + EF)
+   - deploy-android-{user,partner}
+   - deploy-ios-{user,partner}
+   - (Vercel: native build 가 main push 자동 감지)
 ```
 
 > Backend/web deploy 는 main 에서 안 함 — dev 의 rc-gate-pass 에서 이미 prod 반영됨. Mobile deploy 는 별도 workflow.

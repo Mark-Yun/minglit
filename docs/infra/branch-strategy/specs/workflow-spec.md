@@ -122,7 +122,7 @@ Cross-branch cherry-pick PR 자동 생성.
 |------|----|
 | Trigger | `push` to `dev` (= nightly-cut PR merge 직후) |
 | Outputs | commit status `rc-gate-pass` (success only) |
-| Steps | (1) calls `rc-gate-suite` (2) **success**: set commit status `rc-gate-pass` → parallel `workflow_call` 기존 `deploy-supabase` + `deploy-vercel` (3) **failure**: `auto-issue` (P1, label `rc-gate-failure`, assignee=직전 rc-gate-pass 이후 머지된 PR 작성자들). dev 는 broken 상태로 잠시 머묾, AI agent 가 fix PR 을 dev-staging 으로 normal flow 로 작성 → 다음 nightly-cut → 다음 rc-gate 가 검증 |
+| Steps | (1) calls `rc-gate-suite` (2) **success**: set commit status `rc-gate-pass` → `workflow_call` `deploy-supabase` **with target=main-staging** (= staging Supabase project, NOT prod). Vercel 은 native build 가 dev branch → preview deployment 자동 처리 (3) **failure**: `auto-issue` (P1, label `rc-gate-failure`, assignee=직전 rc-gate-pass 이후 머지된 PR 작성자들). dev 는 broken 상태로 잠시 머묾, AI agent 가 fix PR 을 dev-staging 으로 normal flow 로 작성 → 다음 nightly-cut → 다음 rc-gate 가 검증 |
 | Backoff | 같은 area 3회 연속 실패 시 `rc-cut` 자동 차단 (다음 weekly cut PR 안 만듦) |
 
 > **No auto-revert** — snapshot 모델: 실패 = no tag, dev keeps moving, 새 fix 가 자연스럽게 다음 rc-gate 에서 검증됨.
@@ -131,19 +131,23 @@ Cross-branch cherry-pick PR 자동 생성.
 
 | 항목 | 값 |
 |------|----|
-| 현재 trigger | `push` to dev or main + paths filter (`supabase/migrations/**`, `supabase/functions/**`) |
-| Refactor 후 trigger | `workflow_call` from `rc-gate` (success) + `push` to main |
+| 현재 trigger | `push` to dev or main + paths filter |
+| Refactor 후 trigger | `workflow_call` (target=main-staging) from `rc-gate` (success) **+** `workflow_call` (target=main) from `main-post-merge-promote` |
+| Inputs | `target_env`: main-staging \| main |
 | Outputs | deploy status, Sentry release marker |
-| Steps | (1) Supabase migration apply (2) EF deploy (3) Sentry release marker (4) post-deploy smoke (5) 실패 시 retry → `auto-issue` (P0) + on-call |
+| Steps | (1) Supabase migration apply to target env (2) EF deploy to target env (3) Sentry release marker (4) post-deploy smoke (5) 실패 시 retry → `auto-issue` (P0) + on-call |
+| Env file | `minglit_env/${target_env}/.env` (main-staging = staging Supabase project, main = prod Supabase project) |
 
-#### `deploy-vercel` (기존, refactor 대상)
+#### `deploy-vercel` (폐기 예정)
 
-| 항목 | 값 |
-|------|----|
-| 현재 trigger | `schedule` cron 2시간 + `workflow_dispatch` |
-| Refactor 후 trigger | `workflow_call` from `rc-gate` (success) + `push` to main (cron 폐기) |
-| Outputs | deploy status |
-| Steps | Vercel deploy hooks (4앱 parallel) · 실패 시 retry → `auto-issue` (P0) |
+기존 자체 빌드 워크플로우 폐기. **Vercel native build 로 전환** (Vercel-GitHub 연결, Vercel-side branch 매핑).
+
+| Branch | Vercel target |
+|--------|---------------|
+| `main` | production deployment |
+| `dev` (rc-gate-pass) | preview deployment (main-staging equivalent) |
+
+Vercel native 가 자체 trigger 및 build 처리. workflow 측 작업 없음.
 
 ### rc
 
@@ -202,17 +206,16 @@ Cross-branch cherry-pick PR 자동 생성.
 | 항목 | 값 |
 |------|----|
 | Trigger | `push` to `main` (rc → main auto-merge 직후) |
-| Outputs | tag `v{ver}` + tag `promo/main-YYYY-Wxx` + Sentry marker + Firebase RC `latest_version` update |
-| Steps | (1) calls `version-bump` (suffix="") (2) `git tag promo/main-YYYY-Wxx` + push (3) Sentry release marker `v{ver}` (4) Firebase RC `latest_version` = `v{ver}` (Admin SDK) (5) **deploys 는 별도 — push: main trigger 로 기존 workflow 들이 자동 발동** |
+| Outputs | tag `v{ver}` + tag `promo/main-YYYY-Wxx` + Sentry marker + Firebase RC `latest_version` update + parallel deploy chain |
+| Steps | (1) calls `version-bump` (suffix="") (2) `git tag promo/main-YYYY-Wxx` + push (3) Sentry release marker `v{ver}` (4) Firebase RC `latest_version` = `v{ver}` (Admin SDK) (5) **parallel deploy chain** (모두 target=main env): `deploy-supabase`, mobile deploy workflows |
 
-> main push 후 자동 발동되는 기존 deploy workflows (병렬):
-> - `deploy-supabase` — EF + migration
-> - `deploy-vercel` — 4 web 앱
+> main push 후 자동 발동되는 deploy workflows (병렬):
+> - `deploy-supabase` (target=main, prod Supabase project) — EF + migration
 > - `deploy-android-user`, `deploy-android-partner` (each calls `shared-android-deploy`)
-> - `deploy-ios-user`, `deploy-ios-partner` (TBD: shared-ios-deploy reusable 있는지 확인)
+> - `deploy-ios-user`, `deploy-ios-partner` (TBD: shared-ios-deploy reusable)
+> - Vercel: native build 가 main push 자동 감지 (workflow_call 아님)
 
-> Mobile cadence = main 머지 마다 weekly build/upload (hotfix 없으면). store review + staged rollout 은 store-side.
-> Fastlane vs native action 등 mobile deploy 의 구체 도구는 기존 workflow 따름 (Fastlane 통일 검토는 후속 TBD).
+> Cadence: backend prod + mobile 모두 weekly (rc → main 머지 마다, hotfix 없으면). store review + staged rollout 은 store-side.
 
 ## Workflow Chain Diagram
 
@@ -229,7 +232,7 @@ Cross-branch cherry-pick PR 자동 생성.
 [nightly-cut] ──PR created──▶ [nightly-pr-gate] ──auto-merge──▶ dev push
                                                                     ↓
                                                               [rc-gate]
-                                                              ├ success ─▶ status rc-gate-pass + [deploy-supabase] + [deploy-vercel]
+                                                              ├ success ─▶ status rc-gate-pass + [deploy-supabase target=main-staging] (+ Vercel preview native)
                                                               │              ↓ Sentry release
                                                               │
                                                               └ failure ─▶ [auto-issue P1] (AI agent assignee → dev-staging fix PR)
