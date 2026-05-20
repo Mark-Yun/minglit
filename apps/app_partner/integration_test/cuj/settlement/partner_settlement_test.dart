@@ -3,18 +3,18 @@
 // 대응 spec: docs/features/settlement/partner-settlement/spec.md
 // CUJ 추가 시 본 파일에 `cujGroup` 블록 추가 (새 파일 X).
 //
-// 커버 범위 (Flutter integration test): 7/14
+// 커버 범위 (Flutter integration test): 5/14
 //   3-1: 정산 요약 KPI 조회 (대시보드 탭)
 //   3-2: 이벤트별 정산 목록 조회 (목록 탭)
-//   3-3: 정산 상세 (수수료 내역 · 타임라인)
-//   3-4: 정산 상세 → 재지급 요청 버튼 (FAILED/retryable)
-//   3-5: 정산 상세 → CSV 다운로드 버튼
+//   3-3: 정산 상세 (수수료 내역 · 타임라인 · 재지급 버튼 · CSV)
 //   5-1: 정산 계좌 등록 (빈 상태 → 저장)
 //   5-2: 정산 계좌 변경 (기존 계좌 → 수정 저장)
 //
-// 미커버 (7/14):
+// 미커버 (9/14):
 //   1-1, 1-2: DB 트리거 / 멱등성 — Supabase pgTAP 테스트 영역
 //   2-1, 2-2, 2-3: nightly cron / PortOne Payout API — 백엔드 영역
+//   3-4: 정산 이의 제기 — HOLD 상태 이의 제기 기능 미구현
+//   3-5: 정산 PDF 다운로드 — PDF 다운로드 기능 미구현 (현재 CSV만 존재)
 //   4-1: 시스템 지수 백오프 재시도 — 백엔드 영역
 //   6-1: 이벤트 취소 → 정산 CANCELED — 백엔드 영역
 
@@ -385,15 +385,14 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // CUJ 3-3: 정산 상세 (수수료 내역 · 타임라인)
+  // CUJ 3-3: 정산 상세 (수수료 내역 · 타임라인 · 액션 버튼)
   // ---------------------------------------------------------------------------
 
-  cujGroup('3-3', '정산 상세 — 수수료 내역 · 타임라인', () {
+  cujGroup('3-3', '정산 상세 — 수수료 내역 · 타임라인 · 액션 버튼', () {
     cujCase(
       'happy: COMPLETED — 지급 완료 메시지 + 금액 내역 + 처리 이력',
       app: const SettlementDetailPage(itemId: 'item-c'),
-      overrides: () => base(),
-      body: (t) async {
+      overrides: () {
         when(() => repo.getSettlementItemDetail('item-c')).thenAnswer(
           (_) async => _makeItem(
             id: 'item-c',
@@ -408,8 +407,9 @@ void main() {
             ],
           ),
         );
-        await t.pumpAndSettle();
-
+        return base();
+      },
+      body: (t) async {
         expect(find.text('정산 상세'), findsOneWidget);
         expect(find.text('지급이 완료되었습니다.'), findsOneWidget);
         expect(find.text('금액 내역'), findsOneWidget);
@@ -420,13 +420,13 @@ void main() {
     cujCase(
       'happy: PENDING — 확정 대기 메시지',
       app: const SettlementDetailPage(itemId: 'item-p'),
-      overrides: () => base(),
+      overrides: () {
+        when(() => repo.getSettlementItemDetail('item-p')).thenAnswer(
+          (_) async => _makeItem(id: 'item-p', status: 'PENDING'),
+        );
+        return base();
+      },
       body: (t) async {
-        when(
-          () => repo.getSettlementItemDetail('item-p'),
-        ).thenAnswer((_) async => _makeItem(id: 'item-p', status: 'PENDING'));
-        await t.pumpAndSettle();
-
         expect(find.text('정산이 확정되기를 기다리고 있습니다.'), findsOneWidget);
       },
     );
@@ -434,13 +434,13 @@ void main() {
     cujCase(
       'happy: HOLD — 보류 메시지',
       app: const SettlementDetailPage(itemId: 'item-h'),
-      overrides: () => base(),
+      overrides: () {
+        when(() => repo.getSettlementItemDetail('item-h')).thenAnswer(
+          (_) async => _makeItem(id: 'item-h', status: 'HOLD'),
+        );
+        return base();
+      },
       body: (t) async {
-        when(
-          () => repo.getSettlementItemDetail('item-h'),
-        ).thenAnswer((_) async => _makeItem(id: 'item-h', status: 'HOLD'));
-        await t.pumpAndSettle();
-
         expect(find.text('정산이 보류 중입니다. 지원센터에 문의해 주세요.'), findsOneWidget);
       },
     );
@@ -448,37 +448,29 @@ void main() {
     cujCase(
       'error: 상세 로드 실패 → 오류 메시지 + 다시 시도',
       app: const SettlementDetailPage(itemId: 'item-err'),
-      overrides: () => base(),
+      overrides: () {
+        when(() => repo.getSettlementItemDetail('item-err')).thenThrow(
+          Exception('network error'),
+        );
+        return base();
+      },
       body: (t) async {
-        when(
-          () => repo.getSettlementItemDetail('item-err'),
-        ).thenThrow(Exception('network error'));
-        await t.pumpAndSettle();
-
         expect(find.text('오류가 발생했습니다'), findsOneWidget);
         expect(find.text('다시 시도'), findsOneWidget);
       },
     );
-  });
 
-  // ---------------------------------------------------------------------------
-  // CUJ 3-4: 재지급 요청 (FAILED/retryable)
-  // ---------------------------------------------------------------------------
-
-  cujGroup('3-4', '정산 상세 — 재지급 요청 버튼', () {
     cujCase(
       'happy: FAILED + retryable=true → 재지급 요청 버튼 노출',
       app: const SettlementDetailPage(itemId: 'item-fail'),
-      overrides: () => base(),
-      body: (t) async {
-        when(
-          () => repo.getSettlementItemDetail('item-fail'),
-        ).thenAnswer(
+      overrides: () {
+        when(() => repo.getSettlementItemDetail('item-fail')).thenAnswer(
           (_) async =>
               _makeItem(id: 'item-fail', status: 'FAILED', retryable: true),
         );
-        await t.pumpAndSettle();
-
+        return base();
+      },
+      body: (t) async {
         expect(find.text('지급에 실패했습니다. 계좌 정보를 확인해 주세요.'), findsOneWidget);
         expect(find.text('재지급 요청'), findsOneWidget);
       },
@@ -487,38 +479,64 @@ void main() {
     cujCase(
       'happy: FAILED + retryable=false → 재지급 요청 버튼 미노출',
       app: const SettlementDetailPage(itemId: 'item-fail-nr'),
-      overrides: () => base(),
-      body: (t) async {
-        when(
-          () => repo.getSettlementItemDetail('item-fail-nr'),
-        ).thenAnswer(
+      overrides: () {
+        when(() => repo.getSettlementItemDetail('item-fail-nr')).thenAnswer(
           (_) async => _makeItem(id: 'item-fail-nr', status: 'FAILED'),
         );
-        await t.pumpAndSettle();
-
+        return base();
+      },
+      body: (t) async {
         expect(find.text('재지급 요청'), findsNothing);
+      },
+    );
+
+    cujCase(
+      'happy: 정산 항목 → CSV 다운로드 버튼 노출',
+      app: const SettlementDetailPage(itemId: 'item-csv'),
+      overrides: () {
+        when(() => repo.getSettlementItemDetail('item-csv')).thenAnswer(
+          (_) async => _makeItem(id: 'item-csv', status: 'COMPLETED'),
+        );
+        return base();
+      },
+      body: (t) async {
+        expect(find.text('CSV 다운로드'), findsOneWidget);
       },
     );
   });
 
   // ---------------------------------------------------------------------------
-  // CUJ 3-5: CSV 다운로드
+  // CUJ 3-4: 정산 이의 제기 (HOLD 상태) — 미구현
   // ---------------------------------------------------------------------------
 
-  cujGroup('3-5', '정산 상세 — CSV 다운로드 버튼', () {
+  cujGroup('3-4', '정산 이의 제기 (HOLD 상태)', () {
     cujCase(
-      'happy: 정산 항목 → CSV 다운로드 버튼 노출',
-      app: const SettlementDetailPage(itemId: 'item-csv'),
-      overrides: () => base(),
+      'stub: HOLD 상태 이의 제기 기능 미구현 — 별도 이슈 분리',
+      app: const Placeholder(),
+      overrides: () => [],
       body: (t) async {
-        when(
-          () => repo.getSettlementItemDetail('item-csv'),
-        ).thenAnswer(
-          (_) async => _makeItem(id: 'item-csv', status: 'COMPLETED'),
-        );
-        await t.pumpAndSettle();
+        // CUJ 3-4 (spec: HOLD 상태에서 이의 제기 탭, 사유 입력, 운영팀 알림)
+        // SettlementDetailPage에 이의 제기 기능이 구현되지 않았음.
+        // 구현 완료 후 SettlementDetailPage(itemId: ...) 위젯으로 테스트 교체.
+        expect(true, isTrue);
+      },
+    );
+  });
 
-        expect(find.text('CSV 다운로드'), findsOneWidget);
+  // ---------------------------------------------------------------------------
+  // CUJ 3-5: 정산 PDF 다운로드 — 미구현
+  // ---------------------------------------------------------------------------
+
+  cujGroup('3-5', '정산 PDF 다운로드', () {
+    cujCase(
+      'stub: PDF 다운로드 기능 미구현 — 별도 이슈 분리',
+      app: const Placeholder(),
+      overrides: () => [],
+      body: (t) async {
+        // CUJ 3-5 (spec: 정산 상세에서 PDF 다운로드, 정산 내역·서명·수수료 포함)
+        // 현재 구현은 CSV 다운로드만 존재 (SettlementDetailPage.ActionButtons).
+        // PDF 기능 구현 완료 후 교체.
+        expect(true, isTrue);
       },
     );
   });
@@ -546,11 +564,10 @@ void main() {
     cujCase(
       'happy: 계좌 미등록 상태 → 계좌 정보 입력 후 저장',
       app: const BankAccountPage(),
-      overrides: () => base(),
-      body: (t) async {
-        when(
-          () => repo.getBankAccount('partner-1'),
-        ).thenAnswer((_) async => null);
+      overrides: () {
+        when(() => repo.getBankAccount('partner-1')).thenAnswer(
+          (_) async => null,
+        );
         when(
           () => repo.upsertBankAccount(
             partnerId: any(named: 'partnerId'),
@@ -559,8 +576,9 @@ void main() {
             accountNumber: any(named: 'accountNumber'),
           ),
         ).thenAnswer((_) async {});
-        await t.pumpAndSettle();
-
+        return base();
+      },
+      body: (t) async {
         expect(find.text('등록된 계좌 정보가 없습니다.'), findsOneWidget);
         expect(find.text('계좌 수정'), findsOneWidget);
 
@@ -594,11 +612,8 @@ void main() {
     cujCase(
       'happy: 기존 계좌 표시 → 새 계좌로 변경 후 저장',
       app: const BankAccountPage(),
-      overrides: () => base(),
-      body: (t) async {
-        when(
-          () => repo.getBankAccount('partner-1'),
-        ).thenAnswer(
+      overrides: () {
+        when(() => repo.getBankAccount('partner-1')).thenAnswer(
           (_) async => <String, dynamic>{
             'bank_name': '신한은행',
             'account_holder': '홍길동',
@@ -613,8 +628,9 @@ void main() {
             accountNumber: any(named: 'accountNumber'),
           ),
         ).thenAnswer((_) async {});
-        await t.pumpAndSettle();
-
+        return base();
+      },
+      body: (t) async {
         // 기존 계좌 표시 확인
         expect(find.text('현재 계좌'), findsOneWidget);
         expect(find.text('신한은행'), findsOneWidget);
@@ -642,11 +658,10 @@ void main() {
     cujCase(
       'edge: 저장 실패 → SnackBar 오류 메시지',
       app: const BankAccountPage(),
-      overrides: () => base(),
-      body: (t) async {
-        when(
-          () => repo.getBankAccount('partner-1'),
-        ).thenAnswer((_) async => null);
+      overrides: () {
+        when(() => repo.getBankAccount('partner-1')).thenAnswer(
+          (_) async => null,
+        );
         when(
           () => repo.upsertBankAccount(
             partnerId: any(named: 'partnerId'),
@@ -655,8 +670,9 @@ void main() {
             accountNumber: any(named: 'accountNumber'),
           ),
         ).thenThrow(Exception('network'));
-        await t.pumpAndSettle();
-
+        return base();
+      },
+      body: (t) async {
         await t.enterText(find.bySemanticsLabel('은행명'), '국민은행');
         await t.enterText(find.bySemanticsLabel('예금주'), '홍길동');
         await t.enterText(find.bySemanticsLabel('계좌번호'), '12345678901234');
