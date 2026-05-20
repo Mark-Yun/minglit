@@ -39,7 +39,8 @@ import '../_engine/cuj_test.dart';
 
 class _MockSettlementRepository extends Mock implements SettlementRepository {}
 
-class _MockSettlementCoordinator extends Mock implements SettlementCoordinator {}
+class _MockSettlementCoordinator extends Mock
+    implements SettlementCoordinator {}
 
 // ---------------------------------------------------------------------------
 // Fake controllers — 네트워크 없이 원하는 상태를 즉시 반환
