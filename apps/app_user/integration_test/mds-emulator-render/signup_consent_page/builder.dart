@@ -54,8 +54,7 @@ class _AllConsentController extends ConsentController {
 /// 미완료 future — isInitialLoading=true 유지 (스피너 표시).
 class _LoadingConsentController extends ConsentController {
   @override
-  FutureOr<List<UserConsent>> build() =>
-      Completer<List<UserConsent>>().future;
+  FutureOr<List<UserConsent>> build() => Completer<List<UserConsent>>().future;
 }
 
 UserConsent _consent(ConsentType type) => UserConsent(
