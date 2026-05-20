@@ -35,9 +35,13 @@ class _FakeEntryGroupStatsController extends EntryGroupCheckinStatsController {
 }
 
 class _ErrorEntryGroupStatsController extends EntryGroupCheckinStatsController {
+  // Fix #2612: build() 를 `async` 로 두고 throw — 동기 `Future.error` 반환은
+  // AsyncNotifier 가 await 하기 전에 microtask 로 에러가 propagate 되어
+  // 일부 환경에서 AsyncError state transition 이 누락되는 케이스가 있다.
+  // async throw 패턴은 framework 가 만든 Future 안에서 catch 되므로 안전.
   @override
-  Future<List<EntryGroupCheckinStats>> build(String eventId) {
-    return Future<List<EntryGroupCheckinStats>>.error(Exception('RPC 실패'));
+  Future<List<EntryGroupCheckinStats>> build(String eventId) async {
+    throw Exception('RPC 실패');
   }
 }
 
@@ -382,9 +386,11 @@ void main() {
         ).overrideWith(_ErrorEntryGroupStatsController.new),
       ],
       body: (t) async {
-        // Fix #2612: build() 가 Future.error 를 반환 → AsyncError 로 즉시 transition
-        // (이전 ProviderContainer + state= 패턴은 keepAlive 없는 provider 가
-        // 옵저버 부재 시 dispose 되면서 manual state 가 유실되어 실패했음).
+        // Fix #2612: build() async throw → AsyncError 로 transition.
+        // pump → Loading 렌더, 짧은 duration → build microtask 처리,
+        // pumpAndSettle → error 상태 반영 마무리.
+        await t.pump();
+        await t.pump(const Duration(milliseconds: 200));
         await t.pumpAndSettle();
         expect(find.text('엔트리 그룹별 현황'), findsOneWidget);
         expect(find.textContaining('불러오기 실패'), findsOneWidget);
