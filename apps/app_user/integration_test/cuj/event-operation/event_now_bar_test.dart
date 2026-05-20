@@ -4,7 +4,7 @@
 // CUJ 추가 시 본 파일에 `cujGroup` 블록 추가 (새 파일 X).
 //
 // Fix #2564: event-operation 카테고리 CUJ integration test 전무 해소 (event-now-bar)
-// Refs #2589: 추가 CUJ 커버 (1-2 ~ 2-1)
+// Refs #2589: 추가 CUJ 커버 (1-2 ~ 2-1, 2-2, 2-3)
 
 import 'dart:async';
 
@@ -465,6 +465,161 @@ void main() {
         await t.pumpAndSettle();
 
         expect(find.text('3'), findsOneWidget);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 2-2: 드롭다운 탭 → 이벤트 목록 시트 (FR-15)
+  // ---------------------------------------------------------------------------
+
+  cujGroup('2-2', '드롭다운 탭 → 이벤트 목록 시트 오픈', () {
+    final e1 = _makeActiveEvent();
+    final e2 = _makeActiveEvent2();
+
+    cujCase(
+      'happy: 멀티 이벤트에서 드롭다운 탭 → 시트 헤더 노출',
+      app: Scaffold(
+        body: EventNowMultiStack(events: [e1, e2]),
+      ),
+      overrides: () => [
+        eventNowBarStateProvider(e1).overrideWith(
+          () => _FakeEventNowBarStateNotifier(EventNowBarState.waiting),
+        ),
+        eventNowBarStateProvider(e2).overrideWith(
+          () => _FakeEventNowBarStateNotifier(EventNowBarState.waiting),
+        ),
+        eventRealtimeProvider(e1.event.id).overrideWith(
+          _FakeEventRealtime.new,
+        ),
+        eventRealtimeProvider(e2.event.id).overrideWith(
+          _FakeEventRealtime.new,
+        ),
+      ],
+      body: (t) async {
+        await t.pump();
+        await t.pumpAndSettle();
+
+        // 초기 상태: 시트는 닫혀 있음
+        expect(find.text('진행 중인 이벤트'), findsNothing);
+
+        // 드롭다운 아이콘 탭 → modal bottom sheet 오픈
+        await t.tap(find.byIcon(Icons.expand_more));
+        await t.pumpAndSettle();
+
+        // 시트 헤더 노출
+        expect(find.text('진행 중인 이벤트'), findsOneWidget);
+      },
+    );
+
+    cujCase(
+      'edge: 시트에서 다른 이벤트 선택 → 시트 닫힘',
+      app: Scaffold(
+        body: EventNowMultiStack(events: [e1, e2]),
+      ),
+      overrides: () => [
+        eventNowBarStateProvider(e1).overrideWith(
+          () => _FakeEventNowBarStateNotifier(EventNowBarState.waiting),
+        ),
+        eventNowBarStateProvider(e2).overrideWith(
+          () => _FakeEventNowBarStateNotifier(EventNowBarState.waiting),
+        ),
+        eventRealtimeProvider(e1.event.id).overrideWith(
+          _FakeEventRealtime.new,
+        ),
+        eventRealtimeProvider(e2.event.id).overrideWith(
+          _FakeEventRealtime.new,
+        ),
+      ],
+      body: (t) async {
+        await t.pump();
+        await t.pumpAndSettle();
+
+        // 시트 오픈
+        await t.tap(find.byIcon(Icons.expand_more));
+        await t.pumpAndSettle();
+        expect(find.text('진행 중인 이벤트'), findsOneWidget);
+
+        // 첫 번째 tile 선택 → 시트 닫힘 (onSelect 가 Navigator.pop 호출)
+        // _EventListTile 의 InkWell 중 하나를 탭 (시트 안의 첫 tile)
+        final tileFinder = find.descendant(
+          of: find.byType(BottomSheet),
+          matching: find.byType(InkWell),
+        );
+        expect(tileFinder, findsWidgets);
+        await t.tap(tileFinder.first);
+        await t.pumpAndSettle();
+
+        // 시트 닫힘 → 헤더 사라짐
+        expect(find.text('진행 중인 이벤트'), findsNothing);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 2-3: 한 이벤트 종료 → 자동으로 다음 이벤트 상단 (FR-14, FR-16)
+  // ---------------------------------------------------------------------------
+
+  cujGroup('2-3', '한 이벤트 종료 → 다음 활성 이벤트가 상단', () {
+    final e1 = _makeActiveEvent();
+    final e2 = _makeActiveEvent2();
+
+    cujCase(
+      'happy: ENDED + WAITING 혼합 → 바는 WAITING 이벤트 상태 표시',
+      app: Scaffold(
+        body: EventNowMultiStack(events: [e1, e2]),
+      ),
+      overrides: () => [
+        // e1 = ENDED (priority 2 → 하단), e2 = WAITING (priority 1 → 상단)
+        eventNowBarStateProvider(e1).overrideWith(
+          () => _FakeEventNowBarStateNotifier(EventNowBarState.ended),
+        ),
+        eventNowBarStateProvider(e2).overrideWith(
+          () => _FakeEventNowBarStateNotifier(EventNowBarState.waiting),
+        ),
+        eventRealtimeProvider(e1.event.id).overrideWith(
+          _FakeEventRealtime.new,
+        ),
+        eventRealtimeProvider(e2.event.id).overrideWith(
+          _FakeEventRealtime.new,
+        ),
+      ],
+      body: (t) async {
+        await t.pump();
+        await t.pumpAndSettle();
+
+        // sortActiveEvents 가 ENDED 를 하단, WAITING 을 상단 → 바는 WAITING
+        // 의 status text '곧 시작' 표시 (단일 instance — 바는 1 개)
+        expect(find.text('곧 시작'), findsOneWidget);
+      },
+    );
+
+    cujCase(
+      'edge: ACTIVE (CHECK_IN_READY, priority 0) + WAITING → 바는 ACTIVE 표시',
+      app: Scaffold(
+        body: EventNowMultiStack(events: [e1, e2]),
+      ),
+      overrides: () => [
+        // e1 = WAITING (priority 1), e2 = CHECK_IN_READY (priority 0 → 최상위)
+        eventNowBarStateProvider(e1).overrideWith(
+          () => _FakeEventNowBarStateNotifier(EventNowBarState.waiting),
+        ),
+        eventNowBarStateProvider(e2).overrideWith(
+          () => _FakeEventNowBarStateNotifier(EventNowBarState.checkInReady),
+        ),
+        eventRealtimeProvider(e1.event.id).overrideWith(
+          _FakeEventRealtime.new,
+        ),
+        eventRealtimeProvider(e2.event.id).overrideWith(
+          _FakeEventRealtime.new,
+        ),
+      ],
+      body: (t) async {
+        await t.pump();
+        await t.pumpAndSettle();
+
+        // CHECK_IN_READY 가 priority 0 으로 상단 → 바는 '체크인하세요' 표시
+        expect(find.text('체크인하세요'), findsOneWidget);
       },
     );
   });
