@@ -61,6 +61,18 @@ class CheckinStatsController extends _$CheckinStatsController {
     return CheckinStats.fromJson(data as Map<String, dynamic>);
   }
 
+  // Extracted for testability — called by realtime callback and polling.
+  // Subclasses (fakes) can override to supply test data without real Supabase.
+  Future<void> applyFetchedStats(String eventId) async {
+    final supabase = ref.read(supabaseClientProvider);
+    try {
+      final newStats = await _fetchStats(supabase, eventId);
+      state = AsyncData(newStats);
+    } on Object catch (e, st) {
+      Log.e('체크인 통계 갱신 실패', e, st);
+    }
+  }
+
   void _subscribeToRealtime(SupabaseClient supabase, String eventId) {
     _channel = supabase.channel('checkin-stats-$eventId');
     _channel!
@@ -74,14 +86,7 @@ class CheckinStatsController extends _$CheckinStatsController {
             value: eventId,
           ),
           // Fix #1817: invalidateSelf() 대신 직접 fetch → 채널 teardown/rebuild 방지
-          callback: (_) async {
-            try {
-              final newStats = await _fetchStats(supabase, eventId);
-              state = AsyncData(newStats);
-            } on Object catch (e, st) {
-              Log.e('Realtime 체크인 통계 갱신 실패', e, st);
-            }
-          },
+          callback: (_) => applyFetchedStats(eventId),
         )
         .subscribe((status, [error]) {
           // Fix #1817: subscribed 상태 복귀 시 폴링 취소
@@ -89,24 +94,17 @@ class CheckinStatsController extends _$CheckinStatsController {
             _pollingTimer?.cancel();
             _pollingTimer = null;
           } else if (status == RealtimeSubscribeStatus.closed) {
-            _startPollingFallback(supabase, eventId);
+            _startPollingFallback(eventId);
           }
         });
   }
 
-  void _startPollingFallback(SupabaseClient supabase, String eventId) {
+  void _startPollingFallback(String eventId) {
     _pollingTimer?.cancel();
     _pollingTimer = Timer.periodic(
       const Duration(seconds: 30),
       // Fix #1817: invalidateSelf() 대신 직접 fetch → 채널 teardown/rebuild 방지
-      (_) async {
-        try {
-          final newStats = await _fetchStats(supabase, eventId);
-          state = AsyncData(newStats);
-        } on Object catch (e, st) {
-          Log.e('폴링 체크인 통계 갱신 실패', e, st);
-        }
-      },
+      (_) => applyFetchedStats(eventId),
     );
   }
 }
