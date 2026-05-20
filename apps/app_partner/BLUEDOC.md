@@ -11,7 +11,8 @@ Minglit 의 **파트너 사장님 Flutter 앱**. 매장 관리·멤버 초대·�
 | [`lib/src/routing/`](./lib/src/routing/) | `app_router` (auth + 권한 + 온보딩 redirect) + `app_routes` (Type-safe) |
 | [`lib/src/logic/`](./lib/src/logic/) | 앱-레벨 Provider (`current_partner_provider`, `onboarding_state_provider`, `event_application_logic`, `dashboard_refresh_notifier`) |
 | `lib/src/ui/` · `widgets/` · `utils/` · `l10n/` | 파트너 전용 UI (shell, widgets) · 공용 위젯 · 헬퍼 · 다국어 |
-| [`integration_test/`](./integration_test/) | 통합 테스트 / CUJ ([BLUEDOC](./integration_test/cuj/BLUEDOC.md)) |
+| [`integration_test/cuj/`](./integration_test/cuj/) | CUJ 통합 테스트 ([BLUEDOC](./integration_test/cuj/BLUEDOC.md)) |
+| [`integration_test/mds-emulator-render/`](./integration_test/mds-emulator-render/) | MDS 에뮬레이터 렌더 catalog ([BLUEDOC](./integration_test/mds-emulator-render/BLUEDOC.md)) |
 | [`architecture.md`](./architecture.md) | 파트너 앱 고유 아키텍처 (권한 기반 라우팅 redirect) |
 | [`README.md`](./README.md) | 빌드·실행 명령 |
 
@@ -48,6 +49,7 @@ Minglit 의 **파트너 사장님 Flutter 앱**. 매장 관리·멤버 초대·�
 - [minglit_kit/BLUEDOC.md](../../shared/packages/minglit_kit/BLUEDOC.md) — 공용 패키지
 - [README.md](./README.md) — 빌드·실행 명령
 - [integration_test/cuj/BLUEDOC.md](./integration_test/cuj/BLUEDOC.md) — CUJ 통합 테스트
+- [integration_test/mds-emulator-render/BLUEDOC.md](./integration_test/mds-emulator-render/BLUEDOC.md) — MDS 에뮬레이터 렌더 catalog
 
 ---
-_Reviewed: 2026-05-17 22:32_
+_Reviewed: 2026-05-20 00:20_

@@ -1,0 +1,23 @@
+// MDS render catalog registry — app_partner.
+//
+// 등록된 catalog 목록. 알파벳 순서 유지.
+// 새 screen 추가 시 아래 import + catalog 변수 참조 추가.
+
+import 'bank_account_page/bank_account_page_test.dart' as bank_account_page;
+import 'checkin_placeholder_page/checkin_placeholder_page_test.dart'
+    as checkin_placeholder_page;
+import 'create_verification_page/create_verification_page_test.dart'
+    as create_verification_page;
+import 'recurrence_management_screen/recurrence_management_screen_test.dart'
+    as recurrence_management_screen;
+import 'verification_manage_page/verification_manage_page_test.dart'
+    as verification_manage_page;
+
+/// 모든 등록된 catalog.
+final List<Object> catalogs = [
+  bank_account_page.catalog,
+  checkin_placeholder_page.catalog,
+  create_verification_page.catalog,
+  recurrence_management_screen.catalog,
+  verification_manage_page.catalog,
+];

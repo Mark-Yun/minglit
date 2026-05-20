@@ -4,6 +4,7 @@
 // 파일시스템만 스캔 (Flutter SDK / dart import 의존 없음):
 //   - MDS spec: apps/mds/docs/public/specs/<screen>/state_*.png
 //   - Cataloged: apps/app_user/integration_test/mds-emulator-render/<screen>/
+//              + apps/app_partner/integration_test/mds-emulator-render/<screen>/
 //   - Captured: docs/infra/mds-emulator-render/<screen>/state-*.png
 //
 // 사용:
@@ -22,8 +23,10 @@ import 'dart:convert';
 import 'dart:io';
 
 const _mdsSpecsRoot = 'apps/mds/docs/public/specs';
-const _catalogRoot =
-    'apps/app_user/integration_test/mds-emulator-render';
+const _catalogRoots = [
+  'apps/app_user/integration_test/mds-emulator-render',
+  'apps/app_partner/integration_test/mds-emulator-render',
+];
 const _renderRoot = 'docs/infra/mds-emulator-render';
 
 void main(List<String> args) {
@@ -36,9 +39,16 @@ void main(List<String> args) {
         .where((d) => !d.startsWith('_'))
         .where((d) => _countPngs('$_mdsSpecsRoot/$d', 'state_') > 0)
         .toList();
-    final cataloged = _listDirs(_catalogRoot)
-        .where((d) => !d.startsWith('_')) // _engine, _mocks 등 제외
-        .toList();
+    // app_user + app_partner catalog 병합 (union). 같은 화면이 두 앱에 있어도
+    // 한 번만 카운트. _engine, _mocks 등 internal 디렉토리 제외.
+    final cataloged = _catalogRoots
+        .expand(
+          (root) =>
+              _listDirs(root).where((d) => !d.startsWith('_')),
+        )
+        .toSet()
+        .toList()
+      ..sort();
 
     final uncovered = mdsScreens.where((s) => !cataloged.contains(s)).toList();
     final orphan = cataloged.where((c) => !mdsScreens.contains(c)).toList();
