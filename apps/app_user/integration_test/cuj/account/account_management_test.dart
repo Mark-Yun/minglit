@@ -287,7 +287,10 @@ void main() {
         await t.tap(find.text('열기'));
         await t.pumpAndSettle();
 
-        expect(find.text('계정 관리'), findsOneWidget);
+        // Fix #2659: AccountManagementPage는 AppBar 제목 + settings group 헤더 양쪽에
+        // '계정 관리' 텍스트가 있어 findsOneWidget 대신 '로그아웃' 로 페이지 진입 검증.
+        expect(find.text('로그아웃'), findsOneWidget);
+        expect(find.byType(BackButton), findsOneWidget);
 
         // AppBar 뒤로 가기
         await t.tap(find.byType(BackButton));
