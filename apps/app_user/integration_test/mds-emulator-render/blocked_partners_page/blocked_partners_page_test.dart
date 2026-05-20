@@ -13,7 +13,7 @@ final catalog = MdsCatalog<BlockedPartnersPageBuilder>(
   mdsSpec: 'apps/mds/docs/public/specs/blocked_partners_page/',
   builder: BlockedPartnersPageBuilder.new,
   states: [
-    MdsState('state-loading', (b) => b.loading(), mdsIndex: 1),
+    MdsState('state-loading', (b) => b.loading(), mdsIndex: 1, infiniteAnimation: true),
     MdsState('state-empty', (b) => b.empty(), mdsIndex: 2),
     MdsState('state-with-partners', (b) => b.withPartners(), mdsIndex: 3),
     MdsState('state-dark', (b) => b.withPartners().dark()),

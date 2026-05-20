@@ -18,7 +18,7 @@ final catalog = MdsCatalog<PrivacyPageBuilder>(
   builder: PrivacyPageBuilder.new,
   states: [
     // 기본 state 는 consentControllerProvider AsyncLoading (override 없음).
-    MdsState('state-loading', (b) => b, mdsIndex: 1),
+    MdsState('state-loading', (b) => b, mdsIndex: 1, infiniteAnimation: true),
     MdsState('state-loaded', (b) => b.loaded(), mdsIndex: 2),
     MdsState('state-dark', (b) => b.loaded().dark(), mdsIndex: 3),
   ],
