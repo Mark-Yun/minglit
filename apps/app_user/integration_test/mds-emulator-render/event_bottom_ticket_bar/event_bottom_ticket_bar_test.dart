@@ -18,7 +18,11 @@ final catalog = MdsCatalog<EventBottomTicketBarBuilder>(
     // 12 admission states
     MdsState('state-eligible', (b) => b..eligible(), mdsIndex: 4),
     MdsState('state-guest', (b) => b..guest(), mdsIndex: 1),
-    MdsState('state-identity-required', (b) => b..identityRequired(), mdsIndex: 2),
+    MdsState(
+      'state-identity-required',
+      (b) => b..identityRequired(),
+      mdsIndex: 2,
+    ),
     MdsState(
       'state-qualification-required',
       (b) => b..qualificationRequired(),

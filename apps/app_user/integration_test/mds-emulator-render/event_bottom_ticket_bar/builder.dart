@@ -72,8 +72,7 @@ final _renderEvent = Event(
 // Builder
 // ---------------------------------------------------------------------------
 
-class EventBottomTicketBarBuilder
-    extends MdsScreenBuilder<Scaffold> {
+class EventBottomTicketBarBuilder extends MdsScreenBuilder<Scaffold> {
   EventBottomTicketBarBuilder()
     : super(
         page: Scaffold(
@@ -93,66 +92,66 @@ class EventBottomTicketBarBuilder
 
   /// CUJ 메인 — 구매 가능 상태 ("참가 신청하기").
   void eligible() => _applyAdmission(
-        AdmissionState(status: EventAdmissionStatus.eligible),
-      );
+    AdmissionState(status: EventAdmissionStatus.eligible),
+  );
 
   /// 비로그인 상태 ("로그인하고 신청하기").
   void guest() => _applyAdmission(
-        AdmissionState(status: EventAdmissionStatus.guest),
-      );
+    AdmissionState(status: EventAdmissionStatus.guest),
+  );
 
   /// 본인인증 필요 상태 ("본인인증 후 신청하기").
   void identityRequired() => _applyAdmission(
-        AdmissionState(status: EventAdmissionStatus.identityRequired),
-      );
+    AdmissionState(status: EventAdmissionStatus.identityRequired),
+  );
 
   /// 파트너 심사 필요 상태 ("신청하기").
   void qualificationRequired() => _applyAdmission(
-        AdmissionState(status: EventAdmissionStatus.qualificationRequired),
-      );
+    AdmissionState(status: EventAdmissionStatus.qualificationRequired),
+  );
 
   /// 참여 조건 미달 상태 ("성별 조건이 맞지 않습니다.").
   void notEligible() => _applyAdmission(
-        AdmissionState(
-          status: EventAdmissionStatus.notEligible,
-          ineligibleReason: '성별 조건이 맞지 않습니다.',
-        ),
-      );
+    AdmissionState(
+      status: EventAdmissionStatus.notEligible,
+      ineligibleReason: '성별 조건이 맞지 않습니다.',
+    ),
+  );
 
   /// 정원 마감 / 매진 상태 ("마감된 이벤트").
   void soldOut() => _applyAdmission(
-        AdmissionState(status: EventAdmissionStatus.fullOrSoldOut),
-      );
+    AdmissionState(status: EventAdmissionStatus.fullOrSoldOut),
+  );
 
   /// 결제 미완료 — 이어하기 상태 ("결제 계속하기").
   void pendingPayment() => _applyAdmission(
-        AdmissionState(status: EventAdmissionStatus.pendingPayment),
-      );
+    AdmissionState(status: EventAdmissionStatus.pendingPayment),
+  );
 
   /// 이미 신청 완료 상태 ("이미 신청한 이벤트").
   void applied() => _applyAdmission(
-        AdmissionState(status: EventAdmissionStatus.applied),
-      );
+    AdmissionState(status: EventAdmissionStatus.applied),
+  );
 
   /// 심사 반려 상태 — destructive 버튼.
   void rejected() => _applyAdmission(
-        AdmissionState(status: EventAdmissionStatus.rejected),
-      );
+    AdmissionState(status: EventAdmissionStatus.rejected),
+  );
 
   /// 이벤트 종료 + 미참여 상태 ("종료된 이벤트").
   void eventEnded() => _applyAdmission(
-        AdmissionState(status: EventAdmissionStatus.eventEnded),
-      );
+    AdmissionState(status: EventAdmissionStatus.eventEnded),
+  );
 
   /// 이벤트 종료 + 매칭 결과 도착 ("매칭 결과 보기").
   void eventEndedWithResults() => _applyAdmission(
-        AdmissionState(status: EventAdmissionStatus.eventEndedWithResults),
-      );
+    AdmissionState(status: EventAdmissionStatus.eventEndedWithResults),
+  );
 
   /// 이벤트 종료 + 참여 완료 ("참여 완료").
   void eventEndedParticipated() => _applyAdmission(
-        AdmissionState(status: EventAdmissionStatus.eventEndedParticipated),
-      );
+    AdmissionState(status: EventAdmissionStatus.eventEndedParticipated),
+  );
 
   /// admission 로딩 중 — 스피너 표시.
   void loading() {
