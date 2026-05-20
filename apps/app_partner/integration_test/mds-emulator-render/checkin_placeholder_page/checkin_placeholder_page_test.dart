@@ -16,7 +16,12 @@ final catalog = MdsCatalog<CheckinPlaceholderPageBuilder>(
   builder: CheckinPlaceholderPageBuilder.new,
   states: [
     // Loading — partner 정보 로딩 중 스피너
-    MdsState('state-loading', (b) => b.loading(), mdsIndex: 1, infiniteAnimation: true),
+    MdsState(
+      'state-loading',
+      (b) => b.loading(),
+      mdsIndex: 1,
+      infiniteAnimation: true,
+    ),
     // Error — partner 정보 로드 실패
     MdsState('state-error', (b) => b.error(), mdsIndex: 2),
     // Empty — 오늘 이벤트 없음

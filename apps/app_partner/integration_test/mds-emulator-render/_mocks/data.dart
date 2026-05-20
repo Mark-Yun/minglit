@@ -31,6 +31,47 @@ List<Event> mockEvents({int count = 2, DateTime? now}) {
   );
 }
 
+/// MDS render 용 mock Verification (partner custom 인증).
+Verification mockVerification({
+  String id = 'mock-verification-1',
+  String displayName = '골프 핸디캡 인증',
+  String internalName = 'golf_handicap',
+  VerificationCategory category = VerificationCategory.etc,
+  bool isActive = true,
+}) => Verification(
+  id: id,
+  displayName: displayName,
+  internalName: internalName,
+  category: category,
+  partnerId: 'mock-partner-1',
+  description: '골프 핸디캡을 인증하는 용도입니다.',
+  isActive: isActive,
+  formSchema: [
+    const VerificationFormField(
+      type: 'text',
+      label: '핸디캡 수치',
+      key: 'handicap_value',
+    ),
+    const VerificationFormField(
+      type: 'file',
+      label: '증빙 파일',
+      key: 'proof_file',
+      required: false,
+    ),
+  ],
+);
+
+/// MDS render 용 mock bank account data.
+Map<String, dynamic> mockBankAccount({
+  String bankName = '국민은행',
+  String accountHolder = '밍글릿 파트너',
+  String accountNumber = '12345678901234',
+}) => {
+  'bank_name': bankName,
+  'account_holder': accountHolder,
+  'account_number': accountNumber,
+};
+
 /// MDS render 용 mock RecurrenceRule (활성 상태, 매주 월요일).
 RecurrenceRule mockRecurrenceRule({
   String id = 'mock-rule-1',
