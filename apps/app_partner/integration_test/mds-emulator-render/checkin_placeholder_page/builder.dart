@@ -16,8 +16,7 @@ import '../_mocks/data.dart';
 
 class CheckinPlaceholderPageBuilder
     extends MdsScreenBuilder<CheckinPlaceholderPage> {
-  CheckinPlaceholderPageBuilder()
-    : super(page: const CheckinPlaceholderPage());
+  CheckinPlaceholderPageBuilder() : super(page: const CheckinPlaceholderPage());
 
   Partner? _partner;
   bool _isLoading = false;
