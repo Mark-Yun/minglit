@@ -21,8 +21,11 @@ flutter drive \
 
 | 화면 | states |
 |------|--------|
+| `bank_account_page` | loading · no-account · with-account · dark |
 | `checkin_placeholder_page` | loading · error · empty · selection · selection-dark |
+| `create_verification_page` | empty · with-fields · dark |
 | `recurrence_management_screen` | active · paused · cancelled · no-rule · action-loading · loading · active-dark |
+| `verification_manage_page` | loading · active-empty · active-with-items · archived-with-items · dark |
 
 ## 구조
 
@@ -36,14 +39,23 @@ mds-emulator-render/
 │   ├── runner.dart
 │   └── manifest.dart
 ├── _mocks/
-│   └── data.dart           # mockPartner(), mockRecurrenceRule(), mockEvents()
+│   └── data.dart           # mockPartner(), mockVerification(), mockBankAccount(), mockRecurrenceRule(), mockEvents()
 ├── _registry.dart          # 등록된 모든 catalog (알파벳 순)
+├── bank_account_page/
+│   ├── builder.dart
+│   └── bank_account_page_test.dart
 ├── checkin_placeholder_page/
 │   ├── builder.dart
 │   └── checkin_placeholder_page_test.dart
-└── recurrence_management_screen/
+├── create_verification_page/
+│   ├── builder.dart
+│   └── create_verification_page_test.dart
+├── recurrence_management_screen/
+│   ├── builder.dart
+│   └── recurrence_management_screen_test.dart
+└── verification_manage_page/
     ├── builder.dart
-    └── recurrence_management_screen_test.dart
+    └── verification_manage_page_test.dart
 ```
 
 ## 관련
@@ -51,4 +63,4 @@ mds-emulator-render/
 - [app_user mds-emulator-render](../../../app_user/integration_test/mds-emulator-render/BLUEDOC.md)
 - [architecture.md](../../../app_user/integration_test/mds-emulator-render/architecture.md)
 
-_Reviewed: 2026-05-20 00:00_
+_Reviewed: 2026-05-20 12:25_
