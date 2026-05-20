@@ -9,7 +9,7 @@
  *   - 카드 좌우 horizontal padding (medium = 16) — scaffold edge에서 떨어진 모양
  *   - radius-card (16) · surfaceContainerLowest 배경 (라이트모드 흰색)
  *   - 카드 위에 헤더 라벨 (uppercase · letter-spacing 0.5 · 회색)
- *   - 카드 안의 행 사이에 0.5px 얇은 선 (좌측 indent 52 = 16 padding + 20 icon + 16 gap)
+ *   - 카드 안의 행 사이에 0.5px 얇은 선 (들여쓰기 없이 카드 내부 전체 폭)
  *   - 카드의 둥근 모서리 안쪽으로 콘텐츠가 깔끔히 잘림
  */
 
@@ -129,7 +129,6 @@ function SettingsGroupDemo({
               <div
                 style={{
                   height: 0.5,
-                  marginLeft: 52,
                   background: 'var(--color-divider)',
                 }}
               />
@@ -181,7 +180,7 @@ export default function MinglitSettingsGroupSpec() {
           { text: 'spacing-medium → 카드 좌우 padding (16)', style: { top: 12, left: '50%', transform: 'translateX(-50%)' } },
           { text: 'header (uppercase · 회색 · letter-spacing 0.5)', style: { top: 60, right: 8 } },
           { text: 'radius-card (16) · 카드 모서리', style: { bottom: 80, right: 8 } },
-          { text: 'divider 0.5px · indent 52 (icon 폭만큼 들여쓰기)', style: { bottom: 12, left: 8 } },
+          { text: 'divider 0.5px · full-width', style: { bottom: 12, left: 8 } },
         ]}
       />
 

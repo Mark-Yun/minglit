@@ -34,7 +34,7 @@ simpleAppBar + ListView body의 ProfileGroup + 4 SettingsGroup. 그룹 사이 sp
 
 ## Blueprint & tree
 
-Scaffold + `MinglitTheme.simpleAppBar(title: '더보기', showBackButton: false)` + SafeArea wrap + ListView로 5 그룹 + body padding (top: medium · bottom: xxxlarge — home bar 가림 방지). 각 그룹은 _padded card_: 좌우 16 margin · radius-card 라운드 · 내부 tile 사이 0.5px divider (indent 52). 그룹 헤더는 카드 _바깥_ 위에 UPPERCASE labelMedium으로 노출.
+Scaffold + `MinglitTheme.simpleAppBar(title: '더보기', showBackButton: false)` + SafeArea wrap + ListView로 5 그룹 + body padding (top: medium · bottom: xxxlarge — home bar 가림 방지). 각 그룹은 _padded card_: 좌우 16 margin · radius-card 라운드 · 내부 tile 사이 0.5px full-width divider. 그룹 헤더는 카드 _바깥_ 위에 UPPERCASE labelMedium으로 노출.
 
 ![blueprint](blueprint.png)
 
@@ -47,7 +47,7 @@ Scaffold + `MinglitTheme.simpleAppBar(title: '더보기', showBackButton: false)
 | ② | ProfileGroup | header 없음 · 단일 _ProfileTile (custom · 48px 보다 큼) | card h-margin: 16 · _ProfileTile padding: medium all (16) · row gap: medium · MinglitAvatarImage radius 24 (= 48px) |
 | ③–⑥ | SettingsGroup × 4 | header (외부 · UPPERCASE) + tile list (carded) | 그룹 사이: spacing-large (24) · 카드 h-margin: spacing-medium (16) · header v-padding: spacing-small (8) 하단 + spacing-xsmall (4) 좌측 · 카드 radius: radius-card (16) |
 | — | tile (MinglitSettingsTile) | row · icon + title-stack + trailing | height 고정 48 · h-padding: spacing-medium · icon → title gap: spacing-medium (16) · trailing gap: spacing-small (8) · icon size: 20 (MinglitIconSize.small) |
-| — | tile-tile divider | indent 52 (16+20+16) | height/thickness 0.5 · color outlineVariant |
+| — | tile-tile divider | 들여쓰기 없이 카드 내부 전체 폭 | height/thickness 0.5 · color outlineVariant |
 
 ## SettingsGroup sub-anatomy (per group)
 
@@ -102,7 +102,7 @@ Scaffold + `MinglitTheme.simpleAppBar(title: '더보기', showBackButton: false)
 | 사용자 액션 | ① 프로필 영역 탭 — 계정 관리 화면으로 이동.② 비즈니스 관리 항목 탭 (파티 · 인증 · 계좌 · 멤버) — 각각의 관리 화면으로 이동.③ 알림 설정 / 테마 항목 탭 — 알림 설정 화면으로 이동, 또는 테마 선택 다이얼로그 노출.④ 로그아웃 탭 — 위험 강조 톤의 확인 다이얼로그를 거쳐 로그아웃이 진행됨.⑤ 약관 / 정보 항목 탭 — 외부 브라우저에서 해당 약관 페이지가 열림.⑥ 스크롤 — 화면 아래쪽의 약관·정보 그룹이 노출. |
 | 에지케이스 | · 파트너 정보가 아직 도착하지 않은 동안 멤버 관리 항목을 탭하면 "파트너 정보를 불러오는 중입니다" 안내 메시지가 잠깐 노출됨.· 앱 버전 항목은 탭해도 반응이 없음 — 정보 표시 전용.· 프로필 영역은 다음 세 가지 형태로 변할 수 있음: – 정보를 가져오는 중: 로딩 인디케이터 – 정보 가져오기 실패: 비활성 프로필 영역 + "정보를 불러올 수 없습니다" 안내, 화살표 미노출 – 파트너 정보가 비어있는 경우: 비활성 프로필 영역 + "파트너 정보를 불러올 수 없습니다" 안내 |
 | 컴포넌트 | · MinglitTheme.simpleAppBar(title: '더보기', showBackButton: false)· SafeArea + ListView(EdgeInsets.only top: medium · bottom: xxxlarge) — Fix #1824 / #1803 (home bar 가림 방지)· MinglitSettingsGroup × 5 (header optional · 외부 위치 · padded card)· MinglitSettingsTile × 11 (icon + title-stack + chevron · destructive 분기 · trailing 옵션)· _ProfileTile (private widget · MinglitAvatarImage radius 24 + Icons.store fallback · displayName · email · chevron) — Fix #2069· ThemeSettingsTile (kit-shared · 동적 icon + subtitle · SimpleDialog 라디오)· FutureBuilder<PackageInfo> (앱 버전 tile · package_info_plus)· MinglitAlert.showConfirm (로그아웃 destructive) · launchUrl (약관 외부) |
-| 토큰 | · color: color-surface (scaffold + AppBar gray), color-background (group card white = surfaceContainerLowest), color-text-primary (title · name), color-text-secondary (subtitle · header · email · icon · chevron = onSurfaceVariant), color-divider (= outlineVariant · 0.5px tile divider · indent 52), color-partner-primary (avatar bg @ 22% · scoped to viewport), color-error (로그아웃 destructive)· spacing: spacing-medium (16) (body top · group h-margin · tile h-padding · row gap), spacing-large (24) (그룹 사이), spacing-small (8) (header bottom · trailing gap), spacing-xsmall (4) (header left), spacing-xxxlarge (body bottom safeArea)· radius: radius-card (16) (group card)· typography: appBarTitle (18/600), bodyMedium (16 · tile title), bodySmall (13 · subtitle · email), titleMedium (16/700 · profile name), labelMedium (12/500 · UPPERCASE group header · letter-spacing 0.5)· icon: MinglitIconSize.small (20) |
+| 토큰 | · color: color-surface (scaffold + AppBar gray), color-background (group card white = surfaceContainerLowest), color-text-primary (title · name), color-text-secondary (subtitle · header · email · icon · chevron = onSurfaceVariant), color-divider (= outlineVariant · 0.5px full-width tile divider), color-partner-primary (avatar bg @ 22% · scoped to viewport), color-error (로그아웃 destructive)· spacing: spacing-medium (16) (body top · group h-margin · tile h-padding · row gap), spacing-large (24) (그룹 사이), spacing-small (8) (header bottom · trailing gap), spacing-xsmall (4) (header left), spacing-xxxlarge (body bottom safeArea)· radius: radius-card (16) (group card)· typography: appBarTitle (18/600), bodyMedium (16 · tile title), bodySmall (13 · subtitle · email), titleMedium (16/700 · profile name), labelMedium (12/500 · UPPERCASE group header · letter-spacing 0.5)· icon: MinglitIconSize.small (20) |
 | 노트 | 📝 위 mockup은 5개 그룹을 한 화면에 모두 노출했지만 실제로는 한 번의 스크롤로 마지막 그룹까지 도달함. 라벨은 "정산 계좌 관리" 대신 "계좌 관리"로 통일됨 — 정산 메뉴와 동일한 표기. |
 
 ### Limited permissions · 정산 권한 없는 멤버 비즈니스 관리 그룹에서 "계좌 관리" 한 줄이 빠진 형태
@@ -167,7 +167,7 @@ implementation source + 인접 화면.
 | Route | MoreRoute · /more · MoreBranch (StatefulShell branch 5) · app_routes.dart |
 | Coordinator | moreCoordinatorProvider · more_coordinator.dart — pushPartyList / pushVerificationManage / pushBankAccountManagement / pushMemberList / pushNotificationSettings / pushAccountManagement. |
 | Auth / Permission gates | · currentPartnerInfoProvider — async partner profile (loading / error / data / null 분기)· currentMemberPermissionsProvider — owner 폴백 시 ['SETTLEMENT_VIEW','SETTLEMENT_EDIT'] 자동 부여 (Fix #1568 · Fix #1533 · Fix #1217)· canEditSettlement = permissions.contains('SETTLEMENT_EDIT') — false면 "계좌 관리" tile 미렌더 |
-| SettingsGroup atom | MinglitSettingsGroup — padded card (h-margin 16) · radius-card · header 외부 UPPERCASE labelMedium · 내부 0.5px divider (indent 52) |
+| SettingsGroup atom | MinglitSettingsGroup — padded card (h-margin 16) · radius-card · header 외부 UPPERCASE labelMedium · 내부 0.5px full-width divider |
 | SettingsTile atom | MinglitSettingsTile — height 48 · icon 20 (MinglitIconSize.small) · title + optional subtitle (Column) · trailing: navigation(chevron) / toggle / value / none · destructive (color-error) |
 | ThemeSettingsTile | kit-shared widget — 테마 모드 (system / light / dark) 분기 · subtitle = 현재 모드 · icon = 현재 effective brightness 반영 · theme_settings_tile.dart |
 | _ProfileTile | private widget · MinglitAvatarImage(radius:24 · Icons.store fallback · primaryContainer bg) · name (titleMedium/bold) · email (bodySmall/onSurfaceVariant) · chevron — Fix #2069 (캐싱 + 에러 폴백) |
