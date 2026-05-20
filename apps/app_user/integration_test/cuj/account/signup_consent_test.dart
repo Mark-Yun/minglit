@@ -264,7 +264,20 @@ void main() {
       app: const SignupConsentPage(),
       overrides: base,
       body: (t) async {
-        await t.tap(find.text('보기 ›').at(1));
+        // Fix #2589 dev-blocker: `.at(1)` 은 두 번째 보기 › → 개인정보 항목.
+        // 제3자 항목은 ageConfirmation(보기 › 없음) 다음이라 위치 변동 위험 큼.
+        // 1-3 첫 케이스(서비스 이용약관)와 동일하게 descendant 패턴으로 안정화.
+        await t.tap(
+          find
+              .descendant(
+                of: find.ancestor(
+                  of: find.text('제3자 제공 동의'),
+                  matching: find.byType(InkWell),
+                ),
+                matching: find.text('보기 ›'),
+              )
+              .first,
+        );
         await t.pumpAndSettle();
 
         // 제3자 제공 동의 전문 (FR-5)
@@ -397,6 +410,9 @@ void main() {
       'happy: identity_verification 동의 없음 → 동의 시트 자동 표시',
       app: const IdentityVerificationScreen(),
       overrides: verificationBase,
+      // Fix #2589 dev-blocker: IdentityVerificationScreen 의 무한 CircularProgressIndicator(_isLoading=true) 가
+      // 시트가 열려있는 동안 백그라운드에서 계속 회전 → pumpAndSettle 가 settle 안 되고 10min timeout.
+      afterPump: (t) => t.pump(const Duration(milliseconds: 500)),
       body: (t) async {
         // IdentityVerificationScreen 진입 시 동의 미완료면 시트 자동 표시 (FR-7)
         expect(find.text('본인확인정보 수집·이용 동의'), findsOneWidget);
@@ -440,10 +456,17 @@ void main() {
       'happy: 동의 → consent 저장 → 인증 플로우 진입',
       app: const IdentityVerificationScreen(),
       overrides: verificationBase,
+      // Fix #2589 dev-blocker: 무한 CircularProgressIndicator 회피 (CUJ 2-1 참고)
+      afterPump: (t) => t.pump(const Duration(milliseconds: 500)),
       body: (t) async {
         // 시트 자동 표시됨 (CUJ 2-1과 동일 전제)
         expect(find.text('동의하고 인증'), findsOneWidget);
 
+        // Fix #2589 dev-blocker: bottom sheet content
+        // (SingleChildScrollView)가 viewport(866px)보다 커서 버튼이 off-screen
+        // → tap miss. ensureVisible로 스크롤 후 탭.
+        await t.ensureVisible(find.text('동의하고 인증'));
+        await t.pump();
         await t.tap(find.text('동의하고 인증'));
         // FR-8: 동의 후 toggleConsent(identityVerification, consented: true) 저장
         // mock async 완료 대기 (Portone SDK 외부 호출 전)
@@ -470,12 +493,20 @@ void main() {
       'happy: 취소 탭 → 동의 미저장, 시트 닫힘',
       app: const IdentityVerificationScreen(),
       overrides: verificationBase,
+      // Fix #2589 dev-blocker: 무한 CircularProgressIndicator 회피 (CUJ 2-1 참고)
+      afterPump: (t) => t.pump(const Duration(milliseconds: 500)),
       body: (t) async {
         // 시트 자동 표시됨
         expect(find.text('취소'), findsOneWidget);
 
+        // Fix #2589 dev-blocker: bottom sheet content
+        // (SingleChildScrollView)가 viewport(866px)보다 커서 버튼이 off-screen
+        // → tap miss. ensureVisible로 스크롤 후 탭.
+        await t.ensureVisible(find.text('취소'));
+        await t.pump();
         await t.tap(find.text('취소'));
-        await t.pumpAndSettle();
+        // 무한 spinner 회피 — pumpAndSettle 대신 고정 pump (CUJ 2-1 참고)
+        await t.pump(const Duration(milliseconds: 500));
 
         // FR-7: 취소 시 동의 미저장
         verifyNever(() => repo.saveConsents(any(), any()));
