@@ -449,6 +449,11 @@ void main() {
         // 시트 자동 표시됨 (CUJ 2-1과 동일 전제)
         expect(find.text('동의하고 인증'), findsOneWidget);
 
+        // Fix #2589 dev-blocker: bottom sheet content
+        // (SingleChildScrollView)가 viewport(866px)보다 커서 버튼이 off-screen
+        // → tap miss. ensureVisible로 스크롤 후 탭.
+        await t.ensureVisible(find.text('동의하고 인증'));
+        await t.pump();
         await t.tap(find.text('동의하고 인증'));
         // FR-8: 동의 후 toggleConsent(identityVerification, consented: true) 저장
         // mock async 완료 대기 (Portone SDK 외부 호출 전)
@@ -481,8 +486,14 @@ void main() {
         // 시트 자동 표시됨
         expect(find.text('취소'), findsOneWidget);
 
+        // Fix #2589 dev-blocker: bottom sheet content
+        // (SingleChildScrollView)가 viewport(866px)보다 커서 버튼이 off-screen
+        // → tap miss. ensureVisible로 스크롤 후 탭.
+        await t.ensureVisible(find.text('취소'));
+        await t.pump();
         await t.tap(find.text('취소'));
-        await t.pumpAndSettle();
+        // 무한 spinner 회피 — pumpAndSettle 대신 고정 pump (CUJ 2-1 참고)
+        await t.pump(const Duration(milliseconds: 500));
 
         // FR-7: 취소 시 동의 미저장
         verifyNever(() => repo.saveConsents(any(), any()));
