@@ -677,6 +677,70 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
+  // CUJ 3-1: 백그라운드 복귀 시 미니바 자동 복원 (FR-17)
+  // ---------------------------------------------------------------------------
+  // Integration test limitation: 실제 AppLifecycleState 전환은 시뮬레이션 불가.
+  // 여기선 백그라운드 중 서버 상태가 변경된 상황을 provider override로 재현 —
+  // 포그라운드 복귀 시 provider re-fetch 결과(최신 상태)가 바에 반영됨을 검증.
+
+  cujGroup('3-1', '백그라운드 복귀 시 미니바 자동 복원', () {
+    cujCase(
+      'happy: 백그라운드 중 결과 발표 → 복귀 시 "결과 확인" 즉시 표시 (FR-17)',
+      app: const Scaffold(body: EventNowBar()),
+      overrides: () {
+        final activeEvent = _makeActiveEvent();
+        return [
+          todayActiveEventsProvider.overrideWith(
+            (ref) async => [activeEvent],
+          ),
+          // 백그라운드 중 매칭 결과 발표 → results 상태로 복귀
+          eventNowBarStateProvider(activeEvent).overrideWith(
+            () => _FakeEventNowBarStateNotifier(EventNowBarState.results),
+          ),
+          eventRealtimeProvider(activeEvent.event.id).overrideWith(
+            _FakeEventRealtime.new,
+          ),
+        ];
+      },
+      body: (t) async {
+        await t.pump();
+        // results 상태: AnimationController.repeat() → pumpAndSettle 무한 block 방지
+        await t.pump(const Duration(milliseconds: 50));
+
+        // 포그라운드 복귀 후 re-fetch → 결과 발표 상태 반영
+        expect(find.text('결과 확인'), findsOneWidget);
+      },
+    );
+
+    cujCase(
+      'edge: 백그라운드 중 이벤트 종료 → 복귀 시 "종료됨" 표시 (FR-17)',
+      app: const Scaffold(body: EventNowBar()),
+      overrides: () {
+        final activeEvent = _makeActiveEvent();
+        return [
+          todayActiveEventsProvider.overrideWith(
+            (ref) async => [activeEvent],
+          ),
+          // 백그라운드 30분 이상 → 서버에서 이벤트 ended 상태
+          eventNowBarStateProvider(activeEvent).overrideWith(
+            () => _FakeEventNowBarStateNotifier(EventNowBarState.ended),
+          ),
+          eventRealtimeProvider(activeEvent.event.id).overrideWith(
+            _FakeEventRealtime.new,
+          ),
+        ];
+      },
+      body: (t) async {
+        await t.pump();
+        await t.pumpAndSettle();
+
+        // 포그라운드 복귀 후 ended 상태 반영 — 리뷰 단계 표시
+        expect(find.text('종료됨'), findsOneWidget);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
   // CUJ 3-2: Realtime 끊김 시 폴링 fallback (FR-12) — 오프라인 상태 렌더
   // ---------------------------------------------------------------------------
 
@@ -694,6 +758,60 @@ void main() {
         await t.pumpAndSettle();
 
         expect(find.text('(오프라인)'), findsOneWidget);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 3-3: 앱 킬 후 재시작 시 상태 복원 (FR-17)
+  // ---------------------------------------------------------------------------
+  // Integration test limitation: 실제 앱 킬/재시작은 시뮬레이션 불가.
+  // 여기선 cold-start 시 provider가 서버에서 상태를 re-fetch하여
+  // 미니바가 올바르게 복원되는지 확인.
+
+  cujGroup('3-3', '앱 킬 후 재시작 시 상태 복원', () {
+    cujCase(
+      'happy: cold-start 후 서버 상태 re-fetch → 미니바 정상 복원 (FR-17)',
+      app: const Scaffold(body: EventNowBar()),
+      overrides: () {
+        final activeEvent = _makeActiveEvent();
+        return [
+          todayActiveEventsProvider.overrideWith(
+            (ref) async => [activeEvent],
+          ),
+          // 재시작 후 서버에서 체크인 가능 상태 복원
+          eventNowBarStateProvider(activeEvent).overrideWith(
+            () => _FakeEventNowBarStateNotifier(EventNowBarState.checkInReady),
+          ),
+          eventRealtimeProvider(activeEvent.event.id).overrideWith(
+            _FakeEventRealtime.new,
+          ),
+        ];
+      },
+      body: (t) async {
+        await t.pump();
+        await t.pumpAndSettle();
+
+        // cold-start 후 re-fetch → checkInReady 상태 복원
+        expect(find.text('체크인하세요'), findsOneWidget);
+      },
+    );
+
+    cujCase(
+      'edge: 재시작 후 이벤트 만료(cancelled/expired) → 미니바 해제 (FR-12)',
+      app: const Scaffold(body: EventNowBar()),
+      overrides: () => [
+        // 재시작 후 서버에서 활성 이벤트 없음 반환 (만료 또는 취소된 이벤트)
+        todayActiveEventsProvider.overrideWith((ref) async => []),
+      ],
+      body: (t) async {
+        await t.pump();
+        await t.pumpAndSettle();
+
+        // 활성 이벤트 없으면 미니바 해제 (SizedBox.shrink) — 상태 텍스트 없음
+        expect(find.text('곧 시작'), findsNothing);
+        expect(find.text('체크인하세요'), findsNothing);
+        expect(find.text('종료됨'), findsNothing);
       },
     );
   });
