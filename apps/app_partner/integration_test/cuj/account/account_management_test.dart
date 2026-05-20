@@ -70,9 +70,11 @@ void main() {
         expect(find.text('준비 중입니다.'), findsOneWidget);
 
         // Fix #2676: SnackBar Timer drain before test teardown
-        t.state<ScaffoldMessengerState>(
-          find.byType(ScaffoldMessenger),
-        ).clearSnackBars();
+        t
+            .state<ScaffoldMessengerState>(
+              find.byType(ScaffoldMessenger),
+            )
+            .clearSnackBars();
         await t.pumpAndSettle();
       },
     );
@@ -97,9 +99,11 @@ void main() {
         await t.pumpAndSettle();
 
         // Fix #2676: SnackBar Timer drain before test teardown
-        t.state<ScaffoldMessengerState>(
-          find.byType(ScaffoldMessenger),
-        ).clearSnackBars();
+        t
+            .state<ScaffoldMessengerState>(
+              find.byType(ScaffoldMessenger),
+            )
+            .clearSnackBars();
         await t.pumpAndSettle();
       },
     );
