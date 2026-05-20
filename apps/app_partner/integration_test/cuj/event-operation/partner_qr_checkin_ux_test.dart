@@ -34,6 +34,13 @@ class _FakeEntryGroupStatsController extends EntryGroupCheckinStatsController {
   Future<List<EntryGroupCheckinStats>> build(String eventId) async => _groups;
 }
 
+class _ErrorEntryGroupStatsController extends EntryGroupCheckinStatsController {
+  @override
+  Future<List<EntryGroupCheckinStats>> build(String eventId) {
+    return Future<List<EntryGroupCheckinStats>>.error(Exception('RPC 실패'));
+  }
+}
+
 class _FakeCheckinStatsController extends CheckinStatsController {
   _FakeCheckinStatsController(this._initial, {CheckinStats? realtimeUpdate})
     : _realtimeUpdate = realtimeUpdate;
@@ -364,46 +371,21 @@ void main() {
       },
     );
 
-    // Note: cujCase 미사용 — async throw path는 Riverpod test 환경에서 불안정.
-    // 단위 테스트(entry_group_bottom_sheet_test.dart)와 동일하게 state 직접 주입.
-    testWidgets(
+    cujCase(
       'edge: 그룹 RPC 실패 → 헤더만 + "불러오기 실패" 서브타이틀',
-      (t) async {
-        // Fix #2612: ProviderContainer 로 초기화 후 AsyncError 직접 주입
-        final container = ProviderContainer(
-          overrides: [
-            entryGroupCheckinStatsControllerProvider('evt-err').overrideWith(
-              () => _FakeEntryGroupStatsController([]),
-            ),
-          ],
-        );
-        addTearDown(container.dispose);
-
-        await container.read(
-          entryGroupCheckinStatsControllerProvider('evt-err').future,
-        );
-
-        container
-            .read(
-              entryGroupCheckinStatsControllerProvider('evt-err').notifier,
-            )
-            .state = AsyncError(
-          Exception('RPC 실패'),
-          StackTrace.empty,
-        );
-
-        await t.pumpWidget(
-          UncontrolledProviderScope(
-            container: container,
-            child: const MaterialApp(
-              home: Scaffold(
-                body: EntryGroupBottomSheet(eventId: 'evt-err'),
-              ),
-            ),
-          ),
-        );
+      app: const Scaffold(
+        body: EntryGroupBottomSheet(eventId: 'evt-err'),
+      ),
+      overrides: () => [
+        entryGroupCheckinStatsControllerProvider(
+          'evt-err',
+        ).overrideWith(_ErrorEntryGroupStatsController.new),
+      ],
+      body: (t) async {
+        // Fix #2612: build() 가 Future.error 를 반환 → AsyncError 로 즉시 transition
+        // (이전 ProviderContainer + state= 패턴은 keepAlive 없는 provider 가
+        // 옵저버 부재 시 dispose 되면서 manual state 가 유실되어 실패했음).
         await t.pumpAndSettle();
-
         expect(find.text('엔트리 그룹별 현황'), findsOneWidget);
         expect(find.textContaining('불러오기 실패'), findsOneWidget);
       },
@@ -453,11 +435,15 @@ void main() {
         // 축소 헤더 확인
         expect(find.text('엔트리 그룹별 현황'), findsOneWidget);
 
-        // pull-up fling으로 시트 확장 (DraggableScrollableSheet snap 트리거에 안정적)
+        // Fix #2612: DraggableScrollableSheet 는 ScrollController 가 attach 된
+        // 스크롤러블 (ListView) 의 pointer event 만 sheet drag 로 전달한다.
+        // 헤더 Text 위에서 fling 하면 sheet 가 확장되지 않아 ListView viewport 가
+        // 작아 itemBuilder 가 후순 아이템(남 20대) 을 빌드하지 않음.
+        // → ListView 자체를 target 으로 fling 하고 충분한 velocity 부여.
         await t.fling(
-          find.text('엔트리 그룹별 현황'),
+          find.byType(ListView),
           const Offset(0, -400),
-          1000,
+          4000,
         );
         await t.pumpAndSettle();
 
