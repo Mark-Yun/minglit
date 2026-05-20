@@ -3,10 +3,15 @@
 // 대응 spec: docs/features/account/login-dark-theme/spec.md
 // CUJ 추가 시 본 파일에 `cujGroup` 블록 추가 (새 파일 X).
 //
-// 커버 범위 (Flutter integration test):
+// 커버 범위 (Flutter integration test): 6/7
 //   1-1, 1-2, 1-3, 1-4, 2-1: 다크/라이트 모드 렌더링 + 버튼 구조 검증
-//   3-1: 로그인 화면 렌더 확인 (redirect 깜빡임은 시각적 golden 테스트 범위)
 //   5-1: 실행 중 시스템 테마 토글 시 즉시 반영 (StatefulWrapper 패턴)
+//
+// 미커버 (1/7):
+//   3-1 (보호 경로 redirect 깜빡임 제거): GoRouter 전체 설정 + auth mock 없이
+//        올바른 redirect 시나리오 검증 불가. redirect 로직 자체는
+//        test/src/routing/app_router_redirect_test.dart 에서 검증됨.
+//        시각적 깜빡임 검증은 golden 테스트 범위.
 //
 // 색상 정확도 (NFR-5/NFR-6, Fix #1542):
 //   픽셀 수준 색상 검증은 test/widget/ 에 위치한 golden 테스트가 담당.
@@ -198,29 +203,6 @@ void main() {
         expect(find.text('Google로 시작하기'), findsOneWidget);
         expect(find.text('Apple로 시작하기'), findsOneWidget);
         expect(find.text('Kakao로 시작하기'), findsOneWidget);
-      },
-    );
-  });
-
-  // ---------------------------------------------------------------------------
-  // CUJ 3-1: 보호 경로 redirect 시 깜빡임 제거
-  // ---------------------------------------------------------------------------
-
-  cujGroup('3-1', '보호 경로 redirect 시 깜빡임 제거', () {
-    cujCase(
-      'happy: 다크 모드 로그인 화면 렌더 — 깜빡임 없는 초기 상태 확인',
-      app: Theme(
-        data: MinglitTheme.materialThemeDark,
-        child: const MinglitLoginScreen(),
-      ),
-      overrides: _base,
-      body: (t) async {
-        // Fix #1542: redirect 도착 시 Scaffold 배경 = 다크 테마 (깜빡임 없이)
-        // 전체 routing 시뮬레이션은 routing integration test 범위 — 여기선
-        // 로그인 화면이 다크 모드에서 올바르게 렌더됨을 확인.
-        final scaffold = t.element(find.byType(Scaffold));
-        expect(Theme.of(scaffold).brightness, equals(Brightness.dark));
-        expect(find.byType(Scaffold), findsOneWidget);
       },
     );
   });
