@@ -5,6 +5,31 @@ import 'dart:async';
 import 'package:app_user/src/logic/feed_state_provider.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
+// ── Consent ──────────────────────────────────────────────────────────────────
+
+/// 동의 목록 로드 완료 (필수 3 + 선택 2 동의됨).
+class LoadedConsentController extends ConsentController {
+  @override
+  FutureOr<List<UserConsent>> build() async => [
+    _consent(ConsentType.termsOfService),
+    _consent(ConsentType.privacyCollection),
+    _consent(ConsentType.ageConfirmation),
+    _consent(ConsentType.thirdPartyProvision),
+    _consent(ConsentType.marketingConsent, consented: false),
+    _consent(ConsentType.locationConsent, consented: false),
+  ];
+
+  UserConsent _consent(ConsentType type, {bool consented = true}) =>
+      UserConsent(
+        id: 'consent-${type.name}',
+        userId: 'mock-user-1',
+        consentKey: type,
+        consented: consented,
+        consentedAt: DateTime.utc(2026, 1, 1),
+        createdAt: DateTime.utc(2026, 1, 1),
+      );
+}
+
 // ── Auth ─────────────────────────────────────────────────────────────────────
 
 /// 인증 대기 (idle) 상태 — 로그인 폼 표시.
