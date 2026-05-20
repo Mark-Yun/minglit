@@ -63,4 +63,4 @@ mds-emulator-render/
 - [app_user mds-emulator-render](../../../app_user/integration_test/mds-emulator-render/BLUEDOC.md)
 - [architecture.md](../../../app_user/integration_test/mds-emulator-render/architecture.md)
 
-_Reviewed: 2026-05-20 08:00_
+_Reviewed: 2026-05-20 12:25_
