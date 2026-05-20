@@ -48,7 +48,7 @@ body.dark-mode .viewport {
 /* MinglitSettingsGroup — padded card (16 horizontal margin · NOT edge-to-edge).
    Header is OUTSIDE the card (uppercase labelMedium · letter-spacing 0.5).
    Card bg = surfaceContainerLowest (≈ ColorScheme.surface = #ffffff).
-   Internal dividers between tiles use indent: 52px (= 16 + 20 + 16). */
+   Internal dividers between tiles are full-width inside the card. */
 .more-group { padding: 0 var(--spacing-medium); }
 .more-group + .more-group { margin-top: var(--spacing-large); }
 .more-group__header {
@@ -82,7 +82,7 @@ body.dark-mode .more-group__card { background: var(--color-dark-surface); }
   content: '';
   position: absolute;
   top: 0;
-  left: 52px;  /* 16 (pad) + 20 (icon) + 16 (gap) */
+  left: 0;
   right: 0;
   height: 0.5px;
   background: var(--color-divider);
@@ -288,7 +288,7 @@ body.dark-mode .more-group__card { background: var(--color-dark-surface); }
     <h2>Blueprint &amp; tree</h2>
     <p class="intro">
       Scaffold + <code>MinglitTheme.simpleAppBar(title: '더보기', showBackButton: false)</code> + SafeArea wrap + ListView로 5 그룹 + body padding (top: medium · bottom: xxxlarge — home bar 가림 방지).
-      각 그룹은 <em>padded card</em>: 좌우 16 margin · radius-card 라운드 · 내부 tile 사이 0.5px divider (indent 52).
+      각 그룹은 <em>padded card</em>: 좌우 16 margin · radius-card 라운드 · 내부 tile 사이 0.5px full-width divider.
       그룹 헤더는 카드 <em>바깥</em> 위에 UPPERCASE labelMedium으로 노출.
     </p>
     <div class="layout-grid">
@@ -369,7 +369,7 @@ body.dark-mode .more-group__card { background: var(--color-dark-surface); }
         <tr><td>②</td><td>ProfileGroup</td><td>header 없음 · 단일 _ProfileTile (custom · 48px 보다 큼)</td><td>card h-margin: 16 · _ProfileTile padding: medium all (16) · row gap: medium · MinglitAvatarImage radius 24 (= 48px)</td></tr>
         <tr><td>③–⑥</td><td>SettingsGroup × 4</td><td>header (외부 · UPPERCASE) + tile list (carded)</td><td>그룹 사이: <code>spacing-large (24)</code> · 카드 h-margin: <code>spacing-medium (16)</code> · header v-padding: <code>spacing-small (8)</code> 하단 + <code>spacing-xsmall (4)</code> 좌측 · 카드 radius: <code>radius-card (16)</code></td></tr>
         <tr><td>—</td><td>tile (MinglitSettingsTile)</td><td>row · icon + title-stack + trailing</td><td>height 고정 48 · h-padding: <code>spacing-medium</code> · icon → title gap: <code>spacing-medium (16)</code> · trailing gap: <code>spacing-small (8)</code> · icon size: 20 (<code>MinglitIconSize.small</code>)</td></tr>
-        <tr><td>—</td><td>tile-tile divider</td><td>indent 52 (16+20+16)</td><td>height/thickness 0.5 · color <code>outlineVariant</code></td></tr>
+        <tr><td>—</td><td>tile-tile divider</td><td>들여쓰기 없이 카드 내부 전체 폭</td><td>height/thickness 0.5 · color <code>outlineVariant</code></td></tr>
       </tbody>
     </table>
   </section>
@@ -602,7 +602,7 @@ body.dark-mode .more-group__card { background: var(--color-dark-surface); }
         <tr>
           <td class="state-mini__aspect">토큰</td>
           <td>
-            · color: <code>color-surface</code> (scaffold + AppBar gray), <code>color-background</code> (group card white = surfaceContainerLowest), <code>color-text-primary</code> (title · name), <code>color-text-secondary</code> (subtitle · header · email · icon · chevron = onSurfaceVariant), <code>color-divider</code> (= outlineVariant · 0.5px tile divider · indent 52), <code>color-partner-primary</code> (avatar bg @ 22% · scoped to viewport), <code>color-error</code> (로그아웃 destructive)<br>
+            · color: <code>color-surface</code> (scaffold + AppBar gray), <code>color-background</code> (group card white = surfaceContainerLowest), <code>color-text-primary</code> (title · name), <code>color-text-secondary</code> (subtitle · header · email · icon · chevron = onSurfaceVariant), <code>color-divider</code> (= outlineVariant · 0.5px full-width tile divider), <code>color-partner-primary</code> (avatar bg @ 22% · scoped to viewport), <code>color-error</code> (로그아웃 destructive)<br>
             · spacing: <code>spacing-medium (16)</code> (body top · group h-margin · tile h-padding · row gap), <code>spacing-large (24)</code> (그룹 사이), <code>spacing-small (8)</code> (header bottom · trailing gap), <code>spacing-xsmall (4)</code> (header left), <code>spacing-xxxlarge</code> (body bottom safeArea)<br>
             · radius: <code>radius-card (16)</code> (group card)<br>
             · typography: appBarTitle (18/600), bodyMedium (16 · tile title), bodySmall (13 · subtitle · email), titleMedium (16/700 · profile name), labelMedium (12/500 · UPPERCASE group header · letter-spacing 0.5)<br>
@@ -845,7 +845,7 @@ body.dark-mode .more-group__card { background: var(--color-dark-surface); }
         <tr><th>Route</th><td><code>MoreRoute</code> · <code>/more</code> · <code>MoreBranch</code> (StatefulShell branch 5) · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
         <tr><th>Coordinator</th><td><code>moreCoordinatorProvider</code> · <code>more_coordinator.dart</code> — pushPartyList / pushVerificationManage / pushBankAccountManagement / pushMemberList / pushNotificationSettings / pushAccountManagement.</td></tr>
         <tr><th>Auth / Permission gates</th><td>· <code>currentPartnerInfoProvider</code> — async partner profile (loading / error / data / null 분기)<br>· <code>currentMemberPermissionsProvider</code> — owner 폴백 시 <code>['SETTLEMENT_VIEW','SETTLEMENT_EDIT']</code> 자동 부여 (Fix #1568 · Fix #1533 · Fix #1217)<br>· <code>canEditSettlement = permissions.contains('SETTLEMENT_EDIT')</code> — false면 "계좌 관리" tile 미렌더</td></tr>
-        <tr><th>SettingsGroup atom</th><td><a href="/components#MinglitSettingsGroup"><code>MinglitSettingsGroup</code></a> — padded card (h-margin 16) · radius-card · header 외부 UPPERCASE labelMedium · 내부 0.5px divider (indent 52)</td></tr>
+        <tr><th>SettingsGroup atom</th><td><a href="/components#MinglitSettingsGroup"><code>MinglitSettingsGroup</code></a> — padded card (h-margin 16) · radius-card · header 외부 UPPERCASE labelMedium · 내부 0.5px full-width divider</td></tr>
         <tr><th>SettingsTile atom</th><td><a href="/components#MinglitSettingsTile"><code>MinglitSettingsTile</code></a> — height 48 · icon 20 (<code>MinglitIconSize.small</code>) · title + optional subtitle (Column) · trailing: <code>navigation</code>(chevron) / <code>toggle</code> / <code>value</code> / <code>none</code> · destructive (color-error)</td></tr>
         <tr><th>ThemeSettingsTile</th><td>kit-shared widget — 테마 모드 (system / light / dark) 분기 · subtitle = 현재 모드 · icon = 현재 effective brightness 반영 · <a href="https://github.com/Mark-Yun/minglit/blob/dev/shared/packages/minglit_kit/lib/src/features/theme/theme_settings_tile.dart"><code>theme_settings_tile.dart</code></a></td></tr>
         <tr><th>_ProfileTile</th><td>private widget · MinglitAvatarImage(radius:24 · Icons.store fallback · primaryContainer bg) · name (titleMedium/bold) · email (bodySmall/onSurfaceVariant) · chevron — Fix #2069 (캐싱 + 에러 폴백)</td></tr>

@@ -47,7 +47,7 @@ Scaffold + AppBar (간단 title only · "마이페이지") + ListView 또는 Sin
 | ① | AppBar | title center · showBackButton: false · scaffold bg · border 없음 | height: 56 · gray bg · surfaceTintColor: transparent · elevation 0 |
 | ② | ProfileGroup | headerless · 1 tile (_ProfileTile · avatar 48 + name/email + chevron) | card bg color-background · radius radius-card · h-padding spacing-medium · 탭 영역 전체에 ripple — 탭 시 계정 관리 화면으로 이동 |
 | ③–⑥ | SettingsGroup × 4 | 헤더 + tile list (그룹 카드) | 그룹 사이: spacing-large (24) · header h-padding: spacing-xsmall · header v-padding: spacing-small (8) · tile h-padding: spacing-medium · tile height: 48 (subtitle 있을 시 56+ 자동) |
-| — | tile-tile divider | 두 번째 tile부터 top hairline 0.5px · indent 52(= padding 16 + icon 20 + gap 16) | color-divider · per-tile |
+| — | tile-tile divider | 두 번째 tile부터 top hairline 0.5px · 들여쓰기 없이 카드 내부 전체 폭 | color-divider · per-tile |
 
 🎨
 
@@ -67,7 +67,7 @@ Scaffold + AppBar (간단 title only · "마이페이지") + ListView 또는 Sin
 | 사용자 액션 | ① 프로필 영역 탭 — 계정 관리 화면으로 이동(본인인증 · 파트너 프로필 · 로그아웃 · 회원 탈퇴는 그 안에서).② 각 settings tile 탭 — 해당 하위 settings 화면으로 이동.③ 스크롤 — 화면 아래쪽의 약관·정보 그룹이 노출.④ 뒤로 가기 — 홈으로 복귀. |
 | 에지케이스 | · 앱 버전 tile은 탭해도 반응이 없음 — 정보 표시 전용.· 아직 준비되지 않은 일부 tile은 탭 시 "구현 준비 중" 안내 메시지가 잠깐 나타남.· 계정 관리 / 로그아웃 / 회원 탈퇴는 마이페이지에 별도 tile로 노출되지 않음 — 상단 프로필 영역 탭으로만 진입. |
 | 컴포넌트 | · MinglitTheme.simpleAppBar(title: '마이페이지', showBackButton: false)· ListView + EdgeInsets.symmetric(vertical: MinglitSpacing.medium)· _ProfileTile (private widget · CircleAvatar radius 24 + Icons.person fallback · displayName · email · Icons.chevron_right · 탭 시 계정 관리 화면으로 push)· MinglitSettingsGroup × 6 (1 ProfileGroup + 5 SettingsGroup · header + tile list · 그룹 카드)· MinglitSettingsTile (leading icon + title + optional subtitle + chevron · destructive variant · trailing 옵션)· ThemeSettingsTile (별도 widget · 테마 설정 tile — 시스템/dark/light 분기)· FutureBuilder<PackageInfo> (앱 버전 tile — packageInfoFromPlatform)· PopScope (시스템 back → homeCoordinator.goToHome()) |
-| 토큰 | · color: color-surface (scaffold bg), color-background (그룹 카드 surface), color-text-primary (tile title · profile name), color-text-secondary (subtitle · email · 그룹 헤더 · chevron · leading icon), color-divider (tile 사이 indent hairline), color-primary (avatar bg)· spacing: spacing-medium (16 · body v-padding · 그룹 h-padding · tile h-padding · icon ↔ title gap), spacing-large (24 · 그룹 사이 gap), spacing-small (8 · 헤더 v-padding · subtitle tile padding), spacing-xsmall (헤더 h-padding)· radius: radius-card (그룹 카드 corner)· typography: appBarTitle (18/600), 그룹 헤더(13 · 500 · uppercase · letter-spacing 0.5), tile title (14), tile subtitle (12), profile name (16/700), profile email (12) |
+| 토큰 | · color: color-surface (scaffold bg), color-background (그룹 카드 surface), color-text-primary (tile title · profile name), color-text-secondary (subtitle · email · 그룹 헤더 · chevron · leading icon), color-divider (tile 사이 full-width hairline), color-primary (avatar bg)· spacing: spacing-medium (16 · body v-padding · 그룹 h-padding · tile h-padding · icon ↔ title gap), spacing-large (24 · 그룹 사이 gap), spacing-small (8 · 헤더 v-padding · subtitle tile padding), spacing-xsmall (헤더 h-padding)· radius: radius-card (그룹 카드 corner)· typography: appBarTitle (18/600), 그룹 헤더(13 · 500 · uppercase · letter-spacing 0.5), tile title (14), tile subtitle (12), profile name (16/700), profile email (12) |
 | 노트 | 📝 위 mockup은 프로필 ~ 개인정보·보안 그룹까지만 보임. 실제 화면에서는 약관·정보 그룹은 스크롤로 확인 가능. 계정 관리는 별도 그룹이 아닌 상단 프로필 영역 탭으로 진입. |
 
 ### Logged out · 비로그인 로그인이 필요한 안내 화면이 노출되는 상태

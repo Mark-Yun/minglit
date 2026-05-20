@@ -64,7 +64,6 @@ class MinglitSettingsGroup extends StatelessWidget {
                     Divider(
                       height: 0.5,
                       thickness: 0.5,
-                      indent: 52, // 16 (pad) + 20 (icon) + 16 (gap)
                       color: colorScheme.outlineVariant,
                     ),
                 ],
