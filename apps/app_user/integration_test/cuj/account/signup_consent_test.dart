@@ -264,7 +264,20 @@ void main() {
       app: const SignupConsentPage(),
       overrides: base,
       body: (t) async {
-        await t.tap(find.text('보기 ›').at(1));
+        // Fix #2589 dev-blocker: `.at(1)` 은 두 번째 보기 › → 개인정보 항목.
+        // 제3자 항목은 ageConfirmation(보기 › 없음) 다음이라 위치 변동 위험 큼.
+        // 1-3 첫 케이스(서비스 이용약관)와 동일하게 descendant 패턴으로 안정화.
+        await t.tap(
+          find
+              .descendant(
+                of: find.ancestor(
+                  of: find.text('제3자 제공 동의'),
+                  matching: find.byType(InkWell),
+                ),
+                matching: find.text('보기 ›'),
+              )
+              .first,
+        );
         await t.pumpAndSettle();
 
         // 제3자 제공 동의 전문 (FR-5)
