@@ -54,7 +54,8 @@
 |---------------|----------|--------|--------|
 | pr-gate 실패 (어느 단계든) | PR 작성자 | GitHub PR | 본인 fix → re-push → re-queue |
 | `rc-gate` 실패 (dev 머지 후) | 직전 rc-gate-pass 이후 머지된 PR 작성자들 + AI agent | GitHub issue + Slack `#nightly` | AI agent fix PR via dev-staging — dev keeps moving ([dev-pipeline.md](./dev-pipeline.md)) |
-| Backend/web auto-deploy 실패 | on-call | Slack `#release` | retry → rollback ([main-promotion.md](./main-promotion.md) error-backoff) |
+| Backend/web staging deploy 실패 (dev rc-gate-pass) | on-call | Slack `#release` | retry → P0 이슈, RC 진행 차단 (staging 도달 못함) |
+| Backend/web/mobile prod deploy 실패 (main 머지) | on-call | Slack `#release` | retry → rollback ([main-promotion.md](./main-promotion.md) error-backoff) |
 | rc soak 중 회귀 | RC owner | Slack `#release` | hotfix PR → rc | 
 | deploy-android-*, deploy-ios-* 실패 | mobile 팀 | GitHub issue + Slack | retry + auto-issue ([main-promotion.md](./main-promotion.md) error-backoff) |
 | Sentry alert (error spike) | 영역 owner | Sentry → Slack | 영역 별 on-call 판단 |

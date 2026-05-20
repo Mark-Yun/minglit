@@ -54,11 +54,13 @@ dev 머지 후 자동 발동. 통과 = "이 commit 은 RC 가능 + backend/web p
 
 ```
 1. dev HEAD commit 에 GitHub commit status `rc-gate-pass` set
-2. Auto-deploy chain workflow_call (parallel):
-   - deploy-supabase (EF + migration apply)
-   - deploy-vercel (Vercel hooks 4앱)
-3. (Mobile 은 별도 — main 머지 후 기존 `deploy-android-*` / `deploy-ios-*` workflow 들이 자동 발동)
+2. Auto-deploy chain workflow_call (parallel, target=main-staging):
+   - deploy-supabase (staging Supabase project: EF + migration apply)
+   - (Vercel native: dev branch → preview deployment)
+3. (Mobile + backend prod 은 별도 — main 머지 후 deploy chain)
 ```
+
+> **사용자 서버 영향 X** — rc-gate-pass deploy 는 main-staging env (별도 Supabase project) 만. prod 는 main 머지에서.
 
 ### 실패 시
 

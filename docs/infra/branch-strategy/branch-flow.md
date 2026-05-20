@@ -13,20 +13,21 @@
                                                               │      │
                                                               │      ├─ pass: status rc-gate-pass
                                                               │      │         │
-                                                              │      │         ├─▶ deploy-supabase (EF + migration)
-                                                              │      │         └─▶ deploy-vercel (4앱)
+                                                              │      │         ├─▶ deploy-supabase (target=main-staging, staging Supabase project)
+                                                              │      │         └─▶ Vercel preview (native, dev branch)
                                                               │      │
                                                               │      └─ fail: 자동 이슈 + AI agent fix via dev-staging (no auto-revert)
                                                               │
                                                               └─weekly rc-cut (최신 rc-gate-pass commit)──▶ rc/YYYY-Wxx
                                                                                                               │
-                                                                                                              └─5일 soak (hotfix 시 시계 리셋)──▶ main
+                                                                                                              └─5일 soak (hotfix 시 시계 리셋, main-staging env 사용)──▶ main
                                                                                                                                                     │
-                                                                                                                                                    └─main-post-merge-promote
+                                                                                                                                                    └─main-post-merge-promote (prod deploy chain)
                                                                                                                                                               │
+                                                                                                                                                              ├─▶ deploy-supabase (target=main, prod Supabase)
                                                                                                                                                               ├─▶ deploy-android-{user,partner} ──▶ Play Store
-                                                                                                                                                              └─▶ deploy-ios-{user,partner} ──▶ App Store Connect
-                                                                                                                                                                              (push: main trigger 로 자동, 병렬)
+                                                                                                                                                              ├─▶ deploy-ios-{user,partner} ──▶ App Store Connect
+                                                                                                                                                              └─▶ Vercel production (native, main branch)
 ```
 
 **Hotfix backport 흐름** (rc → dev-staging):
@@ -76,29 +77,30 @@ Hybrid linear history 금지 — 각 branch 내 일관 (squash or rebase 한 가
 
 ## Auto-deploy Chain
 
-### dev rc-gate-pass → backend/web (continuous)
+### dev rc-gate-pass → main-staging env deploy (continuous)
 
 ```yaml
-# 개념
+# 개념 — staging env 만, prod 영향 X
 rc-gate (on push to dev):
   needs: pass
   parallel:
-    - uses: ./.github/workflows/deploy-supabase.yml  # EF + migration
-    - uses: ./.github/workflows/deploy-vercel.yml    # 4앱
+    - uses: ./.github/workflows/deploy-supabase.yml  # target=main-staging
+    # Vercel: native build 가 dev branch → preview deployment
 ```
 
-### main push → mobile (every release)
+### main push → prod deploy chain
 
 ```yaml
-# 개념
+# 개념 — backend + mobile 모두 prod
 main-post-merge-promote (on push to main):
   steps:
     - tag v{ver} + promo/main-Wxx + Sentry marker
     - Firebase RC `latest_version` = v{ver} 자동 update
   parallel:
-    # (실제로는 workflow_call 아닌 push: main trigger 로 기존 deploy-* workflows 자동 발동)
-    # - deploy-android-user / deploy-android-partner
-    # - deploy-ios-user / deploy-ios-partner
+    - uses: ./.github/workflows/deploy-supabase.yml  # target=main (prod Supabase)
+    - uses: ./.github/workflows/deploy-android-{user,partner}.yml
+    - uses: ./.github/workflows/deploy-ios-{user,partner}.yml
+    # Vercel: native build 가 main branch → production deployment
 ```
 
 상세: [specs/workflow-spec.md](./specs/workflow-spec.md).

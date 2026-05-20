@@ -72,8 +72,8 @@
 | 2c | `version-bump` reusable extract (sync-version 의 핵심 로직) | sync-version 의 caller 가 reusable 호출하게 변경 |
 | 2d | `auto-issue` reusable 추가 | 신규 — 기존 영향 없음 |
 | 2e | **`ci-result` 폐기** — 현 branch protection 의 required check `ci-result` 를 각 branch 의 `pr-gate` 로 변경 (Phase 4 에서 실제 적용) | 본 step 은 workflow 측 준비, 실제 protection 변경은 4 |
-| 2f | `deploy-supabase` 의 trigger refactor (push:dev 부분을 rc-gate-pass 발동으로 변경) | dev 배포 trigger 가 status-event 로 변경. 신중 적용 |
-| 2g | **`deploy-vercel` 폐기** — 자체 빌드 워크플로우 제거. 향후 **Vercel native build** 로 전환 (Vercel-GitHub 연결, Vercel-side 자동 트리거) — 본 workflow scope 밖 | web/landing 배포가 GitHub Actions 가 아닌 Vercel 자체 build infra 사용 |
+| 2f | `deploy-supabase` 의 trigger refactor — push:dev 부분을 rc-gate-pass workflow_call **with target=main-staging** 로 변경, push:main 은 main-post-merge-promote 의 workflow_call **with target=main** | staging deploy 와 prod deploy 분리. 사용자 서버 영향 X |
+| 2g | **`deploy-vercel` 폐기** — 자체 빌드 워크플로우 제거. **Vercel native build 로 전환** (Vercel-GitHub 연결, Vercel-side: main=production, dev=preview) | Vercel-side 설정 필요, workflow 측 작업 없음 |
 
 ### Rollback
 

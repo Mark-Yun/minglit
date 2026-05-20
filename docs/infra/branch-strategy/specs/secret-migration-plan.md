@@ -19,12 +19,15 @@ GitHub repo secrets (`DEV_*`, `MAIN_*`, `PRD_*` prefix) → `minglit_env/{stage}
 
 ```
 minglit_env/
-├── dev/.env          # dev 환경 (workflow 의 default)
-├── local/.env        # 로컬 개발자 환경
-├── main/.env         # production
-├── staging/.env      # (옵션 — RC soak 용 향후)
-└── README.md         # 컨벤션 + 변수 카탈로그
+├── local/.env          # 로컬 개발자 환경
+├── dev/.env            # CI 테스트 + dev workflow config
+├── dev-staging → dev   # symlink (같은 env)
+├── main-staging/.env   # RC 가 deploy 되는 staging Supabase project (dev rc-gate-pass 가 deploy)
+├── main/.env           # production (main 머지가 deploy)
+└── README.md           # 컨벤션 + 변수 카탈로그
 ```
+
+> **main-staging env 의 역할**: dev 가 계속 움직이는 동안 RC soak 가 *frozen 환경* 에서 검증되도록 staging Supabase project 를 별도 운영. dev rc-gate-pass 마다 deploy 되지만 사용자 서버 (main env) 영향 X.
 
 기존 도메인별 파일 (`flutter.env`, `supabase.env`, `nextjs.env`, `metabase.env`) 은 통합 후 폐기.
 
