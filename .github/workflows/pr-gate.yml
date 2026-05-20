@@ -202,10 +202,16 @@ jobs:
           supabase_tests:
             - 'supabase/tests/**'
           # EF 소스 + deno config — deno-ef / ef-integration 트리거
-          # BLUEDOC.md / *.md 는 제외 (pure 문서, 동작 영향 0)
+          # NOTE: dorny/paths-filter@v4 의 '!' negation 은 .some() OR 평가로 인해
+          # filter 의도와 반대로 동작 (Fix #2669). negation 대신 explicit positive
+          # patterns 로 .ts/.json/.npmrc 만 매치 → BLUEDOC.md / *.md 는 자연스레 제외.
           supabase_functions:
-            - 'supabase/functions/**'
-            - '!supabase/functions/**/*.md'
+            - 'supabase/functions/**/*.ts'
+            - 'supabase/functions/**/*.tsx'
+            - 'supabase/functions/**/*.js'
+            - 'supabase/functions/**/*.mjs'
+            - 'supabase/functions/**/*.json'
+            - 'supabase/functions/**/.npmrc'
             - 'supabase/deno.json'
 
   # App CI (User + Partner)
