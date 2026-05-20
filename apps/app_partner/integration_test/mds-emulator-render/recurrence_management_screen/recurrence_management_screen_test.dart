@@ -27,7 +27,7 @@ final catalog = MdsCatalog<RecurrenceManagementScreenBuilder>(
     // Action loading — 버튼 disabled
     MdsState('state-action-loading', (b) => b.withActionLoading(), mdsIndex: 6),
     // Loading (fetch) — AsyncValueWidget 로딩
-    MdsState('state-loading', (b) => b.loading(), mdsIndex: 8),
+    MdsState('state-loading', (b) => b.loading(), mdsIndex: 8, infiniteAnimation: true),
     // Dark variant
     MdsState('state-active-dark', (b) => b.withActiveRule().dark()),
   ],
