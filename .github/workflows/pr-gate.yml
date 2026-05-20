@@ -151,6 +151,12 @@ jobs:
       mds_icons: ${{ steps.filter.outputs.mds_icons }}
       supabase: ${{ steps.filter.outputs.supabase }}
       dart_files: ${{ steps.filter.outputs.dart_files }}
+      # 세분화 — 잡별 의존성에 맞춰 분리 (false positive 트리거 회피)
+      supabase_migrations: ${{ steps.filter.outputs.supabase_migrations }}
+      supabase_tests: ${{ steps.filter.outputs.supabase_tests }}
+      supabase_functions: ${{ steps.filter.outputs.supabase_functions }}
+      supabase_db_stack: ${{ steps.filter.outputs.supabase_migrations == 'true' || steps.filter.outputs.supabase_tests == 'true' }}
+      supabase_ef_stack: ${{ steps.filter.outputs.supabase_migrations == 'true' || steps.filter.outputs.supabase_functions == 'true' }}
     steps:
     - uses: actions/checkout@v6
     - uses: dorny/paths-filter@v4
@@ -187,6 +193,26 @@ jobs:
             - 'supabase/**'
           dart_files:
             - '**/*.dart'
+          # migrations + seed + config — pgTAP / ef-integration 트리거
+          supabase_migrations:
+            - 'supabase/migrations/**'
+            - 'supabase/seed*.sql'
+            - 'supabase/config.toml'
+          # pgTAP 테스트 파일 — pgTAP only
+          supabase_tests:
+            - 'supabase/tests/**'
+          # EF 소스 + deno config — deno-ef / ef-integration 트리거
+          # NOTE: dorny/paths-filter@v4 의 '!' negation 은 .some() OR 평가로 인해
+          # filter 의도와 반대로 동작 (Fix #2669). negation 대신 explicit positive
+          # patterns 로 .ts/.json/.npmrc 만 매치 → BLUEDOC.md / *.md 는 자연스레 제외.
+          supabase_functions:
+            - 'supabase/functions/**/*.ts'
+            - 'supabase/functions/**/*.tsx'
+            - 'supabase/functions/**/*.js'
+            - 'supabase/functions/**/*.mjs'
+            - 'supabase/functions/**/*.json'
+            - 'supabase/functions/**/.npmrc'
+            - 'supabase/deno.json'
 
   # App CI (User + Partner)
   test-flutter-apps:
@@ -241,7 +267,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         with:
-          channel: 'stable'
+          flutter-version: '3.41.9'  # Fix #2640: flutter_quill 11.5.0 incompatible with Flutter 3.44.0
           cache: true
       - name: Cache pub packages
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
@@ -261,6 +287,14 @@ jobs:
       - name: Analyze
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         run: flutter analyze --no-fatal-infos
+        working-directory: ${{ matrix.directory }}
+      - name: Custom lint (minglit_kit)
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
+        run: dart run custom_lint
+        working-directory: shared/packages/minglit_kit
+      - name: Custom lint
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' && matrix.app != 'mds_core' }}
+        run: dart run custom_lint
         working-directory: ${{ matrix.directory }}
       - name: Test
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
@@ -311,7 +345,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add '**/goldens/ci/**'
+          # || true: exit 128 when no goldens/ci/** files exist is not an error
+          git add '**/goldens/ci/**' 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "No golden changes to commit"
           else
@@ -446,7 +481,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          flutter-version: '3.41.9'  # Fix #2640: flutter_quill 11.5.0 incompatible with Flutter 3.44.0
           cache: true
       - uses: actions/cache@v5
         with:
@@ -476,8 +511,9 @@ jobs:
   test-supabase:
     name: test-pgtap
     needs: changes
-    if: ${{ needs.changes.outputs.supabase == 'true' }}
-    runs-on: ubuntu-latest
+    # migrations / pgTAP tests / seed / config 변경 시만. EF source 만 바뀌면 skip.
+    if: ${{ needs.changes.outputs.supabase_db_stack == 'true' }}
+    runs-on: [self-hosted, ephemeral]
     steps:
       - uses: actions/checkout@v6
       - uses: supabase/setup-cli@v2
@@ -486,7 +522,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          flutter-version: '3.41.9'  # Fix #2640: flutter_quill 11.5.0 incompatible with Flutter 3.44.0
           cache: true
       # Wipe any volume left by a prior run on this host so `supabase start`
       # initializes a fresh DB and auto-applies all migrations from scratch.
@@ -514,8 +550,9 @@ jobs:
   test-edge-functions:
     name: test-deno-ef
     needs: changes
-    if: ${{ needs.changes.outputs.supabase == 'true' }}
-    runs-on: ubuntu-latest
+    # EF source / deno.json 변경 시만. migrations / 문서 only 면 skip.
+    if: ${{ needs.changes.outputs.supabase_functions == 'true' }}
+    runs-on: [self-hosted, ephemeral]
     steps:
       - uses: actions/checkout@v6
         with:
@@ -598,7 +635,7 @@ jobs:
 
       - name: Upload diff-cover report
         if: github.event_name == 'pull_request' && always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: diff-cover-report
           path: diff-cover.md
@@ -606,7 +643,7 @@ jobs:
 
       - name: Post coverage comment on PR
         if: github.event_name == 'pull_request' && always()
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@v3
         with:
           path: diff-cover.md
           header: deno-diff-coverage
@@ -617,8 +654,9 @@ jobs:
   test-ef-integration:
     name: test-ef-integration
     needs: changes
-    if: ${{ needs.changes.outputs.supabase == 'true' }}
-    runs-on: ubuntu-latest
+    # migrations 또는 EF source 변경 시 (full stack 가드). 문서/pgTAP only 면 skip.
+    if: ${{ needs.changes.outputs.supabase_ef_stack == 'true' }}
+    runs-on: [self-hosted, ephemeral]
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
@@ -677,16 +715,26 @@ jobs:
     permissions:
       contents: write
     steps:
+      # Mint a fresh 1h installation token from the minglit-agent-code-review
+      # GitHub App. Replaces the prior GH_PAT_VERSION_BUMP PAT which 403'd after
+      # the team-minglit org transfer (org policy rejects user-scoped classic
+      # PATs for write ops). App credentials don't expire — only the per-run
+      # token does, and that's minted automatically. Pushes attributed to the
+      # App identity still trigger downstream workflows (unlike default
+      # GITHUB_TOKEN-authored pushes, which GitHub anti-loop-blocks).
+      - name: Generate App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: '3672607'
+          private-key: ${{ secrets.REVIEWER_BOT_PRIVATE_KEY }}
       - uses: actions/checkout@v6
         with:
           ref: ${{ github.head_ref }}
-          # persist-credentials: false keeps the default GITHUB_TOKEN out of
-          # git config; the explicit PAT is injected only in the push step so
-          # pub get / dart format don't see it.
-          persist-credentials: false
+          token: ${{ steps.app-token.outputs.token }}
       - uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          flutter-version: '3.41.9'  # Fix #2640: flutter_quill 11.5.0 incompatible with Flutter 3.44.0
           cache: true
       - name: Install dependencies
         run: flutter pub get
@@ -701,43 +749,76 @@ jobs:
         run: dart format .
         working-directory: apps/app_partner
       - name: Commit changes if needed
-        env:
-          # PAT triggers downstream workflow re-runs on the push commit;
-          # default GITHUB_TOKEN-authored pushes don't (anti-loop protection),
-          # so a real PAT is required to keep CI in sync with the formatted tree.
-          GH_PAT: ${{ secrets.GH_PAT_VERSION_BUMP }}
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git config user.name "minglit-agent-code-review[bot]"
+            git config user.email "minglit-agent-code-review[bot]@users.noreply.github.com"
             git add -- '**/*.dart'
             git commit -m "chore: auto-format"
-            git remote set-url origin "https://x-access-token:${GH_PAT}@github.com/${GITHUB_REPOSITORY}.git"
             git push origin HEAD:"${GITHUB_HEAD_REF}"
-            git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
           else
             echo "No formatting changes needed"
           fi
 
   # Gitleaks secret scan — formerly pr-setup-secret-scan.yml, absorbed into pr-gate as a required check.
-  # Disabled 2026-05-19: post-org-transfer (Mark-Yun → team-minglit), gitleaks-action@v2 requires a
-  # paid license for org repos. ci-result aggregates on "failure" only, so a "skipped" job here does
-  # not block the required check. Re-enable by removing `if: false` once a GITLEAKS_LICENSE secret
-  # is provisioned, or by switching to the raw `gitleaks` binary (no license required).
+  # Re-enabled 2026-05-20 (Fix #2541): swapped gitleaks/gitleaks-action@v2 (paid license for org repos)
+  # → raw `gitleaks` binary from upstream release. Same `.gitleaks.toml` config, same exit-code semantics.
+  # Scope: scans only the commits introduced by the PR (or merge-group / pushed range), NOT the full
+  # repo history — historical leaks that were since removed (e.g. dev_main.dart in 2025-12) stay out
+  # of the gate, while any new leak in the PR diff fails CI.
   gitleaks:
-    if: false
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write
+    env:
+      GITLEAKS_VERSION: '8.21.2'
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@v2
+      - name: Install gitleaks
+        run: |
+          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            | sudo tar -xz -C /usr/local/bin gitleaks
+          gitleaks version
+      - name: Determine scan scope
+        id: scope
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_CONFIG: .gitleaks.toml
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          MERGE_BASE_SHA: ${{ github.event.merge_group.base_sha }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          case "$EVENT_NAME" in
+            pull_request)
+              log_opts="origin/${BASE_REF}..HEAD"
+              ;;
+            merge_group)
+              log_opts="${MERGE_BASE_SHA}..HEAD"
+              ;;
+            push)
+              if [[ -z "${BEFORE_SHA:-}" || "$BEFORE_SHA" == "0000000000000000000000000000000000000000" ]]; then
+                log_opts="HEAD~1..HEAD"
+              else
+                log_opts="${BEFORE_SHA}..HEAD"
+              fi
+              ;;
+            *)
+              log_opts="HEAD~1..HEAD"
+              ;;
+          esac
+          echo "log_opts=${log_opts}" >> "$GITHUB_OUTPUT"
+          echo "::notice::gitleaks scanning commits ${log_opts}"
+      - name: Run gitleaks
+        run: |
+          gitleaks detect \
+            --config .gitleaks.toml \
+            --source . \
+            --log-opts="${{ steps.scope.outputs.log_opts }}" \
+            --no-banner \
+            --redact \
+            --verbose
 
   # check-bluedoc-freshness consolidated into `static-checks` job at top of this file.
 

@@ -12,6 +12,9 @@ import { cujTest } from "../../_framework/cuj_test.ts";
 
 const ctx = suite("discovery/event-feed");
 
+// Fix #2650: 원래 RPC 500 으로 추측됐던 실패는 supabase/config.toml [edge_runtime.secrets]
+// 의 ENVIRONMENT 누락이 root cause 였음 (minglitEdgeFunction init throw → 모든 EF 500).
+// config.toml 픽스로 EF runtime 정상화 — empty DB 케이스 정상 처리 가능, skip 해제.
 cujTest(ctx, "1-1 user-event-feed returns empty array when no events exist", "single-user", async (ctx) => {
   const user = await ctx.actAs.user("user_test1");
   const res = await user.invoke("user-event-feed", { limit: 20 });

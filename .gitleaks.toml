@@ -6,7 +6,11 @@ title = "Minglit Gitleaks Configuration"
     '''\.env$''',
     '''\.env\.local$''',
     '''\.env\.example$''',
-    '''iamport_\w+\.g\.dart$''',
+    # Dart code-generation outputs (riverpod/freezed/json_serializable etc.) contain
+    # provider/state hashes that look like hex/base64 secrets but are deterministic
+    # derivatives of source — never real keys.
+    '''\.g\.dart$''',
+    '''\.freezed\.dart$''',
     '''_test\.ts$''',
     '''_test\.dart$''',
     '''_test_utils/''',
@@ -44,6 +48,14 @@ title = "Minglit Gitleaks Configuration"
   regex = '''[A-Za-z0-9+/]{40,}'''
   path = '''portone|iamport|verify-payment|verify-identity'''
   tags = ["key", "payment"]
+  [rules.allowlist]
+    description = "Dart package import paths and Deno/JSR imports trip the broad base64 regex"
+    regexTarget = "line"
+    regexes = [
+      '''^\s*import\s+['"]''',
+      '''^\s*export\s+['"]''',
+      '''part\s+['"][a-zA-Z0-9_/]+\.dart['"]''',
+    ]
 
 [[rules]]
   id = "kakao-api-key"

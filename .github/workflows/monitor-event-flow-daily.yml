@@ -52,12 +52,14 @@ jobs:
 
       - name: Run event-flow cascade (long)
         run: |
-          # daily 는 데이터 다양성 ↑ 위해 ticks/users 늘림
+          # daily 는 데이터 다양성 ↑ 위해 ticks/users 늘림.
+          # Fix #2545: usersPerTick=50 + delayBetweenCallsMs=400 — Supabase per-trace
+          # rate limit 회피하면서 데이터 다양성 ↑. 최대 (3×50 + partners) × 0.4 ≈ 1~2분.
           http_code=$(curl -s -o /tmp/sim_response.json -w "%{http_code}" -X POST \
             "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/event-flow-simulator" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
             -H "Content-Type: application/json" \
-            -d '{"ticks": 3, "usersPerTick": 20}' \
+            -d '{"ticks": 3, "usersPerTick": 50, "delayBetweenCallsMs": 400}' \
             --max-time 600)
           cat /tmp/sim_response.json
           if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then

@@ -5,8 +5,9 @@ import 'package:app_user/src/features/search/search_page.dart';
 import 'package:app_user/src/logic/feed_state_provider.dart';
 import 'package:app_user/src/routing/app_router.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+// Riverpod 3.x: Override is no longer exported from flutter_riverpod's main
+// barrel — import misc.dart explicitly.
+import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -20,15 +21,16 @@ Widget _buildTestWidget({List<Override> extraOverrides = const []}) {
 
   return ProviderScope(
     overrides: [
-      searchResultsProvider.overrideWith((_) => const AsyncValue.data([])),
+      // Riverpod 3.x: FutureProvider.overrideWith expects FutureOr<T>.
+      searchResultsProvider.overrideWith((_) => <Event>[]),
       goRouterProvider.overrideWithValue(mockRouter),
       searchCoordinatorProvider.overrideWith(
         (ref) => SearchCoordinator(ref.read(goRouterProvider)),
       ),
       ...extraOverrides,
     ],
-    child: MaterialApp(
-      home: const SearchPage(),
+    child: const MaterialApp(
+      home: SearchPage(),
     ),
   );
 }
@@ -58,7 +60,8 @@ void main() {
       await tester.enterText(find.byType(TextField), '스포츠');
       await tester.pump();
 
-      // Clear button (IconButton) must have tooltip set — tooltip drives Android contentDescription
+      // Clear button (IconButton) must have tooltip set — tooltip drives
+      // Android contentDescription
       final clearButton = find.widgetWithIcon(IconButton, Icons.clear);
       expect(clearButton, findsOneWidget);
 

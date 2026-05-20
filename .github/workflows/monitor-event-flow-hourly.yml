@@ -21,11 +21,13 @@ jobs:
       - name: Invoke event-flow-simulator
         run: |
           # Fix #1635: -s + 수동 status 검사 — error body 로깅 보장
+          # Fix #2545: usersPerTick=20 + delayBetweenCallsMs=300 — Supabase per-trace
+          # rate limit 회피. hourly 는 smoke 라 daily 보다 작은 payload.
           http_code=$(curl -s -o /tmp/sim_response.json -w "%{http_code}" -X POST \
             "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/event-flow-simulator" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
             -H "Content-Type: application/json" \
-            -d '{"ticks": 1, "usersPerTick": 10}' \
+            -d '{"ticks": 1, "usersPerTick": 20, "delayBetweenCallsMs": 300}' \
             --max-time 180)
           cat /tmp/sim_response.json
           if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then

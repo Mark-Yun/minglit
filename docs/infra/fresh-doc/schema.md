@@ -4,18 +4,36 @@
 
 ## 위치 및 형식
 
-파일명은 `FRESH_DOC` (확장자 없음, `OWNERS` / `CODEOWNERS` 스타일). 형식은 YAML. 관리할 문서가 있는 디렉토리 루트에 둔다. 관리 단위는 디렉토리이며, 파일별 명세는 두지 않는다.
+파일명은 `FRESH_DOC` (확장자 없음, `OWNERS` / `CODEOWNERS` 스타일). 형식은 YAML. 관리할 문서가 있는 디렉토리 루트에 둔다. 관리 단위는 디렉토리이며, **`target_files` 로 추적 대상을 명시**한다.
 
-하위 디렉토리는 `recursive: true` 일 때만 포함한다. 단, 하위 디렉토리에 별도 `FRESH_DOC` 이 있으면 상위의 관리에서 분리된다.
+## 스키마 버전
+
+| 버전 | 상태 | 식별자 필드 |
+|------|------|------------|
+| **v2** (권장) | 신규 표준 | `target_files` |
+| v1 (deprecated) | backward compat | `last_verified` |
+
+v1 → v2 마이그레이션은 점진적. validator 가 둘 다 통과시키되, 동시 사용 시 error.
 
 ## 트리거 방식
 
-검토 트리거는 시간 기반과 이벤트 기반 두 가지가 있다. **`cycle` 과 `watched_paths` 중 정확히 하나** 만 지정한다 (validator 가 검증).
+검토 트리거는 시간 기반과 이벤트 기반 두 가지. **`cycle` 과 `watched_paths` 중 정확히 하나**만 지정 (validator 검증).
 
 ### 시간 기반 — `cycle`
 
-`last_verified` 로부터 `cycle` 기간이 경과하면 stale.
+derived `last_verified` 로부터 `cycle` 기간이 경과하면 stale.
 
+**v2 (권장)**:
+```yaml
+cycle: 14d
+priority: P2-medium
+target_files:
+  - feature_audit_report.md
+refresh_method: |
+  본 카테고리 audit 수행 + 보고서 갱신.
+```
+
+**v1 (deprecated)**:
 ```yaml
 cycle: 30d
 priority: P3-low
@@ -29,30 +47,55 @@ refresh_method: |
 
 ### 이벤트 기반 — `watched_paths`
 
-`watched_paths` 에 매칭되는 경로 중 `last_verified` 이후 커밋이 있으면 stale.
+`watched_paths` 매칭 경로 중 derived `last_verified` 이후 commit 있으면 stale.
 
+**v2 (권장)**:
 ```yaml
 watched_paths:
   - supabase/migrations/**
   - supabase/functions/**
 priority: P2-medium
-last_verified: 2026-05-13
-recursive: false
+target_files:
+  - backend.md
 refresh_method: |
-  신규 마이그레이션과 Edge Function 을 backend.md 에 반영한다.
+  신규 마이그레이션과 Edge Function 을 backend.md 에 반영.
 ```
 
-## 필드
+## 필드 (v2)
 
 | 필드 | 필수 | 타입 | 설명 |
 |------|------|------|------|
 | `cycle` | 조건부 | duration | 검토 주기. `7d` / `14d` / `30d` / `60d` / `90d`. `watched_paths` 와 상호 배타 |
-| `watched_paths` | 조건부 | string[] | 레포 루트 기준 glob. 이 경로에 `last_verified` 이후 커밋이 있으면 stale. `cycle` 과 상호 배타 |
+| `watched_paths` | 조건부 | string[] | 레포 루트 기준 glob. 매칭 경로 commit 발생 시 stale. `cycle` 과 상호 배타 |
+| `target_files` | ✓ | string[] | 본 FRESH_DOC 이 추적하는 파일 (FRESH_DOC 위치 기준 상대 glob). 이 파일들의 `max(git log -1)` 가 derived `last_verified` |
 | `priority` | ✓ | enum | `P0-critical` / `P1-high` / `P2-medium` / `P3-low` |
-| `last_verified` | ✓ | date | 마지막 검토 일자 (`YYYY-MM-DD`) |
-| `recursive` | | bool | 기본 `false`. `true` 면 하위 디렉토리의 모든 `.md` 도 본 FRESH_DOC 관리 대상 |
-| `exclude` | | string[] | FRESH_DOC 기준 상대 경로의 glob 배열 |
 | `refresh_method` | | string | 이슈 본문에 포함될 갱신 가이드 (3~5줄 권장) |
+
+## 필드 (v1 — deprecated)
+
+| 필드 | 필수 | 타입 | 비고 |
+|------|------|------|------|
+| `last_verified` | ✓ | date | 수동 갱신 (`YYYY-MM-DD`). v2 에서 derived 로 대체 |
+| `recursive` | | bool | v2 에서 `target_files: ["**/*.md"]` 글로브로 대체 |
+| `exclude` | | string[] | v2 에서 `target_files` 글로브에 직접 표현 |
+
+`cycle` / `watched_paths` / `priority` / `refresh_method` 는 두 버전 공통.
+
+## `target_files` 작성 지침
+
+- FRESH_DOC 위치 기준 상대 경로 (절대 / `../` 금지 — validator 차단)
+- glob 지원 (`*`, `**`, `?`)
+- 비어있으면 안 됨
+
+**좋은 예**:
+- `feature_audit_report.md` — 단일 보고서만 추적 (features 카테고리)
+- `["*.md"]` — top-level .md 모두 (recursive 없는 단순 dir)
+- `["**/*.md"]` — 하위 디렉토리 포함 모든 .md (옛 `recursive: true` 와 동일)
+- `["backend.md", "client.md"]` — 핵심 문서만 선별
+
+**피할 예**:
+- `["**"]` — 너무 광범위 (코드 파일까지 매치)
+- `["BLUEDOC.md"]` — BLUEDOC 은 별도 freshness 시스템 (`pr-gate.check-bluedoc-freshness`) 으로 관리 — FRESH_DOC 와 중복
 
 ## cycle 값 가이드
 
@@ -64,42 +107,40 @@ refresh_method: |
 
 ## watched_paths 작성 지침
 
-너무 넓으면 (`**/*.md`) 매번 stale 이 되어 노이즈가 쌓인다. 너무 좁으면 (`supabase/migrations/000123_*.sql`) 실제 변경을 놓친다. 디렉토리 단위 (`supabase/migrations/**`) 가 무난하다.
+너무 넓으면 (`**/*.md`) 매번 stale 노이즈. 너무 좁으면 (`supabase/migrations/000123_*.sql`) 실제 변경 누락. 디렉토리 단위 (`supabase/migrations/**`) 가 무난.
 
 좋은 예: `supabase/migrations/**`, `apps/app_user/lib/features/auth/**`
 피할 예: `**`, `*.md`, `supabase/`
 
-## recursive 동작
+## 하위 디렉토리 경계 (v2)
+
+`target_files: ["**/*.md"]` 같은 recursive 글로브를 쓸 때, 하위 디렉토리에 별도 FRESH_DOC 이 있으면 거기서 경계가 끊긴다. validator 와 워크플로우 둘 다 이 boundary 를 존중한다.
 
 ```
 docs/architecture/
-├── FRESH_DOC            # recursive: true
-├── overview.md
-├── backend.md
+├── FRESH_DOC               # target_files: ["**/*.md"]
+├── overview.md             # ← 상위 FRESH_DOC 관리
 └── subsystem/
-    ├── auth.md          # 상위 FRESH_DOC 관리
-    └── payment.md       # 상위 FRESH_DOC 관리
+    ├── FRESH_DOC           # 별도 존재
+    ├── auth.md             # ← subsystem/FRESH_DOC 관리
+    └── payment.md          # ← subsystem/FRESH_DOC 관리
 ```
-
-하위에 별도 `FRESH_DOC` 이 있으면 그 시점에 분리된다.
-
-```
-docs/architecture/
-├── FRESH_DOC            # recursive: true
-├── overview.md
-└── subsystem/
-    ├── FRESH_DOC        # 별도 존재
-    ├── auth.md          # subsystem/FRESH_DOC 관리
-    └── payment.md       # subsystem/FRESH_DOC 관리
-```
-
-## exclude 매칭
-
-glob 패턴 (`*`, `**`, `?`) 을 지원한다. `recursive: true` 인 경우 `**/draft-*.md` 처럼 하위 경로도 매칭 가능하다. 경로는 FRESH_DOC 위치 기준 상대 경로다.
 
 ## 예시
 
-`docs/architecture/FRESH_DOC` — 이벤트 기반:
+`docs/features/account/FRESH_DOC` — v2 시간 기반:
+
+```yaml
+cycle: 14d
+priority: P2-medium
+target_files:
+  - feature_audit_report.md
+refresh_method: |
+  본 카테고리 (account) 인스펙션 → feature_audit_report.md 갱신 + Action Items 마다 Issue 1건.
+  절차: docs/features/feature_audit_report_template.md 의 "AI 실행 절차" 섹션 참조.
+```
+
+`docs/architecture/FRESH_DOC` — v2 이벤트 기반 (가상 예시):
 
 ```yaml
 watched_paths:
@@ -107,21 +148,10 @@ watched_paths:
   - supabase/functions/**
   - apps/app_user/lib/features/**
 priority: P2-medium
-last_verified: 2026-05-13
-recursive: false
-exclude:
-  - "draft-*.md"
+target_files:
+  - backend.md
+  - client.md
 refresh_method: |
   - 신규 테이블·Edge Function 을 backend.md 에 반영
   - 신규 feature 디렉토리를 client.md 에 반영
-```
-
-`docs/standards/FRESH_DOC` — 시간 기반:
-
-```yaml
-cycle: 90d
-priority: P3-low
-last_verified: 2026-05-13
-refresh_method: |
-  외부 SDK·플랫폼 버전 변경 사항이 standards 에 반영되어 있는지 확인한다.
 ```
