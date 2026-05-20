@@ -70,10 +70,11 @@
 | 2a | `pr-gate.yml` 단일 파일 유지하면서 내부 jobs 를 `workflow_call` 받게 변경 + stage parameter 추가. `pr-gate-core` 별도 파일 아님 | PR 흐름 동일, 내부 jobs reusable 化 |
 | 2b | stage 별 `extra_steps` 지원 (dev-staging / rc / main) | 기존 동작 동일 |
 | 2c | `version-bump` reusable extract (sync-version 의 핵심 로직) | sync-version 의 caller 가 reusable 호출하게 변경 |
-| 2d | `auto-issue` reusable 추가 | 신규 — 기존 영향 없음 |
-| 2e | **`ci-result` 폐기** — 현 branch protection 의 required check `ci-result` 를 각 branch 의 `pr-gate` 로 변경 (Phase 4 에서 실제 적용) | 본 step 은 workflow 측 준비, 실제 protection 변경은 4 |
-| 2f | `deploy-supabase` 의 trigger refactor — push:dev 부분을 rc-gate-pass workflow_call **with target=main-staging** 로 변경, push:main 은 main-post-merge-promote 의 workflow_call **with target=main** | staging deploy 와 prod deploy 분리. 사용자 서버 영향 X |
-| 2g | **`deploy-vercel` 폐기** — 자체 빌드 워크플로우 제거. **Vercel native build 로 전환** (Vercel-GitHub 연결, Vercel-side: main=production, dev=preview) | Vercel-side 설정 필요, workflow 측 작업 없음 |
+| 2d | `minglit-release-bot` 생성 + `MINGLIT_RELEASE_BOT_TOKEN` 등록 + workflow permission 최소화 | protected branch/tag push 를 human 대신 bot 으로 수행 |
+| 2e | `auto-issue` reusable 추가 | 신규 — 기존 영향 없음 |
+| 2f | **`ci-result` 폐기** — 현 branch protection 의 required check `ci-result` 를 각 branch 의 `pr-gate` 로 변경 (Phase 4 에서 실제 적용) | 본 step 은 workflow 측 준비, 실제 protection 변경은 4 |
+| 2g | `deploy-supabase` 의 trigger refactor — push:dev 부분을 rc-gate-pass workflow_call **with target=main-staging** 로 변경, push:main 은 main-post-merge-promote 의 workflow_call **with target=main** | staging deploy 와 prod deploy 분리. 사용자 서버 영향 X |
+| 2h | **`deploy-vercel` 폐기** — 자체 빌드 워크플로우 제거. **Vercel native build 로 전환** (Vercel-GitHub 연결, Vercel-side: main=production, dev=preview) | Vercel-side 설정 필요, workflow 측 작업 없음 |
 
 ### Rollback
 
@@ -93,11 +94,11 @@
 
 | Step | 작업 | 의존 |
 |------|------|------|
-| 3a | `dev-staging-pr-gate`, `dev-staging-post-merge-sync` | 2a, 2b, 2c |
+| 3a | `dev-staging-pr-gate`, `dev-staging-post-merge-sync` | 2a, 2b, 2c, 2d |
 | 3b | `nightly-cut`, `nightly-pr-gate` | 3a + dev-staging branch 존재 (Phase 1) |
 | 3c | `rc-gate-suite` reusable 조립 (CUJ × matrix + integration + Test Lab) | 2a |
-| 3d | `rc-gate` (호출 + status set + deploy chain trigger) | 3c + 2e/2f |
-| 3e | `rc-cut`, `rc-pr-gate`, `rc-post-merge-sync`, `rc-soak-check` | 3d + rc/* branch 패턴 확정 |
+| 3d | `rc-gate` (호출 + status set + deploy chain trigger) | 3c + 2f/2g |
+| 3e | `rc-cut`, `rc-pr-gate`, `rc-post-merge-sync`, `rc-soak-check` | 3d + rc/* branch 패턴 확정 + Supabase branching 설정 |
 | 3f | `backport-pr` reusable, `rc-hotfix-backport` | 2a |
 | 3g | `main-pr-gate`, `main-post-merge-promote` | 3d (rc-gate-pass status 필요) |
 
@@ -130,8 +131,8 @@
 | 4a | `dev-staging` Ruleset 적용 (required: `dev-staging-pr-gate`) | 3a 1주 운영 |
 | 4b | `dev` Ruleset 갱신 (required: `nightly-pr-gate`) | 3b 1주 |
 | 4c | `rc/**` pattern Ruleset 적용 (required: `rc-pr-gate`) | 3e 1주 |
-| 4d | `main` Ruleset 갱신 — **기존 `ci-result` required check 제거** + 추가: `main-pr-gate` + `rc-gate-pass` + `expand-migrate-contract` + label `rc-soak-passed` | 3g 1주 + 3d 안정 |
-| 4e | Tag protection Ruleset (`v*`, `promo/**`) | 4d 안정 (release 가 도는 게 확인된 후) |
+| 4d | `main` Ruleset 갱신 — **기존 `ci-result` required check 제거** + 추가: `main-pr-gate` 단일 required check (`rc-gate-pass`, `expand-migrate-contract`, `rc-soak-passed` 는 내부 검증) | 3g 1주 + 3d 안정 |
+| 4e | Tag protection Ruleset (`v*`, `promo/**`) + release bot tag bypass | 4d 안정 (release 가 도는 게 확인된 후) |
 | 4f | Branch creation 제한 (`rc/**` → bot only) | 4c 안정 |
 | 4g | GitHub Environment `production` 생성 + required reviewer 설정 | 3g 1주 |
 | 4h | **Default branch 변경**: `dev` → `dev-staging` | 모든 위 단계 안정 |
@@ -157,8 +158,8 @@ Phase 1 (skeletal) → Phase 2a-2c (pr-gate refactor) → Phase 3a (dev-staging 
 ```
 
 비-critical (병렬 가능):
-- Phase 2d (`auto-issue` reusable) — 신규, 의존 없음
-- Phase 2e/2f (deploy trigger refactor) — Phase 3 이전에 끝나면 OK
+- Phase 2e (`auto-issue` reusable) — 신규, 의존 없음
+- Phase 2f/2g (deploy trigger refactor) — Phase 3 이전에 끝나면 OK
 - 3c (rc-gate-suite) — 3d 이전에만 끝나면 OK
 
 ## Secret Management 정리 (별도 작업, user 와 함께)
@@ -204,15 +205,16 @@ Phase 1 (skeletal) → Phase 2a-2c (pr-gate refactor) → Phase 3a (dev-staging 
 
 1. **CI 실패가 release 차단**: pr-gate 의 stage parameter 가 정확히 매칭돼야 함. *required check 이름 한 글자라도 다르면 차단*. 특히 `ci-result` → stage pr-gate 전환 시 cutover 타이밍 중요
 2. **trigger 변경**: cron → push 변경 시 *겹치는 기간* 발생할 수 있음 — 한쪽 비활성화 후 다른쪽 활성화. 부분 적용 금지
-3. **status check naming**: `rc-gate-pass` 같은 commit status 의 이름이 spec, workflow, branch protection 셋 모두에서 일치해야 함
+3. **status check naming**: `rc-gate-pass` 같은 commit status 의 이름이 spec 과 workflow 에서 일치해야 함. branch protection 에는 직접 required 로 걸지 않고 `main-pr-gate` 내부에서 검증
 4. **AI agent 의 PR 동시성**: merge queue 없으니 race condition 발생 시 수동 conflict resolve 필요 (또는 merge queue 도입 검토)
-5. **Secret 마이그레이션 중 workflow 실패**: file 기반과 GH secret 참조가 섞이는 transition 기간 — env 변수 누락 시 즉시 발견 (CI 통과 못함)
+5. **Release bot token 실패**: `MINGLIT_RELEASE_BOT_TOKEN` 권한 부족이면 version bump/tag/promotion workflow 가 막힘. 최초 도입 시 dry-run branch 로 push/tag/delete까지 검증
+6. **Secret 마이그레이션 중 workflow 실패**: file 기반과 GH secret 참조가 섞이는 transition 기간 — env 변수 누락 시 즉시 발견 (CI 통과 못함)
 
 ## Self-review: Phase 3 ordering
 
 내부 검토 결과 — **현재 순서 (3a → 3b → 3c → 3d → 3e → 3f → 3g) OK**, 단 다음 minor 개선:
 
-- **3a / 3b 병렬 가능**: dev-staging-pr-gate (3a) 와 nightly-cut (3b) 는 서로 의존 없음. 다른 PR 로 병렬 진행 가능
+- **3a / 3b 병렬 가능**: dev-staging-pr-gate (3a) 와 nightly-cut (3b) 는 서로 의존이 약함. 단 version bump/tag push 검증에는 release bot 준비가 선행되어야 함
 - **3c → 3d 사이 verification 불필요**: rc-gate-suite (3c) 는 reusable, 호출은 rc-gate (3d) 에서. 3c 자체로는 동작 없음 → 3d 와 동일 PR 또는 직후 PR 가능
 - **3f 는 3e 와 같이**: rc-hotfix-backport 가 rc-promotion 흐름의 일부라 같은 시점에 도입이 자연스러움
 - **가장 critical**: 3d (rc-gate) — 첫 verification 기간 1주 이상 추천 (다른 stage 와 달리 60분 비용 + 통합 시나리오 복잡)

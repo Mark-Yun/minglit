@@ -1,6 +1,6 @@
 # RC Promotion
 
-`rc/YYYY-Wxx` 브랜치의 lifecycle: weekly cut from dev 의 `rc-gate-pass` commit, 5일 soak (hotfix 시 시계 리셋), soak 통과 시 main 으로 머지.
+`rc/YYYY-Wxx` 브랜치의 lifecycle: weekly cut from dev 의 `rc-gate-pass` commit, RC 전용 Supabase branch 생성, 5일 soak (hotfix 시 시계 리셋), soak 통과 시 main 으로 머지 후 RC branch 정리.
 
 ## 4가지 workflow
 
@@ -16,18 +16,21 @@
 - **cron**: 매주 X 요일 KST 10:00 (TBD)
 - **manual**: `workflow_dispatch` (긴급 cut)
 - 동작:
-  1. **현재 `rc/*` 살아있는지 확인** → 있으면 skip + Slack `#release` 알림 (이전 RC 가 hotfix 로 길어지는 중)
+  1. **active RC marker 확인** → 있으면 skip + Slack `#release` 알림 (이전 RC 가 hotfix 로 길어지는 중)
   2. 없으면 dev 의 최신 `rc-gate-pass` status 부여된 commit 찾기 (GitHub API: `GET /repos/.../commits/{sha}/status`)
   3. 못 찾으면 (3일+ green 없음) → alert + cut 보류
   4. 찾았으면 그 commit 에서 `rc/YYYY-Wxx` branch cut
-  5. `bump-version.sh {ver}-rc-01` 실행 → tag `v{ver}-rc-01` + `promo/rc-YYYY-Wxx`
-  6. Branch protection 활성화 (direct push 금지, cherry-pick PR 만)
-  7. Slack `#release` 알림 + soak 시작
+  5. Supabase branch 생성 (`rc-YYYY-Wxx`) + RC env 에 migration/EF deploy
+  6. `bump-version.sh {ver}-rc-01` 실행 → tag `v{ver}-rc-01` + `promo/rc-YYYY-Wxx`
+  7. Branch protection 활성화 (direct push 금지, hotfix PR 만)
+  8. active RC marker 기록 + Slack `#release` 알림 + soak 시작
 
 ### Cron 슬립 처리
 
-- "현재 `rc/*` 살아있음" → skip + 다음 주 cron 까지 대기
+- "active RC marker 있음" → skip + 다음 주 cron 까지 대기
 - "rc-gate-pass commit 없음 (3일+)" → cut 보류 + alert (운영자 개입 필요)
+
+`rc/*` git branch 는 릴리즈 이력 보존 수단이 아니다. RC 종료 후 삭제할 수 있으며, 이력은 `promo/rc-*`, `v*-rc-*`, `promo/main-*` protected tag 로 보존한다.
 
 ## `rc-pr-gate`
 
@@ -47,6 +50,7 @@ Hotfix PR 머지 직후 자동:
 2. git commit -m "chore: bump RC version [skip ci]"
 3. git tag v{ver}-rc-NN
 4. git push
+5. RC Supabase branch 에 migration/EF 재적용
 ```
 
 **Soak 시계 자동 리셋** — 새 commit 의 committer date 가 최신이므로 `rc-soak-check` 가 자연스럽게 카운트 다시 시작.
@@ -79,7 +83,7 @@ Mark 님 직감대로 hotfix loop 으로 RC lifecycle 이 길어지는 게 일�
 |------|------|
 | 누적 회귀 | rc 의 nightly 재실행 (선택 — RC 별도 nightly schedule TBD) |
 | 내부 dogfooding | 내부 직원 cohort 가 `_rc-NN` 빌드 사용 |
-| Real-data 이슈 | rc 의 supabase staging branch (단일 공유 branch, 5일 후 reset) |
+| Real-data 이슈 | RC 전용 Supabase branch (`rc-YYYY-Wxx`) |
 | 외부 의존성 동작 (실 결제, 실 메시지) | 내부 사용자가 실제로 사용해보며 검증 |
 
 ## Hotfix 경로
@@ -124,24 +128,31 @@ RC 는 dev-staging 에서 cut 됐지만 RC 가 사는 동안 dev-staging 이 앞
 - AI 가 resolve 후 push
 - pr-gate 통과 시 머지
 
+`rc-hotfix-backport` 는 hotfix PR 의 merged commits 만 cherry-pick 한다. `rc-post-merge-sync` 가 만든 version bump commit 은 backport 대상에서 제외한다.
+
 ### Mobile 의 backport 불필요
 
 Mobile 은 release branch 없음 (main 머지 마다 `deploy-android-*, deploy-ios-*` 가 직접 build + store upload). 따라서 mobile-specific backport 흐름 없음. mobile 의 모든 hotfix 는 dev-staging → ... → rc → main 의 정상 흐름을 따라 다음 main push 시 mobile deploy workflow 들이 자동 반영.
 
-## Supabase Staging Branch (RC 의 backend 검증용)
+## Supabase Branching (RC 의 backend 검증용)
 
-**전략**: 단일 영구 supabase staging branch 를 모든 RC 가 공유 (RC merge to main 시점에 reset).
+**전략**: RC 마다 Supabase branch 를 생성하고, RC 종료 시 삭제한다. 단일 공유 staging branch 는 RC soak 와 dev continuous deploy 가 서로 오염될 수 있으므로 사용하지 않는다.
 
-- 비용 절감 (RC 마다 새 branch 안 만듬)
-- 복잡도 낮음 (sync 디테일 단순)
-- expand-migrate-contract CI 가 PR 시점에 destructive 검증 → 5일 소크 시점 추가 보호
+### Lifecycle
 
-이전: RC 마다 ephemeral branch — runtime 가격 누적, 복잡.
-지금: 1 branch 영구 운영. RC merge to main → DB reset → 다음 RC 가 깨끗한 상태에서 시작.
+| 시점 | 동작 |
+|------|------|
+| `rc-cut` | Supabase branch `rc-YYYY-Wxx` 생성, RC SHA 기준 migration/EF deploy |
+| RC soak | 내부 dogfooding 과 real-data 검증은 해당 RC branch 로만 수행 |
+| hotfix merge | 같은 RC Supabase branch 에 migration/EF 재적용 |
+| rc → main 완료 | prod deploy 후 RC Supabase branch 삭제 |
+| RC abandon | RC Supabase branch 삭제 + active RC marker 제거 |
+
+dev 의 `rc-gate-pass` 는 계속 `main-staging` env 로 deploy 된다. RC soak 는 `rc-YYYY-Wxx` branch 를 사용하므로 dev 의 후속 green commit 과 섞이지 않는다.
 
 ### 결정해야 할 것
 
-- staging branch reset 시점 정확화 (main 머지 직후 / 다음 rc-cut 직전)
+- Supabase branch TTL / 비용 알림
 - staging branch 의 seed data 정책
 
 ## Error-Backoff 정책
@@ -154,14 +165,14 @@ Mobile 은 release branch 없음 (main 머지 마다 `deploy-android-*, deploy-i
 |--------|------|
 | Minor (UI, edge case) | hotfix PR → rc-post-merge-sync → soak 시계 리셋 |
 | Critical (crash, data loss) | flag 로 즉시 OFF (코드 release 와 분리 — life-of-flag 참고) + hotfix PR 병행 |
-| Catastrophic (전체 깨짐) | RC abandon — branch 삭제, 다음 weekly cut 새로 시작 (작업 손실) |
+| Catastrophic (전체 깨짐) | RC abandon — git rc branch + Supabase branch 삭제, active marker 제거, 다음 weekly cut 새로 시작 |
 
 ## 결정해야 할 것
 
 - weekly rc-cut 요일
 - rc-soak-check daily cron 시각
 - RC 자체 nightly 별도 schedule 여부
-- staging supabase branch reset 정책
+- Supabase RC branch TTL / seed data 정책
 - RC abandon 의 명확한 기준
 
 ## 관련

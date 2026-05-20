@@ -5,7 +5,7 @@
 ## 흐름 다이어그램
 
 ```
-  agents ──merge queue──▶ dev-staging
+  agents ──PR + auto-merge──▶ dev-staging
                               │
                               └─daily nightly-cut snapshot──▶ dev
                                                               │
@@ -44,21 +44,21 @@ rc/* hotfix 머지 ──auto cherry-pick──▶ backport-branch ──PR─�
 
 | 머지 방향 | base ← head | 트리거 | 머지 방식 | 요구 체크 |
 |-----------|-------------|--------|-----------|-----------|
-| feature/agent → dev-staging | `dev-staging` ← `feat/*`, `fix/*`, `chore/*`, `docs/*` | merge queue enqueue | **squash** (queue) | `dev-staging-pr-gate` |
+| feature/agent → dev-staging | `dev-staging` ← `feat/*`, `fix/*`, `chore/*`, `docs/*` | PR + auto-merge | **squash** | `dev-staging-pr-gate` |
 | dev-staging → dev | `dev` ← `dev-staging` | daily cron `nightly-cut` | merge (snapshot) | `nightly-pr-gate` |
 | hotfix → rc | `rc/YYYY-Wxx` ← hotfix branch | hotfix only | rebase | `rc-pr-gate` |
-| rc → main | `main` ← `rc/YYYY-Wxx` | `rc-soak-check` 가 5일 무커밋 시 PR 생성 + auto-merge | rebase + ff | `main-pr-gate` + `rc-soak-passed` |
+| rc → main | `main` ← `rc/YYYY-Wxx` | `rc-soak-check` 가 5일 무커밋 시 PR 생성 + auto-merge | rebase + ff | `main-pr-gate` |
 
 ## Branch Protection 설정
 
 | 브랜치 | direct push | linear | required check | merge 종류 |
 |--------|-------------|--------|----------------|------------|
-| `dev-staging` | 금지 | **ON** | `dev-staging-pr-gate` + merge queue | squash |
+| `dev-staging` | 금지 (release bot 예외) | **ON** | `dev-staging-pr-gate` | squash |
 | `dev` | 금지 | **ON** | `nightly-pr-gate` | merge (snapshot) |
 | `rc/YYYY-Wxx` | 금지 | **ON** | `rc-pr-gate` | rebase |
-| `main` | 금지 | **ON** | `main-pr-gate` + `rc-gate-pass` (RC HEAD) + `expand-migrate-contract` + `rc-soak-passed` | rebase |
+| `main` | 금지 (release bot 예외) | **ON** | `main-pr-gate` | rebase |
 
-Hybrid linear history 금지 — 각 branch 내 일관 (squash or rebase 한 가지).
+Hybrid linear history 금지 — 각 branch 내 일관 (squash or rebase 한 가지). Protected branch 직접 push 는 `minglit-release-bot` 의 version bump/tag/promotion commit 에만 Ruleset bypass 로 허용한다.
 
 ## Promotion Tag 컨벤션
 
@@ -116,7 +116,6 @@ main-post-merge-promote (on push to main):
 ## 결정해야 할 것
 
 - 주간 rc-cut 요일
-- merge queue 모드 (concurrent vs serial)
 - Fastlane / store upload 설정
 - `RELEASE.md` 작성
 

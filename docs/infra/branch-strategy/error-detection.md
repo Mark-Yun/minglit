@@ -7,7 +7,7 @@
 | Stage | Detection 도구 | 잡는 에러 | Latency |
 |-------|----------------|----------|---------|
 | 개발자 로컬 | LSP, analyze, unit | 컴파일/타입/단위 | 초~분 |
-| dev-staging merge queue | `dev-staging-pr-gate` (unit, lint, pgTAP, EF, migration, `expand-migrate-contract`, `flag-registration`, gitleaks) | PR 회귀, 보안, migration 충돌, flag 미등록, contract 위반 | < 10분 |
+| dev-staging PR gate | `dev-staging-pr-gate` (unit, lint, pgTAP, EF, migration, `expand-migrate-contract`, `flag-registration`, gitleaks) | PR 회귀, 보안, migration 충돌, flag 미등록, contract 위반 | < 10분 |
 | nightly-cut PR | `nightly-pr-gate` (defensive) | 환경 차이 회귀 | < 10분 |
 | dev 머지 후 (자동) | `rc-gate` (CUJ matrix happy/unhappy/chaos, integration, e2e, Test Lab) | 통합 회귀, 시나리오, 외부 의존, 디바이스 | 30-60분 |
 | Backend/Web auto-deploy | post-deploy smoke, Sentry release marker | deploy infra 회귀 | 분 |
@@ -52,7 +52,7 @@
 
 | Detection 신호 | 누가 받음 | 어디서 | Action |
 |---------------|----------|--------|--------|
-| pr-gate 실패 (어느 단계든) | PR 작성자 | GitHub PR | 본인 fix → re-push → re-queue |
+| pr-gate 실패 (어느 단계든) | PR 작성자 | GitHub PR | 본인 fix → re-push → auto-merge 재대기 |
 | `rc-gate` 실패 (dev 머지 후) | 직전 rc-gate-pass 이후 머지된 PR 작성자들 + AI agent | GitHub issue + Slack `#nightly` | AI agent fix PR via dev-staging — dev keeps moving ([dev-pipeline.md](./dev-pipeline.md)) |
 | Backend/web staging deploy 실패 (dev rc-gate-pass) | on-call | Slack `#release` | retry → P0 이슈, RC 진행 차단 (staging 도달 못함) |
 | Backend/web/mobile prod deploy 실패 (main 머지) | on-call | Slack `#release` | retry → rollback ([main-promotion.md](./main-promotion.md) error-backoff) |

@@ -79,7 +79,7 @@ PR# 가 dev-staging 에서 부여되고 같은 PR# 가 후속 단계에서 suffi
 - mobile release branch hotfix 의 PR# 출처 (cherry-pick PR# 인가 새 PR# 인가)
 - main 비-promotion 변경의 version bump 룰 (긴급 hotfix 직접 push 시)
 - `RELEASE.md` 작성 (tag regex single source)
-- merge queue 가 squash commit 에 `bump-version.sh` 결과를 inline 시킬지 별도 commit 으로 둘지
+- `bump-version.sh` 결과를 squash commit 에 inline 시킬지 release bot 별도 commit 으로 둘지
 
 ## 관련
 

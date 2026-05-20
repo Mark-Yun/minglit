@@ -6,11 +6,11 @@
 
 | 단계 | 게이트 | 소요 | 실패 시 |
 |------|--------|------|---------|
-| dev-staging 머지 전 | `dev-staging-pr-gate` (unit · lint · analyze · pgTAP · EF test · migration check · `expand-migrate-contract` · `flag-registration` · gitleaks) | < 10분 | merge queue PR drop |
+| dev-staging 머지 전 | `dev-staging-pr-gate` (unit · lint · analyze · pgTAP · EF test · migration check · `expand-migrate-contract` · `flag-registration` · gitleaks) | < 10분 | auto-merge 보류 |
 | dev 머지 전 | `nightly-pr-gate` (dev-staging-pr-gate 와 동일 — defensive) | < 10분 | nightly-cut PR drop |
 | dev 머지 후 (자동) | `rc-gate` (CUJ matrix happy/unhappy/chaos · integration · e2e · Test Lab smoke) | 30-60분 | 자동 이슈 + AI fix flow via dev-staging. `rc-gate-pass` 미부여 |
 | rc 머지 전 (hotfix) | `rc-pr-gate` (pr-gate + mobile smoke) | < 15분 | hotfix PR drop |
-| main 머지 전 (rc → main) | `main-pr-gate` (pr-gate + `expand-migrate-contract` 재검증 + RC HEAD 의 `rc-gate-pass` 확인) | 분 | promotion PR 보류 |
+| main 머지 전 (rc → main) | `main-pr-gate` (pr-gate + `expand-migrate-contract` 재검증 + RC HEAD 의 `rc-gate-pass` 확인 + `rc-soak-passed` marker 확인) | 분 | promotion PR 보류 |
 | rc → main PR | workflow auto-merge (모든 check 통과 시) | 분 | check 실패 시 PR hold + alert |
 | Backend/Web auto-deploy 후 | post-deploy smoke + Sentry/Crashlytics 알람 임계 | 분 | auto-rollback ([main-promotion.md](./main-promotion.md)) |
 | deploy-android-*, deploy-ios-* 후 | mobile build smoke (Fastlane upload 검증) | 시간 | retry 1회 → auto-issue + mobile 팀 |
@@ -21,7 +21,7 @@
 
 ### dev-staging-pr-gate — 빠른 머지 게이트
 
-merge queue 가 직렬 처리. 각 PR 이 rebase 후 재실행.
+일반 PR + auto-merge 로 처리한다. base drift 가 생기면 branch update 후 gate 를 재실행한다.
 
 - `test-flutter-apps` (matrix: app_user, app_partner)
 - `lint-landing-user`, `lint-landing-partner`
@@ -78,7 +78,7 @@ RC 의 hotfix 만 받음. `pr-gate` + 추가 mobile smoke. 머지 시 `rc-post-m
 | 테스트 성격 | 배치 위치 | 이유 |
 |-------------|-----------|------|
 | 결정론적, < 10분 | `dev-staging-pr-gate` | PR 사이클 안 막음 |
-| flaky 또는 느림 (10분+) | `rc-gate` | merge queue 신뢰도 보호 |
+| flaky 또는 느림 (10분+) | `rc-gate` | PR 머지 게이트의 신뢰도 보호 |
 | 외부 의존성 (실 결제 등) | `rc-gate` + flag canary | 비용·side effect 통제 |
 | 부하/성능 | `rc-gate` (주 1회) or staged rollout 메트릭 | 매일 무거움 |
 | backend ↔ mobile 계약 호환 | `expand-migrate-contract` CI + flag canary 메트릭 | 다층 안전망 |

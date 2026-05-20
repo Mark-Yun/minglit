@@ -83,19 +83,19 @@ Cross-branch cherry-pick PR 자동 생성.
 
 | 항목 | 값 |
 |------|----|
-| Trigger | `pull_request` (base: `dev-staging`) + `merge_group` (GitHub merge queue) |
+| Trigger | `pull_request` (base: `dev-staging`) |
 | Outputs | required status check |
 | Steps | calls `pr-gate-core` (stage=dev-staging) |
-| Required for | dev-staging merge queue + PR merge |
+| Required for | dev-staging PR merge |
 
 #### `dev-staging-post-merge-sync`
 
 | 항목 | 값 |
 |------|----|
-| Trigger | `push` to `dev-staging` (merge queue 통과 후) |
+| Trigger | `push` to `dev-staging` (PR squash merge 후) |
 | Inputs | (from event) PR number, merged SHA |
 | Outputs | tag `v{YY.MM.PR#}-dev-staging` |
-| Steps | calls `version-bump` (suffix=`-dev-staging`, version=`{YY.MM.PR#}`) |
+| Steps | calls `version-bump` (suffix=`-dev-staging`, version=`{YY.MM.PR#}`) using `MINGLIT_RELEASE_BOT_TOKEN` |
 
 ### nightly (dev 진입)
 
@@ -106,7 +106,7 @@ Cross-branch cherry-pick PR 자동 생성.
 | Trigger | `schedule` (daily KST 02:00 TBD) + `workflow_dispatch` |
 | Inputs | (none, or optional ref override) |
 | Outputs | PR number (dev-staging → dev) or skip |
-| Steps | (1) 이전 `nightly-cut` PR open 이면 skip + Slack (2) 가장 최근 `v*-dev-staging` tag SHA 조회 (3) dev HEAD == 그 SHA 이면 skip ("no new commits") (4) 아니면 `gh pr create` (base=dev, head=dev-staging) + auto-merge 활성화 |
+| Steps | (1) 이전 `nightly-cut` PR open 이면 skip + Slack (2) 가장 최근 `v*-dev-staging` tag SHA 조회 (3) dev HEAD == 그 SHA 이면 skip ("no new commits") (4) `nightly/YYYY-MM-DD` promotion branch 를 tag SHA 에서 생성 (5) `gh pr create` (base=dev, head=nightly/YYYY-MM-DD) + auto-merge 활성화 |
 
 #### `nightly-pr-gate`
 
@@ -157,7 +157,7 @@ Vercel native 가 자체 trigger 및 build 처리. workflow 측 작업 없음.
 |------|----|
 | Trigger | `schedule` (weekly KST TBD) + `workflow_dispatch` |
 | Outputs | branch `rc/YYYY-Wxx` + tag `v{ver}-rc-01` + tag `promo/rc-YYYY-Wxx` |
-| Steps | (1) 현재 `rc/*` 살아있는지 확인 → 있으면 skip + Slack `#release` (hotfix 로 길어지는 중) (2) dev 의 최신 `rc-gate-pass` status SHA query (`gh api`) (3) 없으면 (3일+ green 없음) alert + abort (4) `git branch rc/YYYY-Wxx <SHA>` + push (5) calls `version-bump` (suffix=`-rc-01`) (6) `git tag promo/rc-YYYY-Wxx` + push (7) branch protection 활성화 (8) Slack `#release` 알림 |
+| Steps | (1) active RC marker 가 있으면 skip + Slack `#release` (hotfix 로 길어지는 중) (2) dev 의 최신 `rc-gate-pass` status SHA query (`gh api`) (3) 없으면 (3일+ green 없음) alert + abort (4) `git branch rc/YYYY-Wxx <SHA>` + push using release bot (5) Supabase branch 생성 + RC env deploy (6) calls `version-bump` (suffix=`-rc-01`) (7) `git tag promo/rc-YYYY-Wxx` + push (8) branch protection 활성화 (9) Slack `#release` 알림 |
 
 #### `rc-pr-gate`
 
@@ -173,7 +173,7 @@ Vercel native 가 자체 trigger 및 build 처리. workflow 측 작업 없음.
 |------|----|
 | Trigger | `push` to `rc/*` (hotfix merge 후) |
 | Outputs | tag `v{ver}-rc-NN` (NN+1) |
-| Steps | (1) 현 rc 의 마지막 `v*-rc-*` tag 의 NN 파싱 (2) calls `version-bump` (suffix=`-rc-{NN+1}`) |
+| Steps | (1) 현 rc 의 마지막 `v*-rc-*` tag 의 NN 파싱 (2) calls `version-bump` (suffix=`-rc-{NN+1}`) using release bot (3) RC Supabase branch 에 migration/EF 재적용 |
 
 #### `rc-soak-check`
 
@@ -187,9 +187,9 @@ Vercel native 가 자체 trigger 및 build 처리. workflow 측 작업 없음.
 
 | 항목 | 값 |
 |------|----|
-| Trigger | `push` to `rc/*` (rc-post-merge-sync 와 parallel) |
+| Trigger | `pull_request` closed/merged (base: `rc/*`) |
 | Outputs | backport PR (rc/* → dev-staging) |
-| Steps | calls `backport-pr` (source=`rc/*`, target=dev-staging, commits=[새 hotfix SHA]) · 충돌 시 `auto-issue` (P1, AI agent assignee) |
+| Steps | calls `backport-pr` (source=`rc/*`, target=dev-staging, commits=[merged PR commits only]) · 충돌 시 `auto-issue` (P1, AI agent assignee). `rc-post-merge-sync` 의 version bump commit 은 backport 대상에서 제외 |
 
 ### main
 
@@ -207,7 +207,7 @@ Vercel native 가 자체 trigger 및 build 처리. workflow 측 작업 없음.
 |------|----|
 | Trigger | `push` to `main` (rc → main auto-merge 직후) |
 | Outputs | tag `v{ver}` + tag `promo/main-YYYY-Wxx` + Sentry marker + Firebase RC `latest_version` update + parallel deploy chain |
-| Steps | (1) calls `version-bump` (suffix="") (2) `git tag promo/main-YYYY-Wxx` + push (3) Sentry release marker `v{ver}` (4) Firebase RC `latest_version` = `v{ver}` (Admin SDK) (5) **parallel deploy chain** (모두 target=main env): `deploy-supabase`, mobile deploy workflows |
+| Steps | (1) calls `version-bump` (suffix="") using release bot (2) `git tag promo/main-YYYY-Wxx` + push (3) Sentry release marker `v{ver}` (4) Firebase RC `latest_version` = `v{ver}` (Admin SDK) (5) **parallel deploy chain** (모두 target=main env): `deploy-supabase`, mobile deploy workflows (6) RC Supabase branch 삭제 |
 
 > main push 후 자동 발동되는 deploy workflows (병렬):
 > - `deploy-supabase` (target=main, prod Supabase project) — EF + migration
@@ -222,7 +222,7 @@ Vercel native 가 자체 trigger 및 build 처리. workflow 측 작업 없음.
 ```
 [agent PR opens to dev-staging]
        ↓
-[dev-staging-pr-gate] ──merge queue 통과──▶ dev-staging push
+[dev-staging-pr-gate] ──auto-merge──▶ dev-staging push
                                                 ↓
                                          [dev-staging-post-merge-sync]
                                                 ↓ tag v{ver}-dev-staging
