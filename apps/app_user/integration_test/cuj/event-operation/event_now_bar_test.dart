@@ -41,10 +41,10 @@ class _FakeEventRealtime extends EventRealtime {
 // Helpers
 // ---------------------------------------------------------------------------
 
-Event _makeEvent({String id = 'evt-1'}) => Event(
+Event _makeEvent({String id = 'evt-1', String title = 'Test Event'}) => Event(
   id: id,
   partyId: 'party-1',
-  title: 'Test Event',
+  title: title,
   startTime: DateTime(2026, 5, 18, 18),
   endTime: DateTime(2026, 5, 18, 20),
   createdAt: DateTime(2026),
@@ -57,14 +57,50 @@ TodayActiveEvent _makeActiveEvent() => TodayActiveEvent(
 );
 
 TodayActiveEvent _makeActiveEvent2() => TodayActiveEvent(
-  event: _makeEvent(id: 'evt-2'),
+  event: _makeEvent(id: 'evt-2', title: 'Test Event 2'),
   participantStatus: 'ticket_issued',
 );
 
 TodayActiveEvent _makeActiveEvent3() => TodayActiveEvent(
-  event: _makeEvent(id: 'evt-3'),
+  event: _makeEvent(id: 'evt-3', title: 'Test Event 3'),
   participantStatus: 'ticket_issued',
 );
+
+/// Test harness that wraps [EventNowMultiStack] with an `onEventTap`
+/// callback that records the last tapped event for assertions.
+///
+/// Captures into a static so CUJ tests (which pass `app:` as a const-ish
+/// widget) can verify the callback fired with the expected event without
+/// plumbing closures through the cuj engine API.
+class _OnEventTapHarness extends StatefulWidget {
+  const _OnEventTapHarness({required this.events});
+
+  final List<TodayActiveEvent> events;
+
+  static TodayActiveEvent? lastTapped;
+
+  @override
+  State<_OnEventTapHarness> createState() => _OnEventTapHarnessState();
+}
+
+class _OnEventTapHarnessState extends State<_OnEventTapHarness> {
+  @override
+  void initState() {
+    super.initState();
+    // Reset between cujCases to avoid cross-test contamination.
+    _OnEventTapHarness.lastTapped = null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: EventNowMultiStack(
+        events: widget.events,
+        onEventTap: (event) => _OnEventTapHarness.lastTapped = event,
+      ),
+    );
+  }
+}
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -512,11 +548,13 @@ void main() {
       },
     );
 
+    // Initial _selectedIndex = 0 → first tile is already selected (e1).
+    // To verify CUJ 2-2 / FR-15 (선택한 이벤트로 전환) we must tap the
+    // *second* tile (e2) and assert both the onEventTap callback receives e2
+    // AND the bar re-renders with e2's distinct title.
     cujCase(
-      'edge: 시트에서 다른 이벤트 선택 → 시트 닫힘',
-      app: Scaffold(
-        body: EventNowMultiStack(events: [e1, e2]),
-      ),
+      'edge: 시트에서 다른 이벤트(e2) 선택 → 시트 닫힘 + 바가 e2로 전환',
+      app: _OnEventTapHarness(events: [e1, e2]),
       overrides: () => [
         eventNowBarStateProvider(e1).overrideWith(
           () => _FakeEventNowBarStateNotifier(EventNowBarState.waiting),
@@ -535,23 +573,37 @@ void main() {
         await t.pump();
         await t.pumpAndSettle();
 
+        // 초기 바: e1 (선택 인덱스 0) → 'Test Event' 표시, e2 title 부재
+        expect(find.text('Test Event'), findsOneWidget);
+        expect(find.text('Test Event 2'), findsNothing);
+
         // 시트 오픈
         await t.tap(find.byIcon(Icons.expand_more));
         await t.pumpAndSettle();
         expect(find.text('진행 중인 이벤트'), findsOneWidget);
 
-        // 첫 번째 tile 선택 → 시트 닫힘 (onSelect 가 Navigator.pop 호출)
-        // _EventListTile 의 InkWell 중 하나를 탭 (시트 안의 첫 tile)
+        // 시트 안 두 번째 tile (e2) 탭 — 실제 "다른 이벤트" 선택
         final tileFinder = find.descendant(
           of: find.byType(BottomSheet),
           matching: find.byType(InkWell),
         );
-        expect(tileFinder, findsWidgets);
-        await t.tap(tileFinder.first);
+        expect(tileFinder, findsNWidgets(2));
+        await t.tap(tileFinder.at(1));
         await t.pumpAndSettle();
 
-        // 시트 닫힘 → 헤더 사라짐
+        // 1) 시트 닫힘 → 헤더 사라짐
         expect(find.text('진행 중인 이벤트'), findsNothing);
+
+        // 2) onEventTap 콜백이 e2 를 받았는지 확인 (식별자로 검증)
+        final tapped = _OnEventTapHarness.lastTapped;
+        expect(tapped, isNotNull);
+        expect(tapped!.event.id, 'evt-2');
+
+        // 3) 바가 실제로 e2 로 전환되어 'Test Event 2' 타이틀 표시 — e1
+        //    title 은 사라짐. selectedIndex 가 갱신되지 않거나 잘못된
+        //    인덱스로 갱신되는 회귀(예: 항상 .first 탭) 를 막는 핵심 assert.
+        expect(find.text('Test Event 2'), findsOneWidget);
+        expect(find.text('Test Event'), findsNothing);
       },
     );
   });
