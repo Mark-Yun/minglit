@@ -8,6 +8,8 @@ import '_engine/builder.dart';
 import '_engine/catalog.dart';
 import 'account_management_page/account_management_page_test.dart'
     as account_management_page;
+import 'event_bottom_ticket_bar/event_bottom_ticket_bar_test.dart'
+    as event_bottom_ticket_bar;
 import 'auth_callback_page/auth_callback_page_test.dart' as auth_callback_page;
 import 'blocked_partners_page/blocked_partners_page_test.dart'
     as blocked_partners_page;
@@ -44,6 +46,7 @@ final List<MdsCatalog<MdsScreenBuilder<dynamic>>> allCatalogs = [
   deletion_info_page.catalogWithReason,
   deletion_reason_page.catalog,
   deletion_verify_page.catalog,
+  event_bottom_ticket_bar.catalog,
   event_now_bar.catalog,
   event_ongoing_banner.catalog,
   home_page.catalog,
