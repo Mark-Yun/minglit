@@ -49,6 +49,7 @@ Phase 2 (TODO, follow-up PR) — `_manifest.yaml`, coverage report, scaffold 결
 | `search_page` | idle · results · empty |
 | `event_now_bar` | waiting · check-in-ready · checked-in · matching · results · ended · offline |
 | `event_ongoing_banner` | 8 phases + dark |
+| `signup_consent_page` | loading · default · required-only · all · dark |
 | `ticket_qr_screen` | with-token · not-found · dark |
 
 ## 폴더 컨벤션
