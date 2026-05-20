@@ -25,8 +25,7 @@ const List<Map<String, Object?>> _mockPartners = [
   },
 ];
 
-class BlockedPartnersPageBuilder
-    extends MdsScreenBuilder<BlockedPartnersPage> {
+class BlockedPartnersPageBuilder extends MdsScreenBuilder<BlockedPartnersPage> {
   BlockedPartnersPageBuilder() : super(page: const BlockedPartnersPage());
 
   /// 로딩 중 (future 미완료).

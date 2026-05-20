@@ -19,14 +19,15 @@ class LoadedConsentController extends ConsentController {
     _consent(ConsentType.locationConsent, consented: false),
   ];
 
-  UserConsent _consent(ConsentType type, {bool consented = true}) => UserConsent(
-    id: 'consent-${type.name}',
-    userId: 'mock-user-1',
-    consentKey: type,
-    consented: consented,
-    consentedAt: DateTime.utc(2026, 1, 1),
-    createdAt: DateTime.utc(2026, 1, 1),
-  );
+  UserConsent _consent(ConsentType type, {bool consented = true}) =>
+      UserConsent(
+        id: 'consent-${type.name}',
+        userId: 'mock-user-1',
+        consentKey: type,
+        consented: consented,
+        consentedAt: DateTime.utc(2026, 1, 1),
+        createdAt: DateTime.utc(2026, 1, 1),
+      );
 }
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
