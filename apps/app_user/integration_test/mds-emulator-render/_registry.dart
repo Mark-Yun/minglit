@@ -6,6 +6,8 @@
 
 import '_engine/builder.dart';
 import '_engine/catalog.dart';
+import 'account_management_page/account_management_page_test.dart'
+    as account_management_page;
 import 'auth_callback_page/auth_callback_page_test.dart' as auth_callback_page;
 import 'blocked_partners_page/blocked_partners_page_test.dart'
     as blocked_partners_page;
@@ -21,6 +23,7 @@ import 'event_ongoing_banner/event_ongoing_banner_test.dart'
     as event_ongoing_banner;
 import 'home_page/home_page_test.dart' as home_page;
 import 'login_page/login_page_test.dart' as login_page;
+import 'my_page/my_page_test.dart' as my_page;
 import 'notification_list_screen/notification_list_screen_test.dart'
     as notification_list_screen;
 import 'notification_settings_screen/notification_settings_screen_test.dart'
@@ -33,6 +36,7 @@ import 'ticket_qr_screen/ticket_qr_screen_test.dart' as ticket_qr_screen;
 
 /// 모든 cataloged 화면의 명시적 list. 새 화면 추가 시 본 list 에 추가.
 final List<MdsCatalog<MdsScreenBuilder<dynamic>>> allCatalogs = [
+  account_management_page.catalog,
   auth_callback_page.catalog,
   blocked_partners_page.catalog,
   deletion_complete_page.catalog,
@@ -44,6 +48,7 @@ final List<MdsCatalog<MdsScreenBuilder<dynamic>>> allCatalogs = [
   event_ongoing_banner.catalog,
   home_page.catalog,
   login_page.catalog,
+  my_page.catalog,
   notification_list_screen.catalog,
   notification_settings_screen.catalog,
   privacy_page.catalog,
