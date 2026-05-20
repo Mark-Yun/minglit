@@ -235,9 +235,13 @@ void main() {
       app: const _ThemeWrapper(),
       overrides: _base,
       body: (t) async {
+        // Fix #2659: _ThemeWrapper element는 자기 자신이 build()로 반환하는
+        // Theme 자식 위젯의 위쪽에 위치 — Theme.of()는 위로 walk-up하므로
+        // harness MaterialApp의 light theme을 읽음. Scaffold element에서 읽어야
+        // _ThemeWrapper가 주입한 inner Theme을 올바르게 탐색.
         // 초기 라이트 모드 확인
-        final wrapperEl = t.element(find.byType(_ThemeWrapper));
-        expect(Theme.of(wrapperEl).brightness, equals(Brightness.light));
+        final scaffold = t.element(find.byType(Scaffold));
+        expect(Theme.of(scaffold).brightness, equals(Brightness.light));
 
         // 시스템 테마 토글 시뮬레이션 (OS 이벤트 → setState)
         t
@@ -246,8 +250,8 @@ void main() {
         await t.pump();
 
         // 즉시 다크 변형 교체 확인 (재진입 불필요)
-        final updatedEl = t.element(find.byType(_ThemeWrapper));
-        expect(Theme.of(updatedEl).brightness, equals(Brightness.dark));
+        final updatedScaffold = t.element(find.byType(Scaffold));
+        expect(Theme.of(updatedScaffold).brightness, equals(Brightness.dark));
       },
     );
   });
