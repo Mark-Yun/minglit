@@ -21,7 +21,18 @@ class AccountDeletionController extends _$AccountDeletionController {
 
   /// Reloads the deletion status from the backend.
   Future<DeletionStatus?> checkStatus() async {
-    if (state.isLoading) return state.value;
+    // Fix #2555: await any in-flight initial build before triggering a fresh
+    // fetch. Without this, the first call from PendingDeletionRecoveryListener
+    // on a fresh signedIn races against build() and returns state.value (null)
+    // without ever invoking getDeletionStatus — so the recovery dialog never
+    // shows during the grace period.
+    if (state.isLoading) {
+      try {
+        await future;
+      } on Object {
+        // Swallow; the explicit fetch below will surface fresh errors.
+      }
+    }
 
     state = const AsyncLoading();
     try {
@@ -55,7 +66,19 @@ class AccountDeletionController extends _$AccountDeletionController {
 
   /// Cancels a pending deletion and reloads the latest status.
   Future<DeletionStatus?> cancelDeletion() async {
-    if (state.isLoading) return state.value;
+    // Fix #2555: await any in-flight initial build before mutating state.
+    // The provider is autoDispose; when PendingDeletionRecoveryListener invokes
+    // cancelDeletion after the recovery dialog closes, the previous notifier
+    // may have been disposed (no widget held a subscription during the dialog)
+    // and a fresh build is in-flight. Without awaiting it here, state.isLoading
+    // short-circuits the call and repo.cancelDeletion is never invoked.
+    if (state.isLoading) {
+      try {
+        await future;
+      } on Object {
+        // Swallow; the explicit cancel below will surface fresh errors.
+      }
+    }
 
     state = const AsyncLoading();
     final repository = ref.read(accountRepositoryProvider);
