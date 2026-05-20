@@ -176,7 +176,11 @@ void main() {
       body: (t) async {
         await t.pumpAndSettle();
 
-        // 예매 취소 버튼 탭
+        // Fix #2589 dev-blocker: PurchaseHistoryDetailPage SingleChildScroll
+        // View 가 viewport(866px)보다 커서 예매 취소 버튼이 off-screen
+        // → tap miss (Offset Y=908 > 866). ensureVisible로 스크롤 후 탭.
+        await t.ensureVisible(find.widgetWithText(ElevatedButton, '예매 취소'));
+        await t.pump();
         await t.tap(find.widgetWithText(ElevatedButton, '예매 취소'));
         await t.pumpAndSettle();
 
@@ -236,6 +240,9 @@ void main() {
       body: (t) async {
         await t.pumpAndSettle();
 
+        // Fix #2589 dev-blocker: 예매 취소 버튼 off-screen → ensureVisible 후 탭.
+        await t.ensureVisible(find.widgetWithText(ElevatedButton, '예매 취소'));
+        await t.pump();
         await t.tap(find.widgetWithText(ElevatedButton, '예매 취소'));
         await t.pumpAndSettle();
 
@@ -338,6 +345,9 @@ void main() {
       body: (t) async {
         await t.pumpAndSettle();
 
+        // Fix #2589 dev-blocker: 예매 취소 버튼 off-screen → ensureVisible 후 탭.
+        await t.ensureVisible(find.widgetWithText(ElevatedButton, '예매 취소'));
+        await t.pump();
         await t.tap(find.widgetWithText(ElevatedButton, '예매 취소'));
         await t.pumpAndSettle();
 
