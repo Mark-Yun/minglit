@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:app_user/src/features/event/admission/event_admission_controller.dart';
+import 'package:app_user/src/features/event/detail/event_bottom_ticket_bar.dart';
 import 'package:app_user/src/features/event/detail/event_detail_now_provider.dart';
 import 'package:app_user/src/features/event/detail/open_in_app_dialog.dart';
 import 'package:app_user/src/features/event/detail/report_bottom_sheet.dart';
@@ -15,7 +15,6 @@ import 'package:minglit_kit/minglit_kit.dart';
 
 export 'package:app_user/src/features/event/detail/event_detail_now_provider.dart';
 
-part 'event_bottom_ticket_bar.dart';
 part 'event_detail_content.dart';
 part 'event_detail_content_skeleton.dart';
 part 'event_detail_tab_bar_delegate.dart';
@@ -72,8 +71,8 @@ class EventDetailPage extends ConsumerWidget {
             ),
           ),
           eventAsync.when(
-            data: (event) => _BottomTicketBar(event: event),
-            loading: () => const _BottomTicketBarSkeleton(),
+            data: (event) => EventBottomTicketBar(event: event),
+            loading: () => const EventBottomTicketBarSkeleton(),
             error: (_, _) => const SizedBox.shrink(),
           ),
         ],

@@ -1,7 +1,12 @@
-part of 'event_detail_page.dart';
+// Refs #2588: extracted from part-of to public for mds-render catalog
+import 'package:app_user/src/features/event/admission/event_admission_controller.dart';
+import 'package:app_user/src/logic/event_coordinator.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:minglit_kit/minglit_kit.dart';
 
-class _BottomTicketBar extends ConsumerWidget {
-  const _BottomTicketBar({required this.event});
+class EventBottomTicketBar extends ConsumerWidget {
+  const EventBottomTicketBar({required this.event, super.key});
 
   final Event event;
 
@@ -119,8 +124,8 @@ class _BottomTicketBar extends ConsumerWidget {
   }
 }
 
-class _BottomTicketBarSkeleton extends StatelessWidget {
-  const _BottomTicketBarSkeleton();
+class EventBottomTicketBarSkeleton extends StatelessWidget {
+  const EventBottomTicketBarSkeleton({super.key});
 
   @override
   Widget build(BuildContext context) {
