@@ -35,13 +35,16 @@ class _FakeEntryGroupStatsController extends EntryGroupCheckinStatsController {
 }
 
 class _ErrorEntryGroupStatsController extends EntryGroupCheckinStatsController {
-  // Fix #2612: build() 를 `async` 로 두고 throw — 동기 `Future.error` 반환은
-  // AsyncNotifier 가 await 하기 전에 microtask 로 에러가 propagate 되어
-  // 일부 환경에서 AsyncError state transition 이 누락되는 케이스가 있다.
-  // async throw 패턴은 framework 가 만든 Future 안에서 catch 되므로 안전.
+  // Fix #2612: async throw / Future.error 모두 Riverpod test 환경에서
+  // AsyncError 로 안정적으로 transition 안 됨 (entry_group_bottom_sheet_test.dart
+  // 의 working pattern 인 state setter 직접 주입 패턴을 모사).
+  // 빈 데이터 초기화 → Timer(Duration.zero) 로 state 를 AsyncError 로 전환.
   @override
   Future<List<EntryGroupCheckinStats>> build(String eventId) async {
-    throw Exception('RPC 실패');
+    Future<void>.delayed(Duration.zero, () {
+      state = AsyncError(Exception('RPC 실패'), StackTrace.empty);
+    });
+    return const <EntryGroupCheckinStats>[];
   }
 }
 
@@ -386,11 +389,8 @@ void main() {
         ).overrideWith(_ErrorEntryGroupStatsController.new),
       ],
       body: (t) async {
-        // Fix #2612: build() async throw → AsyncError 로 transition.
-        // pump → Loading 렌더, 짧은 duration → build microtask 처리,
-        // pumpAndSettle → error 상태 반영 마무리.
-        await t.pump();
-        await t.pump(const Duration(milliseconds: 200));
+        // Fix #2612: Timer(Duration.zero) 발사를 위해 pump 한 번 더.
+        await t.pump(const Duration(milliseconds: 16));
         await t.pumpAndSettle();
         expect(find.text('엔트리 그룹별 현황'), findsOneWidget);
         expect(find.textContaining('불러오기 실패'), findsOneWidget);
