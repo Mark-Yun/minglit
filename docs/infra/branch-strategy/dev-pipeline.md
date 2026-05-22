@@ -98,8 +98,8 @@ Snapshot 모델 — **auto-revert 없음**. dev 가 broken 상태로 잠시 머�
 
 ### `deploy-vercel`
 
-- Vercel deploy hooks 4앱 (app_user, app_partner, landing_user, landing_partner)
-- 현재 cron 2시간 → push-event 기반으로 교체
+- Vercel native build 사용. `dev` 는 preview deployment, `main` 은 production deployment
+- 기존 cron/deploy hook 워크플로우는 전환 완료 후 폐기
 - 실패 시: retry 1회 → 실패 시 P0 이슈
 
 ## Artifact / 보존
@@ -112,7 +112,7 @@ Snapshot 모델 — **auto-revert 없음**. dev 가 broken 상태로 잠시 머�
 - nightly-cut cron 시각
 - backoff 임계 (3회 차단이 적정한가)
 - CUJ chaos 시나리오 정의 (현재 미정의)
-- ephemeral Supabase branch (RC 마다 새로 vs 단일 공유)
+- Supabase RC branch TTL / seed data 정책
 - rc-gate selective run 도입 시점
 
 ## 관련

@@ -1,42 +1,40 @@
 # Dev-Staging Pipeline
 
-AI agent 와 feature/fix/chore PR 이 `dev-staging` 브랜치로 들어오는 진입점. merge queue 가 직렬 처리하고, `dev-staging-pr-gate` 가 가벼운 검증, 머지 후 `dev-staging-post-merge-sync` 가 version bump.
+AI agent 와 feature/fix/chore PR 이 `dev-staging` 브랜치로 들어오는 진입점. 일반 PR + auto-merge 로 처리하고, `dev-staging-pr-gate` 가 가벼운 검증, 머지 후 `dev-staging-post-merge-sync` 가 release bot 권한으로 version bump.
 
 ## 두 가지 workflow
 
-1. **`dev-staging-pr-gate`** — PR 머지 전 (merge queue 가 각 PR rebase 후 실행)
+1. **`dev-staging-pr-gate`** — PR 머지 전
 2. **`dev-staging-post-merge-sync`** — PR 머지 직후 (version bump + tag)
 
-## Merge Queue
+## PR + Auto-Merge
 
-GitHub merge queue 가 `dev-staging` 의 PR 을 직렬 처리:
+초기 모델에서는 merge queue 를 쓰지 않는다. PR 은 `dev-staging-pr-gate` 통과 후 auto-merge 로 squash merge 된다. base drift 는 strict status checks 와 자동 branch update 로 처리한다.
 
 ```
-[PR enqueue]
+[PR open]
     ↓
-[PR base 를 최신 dev-staging HEAD 로 rebase]
+[dev-staging-pr-gate]
     ↓
-[dev-staging-pr-gate 재실행 (rebased state)]
+[auto-merge 대기]
+    ↓
+[base drift 발생 시 branch update 후 gate 재실행]
     ↓
 [통과 시 squash merge to dev-staging]
     ↓
 [dev-staging-post-merge-sync 자동 발동]
-    ↓
-[다음 PR 처리]
 ```
 
-### 왜 merge queue
+### 왜 merge queue 를 보류하나
 
-- Master-green 유지 (Uber Submit Queue: 99%+)
-- Drift / conflict accumulation 회피
-- AI agent 가 동시 다발 PR 작성해도 안전하게 직렬 처리
-- "Update branch" 수동 작업 제거
+- 현재 PR 동시성/충돌 빈도 데이터를 먼저 본다
+- 운영 복잡도를 낮추고 기존 GitHub auto-merge 흐름을 재사용한다
+- 필요해지면 `dev-staging` 에만 merge queue 를 후속 도입한다
 
 ### 결정해야 할 것
 
-- 모드 (concurrent vs serial)
-- queue stuck 시 escalation
-- 도입 단계 (전체 vs 점진)
+- branch update 자동화 방식 (`gh api update-branch` vs 기존 sync-pr-branches 재사용)
+- merge queue 도입 기준 (동시 PR 수, conflict 빈도, stale 재실행 비용)
 
 ## `dev-staging-pr-gate`
 
@@ -94,15 +92,17 @@ PR 머지 직후 자동 발동.
 4. git push (tag + commit)
 ```
 
+`git push` 는 human 권한이 아니라 `minglit-release-bot` 전용 token 으로 실행한다. Ruleset bypass 는 이 bot actor 에만 부여하고, workflow permission 은 `contents: write` 및 tag/status 갱신에 필요한 최소 권한으로 제한한다.
+
 Tag `v{ver}-dev-staging` 는 다음 단계의 `nightly-cut` workflow 가 query 해서 "가장 최근 dev-staging 의 coherent snapshot" 찾는 데 사용.
 
 > **구현 디테일**: bump 커밋이 별도로 만들어지는 게 깔끔 vs squash 커밋에 inline 시키는 게 깔끔 — workflow 디자인 결정 (TBD).
 
 ## Error-Backoff
 
-**Workflow infra 실패** (merge queue 다운, runner 다운, script 에러) → **P0 이슈** + on-call.
+**Workflow infra 실패** (runner 다운, script 에러, release bot push 실패) → **P0 이슈** + on-call.
 
-**Test 실패** (PR 단위) → queue 가 PR drop + 작성자 알림. 작성자 fix → re-queue.
+**Test 실패** (PR 단위) → auto-merge 보류 + 작성자 알림. 작성자 fix → re-run.
 
 ### `expand-migrate-contract` false positive
 
@@ -112,7 +112,7 @@ destructive pattern 검출이 too aggressive 한 경우:
 
 ## 결정해야 할 것
 
-- merge queue 모드 (concurrent / serial)
+- branch update 자동화 방식
 - `expand-migrate-contract` 의 6-month-old schema 보관 위치
 - `flag-registration` AST 도구 (analyzer / 자체 / Semgrep?)
 - version bump commit 별도 vs inline

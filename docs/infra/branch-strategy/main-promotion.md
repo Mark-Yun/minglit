@@ -18,7 +18,7 @@
 | RC HEAD 의 `rc-gate-pass` status 확인 | 마지막 hotfix 이 rc-gate 통과했는지 |
 | `rc-soak-passed` 자동 마커 | rc-soak-check 가 5일 무커밋 확인 후 부여 |
 
-**모든 check 통과 시 workflow 가 auto-merge** (rebase + fast-forward). 어느 하나라도 실패 시 PR hold + Slack 알림 → human 개입 (edge case).
+GitHub Ruleset 의 required check 는 `main-pr-gate` 하나로 둔다. `rc-gate-pass`, `expand-migrate-contract`, `rc-soak-passed` 는 PR head SHA 와 별도 commit/label 상태가 섞일 수 있으므로 `main-pr-gate` 내부 검증으로 처리한다. 모든 check 통과 시 workflow 가 auto-merge (rebase + fast-forward) 한다. 어느 하나라도 실패 시 PR hold + Slack 알림 → human 개입 (edge case).
 
 ## `main-post-merge-promote`
 
@@ -37,9 +37,10 @@ auto-merge 직후 자동 (promote + prod deploy chain):
    - deploy-android-{user,partner}
    - deploy-ios-{user,partner}
    - (Vercel: native build 가 main push 자동 감지)
+9. RC Supabase branch 삭제 + active RC marker 제거
 ```
 
-> Backend/web deploy 는 main 에서 안 함 — dev 의 rc-gate-pass 에서 이미 prod 반영됨. Mobile deploy 는 별도 workflow.
+> Backend/web staging deploy 는 dev 의 rc-gate-pass 에서 수행되고, backend/web prod deploy 는 main 머지 후 수행한다. Mobile deploy 는 main push 이후 별도 workflow 로 수행한다.
 
 ## 기존 Mobile Deploy Workflows (재사용)
 
