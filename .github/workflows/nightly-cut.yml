@@ -45,7 +45,7 @@ jobs:
       - name: Plan nightly promotion
         id: plan
         env:
-          GH_TOKEN: ${{ steps.release-bot.outputs.token }}
+          GH_TOKEN: ${{ github.token }}
           RELEASE_BOT_TOKEN: ${{ steps.release-bot.outputs.token }}
           REQUESTED_TAG: ${{ inputs.tag_name || '' }}
         run: |
