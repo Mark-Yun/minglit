@@ -70,7 +70,7 @@
 | 2a | `pr-gate.yml` 단일 파일 유지하면서 내부 jobs 를 `workflow_call` 받게 변경 + stage parameter 추가. `pr-gate-core` 별도 파일 아님 | PR 흐름 동일, 내부 jobs reusable 化 |
 | 2b | stage 별 `extra_steps` 지원 (dev-staging / rc / main) | 기존 동작 동일 |
 | 2c | `version-bump` reusable extract (sync-version 의 핵심 로직) | sync-version 의 caller 가 reusable 호출하게 변경 |
-| 2d | `minglit-release-bot` 생성 + `MINGLIT_RELEASE_BOT_TOKEN` 등록 + workflow permission 최소화 | protected branch/tag push 를 human 대신 bot 으로 수행 |
+| 2d | `minglit-release-bot` 생성 + App ID/private key 등록 + workflow permission 최소화 | protected branch/tag push 를 human 대신 bot 으로 수행 |
 | 2e | `auto-issue` reusable 추가 | 신규 — 기존 영향 없음 |
 | 2f | **`ci-result` 폐기** — 현 branch protection 의 required check `ci-result` 를 각 branch 의 `pr-gate` 로 변경 (Phase 4 에서 실제 적용) | 본 step 은 workflow 측 준비, 실제 protection 변경은 4 |
 | 2g | `deploy-supabase` 의 trigger refactor — push:dev 부분을 rc-gate-pass workflow_call **with target=main-staging** 로 변경, push:main 은 main-post-merge-promote 의 workflow_call **with target=main** | staging deploy 와 prod deploy 분리. 사용자 서버 영향 X |
@@ -207,7 +207,7 @@ Phase 1 (skeletal) → Phase 2a-2c (pr-gate refactor) → Phase 3a (dev-staging 
 2. **trigger 변경**: cron → push 변경 시 *겹치는 기간* 발생할 수 있음 — 한쪽 비활성화 후 다른쪽 활성화. 부분 적용 금지
 3. **status check naming**: `rc-gate-pass` 같은 commit status 의 이름이 spec 과 workflow 에서 일치해야 함. branch protection 에는 직접 required 로 걸지 않고 `main-pr-gate` 내부에서 검증
 4. **AI agent 의 PR 동시성**: merge queue 없으니 race condition 발생 시 수동 conflict resolve 필요 (또는 merge queue 도입 검토)
-5. **Release bot token 실패**: `MINGLIT_RELEASE_BOT_TOKEN` 권한 부족이면 version bump/tag/promotion workflow 가 막힘. 최초 도입 시 dry-run branch 로 push/tag/delete까지 검증
+5. **Release bot token 실패**: GitHub App ID/private key 누락 또는 App 권한 부족이면 version bump/tag/promotion workflow 가 막힘. 최초 도입 시 dry-run branch 로 push/tag/delete까지 검증
 6. **Secret 마이그레이션 중 workflow 실패**: file 기반과 GH secret 참조가 섞이는 transition 기간 — env 변수 누락 시 즉시 발견 (CI 통과 못함)
 
 ## Self-review: Phase 3 ordering
