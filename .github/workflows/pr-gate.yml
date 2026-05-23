@@ -877,9 +877,9 @@ jobs:
           # 1. Check CI job results
           results='${{ toJSON(needs.*.result) }}'
           echo "Job results: $results"
-          if echo "$results" | grep -q '"failure"'; then
+          if echo "$results" | grep -Eq '"(failure|cancelled)"'; then
             echo ""
-            echo '${{ toJSON(needs) }}' | jq -r 'to_entries[] | select(.value.result == "failure") | "❌ \(.key)"'
+            echo '${{ toJSON(needs) }}' | jq -r 'to_entries[] | select(.value.result == "failure" or .value.result == "cancelled") | "❌ \(.key): \(.value.result)"'
             exit 1
           fi
           echo "✅ CI jobs passed"
