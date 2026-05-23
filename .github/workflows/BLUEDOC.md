@@ -20,7 +20,7 @@
 | `post-merge` | dev push 직후 follow-up 자동화의 단일 entry point (5 reusable orchestrator) | `post-merge` |
 | `tool-` | (수동으로 부를 때만 도는 도구) | (현재 없음 — 새 수동 도구 추가 시 prefix) |
 | `shared-` | (다른 워크플로우의 부품 — 단독 실행 X) | `shared-notify`, `shared-android-deploy` |
-| branch-strategy stage name | branch-strategy 문서의 stage entry workflow | `dev-staging-post-merge-sync` |
+| branch-strategy stage name | branch-strategy 문서의 stage entry workflow | `dev-staging-post-merge-sync`, `nightly-cut` |
 | reusable no-prefix | `workflow_call` 로만 호출되는 domain reusable | `version-bump` |
 
 ## Reusable Gates
@@ -48,4 +48,4 @@
 - [CLAUDE.md](../../CLAUDE.md) `## PR Conventions` — required check (`ci-result` job = `pr-gate.yml` 내부) / auto-merge 흐름
 
 ---
-_Reviewed: 2026-05-23 16:18_
+_Reviewed: 2026-05-23 16:31_

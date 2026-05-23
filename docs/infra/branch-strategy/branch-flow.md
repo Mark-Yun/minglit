@@ -7,7 +7,7 @@
 ```
   agents ──PR + auto-merge──▶ dev-staging
                               │
-                              └─daily nightly-cut snapshot──▶ dev
+                              └─daily nightly-cut linear snapshot PR──▶ dev
                                                               │
                                                               ├─▶ rc-gate (post-merge 자동)
                                                               │      │
@@ -45,7 +45,7 @@ rc/* hotfix 머지 ──auto cherry-pick──▶ backport-branch ──PR─�
 | 머지 방향 | base ← head | 트리거 | 머지 방식 | 요구 체크 |
 |-----------|-------------|--------|-----------|-----------|
 | feature/agent → dev-staging | `dev-staging` ← `feat/*`, `fix/*`, `chore/*`, `docs/*` | PR + auto-merge | **squash** | `dev-staging-pr-gate` |
-| dev-staging → dev | `dev` ← `dev-staging` | daily cron `nightly-cut` | merge (snapshot) | `nightly-pr-gate` |
+| dev-staging → dev | `dev` ← `nightly/YYYY-MM-DD-{sha8}` at latest `v*-dev-staging` tag | daily cron `nightly-cut` | rebase (linear snapshot) | `nightly-pr-gate` |
 | hotfix → rc | `rc/YYYY-Wxx` ← hotfix branch | hotfix only | rebase | `rc-pr-gate` |
 | rc → main | `main` ← `rc/YYYY-Wxx` | `rc-soak-check` 가 5일 무커밋 시 PR 생성 + auto-merge | rebase + ff | `main-pr-gate` |
 
@@ -54,11 +54,11 @@ rc/* hotfix 머지 ──auto cherry-pick──▶ backport-branch ──PR─�
 | 브랜치 | direct push | linear | required check | merge 종류 |
 |--------|-------------|--------|----------------|------------|
 | `dev-staging` | 금지 (release bot 예외) | **ON** | `dev-staging-pr-gate` | squash |
-| `dev` | 금지 | **ON** | `nightly-pr-gate` | merge (snapshot) |
+| `dev` | 금지 | **ON** | `nightly-pr-gate` | rebase (linear snapshot) |
 | `rc/YYYY-Wxx` | 금지 | **ON** | `rc-pr-gate` | rebase |
 | `main` | 금지 (release bot 예외) | **ON** | `main-pr-gate` | rebase |
 
-Hybrid linear history 금지 — 각 branch 내 일관 (squash or rebase 한 가지). Protected branch 직접 push 는 `minglit-release-bot` 의 version bump/tag/promotion commit 에만 Ruleset bypass 로 허용한다.
+Hybrid linear history 금지 — 각 branch 내 일관 (squash or rebase 한 가지). `dev` 는 active ruleset 의 linear history 와 맞추기 위해 nightly promotion 도 rebase 를 사용한다. Protected branch 직접 push 는 `minglit-release-bot` 의 version bump/tag/promotion commit 에만 Ruleset bypass 로 허용한다.
 
 ## Promotion Tag 컨벤션
 
@@ -120,4 +120,4 @@ main-post-merge-promote (on push to main):
 - `RELEASE.md` 작성
 
 ---
-_Reviewed: 2026-05-19 09:47_
+_Reviewed: 2026-05-23 16:31_

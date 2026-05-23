@@ -1,0 +1,160 @@
+name: nightly-cut
+
+on:
+  schedule:
+    # 02:00 KST daily.
+    - cron: '0 17 * * *'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: Optional v*-dev-staging tag to promote instead of the latest one.
+        required: false
+        type: string
+
+concurrency:
+  group: nightly-cut
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  create-nightly-pr:
+    runs-on: ubuntu-latest
+    outputs:
+      skipped: ${{ steps.plan.outputs.skipped }}
+      pr_number: ${{ steps.pr.outputs.pr_number }}
+      tag_name: ${{ steps.plan.outputs.tag_name }}
+      branch_name: ${{ steps.plan.outputs.branch_name }}
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Generate release bot token
+        id: release-bot
+        uses: ./.github/actions/release-bot-token
+        with:
+          fallback-app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
+          fallback-private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
+
+      - name: Plan nightly promotion
+        id: plan
+        env:
+          GH_TOKEN: ${{ steps.release-bot.outputs.token }}
+          REQUESTED_TAG: ${{ inputs.tag_name || '' }}
+        run: |
+          set -euo pipefail
+
+          git fetch origin dev dev-staging --tags --force
+
+          OPEN_PR="$(gh pr list \
+            --base dev \
+            --state open \
+            --json number,headRefName \
+            --jq '[.[] | select(.headRefName | startswith("nightly/"))][0].number // empty')"
+          if [ -n "${OPEN_PR}" ]; then
+            echo "Nightly PR #${OPEN_PR} is already open; skipping."
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ -n "${REQUESTED_TAG}" ]; then
+            TAG_NAME="${REQUESTED_TAG}"
+          else
+            TAG_NAME="$(git for-each-ref \
+              --sort=-creatordate \
+              --format='%(refname:short)' \
+              'refs/tags/v*-dev-staging' | head -n 1)"
+          fi
+
+          if [ -z "${TAG_NAME}" ]; then
+            echo "::error::No v*-dev-staging tag found to promote."
+            exit 1
+          fi
+          if ! git rev-parse -q --verify "refs/tags/${TAG_NAME}" >/dev/null; then
+            echo "::error::Tag ${TAG_NAME} does not exist."
+            exit 1
+          fi
+
+          TAG_SHA="$(git rev-list -n 1 "${TAG_NAME}")"
+          if ! git merge-base --is-ancestor "${TAG_SHA}" origin/dev-staging; then
+            echo "::error::Tag ${TAG_NAME} (${TAG_SHA}) is not reachable from origin/dev-staging."
+            exit 1
+          fi
+
+          if git merge-base --is-ancestor "${TAG_SHA}" origin/dev; then
+            echo "origin/dev already contains ${TAG_NAME}; skipping."
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+            echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          RUN_DATE="$(TZ=Asia/Seoul date +%Y-%m-%d)"
+          SHORT_SHA="${TAG_SHA:0:8}"
+          BRANCH_NAME="nightly/${RUN_DATE}-${SHORT_SHA}"
+          if git ls-remote --exit-code --heads origin "${BRANCH_NAME}" >/dev/null 2>&1; then
+            BRANCH_NAME="${BRANCH_NAME}-${GITHUB_RUN_ID}"
+          fi
+
+          echo "skipped=false" >> "$GITHUB_OUTPUT"
+          echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
+          echo "tag_sha=${TAG_SHA}" >> "$GITHUB_OUTPUT"
+          echo "branch_name=${BRANCH_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Push nightly branch
+        if: steps.plan.outputs.skipped != 'true'
+        env:
+          RELEASE_BOT_TOKEN: ${{ steps.release-bot.outputs.token }}
+          TAG_SHA: ${{ steps.plan.outputs.tag_sha }}
+          BRANCH_NAME: ${{ steps.plan.outputs.branch_name }}
+        run: |
+          set -euo pipefail
+          git remote set-url origin "https://x-access-token:${RELEASE_BOT_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push origin "${TAG_SHA}:refs/heads/${BRANCH_NAME}"
+          git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
+
+      - name: Create nightly PR and enable auto-merge
+        id: pr
+        if: steps.plan.outputs.skipped != 'true'
+        env:
+          GH_TOKEN: ${{ steps.release-bot.outputs.token }}
+          TAG_NAME: ${{ steps.plan.outputs.tag_name }}
+          TAG_SHA: ${{ steps.plan.outputs.tag_sha }}
+          BRANCH_NAME: ${{ steps.plan.outputs.branch_name }}
+        run: |
+          set -euo pipefail
+          RUN_DATE="$(TZ=Asia/Seoul date +%Y-%m-%d)"
+          BODY="$(cat <<EOF
+          Promotes the latest coherent dev-staging snapshot to dev.
+
+          - Source tag: ${TAG_NAME}
+          - Source SHA: ${TAG_SHA}
+          - Merge mode: rebase, because the active dev ruleset requires linear history.
+          EOF
+          )"
+
+          PR_URL="$(gh pr create \
+            --base dev \
+            --head "${BRANCH_NAME}" \
+            --title "chore(promo): dev-staging to dev ${RUN_DATE}" \
+            --body "${BODY}")"
+          PR_NUMBER="${PR_URL##*/}"
+
+          gh pr merge "${PR_NUMBER}" --auto --rebase --delete-branch
+          echo "pr_number=${PR_NUMBER}" >> "$GITHUB_OUTPUT"
+
+  notify-failure:
+    needs: [create-nightly-pr]
+    if: always()
+    permissions:
+      issues: write
+    uses: ./.github/workflows/shared-notify.yml
+    with:
+      success: ${{ needs.create-nightly-pr.result == 'success' || needs.create-nightly-pr.result == 'skipped' }}
+      workflow_name: 'Nightly Cut'
+      job_results: '{"create-nightly-pr":"${{ needs.create-nightly-pr.result }}"}'

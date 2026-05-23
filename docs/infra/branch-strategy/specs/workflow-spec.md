@@ -106,7 +106,7 @@ Cross-branch cherry-pick PR 자동 생성.
 | Trigger | `schedule` (daily KST 02:00 TBD) + `workflow_dispatch` |
 | Inputs | (none, or optional ref override) |
 | Outputs | PR number (dev-staging → dev) or skip |
-| Steps | (1) 이전 `nightly-cut` PR open 이면 skip + Slack (2) 가장 최근 `v*-dev-staging` tag SHA 조회 (3) dev HEAD == 그 SHA 이면 skip ("no new commits") (4) `nightly/YYYY-MM-DD` promotion branch 를 tag SHA 에서 생성 (5) `gh pr create` (base=dev, head=nightly/YYYY-MM-DD) + auto-merge 활성화 |
+| Steps | (1) 이전 `nightly-cut` PR open 이면 skip + Slack (2) 가장 최근 `v*-dev-staging` tag SHA 조회 (3) dev 가 그 SHA 를 이미 포함하면 skip ("no new commits") (4) `nightly/YYYY-MM-DD-{sha8}` promotion branch 를 tag SHA 에서 생성 (5) `gh pr create` (base=dev, head=nightly/YYYY-MM-DD-{sha8}) + auto-merge 활성화 (`rebase`, active dev ruleset 의 linear history 와 호환) |
 
 #### `nightly-pr-gate`
 
