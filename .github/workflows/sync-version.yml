@@ -25,7 +25,16 @@ jobs:
         with:
           ref: ${{ github.base_ref }}
           fetch-depth: 0
-          token: ${{ secrets.GH_PAT_VERSION_BUMP }}
+          persist-credentials: false
+
+      - name: Validate release bot token
+        env:
+          MINGLIT_RELEASE_BOT_TOKEN: ${{ secrets.MINGLIT_RELEASE_BOT_TOKEN }}
+        run: |
+          if [ -z "${MINGLIT_RELEASE_BOT_TOKEN}" ]; then
+            echo "::error::MINGLIT_RELEASE_BOT_TOKEN is required for protected branch version bump pushes"
+            exit 1
+          fi
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -62,12 +71,15 @@ jobs:
         run: bash scripts/bump-version.sh "${{ steps.version.outputs.new }}"
 
       - name: Commit and push version bump
+        env:
+          MINGLIT_RELEASE_BOT_TOKEN: ${{ secrets.MINGLIT_RELEASE_BOT_TOKEN }}
         run: |
           NEW_VERSION="${{ steps.version.outputs.new }}"
           BRANCH="${{ github.base_ref }}"
 
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "minglit-release-bot"
+          git config user.email "minglit-release-bot@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${MINGLIT_RELEASE_BOT_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
 
           git add -A
           git diff --cached --quiet && { echo "No version changes to commit."; exit 0; }
@@ -91,11 +103,12 @@ jobs:
             # linear backoff: 2s, 4s, 6s, 8s
             sleep $((2 * ATTEMPT))
           done
+          git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
 
       - name: Create GitHub release (main only)
         if: github.base_ref == 'main'
         env:
-          GH_TOKEN: ${{ secrets.GH_PAT_VERSION_BUMP }}
+          GH_TOKEN: ${{ secrets.MINGLIT_RELEASE_BOT_TOKEN }}
         run: |
           VERSION="${{ steps.version.outputs.base }}"
           gh release create "v${VERSION}" \
