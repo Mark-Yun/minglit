@@ -24,7 +24,14 @@ jobs:
         with:
           ref: dev
           fetch-depth: 0
-          token: ${{ secrets.GH_PAT_VERSION_BUMP }}
+          persist-credentials: false
+
+      - name: Generate release bot token
+        id: release-bot
+        uses: ./.github/actions/release-bot-token
+        with:
+          fallback-app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
+          fallback-private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -44,13 +51,16 @@ jobs:
         run: graphify update .
 
       - name: Commit & push if changed
+        env:
+          RELEASE_BOT_TOKEN: ${{ steps.release-bot.outputs.token }}
         run: |
           if [[ -n "$(git status --porcelain graphify-out/)" ]]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git config user.name "minglit-release-bot"
+            git config user.email "minglit-release-bot@users.noreply.github.com"
+            git remote set-url origin "https://x-access-token:${RELEASE_BOT_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
             git add graphify-out/
             git commit -m "chore(graphify): auto-update [skip ci]"
-            git push origin dev
+            git push origin HEAD:dev
           else
             echo "No graph changes"
           fi
