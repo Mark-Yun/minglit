@@ -203,9 +203,9 @@ void main() {
         // 3 초 후 자동 dismiss Timer 가 있다. pumpAndSettle 은 Timer 를 drain 하지
         // 않으므로 test body 종료 후 Timer 가 발화 → flutter_test binding 의
         // 'inTest: is not true' assertion. test 끝나기 전에 명시적으로 clear.
-        ScaffoldMessenger.of(
-          t.element(find.byType(MaterialApp)),
-        ).clearSnackBars();
+        ScaffoldMessenger.maybeOf(
+          t.element(find.byType(PurchaseHistoryDetailPage)),
+        )?.clearSnackBars();
         await t.pumpAndSettle();
       },
     );
@@ -375,9 +375,9 @@ void main() {
 
         // Fix #2589 dev-blocker: SnackBar 3 초 자동 dismiss Timer drain
         // (1-1 happy 동일 패턴 참고).
-        ScaffoldMessenger.of(
-          t.element(find.byType(MaterialApp)),
-        ).clearSnackBars();
+        ScaffoldMessenger.maybeOf(
+          t.element(find.byType(PurchaseHistoryDetailPage)),
+        )?.clearSnackBars();
         await t.pumpAndSettle();
       },
     );
