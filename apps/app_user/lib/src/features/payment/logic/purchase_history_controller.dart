@@ -82,6 +82,9 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
     required Future<bool> Function(String message) showError,
     required Future<void> Function() onSuccess,
   }) async {
+    final repository = ref.read(eventRepositoryProvider);
+    final loading = ref.read(globalLoadingControllerProvider.notifier);
+
     // Fix #1652: 무료 티켓(paymentAmount=0, paymentId=null)은 환불 계산 건너뜀
     // user-cancel-order EF가 paymentAmount=0 케이스를 직접 처리
     final isFree = paymentAmount == 0 && paymentId == null;
@@ -108,6 +111,8 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
       );
       if (!confirmed) return;
       await _requestRefund(
+        repository: repository,
+        loading: loading,
         eventId: eventId,
         showError: showError,
         onSuccess: onSuccess,
@@ -144,6 +149,8 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
     if (!confirmed) return;
 
     await _requestRefund(
+      repository: repository,
+      loading: loading,
       eventId: eventId,
       showError: showError,
       onSuccess: onSuccess,
@@ -152,23 +159,27 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
 
   // Fix #299: cancelPayment → cancelOrder EF 전환
   Future<void> _requestRefund({
+    required EventRepository repository,
+    required GlobalLoadingController loading,
     required String eventId,
     required Future<bool> Function(String message) showError,
     required Future<void> Function() onSuccess,
   }) async {
-    final loading = ref.read(globalLoadingControllerProvider.notifier)..show();
+    loading.show();
     try {
-      await ref
-          .read(eventRepositoryProvider)
-          .cancelOrder(
-            eventId: eventId,
-            reason: '사용자 예매 취소',
-          );
+      await repository.cancelOrder(
+        eventId: eventId,
+        reason: '사용자 예매 취소',
+      );
 
       await onSuccess();
       // Fix #1951: invalidate after onSuccess — Riverpod 3.x throws StateError
       // when self-invalidating mid-action before onSuccess() can run.
-      ref.invalidate(purchaseHistoryControllerProvider);
+      // Fix #2705: confirm dialogs can dispose this autoDispose controller
+      // before refund side effects finish; do not touch ref after disposal.
+      if (ref.mounted) {
+        ref.invalidate(purchaseHistoryControllerProvider);
+      }
     } on Object catch (e, st) {
       final exception = MinglitException.from(e, st);
       final message = exception is MinglitSystemException
@@ -177,6 +188,8 @@ class PurchaseHistoryController extends _$PurchaseHistoryController {
       final retry = await showError(message);
       if (retry) {
         await _requestRefund(
+          repository: repository,
+          loading: loading,
           eventId: eventId,
           showError: showError,
           onSuccess: onSuccess,
