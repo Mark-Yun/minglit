@@ -34,7 +34,7 @@
 | Trigger | `workflow_call` |
 | Inputs | `version`: YY.MM.PR# / `suffix`: ""\|`-dev-staging`\|`-rc-NN` / `commit_message`: string |
 | Outputs | `commit_sha`, `tag_name` |
-| 핵심 steps | `bash scripts/bump-version.sh {version}{suffix}` · commit (with `[skip ci]`) · `git tag v{version}{suffix}` · push |
+| 핵심 steps | `bash scripts/bump-version.sh {version}{suffix}` · commit (`skip_ci` option) · `git tag v{version}{suffix}` · push |
 | Called by | `dev-staging-post-merge-sync`, `rc-cut`, `rc-post-merge-sync`, `main-post-merge-promote` |
 
 ### `rc-gate-suite`

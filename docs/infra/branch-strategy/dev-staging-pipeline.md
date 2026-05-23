@@ -87,7 +87,7 @@ PR 머지 직후 자동 발동.
 
 ```
 1. `version-bump` reusable 호출: `bump-version.sh YY.MM.{PR번호}-dev-staging`
-2. git commit -m "chore: bump version to v{ver}-dev-staging [skip ci]"
+2. git commit -m "chore: bump version to v{ver}-dev-staging"
 3. git tag v{ver}-dev-staging
 4. git push (tag + commit)
 ```
@@ -96,7 +96,7 @@ PR 머지 직후 자동 발동.
 
 Tag `v{ver}-dev-staging` 는 다음 단계의 `nightly-cut` workflow 가 query 해서 "가장 최근 dev-staging 의 coherent snapshot" 찾는 데 사용.
 
-> **구현 결정**: bump 커밋은 PR squash commit 과 분리한다. release bot 전용 커밋으로 남겨 branch/tag write 권한과 human PR 변경을 분리한다.
+> **구현 결정**: bump 커밋은 PR squash commit 과 분리한다. release bot 전용 커밋으로 남겨 branch/tag write 권한과 human PR 변경을 분리한다. `[skip ci]` 는 쓰지 않는다. nightly PR 의 HEAD 가 이 bump 커밋이므로 `[skip ci]` 를 넣으면 required check 가 생성되지 않는다. 루프 방지는 `dev-staging-post-merge-sync` 의 commit message guard 로 처리한다.
 
 ## Error-Backoff
 
