@@ -32,7 +32,6 @@ jobs:
         uses: ./.github/actions/release-bot-token
         with:
           env-file: minglit_env/dev/github.env
-          minglit-env-pat: ${{ secrets.MINGLIT_ENV_PAT }}
           fallback-app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
           fallback-private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
 

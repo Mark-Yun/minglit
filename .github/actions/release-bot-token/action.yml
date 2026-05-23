@@ -10,6 +10,10 @@ inputs:
     description: Optional token for checking out the private minglit_env submodule.
     required: false
     default: ''
+  env-repository:
+    description: Repository that contains the private env submodule.
+    required: false
+    default: minglit_env
   fallback-app-id:
     description: Fallback GitHub App ID when env-file is unavailable.
     required: false
@@ -35,18 +39,28 @@ outputs:
 runs:
   using: composite
   steps:
+    - name: Generate minglit_env checkout token
+      id: env-token
+      if: ${{ inputs.minglit-env-pat == '' && inputs.fallback-app-id != '' && inputs.fallback-private-key != '' }}
+      uses: actions/create-github-app-token@v2
+      with:
+        app-id: ${{ inputs.fallback-app-id }}
+        private-key: ${{ inputs.fallback-private-key }}
+        owner: ${{ inputs.owner }}
+        repositories: ${{ inputs.env-repository }}
+
     - name: Checkout minglit_env submodule
       shell: bash
       env:
-        MINGLIT_ENV_PAT: ${{ inputs.minglit-env-pat }}
+        MINGLIT_ENV_TOKEN: ${{ inputs.minglit-env-pat || steps.env-token.outputs.token }}
       run: |
         set -euo pipefail
-        if [ -z "${MINGLIT_ENV_PAT:-}" ]; then
-          echo "::warning::MINGLIT_ENV_PAT is not configured; release bot credentials will use fallback inputs if env-file is unavailable."
+        if [ -z "${MINGLIT_ENV_TOKEN:-}" ]; then
+          echo "::warning::No minglit_env checkout token is available; release bot credentials will use fallback inputs if env-file is unavailable."
           exit 0
         fi
 
-        git -c "url.https://x-access-token:${MINGLIT_ENV_PAT}@github.com/.insteadOf=https://github.com/" \
+        git -c "url.https://x-access-token:${MINGLIT_ENV_TOKEN}@github.com/.insteadOf=https://github.com/" \
           submodule update --init --recursive minglit_env
 
     - name: Load release bot credentials
