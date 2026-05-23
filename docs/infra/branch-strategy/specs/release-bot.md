@@ -9,7 +9,7 @@
 | App name | `minglit-release-bot` |
 | Owner | 개인 계정 또는 `team-minglit` org |
 | Visibility | **Any account** 권장 — 개인 계정에서 만든 App 을 org repo 에 설치하려면 필요 |
-| Installation target | `Mark-Yun/minglit` selected repository |
+| Installation target | `Mark-Yun/minglit` + `Mark-Yun/minglit_env` selected repositories |
 | Webhook | 불필요. Active 해제 가능 |
 
 ## Permissions
@@ -44,9 +44,10 @@ Workflow 에 release bot 장기 PAT 를 저장하지 않는다. App private key 
 | `MINGLIT_RELEASE_BOT_PRIVATE_KEY_BASE64` | `minglit_env/{stage}/github.env` | GitHub App private key PEM 을 base64 단일 라인으로 저장 |
 | `MINGLIT_RELEASE_BOT_OWNER` | `minglit_env/{stage}/github.env` | `Mark-Yun` |
 | `MINGLIT_RELEASE_BOT_REPOSITORIES` | `minglit_env/{stage}/github.env` | `minglit` |
-| `MINGLIT_ENV_PAT` | GitHub Actions secret | private `minglit_env` submodule checkout 용 read-only token |
+| `MINGLIT_RELEASE_BOT_APP_ID` | GitHub Actions secret | `minglit_env` checkout bootstrap 용 GitHub App ID |
+| `MINGLIT_RELEASE_BOT_PRIVATE_KEY` | GitHub Actions secret | `minglit_env` checkout bootstrap 용 GitHub App private key PEM |
 
-`release-bot-token` composite action 은 파일 기반 값을 우선 사용한다. `MINGLIT_ENV_PAT` 이 아직 없거나 submodule checkout 이 실패하는 transition 기간에는 기존 `MINGLIT_RELEASE_BOT_APP_ID` / `MINGLIT_RELEASE_BOT_PRIVATE_KEY` GitHub Actions secret 을 fallback 으로 사용할 수 있다.
+`release-bot-token` composite action 은 GitHub Actions secret 의 App key 로 bootstrap token 을 만든 뒤 `minglit_env` 를 checkout 하고, 파일 기반 값을 우선 사용한다. `minglit_env` 를 읽을 수 없을 때만 기존 `MINGLIT_RELEASE_BOT_APP_ID` / `MINGLIT_RELEASE_BOT_PRIVATE_KEY` GitHub Actions secret 을 fallback 으로 사용한다.
 
 ## Workflow 사용법
 
@@ -58,7 +59,6 @@ Workflow 에 release bot 장기 PAT 를 저장하지 않는다. App private key 
   uses: ./.github/actions/release-bot-token
   with:
     env-file: minglit_env/dev/github.env
-    minglit-env-pat: ${{ secrets.MINGLIT_ENV_PAT }}
     fallback-app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
     fallback-private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
 ```
