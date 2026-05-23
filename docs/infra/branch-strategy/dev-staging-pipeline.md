@@ -83,7 +83,7 @@ AI agent 와 feature/fix/chore PR 이 `dev-staging` 브랜치로 들어오는 �
 
 ## `dev-staging-post-merge-sync`
 
-PR 머지 직후 자동 발동.
+PR 머지 직후 자동 발동. 운영 복구용으로 `workflow_dispatch` 도 제공하며, 수동 실행 시 version 에 사용할 PR 번호를 입력한다.
 
 ```
 1. `version-bump` reusable 호출: `bump-version.sh YY.MM.{PR번호}-dev-staging`
