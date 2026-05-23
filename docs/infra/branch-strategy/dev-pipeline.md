@@ -17,9 +17,9 @@
 - **manual**: `workflow_dispatch`
 - 동작:
   1. 가장 최근 `v*-dev-staging` 태그 (dev-staging 의 latest coherent snapshot) 찾기
-  2. PR 생성: `chore(promo): dev-staging → dev YYYY-MM-DD` (base=dev, head=dev-staging at that tag)
+  2. PR 생성: `chore(promo): dev-staging → dev YYYY-MM-DD` (base=dev, head=`nightly/YYYY-MM-DD-{sha8}` at that tag)
   3. `nightly-pr-gate` 자동 발동
-  4. 통과 시 auto-merge (merge — snapshot 보존)
+  4. 통과 시 auto-merge (rebase — active `dev` ruleset 의 linear history 와 호환)
 
 ### 슬립 처리
 
@@ -124,4 +124,4 @@ Snapshot 모델 — **auto-revert 없음**. dev 가 broken 상태로 잠시 머�
 - [branch-flow.md](./branch-flow.md) — auto-deploy chain 그림
 
 ---
-_Reviewed: 2026-05-19 09:47_
+_Reviewed: 2026-05-23 16:31_
