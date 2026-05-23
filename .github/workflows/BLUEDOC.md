@@ -26,7 +26,7 @@
 - `pr-gate.yml` 은 기존 `push`/`pull_request`/`merge_group` 진입점을 유지하면서 `workflow_call` 도 지원한다.
 - 호출자는 `stage` (`dev`, `dev-staging`, `nightly`, `rc`, `main`) 와 `base_ref` 를 넘겨 동일한 CI 코어를 stage 별 gate 로 재사용한다.
 - 기존 required check 는 아직 `ci-result` 그대로 유지한다. stage 별 required check 전환은 branch-strategy Phase 4 에서 Ruleset 과 함께 적용한다.
-- protected branch/tag 에 직접 push 하는 workflow 는 `minglit-release-bot` GitHub App token 을 사용한다. 공통 token mint 는 `.github/actions/release-bot-token` 에서 처리한다.
+- protected branch/tag 에 직접 push 하는 workflow 는 `minglit-release-bot` GitHub App token 을 사용한다. App credential 은 `minglit_env/{stage}/github.env` 파일에서 먼저 읽고, 공통 token mint 는 `.github/actions/release-bot-token` 에서 처리한다.
 
 ## 컨벤션
 

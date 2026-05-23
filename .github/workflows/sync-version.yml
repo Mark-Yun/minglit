@@ -27,14 +27,77 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Checkout minglit_env submodule
+        env:
+          MINGLIT_ENV_PAT: ${{ secrets.MINGLIT_ENV_PAT }}
+        run: |
+          set -euo pipefail
+          if [ -z "${MINGLIT_ENV_PAT:-}" ]; then
+            echo "::warning::MINGLIT_ENV_PAT is not configured; falling back to GitHub Actions secrets for release bot credentials."
+            exit 0
+          fi
+
+          git -c "url.https://x-access-token:${MINGLIT_ENV_PAT}@github.com/.insteadOf=https://github.com/" \
+            submodule update --init --recursive minglit_env
+
+      - name: Load release bot credentials
+        env:
+          FALLBACK_APP_ID: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
+          FALLBACK_PRIVATE_KEY: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          env_file="minglit_env/dev/github.env"
+
+          if [ -f "${env_file}" ]; then
+            set -a
+            # shellcheck disable=SC1090
+            . "${env_file}"
+            set +a
+          else
+            echo "::warning::${env_file} not found; using GitHub Actions secrets fallback."
+          fi
+
+          MINGLIT_RELEASE_BOT_APP_ID="${MINGLIT_RELEASE_BOT_APP_ID:-${FALLBACK_APP_ID:-}}"
+          MINGLIT_RELEASE_BOT_OWNER="${MINGLIT_RELEASE_BOT_OWNER:-Mark-Yun}"
+          MINGLIT_RELEASE_BOT_REPOSITORIES="${MINGLIT_RELEASE_BOT_REPOSITORIES:-minglit}"
+
+          if [ -n "${MINGLIT_RELEASE_BOT_PRIVATE_KEY_BASE64:-}" ]; then
+            {
+              echo "MINGLIT_RELEASE_BOT_PRIVATE_KEY<<EOF"
+              printf '%s' "${MINGLIT_RELEASE_BOT_PRIVATE_KEY_BASE64}" | base64 --decode
+              echo
+              echo "EOF"
+            } >> "${GITHUB_ENV}"
+          elif [ -n "${FALLBACK_PRIVATE_KEY:-}" ]; then
+            {
+              echo "MINGLIT_RELEASE_BOT_PRIVATE_KEY<<EOF"
+              printf '%s\n' "${FALLBACK_PRIVATE_KEY}"
+              echo "EOF"
+            } >> "${GITHUB_ENV}"
+          else
+            echo "::error::Missing release bot private key. Configure minglit_env/dev/github.env or MINGLIT_RELEASE_BOT_PRIVATE_KEY."
+            exit 1
+          fi
+
+          if [ -z "${MINGLIT_RELEASE_BOT_APP_ID}" ]; then
+            echo "::error::Missing release bot app ID. Configure minglit_env/dev/github.env or MINGLIT_RELEASE_BOT_APP_ID."
+            exit 1
+          fi
+
+          {
+            echo "MINGLIT_RELEASE_BOT_APP_ID=${MINGLIT_RELEASE_BOT_APP_ID}"
+            echo "MINGLIT_RELEASE_BOT_OWNER=${MINGLIT_RELEASE_BOT_OWNER}"
+            echo "MINGLIT_RELEASE_BOT_REPOSITORIES=${MINGLIT_RELEASE_BOT_REPOSITORIES}"
+          } >> "${GITHUB_ENV}"
+
       - name: Generate release bot token
         id: release-bot
         uses: ./.github/actions/release-bot-token
         with:
-          app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
-          private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
-          owner: ${{ vars.MINGLIT_RELEASE_BOT_OWNER || 'team-minglit' }}
-          repositories: ${{ vars.MINGLIT_RELEASE_BOT_REPOSITORIES || 'minglit' }}
+          app-id: ${{ env.MINGLIT_RELEASE_BOT_APP_ID }}
+          private-key: ${{ env.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
+          owner: ${{ env.MINGLIT_RELEASE_BOT_OWNER }}
+          repositories: ${{ env.MINGLIT_RELEASE_BOT_REPOSITORIES }}
 
       - name: Setup Python
         uses: actions/setup-python@v6
