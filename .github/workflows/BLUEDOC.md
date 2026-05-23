@@ -21,6 +21,12 @@
 | `tool-` | (수동으로 부를 때만 도는 도구) | (현재 없음 — 새 수동 도구 추가 시 prefix) |
 | `shared-` | (다른 워크플로우의 부품 — 단독 실행 X) | `shared-notify`, `shared-android-deploy` |
 
+## Reusable Gates
+
+- `pr-gate.yml` 은 기존 `push`/`pull_request`/`merge_group` 진입점을 유지하면서 `workflow_call` 도 지원한다.
+- 호출자는 `stage` (`dev`, `dev-staging`, `nightly`, `rc`, `main`) 와 `base_ref` 를 넘겨 동일한 CI 코어를 stage 별 gate 로 재사용한다.
+- 기존 required check 는 아직 `ci-result` 그대로 유지한다. stage 별 required check 전환은 branch-strategy Phase 4 에서 Ruleset 과 함께 적용한다.
+
 ## 컨벤션
 
 - **파일명 = workflow `name:` 필드** (소문자 kebab, 확장자 제외). 예: `deploy-vercel.yml` 의 `name: deploy-vercel`.
