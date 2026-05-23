@@ -1,6 +1,18 @@
 name: pr-gate
 
 on:
+  workflow_call:
+    inputs:
+      stage:
+        description: 'Logical gate stage: dev, dev-staging, nightly, rc, or main'
+        required: false
+        type: string
+        default: 'dev'
+      base_ref:
+        description: 'Base branch used for diff-based checks when called as a reusable workflow'
+        required: false
+        type: string
+        default: 'dev'
   push:
     branches: [ "main" ]
   pull_request:
@@ -125,7 +137,7 @@ jobs:
         # 새 파일/폴더 추가 또는 파일 삭제 시 가장 가까운 ancestor BLUEDOC.md 갱신 강제.
         # 통과: 이정표 표 갱신 또는 BLUEDOC 의 '_Reviewed_' 날짜 bump.
         env:
-          BASE_REF: origin/${{ github.event.pull_request.base.ref || 'dev' }}
+          BASE_REF: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.event.pull_request.base.ref) || inputs.base_ref && format('origin/{0}', inputs.base_ref) || 'origin/dev' }}
         run: |
           git fetch origin "${BASE_REF#origin/}" --depth=50 || true
           bash .github/scripts/check-bluedoc-freshness.sh
@@ -165,8 +177,9 @@ jobs:
         # merge_group 이벤트는 PR base 컨텍스트가 없어 paths-filter 가 비교 base 를
         # 못 찾고 전체 파일을 changed 로 잡음 → 큐의 batch 효율이 무너짐.
         # 명시적으로 큐의 base_ref(=dev) 와 비교하도록 지정.
+        # workflow_call 은 caller 가 넘긴 base_ref 와 비교.
         # pull_request 이벤트일 때는 빈 값 → paths-filter 가 PR base 로 자동 fallback.
-        base: ${{ github.event_name == 'merge_group' && github.event.merge_group.base_ref || '' }}
+        base: ${{ github.event_name == 'merge_group' && github.event.merge_group.base_ref || inputs.base_ref || '' }}
         filters: |
           app_user:
             - 'apps/app_user/**'
@@ -710,7 +723,7 @@ jobs:
   # build steps instead.
   auto-format:
     needs: changes
-    if: ${{ needs.changes.outputs.dart_files == 'true' && github.event.pull_request.head.repo.fork == false }}
+    if: ${{ needs.changes.outputs.dart_files == 'true' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -785,7 +798,7 @@ jobs:
         id: scope
         env:
           EVENT_NAME: ${{ github.event_name }}
-          BASE_REF: ${{ github.base_ref }}
+          BASE_REF: ${{ github.event_name == 'pull_request' && github.base_ref || inputs.base_ref || 'dev' }}
           MERGE_BASE_SHA: ${{ github.event.merge_group.base_sha }}
           BEFORE_SHA: ${{ github.event.before }}
         run: |
@@ -796,6 +809,10 @@ jobs:
               ;;
             merge_group)
               log_opts="${MERGE_BASE_SHA}..HEAD"
+              ;;
+            workflow_call)
+              git fetch origin "${BASE_REF}" --depth=200
+              log_opts="origin/${BASE_REF}..HEAD"
               ;;
             push)
               if [[ -z "${BEFORE_SHA:-}" || "$BEFORE_SHA" == "0000000000000000000000000000000000000000" ]]; then
@@ -848,6 +865,11 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     steps:
+      - name: Gate context
+        run: |
+          echo "event=${{ github.event_name }}"
+          echo "stage=${{ inputs.stage || 'dev' }}"
+          echo "base_ref=${{ inputs.base_ref || github.event.pull_request.base.ref || github.event.merge_group.base_ref || github.ref_name }}"
       - name: Check CI results
         env:
           GH_TOKEN: ${{ github.token }}
