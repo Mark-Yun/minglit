@@ -46,7 +46,7 @@ Workflow 에 release bot 장기 PAT 를 저장하지 않는다. App private key 
 | `MINGLIT_RELEASE_BOT_REPOSITORIES` | `minglit_env/{stage}/github.env` | `minglit` |
 | `MINGLIT_ENV_PAT` | GitHub Actions secret | private `minglit_env` submodule checkout 용 read-only token |
 
-`sync-version` 은 파일 기반 값을 우선 사용한다. `MINGLIT_ENV_PAT` 이 아직 없거나 submodule checkout 이 실패하는 transition 기간에는 기존 `MINGLIT_RELEASE_BOT_APP_ID` / `MINGLIT_RELEASE_BOT_PRIVATE_KEY` GitHub Actions secret 을 fallback 으로 사용할 수 있다.
+`release-bot-token` composite action 은 파일 기반 값을 우선 사용한다. `MINGLIT_ENV_PAT` 이 아직 없거나 submodule checkout 이 실패하는 transition 기간에는 기존 `MINGLIT_RELEASE_BOT_APP_ID` / `MINGLIT_RELEASE_BOT_PRIVATE_KEY` GitHub Actions secret 을 fallback 으로 사용할 수 있다.
 
 ## Workflow 사용법
 
@@ -57,10 +57,10 @@ Workflow 에 release bot 장기 PAT 를 저장하지 않는다. App private key 
   id: release-bot
   uses: ./.github/actions/release-bot-token
   with:
-    app-id: ${{ env.MINGLIT_RELEASE_BOT_APP_ID }}
-    private-key: ${{ env.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
-    owner: ${{ env.MINGLIT_RELEASE_BOT_OWNER }}
-    repositories: ${{ env.MINGLIT_RELEASE_BOT_REPOSITORIES }}
+    env-file: minglit_env/dev/github.env
+    minglit-env-pat: ${{ secrets.MINGLIT_ENV_PAT }}
+    fallback-app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
+    fallback-private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
 ```
 
 생성된 token 은 같은 job 에서만 사용한다.

@@ -2,18 +2,30 @@ name: release-bot-token
 description: Mint a short-lived GitHub App installation token for minglit-release-bot.
 
 inputs:
-  app-id:
-    description: GitHub App ID for minglit-release-bot.
-    required: true
-  private-key:
-    description: GitHub App private key for minglit-release-bot.
-    required: true
+  env-file:
+    description: Env file containing release bot GitHub App credentials.
+    required: false
+    default: minglit_env/dev/github.env
+  minglit-env-pat:
+    description: Optional token for checking out the private minglit_env submodule.
+    required: false
+    default: ''
+  fallback-app-id:
+    description: Fallback GitHub App ID when env-file is unavailable.
+    required: false
+    default: ''
+  fallback-private-key:
+    description: Fallback GitHub App private key PEM when env-file is unavailable.
+    required: false
+    default: ''
   owner:
-    description: Account or organization where the app is installed.
-    required: true
+    description: Default account or organization where the app is installed.
+    required: false
+    default: Mark-Yun
   repositories:
-    description: Repository list to scope the installation token to.
-    required: true
+    description: Default repository list to scope the installation token to.
+    required: false
+    default: minglit
 
 outputs:
   token:
@@ -23,11 +35,79 @@ outputs:
 runs:
   using: composite
   steps:
+    - name: Checkout minglit_env submodule
+      shell: bash
+      env:
+        MINGLIT_ENV_PAT: ${{ inputs.minglit-env-pat }}
+      run: |
+        set -euo pipefail
+        if [ -z "${MINGLIT_ENV_PAT:-}" ]; then
+          echo "::warning::MINGLIT_ENV_PAT is not configured; release bot credentials will use fallback inputs if env-file is unavailable."
+          exit 0
+        fi
+
+        git -c "url.https://x-access-token:${MINGLIT_ENV_PAT}@github.com/.insteadOf=https://github.com/" \
+          submodule update --init --recursive minglit_env
+
+    - name: Load release bot credentials
+      id: credentials
+      shell: bash
+      env:
+        ENV_FILE: ${{ inputs.env-file }}
+        FALLBACK_APP_ID: ${{ inputs.fallback-app-id }}
+        FALLBACK_PRIVATE_KEY: ${{ inputs.fallback-private-key }}
+        DEFAULT_OWNER: ${{ inputs.owner }}
+        DEFAULT_REPOSITORIES: ${{ inputs.repositories }}
+      run: |
+        set -euo pipefail
+
+        if [ -f "${ENV_FILE}" ]; then
+          set -a
+          # shellcheck disable=SC1090
+          . "${ENV_FILE}"
+          set +a
+        else
+          echo "::warning::${ENV_FILE} not found; using release bot fallback inputs."
+        fi
+
+        MINGLIT_RELEASE_BOT_APP_ID="${MINGLIT_RELEASE_BOT_APP_ID:-${FALLBACK_APP_ID:-}}"
+        MINGLIT_RELEASE_BOT_OWNER="${MINGLIT_RELEASE_BOT_OWNER:-${DEFAULT_OWNER}}"
+        MINGLIT_RELEASE_BOT_REPOSITORIES="${MINGLIT_RELEASE_BOT_REPOSITORIES:-${DEFAULT_REPOSITORIES}}"
+
+        if [ -z "${MINGLIT_RELEASE_BOT_APP_ID}" ]; then
+          echo "::error::Missing release bot app ID. Configure ${ENV_FILE} or fallback-app-id."
+          exit 1
+        fi
+
+        {
+          echo "app_id=${MINGLIT_RELEASE_BOT_APP_ID}"
+          echo "owner=${MINGLIT_RELEASE_BOT_OWNER}"
+          echo "repositories=${MINGLIT_RELEASE_BOT_REPOSITORIES}"
+        } >> "${GITHUB_OUTPUT}"
+
+        if [ -n "${MINGLIT_RELEASE_BOT_PRIVATE_KEY_BASE64:-}" ]; then
+          {
+            echo "private_key<<EOF"
+            printf '%s' "${MINGLIT_RELEASE_BOT_PRIVATE_KEY_BASE64}" | base64 --decode
+            echo
+            echo "EOF"
+          } >> "${GITHUB_OUTPUT}"
+        elif [ -n "${FALLBACK_PRIVATE_KEY:-}" ]; then
+          {
+            echo "private_key<<EOF"
+            printf '%s\n' "${FALLBACK_PRIVATE_KEY}"
+            echo "EOF"
+          } >> "${GITHUB_OUTPUT}"
+        else
+          echo "::error::Missing release bot private key. Configure ${ENV_FILE} or fallback-private-key."
+          exit 1
+        fi
+
     - name: Generate release bot token
       id: app-token
       uses: actions/create-github-app-token@v2
       with:
-        app-id: ${{ inputs.app-id }}
-        private-key: ${{ inputs.private-key }}
-        owner: ${{ inputs.owner }}
-        repositories: ${{ inputs.repositories }}
+        app-id: ${{ steps.credentials.outputs.app_id }}
+        private-key: ${{ steps.credentials.outputs.private_key }}
+        owner: ${{ steps.credentials.outputs.owner }}
+        repositories: ${{ steps.credentials.outputs.repositories }}

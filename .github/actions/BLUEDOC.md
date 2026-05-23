@@ -9,7 +9,7 @@
 | [deploy-flutter-app](./deploy-flutter-app/action.yml) | Flutter app deploy 공통 action |
 | [deploy-nextjs-app](./deploy-nextjs-app/action.yml) | Next.js app deploy 공통 action |
 | [ios-deploy](./ios-deploy/action.yml) | iOS deploy 공통 action |
-| [release-bot-token](./release-bot-token/action.yml) | `minglit-release-bot` GitHub App installation token mint |
+| [release-bot-token](./release-bot-token/action.yml) | `minglit_env/{stage}/github.env` 우선 로드 + `minglit-release-bot` GitHub App installation token mint |
 
 ## 컨벤션
 
