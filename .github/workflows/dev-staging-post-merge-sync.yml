@@ -79,6 +79,7 @@ jobs:
       version: ${{ needs.calculate-version.outputs.version }}
       release_version: ${{ needs.calculate-version.outputs.release_version }}
       tag_name: ${{ needs.calculate-version.outputs.tag_name }}
+      skip_ci: false
     secrets: inherit
 
   notify-failure:
