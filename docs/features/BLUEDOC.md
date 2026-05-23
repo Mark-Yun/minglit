@@ -30,7 +30,6 @@ feature 가 아닌 것:
 | `prd.md` | 사람 (PM) | product overview — Summary / Motivation / Goals / Principles / User Journey / KPIs / Legal Basis |
 | `spec.md` | 사람 (architect/PM) | testable CUJ 명세 — CUJs 표 / FR / NFR / Edge Cases / Open Questions / (참고) 화면 구성 |
 | `mds_specs.md` | 워크플로우 derived | 이 feature 가 사용하는 MDS 화면 목록 + index.md 본문 |
-| `spec_walk_flows.md` | 워크플로우 derived | 이 feature 를 cover 하는 spec-walker flow 목록 |
 
 PRD 는 "왜/무엇을", spec.md 는 "테스트 가능한 단위" 로 분리. 한 feature 에 양면(user/partner) 있으면 PRD 에 Scenario 로 양쪽 다 적고, spec.md CUJ 에 actor (user/partner) 명시.
 
@@ -98,7 +97,7 @@ canonical: [`account/signup-consent/spec.md`](./account/signup-consent/spec.md) 
 1. Mark 가 `apps/mds/docs/public/specs/<screen>/index.html` 에 `<meta name="features" content="cat1/name1, cat2/name2">` 추가
 2. `render-spec-mockups.js` 가 index.md 자동 생성 (feature 태그 포함)
 3. 후속 워크플로우가 index.md 를 스캔 → feature 별로 grouping → `mds_specs.md` 생성
-4. spec-walker flow 의 frontmatter `feature: <cat>/<name>` → 동일 패턴으로 `spec_walk_flows.md` 생성
+4. MDS spec metadata 를 기준으로 feature 별 `mds_specs.md` 생성
 
 ## 카테고리 폴더
 
@@ -108,8 +107,8 @@ canonical: [`account/signup-consent/spec.md`](./account/signup-consent/spec.md) 
 
 ## 관련
 
-- [BLUEDOC](../infra/bluedoc/BLUEDOC.md), [FRESH_DOC](../infra/fresh-doc/BLUEDOC.md), [spec-walker](../spec-walker/BLUEDOC.md)
+- [BLUEDOC](../infra/bluedoc/BLUEDOC.md), [FRESH_DOC](../infra/fresh-doc/BLUEDOC.md)
 - [MDS flow](../../apps/mds/docs/src/lib/flow-data.ts) — 카테고리 매핑 근거
 
 ---
-_Reviewed: 2026-05-17 22:32_
+_Reviewed: 2026-05-23 10:47_
