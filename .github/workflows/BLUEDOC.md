@@ -20,6 +20,7 @@
 | `post-merge` | dev push 직후 follow-up 자동화의 단일 entry point (5 reusable orchestrator) | `post-merge` |
 | `tool-` | (수동으로 부를 때만 도는 도구) | (현재 없음 — 새 수동 도구 추가 시 prefix) |
 | `shared-` | (다른 워크플로우의 부품 — 단독 실행 X) | `shared-notify`, `shared-android-deploy` |
+| branch-strategy stage name | branch-strategy 문서의 stage entry workflow | `dev-staging-post-merge-sync` |
 | reusable no-prefix | `workflow_call` 로만 호출되는 domain reusable | `version-bump` |
 
 ## Reusable Gates
@@ -33,7 +34,8 @@
 
 - **파일명 = workflow `name:` 필드** (소문자 kebab, 확장자 제외). 예: `deploy-vercel.yml` 의 `name: deploy-vercel`.
 - prefix 다음은 *대상*만 적는다. 액션 동사는 prefix 가 이미 함의함 (`deploy-vercel` ◯ / `deploy-to-vercel` ✗).
-- 새 entry workflow 는 위 9 prefix 중 하나에 반드시 속해야 한다. `workflow_call` 전용 reusable 은 domain name no-prefix 를 허용한다.
+- 새 entry workflow 는 위 9 prefix 중 하나에 반드시 속해야 한다. 단, branch-strategy 문서에서 고정한 stage entry workflow 는 문서명과 같은 이름을 허용한다.
+- `workflow_call` 전용 reusable 은 domain name no-prefix 를 허용한다.
 - `pr-setup-` vs `pr-review-setup-` vs `sync-` vs `triage-` 의 기준:
   - `pr-setup-` = PR push 마다 PR 브랜치를 mutate (#2627 이후 인스턴스 없음 — auto-format 은 `pr-gate` 의 `format-check` 잡으로 대체)
   - `pr-review-setup-` = PR 의 "리뷰 준비 단계" 자동화 (auto-merge enable, `needs-review` 라벨 부여)
@@ -46,4 +48,4 @@
 - [CLAUDE.md](../../CLAUDE.md) `## PR Conventions` — required check (`ci-result` job = `pr-gate.yml` 내부) / auto-merge 흐름
 
 ---
-_Reviewed: 2026-05-23 16:05_
+_Reviewed: 2026-05-23 16:18_

@@ -86,7 +86,7 @@ AI agent 와 feature/fix/chore PR 이 `dev-staging` 브랜치로 들어오는 �
 PR 머지 직후 자동 발동.
 
 ```
-1. bump-version.sh {PR번호}-dev-staging  # 8개 파일 version 일괄 업데이트
+1. `version-bump` reusable 호출: `bump-version.sh YY.MM.{PR번호}-dev-staging`
 2. git commit -m "chore: bump version to v{ver}-dev-staging [skip ci]"
 3. git tag v{ver}-dev-staging
 4. git push (tag + commit)
@@ -96,7 +96,7 @@ PR 머지 직후 자동 발동.
 
 Tag `v{ver}-dev-staging` 는 다음 단계의 `nightly-cut` workflow 가 query 해서 "가장 최근 dev-staging 의 coherent snapshot" 찾는 데 사용.
 
-> **구현 디테일**: bump 커밋이 별도로 만들어지는 게 깔끔 vs squash 커밋에 inline 시키는 게 깔끔 — workflow 디자인 결정 (TBD).
+> **구현 결정**: bump 커밋은 PR squash commit 과 분리한다. release bot 전용 커밋으로 남겨 branch/tag write 권한과 human PR 변경을 분리한다.
 
 ## Error-Backoff
 
@@ -124,4 +124,4 @@ destructive pattern 검출이 too aggressive 한 경우:
 - [branch-flow.md](./branch-flow.md) — protection + tag
 
 ---
-_Reviewed: 2026-05-19 09:47_
+_Reviewed: 2026-05-23 16:18_
