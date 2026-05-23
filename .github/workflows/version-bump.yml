@@ -21,6 +21,11 @@ on:
         required: false
         type: boolean
         default: false
+      tag_name:
+        description: Optional git tag to create at the bumped commit.
+        required: false
+        type: string
+        default: ''
       env_file:
         description: minglit_env file for release bot credentials.
         required: false
@@ -101,6 +106,25 @@ jobs:
 
           git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
           echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Create git tag
+        if: ${{ inputs.tag_name != '' }}
+        env:
+          RELEASE_BOT_TOKEN: ${{ steps.release-bot.outputs.token }}
+        run: |
+          TAG_NAME="${{ inputs.tag_name }}"
+
+          git remote set-url origin "https://x-access-token:${RELEASE_BOT_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+          if git ls-remote --exit-code --tags origin "refs/tags/${TAG_NAME}" >/dev/null 2>&1; then
+            echo "Tag ${TAG_NAME} already exists; skipping."
+            git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
+            exit 0
+          fi
+
+          git tag "${TAG_NAME}" "$(git rev-parse HEAD)"
+          git push origin "refs/tags/${TAG_NAME}"
+          git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
 
       - name: Create GitHub release
         if: ${{ inputs.create_release }}

@@ -5,6 +5,8 @@
 # Examples:
 #   bash scripts/bump-version.sh 26.03.1
 #   bash scripts/bump-version.sh 26.03.1-dev
+#   bash scripts/bump-version.sh 26.03.1-dev-staging
+#   bash scripts/bump-version.sh 26.03.1-rc-01
 
 set -e
 
@@ -21,18 +23,20 @@ if [ $# -ne 1 ]; then
     echo "Examples:"
     echo "  bash scripts/bump-version.sh 26.03.1"
     echo "  bash scripts/bump-version.sh 26.03.1-dev"
+    echo "  bash scripts/bump-version.sh 26.03.1-dev-staging"
+    echo "  bash scripts/bump-version.sh 26.03.1-rc-01"
     exit 1
 fi
 
 VERSION_INPUT="$1"
 
-# Regex validation: YY.MM.PR#[-dev]
-# Format: 26.03.1 or 26.03.1-dev
+# Regex validation: YY.MM.PR#[-stage]
+# Format: 26.03.1, 26.03.1-dev, 26.03.1-dev-staging, or 26.03.1-rc-01
 # Month must be 01-12
-if ! [[ "$VERSION_INPUT" =~ ^[0-9]{2}\.[0-9]{2}\.[0-9]+(-dev)?$ ]]; then
+if ! [[ "$VERSION_INPUT" =~ ^[0-9]{2}\.(0[1-9]|1[0-2])\.[0-9]+(-(dev|dev-staging|rc-[0-9]{2}))?$ ]]; then
     echo -e "${RED}Error: Invalid version format: $VERSION_INPUT${NC}"
-    echo "Expected format: YY.MM.PR# or YY.MM.PR#-dev"
-    echo "Examples: 26.03.1, 26.03.1-dev, 26.12.99"
+    echo "Expected format: YY.MM.PR#, YY.MM.PR#-dev, YY.MM.PR#-dev-staging, or YY.MM.PR#-rc-NN"
+    echo "Examples: 26.03.1, 26.03.1-dev, 26.03.1-dev-staging, 26.03.1-rc-01, 26.12.99"
     exit 1
 fi
 
@@ -41,8 +45,8 @@ YY=$(echo "$VERSION_INPUT" | cut -d. -f1)
 MM=$(echo "$VERSION_INPUT" | cut -d. -f2)
 PR_AND_SUFFIX=$(echo "$VERSION_INPUT" | cut -d. -f3)
 
-# Extract PR# (remove -dev suffix if present)
-PR=$(echo "$PR_AND_SUFFIX" | sed 's/-dev$//')
+# Extract PR# (remove stage suffix if present)
+PR=$(echo "$PR_AND_SUFFIX" | sed -E 's/-(dev|dev-staging|rc-[0-9]{2})$//')
 
 # Validate PR# (must be >= 1)
 if [ "$((10#$PR))" -lt 1 ]; then
@@ -64,8 +68,8 @@ fi
 # Calculate versionCode: YYMM * 10000 + PR#
 VERSION_CODE=$(( (YY_DEC * 100 + MM_DEC) * 10000 + PR_DEC ))
 
-# Extract base version (without -dev)
-BASE_VERSION=$(echo "$VERSION_INPUT" | sed 's/-dev$//')
+# Extract base version (without stage suffix)
+BASE_VERSION=$(echo "$VERSION_INPUT" | sed -E 's/-(dev|dev-staging|rc-[0-9]{2})$//')
 
 echo -e "${YELLOW}Bumping version to: $VERSION_INPUT${NC}"
 echo "  YY=$YY, MM=$MM, PR#=$PR"
