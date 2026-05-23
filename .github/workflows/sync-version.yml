@@ -3,7 +3,7 @@ name: sync-version
 on:
   pull_request:
     types: [closed]
-    branches: [dev, main]
+    branches: [main]
 
 concurrency:
   group: sync-version-${{ github.base_ref }}
@@ -45,11 +45,7 @@ jobs:
 
           BASE="${NOW_YY}.${NOW_MM}.${PR_NUM}"
 
-          if [ "$BRANCH" = "dev" ]; then
-            NEW_VERSION="${BASE}-dev"
-          else
-            NEW_VERSION="${BASE}"
-          fi
+          NEW_VERSION="${BASE}"
 
           echo "new=$NEW_VERSION" >> "$GITHUB_OUTPUT"
           echo "base=$BASE" >> "$GITHUB_OUTPUT"

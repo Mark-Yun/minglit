@@ -31,7 +31,7 @@
 | Workflow | When | What |
 |----------|------|------|
 | `dev-staging-post-merge-sync` | dev-staging PR 머지 직후 | `bump-version.sh {PR#}-dev-staging` |
-| `nightly-cut` | daily snapshot 생성 시 | version 변경 없음 (dev-staging 의 그대로 가져감) |
+| `nightly-cut` | daily snapshot 생성 시 | version 변경 없음 (dev-staging 의 그대로 가져감, legacy `sync-version` dev trigger 비활성화) |
 | `rc-cut` | RC 브랜치 생성 시 | `bump-version.sh {ver}-rc-01` |
 | `rc-post-merge-sync` | RC hotfix 머지 직후 | `bump-version.sh {PR#}-rc-NN` (N 증가) |
 | `main-post-merge-promote` | rc → main 머지 직후 | `bump-version.sh {ver}` (suffix 제거) |
