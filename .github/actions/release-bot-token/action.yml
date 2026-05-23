@@ -41,18 +41,18 @@ runs:
   steps:
     - name: Generate minglit_env checkout token
       id: env-token
-      if: ${{ inputs.minglit-env-pat == '' && inputs.fallback-app-id != '' && inputs.fallback-private-key != '' }}
+      if: ${{ inputs['minglit-env-pat'] == '' && inputs['fallback-app-id'] != '' && inputs['fallback-private-key'] != '' }}
       uses: actions/create-github-app-token@v2
       with:
-        app-id: ${{ inputs.fallback-app-id }}
-        private-key: ${{ inputs.fallback-private-key }}
+        app-id: ${{ inputs['fallback-app-id'] }}
+        private-key: ${{ inputs['fallback-private-key'] }}
         owner: ${{ inputs.owner }}
-        repositories: ${{ inputs.env-repository }}
+        repositories: ${{ inputs['env-repository'] }}
 
     - name: Checkout minglit_env submodule
       shell: bash
       env:
-        MINGLIT_ENV_TOKEN: ${{ inputs.minglit-env-pat || steps.env-token.outputs.token }}
+        MINGLIT_ENV_TOKEN: ${{ inputs['minglit-env-pat'] || steps.env-token.outputs.token }}
       run: |
         set -euo pipefail
         if [ -z "${MINGLIT_ENV_TOKEN:-}" ]; then
@@ -67,9 +67,9 @@ runs:
       id: credentials
       shell: bash
       env:
-        ENV_FILE: ${{ inputs.env-file }}
-        FALLBACK_APP_ID: ${{ inputs.fallback-app-id }}
-        FALLBACK_PRIVATE_KEY: ${{ inputs.fallback-private-key }}
+        ENV_FILE: ${{ inputs['env-file'] }}
+        FALLBACK_APP_ID: ${{ inputs['fallback-app-id'] }}
+        FALLBACK_PRIVATE_KEY: ${{ inputs['fallback-private-key'] }}
         DEFAULT_OWNER: ${{ inputs.owner }}
         DEFAULT_REPOSITORIES: ${{ inputs.repositories }}
       run: |
