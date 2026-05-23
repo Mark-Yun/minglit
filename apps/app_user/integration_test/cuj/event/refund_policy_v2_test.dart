@@ -188,6 +188,10 @@ void main() {
         expect(find.text('예매 취소'), findsWidgets);
         expect(find.textContaining('원이 환불됩니다'), findsOneWidget);
 
+        final messenger = ScaffoldMessenger.maybeOf(
+          t.element(find.byType(PurchaseHistoryDetailPage)),
+        );
+
         // "취소하기" 탭 → cancelOrder 호출
         await t.tap(find.text('취소하기'));
         await t.pumpAndSettle();
@@ -203,9 +207,7 @@ void main() {
         // 3 초 후 자동 dismiss Timer 가 있다. pumpAndSettle 은 Timer 를 drain 하지
         // 않으므로 test body 종료 후 Timer 가 발화 → flutter_test binding 의
         // 'inTest: is not true' assertion. test 끝나기 전에 명시적으로 clear.
-        ScaffoldMessenger.of(
-          t.element(find.byType(MaterialApp)),
-        ).clearSnackBars();
+        messenger?.clearSnackBars();
         await t.pumpAndSettle();
       },
     );
@@ -363,6 +365,10 @@ void main() {
         // 무료 이벤트: 0원 환불 다이얼로그 (FR-14: PortOne 없이 상태만 변경)
         expect(find.textContaining('원이 환불됩니다'), findsOneWidget);
 
+        final messenger = ScaffoldMessenger.maybeOf(
+          t.element(find.byType(PurchaseHistoryDetailPage)),
+        );
+
         await t.tap(find.text('취소하기'));
         await t.pumpAndSettle();
 
@@ -375,9 +381,7 @@ void main() {
 
         // Fix #2589 dev-blocker: SnackBar 3 초 자동 dismiss Timer drain
         // (1-1 happy 동일 패턴 참고).
-        ScaffoldMessenger.of(
-          t.element(find.byType(MaterialApp)),
-        ).clearSnackBars();
+        messenger?.clearSnackBars();
         await t.pumpAndSettle();
       },
     );
