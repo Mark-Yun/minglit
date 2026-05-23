@@ -26,6 +26,11 @@ on:
         required: false
         type: string
         default: ''
+      skip_ci:
+        description: Whether to append [skip ci] to the bump commit message.
+        required: false
+        type: boolean
+        default: true
       env_file:
         description: minglit_env file for release bot credentials.
         required: false
@@ -69,9 +74,14 @@ jobs:
         id: commit
         env:
           RELEASE_BOT_TOKEN: ${{ steps.release-bot.outputs.token }}
+          SKIP_CI: ${{ inputs.skip_ci }}
         run: |
           NEW_VERSION="${{ inputs.version }}"
           BRANCH="${{ inputs.target_ref }}"
+          SKIP_CI_SUFFIX=""
+          if [ "${SKIP_CI}" = "true" ]; then
+            SKIP_CI_SUFFIX=" [skip ci]"
+          fi
 
           git config user.name "minglit-release-bot"
           git config user.email "minglit-release-bot@users.noreply.github.com"
@@ -84,7 +94,7 @@ jobs:
             exit 0
           fi
 
-          git commit -m "chore: bump version to v${NEW_VERSION} [skip ci]"
+          git commit -m "chore: bump version to v${NEW_VERSION}${SKIP_CI_SUFFIX}"
 
           # Fix #1506: push race — target ref may advance via another workflow.
           MAX_ATTEMPTS=5
