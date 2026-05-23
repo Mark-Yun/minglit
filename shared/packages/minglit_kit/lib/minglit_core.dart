@@ -1,3 +1,4 @@
+export 'src/bootstrap/bootstrap.dart';
 export 'src/config/env_keystore.dart';
 export 'src/config/url_config.dart';
 export 'src/services/location_service.dart';
