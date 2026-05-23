@@ -9,7 +9,7 @@
 | App name | `minglit-release-bot` |
 | Owner | 개인 계정 또는 `team-minglit` org |
 | Visibility | **Any account** 권장 — 개인 계정에서 만든 App 을 org repo 에 설치하려면 필요 |
-| Installation target | `team-minglit/minglit` selected repository |
+| Installation target | `Mark-Yun/minglit` selected repository |
 | Webhook | 불필요. Active 해제 가능 |
 
 ## Permissions
@@ -36,16 +36,17 @@ GitHub App permission 은 아래만 부여한다.
 
 ## Secrets / Env
 
-Workflow 에는 장기 PAT 를 저장하지 않는다. App private key 로 매 run 마다 1시간짜리 installation token 을 mint 한다.
+Workflow 에 release bot 장기 PAT 를 저장하지 않는다. App private key 로 매 run 마다 1시간짜리 installation token 을 mint 한다.
 
 | 이름 | 위치 | 내용 |
 |------|------|------|
-| `MINGLIT_RELEASE_BOT_APP_ID` | GitHub Actions secret 또는 `minglit_env/{stage}` | GitHub App ID |
-| `MINGLIT_RELEASE_BOT_PRIVATE_KEY` | GitHub Actions secret 권장 | GitHub App private key PEM |
-| `MINGLIT_RELEASE_BOT_OWNER` | `minglit_env/{stage}` 또는 workflow env | `team-minglit` |
-| `MINGLIT_RELEASE_BOT_REPOSITORIES` | `minglit_env/{stage}` 또는 workflow env | `minglit` |
+| `MINGLIT_RELEASE_BOT_APP_ID` | `minglit_env/{stage}/github.env` | GitHub App ID |
+| `MINGLIT_RELEASE_BOT_PRIVATE_KEY_BASE64` | `minglit_env/{stage}/github.env` | GitHub App private key PEM 을 base64 단일 라인으로 저장 |
+| `MINGLIT_RELEASE_BOT_OWNER` | `minglit_env/{stage}/github.env` | `Mark-Yun` |
+| `MINGLIT_RELEASE_BOT_REPOSITORIES` | `minglit_env/{stage}/github.env` | `minglit` |
+| `MINGLIT_ENV_PAT` | GitHub Actions secret | private `minglit_env` submodule checkout 용 read-only token |
 
-비밀이 아닌 `owner`, `repositories` 는 env 파일에 둘 수 있다. `private-key` 는 줄바꿈이 포함된 PEM 이라 GitHub Actions secret 으로 두는 것을 기본값으로 한다.
+`sync-version` 은 파일 기반 값을 우선 사용한다. `MINGLIT_ENV_PAT` 이 아직 없거나 submodule checkout 이 실패하는 transition 기간에는 기존 `MINGLIT_RELEASE_BOT_APP_ID` / `MINGLIT_RELEASE_BOT_PRIVATE_KEY` GitHub Actions secret 을 fallback 으로 사용할 수 있다.
 
 ## Workflow 사용법
 
@@ -56,10 +57,10 @@ Workflow 에는 장기 PAT 를 저장하지 않는다. App private key 로 매 r
   id: release-bot
   uses: ./.github/actions/release-bot-token
   with:
-    app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
-    private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
-    owner: ${{ vars.MINGLIT_RELEASE_BOT_OWNER || 'team-minglit' }}
-    repositories: ${{ vars.MINGLIT_RELEASE_BOT_REPOSITORIES || 'minglit' }}
+    app-id: ${{ env.MINGLIT_RELEASE_BOT_APP_ID }}
+    private-key: ${{ env.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
+    owner: ${{ env.MINGLIT_RELEASE_BOT_OWNER }}
+    repositories: ${{ env.MINGLIT_RELEASE_BOT_REPOSITORIES }}
 ```
 
 생성된 token 은 같은 job 에서만 사용한다.
