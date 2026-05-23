@@ -1,0 +1,114 @@
+name: version-bump
+
+on:
+  workflow_call:
+    inputs:
+      target_ref:
+        description: Branch/ref to bump and push.
+        required: true
+        type: string
+      version:
+        description: Full version passed to scripts/bump-version.sh.
+        required: true
+        type: string
+      release_version:
+        description: Release version without stage suffix, used for GitHub release tags.
+        required: false
+        type: string
+        default: ''
+      create_release:
+        description: Whether to create a GitHub Release after bumping.
+        required: false
+        type: boolean
+        default: false
+      env_file:
+        description: minglit_env file for release bot credentials.
+        required: false
+        type: string
+        default: minglit_env/dev/github.env
+
+    outputs:
+      commit_sha:
+        description: Commit SHA after the bump job.
+        value: ${{ jobs.bump.outputs.commit_sha }}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    outputs:
+      commit_sha: ${{ steps.commit.outputs.commit_sha }}
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.target_ref }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Generate release bot token
+        id: release-bot
+        uses: ./.github/actions/release-bot-token
+        with:
+          env-file: ${{ inputs.env_file }}
+          fallback-app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
+          fallback-private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
+
+      - name: Run bump-version.sh
+        run: bash scripts/bump-version.sh "${{ inputs.version }}"
+
+      - name: Commit and push version bump
+        id: commit
+        env:
+          RELEASE_BOT_TOKEN: ${{ steps.release-bot.outputs.token }}
+        run: |
+          NEW_VERSION="${{ inputs.version }}"
+          BRANCH="${{ inputs.target_ref }}"
+
+          git config user.name "minglit-release-bot"
+          git config user.email "minglit-release-bot@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${RELEASE_BOT_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No version changes to commit."
+            echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git commit -m "chore: bump version to v${NEW_VERSION} [skip ci]"
+
+          # Fix #1506: push race — target ref may advance via another workflow.
+          MAX_ATTEMPTS=5
+          ATTEMPT=0
+          until git push origin HEAD:${BRANCH}; do
+            ATTEMPT=$((ATTEMPT+1))
+            if [ $ATTEMPT -ge $MAX_ATTEMPTS ]; then
+              echo "::error::push failed after $MAX_ATTEMPTS attempts"
+              exit 1
+            fi
+            echo "::warning::push rejected (attempt $ATTEMPT/$MAX_ATTEMPTS), rebasing on origin/${BRANCH} and retrying..."
+            git fetch origin "${BRANCH}"
+            git rebase "origin/${BRANCH}" || {
+              echo "::error::rebase failed — manual resolution required"
+              exit 1
+            }
+            sleep $((2 * ATTEMPT))
+          done
+
+          git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        if: ${{ inputs.create_release }}
+        env:
+          GH_TOKEN: ${{ steps.release-bot.outputs.token }}
+        run: |
+          VERSION="${{ inputs.release_version || inputs.version }}"
+          gh release create "v${VERSION}" \
+            --generate-notes \
+            --target "${{ inputs.target_ref }}" \
+            --title "v${VERSION}"
