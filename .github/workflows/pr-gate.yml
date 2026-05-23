@@ -16,7 +16,7 @@ on:
   push:
     branches: [ "main" ]
   pull_request:
-    branches: [ "main", "dev" ]
+    branches: [ "main", "dev", "dev-staging" ]
   merge_group:
 
 concurrency:
