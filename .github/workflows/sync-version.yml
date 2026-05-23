@@ -27,14 +27,14 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Validate release bot token
-        env:
-          MINGLIT_RELEASE_BOT_TOKEN: ${{ secrets.MINGLIT_RELEASE_BOT_TOKEN }}
-        run: |
-          if [ -z "${MINGLIT_RELEASE_BOT_TOKEN}" ]; then
-            echo "::error::MINGLIT_RELEASE_BOT_TOKEN is required for protected branch version bump pushes"
-            exit 1
-          fi
+      - name: Generate release bot token
+        id: release-bot
+        uses: ./.github/actions/release-bot-token
+        with:
+          app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
+          private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
+          owner: ${{ vars.MINGLIT_RELEASE_BOT_OWNER || 'team-minglit' }}
+          repositories: ${{ vars.MINGLIT_RELEASE_BOT_REPOSITORIES || 'minglit' }}
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -72,14 +72,14 @@ jobs:
 
       - name: Commit and push version bump
         env:
-          MINGLIT_RELEASE_BOT_TOKEN: ${{ secrets.MINGLIT_RELEASE_BOT_TOKEN }}
+          RELEASE_BOT_TOKEN: ${{ steps.release-bot.outputs.token }}
         run: |
           NEW_VERSION="${{ steps.version.outputs.new }}"
           BRANCH="${{ github.base_ref }}"
 
           git config user.name "minglit-release-bot"
           git config user.email "minglit-release-bot@users.noreply.github.com"
-          git remote set-url origin "https://x-access-token:${MINGLIT_RELEASE_BOT_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git remote set-url origin "https://x-access-token:${RELEASE_BOT_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
 
           git add -A
           git diff --cached --quiet && { echo "No version changes to commit."; exit 0; }
@@ -108,7 +108,7 @@ jobs:
       - name: Create GitHub release (main only)
         if: github.base_ref == 'main'
         env:
-          GH_TOKEN: ${{ secrets.MINGLIT_RELEASE_BOT_TOKEN }}
+          GH_TOKEN: ${{ steps.release-bot.outputs.token }}
         run: |
           VERSION="${{ steps.version.outputs.base }}"
           gh release create "v${VERSION}" \

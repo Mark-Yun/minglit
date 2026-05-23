@@ -95,7 +95,7 @@ Cross-branch cherry-pick PR 자동 생성.
 | Trigger | `push` to `dev-staging` (PR squash merge 후) |
 | Inputs | (from event) PR number, merged SHA |
 | Outputs | tag `v{YY.MM.PR#}-dev-staging` |
-| Steps | calls `version-bump` (suffix=`-dev-staging`, version=`{YY.MM.PR#}`) using `MINGLIT_RELEASE_BOT_TOKEN` |
+| Steps | calls `version-bump` (suffix=`-dev-staging`, version=`{YY.MM.PR#}`) using release bot GitHub App token |
 
 ### nightly (dev 진입)
 

@@ -159,7 +159,7 @@ Protected branch 에 대한 direct push 는 human 에게 허용하지 않는다.
 | 항목 | 값 |
 |------|----|
 | Actor | `minglit-release-bot` (GitHub App 권장, 대안: fine-grained PAT 전용 bot account) |
-| Token secret | `MINGLIT_RELEASE_BOT_TOKEN` |
+| Token source | GitHub App installation token minted from `MINGLIT_RELEASE_BOT_APP_ID` + `MINGLIT_RELEASE_BOT_PRIVATE_KEY` |
 | 사용 workflow | `dev-staging-post-merge-sync`, `nightly-cut`, `rc-cut`, `rc-post-merge-sync`, `rc-soak-check`, `rc-hotfix-backport`, `main-post-merge-promote` |
 | Ruleset bypass | `dev-staging`, `dev`, `rc/**`, `main`, protected tag push (`v*`, `promo/**`) |
 | Human 사용 | 금지. 로컬/수동 CLI 에서 token 사용 금지 |

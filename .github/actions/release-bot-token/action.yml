@@ -1,0 +1,33 @@
+name: release-bot-token
+description: Mint a short-lived GitHub App installation token for minglit-release-bot.
+
+inputs:
+  app-id:
+    description: GitHub App ID for minglit-release-bot.
+    required: true
+  private-key:
+    description: GitHub App private key for minglit-release-bot.
+    required: true
+  owner:
+    description: Account or organization where the app is installed.
+    required: true
+  repositories:
+    description: Repository list to scope the installation token to.
+    required: true
+
+outputs:
+  token:
+    description: Short-lived installation token.
+    value: ${{ steps.app-token.outputs.token }}
+
+runs:
+  using: composite
+  steps:
+    - name: Generate release bot token
+      id: app-token
+      uses: actions/create-github-app-token@v2
+      with:
+        app-id: ${{ inputs.app-id }}
+        private-key: ${{ inputs.private-key }}
+        owner: ${{ inputs.owner }}
+        repositories: ${{ inputs.repositories }}
