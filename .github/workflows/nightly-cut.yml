@@ -32,7 +32,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          fetch-depth: 0
+          fetch-depth: 1
           persist-credentials: false
 
       - name: Generate release bot token
@@ -46,10 +46,12 @@ jobs:
         id: plan
         env:
           GH_TOKEN: ${{ steps.release-bot.outputs.token }}
+          RELEASE_BOT_TOKEN: ${{ steps.release-bot.outputs.token }}
           REQUESTED_TAG: ${{ inputs.tag_name || '' }}
         run: |
           set -euo pipefail
 
+          git remote set-url origin "https://x-access-token:${RELEASE_BOT_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git fetch origin dev dev-staging --tags --force
 
           OPEN_PR="$(gh pr list \
