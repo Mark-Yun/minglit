@@ -1,5 +1,10 @@
-import { errorResponse } from "../_shared/response_utils.ts";
 import type { CreateOrderVerificationData } from "../_shared/domains/order/create_order_policy.ts";
+import {
+  type InputResult,
+  isPlainRecord,
+  requireStringField,
+} from "../_shared/input_validation.ts";
+import { errorResponse } from "../_shared/response_utils.ts";
 
 export interface CreateOrderInput {
   event_id: string;
@@ -9,16 +14,12 @@ export interface CreateOrderInput {
 
 export function parseCreateOrderInput(
   body: Record<string, unknown>,
-): CreateOrderInput | Response {
-  const eventId = body.event_id;
-  if (typeof eventId !== "string" || eventId.length === 0) {
-    return errorResponse("Missing required field: event_id", 400);
-  }
+): InputResult<CreateOrderInput> {
+  const eventId = requireStringField(body, "event_id");
+  if (eventId instanceof Response) return eventId;
 
-  const ticketId = body.ticket_id;
-  if (typeof ticketId !== "string" || ticketId.length === 0) {
-    return errorResponse("Missing required field: ticket_id", 400);
-  }
+  const ticketId = requireStringField(body, "ticket_id");
+  if (ticketId instanceof Response) return ticketId;
 
   const verificationData = body.verification_data;
   if (verificationData === undefined) {
@@ -39,13 +40,9 @@ export function parseCreateOrderInput(
 function isVerificationData(
   value: unknown,
 ): value is CreateOrderVerificationData {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return false;
-  }
-  const record = value as Record<string, unknown>;
+  if (!isPlainRecord(value)) return false;
+  const record = value;
   const data = record.data;
   return typeof record.verification_id === "string" &&
-    typeof data === "object" &&
-    data !== null &&
-    !Array.isArray(data);
+    isPlainRecord(data);
 }

@@ -1,4 +1,7 @@
-import { errorResponse } from "../_shared/response_utils.ts";
+import {
+  type InputResult,
+  requireStringField,
+} from "../_shared/input_validation.ts";
 
 export interface PaymentVerifyInput {
   imp_uid: string;
@@ -7,18 +10,20 @@ export interface PaymentVerifyInput {
 
 export function parsePaymentVerifyInput(
   body: Record<string, unknown>,
-): PaymentVerifyInput | Response {
-  const impUid = body.imp_uid;
-  const merchantUid = body.merchant_uid;
+): InputResult<PaymentVerifyInput> {
+  const impUid = requireStringField(
+    body,
+    "imp_uid",
+    "Missing required parameters",
+  );
+  if (impUid instanceof Response) return impUid;
 
-  if (
-    typeof impUid !== "string" ||
-    impUid.length === 0 ||
-    typeof merchantUid !== "string" ||
-    merchantUid.length === 0
-  ) {
-    return errorResponse("Missing required parameters", 400);
-  }
+  const merchantUid = requireStringField(
+    body,
+    "merchant_uid",
+    "Missing required parameters",
+  );
+  if (merchantUid instanceof Response) return merchantUid;
 
   return { imp_uid: impUid, merchant_uid: merchantUid };
 }
