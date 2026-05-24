@@ -22,7 +22,7 @@ Minglit 의 **파트너 사장님 Flutter 앱**. 매장 관리·멤버 초대·�
 |---|---|
 | `auth/` | 파트너 로그인·인증 |
 | `home/` | 파트너 대시보드 |
-| `admin/` | 관리자 기능 (입점 신청 관리) |
+| `admin/` | 관리자 기능 (입점 신청 관리, 운영 CI/CD 상태 대시보드) |
 | `onboarding/` | 파트너 온보딩 (신규 신청·서류 작성) |
 | `member/` | 멤버 관리 (초대·권한) |
 | `party/` | 파티·이벤트 관리 |
@@ -48,4 +48,4 @@ Minglit 의 **파트너 사장님 Flutter 앱**. 매장 관리·멤버 초대·�
 - [README.md](./README.md) — 빌드·실행 / [integration_test/cuj](./integration_test/cuj/BLUEDOC.md) — CUJ
 
 ---
-_Reviewed: 2026-05-24 16:30_
+_Reviewed: 2026-05-24 22:16_
