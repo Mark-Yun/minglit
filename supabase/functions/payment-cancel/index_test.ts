@@ -10,13 +10,14 @@
 import { assertEquals } from "@std/assert";
 import {
   fakeSupabase,
+  type Handler,
   makeCtx,
   readJson,
   runHandler,
-  type Handler,
 } from "../_shared/_testing/mod.ts";
 import {
   createFetchMock,
+  importHandlerWithStubbedServe,
   jsonResponse,
   withEnv,
   withMockedFetch,
@@ -25,20 +26,9 @@ import {
 let _handler: Handler | null = null;
 async function getHandler(): Promise<Handler> {
   if (_handler) return _handler;
-  const denoAsAny = Deno as unknown as { serve: (...args: unknown[]) => Deno.HttpServer };
-  const origServe = denoAsAny.serve;
-  denoAsAny.serve = () => ({ shutdown() {}, finished: Promise.resolve() } as Deno.HttpServer);
-  const origSetInterval = globalThis.setInterval;
-  const origClearInterval = globalThis.clearInterval;
-  globalThis.setInterval = ((_cb: () => void) => 0 as unknown as ReturnType<typeof setInterval>) as typeof setInterval;
-  globalThis.clearInterval = ((_id?: ReturnType<typeof setInterval>) => {}) as typeof clearInterval;
-  try {
-    _handler = (await import(`./index.ts?unit=${crypto.randomUUID()}`)).handler as Handler;
-  } finally {
-    denoAsAny.serve = origServe;
-    globalThis.setInterval = origSetInterval;
-    globalThis.clearInterval = origClearInterval;
-  }
+  _handler = await importHandlerWithStubbedServe<Handler>(
+    new URL("./index.ts", import.meta.url),
+  );
   return _handler!;
 }
 
@@ -46,8 +36,10 @@ async function getHandler(): Promise<Handler> {
 const nowMs = Date.now();
 const ELIGIBLE_PAID_AT = new Date(nowMs - 1 * 60 * 60 * 1000).toISOString(); // 1h ago — within 2h grace
 const INELIGIBLE_PAID_AT = new Date(nowMs - 3 * 60 * 60 * 1000).toISOString(); // 3h ago — outside grace
-const FAR_FUTURE_EVENT = new Date(nowMs + 10 * 24 * 60 * 60 * 1000).toISOString(); // 10d → within cutoff
-const NEAR_FUTURE_EVENT = new Date(nowMs + 3 * 24 * 60 * 60 * 1000).toISOString(); // 3d → outside 7d cutoff
+const FAR_FUTURE_EVENT = new Date(nowMs + 10 * 24 * 60 * 60 * 1000)
+  .toISOString(); // 10d → within cutoff
+const NEAR_FUTURE_EVENT = new Date(nowMs + 3 * 24 * 60 * 60 * 1000)
+  .toISOString(); // 3d → outside 7d cutoff
 const PAST_EVENT = new Date(nowMs - 60 * 60 * 1000).toISOString(); // already started
 
 // ── Shared env required by executeRefund ─────────────────────────────────────
@@ -64,13 +56,16 @@ const portoneTokenRoute = {
 
 const portoneCancelRoute = {
   matcher: "https://api.iamport.kr/payments/cancel",
-  handler: () => jsonResponse({ code: 0, response: { status: "cancelled", amount: 15000 } }),
+  handler: () =>
+    jsonResponse({ code: 0, response: { status: "cancelled", amount: 15000 } }),
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 /** Standard application row returned from event_applications select */
-function makeApp(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+function makeApp(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
   return {
     paid_at: ELIGIBLE_PAID_AT,
     event_id: "ev-1",
@@ -146,7 +141,9 @@ Deno.test("payment-cancel :: event fetch error → 500", async () => {
   const sb = fakeSupabase()
     .on("event_applications", "select", { data: makeApp() })
     .on("events", "select", { error: { message: "connection timeout" } })
-    .on("get_current_policy", "rpc", { data: { grace_period_hours: 2, cutoff_days: 7 } });
+    .on("get_current_policy", "rpc", {
+      data: { grace_period_hours: 2, cutoff_days: 7 },
+    });
 
   const res = await runHandler(handler, {
     body: { payment_id: "imp_123" },
@@ -182,14 +179,18 @@ Deno.test("payment-cancel :: event already started → 400 refund_not_eligible",
       data: makeApp({ paid_at: ELIGIBLE_PAID_AT }),
     })
     .on("events", "select", { data: { start_time: PAST_EVENT } })
-    .on("get_current_policy", "rpc", { data: { grace_period_hours: 2, cutoff_days: 7 } });
+    .on("get_current_policy", "rpc", {
+      data: { grace_period_hours: 2, cutoff_days: 7 },
+    });
 
   const res = await runHandler(handler, {
     body: { payment_id: "imp_123" },
     ctx: makeCtx({ supabase: sb, userId: "u-1" }),
   });
   assertEquals(res.status, 400);
-  const body = await readJson<{ error: string; details?: { reason?: string } }>(res);
+  const body = await readJson<{ error: string; details?: { reason?: string } }>(
+    res,
+  );
   assertEquals(body.error, "refund_not_eligible");
 });
 
@@ -201,7 +202,9 @@ Deno.test("payment-cancel :: outside grace and cutoff window → 400 refund_not_
       data: makeApp({ paid_at: INELIGIBLE_PAID_AT }), // 3h ago — outside 2h grace
     })
     .on("events", "select", { data: { start_time: NEAR_FUTURE_EVENT } }) // 3d — outside 7d cutoff
-    .on("get_current_policy", "rpc", { data: { grace_period_hours: 2, cutoff_days: 7 } });
+    .on("get_current_policy", "rpc", {
+      data: { grace_period_hours: 2, cutoff_days: 7 },
+    });
 
   const res = await runHandler(handler, {
     body: { payment_id: "imp_123" },
@@ -218,7 +221,9 @@ Deno.test("payment-cancel :: missing portone credentials → 500", async () => {
   const sb = fakeSupabase()
     .on("event_applications", "select", { data: makeApp() })
     .on("events", "select", { data: { start_time: FAR_FUTURE_EVENT } })
-    .on("get_current_policy", "rpc", { data: { grace_period_hours: 2, cutoff_days: 7 } });
+    .on("get_current_policy", "rpc", {
+      data: { grace_period_hours: 2, cutoff_days: 7 },
+    });
 
   // Explicitly unset credentials so executeRefund throws RefundError("Server configuration error", 500)
   await withEnv(
@@ -243,10 +248,15 @@ Deno.test("payment-cancel :: happy path (within grace) → 200 + refund_status=c
       data: makeApp({ paid_at: ELIGIBLE_PAID_AT }),
     })
     .on("events", "select", { data: { start_time: NEAR_FUTURE_EVENT } })
-    .on("get_current_policy", "rpc", { data: { grace_period_hours: 2, cutoff_days: 7 } })
+    .on("get_current_policy", "rpc", {
+      data: { grace_period_hours: 2, cutoff_days: 7 },
+    })
     .on("event_applications", "update", { error: null });
 
-  const { fetchMock } = createFetchMock([portoneTokenRoute, portoneCancelRoute]);
+  const { fetchMock } = createFetchMock([
+    portoneTokenRoute,
+    portoneCancelRoute,
+  ]);
 
   await withEnv(PORTONE_ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
@@ -277,10 +287,15 @@ Deno.test("payment-cancel :: paidAt=null + within cutoff → 200", async () => {
       data: makeApp({ paid_at: null }),
     })
     .on("events", "select", { data: { start_time: FAR_FUTURE_EVENT } }) // 10d → within 7d cutoff
-    .on("get_current_policy", "rpc", { data: { grace_period_hours: 2, cutoff_days: 7 } })
+    .on("get_current_policy", "rpc", {
+      data: { grace_period_hours: 2, cutoff_days: 7 },
+    })
     .on("event_applications", "update", { error: null });
 
-  const { fetchMock } = createFetchMock([portoneTokenRoute, portoneCancelRoute]);
+  const { fetchMock } = createFetchMock([
+    portoneTokenRoute,
+    portoneCancelRoute,
+  ]);
 
   await withEnv(PORTONE_ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
@@ -299,7 +314,9 @@ Deno.test("payment-cancel :: portone token failure → 502", async () => {
   const sb = fakeSupabase()
     .on("event_applications", "select", { data: makeApp() })
     .on("events", "select", { data: { start_time: FAR_FUTURE_EVENT } })
-    .on("get_current_policy", "rpc", { data: { grace_period_hours: 2, cutoff_days: 7 } });
+    .on("get_current_policy", "rpc", {
+      data: { grace_period_hours: 2, cutoff_days: 7 },
+    });
 
   const { fetchMock } = createFetchMock([
     {
@@ -327,10 +344,17 @@ Deno.test("payment-cancel :: DB update error is non-fatal → 200", async () => 
   const sb = fakeSupabase()
     .on("event_applications", "select", { data: makeApp() })
     .on("events", "select", { data: { start_time: FAR_FUTURE_EVENT } })
-    .on("get_current_policy", "rpc", { data: { grace_period_hours: 2, cutoff_days: 7 } })
-    .on("event_applications", "update", { error: { message: "DB error", code: "XXXXX" } });
+    .on("get_current_policy", "rpc", {
+      data: { grace_period_hours: 2, cutoff_days: 7 },
+    })
+    .on("event_applications", "update", {
+      error: { message: "DB error", code: "XXXXX" },
+    });
 
-  const { fetchMock } = createFetchMock([portoneTokenRoute, portoneCancelRoute]);
+  const { fetchMock } = createFetchMock([
+    portoneTokenRoute,
+    portoneCancelRoute,
+  ]);
 
   await withEnv(PORTONE_ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
