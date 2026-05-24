@@ -250,9 +250,7 @@ void main() {
         settlementDashboardControllerProvider.overrideWith(
           () => _FakeDashboardController(_makeDashboardData()),
         ),
-        settlementListControllerProvider.overrideWith(
-          _EmptyListController.new,
-        ),
+        settlementListControllerProvider.overrideWith(_EmptyListController.new),
       ],
       body: (t) async {
         expect(find.text('정산 완료 매출'), findsOneWidget);
@@ -278,9 +276,7 @@ void main() {
             'status_counts': <String, int>{},
           }),
         ),
-        settlementListControllerProvider.overrideWith(
-          _EmptyListController.new,
-        ),
+        settlementListControllerProvider.overrideWith(_EmptyListController.new),
       ],
       body: (t) async {
         expect(find.text('정산 완료 매출'), findsOneWidget);
@@ -296,9 +292,7 @@ void main() {
         settlementDashboardControllerProvider.overrideWith(
           _ErrorDashboardController.new,
         ),
-        settlementListControllerProvider.overrideWith(
-          _EmptyListController.new,
-        ),
+        settlementListControllerProvider.overrideWith(_EmptyListController.new),
       ],
       body: (t) async {
         expect(find.text('대시보드를 불러오지 못했습니다'), findsOneWidget);
@@ -345,9 +339,7 @@ void main() {
         settlementDashboardControllerProvider.overrideWith(
           () => _FakeDashboardController(_makeDashboardData()),
         ),
-        settlementListControllerProvider.overrideWith(
-          _EmptyListController.new,
-        ),
+        settlementListControllerProvider.overrideWith(_EmptyListController.new),
       ],
       body: (t) async {
         await t.tap(find.text('정산 내역'));
@@ -645,8 +637,15 @@ void main() {
       body: (t) async {
         // 기존 계좌 표시 확인
         expect(find.text('현재 계좌'), findsOneWidget);
-        expect(find.text('신한은행'), findsWidgets);
-        expect(find.text('홍길동'), findsOneWidget);
+        final accountCard = find.byType(AccountCard);
+        expect(
+          find.descendant(of: accountCard, matching: find.text('신한은행')),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(of: accountCard, matching: find.text('홍길동')),
+          findsOneWidget,
+        );
 
         // 은행명 수정
         await t.enterText(find.bySemanticsLabel('은행명'), '국민은행');
