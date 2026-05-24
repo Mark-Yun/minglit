@@ -6,7 +6,7 @@
 
 | 항목 | 무엇 |
 |---|---|
-| [`src/`](./src/) | unit + widget 테스트 (lib/src/ 미러링: components/config/data/features/logic/theme/ui/utils) |
+| [`src/`](./src/) | unit + widget 테스트 (lib/src/ 미러링: bootstrap/components/config/data/features/logic/theme/ui/utils) |
 | [`contract/`](./contract/) | Repository 계약 테스트 — Supabase schema 와의 동기화 검증 |
 | [`goldens/`](./goldens/) | Golden 테스트 (Alchemist) — 공용 위젯 시각 회귀 |
 | [`logic/`](./logic/) | 글로벌 logic 테스트 (auth, provider 등) |
@@ -43,4 +43,4 @@ CI 자동 실행: `pr-gate.test-flutter-apps` matrix (minglit_kit 변경 시). �
 - [tests/_coverage/BLUEDOC](../../../../tests/_coverage/BLUEDOC.md)
 
 ---
-_Reviewed: 2026-05-19 14:00_
+_Reviewed: 2026-05-23 00:00_

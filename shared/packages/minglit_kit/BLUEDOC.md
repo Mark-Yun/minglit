@@ -13,6 +13,7 @@ Minglit 의 **공용 클라이언트 패키지**. `app_user` 와 `app_partner` �
 | [`lib/src/ui/`](./lib/src/ui/BLUEDOC.md) | Design System 구현 (Tokens, Theme, Feedback, Widgets) ([architecture](./lib/src/ui/architecture.md)) |
 | [`lib/src/domain/`](./lib/src/domain/) | 비즈니스 도메인 타입·enum |
 | [`lib/src/features/`](./lib/src/features/) | 공용 feature 13 개 (아래 표) |
+| [`lib/src/bootstrap/`](./lib/src/bootstrap/BLUEDOC.md) | 앱 부팅 step 정책 (critical/platform/degradable) |
 | [`lib/src/services/`](./lib/src/services/) · `components/` · `config/` | 외부 SDK 래퍼 · feedback 컴포넌트 · 환경 설정 |
 | [`lib/src/utils/`](./lib/src/utils/) | 헬퍼 (`Log`, `feedback_ext`, `age_util`, `refund_calculator`, `ticket_crypto` 등) |
 | [`architecture.md`](./architecture.md) | Repository pattern, Provider 조직, Design System, Error Handling 상세 |
@@ -45,4 +46,4 @@ Minglit 의 **공용 클라이언트 패키지**. `app_user` 와 `app_partner` �
 - [BLUEDOC 컨벤션](../../../docs/infra/bluedoc/BLUEDOC.md)
 
 ---
-_Reviewed: 2026-05-20 09:41_
+_Reviewed: 2026-05-23 00:00_
