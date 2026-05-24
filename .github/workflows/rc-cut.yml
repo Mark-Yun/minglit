@@ -1,0 +1,220 @@
+name: rc-cut
+
+on:
+  schedule:
+    # 10:00 KST every Monday.
+    - cron: '0 1 * * 1'
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Optional dev commit SHA to cut instead of the latest rc-gate-pass commit.
+        required: false
+        type: string
+      rc_week:
+        description: Optional ISO week, e.g. 2026-W22. Defaults to current KST week.
+        required: false
+        type: string
+      allow_active_rc:
+        description: Allow cutting while an rc/* branch already exists.
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: rc-cut
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  statuses: read
+  issues: write
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      skipped: ${{ steps.plan.outputs.skipped }}
+      rc_week: ${{ steps.plan.outputs.rc_week }}
+      rc_branch: ${{ steps.plan.outputs.rc_branch }}
+      source_sha: ${{ steps.plan.outputs.source_sha }}
+      version: ${{ steps.plan.outputs.version }}
+      release_version: ${{ steps.plan.outputs.release_version }}
+      tag_name: ${{ steps.plan.outputs.tag_name }}
+      promo_tag: ${{ steps.plan.outputs.promo_tag }}
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: dev
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Generate release bot token
+        id: release-bot
+        uses: ./.github/actions/release-bot-token
+        with:
+          fallback-app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
+          fallback-private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
+
+      - name: Plan RC cut
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_BOT_TOKEN: ${{ steps.release-bot.outputs.token }}
+          REQUESTED_SOURCE_SHA: ${{ inputs.source_sha || '' }}
+          REQUESTED_RC_WEEK: ${{ inputs.rc_week || '' }}
+          ALLOW_ACTIVE_RC: ${{ inputs.allow_active_rc || false }}
+        run: |
+          set -euo pipefail
+
+          git remote set-url origin "https://x-access-token:${RELEASE_BOT_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git fetch origin dev --tags --force
+
+          RC_WEEK="${REQUESTED_RC_WEEK}"
+          if [ -z "${RC_WEEK}" ]; then
+            RC_WEEK="$(TZ=Asia/Seoul date +%G-W%V)"
+          fi
+          if ! [[ "${RC_WEEK}" =~ ^[0-9]{4}-W[0-9]{2}$ ]]; then
+            echo "::error::Invalid rc_week: ${RC_WEEK}. Expected YYYY-Www, e.g. 2026-W22."
+            exit 1
+          fi
+
+          RC_BRANCH="rc/${RC_WEEK}"
+          PROMO_TAG="promo/rc-${RC_WEEK}"
+
+          ACTIVE_RC="$(git ls-remote --heads origin 'rc/*' | awk '{print $2}' | sed 's#refs/heads/##' | sort | xargs || true)"
+          if [ -n "${ACTIVE_RC}" ] && [ "${ALLOW_ACTIVE_RC}" != "true" ]; then
+            echo "Active RC branch exists (${ACTIVE_RC}); skipping rc-cut."
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+            echo "rc_week=${RC_WEEK}" >> "$GITHUB_OUTPUT"
+            echo "rc_branch=${RC_BRANCH}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if git ls-remote --exit-code --heads origin "${RC_BRANCH}" >/dev/null 2>&1; then
+            echo "RC branch ${RC_BRANCH} already exists; skipping."
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+            echo "rc_week=${RC_WEEK}" >> "$GITHUB_OUTPUT"
+            echo "rc_branch=${RC_BRANCH}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          SOURCE_SHA="${REQUESTED_SOURCE_SHA}"
+          if [ -n "${SOURCE_SHA}" ]; then
+            SOURCE_SHA="$(git rev-parse "${SOURCE_SHA}^{commit}")"
+            if ! git merge-base --is-ancestor "${SOURCE_SHA}" origin/dev; then
+              echo "::error::Requested source_sha ${SOURCE_SHA} is not reachable from origin/dev."
+              exit 1
+            fi
+          else
+            for sha in $(git rev-list --first-parent -n 200 origin/dev); do
+              state="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${sha}/status" \
+                --jq '[.statuses[] | select(.context == "rc-gate-pass")][0].state // empty' || true)"
+              if [ "${state}" = "success" ]; then
+                SOURCE_SHA="${sha}"
+                break
+              fi
+            done
+          fi
+
+          if [ -z "${SOURCE_SHA}" ]; then
+            echo "::warning::No origin/dev commit with successful rc-gate-pass status found in the latest 200 first-parent commits; skipping rc-cut."
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+            echo "rc_week=${RC_WEEK}" >> "$GITHUB_OUTPUT"
+            echo "rc_branch=${RC_BRANCH}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          CURRENT_VERSION="$(git show "${SOURCE_SHA}:apps/app_user/pubspec.yaml" | awk '/^version:/ {print $2; exit}' | sed 's/+.*//')"
+          RELEASE_VERSION="$(printf '%s' "${CURRENT_VERSION}" | sed -E 's/-(dev|dev-staging|rc-[0-9]{2})$//')"
+          VERSION="${RELEASE_VERSION}-rc-01"
+          TAG_NAME="v${VERSION}"
+
+          if git ls-remote --exit-code --tags origin "refs/tags/${TAG_NAME}" >/dev/null 2>&1; then
+            echo "::error::Tag ${TAG_NAME} already exists. Refusing to cut duplicate RC."
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/${PROMO_TAG}" >/dev/null 2>&1; then
+            echo "::error::Tag ${PROMO_TAG} already exists. Refusing to cut duplicate RC."
+            exit 1
+          fi
+
+          git push origin "${SOURCE_SHA}:refs/heads/${RC_BRANCH}"
+          git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
+
+          echo "skipped=false" >> "$GITHUB_OUTPUT"
+          echo "rc_week=${RC_WEEK}" >> "$GITHUB_OUTPUT"
+          echo "rc_branch=${RC_BRANCH}" >> "$GITHUB_OUTPUT"
+          echo "source_sha=${SOURCE_SHA}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "release_version=${RELEASE_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
+          echo "promo_tag=${PROMO_TAG}" >> "$GITHUB_OUTPUT"
+
+  bump:
+    needs: [plan]
+    if: needs.plan.outputs.skipped != 'true'
+    uses: ./.github/workflows/version-bump.yml
+    with:
+      target_ref: ${{ needs.plan.outputs.rc_branch }}
+      version: ${{ needs.plan.outputs.version }}
+      release_version: ${{ needs.plan.outputs.release_version }}
+      tag_name: ${{ needs.plan.outputs.tag_name }}
+      skip_ci: true
+    secrets: inherit
+
+  tag-promo:
+    needs: [plan, bump]
+    if: needs.plan.outputs.skipped != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.plan.outputs.rc_branch }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Generate release bot token
+        id: release-bot
+        uses: ./.github/actions/release-bot-token
+        with:
+          fallback-app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
+          fallback-private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
+
+      - name: Tag promotion marker
+        env:
+          RELEASE_BOT_TOKEN: ${{ steps.release-bot.outputs.token }}
+          PROMO_TAG: ${{ needs.plan.outputs.promo_tag }}
+          COMMIT_SHA: ${{ needs.bump.outputs.commit_sha }}
+        run: |
+          set -euo pipefail
+          git remote set-url origin "https://x-access-token:${RELEASE_BOT_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git fetch origin "${{ needs.plan.outputs.rc_branch }}" --tags --force
+
+          if git ls-remote --exit-code --tags origin "refs/tags/${PROMO_TAG}" >/dev/null 2>&1; then
+            echo "Tag ${PROMO_TAG} already exists; skipping."
+            exit 0
+          fi
+
+          git tag "${PROMO_TAG}" "${COMMIT_SHA}"
+          git push origin "refs/tags/${PROMO_TAG}"
+          git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
+
+  notify-failure:
+    needs: [plan, bump, tag-promo]
+    if: always()
+    permissions:
+      issues: write
+    uses: ./.github/workflows/shared-notify.yml
+    with:
+      success: >-
+        ${{
+          needs.plan.outputs.skipped == 'true' ||
+          (
+            needs.plan.result == 'success' &&
+            needs.bump.result == 'success' &&
+            needs.tag-promo.result == 'success'
+          )
+        }}
+      workflow_name: 'RC Cut'
+      job_results: '{"plan":"${{ needs.plan.result }}","bump":"${{ needs.bump.result }}","tag-promo":"${{ needs.tag-promo.result }}"}'
