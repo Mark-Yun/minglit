@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertStringIncludes } from "@std/assert";
 import {
   captureServeHandler,
   createFetchMock,
@@ -152,6 +152,167 @@ Deno.test("ops-cicd-status - returns normalized branch and issue snapshot", asyn
   });
 });
 
+Deno.test("ops-cicd-status - handles missing branches, missing workflows, and mixed run states", async () => {
+  await withEnv(BASE_ENV, async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    const { fetchMock } = createFetchMock([
+      AUTH_ROUTE,
+      ADMIN_ROLE_ROUTE,
+      {
+        matcher: /\/actions\/workflows(\?|$)/,
+        handler: () =>
+          jsonResponse({
+            workflows: [
+              {
+                id: 1,
+                name: "dev-staging-pr-gate",
+                path: ".github/workflows/dev-staging-pr-gate.yml",
+                state: "active",
+              },
+              {
+                id: 2,
+                name: "dev-deploy",
+                path: ".github/workflows/dev-deploy.yml",
+                state: "active",
+              },
+              {
+                id: 3,
+                name: "main-deploy",
+                path: ".github/workflows/main-deploy.yml",
+                state: "active",
+              },
+            ],
+          }),
+      },
+      {
+        matcher: /\/branches\/dev-staging$/,
+        handler: () => new Response("not found", { status: 404 }),
+      },
+      {
+        matcher: /\/branches\/dev$/,
+        handler: () =>
+          jsonResponse({
+            name: "dev",
+            commit: { sha: "sha-dev", url: "" },
+          }),
+      },
+      {
+        matcher: /\/branches\/main$/,
+        handler: () =>
+          jsonResponse({
+            name: "main",
+            commit: { sha: "sha-main", url: "" },
+          }),
+      },
+      {
+        matcher: /\/branches\?per_page=100$/,
+        handler: () => jsonResponse([]),
+      },
+      {
+        matcher: /\/actions\/workflows\/1\/runs/,
+        handler: () => jsonResponse({ workflow_runs: [] }),
+      },
+      {
+        matcher: /\/actions\/workflows\/2\/runs/,
+        handler: () =>
+          jsonResponse({
+            workflow_runs: [{
+              id: 2,
+              name: "dev deploy",
+              html_url: "https://github.com/Mark-Yun/minglit/actions/runs/2",
+              status: "in_progress",
+              conclusion: null,
+              head_branch: "dev",
+              head_sha: "sha-dev",
+              event: "workflow_dispatch",
+              created_at: "2026-05-24T00:00:00Z",
+              updated_at: "2026-05-24T00:01:00Z",
+            }],
+          }),
+      },
+      {
+        matcher: /\/actions\/workflows\/3\/runs/,
+        handler: () =>
+          jsonResponse({
+            workflow_runs: [{
+              id: 3,
+              name: "main deploy",
+              html_url: "https://github.com/Mark-Yun/minglit/actions/runs/3",
+              status: "completed",
+              conclusion: "skipped",
+              head_branch: "main",
+              head_sha: "sha-main",
+              event: "workflow_dispatch",
+              created_at: "2026-05-24T00:00:00Z",
+              updated_at: "2026-05-24T00:01:00Z",
+            }],
+          }),
+      },
+      {
+        matcher: /\/commits\/sha-dev\/status$/,
+        handler: () =>
+          jsonResponse({
+            state: "pending",
+            statuses: [{
+              context: "dev-soak/backend-simulator",
+              state: "pending",
+              description: "running",
+              target_url: null,
+              updated_at: "2026-05-24T00:02:00Z",
+            }, {
+              context: "unrelated",
+              state: "failure",
+              description: "ignored",
+              target_url: null,
+              updated_at: "2026-05-24T00:02:00Z",
+            }],
+          }),
+      },
+      {
+        matcher: /\/commits\/sha-main\/status$/,
+        handler: () =>
+          jsonResponse({
+            state: "error",
+            statuses: [{
+              context: "main-deploy",
+              state: "error",
+              description: "failed",
+              target_url: null,
+              updated_at: "2026-05-24T00:02:00Z",
+            }],
+          }),
+      },
+      {
+        matcher: /\/issues\?state=open&labels=ci-failure&per_page=25$/,
+        handler: () =>
+          jsonResponse([{
+            number: 43,
+            title: "string labels",
+            state: "open",
+            html_url: "https://github.com/Mark-Yun/minglit/issues/43",
+            labels: ["ci-failure", "P2-medium"],
+            updated_at: "2026-05-24T01:00:00Z",
+          }]),
+      },
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      const response = await handler(authedRequest());
+      const body = await readJson(response);
+
+      assertEquals(response.status, 200);
+      assertEquals(body.branches[0].branch_name, null);
+      assertEquals(body.branches[0].state, "unknown");
+      assertEquals(body.branches[1].state, "running");
+      assertEquals(body.branches[3].state, "failure");
+      assertEquals(body.issues[0].labels, ["ci-failure", "P2-medium"]);
+    });
+  });
+});
+
 Deno.test("ops-cicd-status - rejects non super_admin user", async () => {
   await withEnv(BASE_ENV, async () => {
     const handler = await captureServeHandler(
@@ -172,6 +333,95 @@ Deno.test("ops-cicd-status - rejects non super_admin user", async () => {
 
       assertEquals(response.status, 403);
       assertEquals(body.error, "Forbidden");
+    });
+  });
+});
+
+Deno.test("ops-cicd-status - rejects unsupported methods", async () => {
+  await withEnv(BASE_ENV, async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    const { fetchMock } = createFetchMock([AUTH_ROUTE]);
+    await withMockedFetch(fetchMock, async () => {
+      const response = await handler(
+        new Request("http://localhost", {
+          method: "DELETE",
+          headers: { Authorization: "Bearer test-jwt" },
+        }),
+      );
+      const body = await readJson(response);
+
+      assertEquals(response.status, 405);
+      assertEquals(body.error, "Method Not Allowed");
+    });
+  });
+});
+
+Deno.test("ops-cicd-status - returns 500 when admin role lookup fails", async () => {
+  await withEnv(BASE_ENV, async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    const { fetchMock } = createFetchMock([
+      AUTH_ROUTE,
+      {
+        matcher: /rest\/v1\/app_roles/,
+        handler: () => jsonResponse({ message: "db down" }, { status: 500 }),
+      },
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      const response = await handler(authedRequest());
+      const body = await readJson(response);
+
+      assertEquals(response.status, 500);
+      assertEquals(body.error, "Failed to verify admin role");
+    });
+  });
+});
+
+Deno.test("ops-cicd-status - returns 500 when GITHUB_ACCESS_TOKEN is missing", async () => {
+  await withEnv({ ...BASE_ENV, GITHUB_ACCESS_TOKEN: undefined }, async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    const { fetchMock } = createFetchMock([AUTH_ROUTE, ADMIN_ROLE_ROUTE]);
+
+    await withMockedFetch(fetchMock, async () => {
+      const response = await handler(authedRequest());
+      const body = await readJson(response);
+
+      assertEquals(response.status, 500);
+      assertEquals(body.error, "GITHUB_ACCESS_TOKEN is not set");
+    });
+  });
+});
+
+Deno.test("ops-cicd-status - returns 502 when GitHub API fails", async () => {
+  await withEnv(BASE_ENV, async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    const { fetchMock } = createFetchMock([
+      AUTH_ROUTE,
+      ADMIN_ROLE_ROUTE,
+      {
+        matcher: /\/actions\/workflows(\?|$)/,
+        handler: () => new Response("rate limited", { status: 403 }),
+      },
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      const response = await handler(authedRequest());
+      const body = await readJson(response);
+
+      assertEquals(response.status, 502);
+      assertStringIncludes(body.error, "GitHub API /actions/workflows failed");
     });
   });
 });
