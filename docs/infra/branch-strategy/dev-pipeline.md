@@ -36,6 +36,8 @@
 
 dev 머지 후 자동 발동. 통과 = "이 commit 은 RC 가능 + backend/web prod 배포 가능".
 
+> **Current implementation**: first operational version runs user/partner CUJ integration directly and sets `rc-gate-pass` on success. Backend/EF/Test Lab and the deploy chain are follow-up expansions.
+
 ### 무엇을 도는가
 
 매트릭스 병렬. 하나라도 실패 = rc-gate 전체 실패.
@@ -124,4 +126,4 @@ Snapshot 모델 — **auto-revert 없음**. dev 가 broken 상태로 잠시 머�
 - [branch-flow.md](./branch-flow.md) — auto-deploy chain 그림
 
 ---
-_Reviewed: 2026-05-23 16:31_
+_Reviewed: 2026-05-24 09:24_
