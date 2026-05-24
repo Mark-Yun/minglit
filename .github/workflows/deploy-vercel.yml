@@ -221,8 +221,12 @@ jobs:
     needs: [deploy-app_user, deploy-landing_user, deploy-landing_partner, deploy-app_partner, deploy-mds_docs, smoke-test]
     if: always()
     permissions:
+      actions: read
+      contents: read
       issues: write
+      statuses: write
     uses: ./.github/workflows/shared-notify.yml
     with:
-      success: ${{ !contains(needs.*.result, 'failure') }}
+      failed: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
       workflow_name: 'Vercel Deploy'
+      severity: 'P0-critical'

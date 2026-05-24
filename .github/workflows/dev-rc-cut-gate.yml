@@ -60,14 +60,20 @@ jobs:
     needs: [cuj-integration-user, cuj-integration-partner, set-dev-rc-cut-status]
     if: always()
     permissions:
+      actions: read
+      contents: read
       issues: write
+      statuses: write
     uses: ./.github/workflows/shared-notify.yml
     with:
-      success: >-
+      failed: >-
         ${{
-          needs.cuj-integration-user.result == 'success' &&
-          needs.cuj-integration-partner.result == 'success' &&
-          needs.set-dev-rc-cut-status.result == 'success'
+          (
+            needs.cuj-integration-user.result != 'success' ||
+            needs.cuj-integration-partner.result != 'success' ||
+            needs.set-dev-rc-cut-status.result != 'success'
+          )
         }}
       workflow_name: 'Dev RC Cut Gate'
+      severity: 'P1-high'
       job_results: '{"cuj-integration-user":"${{ needs.cuj-integration-user.result }}","cuj-integration-partner":"${{ needs.cuj-integration-partner.result }}","set-dev-rc-cut-status":"${{ needs.set-dev-rc-cut-status.result }}"}'

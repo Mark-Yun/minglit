@@ -204,17 +204,21 @@ jobs:
     needs: [plan, bump, tag-promo]
     if: always()
     permissions:
+      actions: read
+      contents: read
       issues: write
+      statuses: write
     uses: ./.github/workflows/shared-notify.yml
     with:
-      success: >-
+      failed: >-
         ${{
-          needs.plan.outputs.skipped == 'true' ||
+          needs.plan.outputs.skipped != 'true' &&
           (
-            needs.plan.result == 'success' &&
-            needs.bump.result == 'success' &&
-            needs.tag-promo.result == 'success'
+            needs.plan.result != 'success' ||
+            needs.bump.result != 'success' ||
+            needs.tag-promo.result != 'success'
           )
         }}
       workflow_name: 'Dev RC Cut'
+      severity: 'P1-high'
       job_results: '{"plan":"${{ needs.plan.result }}","bump":"${{ needs.bump.result }}","tag-promo":"${{ needs.tag-promo.result }}"}'

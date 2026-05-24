@@ -86,13 +86,19 @@ jobs:
     needs: [calculate-version, bump]
     if: always()
     permissions:
+      actions: read
+      contents: read
       issues: write
+      statuses: write
     uses: ./.github/workflows/shared-notify.yml
     with:
-      success: >-
+      failed: >-
         ${{
-          (needs.calculate-version.result == 'success' || needs.calculate-version.result == 'skipped') &&
-          (needs.bump.result == 'success' || needs.bump.result == 'skipped')
+          (
+            (needs.calculate-version.result != 'success' && needs.calculate-version.result != 'skipped') ||
+            (needs.bump.result != 'success' && needs.bump.result != 'skipped')
+          )
         }}
       workflow_name: 'Dev-Staging Dev Cut Gate'
+      severity: 'P1-high'
       job_results: '{"calculate-version":"${{ needs.calculate-version.result }}","bump":"${{ needs.bump.result }}"}'

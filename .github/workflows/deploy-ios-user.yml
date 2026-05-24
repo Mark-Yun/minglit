@@ -53,9 +53,13 @@ jobs:
     needs: [ios-deploy]
     if: always()
     permissions:
+      actions: read
+      contents: read
       issues: write
+      statuses: write
     uses: ./.github/workflows/shared-notify.yml
     with:
-      success: ${{ needs.ios-deploy.result == 'success' }}
+      failed: ${{ needs.ios-deploy.result != 'success' }}
       workflow_name: 'iOS Deploy User'
+      severity: 'P0-critical'
       job_results: '{"ios-deploy":"${{ needs.ios-deploy.result }}"}'
