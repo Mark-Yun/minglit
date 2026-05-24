@@ -346,13 +346,29 @@ void main() {
       app: const DeletionReasonPage(),
       overrides: base,
       body: (t) async {
-        final otherReasonTile = find.byWidgetPredicate(
-          (widget) =>
-              widget is RadioListTile<WithdrawalReasonCode> &&
-              widget.value == WithdrawalReasonCode.other,
+        final scrollable = find.byType(Scrollable).first;
+        final otherReasonText = find.text(
+          '직접 입력할게요',
+          skipOffstage: false,
         );
-        await t.ensureVisible(otherReasonTile);
-        await t.tap(otherReasonTile);
+        await t.scrollUntilVisible(
+          otherReasonText,
+          120,
+          scrollable: scrollable,
+        );
+
+        Future<void> tapOtherReasonRadio() async {
+          final rect = t.getRect(otherReasonText);
+          await t.tapAt(rect.centerLeft + const Offset(-24, 0));
+          await t.pumpAndSettle();
+        }
+
+        await tapOtherReasonRadio();
+        if (!t.any(find.byType(EditableText))) {
+          await t.drag(scrollable, const Offset(0, -120));
+          await t.pumpAndSettle();
+          await tapOtherReasonRadio();
+        }
         await t.pumpAndSettle();
 
         expect(find.byType(EditableText), findsOneWidget);
