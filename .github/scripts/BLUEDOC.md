@@ -10,6 +10,7 @@
 | [`run-user-cuj.sh`](./run-user-cuj.sh) | `apps/app_user/integration_test/cuj/` 의 CUJ 테스트 실행 (emulator) | `shared-cuj-integration` (app-name=user 일 때) |
 | [`run-partner-cuj.sh`](./run-partner-cuj.sh) | `apps/app_partner/integration_test/cuj/` CUJ 실행 | `shared-cuj-integration` (app-name=partner 일 때) |
 | [`check-bluedoc-freshness.sh`](./check-bluedoc-freshness.sh) | PR 에서 새/삭제 파일에 대해 가장 가까운 ancestor BLUEDOC.md 갱신 강제. 통과: 이정표 표 갱신 또는 BLUEDOC 의 `_Reviewed_` 날짜 bump. + 모든 BLUEDOC.md 의 Reviewed 형식 검증 | `pr-gate.check-bluedoc-freshness` (required check) |
+| [`check-ios-deploy-branch-conditions.sh`](./check-ios-deploy-branch-conditions.sh) | `ios-deploy` action 의 브랜치 분기(`main` vs `non-main`) 회귀 검증 | 수동 실행 (`bash .github/scripts/check-ios-deploy-branch-conditions.sh`) |
 
 ## 핵심 컨벤션
 
@@ -26,4 +27,4 @@
 - [.github/BLUEDOC.md](../BLUEDOC.md) — 상위 진입점
 
 ---
-_Reviewed: 2026-05-17 22:50_
+_Reviewed: 2026-05-24 21:30_
