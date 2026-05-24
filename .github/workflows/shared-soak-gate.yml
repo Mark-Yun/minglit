@@ -1,0 +1,226 @@
+name: shared-soak-gate
+
+on:
+  workflow_call:
+    inputs:
+      candidate_ref:
+        type: string
+        required: true
+        description: 'Remote branch/ref to evaluate when candidate_sha is empty, e.g. dev or rc/2026-W22.'
+      candidate_sha:
+        type: string
+        required: false
+        default: ''
+        description: 'Optional full candidate SHA. If empty, origin/{candidate_ref} is used.'
+      min_soak_hours:
+        type: string
+        required: true
+        description: 'Minimum candidate age in hours.'
+      required_runs_json:
+        type: string
+        required: false
+        default: '[]'
+        description: 'JSON array of workflow run requirements.'
+      failure_contexts:
+        type: string
+        required: false
+        default: ''
+        description: 'Newline-separated commit status contexts that must not be failure.'
+      success_contexts:
+        type: string
+        required: false
+        default: ''
+        description: 'Newline-separated commit status contexts to mark success when eligible.'
+      pass_context:
+        type: string
+        required: true
+        description: 'Final pass marker context, e.g. dev-rc-cut-pass.'
+      pass_description:
+        type: string
+        required: true
+        description: 'Description for the final pass marker.'
+    outputs:
+      skipped:
+        description: 'true when candidate is not eligible yet.'
+        value: ${{ jobs.evaluate.outputs.skipped }}
+      reason:
+        description: 'Human-readable skip/pass reason.'
+        value: ${{ jobs.evaluate.outputs.reason }}
+      candidate_sha:
+        description: 'Evaluated candidate SHA.'
+        value: ${{ jobs.evaluate.outputs.candidate_sha }}
+    secrets:
+      MINGLIT_RELEASE_BOT_APP_ID:
+        required: false
+        description: 'Fallback GitHub App ID for minglit-release-bot.'
+      MINGLIT_RELEASE_BOT_PRIVATE_KEY:
+        required: false
+        description: 'Fallback GitHub App private key for minglit-release-bot.'
+
+permissions:
+  actions: read
+  contents: read
+  statuses: write
+
+jobs:
+  evaluate:
+    name: evaluate
+    runs-on: ubuntu-latest
+    outputs:
+      skipped: ${{ steps.evaluate.outputs.skipped }}
+      reason: ${{ steps.evaluate.outputs.reason }}
+      candidate_sha: ${{ steps.evaluate.outputs.candidate_sha }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Generate release bot token
+        id: release-bot
+        uses: ./.github/actions/release-bot-token
+        with:
+          fallback-app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
+          fallback-private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
+
+      - name: Evaluate soak gate and write pass markers
+        id: evaluate
+        env:
+          GH_TOKEN: ${{ steps.release-bot.outputs.token }}
+          INPUT_CANDIDATE_REF: ${{ inputs.candidate_ref }}
+          INPUT_CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+          INPUT_MIN_SOAK_HOURS: ${{ inputs.min_soak_hours }}
+          INPUT_REQUIRED_RUNS_JSON: ${{ inputs.required_runs_json }}
+          INPUT_FAILURE_CONTEXTS: ${{ inputs.failure_contexts }}
+          INPUT_SUCCESS_CONTEXTS: ${{ inputs.success_contexts }}
+          INPUT_PASS_CONTEXT: ${{ inputs.pass_context }}
+          INPUT_PASS_DESCRIPTION: ${{ inputs.pass_description }}
+        run: |
+          set -euo pipefail
+
+          skip() {
+            echo "skipped=true" >> "${GITHUB_OUTPUT}"
+            echo "reason=$1" >> "${GITHUB_OUTPUT}"
+            echo "::notice::$1"
+            exit 0
+          }
+
+          if ! [[ "${INPUT_MIN_SOAK_HOURS}" =~ ^[0-9]+$ ]]; then
+            echo "::error::min_soak_hours must be a non-negative integer."
+            exit 1
+          fi
+          if [ -z "${INPUT_PASS_CONTEXT}" ]; then
+            echo "::error::pass_context is required."
+            exit 1
+          fi
+
+          CANDIDATE_SHA="${INPUT_CANDIDATE_SHA}"
+          if [ -z "${CANDIDATE_SHA}" ]; then
+            git fetch origin "${INPUT_CANDIDATE_REF}" --depth=200
+            CANDIDATE_SHA="$(git rev-parse "origin/${INPUT_CANDIDATE_REF}")"
+          fi
+          if ! [[ "${CANDIDATE_SHA}" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "::error::candidate_sha must be a full 40-character commit SHA."
+            exit 1
+          fi
+
+          echo "candidate_sha=${CANDIDATE_SHA}" >> "${GITHUB_OUTPUT}"
+          if ! git cat-file -e "${CANDIDATE_SHA}^{commit}" 2>/dev/null; then
+            git fetch origin '+refs/heads/*:refs/remotes/origin/*' --depth=200
+          fi
+          if ! git cat-file -e "${CANDIDATE_SHA}^{commit}" 2>/dev/null; then
+            echo "::error::candidate_sha is not reachable from fetched refs: ${CANDIDATE_SHA}"
+            exit 1
+          fi
+
+          COMMIT_TS="$(git show -s --format=%ct "${CANDIDATE_SHA}")"
+          COMMIT_ISO="$(date -u -d "@${COMMIT_TS}" +%Y-%m-%dT%H:%M:%SZ)"
+          NOW_TS="$(date +%s)"
+          AGE_HOURS="$(( (NOW_TS - COMMIT_TS) / 3600 ))"
+          if [ "${AGE_HOURS}" -lt "${INPUT_MIN_SOAK_HOURS}" ]; then
+            skip "candidate ${CANDIDATE_SHA} age ${AGE_HOURS}h < ${INPUT_MIN_SOAK_HOURS}h"
+          fi
+
+          python3 - <<'PY' > /tmp/run_requirements.tsv
+          import json
+          import os
+          import sys
+
+          raw = os.environ["INPUT_REQUIRED_RUNS_JSON"].strip() or "[]"
+          try:
+              items = json.loads(raw)
+          except Exception as exc:
+              print(f"::error::required_runs_json is invalid JSON: {exc}", file=sys.stderr)
+              sys.exit(1)
+          if not isinstance(items, list):
+              print("::error::required_runs_json must be a JSON array.", file=sys.stderr)
+              sys.exit(1)
+          for item in items:
+              if not isinstance(item, dict):
+                  print("::error::each run requirement must be an object.", file=sys.stderr)
+                  sys.exit(1)
+              workflow = str(item.get("workflow", "")).strip()
+              branch = str(item.get("branch", "")).strip()
+              min_success = int(item.get("min_success", 0))
+              match_head_sha = bool(item.get("match_head_sha", False))
+              if not workflow or not branch or min_success < 0:
+                  print("::error::run requirement needs workflow, branch, min_success.", file=sys.stderr)
+                  sys.exit(1)
+              print(f"{workflow}\t{branch}\t{min_success}\t{str(match_head_sha).lower()}")
+          PY
+
+          while IFS=$'\t' read -r workflow branch min_success match_head_sha; do
+            [ -z "${workflow}" ] && continue
+            runs_json="$(gh run list \
+              --workflow "${workflow}" \
+              --branch "${branch}" \
+              --limit 100 \
+              --json conclusion,createdAt,headSha)"
+            if [ "${match_head_sha}" = "true" ]; then
+              run_count="$(jq \
+                --arg since "${COMMIT_ISO}" \
+                --arg sha "${CANDIDATE_SHA}" \
+                '[.[] | select(.conclusion == "success" and .createdAt >= $since and .headSha == $sha)] | length' \
+                <<< "${runs_json}")"
+            else
+              run_count="$(jq \
+                --arg since "${COMMIT_ISO}" \
+                '[.[] | select(.conclusion == "success" and .createdAt >= $since)] | length' \
+                <<< "${runs_json}")"
+            fi
+            if [ "${run_count}" -lt "${min_success}" ]; then
+              skip "${workflow} has ${run_count}/${min_success} success runs since ${COMMIT_ISO}"
+            fi
+          done < /tmp/run_requirements.tsv
+
+          STATUS_JSON="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${CANDIDATE_SHA}/status")"
+          while IFS= read -r context; do
+            [ -z "${context}" ] && continue
+            state="$(jq -r --arg context "${context}" '.statuses[]? | select(.context == $context) | .state' <<< "${STATUS_JSON}" | head -n 1)"
+            if [ "${state}" = "failure" ]; then
+              skip "${context} is failure on ${CANDIDATE_SHA}"
+            fi
+          done <<< "${INPUT_FAILURE_CONTEXTS}"
+
+          TARGET_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          write_status() {
+            local context="$1"
+            local description="$2"
+            [ -z "${context}" ] && return 0
+            gh api "repos/${GITHUB_REPOSITORY}/statuses/${CANDIDATE_SHA}" \
+              --method POST \
+              -f state=success \
+              -f context="${context}" \
+              -f description="${description:0:140}" \
+              -f target_url="${TARGET_URL}"
+          }
+
+          while IFS= read -r context; do
+            [ -z "${context}" ] && continue
+            write_status "${context}" "${context}: soak confirmed"
+          done <<< "${INPUT_SUCCESS_CONTEXTS}"
+
+          write_status "${INPUT_PASS_CONTEXT}" "${INPUT_PASS_DESCRIPTION}"
+
+          echo "skipped=false" >> "${GITHUB_OUTPUT}"
+          echo "reason=passed" >> "${GITHUB_OUTPUT}"
