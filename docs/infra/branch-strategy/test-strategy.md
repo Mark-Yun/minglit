@@ -71,7 +71,7 @@ RC 의 hotfix 만 받음. `pr-gate` + 추가 mobile smoke. 머지 시 `rc-post-m
 `rc-main-cut` 이 자동 생성한 promotion PR 에 적용:
 - pr-gate 재실행
 - `expand-migrate-contract` 다시 검증 (RC 5일 동안 dev 가 더 나갔을 수 있음)
-- RC HEAD 의 `dev-rc-cut-pass` status 확인 (마지막 hotfix 이 dev-rc-cut-gate 통과했는지)
+- RC first-parent lineage 안의 `dev-rc-cut-pass` source commit 확인
 
 모든 check 통과 시 workflow auto-merge (rebase + ff).
 

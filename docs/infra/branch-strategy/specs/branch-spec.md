@@ -61,7 +61,7 @@
 | Direct push | 금지 |
 | Force push | 금지 |
 | Branch deletion | 금지 |
-| Required status checks | `main-pr-gate` (RC HEAD 의 `dev-rc-cut-pass`, `expand-migrate-contract`, `rc-main-cut-pass` marker 를 내부 검증) |
+| Required status checks | `main-pr-gate` (RC lineage 의 `dev-rc-cut-pass`, `expand-migrate-contract`, `rc-main-cut-pass` marker 를 내부 검증) |
 | Required PR labels | GitHub Ruleset 직접 요구 없음. `main-pr-gate` 가 `rc-main-cut-pass` marker 를 검증 |
 | Required reviewers | 0 (workflow auto-merge) |
 | Require conversation resolution | yes |
@@ -70,7 +70,7 @@
 | Auto-delete head branch on merge | yes (`rc/*` branch 는 main merge 후 삭제, 이력은 protected tag 로 보존) |
 | Bypass roles | `minglit-release-bot` for final version/tag push, release manager only for catastrophic incident response |
 
-> rc → main PR 만 받음. GitHub Ruleset 은 `main-pr-gate` 하나만 required 로 두고, `main-pr-gate` 내부에서 RC HEAD status, soak marker, contract 재검증을 수행한다. PR head SHA 와 dev commit status 가 다를 수 있으므로 `dev-rc-cut-pass` 를 branch protection 의 독립 required check 로 걸지 않는다.
+> rc → main PR 만 받음. GitHub Ruleset 은 `main-pr-gate` 하나만 required 로 두고, `main-pr-gate` 내부에서 RC lineage status, soak marker, contract 재검증을 수행한다. PR head SHA 와 dev commit status 가 다를 수 있으므로 `dev-rc-cut-pass` 를 branch protection 의 독립 required check 로 걸지 않는다.
 
 ## Pattern Branch 설정
 
