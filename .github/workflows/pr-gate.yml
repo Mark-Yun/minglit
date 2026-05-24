@@ -137,6 +137,10 @@ jobs:
           git fetch origin "${BASE_REF#origin/}" --depth=50 || true
           bash .github/scripts/check-bluedoc-freshness.sh
 
+      - name: Build artifact secret scan self-test
+        if: ${{ !cancelled() }}
+        run: python3 .github/scripts/scan-build-artifact-secrets.py --self-test
+
   # 변경 사항 감지 Job
   changes:
     runs-on: ubuntu-latest
@@ -158,6 +162,7 @@ jobs:
       mds_icons: ${{ steps.filter.outputs.mds_icons }}
       supabase: ${{ steps.filter.outputs.supabase }}
       dart_files: ${{ steps.filter.outputs.dart_files }}
+      artifact_secret_scan: ${{ steps.filter.outputs.artifact_secret_scan }}
       # 세분화 — 잡별 의존성에 맞춰 분리 (false positive 트리거 회피)
       supabase_migrations: ${{ steps.filter.outputs.supabase_migrations }}
       supabase_tests: ${{ steps.filter.outputs.supabase_tests }}
@@ -201,6 +206,10 @@ jobs:
             - 'supabase/**'
           dart_files:
             - '**/*.dart'
+          artifact_secret_scan:
+            - '.github/scripts/scan-build-artifact-secrets.py'
+            - '.github/scripts/BLUEDOC.md'
+            - '.github/workflows/pr-gate.yml'
           # migrations + seed + config — pgTAP / ef-integration 트리거
           supabase_migrations:
             - 'supabase/migrations/**'
@@ -416,7 +425,7 @@ jobs:
   lint-landing-user:
     name: lint-and-build-landing-user
     needs: changes
-    if: ${{ needs.changes.outputs.landing_user == 'true' }}
+    if: ${{ needs.changes.outputs.landing_user == 'true' || needs.changes.outputs.artifact_secret_scan == 'true' }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -432,12 +441,14 @@ jobs:
       - run: npm audit --audit-level=high
       - run: npm run lint
       - run: npm run build
+      - name: Scan Next.js build artifact secrets
+        run: python3 ../../.github/scripts/scan-build-artifact-secrets.py .next
 
   # Landing Partner CI
   lint-landing-partner:
     name: lint-and-build-landing-partner
     needs: changes
-    if: ${{ needs.changes.outputs.landing_partner == 'true' }}
+    if: ${{ needs.changes.outputs.landing_partner == 'true' || needs.changes.outputs.artifact_secret_scan == 'true' }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -453,6 +464,131 @@ jobs:
       - run: npm audit --audit-level=high
       - run: npm run lint
       - run: npm run build
+      - name: Scan Next.js build artifact secrets
+        run: python3 ../../.github/scripts/scan-build-artifact-secrets.py .next
+
+  # Flutter release artifact secret scan (Android first; iOS requires macOS/signing deploy context).
+  scan-flutter-artifact-secrets:
+    name: scan-build-artifact-secrets
+    needs: changes
+    if: ${{ needs.changes.outputs.app_user == 'true' || needs.changes.outputs.app_partner == 'true' || needs.changes.outputs.artifact_secret_scan == 'true' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: app_user
+            change_key: app_user
+            directory: apps/app_user
+          - app: app_partner
+            change_key: app_partner
+            directory: apps/app_partner
+    defaults:
+      run:
+        working-directory: ./${{ matrix.directory }}
+    steps:
+      - uses: actions/checkout@v6
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' || needs.changes.outputs.artifact_secret_scan == 'true' }}
+
+      - name: Set up JDK 17
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' || needs.changes.outputs.artifact_secret_scan == 'true' }}
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+          cache-dependency-path: ${{ matrix.directory }}/android/build.gradle.kts
+
+      - uses: subosito/flutter-action@v2
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' || needs.changes.outputs.artifact_secret_scan == 'true' }}
+        with:
+          flutter-version: '3.41.9'  # Fix #2640: flutter_quill 11.5.0 incompatible with Flutter 3.44.0
+          cache: true
+
+      - name: Cache Gradle
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' || needs.changes.outputs.artifact_secret_scan == 'true' }}
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ${{ matrix.directory }}/android/.gradle
+          key: ${{ runner.os }}-artifact-secret-scan-${{ matrix.app }}-${{ hashFiles(format('{0}/android/**/*.gradle.kts', matrix.directory), format('{0}/android/gradle/wrapper/gradle-wrapper.properties', matrix.directory)) }}
+          restore-keys: |
+            ${{ runner.os }}-artifact-secret-scan-${{ matrix.app }}-
+
+      - name: Get dependencies
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' || needs.changes.outputs.artifact_secret_scan == 'true' }}
+        run: flutter pub get
+
+      - name: Decode Keystore
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' || needs.changes.outputs.artifact_secret_scan == 'true' }}
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          : "${ANDROID_KEYSTORE_BASE64:?ANDROID_KEYSTORE_BASE64 is required for release artifact scan}"
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+
+      - name: Create key.properties
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' || needs.changes.outputs.artifact_secret_scan == 'true' }}
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          : "${ANDROID_KEYSTORE_PASSWORD:?ANDROID_KEYSTORE_PASSWORD is required for release artifact scan}"
+          : "${ANDROID_KEY_PASSWORD:?ANDROID_KEY_PASSWORD is required for release artifact scan}"
+          : "${ANDROID_KEY_ALIAS:?ANDROID_KEY_ALIAS is required for release artifact scan}"
+          {
+            echo "storePassword=$ANDROID_KEYSTORE_PASSWORD"
+            echo "keyPassword=$ANDROID_KEY_PASSWORD"
+            echo "keyAlias=$ANDROID_KEY_ALIAS"
+            echo "storeFile=upload-keystore.jks"
+          } > android/key.properties
+
+      - name: Build dev release APK
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' || needs.changes.outputs.artifact_secret_scan == 'true' }}
+        env:
+          SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
+          SUPABASE_DEV_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+          SENTRY_DSN_FLUTTER: ${{ secrets.SENTRY_DSN_FLUTTER }}
+          JUSO_CONFIRM_KEY: ${{ secrets.JUSO_CONFIRM_KEY }}
+        run: |
+          flutter build apk \
+            --flavor dev \
+            --release \
+            --build-number=${{ github.run_number }} \
+            --dart-define=SUPABASE_URL="$SUPABASE_DEV_URL" \
+            --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_DEV_PUBLISHABLE_KEY" \
+            --dart-define=SENTRY_DSN="$SENTRY_DSN_FLUTTER" \
+            --dart-define=ENVIRONMENT=development \
+            --dart-define=JUSO_CONFIRM_KEY="$JUSO_CONFIRM_KEY"
+
+      - name: Build dev release AAB
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' || needs.changes.outputs.artifact_secret_scan == 'true' }}
+        env:
+          SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
+          SUPABASE_DEV_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+          SENTRY_DSN_FLUTTER: ${{ secrets.SENTRY_DSN_FLUTTER }}
+          JUSO_CONFIRM_KEY: ${{ secrets.JUSO_CONFIRM_KEY }}
+        run: |
+          flutter build appbundle \
+            --flavor dev \
+            --release \
+            --build-number=${{ github.run_number }} \
+            --dart-define=SUPABASE_URL="$SUPABASE_DEV_URL" \
+            --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_DEV_PUBLISHABLE_KEY" \
+            --dart-define=SENTRY_DSN="$SENTRY_DSN_FLUTTER" \
+            --dart-define=ENVIRONMENT=development \
+            --dart-define=JUSO_CONFIRM_KEY="$JUSO_CONFIRM_KEY"
+
+      - name: Scan Flutter build artifact secrets
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' || needs.changes.outputs.artifact_secret_scan == 'true' }}
+        working-directory: .
+        run: |
+          python3 .github/scripts/scan-build-artifact-secrets.py \
+            "${{ matrix.directory }}/build/app/outputs/flutter-apk" \
+            "${{ matrix.directory }}/build/app/outputs/bundle"
 
   # MDS Docs CI
   lint-mds-docs:
