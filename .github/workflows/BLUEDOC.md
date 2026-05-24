@@ -58,4 +58,4 @@
 - [CLAUDE.md](../../CLAUDE.md) `## PR Conventions` — branch별 required check / auto-merge 흐름
 
 ---
-_Reviewed: 2026-05-24 16:30_
+_Reviewed: 2026-05-24 16:31_
