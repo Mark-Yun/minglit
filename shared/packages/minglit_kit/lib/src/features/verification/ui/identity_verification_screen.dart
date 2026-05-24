@@ -14,12 +14,25 @@ import 'package:minglit_kit/src/features/iamport/data/repository/iamport_reposit
 import 'package:minglit_kit/src/features/verification/ui/identity_verification_consent_sheet.dart';
 import 'package:minglit_kit/src/utils/error_ui_handler.dart';
 
+/// Starts the external identity verification flow and returns the
+/// verification id.
+typedef IdentityVerificationStarter =
+    Future<String?> Function({
+      required BuildContext context,
+      required String userCode,
+      required String merchantUid,
+      String? mRedirectUrl,
+    });
+
 /// **Identity Verification Screen**
 ///
 /// A screen where users verify their real identity via Iamport (V2).
 class IdentityVerificationScreen extends ConsumerStatefulWidget {
   /// Creates an identity verification screen.
-  const IdentityVerificationScreen({super.key});
+  const IdentityVerificationScreen({super.key, this.certificationStarter});
+
+  /// Optional test/render hook for the external certification flow.
+  final IdentityVerificationStarter? certificationStarter;
 
   /// Creates the state for the identity verification screen.
   @override
@@ -71,9 +84,7 @@ class _IdentityVerificationScreenState
 
     final consents = await ref
         .read(consentRepositoryProvider)
-        .getConsents(
-          user.id,
-        );
+        .getConsents(user.id);
     final hasConsent = consents.any(
       (consent) => consent.consentKey == ConsentType.identityVerification,
     );
@@ -98,8 +109,8 @@ class _IdentityVerificationScreenState
     final merchantUid = 'IDV_${DateTime.now().millisecondsSinceEpoch}';
     final config = ref.read(iamportConfigProvider);
 
-    final service = getCertificationService();
-    final verificationId = await service.verify(
+    final starter = widget.certificationStarter ?? _startIamportCertification;
+    final verificationId = await starter(
       context: context,
       userCode: config.userCode,
       merchantUid: merchantUid,
@@ -119,11 +130,26 @@ class _IdentityVerificationScreenState
         .verifyCertification(verificationId);
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('✅ 본인인증이 성공적으로 완료되었습니다.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('✅ 본인인증이 성공적으로 완료되었습니다.')));
       Navigator.of(context).pop(true);
     }
+  }
+
+  Future<String?> _startIamportCertification({
+    required BuildContext context,
+    required String userCode,
+    required String merchantUid,
+    String? mRedirectUrl,
+  }) {
+    final service = getCertificationService();
+    return service.verify(
+      context: context,
+      userCode: userCode,
+      merchantUid: merchantUid,
+      mRedirectUrl: mRedirectUrl,
+    );
   }
 
   @override

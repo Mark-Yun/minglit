@@ -1,6 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+class _MockSupabaseClient extends Mock implements SupabaseClient {}
+
+class _MockUser extends Mock implements User {}
+
+class _IdentityConsentRepository extends ConsentRepository {
+  _IdentityConsentRepository() : super(_MockSupabaseClient());
+
+  @override
+  Future<List<UserConsent>> getConsents(String userId) async {
+    final now = DateTime(2026);
+    return [
+      UserConsent(
+        id: 'consent-identity-verification',
+        userId: userId,
+        consentKey: ConsentType.identityVerification,
+        consented: true,
+        consentedAt: now,
+        createdAt: now,
+      ),
+    ];
+  }
+}
+
+User _makeUser() {
+  final user = _MockUser();
+  when(() => user.id).thenReturn('mock-user-1');
+  return user;
+}
 
 /// ProviderObserver that records the names of providers that have been
 /// initialized in the container.
@@ -70,6 +101,39 @@ void main() {
 
         // 첫 프레임: loading state
         expect(find.byType(CircularProgressIndicator), findsAny);
+      },
+    );
+
+    testWidgets(
+      'renders retry state when certification returns null',
+      (tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              currentUserProvider.overrideWithValue(_makeUser()),
+              consentRepositoryProvider.overrideWithValue(
+                _IdentityConsentRepository(),
+              ),
+            ],
+            child: MaterialApp(
+              home: IdentityVerificationScreen(
+                certificationStarter:
+                    ({
+                      required context,
+                      required userCode,
+                      required merchantUid,
+                      mRedirectUrl,
+                    }) async => null,
+              ),
+            ),
+          ),
+        );
+
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        expect(find.text('인증이 취소되었거나 창이 열리지 않았습니다.'), findsOne);
+        expect(find.text('본인인증 다시 시도하기'), findsOne);
       },
     );
   });

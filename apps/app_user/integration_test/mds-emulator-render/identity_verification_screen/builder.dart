@@ -32,6 +32,32 @@ class _NoIdentityConsentRepository extends ConsentRepository {
   Future<List<UserConsent>> getConsents(String userId) async => const [];
 }
 
+class _IdentityConsentRepository extends ConsentRepository {
+  _IdentityConsentRepository() : super(_MockSupabaseClient());
+
+  @override
+  Future<List<UserConsent>> getConsents(String userId) async {
+    final now = DateTime(2026);
+    return [
+      UserConsent(
+        id: 'consent-identity-verification',
+        userId: userId,
+        consentKey: ConsentType.identityVerification,
+        consented: true,
+        consentedAt: now,
+        createdAt: now,
+      ),
+    ];
+  }
+}
+
+Future<String?> _cancelCertification({
+  required BuildContext context,
+  required String userCode,
+  required String merchantUid,
+  String? mRedirectUrl,
+}) async => null;
+
 User _makeUser() {
   final user = _MockUser();
   when(() => user.id).thenReturn('mock-user-1');
@@ -41,7 +67,11 @@ User _makeUser() {
 class IdentityVerificationScreenBuilder
     extends MdsScreenBuilder<IdentityVerificationScreen> {
   IdentityVerificationScreenBuilder()
-    : super(page: const IdentityVerificationScreen());
+    : super(
+        page: const IdentityVerificationScreen(
+          certificationStarter: _cancelCertification,
+        ),
+      );
 
   User? _user;
   ConsentRepository? _consentRepository;
@@ -63,10 +93,10 @@ class IdentityVerificationScreenBuilder
     return this;
   }
 
-  /// 로그인 없음 상태로 오류 + 재시도 버튼 상태를 노출한다.
+  /// 인증 창 취소/실패 후 오류 + 재시도 버튼 상태를 노출한다.
   IdentityVerificationScreenBuilder errorRetry() {
-    _user = null;
-    _consentRepository = _NoIdentityConsentRepository();
+    _user = _makeUser();
+    _consentRepository = _IdentityConsentRepository();
     // ignore: avoid_returning_this, fluent builder — callers chain b.errorRetry().dark()
     return this;
   }
