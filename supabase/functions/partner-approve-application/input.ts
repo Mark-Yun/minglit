@@ -1,7 +1,8 @@
+import {
+  type InputResult,
+  requireUuidField,
+} from "../_shared/input_validation.ts";
 import { errorResponse } from "../_shared/response_utils.ts";
-
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export type PartnerApproveInput =
   | { action: "approve"; applicationId: string }
@@ -10,26 +11,22 @@ export type PartnerApproveInput =
 export function parsePartnerApproveInput(
   action: string,
   body: Record<string, unknown>,
-): PartnerApproveInput | Response {
+): InputResult<PartnerApproveInput> {
   if (action === "approve") {
-    const applicationId = body.application_id;
-    if (typeof applicationId !== "string" || !applicationId) {
-      return errorResponse("Missing application_id", 400);
-    }
-    if (!UUID_RE.test(applicationId)) {
-      return errorResponse("Invalid application_id", 400);
-    }
+    const applicationId = requireUuidField(body, "application_id", {
+      missing: "Missing application_id",
+      invalid: "Invalid application_id",
+    });
+    if (applicationId instanceof Response) return applicationId;
     return { action, applicationId };
   }
 
   if (action === "bulk_approve") {
-    const eventId = body.event_id;
-    if (typeof eventId !== "string" || !eventId) {
-      return errorResponse("Missing event_id", 400);
-    }
-    if (!UUID_RE.test(eventId)) {
-      return errorResponse("Invalid event_id", 400);
-    }
+    const eventId = requireUuidField(body, "event_id", {
+      missing: "Missing event_id",
+      invalid: "Invalid event_id",
+    });
+    if (eventId instanceof Response) return eventId;
     return { action, eventId };
   }
 

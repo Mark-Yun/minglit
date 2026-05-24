@@ -1,22 +1,23 @@
 # _shared
 
-모든 Edge Function 이 import 하는 공용 라이브러리. `_` prefix 라 EF entrypoint 아님.
+모든 Edge Function 이 import 하는 공용 라이브러리. `_` prefix 라 EF entrypoint
+아님.
 
 ## 이정표
 
-| 항목 | 역할 |
-|---|---|
-| `edge_function.ts` | `minglitEdgeFunction(handler)` wrapper. manifest env/caller 가드 + logging/Sentry |
-| `env_keystore.ts` | env-manifest 기반 환경변수 typed 접근 |
-| `request_utils.ts` / `response_utils.ts` | request body parsing, CORS/success/error response |
-| `supabase_client.ts` | service/user Supabase client 생성 |
-| `logger.ts` / `axiom_logger.ts` / `statsig_utils.ts` | local/Axiom/Statsig observability |
-| `iamport_client.ts` / `portone_client.ts` | 결제 외부 client |
-| `partner_permissions.ts` / `refund_utils.ts` / `worker_utils.ts` | IO 포함 공용 helper |
-| `validation_utils.ts` / `temporal_utils.ts` | 입력/시간 helper |
-| [domains/](domains/BLUEDOC.md) | pure business rule core (`event`, `payment`, `order`) |
-| [_testing/](_testing/BLUEDOC.md) | L3 handler unit test (`fakeSupabase`, fixtures, `makeCtx`) |
-| [ai/](ai/) | AI adapter abstraction |
+| 항목                                                             | 역할                                                                              |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `edge_function.ts`                                               | `minglitEdgeFunction(handler)` wrapper. manifest env/caller 가드 + logging/Sentry |
+| `env_keystore.ts`                                                | env-manifest 기반 환경변수 typed 접근                                             |
+| `request_utils.ts` / `input_validation.ts` / `response_utils.ts` | request parsing, typed input field validation, CORS/success/error response        |
+| `supabase_client.ts`                                             | service/user Supabase client 생성                                                 |
+| `logger.ts` / `axiom_logger.ts` / `statsig_utils.ts`             | local/Axiom/Statsig observability                                                 |
+| `iamport_client.ts` / `portone_client.ts`                        | 결제 외부 client                                                                  |
+| `partner_permissions.ts` / `refund_utils.ts` / `worker_utils.ts` | IO 포함 공용 helper                                                               |
+| `validation_utils.ts` / `temporal_utils.ts`                      | 입력/시간 helper                                                                  |
+| [domains/](domains/BLUEDOC.md)                                   | pure business rule core (`event`, `payment`, `order`)                             |
+| [_testing/](_testing/BLUEDOC.md)                                 | L3 handler unit test (`fakeSupabase`, fixtures, `makeCtx`)                        |
+| [ai/](ai/)                                                       | AI adapter abstraction                                                            |
 
 ## 핵심 컨벤션
 
@@ -33,4 +34,5 @@
 - [functions/BLUEDOC.md](../BLUEDOC.md)
 
 ---
+
 _Reviewed: 2026-05-24 00:00_
