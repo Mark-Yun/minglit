@@ -6,10 +6,11 @@ Minglit 의 **일반 사용자 Flutter 앱**. 파티 탐색·참여 신청·결�
 
 | 항목 | 무엇 |
 |---|---|
-| `lib/main.dart` / `lib/dev_main.dart` / `lib/main_demo.dart` | 프로덕션 / 개발용 엔트리포인트 (dev_main 은 DevMap, main_demo 는 demo flavor — 자세히는 `docs/infra/app_demo/`) |
+| `lib/main.dart` / `lib/main_demo.dart` | 프로덕션 / demo flavor 엔트리포인트 |
 | [`lib/src/features/`](./lib/src/features/) | 기능별 모듈 (아래 표) |
 | [`lib/src/routing/`](./lib/src/routing/) | `app_router` (GoRouter) + `app_routes` (Type-safe) + `app_coordinator` |
 | [`lib/src/logic/`](./lib/src/logic/) | 앱-레벨 Coordinator / Provider (`event_coordinator`, `auth_coordinator`, `feed_state_provider`) |
+| [`lib/src/bootstrap/`](./lib/src/bootstrap/BLUEDOC.md) | 사용자 앱 부팅 초기화 step 조립 |
 | `lib/src/common/` · `widgets/` · `utils/` · `l10n/` | 앱 공통 위젯·Provider·헬퍼·다국어 |
 | [`integration_test/`](./integration_test/) | 통합 테스트 / CUJ ([BLUEDOC](./integration_test/BLUEDOC.md)) |
 | [`README.md`](./README.md) | 빌드·실행 명령 |
@@ -24,7 +25,7 @@ Minglit 의 **일반 사용자 Flutter 앱**. 파티 탐색·참여 신청·결�
 | `party/` | 파티 목록·상세 |
 | `partner/` | 파트너 상세 페이지 |
 | `payment/` | 결제 플로우·결제 완료 |
-| `ticket/` · `tickets/` · `my_tickets/` | 티켓 선택·관리·내 티켓 목록 |
+| `ticket/` · `tickets/` · `my_tickets/` | 티켓 선택·관리 |
 | `search/` | 이벤트·파티 검색 (PGroonga) |
 | `tag/` | 태그 기반 탐색 |
 | `settings/` | 앱 설정 |
@@ -42,10 +43,8 @@ Minglit 의 **일반 사용자 Flutter 앱**. 파티 탐색·참여 신청·결�
 ## 관련
 
 - [apps/architecture.md](../architecture.md) — Flutter 공통 아키텍처
-- [apps/BLUEDOC.md](../BLUEDOC.md) — 앱 폴더 진입점
 - [minglit_kit/BLUEDOC.md](../../shared/packages/minglit_kit/BLUEDOC.md) — 공용 패키지
-- [README.md](./README.md) — 빌드·실행 명령
-- [integration_test/BLUEDOC.md](./integration_test/BLUEDOC.md) — 통합 테스트
+- [README.md](./README.md) — 빌드·실행 / [integration_test](./integration_test/BLUEDOC.md) — 통합 테스트
 
 ---
-_Reviewed: 2026-05-19 14:00_
+_Reviewed: 2026-05-23 00:00_
