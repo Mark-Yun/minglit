@@ -8,7 +8,7 @@
 
 | 카테고리 | 파일 | 본 모델과의 관계 |
 |----------|------|------------------|
-| **Deploy** | `deploy-android-{user,partner}`, `deploy-ios-{user,partner}`, `deploy-supabase`, `deploy-vercel`, `deploy-dev-seed`, `shared-android-deploy` | spec 의 deploy 부분 — 재사용 + trigger refactor |
+| **Deploy** | `dev-deploy`, `rc-deploy`, `main-deploy`, `deploy-android-{user,partner}`, `deploy-ios-{user,partner}`, `deploy-dev-seed`, `shared-android-deploy` | branch-level deploy entrypoint + reusable/domain deploy jobs |
 | **PR / Review** | `pr-gate`, `pr-review-setup`, `doc-freshness` | spec 의 pr-gate-core 의 base — 추출·일반화 대상 |
 | **Post-merge** | `post-merge` (dev push orchestrator), `sync-version`, `sync-pr-branches`, `sync-test-coverage`, `sync-mds-mockups`, `sync-graphify` | spec 의 `*-post-merge-sync` 의 base — 부분 흡수 |
 | **Reusable** | `shared-android-deploy`, `shared-cuj-integration`, `shared-notify` | spec 의 reusable 패턴 — 추가 reusable extract 시 참고 |
@@ -30,11 +30,12 @@
 | `dev-staging-post-merge-sync` | `post-merge` + `sync-version` orchestration | **신규 (조합)** |
 | `nightly-cut` | (없음) | **신규** |
 | `nightly-pr-gate` | `dev-staging-pr-gate` 와 동일 (stage=nightly) | **신규 (얇은 wrapper)** |
-| `rc-gate` | (없음) — rc-gate-suite 호출 + status set + deploy chain | **신규** |
-| `rc-cut`, `rc-pr-gate`, `rc-post-merge-sync`, `rc-soak-check`, `rc-hotfix-backport` | (모두 없음) | **신규** |
-| `main-pr-gate`, `main-post-merge-promote` | (없음, 부분적으로 `sync-version`) | **신규 + refactor** |
-| `deploy-supabase` | 그대로 + trigger refactor (rc-gate-pass + push:main) | **trigger refactor** |
-| `deploy-vercel` | 그대로 + trigger refactor (cron 폐기 → rc-gate-pass + push:main) | **trigger refactor** |
+| `rc-gate` | (없음) — rc-gate-suite 호출 + status set | **신규** |
+| `dev-deploy` | dev deploy/smoke entrypoint (범위 TBD), event-flow 는 monitor 로 유지 | **신규/선택** |
+| `rc-cut`, `rc-pr-gate`, `rc-post-merge-sync`, `rc-deploy`, `main-cut`, `rc-hotfix-backport` | (모두 없음) | **신규** |
+| `main-pr-gate`, `main-deploy` | (없음, 부분적으로 `sync-version` / `deploy-*`) | **신규 + refactor** |
+| backend prod deploy | `deploy-supabase` 로직을 `main-deploy` 하위 job/reusable 로 흡수 | **refactor** |
+| web deploy | Vercel native build 로 전환 | **external config** |
 | `deploy-android-{user,partner}`, `deploy-ios-{user,partner}` | 그대로 (이미 push:main trigger) | **변경 없음** |
 | `deploy-dev-seed` | 본 spec scope 밖 (dev 환경 seeding) | **변경 없음** |
 
@@ -73,8 +74,8 @@
 | 2d | `minglit-release-bot` 생성 + App ID/private key 등록 + workflow permission 최소화 | protected branch/tag push 를 human 대신 bot 으로 수행 |
 | 2e | `auto-issue` reusable 추가 | 신규 — 기존 영향 없음 |
 | 2f | **`ci-result` 폐기** — 현 branch protection 의 required check `ci-result` 를 각 branch 의 `pr-gate` 로 변경 (Phase 4 에서 실제 적용) | 본 step 은 workflow 측 준비, 실제 protection 변경은 4 |
-| 2g | `deploy-supabase` 의 trigger refactor — push:dev 부분을 rc-gate-pass workflow_call **with target=main-staging** 로 변경, push:main 은 main-post-merge-promote 의 workflow_call **with target=main** | staging deploy 와 prod deploy 분리. 사용자 서버 영향 X |
-| 2h | **`deploy-vercel` 폐기** — 자체 빌드 워크플로우 제거. **Vercel native build 로 전환** (Vercel-GitHub 연결, Vercel-side: main=production, dev=preview) | Vercel-side 설정 필요, workflow 측 작업 없음 |
+| 2g | backend deploy 로직을 `main-deploy` 하위 job/reusable 로 정리. dev 에서는 prod backend deploy 하지 않음 | prod deploy 의 단일 진입점 확정 |
+| 2h | **`deploy-vercel` 폐기** — 자체 빌드 워크플로우 제거. **Vercel native build 로 전환** (Vercel-GitHub 연결, Vercel-side: main=production) | Vercel-side 설정 필요, workflow 측 작업 없음 |
 
 ### Rollback
 
@@ -97,10 +98,10 @@
 | 3a | `dev-staging-pr-gate`, `dev-staging-post-merge-sync` | 2a, 2b, 2c, 2d |
 | 3b | `nightly-cut`, `nightly-pr-gate` | 3a + dev-staging branch 존재 (Phase 1) |
 | 3c | `rc-gate-suite` reusable 조립 (CUJ × matrix + integration + Test Lab) | 2a |
-| 3d | `rc-gate` (호출 + status set + deploy chain trigger) | 3c + 2f/2g |
-| 3e | `rc-cut`, `rc-pr-gate`, `rc-post-merge-sync`, `rc-soak-check` | 3d + rc/* branch 패턴 확정 + Supabase branching 설정 |
+| 3d | `rc-gate` (호출 + status set) | 3c + 2f |
+| 3e | `rc-cut`, `rc-pr-gate`, `rc-post-merge-sync`, `rc-deploy`, `main-cut` | 3d + rc/* branch 패턴 확정 + Supabase branching 설정 |
 | 3f | `backport-pr` reusable, `rc-hotfix-backport` | 2a |
-| 3g | `main-pr-gate`, `main-post-merge-promote` | 3d (rc-gate-pass status 필요) |
+| 3g | `main-pr-gate`, `main-deploy` | 3d (rc-gate-pass status 필요) |
 
 ### Verification 단계
 

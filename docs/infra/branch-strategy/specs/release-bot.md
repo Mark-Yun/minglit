@@ -88,9 +88,9 @@ git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
 | `nightly-cut` | immutable nightly branch 생성, dev PR 생성 |
 | `rc-cut` | `rc/YYYY-Wxx` branch 생성, RC tag |
 | `rc-post-merge-sync` | RC hotfix version bump/tag |
-| `rc-soak-check` | rc → main promotion PR 생성/auto-merge |
+| `main-cut` | rc → main promotion PR 생성/auto-merge |
 | `rc-hotfix-backport` | backport branch/PR 생성 |
-| `main-post-merge-promote` | final version/tag/release marker, RC branch cleanup |
+| `main-deploy` | final version/tag/release marker, prod deploy, RC branch cleanup |
 
 ## Ruleset Bypass
 
