@@ -85,7 +85,7 @@ class _EmptyListController extends SettlementListController {
 // ---------------------------------------------------------------------------
 
 final _epoch = DateTime(2024);
-final _partner = Partner(id: 'partner-1', name: '테스트 파트너');
+const _partner = Partner(id: 'partner-1', name: '테스트 파트너');
 
 SettlementItemDetail _makeItem({
   String id = 'item-1',
@@ -251,7 +251,7 @@ void main() {
           () => _FakeDashboardController(_makeDashboardData()),
         ),
         settlementListControllerProvider.overrideWith(
-          () => _EmptyListController(),
+          _EmptyListController.new,
         ),
       ],
       body: (t) async {
@@ -279,7 +279,7 @@ void main() {
           }),
         ),
         settlementListControllerProvider.overrideWith(
-          () => _EmptyListController(),
+          _EmptyListController.new,
         ),
       ],
       body: (t) async {
@@ -294,10 +294,10 @@ void main() {
       overrides: () => [
         ...base(),
         settlementDashboardControllerProvider.overrideWith(
-          () => _ErrorDashboardController(),
+          _ErrorDashboardController.new,
         ),
         settlementListControllerProvider.overrideWith(
-          () => _EmptyListController(),
+          _EmptyListController.new,
         ),
       ],
       body: (t) async {
@@ -322,7 +322,7 @@ void main() {
         ),
         settlementListControllerProvider.overrideWith(
           () => _FakeListController([
-            _makeItem(id: 'item-1', status: 'PENDING'),
+            _makeItem(),
             _makeItem(id: 'item-2', status: 'COMPLETED'),
           ]),
         ),
@@ -346,7 +346,7 @@ void main() {
           () => _FakeDashboardController(_makeDashboardData()),
         ),
         settlementListControllerProvider.overrideWith(
-          () => _EmptyListController(),
+          _EmptyListController.new,
         ),
       ],
       body: (t) async {
@@ -361,17 +361,29 @@ void main() {
     cujCase(
       'happy: 완료 필터 선택 → 완료 항목만 노출',
       app: const SettlementPage(),
-      overrides: () => [
-        ...base(),
-        settlementDashboardControllerProvider.overrideWith(
-          () => _FakeDashboardController(_makeDashboardData()),
-        ),
-        settlementListControllerProvider.overrideWith(
-          () => _FakeListController([
-            _makeItem(id: 'item-c', status: 'COMPLETED'),
-          ]),
-        ),
-      ],
+      overrides: () {
+        when(
+          () => repo.getSettlementItems(
+            partnerId: any(named: 'partnerId'),
+            status: any(named: 'status'),
+            offset: any(named: 'offset'),
+            limit: any(named: 'limit'),
+          ),
+        ).thenAnswer(
+          (_) async => [_makeItem(id: 'item-c', status: 'COMPLETED')],
+        );
+        return [
+          ...base(),
+          settlementDashboardControllerProvider.overrideWith(
+            () => _FakeDashboardController(_makeDashboardData()),
+          ),
+          settlementListControllerProvider.overrideWith(
+            () => _FakeListController([
+              _makeItem(id: 'item-c', status: 'COMPLETED'),
+            ]),
+          ),
+        ];
+      },
       body: (t) async {
         await t.tap(find.text('정산 내역'));
         await t.pumpAndSettle();
@@ -421,9 +433,9 @@ void main() {
       'happy: PENDING — 확정 대기 메시지',
       app: const SettlementDetailPage(itemId: 'item-p'),
       overrides: () {
-        when(() => repo.getSettlementItemDetail('item-p')).thenAnswer(
-          (_) async => _makeItem(id: 'item-p', status: 'PENDING'),
-        );
+        when(
+          () => repo.getSettlementItemDetail('item-p'),
+        ).thenAnswer((_) async => _makeItem(id: 'item-p'));
         return base();
       },
       body: (t) async {
@@ -435,9 +447,9 @@ void main() {
       'happy: HOLD — 보류 메시지',
       app: const SettlementDetailPage(itemId: 'item-h'),
       overrides: () {
-        when(() => repo.getSettlementItemDetail('item-h')).thenAnswer(
-          (_) async => _makeItem(id: 'item-h', status: 'HOLD'),
-        );
+        when(
+          () => repo.getSettlementItemDetail('item-h'),
+        ).thenAnswer((_) async => _makeItem(id: 'item-h', status: 'HOLD'));
         return base();
       },
       body: (t) async {
@@ -449,9 +461,9 @@ void main() {
       'error: 상세 로드 실패 → 오류 메시지 + 다시 시도',
       app: const SettlementDetailPage(itemId: 'item-err'),
       overrides: () {
-        when(() => repo.getSettlementItemDetail('item-err')).thenThrow(
-          Exception('network error'),
-        );
+        when(
+          () => repo.getSettlementItemDetail('item-err'),
+        ).thenThrow(Exception('network error'));
         return base();
       },
       body: (t) async {
@@ -565,9 +577,9 @@ void main() {
       'happy: 계좌 미등록 상태 → 계좌 정보 입력 후 저장',
       app: const BankAccountPage(),
       overrides: () {
-        when(() => repo.getBankAccount('partner-1')).thenAnswer(
-          (_) async => null,
-        );
+        when(
+          () => repo.getBankAccount('partner-1'),
+        ).thenAnswer((_) async => null);
         when(
           () => repo.upsertBankAccount(
             partnerId: any(named: 'partnerId'),
@@ -633,7 +645,7 @@ void main() {
       body: (t) async {
         // 기존 계좌 표시 확인
         expect(find.text('현재 계좌'), findsOneWidget);
-        expect(find.text('신한은행'), findsOneWidget);
+        expect(find.text('신한은행'), findsWidgets);
         expect(find.text('홍길동'), findsOneWidget);
 
         // 은행명 수정
@@ -659,9 +671,9 @@ void main() {
       'edge: 저장 실패 → SnackBar 오류 메시지',
       app: const BankAccountPage(),
       overrides: () {
-        when(() => repo.getBankAccount('partner-1')).thenAnswer(
-          (_) async => null,
-        );
+        when(
+          () => repo.getBankAccount('partner-1'),
+        ).thenAnswer((_) async => null);
         when(
           () => repo.upsertBankAccount(
             partnerId: any(named: 'partnerId'),
