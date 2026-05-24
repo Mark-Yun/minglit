@@ -12,6 +12,7 @@ concurrency:
 permissions:
   contents: read
   statuses: write
+  issues: write
 
 jobs:
   cuj-integration-user:
@@ -54,3 +55,19 @@ jobs:
           echo "cuj-integration-user=${{ needs.cuj-integration-user.result }}"
           echo "cuj-integration-partner=${{ needs.cuj-integration-partner.result }}"
           exit 1
+
+  notify-failure:
+    needs: [cuj-integration-user, cuj-integration-partner, set-rc-gate-status]
+    if: always()
+    permissions:
+      issues: write
+    uses: ./.github/workflows/shared-notify.yml
+    with:
+      success: >-
+        ${{
+          needs.cuj-integration-user.result == 'success' &&
+          needs.cuj-integration-partner.result == 'success' &&
+          needs.set-rc-gate-status.result == 'success'
+        }}
+      workflow_name: 'RC Gate'
+      job_results: '{"cuj-integration-user":"${{ needs.cuj-integration-user.result }}","cuj-integration-partner":"${{ needs.cuj-integration-partner.result }}","set-rc-gate-status":"${{ needs.set-rc-gate-status.result }}"}'
