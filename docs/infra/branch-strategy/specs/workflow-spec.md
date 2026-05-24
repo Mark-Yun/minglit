@@ -42,19 +42,44 @@
 | 핵심 steps | `bash scripts/bump-version.sh {version}{suffix}` · commit (`skip_ci` option) · `git tag v{version}{suffix}` · push |
 | Called by | `dev-staging-dev-cut-gate`, `dev-rc-cut`, `rc-post-merge-sync`, `main-deploy` |
 
-### `dev-rc-cut-gate-suite`
+### `shared-set-commit-status`
 
-Heavy integration test suite. 60분 예산.
+GitHub commit status 를 쓰는 low-level reusable workflow. Stage/signal mapping 은 하지 않는다.
 
 | 항목 | 값 |
 |------|----|
 | Trigger | `workflow_call` |
-| Inputs | `ref`: dev commit SHA |
-| Outputs | `status`: pass\|fail / `failed_jobs`: array |
-| Matrix | (app × scenario): `cuj-app-user × {happy, unhappy, chaos}` + `cuj-app-partner × {happy, unhappy, chaos}` + `integration-backend` + `integration-edge-functions` + `test-lab-smoke` |
-| Called by | `dev-rc-cut-gate` |
+| Inputs | `sha`, `context`, `state`: failure\|success\|pending, `target_url`, `description` |
+| Outputs | GitHub commit status |
+| Called by | `set-dev-soak-status`, `set-rc-soak-status`, cut-gate evaluators |
 
-> chaos 시나리오 미정의면 CUJ 로 추후 정의 (TBD).
+외부 workflow/AI agent 는 직접 호출하지 않는다. Public API 는 stage별 `set-*-soak-status` entry workflow 다.
+
+### `set-dev-soak-status`
+
+Dev soak status write API. `workflow_call` 과 `workflow_dispatch` 를 모두 지원한다.
+
+| 항목 | 값 |
+|------|----|
+| Trigger | `workflow_call` + `workflow_dispatch` |
+| Inputs | `signal`: backend-simulator\|real-device\|app-ai-review, `state`, `sha`, `target_url`, `description` |
+| Mapping | `backend-simulator` → `dev-soak/backend-simulator`; `real-device` → `dev-soak/real-device`; `app-ai-review` → `dev-soak/app-ai-review` |
+| Steps | validate signal/state → context mapping → calls `shared-set-commit-status` |
+| Called by | `monitor-event-flow-*`, real-device workflow, AI agent, `dev-rc-cut-gate` |
+
+### `set-rc-soak-status`
+
+RC soak status write API. dev 와 signal set 이 다를 수 있으므로 별도 entry 로 둔다.
+
+| 항목 | 값 |
+|------|----|
+| Trigger | `workflow_call` + `workflow_dispatch` |
+| Inputs | `signal`: backend-simulator\|real-device\|dogfooding, `state`, `sha`, `target_url`, `description` |
+| Mapping | `backend-simulator` → `rc-soak/backend-simulator`; `real-device` → `rc-soak/real-device`; `dogfooding` → `rc-soak/dogfooding` |
+| Steps | validate signal/state → context mapping → calls `shared-set-commit-status` |
+| Called by | `rc-deploy`, real-device workflow, AI agent, `rc-main-cut-gate` |
+
+Issue 는 audit/log surface 이며 gate 판정 source-of-truth 가 아니다.
 
 ### `auto-issue`
 
@@ -126,13 +151,15 @@ Cross-branch cherry-pick PR 자동 생성.
 
 | 항목 | 값 |
 |------|----|
-| Trigger | `push` to `dev` (= dev-staging-dev-cut PR merge 직후) |
-| Outputs | commit status `dev-rc-cut-pass` (success only) |
-| Steps | (1) calls `dev-rc-cut-gate-suite` (2) **success**: set commit status `dev-rc-cut-pass` (3) **failure**: `auto-issue` (P1, label `dev-rc-cut-gate-failure`, assignee=직전 dev-rc-cut-pass 이후 머지된 PR 작성자들). dev 는 broken 상태로 잠시 머묾, AI agent 가 fix PR 을 dev-staging 으로 normal flow 로 작성 → 다음 dev-staging-dev-cut → 다음 dev-rc-cut-gate 가 검증 |
-| Backoff | 같은 area 3회 연속 실패 시 `dev-rc-cut` 자동 차단 (다음 weekly cut PR 안 만듦) |
+| Trigger | `schedule` (cut 직전, TBD) + `workflow_dispatch` |
+| Inputs | optional `candidate_sha` (default: latest `origin/dev` HEAD) |
+| Outputs | commit status `dev-rc-cut-pass` (success only) + `dev-soak/*` success confirmations |
+| Steps | (1) latest `origin/dev` HEAD 를 candidate 로 선택 (2) candidate age >= 24h 확인 (3) `monitor-event-flow-hourly` success run >= 20, `monitor-event-flow-daily` success run >= 1 확인 (4) candidate 의 최신 `dev-soak/backend-simulator`, `dev-soak/real-device`, `dev-soak/app-ai-review` status 가 failure 가 아닌지 확인 (5) real-device/app AI review pass signal 확인 (6) 통과 시 `set-dev-soak-status` 로 `dev-soak/*` success 작성 + `shared-set-commit-status` 로 `dev-rc-cut-pass` success set |
+| Failure path | 조건 미충족이면 `dev-rc-cut-pass` 를 쓰지 않는다. 실패를 발견한 monitor/AI agent 가 이미 `dev-soak/*` failure 를 쓴다 |
 
-> **No auto-revert** — snapshot 모델: 실패 = no tag, dev keeps moving, 새 fix 가 자연스럽게 다음 dev-rc-cut-gate 에서 검증됨.
+> **No auto-revert** — snapshot 모델: 실패 = no `dev-rc-cut-pass`, dev keeps moving, 새 fix 가 자연스럽게 다음 dev-staging-dev-cut 후 새 candidate 로 검증됨.
 > **Naming** — `dev-rc-cut-pass` 가 canonical RC eligibility marker 이다. `rc-eligible` 은 현재 workflow/status 명칭이 아니다.
+> **SSOT** — dev soak 판정은 [../dev-soak-status-model.md](../dev-soak-status-model.md) 의 commit status + run history 를 따른다. GitHub Issue 는 사람이 보는 incident/audit surface 다.
 
 #### `dev-deploy`
 
@@ -149,7 +176,7 @@ Cross-branch cherry-pick PR 자동 생성.
 |------|----|
 | Trigger | schedule (`monitor-event-flow-hourly`, `monitor-event-flow-daily`) |
 | Branch/env | dev 를 계속 관찰. RC cut 후에는 RC env/Supabase branch 도 pre-main 검증 signal 로 사용 |
-| Outputs | event-flow simulation signal, issue/alert |
+| Outputs | event-flow simulation signal, `set-dev-soak-status(signal=backend-simulator,state=failure)`, issue/alert |
 | Note | promotion gate 자체가 아니라 지속 신호다. main deploy 를 대신하지 않는다 |
 
 ### rc
@@ -297,7 +324,8 @@ Cross-branch cherry-pick PR 자동 생성.
 
 - `pr-gate-core` 의 stage 별 `extra_steps` 명세
 - `version-bump` 의 commit 방식 (별도 commit vs squash inline)
-- `dev-rc-cut-gate-suite` matrix 분할 (60분 예산)
+- `set-dev-soak-status` / `set-rc-soak-status` 의 signal set 확정
+- real-device / app AI review 가 어떤 workflow 또는 agent 에서 pass/failure status 를 쓸지 확정
 - `dev-deploy` 가 실제로 맡을 dev deploy/smoke 범위
 - `rc-deploy` 의 Supabase branch seed data 와 event-flow simulation contract
 - CUJ chaos 시나리오 정의 (현재 미정의)
@@ -309,7 +337,8 @@ Cross-branch cherry-pick PR 자동 생성.
 ## 관련
 
 - [../branch-flow.md](../branch-flow.md) — workflow 가 흘러가는 branch 그림
-- [../test-strategy.md](../test-strategy.md) — pr-gate-core 와 dev-rc-cut-gate-suite 의 test 내용
+- [../test-strategy.md](../test-strategy.md) — pr-gate-core 와 dev soak signal 배치
+- [../dev-soak-status-model.md](../dev-soak-status-model.md) — dev soak commit status / run history SSOT
 - [../error-detection.md](../error-detection.md) — auto-issue 의 priority 와 채널
 - [../life-of-flag.md](../life-of-flag.md) — flag lifecycle
 - [../versioning.md](../versioning.md) — version-bump 의 suffix 진행

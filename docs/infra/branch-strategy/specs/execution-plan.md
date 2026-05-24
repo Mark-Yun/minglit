@@ -23,7 +23,9 @@
 |---------------|----------|----------|
 | `pr-gate-core` (reusable) | `pr-gate` 의 step 들을 reusable workflow_call 로 추출 + stage parameter 추가 | **refactor** |
 | `version-bump` (reusable) | `sync-version` 의 핵심 로직 → reusable 분리 | **refactor** |
-| `dev-rc-cut-gate-suite` (reusable) | 기존 `monitor-patrol-e2e`, `monitor-cuj-coverage` 등을 통합해 reusable suite 구성 | **신규 (조합)** |
+| `shared-set-commit-status` | commit status write 공통 reusable | **신규** |
+| `set-dev-soak-status`, `set-rc-soak-status` | stage별 soak status write API (`workflow_call` + `workflow_dispatch`) | **신규** |
+| dev soak monitor/status model | 기존 `monitor-event-flow-*`, real-device workflow, AI agent signal 을 `dev-soak/*` commit status 로 통합 | **신규 (조합)** |
 | `auto-issue` (reusable) | (없음) | **신규** |
 | `backport-pr` (reusable) | (없음) | **신규** |
 | `dev-staging-pr-gate` | `pr-gate` 를 dev-staging base 로 재사용 (stage=dev-staging) | **신규 (얇은 wrapper)** |
@@ -107,10 +109,11 @@
 
 | Step | 작업 | 의존 |
 |------|------|------|
-| 4a | `dev-rc-cut-gate-suite` reusable 조립 (CUJ × matrix + integration + Test Lab) | Phase 2 |
-| 4b | `dev-rc-cut-gate` 에 full suite 연결 + failure auto-issue/backoff | 4a |
-| 4c | `main-pr-gate` 에 RC lineage / `rc-main-cut-pass` / contract 재검증 추가 | Phase 2 |
-| 4d | `backport-pr` reusable, `rc-hotfix-backport` | Phase 2 |
+| 4a | `shared-set-commit-status`, `set-dev-soak-status`, `set-rc-soak-status` 구현 | Phase 2 |
+| 4b | `shared-notify` 가 실패 시 `set-dev-soak-status` 호출 + issue title/body/log tail 개선 | 4a |
+| 4c | `dev-rc-cut-gate` 를 24h soak evaluator 로 변경 (run history + `dev-soak/*` status 확인) | 4a, 4b |
+| 4d | `main-pr-gate` 에 RC lineage / `rc-main-cut-pass` / contract 재검증 추가 | Phase 2 |
+| 4e | `backport-pr` reusable, `rc-hotfix-backport` | Phase 2 |
 
 ### Verification 단계
 
@@ -170,7 +173,7 @@ Phase 1 (skeletal) → Phase 2 (CI/PR flow) → Phase 3 (branch CD)
 비-critical (병렬 가능):
 - Phase 2e (`auto-issue` reusable) — 신규, 의존 없음
 - Phase 3 (deploy trigger refactor) — Phase 5 이전에 끝나면 OK
-- Phase 4a (dev-rc-cut-gate-suite) — Phase 4b 이전에만 끝나면 OK
+- Phase 4a (status write API) — Phase 4b/4c 이전에만 끝나면 OK
 
 ## Secret Management 정리 (별도 작업, user 와 함께)
 
@@ -220,21 +223,21 @@ Phase 1 (skeletal) → Phase 2 (CI/PR flow) → Phase 3 (branch CD)
 5. **Release bot token 실패**: GitHub App ID/private key 누락 또는 App 권한 부족이면 version bump/tag/promotion workflow 가 막힘. 최초 도입 시 dry-run branch 로 push/tag/delete까지 검증
 6. **Secret 마이그레이션 중 workflow 실패**: file 기반과 GH secret 참조가 섞이는 transition 기간 — env 변수 누락 시 즉시 발견 (CI 통과 못함)
 
-## Self-review: Phase 3 ordering
+## Self-review: Phase 4 ordering
 
-내부 검토 결과 — **현재 순서 (3a → 3b → 3c → 3d → 3e → 3f → 3g) OK**, 단 다음 minor 개선:
+내부 검토 결과 — **현재 순서 (4a → 4b → 4c → 4d → 4e) OK**, 단 다음 minor 개선:
 
-- **3a / 3b 병렬 가능**: dev-staging-pr-gate (3a) 와 dev-staging-dev-cut (3b) 는 서로 의존이 약함. 단 version bump/tag push 검증에는 release bot 준비가 선행되어야 함
-- **3c → 3d 사이 verification 불필요**: dev-rc-cut-gate-suite (3c) 는 reusable, 호출은 dev-rc-cut-gate (3d) 에서. 3c 자체로는 동작 없음 → 3d 와 동일 PR 또는 직후 PR 가능
-- **3f 는 3e 와 같이**: rc-hotfix-backport 가 rc-promotion 흐름의 일부라 같은 시점에 도입이 자연스러움
-- **가장 critical**: 3d (dev-rc-cut-gate) — 첫 verification 기간 1주 이상 추천 (다른 stage 와 달리 60분 비용 + 통합 시나리오 복잡)
+- **4a / 4b 는 같은 PR 가능**: `shared-set-commit-status` 와 `shared-notify` 연동은 API contract 가 작아서 같이 검증 가능하다. 단 `set-dev-soak-status` 수동 dispatch dry-run 은 먼저 통과해야 한다
+- **status write API → evaluator 사이 verification 필요**: `set-dev-soak-status` 는 AI agent/monitor 가 직접 쓰는 public API 이므로 context mapping, 권한, target SHA 를 먼저 검증한다
+- **4e 는 4d 와 독립 가능**: rc-hotfix-backport 는 rc promotion 흐름의 일부지만 main protection 적용과 직접 의존하지 않는다
+- **가장 critical**: `dev-rc-cut-gate` evaluator — 첫 verification 기간 1주 이상 추천 (24h soak/run history/status context 판정이 release cut 을 직접 막음)
 
 권장 변경 없음. 위 순서 그대로 진행.
 
 ## TBD (구현 중 결정)
 
 - `auto-issue` 의 P0/P1/P2 라벨 컨벤션 표준 (현재 minglit 의 `P0-critical` 등 따름)
-- `dev-rc-cut-gate-suite` 매트릭스 분할 (60분 예산 안에 들어오게)
+- real-device/app AI review 의 `set-dev-soak-status` pass/failure 입력 방식
 - 4d 의 main protection 적용을 *warn-only* → *enforced* 전환 일자
 - Vercel native build 전환 시점 + Vercel-GitHub 연결 설정 (Vercel-side 작업)
 - Secret 마이그레이션 timing (user 와 함께 — Phase 2/3 와 별도)
@@ -247,4 +250,4 @@ Phase 1 (skeletal) → Phase 2 (CI/PR flow) → Phase 3 (branch CD)
 - 기존 [`.github/workflows/BLUEDOC.md`](../../../../.github/workflows/BLUEDOC.md) — 현재 workflow 의 인벤토리 진입점
 
 ---
-_Reviewed: 2026-05-19 09:47_
+_Reviewed: 2026-05-24 13:05_
