@@ -5,19 +5,20 @@ minglit 의 backend API 진입점. 60+ EF 와 공용 `_shared/`, 테스트 유�
 
 ## 이정표
 
-| 항목                                                                   | 역할                                                             |
-| ---------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| [architecture.md](architecture.md)                                     | EF 표준 레이어 (`index/input/service/domain/RPC`) 와 테스트 전략 |
-| [auth-manifest.json](auth-manifest.json)                               | EF 별 env/caller 선언. wrapper 가 런타임 가드                    |
-| [_shared/](./_shared/BLUEDOC.md)                                       | wrapper, HTTP, DB client, logger, pure domain core               |
-| [_test_utils/](./_test_utils/BLUEDOC.md)                               | HTTP mock, fixture, schema validator                             |
-| [_contract_tests/](./_contract_tests/BLUEDOC.md)                       | EF 응답 JSON schema contract                                     |
-| [_integration_tests/](./_integration_tests/BLUEDOC.md)                 | local Supabase + 외부 mock integration/CUJ                       |
-| [_payment_integration_tests/](./_payment_integration_tests/BLUEDOC.md) | 결제 chaining 시뮬. 추후 `_integration_tests/` 흡수              |
-| [event-flow-simulator/](./event-flow-simulator/BLUEDOC.md)             | 이벤트 lifecycle funnel 시뮬레이터                               |
-| [user-create-order/](./user-create-order/BLUEDOC.md)                   | 이벤트 신청/주문 생성 EF                                         |
-| [payment-verify/](./payment-verify/BLUEDOC.md)                         | PortOne 결제 검증/승인 EF                                        |
-| [user-cancel-order/](./user-cancel-order/BLUEDOC.md)                   | 유저 신청 취소/환불 EF                                           |
+| 항목                                                                     | 역할                                                             |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| [architecture.md](architecture.md)                                       | EF 표준 레이어 (`index/input/service/domain/RPC`) 와 테스트 전략 |
+| [auth-manifest.json](auth-manifest.json)                                 | EF 별 env/caller 선언. wrapper 가 런타임 가드                    |
+| [_shared/](./_shared/BLUEDOC.md)                                         | wrapper, HTTP, DB client, logger, pure domain core               |
+| [_test_utils/](./_test_utils/BLUEDOC.md)                                 | HTTP mock, fixture, schema validator                             |
+| [_contract_tests/](./_contract_tests/BLUEDOC.md)                         | EF 응답 JSON schema contract                                     |
+| [_integration_tests/](./_integration_tests/BLUEDOC.md)                   | local Supabase + 외부 mock integration/CUJ                       |
+| [_payment_integration_tests/](./_payment_integration_tests/BLUEDOC.md)   | 결제 chaining 시뮬. 추후 `_integration_tests/` 흡수              |
+| [event-flow-simulator/](./event-flow-simulator/BLUEDOC.md)               | 이벤트 lifecycle funnel 시뮬레이터                               |
+| [user-create-order/](./user-create-order/BLUEDOC.md)                     | 이벤트 신청/주문 생성 EF                                         |
+| [payment-verify/](./payment-verify/BLUEDOC.md)                           | PortOne 결제 검증/승인 EF                                        |
+| [user-cancel-order/](./user-cancel-order/BLUEDOC.md)                     | 유저 신청 취소/환불 EF                                           |
+| [partner-approve-application/](./partner-approve-application/BLUEDOC.md) | 파트너 신청 승인 EF                                              |
 
 ## 핵심 컨벤션
 

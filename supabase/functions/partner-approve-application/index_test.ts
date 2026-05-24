@@ -3,28 +3,35 @@
 // Lazy-loads the handler via dynamic import with Deno.serve stubbed to prevent
 // a real HTTP server from being started (same pattern as payment-webhook/index_test.ts).
 
-import { assertEquals } from "jsr:@std/assert@1";
+import { assertEquals } from "@std/assert";
 import {
   buildApplication,
   fakeSupabase,
+  type Handler,
   makeCtx,
   readJson,
   runHandler,
-  type Handler,
 } from "../_shared/_testing/mod.ts";
 
 let _handler: Handler | null = null;
 async function getHandler(): Promise<Handler> {
   if (_handler) return _handler;
-  const denoAsAny = Deno as unknown as { serve: (...args: unknown[]) => Deno.HttpServer };
+  const denoAsAny = Deno as unknown as {
+    serve: (...args: unknown[]) => Deno.HttpServer;
+  };
   const origServe = denoAsAny.serve;
-  denoAsAny.serve = () => ({ shutdown() {}, finished: Promise.resolve() } as Deno.HttpServer);
+  denoAsAny.serve =
+    () => ({ shutdown() {}, finished: Promise.resolve() } as Deno.HttpServer);
   const origSetInterval = globalThis.setInterval;
   const origClearInterval = globalThis.clearInterval;
-  globalThis.setInterval = ((_cb: () => void) => 0 as unknown as ReturnType<typeof setInterval>) as typeof setInterval;
-  globalThis.clearInterval = ((_id?: ReturnType<typeof setInterval>) => {}) as typeof clearInterval;
+  globalThis.setInterval =
+    ((_cb: () => void) =>
+      0 as unknown as ReturnType<typeof setInterval>) as typeof setInterval;
+  globalThis.clearInterval =
+    ((_id?: ReturnType<typeof setInterval>) => {}) as typeof clearInterval;
   try {
-    _handler = (await import(`./index.ts?unit=${crypto.randomUUID()}`)).handler as Handler;
+    _handler = (await import(`./index.ts?unit=${crypto.randomUUID()}`))
+      .handler as Handler;
   } finally {
     denoAsAny.serve = origServe;
     globalThis.setInterval = origSetInterval;
@@ -42,7 +49,11 @@ const PARTNER_ID = "p1b2c3d4-e5f6-1234-89ab-000000000003";
 /** application row with nested events+parties join (as handler expects). */
 function buildAppRow(overrides: { status?: string } = {}) {
   return {
-    ...buildApplication({ id: VALID_APP_ID, event_id: VALID_EVENT_ID, status: overrides.status ?? "pending_review" }),
+    ...buildApplication({
+      id: VALID_APP_ID,
+      event_id: VALID_EVENT_ID,
+      status: overrides.status ?? "pending_review",
+    }),
     events: {
       party_id: "party-1",
       parties: { partner_id: PARTNER_ID },
@@ -150,7 +161,9 @@ Deno.test("partner-approve-application :: approve :: partner permission denied (
 Deno.test("partner-approve-application :: approve :: non-approvable status (cancelled) → 400", async () => {
   const handler = await getHandler();
   const sb = fakeSupabase()
-    .on("event_applications", "select", { data: buildAppRow({ status: "cancelled" }) })
+    .on("event_applications", "select", {
+      data: buildAppRow({ status: "cancelled" }),
+    })
     .on("partner_member_permissions", "select", {
       data: { role: "owner", permissions: [] },
     });
@@ -160,7 +173,10 @@ Deno.test("partner-approve-application :: approve :: non-approvable status (canc
   });
   assertEquals(res.status, 400);
   const body = await readJson<{ error: string }>(res);
-  assertEquals(body.error.startsWith("Cannot approve application with status"), true);
+  assertEquals(
+    body.error.startsWith("Cannot approve application with status"),
+    true,
+  );
 });
 
 Deno.test("partner-approve-application :: approve :: event_full → 409 EVENT_FULL", async () => {
@@ -208,7 +224,9 @@ Deno.test("partner-approve-application :: approve :: happy path → 200 + approv
     ctx: makeCtx({ supabase: sb, userId: "u-1" }),
   });
   assertEquals(res.status, 200);
-  const body = await readJson<{ approved: number; application_id: string }>(res);
+  const body = await readJson<{ approved: number; application_id: string }>(
+    res,
+  );
   assertEquals(body.approved, 1);
   assertEquals(body.application_id, VALID_APP_ID);
 });
@@ -243,11 +261,20 @@ Deno.test("partner-approve-application :: bulk_approve :: happy path → 200 + a
   const handler = await getHandler();
   const sb = fakeSupabase()
     .on("events", "select", {
-      data: { id: VALID_EVENT_ID, party_id: "party-1", parties: { partner_id: PARTNER_ID } },
+      data: {
+        id: VALID_EVENT_ID,
+        party_id: "party-1",
+        parties: { partner_id: PARTNER_ID },
+      },
     });
   ownerPermScript(sb);
   sb.on("bulk_approve_event_applications_with_capacity_guard", "rpc", {
-    data: [{ result_status: "ok", approved_count: 5, skipped_due_to_capacity: 2, remaining_slots_before_approval: 7 }],
+    data: [{
+      result_status: "ok",
+      approved_count: 5,
+      skipped_due_to_capacity: 2,
+      remaining_slots_before_approval: 7,
+    }],
   });
   const res = await runHandler(handler, {
     body: { action: "bulk_approve", event_id: VALID_EVENT_ID },
