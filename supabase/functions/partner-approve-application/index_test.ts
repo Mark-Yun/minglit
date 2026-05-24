@@ -4,6 +4,7 @@
 // a real HTTP server from being started (same pattern as payment-webhook/index_test.ts).
 
 import { assertEquals } from "@std/assert";
+import { stub } from "@std/testing/mock";
 import {
   buildApplication,
   fakeSupabase,
@@ -16,12 +17,13 @@ import {
 let _handler: Handler | null = null;
 async function getHandler(): Promise<Handler> {
   if (_handler) return _handler;
-  const denoAsAny = Deno as unknown as {
+  const serveOwner = Deno as unknown as {
     serve: (...args: unknown[]) => Deno.HttpServer;
   };
-  const origServe = denoAsAny.serve;
-  denoAsAny.serve =
-    () => ({ shutdown() {}, finished: Promise.resolve() } as Deno.HttpServer);
+  const serveStub = stub(serveOwner, "serve", () => ({
+    shutdown() {},
+    finished: Promise.resolve(),
+  } as Deno.HttpServer));
   const origSetInterval = globalThis.setInterval;
   const origClearInterval = globalThis.clearInterval;
   globalThis.setInterval =
@@ -33,7 +35,7 @@ async function getHandler(): Promise<Handler> {
     _handler = (await import(`./index.ts?unit=${crypto.randomUUID()}`))
       .handler as Handler;
   } finally {
-    denoAsAny.serve = origServe;
+    serveStub.restore();
     globalThis.setInterval = origSetInterval;
     globalThis.clearInterval = origClearInterval;
   }
