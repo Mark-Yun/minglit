@@ -32,6 +32,11 @@
       "envs": ["dev", "production"],
       "description": "메트릭 알람 → GitHub 이슈 생성/코멘트"
     },
+    "ops-cicd-status": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "운영자 CI/CD 상태 대시보드 — GitHub Actions/commit status/ci-failure issue 조회"
+    },
     "payout-sync": {
       "callers": ["system"],
       "envs": ["dev", "production"],

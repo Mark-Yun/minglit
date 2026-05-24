@@ -532,6 +532,12 @@ verify_jwt = false
 import_map = "./deno.json"
 entrypoint = "./functions/github-stats-sync/index.ts"
 
+[functions.ops-cicd-status]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/ops-cicd-status/index.ts"
+
 [functions.user-cancel-order]
 enabled = true
 verify_jwt = false  # JWT verification handled in function code

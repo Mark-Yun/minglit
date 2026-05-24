@@ -4,6 +4,7 @@ import 'package:app_partner/src/features/account_deletion/ui/deletion_complete_p
 import 'package:app_partner/src/features/account_deletion/ui/deletion_info_page.dart';
 import 'package:app_partner/src/features/account_deletion/ui/deletion_reason_page.dart';
 import 'package:app_partner/src/features/account_deletion/ui/deletion_verify_page.dart';
+import 'package:app_partner/src/features/admin/ops_cicd_status/ops_cicd_dashboard_page.dart';
 import 'package:app_partner/src/features/admin/partner_application_detail_page.dart';
 import 'package:app_partner/src/features/application/event_application_detail_page.dart';
 import 'package:app_partner/src/features/application/event_application_manage_page.dart';
@@ -184,9 +185,7 @@ class NotificationCenterRoute extends GoRouteData
                               routes: [
                                 TypedGoRoute<
                                   EventApplicationReviewConfirmRoute
-                                >(
-                                  path: 'confirm',
-                                ),
+                                >(path: 'confirm'),
                               ],
                             ),
                           ],
@@ -219,6 +218,7 @@ class NotificationCenterRoute extends GoRouteData
                 ),
               ],
             ),
+            TypedGoRoute<OpsCicdStatusRoute>(path: 'ops/cicd-status'),
             // Fix #1213: 계정 관리 서브페이지
             TypedGoRoute<PartnerAccountManagementRoute>(path: 'account'),
           ],
@@ -601,6 +601,13 @@ class NotificationSettingsRoute extends GoRouteData
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const NotificationSettingsScreen();
+}
+
+class OpsCicdStatusRoute extends GoRouteData with $OpsCicdStatusRoute {
+  const OpsCicdStatusRoute();
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const OpsCicdDashboardPage();
 }
 
 class RecurrenceManagementRoute extends GoRouteData

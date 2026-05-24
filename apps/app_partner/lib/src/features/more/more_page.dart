@@ -21,7 +21,7 @@ class MorePage extends ConsumerWidget {
 
     return Scaffold(
       appBar: MinglitTheme.simpleAppBar(title: '더보기', showBackButton: false),
-      // Fix #1824, #1803: SafeArea wraps body to handle system safe area insets (home bar overlap)
+      // Fix #1824, #1803: SafeArea handles system insets/home bar overlap.
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.only(
@@ -38,10 +38,7 @@ class MorePage extends ConsumerWidget {
               error: (error, stackTrace) => const MinglitSettingsGroup(
                 children: [
                   // onTap: null — 에러 상태에서는 타일 비활성화
-                  _ProfileTile(
-                    displayName: '정보를 불러올 수 없습니다',
-                    email: '',
-                  ),
+                  _ProfileTile(displayName: '정보를 불러올 수 없습니다', email: ''),
                 ],
               ),
               data: (partner) {
@@ -87,7 +84,7 @@ class MorePage extends ConsumerWidget {
                 if (canEditSettlement)
                   MinglitSettingsTile(
                     leading: Icons.account_balance_wallet_outlined,
-                    // Fix #1859: '정산 계좌 관리' → '계좌 관리' — settlement tab button과 BankAccountPage 타이틀과 통일
+                    // Fix #1859: keep settlement tab and page titles aligned.
                     title: '계좌 관리',
                     onTap: moreCoordinator.pushBankAccountManagement,
                   ),
@@ -111,6 +108,12 @@ class MorePage extends ConsumerWidget {
             MinglitSettingsGroup(
               header: '설정',
               children: [
+                MinglitSettingsTile(
+                  leading: Icons.account_tree_outlined,
+                  title: 'CI/CD 상태',
+                  subtitle: '브랜치별 게이트, 배포, 실패 이슈 추적',
+                  onTap: moreCoordinator.pushOpsCicdStatus,
+                ),
                 MinglitSettingsTile(
                   leading: Icons.notifications_outlined,
                   title: '알림 설정',
