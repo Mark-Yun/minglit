@@ -714,9 +714,17 @@ jobs:
   # 설계: supabase/functions/_integration_tests/architecture.md
   test-ef-integration:
     name: test-ef-integration
-    needs: changes
+    needs: [changes, test-supabase]
     # migrations 또는 EF source 변경 시 (full stack 가드). 문서/pgTAP only 면 skip.
-    if: ${{ needs.changes.outputs.supabase_ef_stack == 'true' }}
+    # Supabase CLI uses the configured project id for local Docker container
+    # names, so pgTAP and EF integration must not start the same stack in
+    # parallel on shared self-hosted runners.
+    if: >-
+      ${{
+        !cancelled() &&
+        needs.changes.outputs.supabase_ef_stack == 'true' &&
+        (needs.test-supabase.result == 'success' || needs.test-supabase.result == 'skipped')
+      }}
     runs-on: [self-hosted, ephemeral]
     timeout-minutes: 20
     steps:
