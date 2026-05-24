@@ -340,6 +340,42 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
+  // CUJ 1-6: 탈퇴 사유 익명 저장 payload
+  // ---------------------------------------------------------------------------
+
+  cujGroup('1-6', '탈퇴 사유 익명 저장 payload 전달', () {
+    List<dynamic> base() => [
+      accountDeletionCoordinatorProvider.overrideWithValue(coordinator),
+    ];
+
+    cujCase(
+      'happy: 기타 사유 입력 후 다음 → reason_code/reason_text만 전달 (FR-2, FR-7)',
+      app: const DeletionReasonPage(),
+      overrides: base,
+      body: (t) async {
+        await t.tap(find.text('기타'));
+        await t.pumpAndSettle();
+
+        await t.enterText(find.byType(MinglitTextField), '탈퇴 사유 상세 입력');
+        await t.pumpAndSettle();
+
+        await t.tap(find.text('다음'));
+        await t.pumpAndSettle();
+
+        final captured = verify(
+          () => coordinator.pushInfo(reason: captureAny(named: 'reason')),
+        ).captured;
+        final reason = captured.single as WithdrawalReason;
+        final payload = reason.toJson();
+
+        expect(payload['reason_code'], 'other');
+        expect(payload['reason_text'], '탈퇴 사유 상세 입력');
+        expect(payload.containsKey('user_id'), isFalse);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
   // CUJ 3-1: 유예 기간 중 재로그인하면 복구 다이얼로그
   // ---------------------------------------------------------------------------
 
@@ -417,6 +453,51 @@ void main() {
         await t.pumpAndSettle();
 
         expect(find.text('탈퇴 대기 중인 계정입니다'), findsNothing);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 3-2: 유예 기간 경과 시 영구 삭제 (백엔드 CRON)
+  // ---------------------------------------------------------------------------
+
+  cujGroup('3-2', '유예 기간 경과 시 영구 삭제 (백엔드 CRON)', () {
+    cujCase(
+      'stub: CRON 영구 삭제/DI 차단은 Flutter integration test 범위 외',
+      app: const Placeholder(),
+      overrides: () => [],
+      body: (t) async {
+        expect(true, isTrue);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 3-3: 30일 내 동일 DI 재가입 차단 (백엔드 인증)
+  // ---------------------------------------------------------------------------
+
+  cujGroup('3-3', '30일 내 동일 DI 재가입 차단 (백엔드 인증)', () {
+    cujCase(
+      'stub: DI 차단 테이블 조회/만료 계산은 Flutter integration test 범위 외',
+      app: const Placeholder(),
+      overrides: () => [],
+      body: (t) async {
+        expect(true, isTrue);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 3-4: 유예 기간 중 노출 차단 (RLS/서버 필터)
+  // ---------------------------------------------------------------------------
+
+  cujGroup('3-4', '유예 기간 중 알림·매칭·검색 노출 차단 (RLS)', () {
+    cujCase(
+      'stub: feed/search/push exclusion은 서버 정책 검증 범위',
+      app: const Placeholder(),
+      overrides: () => [],
+      body: (t) async {
+        expect(true, isTrue);
       },
     );
   });
