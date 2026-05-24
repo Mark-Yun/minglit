@@ -8,6 +8,8 @@ prints the matched token, so CI logs stay useful without becoming a new leak.
 from __future__ import annotations
 
 import argparse
+import base64
+import json
 import os
 import re
 import sys
@@ -66,9 +68,27 @@ def iter_files(paths: list[Path]) -> list[Path]:
 def scan_bytes(data: bytes, location: str) -> list[Finding]:
     findings: list[Finding] = []
     for rule in RULES:
+        if rule.rule_id == "supabase-legacy-jwt":
+            if any(is_service_role_jwt(match.group(0)) for match in rule.pattern.finditer(data)):
+                findings.append(Finding(rule.rule_id, location))
+            continue
         if rule.pattern.search(data):
             findings.append(Finding(rule.rule_id, location))
     return findings
+
+
+def is_service_role_jwt(token: bytes) -> bool:
+    parts = token.split(b".")
+    if len(parts) != 3:
+        return False
+    try:
+        payload = parts[1]
+        padded = payload + b"=" * (-len(payload) % 4)
+        decoded = base64.urlsafe_b64decode(padded)
+        claims = json.loads(decoded.decode("utf-8"))
+    except (ValueError, UnicodeDecodeError, json.JSONDecodeError):
+        return False
+    return isinstance(claims, dict) and claims.get("role") == "service_role"
 
 
 def scan_file(path: Path) -> list[Finding]:
@@ -122,12 +142,13 @@ def report_findings(findings: list[Finding]) -> None:
 
 
 def run_self_test() -> int:
-    fake_jwt = (
-        b"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
-        + b"A" * 60
-        + b"."
-        + b"B" * 40
-    )
+    def fake_jwt(role: str) -> bytes:
+        header = base64.urlsafe_b64encode(b'{"alg":"HS256","typ":"JWT"}').rstrip(b"=")
+        claims = {"role": role, "iss": "supabase", "ref": "artifact-scan-self-test"}
+        payload = base64.urlsafe_b64encode(json.dumps(claims).encode("utf-8")).rstrip(b"=")
+        signature = b"B" * 40
+        return b".".join([header, payload, signature])
+
     fake_secret = b"sb_" + b"secret_FAKE_ARTIFACT_SCAN_SHOULD_FAIL_1234567890"
 
     with tempfile.TemporaryDirectory() as tmp:
@@ -137,11 +158,11 @@ def run_self_test() -> int:
 
         archive = root / "app.apk"
         with zipfile.ZipFile(archive, "w") as zf:
-            zf.writestr("assets/config.txt", b"jwt=" + fake_jwt)
+            zf.writestr("assets/config.txt", b"jwt=" + fake_jwt("service_role"))
 
         clean = root / "clean.next"
         clean.mkdir()
-        (clean / "chunk.js").write_text("console.log('no server secrets here');")
+        (clean / "chunk.js").write_bytes(b"public_jwt=" + fake_jwt("anon"))
 
         findings = scan_paths([plain, archive, clean])
         rule_ids = {finding.rule_id for finding in findings}
