@@ -15,7 +15,10 @@ import {
   readJson,
   runHandler,
 } from "../_shared/_testing/mod.ts";
-import { withEnv } from "../_test_utils/mock_http.ts";
+import {
+  importHandlerWithStubbedServe,
+  withEnv,
+} from "../_test_utils/mock_http.ts";
 
 const PORTONE_ENV = {
   PORTONE_API_KEY: "test-key",
@@ -25,29 +28,13 @@ const PORTONE_ENV = {
 let _handler: Handler | null = null;
 async function getHandler(): Promise<Handler> {
   if (_handler) return _handler;
-  const denoAsAny = Deno as unknown as {
-    serve: (...args: unknown[]) => Deno.HttpServer;
-  };
-  const origServe = denoAsAny.serve;
-  denoAsAny.serve =
-    () => ({ shutdown() {}, finished: Promise.resolve() } as Deno.HttpServer);
-  const origSetInterval = globalThis.setInterval;
-  const origClearInterval = globalThis.clearInterval;
-  globalThis.setInterval =
-    ((_cb: () => void) =>
-      0 as unknown as ReturnType<typeof setInterval>) as typeof setInterval;
-  globalThis.clearInterval =
-    ((_id?: ReturnType<typeof setInterval>) => {}) as typeof clearInterval;
-  try {
-    _handler = await withEnv(PORTONE_ENV, async () => {
-      const mod = await import(`./index.ts?unit=${crypto.randomUUID()}`);
-      return mod.handler as Handler;
-    });
-  } finally {
-    denoAsAny.serve = origServe;
-    globalThis.setInterval = origSetInterval;
-    globalThis.clearInterval = origClearInterval;
-  }
+  _handler = await withEnv(
+    PORTONE_ENV,
+    () =>
+      importHandlerWithStubbedServe<Handler>(
+        new URL("./index.ts", import.meta.url),
+      ),
+  );
   return _handler!;
 }
 

@@ -19,11 +19,16 @@
 import { assertEquals } from "@std/assert";
 import {
   fakeSupabase,
+  type Handler,
   makeCtx,
   runHandler,
-  type Handler,
 } from "../_shared/_testing/mod.ts";
-import { createFetchMock, withEnv, withMockedFetch } from "../_test_utils/mock_http.ts";
+import {
+  createFetchMock,
+  importHandlerWithStubbedServe,
+  withEnv,
+  withMockedFetch,
+} from "../_test_utils/mock_http.ts";
 
 const PORTONE_ENV = {
   PORTONE_API_KEY: "test-key",
@@ -40,27 +45,13 @@ let _handler: Handler | null = null;
 async function getHandler(): Promise<Handler> {
   if (_handler) return _handler;
 
-  // Stub Deno.serve to prevent a real HTTP server from being started.
-  const denoAsAny = Deno as unknown as { serve: (...args: unknown[]) => Deno.HttpServer };
-  const originalServe = denoAsAny.serve;
-  denoAsAny.serve = () => ({ shutdown() {}, finished: Promise.resolve() } as Deno.HttpServer);
-
-  // Stub setInterval to prevent background timers (e.g. Statsig flush).
-  const originalSetInterval = globalThis.setInterval;
-  const originalClearInterval = globalThis.clearInterval;
-  globalThis.setInterval = ((_cb: () => void) => 0 as unknown as ReturnType<typeof setInterval>) as typeof setInterval;
-  globalThis.clearInterval = ((_id?: ReturnType<typeof setInterval>) => {}) as typeof clearInterval;
-
-  try {
-    _handler = await withEnv(PORTONE_ENV, async () => {
-      const mod = await import(`./index.ts?unit=${crypto.randomUUID()}`);
-      return mod.handler as Handler;
-    });
-  } finally {
-    denoAsAny.serve = originalServe;
-    globalThis.setInterval = originalSetInterval;
-    globalThis.clearInterval = originalClearInterval;
-  }
+  _handler = await withEnv(
+    PORTONE_ENV,
+    () =>
+      importHandlerWithStubbedServe<Handler>(
+        new URL("./index.ts", import.meta.url),
+      ),
+  );
 
   return _handler!;
 }
@@ -125,8 +116,7 @@ Deno.test("payment-webhook :: malformed JSON body → 400", async () => {
       body: "not-json{{{",
       headers: { "content-type": "text/plain" },
       ctx: sysCtx(sb),
-    })
-  );
+    }));
   assertEquals(res.status, 400);
   assertEquals(await res.text(), "Bad Request");
 });
@@ -142,8 +132,7 @@ Deno.test("payment-webhook :: missing imp_uid → 400", async () => {
     runHandler(h, {
       body: { merchant_uid: "order-1", status: "paid" },
       ctx: sysCtx(sb),
-    })
-  );
+    }));
   assertEquals(res.status, 400);
   assertEquals(await res.text(), "Missing parameters");
 });
@@ -159,8 +148,7 @@ Deno.test("payment-webhook :: missing merchant_uid → 400", async () => {
     runHandler(h, {
       body: { imp_uid: "imp-1", status: "paid" },
       ctx: sysCtx(sb),
-    })
-  );
+    }));
   assertEquals(res.status, 400);
   assertEquals(await res.text(), "Missing parameters");
 });
@@ -176,7 +164,10 @@ Deno.test("payment-webhook :: duplicate imp_uid (already processed) → 200 earl
   let portoneCallCount = 0;
   const { fetchMock } = createFetchMock([
     {
-      matcher: () => { portoneCallCount++; return false; },
+      matcher: () => {
+        portoneCallCount++;
+        return false;
+      },
       handler: () => new Response("should not reach", { status: 500 }),
     },
   ]);
@@ -185,8 +176,7 @@ Deno.test("payment-webhook :: duplicate imp_uid (already processed) → 200 earl
     runHandler(h, {
       body: { imp_uid: "imp-dup", merchant_uid: "order-dup", status: "paid" },
       ctx: sysCtx(sb),
-    })
-  );
+    }));
   assertEquals(res.status, 200);
   assertEquals(await res.text(), "OK");
   assertEquals(sb.callsFor("event_applications", "update").length, 0);
@@ -207,8 +197,7 @@ Deno.test("payment-webhook :: merchant_uid mismatch → 400", async () => {
     runHandler(h, {
       body: { imp_uid: "imp-1", merchant_uid: "order-1", status: "paid" },
       ctx: sysCtx(sb),
-    })
-  );
+    }));
   assertEquals(res.status, 400);
   assertEquals(await res.text(), "Merchant UID mismatch");
   assertEquals(sb.callsFor("event_applications", "update").length, 0);
@@ -228,14 +217,15 @@ Deno.test("payment-webhook :: paid → dbStatus=approved, notification enqueued 
     })
     .on("pgmq_send", "rpc", { data: null, error: null });
 
-  const fetchMock = portoneOkFetch("imp-paid", "order-paid", "paid", { paid_at: 1700000000 });
+  const fetchMock = portoneOkFetch("imp-paid", "order-paid", "paid", {
+    paid_at: 1700000000,
+  });
 
   const res = await withMockedFetch(fetchMock, () =>
     runHandler(h, {
       body: { imp_uid: "imp-paid", merchant_uid: "order-paid", status: "paid" },
       ctx: sysCtx(sb),
-    })
-  );
+    }));
   assertEquals(res.status, 200);
 
   const [updateCall] = sb.callsFor("event_applications", "update");
@@ -264,14 +254,19 @@ Deno.test("payment-webhook :: paid but paid_at=null → paid_at omitted from upd
     })
     .on("pgmq_send", "rpc", { data: null, error: null });
 
-  const fetchMock = portoneOkFetch("imp-nopaidat", "order-nopaidat", "paid", { paid_at: null });
+  const fetchMock = portoneOkFetch("imp-nopaidat", "order-nopaidat", "paid", {
+    paid_at: null,
+  });
 
   const res = await withMockedFetch(fetchMock, () =>
     runHandler(h, {
-      body: { imp_uid: "imp-nopaidat", merchant_uid: "order-nopaidat", status: "paid" },
+      body: {
+        imp_uid: "imp-nopaidat",
+        merchant_uid: "order-nopaidat",
+        status: "paid",
+      },
       ctx: sysCtx(sb),
-    })
-  );
+    }));
   assertEquals(res.status, 200);
   const [updateCall] = sb.callsFor("event_applications", "update");
   const patch = updateCall.payload as Record<string, unknown>;
@@ -294,10 +289,13 @@ Deno.test("payment-webhook :: cancelled → dbStatus=cancelled + refund_status=c
 
   const res = await withMockedFetch(fetchMock, () =>
     runHandler(h, {
-      body: { imp_uid: "imp-cancel", merchant_uid: "order-cancel", status: "cancelled" },
+      body: {
+        imp_uid: "imp-cancel",
+        merchant_uid: "order-cancel",
+        status: "cancelled",
+      },
       ctx: sysCtx(sb),
-    })
-  );
+    }));
   assertEquals(res.status, 200);
 
   const [updateCall] = sb.callsFor("event_applications", "update");
@@ -320,14 +318,20 @@ Deno.test("payment-webhook :: failed → dbStatus=payment_failed, no notificatio
 
   const res = await withMockedFetch(fetchMock, () =>
     runHandler(h, {
-      body: { imp_uid: "imp-fail", merchant_uid: "order-fail", status: "failed" },
+      body: {
+        imp_uid: "imp-fail",
+        merchant_uid: "order-fail",
+        status: "failed",
+      },
       ctx: sysCtx(sb),
-    })
-  );
+    }));
   assertEquals(res.status, 200);
 
   const [updateCall] = sb.callsFor("event_applications", "update");
-  assertEquals((updateCall.payload as Record<string, unknown>).status, "payment_failed");
+  assertEquals(
+    (updateCall.payload as Record<string, unknown>).status,
+    "payment_failed",
+  );
   // No pgmq_send for failed payments (only for paid)
   assertEquals(sb.callsFor("pgmq_send", "rpc").length, 0);
 });
@@ -346,14 +350,20 @@ Deno.test("payment-webhook :: ready (가상계좌) → dbStatus=payment_pending 
 
   const res = await withMockedFetch(fetchMock, () =>
     runHandler(h, {
-      body: { imp_uid: "imp-ready", merchant_uid: "order-ready", status: "ready" },
+      body: {
+        imp_uid: "imp-ready",
+        merchant_uid: "order-ready",
+        status: "ready",
+      },
       ctx: sysCtx(sb),
-    })
-  );
+    }));
   assertEquals(res.status, 200);
 
   const [updateCall] = sb.callsFor("event_applications", "update");
-  assertEquals((updateCall.payload as Record<string, unknown>).status, "payment_pending");
+  assertEquals(
+    (updateCall.payload as Record<string, unknown>).status,
+    "payment_pending",
+  );
 });
 
 // ---------------------------------------------------------------------------
@@ -366,14 +376,21 @@ Deno.test("payment-webhook :: unknown status → dbStatus=unknown_<value> → 20
     .on("event_applications", "update", { error: null })
     .on("webhook_imp_uid_log", "insert", { error: null });
 
-  const fetchMock = portoneOkFetch("imp-unk", "order-unk", "awaiting_something");
+  const fetchMock = portoneOkFetch(
+    "imp-unk",
+    "order-unk",
+    "awaiting_something",
+  );
 
   const res = await withMockedFetch(fetchMock, () =>
     runHandler(h, {
-      body: { imp_uid: "imp-unk", merchant_uid: "order-unk", status: "awaiting_something" },
+      body: {
+        imp_uid: "imp-unk",
+        merchant_uid: "order-unk",
+        status: "awaiting_something",
+      },
       ctx: sysCtx(sb),
-    })
-  );
+    }));
   assertEquals(res.status, 200);
 
   const [updateCall] = sb.callsFor("event_applications", "update");
@@ -398,10 +415,13 @@ Deno.test("payment-webhook :: DB update error → 500", async () => {
 
   const res = await withMockedFetch(fetchMock, () =>
     runHandler(h, {
-      body: { imp_uid: "imp-dberr", merchant_uid: "order-dberr", status: "paid" },
+      body: {
+        imp_uid: "imp-dberr",
+        merchant_uid: "order-dberr",
+        status: "paid",
+      },
       ctx: sysCtx(sb),
-    })
-  );
+    }));
   assertEquals(res.status, 500);
   assertEquals(await res.text(), "DB Error");
 });
@@ -423,10 +443,13 @@ Deno.test("payment-webhook :: PortOne getToken failure → 500", async () => {
 
   const res = await withMockedFetch(fetchMock, () =>
     runHandler(h, {
-      body: { imp_uid: "imp-pgfail", merchant_uid: "order-pgfail", status: "paid" },
+      body: {
+        imp_uid: "imp-pgfail",
+        merchant_uid: "order-pgfail",
+        status: "paid",
+      },
       ctx: sysCtx(sb),
-    })
-  );
+    }));
   assertEquals(res.status, 500);
   assertEquals(sb.callsFor("event_applications", "update").length, 0);
 });
@@ -449,8 +472,7 @@ Deno.test("payment-webhook :: paid → webhook_imp_uid_log inserted after succes
     runHandler(h, {
       body: { imp_uid: "imp-log", merchant_uid: "order-log", status: "paid" },
       ctx: sysCtx(sb),
-    })
-  );
+    }));
   assertEquals(res.status, 200);
 
   const insertCalls = sb.callsFor("webhook_imp_uid_log", "insert");

@@ -4,7 +4,6 @@
 // a real HTTP server from being started (same pattern as payment-webhook/index_test.ts).
 
 import { assertEquals } from "@std/assert";
-import { stub } from "@std/testing/mock";
 import {
   buildApplication,
   fakeSupabase,
@@ -13,32 +12,14 @@ import {
   readJson,
   runHandler,
 } from "../_shared/_testing/mod.ts";
+import { importHandlerWithStubbedServe } from "../_test_utils/mock_http.ts";
 
 let _handler: Handler | null = null;
 async function getHandler(): Promise<Handler> {
   if (_handler) return _handler;
-  const serveOwner = Deno as unknown as {
-    serve: (...args: unknown[]) => Deno.HttpServer;
-  };
-  const serveStub = stub(serveOwner, "serve", () => ({
-    shutdown() {},
-    finished: Promise.resolve(),
-  } as Deno.HttpServer));
-  const origSetInterval = globalThis.setInterval;
-  const origClearInterval = globalThis.clearInterval;
-  globalThis.setInterval =
-    ((_cb: () => void) =>
-      0 as unknown as ReturnType<typeof setInterval>) as typeof setInterval;
-  globalThis.clearInterval =
-    ((_id?: ReturnType<typeof setInterval>) => {}) as typeof clearInterval;
-  try {
-    _handler = (await import(`./index.ts?unit=${crypto.randomUUID()}`))
-      .handler as Handler;
-  } finally {
-    serveStub.restore();
-    globalThis.setInterval = origSetInterval;
-    globalThis.clearInterval = origClearInterval;
-  }
+  _handler = await importHandlerWithStubbedServe<Handler>(
+    new URL("./index.ts", import.meta.url),
+  );
   return _handler!;
 }
 

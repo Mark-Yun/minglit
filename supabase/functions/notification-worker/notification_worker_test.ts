@@ -93,9 +93,9 @@ Deno.test({
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const stubs = [
-    stub(WorkerUtils.prototype, "isProcessed", async () => false),
-    stub(WorkerUtils.prototype, "markProcessed", async () => {}),
-    stub(WorkerUtils.prototype, "moveToDLQ", async () => {}),
+    stub(WorkerUtils.prototype, "isProcessed", () => Promise.resolve(false)),
+    stub(WorkerUtils.prototype, "markProcessed", () => Promise.resolve()),
+    stub(WorkerUtils.prototype, "moveToDLQ", () => Promise.resolve()),
     stub(WorkerUtils.prototype, "logTimeLag", () => {}),
   ];
 
@@ -161,9 +161,9 @@ Deno.test({
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const stubs = [
-    stub(WorkerUtils.prototype, "isProcessed", async () => false),
-    stub(WorkerUtils.prototype, "markProcessed", async () => {}),
-    stub(WorkerUtils.prototype, "moveToDLQ", async () => {}),
+    stub(WorkerUtils.prototype, "isProcessed", () => Promise.resolve(false)),
+    stub(WorkerUtils.prototype, "markProcessed", () => Promise.resolve()),
+    stub(WorkerUtils.prototype, "moveToDLQ", () => Promise.resolve()),
     stub(WorkerUtils.prototype, "logTimeLag", () => {}),
   ];
 
@@ -359,9 +359,9 @@ Deno.test({
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const stubs = [
-    stub(WorkerUtils.prototype, "isProcessed", async () => false),
-    stub(WorkerUtils.prototype, "markProcessed", async () => {}),
-    stub(WorkerUtils.prototype, "moveToDLQ", async () => {}),
+    stub(WorkerUtils.prototype, "isProcessed", () => Promise.resolve(false)),
+    stub(WorkerUtils.prototype, "markProcessed", () => Promise.resolve()),
+    stub(WorkerUtils.prototype, "moveToDLQ", () => Promise.resolve()),
     stub(WorkerUtils.prototype, "logTimeLag", () => {}),
   ];
 
@@ -416,9 +416,9 @@ Deno.test({
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const stubs = [
-    stub(WorkerUtils.prototype, "isProcessed", async () => false),
-    stub(WorkerUtils.prototype, "markProcessed", async () => {}),
-    stub(WorkerUtils.prototype, "moveToDLQ", async () => {}),
+    stub(WorkerUtils.prototype, "isProcessed", () => Promise.resolve(false)),
+    stub(WorkerUtils.prototype, "markProcessed", () => Promise.resolve()),
+    stub(WorkerUtils.prototype, "moveToDLQ", () => Promise.resolve()),
     stub(WorkerUtils.prototype, "logTimeLag", () => {}),
   ];
 
@@ -450,7 +450,9 @@ Deno.test({
       async () => {
         await withMockedFetch(fetchMock, async () => {
           await withNoIntervals(async () => {
-            await handler(new Request("http://localhost", { headers: { "Authorization": "Bearer service-key" } }));
+            await withFastTimers(async () => {
+              await handler(new Request("http://localhost", { headers: { "Authorization": "Bearer service-key" } }));
+            });
           });
         });
       },
@@ -473,9 +475,9 @@ Deno.test({
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const stubs = [
-    stub(WorkerUtils.prototype, "isProcessed", async () => false),
-    stub(WorkerUtils.prototype, "markProcessed", async () => {}),
-    stub(WorkerUtils.prototype, "moveToDLQ", async () => {}),
+    stub(WorkerUtils.prototype, "isProcessed", () => Promise.resolve(false)),
+    stub(WorkerUtils.prototype, "markProcessed", () => Promise.resolve()),
+    stub(WorkerUtils.prototype, "moveToDLQ", () => Promise.resolve()),
     stub(WorkerUtils.prototype, "logTimeLag", () => {}),
   ];
 
@@ -553,9 +555,9 @@ Deno.test({
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const stubs = [
-    stub(WorkerUtils.prototype, "isProcessed", async () => false),
-    stub(WorkerUtils.prototype, "markProcessed", async () => {}),
-    stub(WorkerUtils.prototype, "moveToDLQ", async () => {}),
+    stub(WorkerUtils.prototype, "isProcessed", () => Promise.resolve(false)),
+    stub(WorkerUtils.prototype, "markProcessed", () => Promise.resolve()),
+    stub(WorkerUtils.prototype, "moveToDLQ", () => Promise.resolve()),
     stub(WorkerUtils.prototype, "logTimeLag", () => {}),
   ];
 
@@ -613,9 +615,9 @@ Deno.test({
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const stubs = [
-    stub(WorkerUtils.prototype, "isProcessed", async () => false),
-    stub(WorkerUtils.prototype, "markProcessed", async () => {}),
-    stub(WorkerUtils.prototype, "moveToDLQ", async () => {}),
+    stub(WorkerUtils.prototype, "isProcessed", () => Promise.resolve(false)),
+    stub(WorkerUtils.prototype, "markProcessed", () => Promise.resolve()),
+    stub(WorkerUtils.prototype, "moveToDLQ", () => Promise.resolve()),
     stub(WorkerUtils.prototype, "logTimeLag", () => {}),
   ];
 
@@ -646,7 +648,9 @@ Deno.test({
       async () => {
         await withMockedFetch(fetchMock, async () => {
           await withNoIntervals(async () => {
-            await handler(new Request("http://localhost", { headers: { "Authorization": "Bearer service-key" } }));
+            await withFastTimers(async () => {
+              await handler(new Request("http://localhost", { headers: { "Authorization": "Bearer service-key" } }));
+            });
           });
         });
       },
@@ -669,9 +673,9 @@ Deno.test({
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
 
   const stubs = [
-    stub(WorkerUtils.prototype, "isProcessed", async () => false),
-    stub(WorkerUtils.prototype, "markProcessed", async () => {}),
-    stub(WorkerUtils.prototype, "moveToDLQ", async () => {}),
+    stub(WorkerUtils.prototype, "isProcessed", () => Promise.resolve(false)),
+    stub(WorkerUtils.prototype, "markProcessed", () => Promise.resolve()),
+    stub(WorkerUtils.prototype, "moveToDLQ", () => Promise.resolve()),
     stub(WorkerUtils.prototype, "logTimeLag", () => {}),
   ];
 
