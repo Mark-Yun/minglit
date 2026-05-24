@@ -19,9 +19,10 @@
 //   4-1, 4-2, 4-3 (인증 열람 권한): Phase 2 (#556) 미구현
 //   5-1, 5-2 (권한 철회): Phase 2 (#556) 미구현
 
+import 'dart:async';
+
 import 'package:app_user/src/features/settings/privacy_page.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -121,7 +122,7 @@ void main() {
       overrides: () {
         when(() => repo.getConsents(any())).thenAnswer(
           (_) async => [
-            _makeConsent(ConsentType.thirdPartyProvision, consented: true),
+            _makeConsent(ConsentType.thirdPartyProvision),
           ],
         );
         return base();
@@ -177,10 +178,7 @@ void main() {
         await t.tap(find.text('마케팅 정보 수신'));
         await t.pumpAndSettle();
 
-        expect(
-          find.text('동의 변경에 실패했습니다. 다시 시도해주세요.'),
-          findsOneWidget,
-        );
+        expect(find.text('동의 변경에 실패했습니다. 다시 시도해주세요.'), findsOneWidget);
 
         // SnackBar 닫히고 나서도 스위치 복구 대기
         await t.pump(const Duration(seconds: 4));
@@ -201,7 +199,9 @@ void main() {
         // 필수 동의는 SwitchListTile로 표시되지 않아야 함
         final switches = t
             .widgetList<SwitchListTile>(find.byType(SwitchListTile))
-            .map((s) => (s.title as Text).data ?? '')
+            .map((s) => s.title)
+            .whereType<Text>()
+            .map((title) => title.data ?? '')
             .toSet();
 
         expect(switches.contains('서비스 이용약관'), isFalse);
@@ -229,7 +229,7 @@ void main() {
       overrides: () {
         when(() => repo.getConsents(any())).thenAnswer(
           (_) async => [
-            _makeConsent(ConsentType.identityVerification, consented: true),
+            _makeConsent(ConsentType.identityVerification),
           ],
         );
         return base();
@@ -270,7 +270,7 @@ void main() {
       overrides: () {
         when(() => repo.getConsents(any())).thenAnswer(
           (_) async => [
-            _makeConsent(ConsentType.identityVerification, consented: true),
+            _makeConsent(ConsentType.identityVerification),
           ],
         );
         return base();
