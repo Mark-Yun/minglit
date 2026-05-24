@@ -1,4 +1,8 @@
-import { errorResponse } from "../_shared/response_utils.ts";
+import {
+  type InputResult,
+  optionalStringField,
+  requireStringField,
+} from "../_shared/input_validation.ts";
 
 export interface CancelOrderInput {
   event_id: string;
@@ -7,16 +11,12 @@ export interface CancelOrderInput {
 
 export function parseCancelOrderInput(
   body: Record<string, unknown>,
-): CancelOrderInput | Response {
-  const eventId = body.event_id;
-  if (typeof eventId !== "string" || eventId.length === 0) {
-    return errorResponse("Missing required field: event_id", 400);
-  }
+): InputResult<CancelOrderInput> {
+  const eventId = requireStringField(body, "event_id");
+  if (eventId instanceof Response) return eventId;
 
-  const reason = body.reason;
-  if (reason !== undefined && typeof reason !== "string") {
-    return errorResponse("Invalid field: reason", 400);
-  }
+  const reason = optionalStringField(body, "reason");
+  if (reason instanceof Response) return reason;
 
   return reason === undefined
     ? { event_id: eventId }

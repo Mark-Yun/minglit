@@ -27,4 +27,4 @@ business rule 을 검증한다.
 
 ---
 
-_Reviewed: 2026-05-24 00:00_
+_Reviewed: 2026-05-24 11:10_
