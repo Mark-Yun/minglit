@@ -19,8 +19,8 @@ GitHub App permission 은 아래만 부여한다.
 | Permission | Level | 이유 |
 |------------|-------|------|
 | Contents | Read/write | version bump commit, branch 생성/삭제, tag push, release asset/source 접근 |
-| Pull requests | Read/write | nightly/promotion/backport PR 생성, auto-merge enable |
-| Commit statuses | Read/write | `rc-gate-pass` 같은 commit status 설정 |
+| Pull requests | Read/write | promotion/backport PR 생성, auto-merge enable |
+| Commit statuses | Read/write | `dev-rc-cut-pass` 같은 commit status 설정 |
 | Checks | Read | required check / gate 상태 조회 |
 | Issues | Read/write | release 자동 이슈 생성, failure comment |
 | Metadata | Read | GitHub App 기본 권한 |
@@ -84,11 +84,11 @@ git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
 | Workflow | 사용 이유 |
 |----------|-----------|
 | `sync-version` | dev/main version bump commit, main release tag |
-| `dev-staging-post-merge-sync` | dev-staging version bump/tag |
-| `nightly-cut` | immutable nightly branch 생성, dev PR 생성 |
-| `rc-cut` | `rc/YYYY-Wxx` branch 생성, RC tag |
+| `dev-staging-dev-cut-gate` | dev-staging version bump/tag |
+| `dev-staging-dev-cut` | immutable nightly branch 생성, dev PR 생성 |
+| `dev-rc-cut` | `rc/YYYY-Wxx` branch 생성, RC tag |
 | `rc-post-merge-sync` | RC hotfix version bump/tag |
-| `main-cut` | rc → main promotion PR 생성/auto-merge |
+| `rc-main-cut` | rc → main promotion PR 생성/auto-merge |
 | `rc-hotfix-backport` | backport branch/PR 생성 |
 | `main-deploy` | final version/tag/release marker, prod deploy, RC branch cleanup |
 
@@ -99,7 +99,7 @@ Ruleset bypass actor 는 `minglit-release-bot` App installation 으로 제한한
 | Target | 허용 작업 |
 |--------|-----------|
 | `dev-staging` | version bump commit, `v*-dev-staging` tag |
-| `dev` | nightly promotion/version metadata push |
+| `dev` | dev-staging-dev-cut promotion/version metadata push |
 | `rc/**` | RC branch 생성/삭제, RC hotfix version bump |
 | `main` | final version bump/tag/promotion commit |
 | `v*`, `promo/**` | protected tag 생성 |

@@ -1,4 +1,4 @@
-name: nightly-cut
+name: dev-staging-dev-cut
 
 on:
   schedule:
@@ -12,7 +12,7 @@ on:
         type: string
 
 concurrency:
-  group: nightly-cut
+  group: dev-staging-dev-cut
   cancel-in-progress: false
 
 permissions:
@@ -21,7 +21,7 @@ permissions:
   issues: write
 
 jobs:
-  create-nightly-pr:
+  create-dev-cut-pr:
     runs-on: ubuntu-latest
     outputs:
       skipped: ${{ steps.plan.outputs.skipped }}
@@ -42,7 +42,7 @@ jobs:
           fallback-app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
           fallback-private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
 
-      - name: Plan nightly promotion
+      - name: Plan dev promotion
         id: plan
         env:
           GH_TOKEN: ${{ github.token }}
@@ -58,9 +58,9 @@ jobs:
             --base dev \
             --state open \
             --json number,headRefName \
-            --jq '[.[] | select(.headRefName | startswith("nightly/"))][0].number // empty')"
+            --jq '[.[] | select((.headRefName | startswith("cut/dev-staging-dev/")) or (.headRefName | startswith("nightly/")))][0].number // empty')"
           if [ -n "${OPEN_PR}" ]; then
-            echo "Nightly PR #${OPEN_PR} is already open; skipping."
+            echo "dev-staging-dev-cut PR #${OPEN_PR} is already open; skipping."
             echo "skipped=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -98,7 +98,7 @@ jobs:
 
           RUN_DATE="$(TZ=Asia/Seoul date +%Y-%m-%d)"
           SHORT_SHA="${TAG_SHA:0:8}"
-          BRANCH_NAME="nightly/${RUN_DATE}-${SHORT_SHA}"
+          BRANCH_NAME="cut/dev-staging-dev/${RUN_DATE}-${SHORT_SHA}"
           if git ls-remote --exit-code --heads origin "${BRANCH_NAME}" >/dev/null 2>&1; then
             BRANCH_NAME="${BRANCH_NAME}-${GITHUB_RUN_ID}"
           fi
@@ -108,7 +108,7 @@ jobs:
           echo "tag_sha=${TAG_SHA}" >> "$GITHUB_OUTPUT"
           echo "branch_name=${BRANCH_NAME}" >> "$GITHUB_OUTPUT"
 
-      - name: Push nightly branch
+      - name: Push dev promotion branch
         if: steps.plan.outputs.skipped != 'true'
         env:
           RELEASE_BOT_TOKEN: ${{ steps.release-bot.outputs.token }}
@@ -120,7 +120,7 @@ jobs:
           git push origin "${TAG_SHA}:refs/heads/${BRANCH_NAME}"
           git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
 
-      - name: Create nightly PR and enable auto-merge
+      - name: Create dev promotion PR and enable auto-merge
         id: pr
         if: steps.plan.outputs.skipped != 'true'
         env:
@@ -142,7 +142,7 @@ jobs:
           PR_URL="$(gh pr create \
             --base dev \
             --head "${BRANCH_NAME}" \
-            --title "ci(nightly-cut): promote ${TAG_NAME} to dev" \
+            --title "ci(dev-staging-dev-cut): promote ${TAG_NAME} to dev" \
             --body "${BODY}")"
           PR_NUMBER="${PR_URL##*/}"
 
@@ -150,12 +150,12 @@ jobs:
           echo "pr_number=${PR_NUMBER}" >> "$GITHUB_OUTPUT"
 
   notify-failure:
-    needs: [create-nightly-pr]
+    needs: [create-dev-cut-pr]
     if: always()
     permissions:
       issues: write
     uses: ./.github/workflows/shared-notify.yml
     with:
-      success: ${{ needs.create-nightly-pr.result == 'success' || needs.create-nightly-pr.result == 'skipped' }}
-      workflow_name: 'Nightly Cut'
-      job_results: '{"create-nightly-pr":"${{ needs.create-nightly-pr.result }}"}'
+      success: ${{ needs.create-dev-cut-pr.result == 'success' || needs.create-dev-cut-pr.result == 'skipped' }}
+      workflow_name: 'Dev-Staging Dev Cut'
+      job_results: '{"create-dev-cut-pr":"${{ needs.create-dev-cut-pr.result }}"}'

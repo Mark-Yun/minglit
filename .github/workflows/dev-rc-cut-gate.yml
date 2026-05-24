@@ -1,4 +1,4 @@
-name: rc-gate
+name: dev-rc-cut-gate
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: rc-gate-${{ github.ref }}
+  group: dev-rc-cut-gate-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
@@ -29,8 +29,8 @@ jobs:
       app-name: partner
     secrets: inherit
 
-  set-rc-gate-status:
-    name: set-rc-gate-status
+  set-dev-rc-cut-status:
+    name: set-dev-rc-cut-status
     needs: [cuj-integration-user, cuj-integration-partner]
     if: always()
     runs-on: ubuntu-latest
@@ -44,20 +44,20 @@ jobs:
           gh api "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
             --method POST \
             -f state=success \
-            -f context=rc-gate-pass \
-            -f description="rc-gate passed; this dev commit can be cut to RC" \
+            -f context=dev-rc-cut-pass \
+            -f description="dev-rc-cut-gate passed; this dev commit can be cut to RC" \
             -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
 
-      - name: Fail rc-gate without publishing rc-gate-pass
+      - name: Fail dev-rc-cut-gate without publishing dev-rc-cut-pass
         if: ${{ needs.cuj-integration-user.result != 'success' || needs.cuj-integration-partner.result != 'success' }}
         run: |
-          echo "::error::rc-gate failed; rc-gate-pass status was not set."
+          echo "::error::dev-rc-cut-gate failed; dev-rc-cut-pass status was not set."
           echo "cuj-integration-user=${{ needs.cuj-integration-user.result }}"
           echo "cuj-integration-partner=${{ needs.cuj-integration-partner.result }}"
           exit 1
 
   notify-failure:
-    needs: [cuj-integration-user, cuj-integration-partner, set-rc-gate-status]
+    needs: [cuj-integration-user, cuj-integration-partner, set-dev-rc-cut-status]
     if: always()
     permissions:
       issues: write
@@ -67,7 +67,7 @@ jobs:
         ${{
           needs.cuj-integration-user.result == 'success' &&
           needs.cuj-integration-partner.result == 'success' &&
-          needs.set-rc-gate-status.result == 'success'
+          needs.set-dev-rc-cut-status.result == 'success'
         }}
-      workflow_name: 'RC Gate'
-      job_results: '{"cuj-integration-user":"${{ needs.cuj-integration-user.result }}","cuj-integration-partner":"${{ needs.cuj-integration-partner.result }}","set-rc-gate-status":"${{ needs.set-rc-gate-status.result }}"}'
+      workflow_name: 'Dev RC Cut Gate'
+      job_results: '{"cuj-integration-user":"${{ needs.cuj-integration-user.result }}","cuj-integration-partner":"${{ needs.cuj-integration-partner.result }}","set-dev-rc-cut-status":"${{ needs.set-dev-rc-cut-status.result }}"}'
