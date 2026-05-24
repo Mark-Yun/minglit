@@ -166,39 +166,12 @@ jobs:
   tag-promo:
     needs: [plan, bump]
     if: needs.plan.outputs.skipped != 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.plan.outputs.rc_branch }}
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Generate release bot token
-        id: release-bot
-        uses: ./.github/actions/release-bot-token
-        with:
-          fallback-app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
-          fallback-private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
-
-      - name: Tag promotion marker
-        env:
-          RELEASE_BOT_TOKEN: ${{ steps.release-bot.outputs.token }}
-          PROMO_TAG: ${{ needs.plan.outputs.promo_tag }}
-          COMMIT_SHA: ${{ needs.bump.outputs.commit_sha }}
-        run: |
-          set -euo pipefail
-          git remote set-url origin "https://x-access-token:${RELEASE_BOT_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git fetch origin "${{ needs.plan.outputs.rc_branch }}" --tags --force
-
-          if git ls-remote --exit-code --tags origin "refs/tags/${PROMO_TAG}" >/dev/null 2>&1; then
-            echo "Tag ${PROMO_TAG} already exists; skipping."
-            exit 0
-          fi
-
-          git tag "${PROMO_TAG}" "${COMMIT_SHA}"
-          git push origin "refs/tags/${PROMO_TAG}"
-          git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
+    uses: ./.github/workflows/shared-promo-tag.yml
+    with:
+      target_ref: ${{ needs.plan.outputs.rc_branch }}
+      tag_name: ${{ needs.plan.outputs.promo_tag }}
+      commit_sha: ${{ needs.bump.outputs.commit_sha }}
+    secrets: inherit
 
   notify-failure:
     needs: [plan, bump, tag-promo]
