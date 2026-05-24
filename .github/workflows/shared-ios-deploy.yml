@@ -1,0 +1,111 @@
+name: shared-ios-deploy
+
+on:
+  workflow_call:
+    inputs:
+      app-name:
+        description: 'App name (user or partner)'
+        required: true
+        type: string
+      app-directory:
+        description: 'App directory path, e.g. apps/app_user'
+        required: true
+        type: string
+      bundle-id:
+        description: 'iOS bundle ID'
+        required: true
+        type: string
+      provisioning-profile-dev-specifier:
+        description: 'DEV provisioning profile specifier name'
+        required: true
+        type: string
+      provisioning-profile-prod-specifier:
+        description: 'Production provisioning profile specifier name'
+        required: true
+        type: string
+      notify-workflow-name:
+        description: 'Workflow name for failure notification'
+        required: true
+        type: string
+    secrets:
+      APPLE_CERTIFICATE_BASE64:
+        required: true
+      APPLE_CERTIFICATE_PASSWORD:
+        required: true
+      APPLE_PROVISION_PROFILE_DEV_BASE64:
+        required: true
+      APPLE_PROVISION_PROFILE_PROD_BASE64:
+        required: true
+      APP_STORE_CONNECT_API_KEY_BASE64:
+        required: true
+      APP_STORE_CONNECT_API_KEY_ID:
+        required: true
+      APP_STORE_CONNECT_ISSUER_ID:
+        required: true
+      SUPABASE_DEV_URL:
+        required: true
+      SUPABASE_DEV_PUBLISHABLE_KEY:
+        required: true
+      KAKAO_LOCAL_REST_API_KEY:
+        required: true
+      JUSO_CONFIRM_KEY:
+        required: false
+      SENTRY_DSN_FLUTTER:
+        required: true
+      SUPABASE_MAIN_URL:
+        required: true
+      SUPABASE_MAIN_PUBLISHABLE_KEY:
+        required: true
+      GH_PAT_VERSION_BUMP:
+        required: true
+
+jobs:
+  ios-deploy:
+    runs-on: macos-15  # Fix #2371: connectivity_plus 7.1.1 requires iOS 18 SDK / Xcode 16+.
+    timeout-minutes: 60
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: iOS Deploy
+        uses: ./.github/actions/ios-deploy
+        with:
+          app-name: ${{ inputs.app-name }}
+          app-directory: ${{ inputs.app-directory }}
+          bundle-id: ${{ inputs.bundle-id }}
+          provisioning-profile-dev-specifier: ${{ inputs.provisioning-profile-dev-specifier }}
+          provisioning-profile-prod-specifier: ${{ inputs.provisioning-profile-prod-specifier }}
+          git-ref: ${{ github.ref }}
+          run-number: ${{ github.run_number }}
+          APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_PROVISION_PROFILE_DEV_BASE64: ${{ secrets.APPLE_PROVISION_PROFILE_DEV_BASE64 }}
+          APPLE_PROVISION_PROFILE_PROD_BASE64: ${{ secrets.APPLE_PROVISION_PROFILE_PROD_BASE64 }}
+          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
+          SUPABASE_DEV_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+          KAKAO_LOCAL_REST_API_KEY: ${{ secrets.KAKAO_LOCAL_REST_API_KEY }}
+          JUSO_CONFIRM_KEY: ${{ secrets.JUSO_CONFIRM_KEY }}
+          SENTRY_DSN_FLUTTER: ${{ secrets.SENTRY_DSN_FLUTTER }}
+          SUPABASE_MAIN_URL: ${{ secrets.SUPABASE_MAIN_URL }}
+          SUPABASE_MAIN_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
+          GH_PAT_VERSION_BUMP: ${{ secrets.GH_PAT_VERSION_BUMP }}
+
+  notify-failure:
+    needs: [ios-deploy]
+    if: always()
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+      statuses: write
+    uses: ./.github/workflows/shared-notify.yml
+    with:
+      failed: ${{ needs.ios-deploy.result != 'success' }}
+      workflow_name: ${{ inputs.notify-workflow-name }}
+      severity: 'P0-critical'

@@ -16,51 +16,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ios-deploy:
-    runs-on: macos-15  # Fix #2371: connectivity_plus 7.1.1 requires NWPath.isUltraConstrained (iOS 18 SDK / Xcode 16+)
-    timeout-minutes: 60
-    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: iOS Deploy
-        uses: ./.github/actions/ios-deploy
-        with:
-          app-name: partner
-          app-directory: apps/app_partner
-          bundle-id: com.minglit.appPartner
-          provisioning-profile-dev-specifier: Minglit Partner App DEV Profile
-          provisioning-profile-prod-specifier: Minglit Partner App Store Profile
-          git-ref: ${{ github.ref }}
-          run-number: ${{ github.run_number }}
-          APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_PROVISION_PROFILE_DEV_BASE64: ${{ secrets.APPLE_PROVISION_PROFILE_PARTNER_DEV_BASE64 }}
-          APPLE_PROVISION_PROFILE_PROD_BASE64: ${{ secrets.APPLE_PROVISION_PROFILE_PARTNER_BASE64 }}
-          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
-          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
-          SUPABASE_DEV_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
-          KAKAO_LOCAL_REST_API_KEY: ${{ secrets.KAKAO_LOCAL_REST_API_KEY }}
-          JUSO_CONFIRM_KEY: ${{ secrets.JUSO_CONFIRM_KEY }}
-          SENTRY_DSN_FLUTTER: ${{ secrets.SENTRY_DSN_FLUTTER }}
-          SUPABASE_MAIN_URL: ${{ secrets.SUPABASE_MAIN_URL }}
-          SUPABASE_MAIN_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
-          GH_PAT_VERSION_BUMP: ${{ secrets.GH_PAT_VERSION_BUMP }}
-
-  notify-failure:
-    needs: [ios-deploy]
-    if: always()
-    permissions:
-      actions: read
-      contents: read
-      issues: write
-      statuses: write
-    uses: ./.github/workflows/shared-notify.yml
+  deploy:
+    uses: ./.github/workflows/shared-ios-deploy.yml
     with:
-      failed: ${{ needs.ios-deploy.result != 'success' }}
-      workflow_name: 'iOS Deploy Partner'
-      severity: 'P0-critical'
-      job_results: '{"ios-deploy":"${{ needs.ios-deploy.result }}"}'
+      app-name: partner
+      app-directory: apps/app_partner
+      bundle-id: com.minglit.appPartner
+      provisioning-profile-dev-specifier: Minglit Partner App DEV Profile
+      provisioning-profile-prod-specifier: Minglit Partner App Store Profile
+      notify-workflow-name: iOS Deploy Partner
+    secrets:
+      APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+      APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      APPLE_PROVISION_PROFILE_DEV_BASE64: ${{ secrets.APPLE_PROVISION_PROFILE_PARTNER_DEV_BASE64 }}
+      APPLE_PROVISION_PROFILE_PROD_BASE64: ${{ secrets.APPLE_PROVISION_PROFILE_PARTNER_BASE64 }}
+      APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+      APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
+      SUPABASE_DEV_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+      KAKAO_LOCAL_REST_API_KEY: ${{ secrets.KAKAO_LOCAL_REST_API_KEY }}
+      JUSO_CONFIRM_KEY: ${{ secrets.JUSO_CONFIRM_KEY }}
+      SENTRY_DSN_FLUTTER: ${{ secrets.SENTRY_DSN_FLUTTER }}
+      SUPABASE_MAIN_URL: ${{ secrets.SUPABASE_MAIN_URL }}
+      SUPABASE_MAIN_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
+      GH_PAT_VERSION_BUMP: ${{ secrets.GH_PAT_VERSION_BUMP }}
