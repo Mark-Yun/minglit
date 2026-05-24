@@ -25,10 +25,10 @@
 
 ## Reusable Gates
 
-- `pr-gate.yml` 은 기존 `push`/`pull_request`/`merge_group` 진입점을 유지하면서 `workflow_call` 도 지원한다.
+- `pr-gate.yml` 은 `workflow_call` 전용 reusable CI core 다. 직접 `push`/`pull_request`/`merge_group` 로 실행하지 않는다.
 - 호출자는 `stage` (`dev-staging`, `dev`, `rc`, `main`) 와 `base_ref` 를 넘겨 동일한 CI 코어를 stage 별 gate 로 재사용한다.
-- 기존 required check 는 아직 `ci-result` 그대로 유지한다. stage 별 required check 전환은 branch-strategy Phase 4 에서 Ruleset 과 함께 적용한다.
-- `dev-staging-pr-gate`, `dev-pr-gate`, `rc-pr-gate`, `main-pr-gate` 는 얇은 wrapper 로 시작한다. 현재는 `pr-gate.yml` 의 `ci-result` 를 재사용하고, branch ruleset 전환 시 이 wrapper job 이름을 required check 로 사용한다.
+- Branch ruleset 의 required check 는 `dev-staging-pr-gate`, `dev-pr-gate`, `rc-pr-gate`, `main-pr-gate` 같은 branch별 wrapper job 이름을 사용한다. `ci-result` summary job 은 폐기한다.
+- `dev-staging-pr-gate`, `dev-pr-gate`, `rc-pr-gate`, `main-pr-gate` 는 얇은 wrapper 로 시작한다. 내부에서는 `pr-gate.yml` reusable core 를 호출하고, wrapper job 이 최종 required check context 를 제공한다.
 - `dev-staging-dev-cut-gate` 가 dev-staging 의 PR-number CalVer bump/tag 를 담당한다. `sync-version` 은 legacy main release bump 만 담당하며, `dev` promotion 은 `dev-staging-dev-cut` 에서 version 변경 없이 처리한다.
 - `dev-rc-cut-gate` 는 dev push 후 user/partner CUJ integration 을 직접 실행하고, 통과한 commit 에만 `dev-rc-cut-pass` status 를 찍는다. backend/EF/Test Lab 을 포함한 full `dev-rc-cut-gate-suite` matrix 는 후속 확장이다.
 - `dev-rc-cut` 은 latest `dev-rc-cut-pass` dev commit 에서 `rc/YYYY-Wxx` branch 를 만들고 `version-bump` 로 `v*-rc-01` + `promo/rc-*` tag 를 생성한다.
@@ -51,7 +51,7 @@
 ## 관련
 
 - [BLUEDOC](../../docs/infra/bluedoc/BLUEDOC.md) — 본 파일이 따르는 진입점 컨벤션
-- [CLAUDE.md](../../CLAUDE.md) `## PR Conventions` — required check (`ci-result` job = `pr-gate.yml` 내부) / auto-merge 흐름
+- [CLAUDE.md](../../CLAUDE.md) `## PR Conventions` — branch별 required check / auto-merge 흐름
 
 ---
 _Reviewed: 2026-05-24 10:24_
