@@ -1,0 +1,56 @@
+name: dev-deploy
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+concurrency:
+  group: dev-deploy
+  cancel-in-progress: true
+
+jobs:
+  web:
+    uses: ./.github/workflows/deploy-vercel.yml
+    with:
+      deploy_branch: dev
+    secrets: inherit
+
+  android_user:
+    uses: ./.github/workflows/deploy-android-user.yml
+    with:
+      target-ref: dev
+    secrets: inherit
+
+  android_partner:
+    uses: ./.github/workflows/deploy-android-partner.yml
+    with:
+      target-ref: dev
+    secrets: inherit
+
+  ios_user:
+    uses: ./.github/workflows/deploy-ios-user.yml
+    with:
+      target-ref: dev
+    secrets: inherit
+
+  ios_partner:
+    uses: ./.github/workflows/deploy-ios-partner.yml
+    with:
+      target-ref: dev
+    secrets: inherit
+
+  notify-failure:
+    needs: [web, android_user, android_partner, ios_user, ios_partner]
+    if: always()
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+      statuses: write
+    uses: ./.github/workflows/shared-notify.yml
+    with:
+      failed: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+      workflow_name: 'Dev Deploy'
+      severity: 'P1-high'
+      job_results: '{"web":"${{ needs.web.result }}","android-user":"${{ needs.android_user.result }}","android-partner":"${{ needs.android_partner.result }}","ios-user":"${{ needs.ios_user.result }}","ios-partner":"${{ needs.ios_partner.result }}"}'

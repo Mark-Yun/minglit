@@ -1,15 +1,19 @@
 name: deploy-ios-user
 
 on:
-  push:
-    branches: ["main"]
-    paths:
-      - "apps/app_user/**"
-      - "shared/packages/minglit_kit/**"
-      - "pubspec.yaml"
-  schedule:
-    - cron: '0 10 * * *'  # Daily dev build (KST 19:00) — runs on default branch (dev)
+  workflow_call:
+    inputs:
+      target-ref:
+        description: Git ref to deploy.
+        required: false
+        type: string
+        default: ''
   workflow_dispatch:
+    inputs:
+      target-ref:
+        description: Git ref to deploy. Defaults to the selected workflow ref.
+        required: false
+        type: string
 
 concurrency:
   group: deploy-ios-user-${{ github.ref }}
@@ -25,6 +29,7 @@ jobs:
       provisioning-profile-dev-specifier: Minglit User App DEV Profile
       provisioning-profile-prod-specifier: Minglit User App Store Profile
       notify-workflow-name: iOS Deploy User
+      target-ref: ${{ inputs.target-ref || github.ref }}
     secrets:
       APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
       APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}

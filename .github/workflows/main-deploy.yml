@@ -88,8 +88,48 @@ jobs:
       commit_sha: ${{ needs.finalize-version.outputs.commit_sha }}
     secrets: inherit
 
-  notify-failure:
+  web:
     needs: [plan, finalize-version, tag-promo]
+    if: needs.plan.outputs.skipped != 'true'
+    uses: ./.github/workflows/deploy-vercel.yml
+    with:
+      deploy_branch: main
+    secrets: inherit
+
+  android_user:
+    needs: [plan, finalize-version, tag-promo]
+    if: needs.plan.outputs.skipped != 'true'
+    uses: ./.github/workflows/deploy-android-user.yml
+    with:
+      target-ref: main
+    secrets: inherit
+
+  android_partner:
+    needs: [plan, finalize-version, tag-promo]
+    if: needs.plan.outputs.skipped != 'true'
+    uses: ./.github/workflows/deploy-android-partner.yml
+    with:
+      target-ref: main
+    secrets: inherit
+
+  ios_user:
+    needs: [plan, finalize-version, tag-promo]
+    if: needs.plan.outputs.skipped != 'true'
+    uses: ./.github/workflows/deploy-ios-user.yml
+    with:
+      target-ref: main
+    secrets: inherit
+
+  ios_partner:
+    needs: [plan, finalize-version, tag-promo]
+    if: needs.plan.outputs.skipped != 'true'
+    uses: ./.github/workflows/deploy-ios-partner.yml
+    with:
+      target-ref: main
+    secrets: inherit
+
+  notify-failure:
+    needs: [plan, finalize-version, tag-promo, web, android_user, android_partner, ios_user, ios_partner]
     if: always()
     permissions:
       actions: read
@@ -104,9 +144,14 @@ jobs:
           (
             needs.plan.result != 'success' ||
             needs.finalize-version.result != 'success' ||
-            needs.tag-promo.result != 'success'
+            needs.tag-promo.result != 'success' ||
+            needs.web.result != 'success' ||
+            needs.android_user.result != 'success' ||
+            needs.android_partner.result != 'success' ||
+            needs.ios_user.result != 'success' ||
+            needs.ios_partner.result != 'success'
           )
         }}
       workflow_name: 'Main Deploy'
       severity: 'P0-critical'
-      job_results: '{"plan":"${{ needs.plan.result }}","finalize-version":"${{ needs.finalize-version.result }}","tag-promo":"${{ needs.tag-promo.result }}"}'
+      job_results: '{"plan":"${{ needs.plan.result }}","finalize-version":"${{ needs.finalize-version.result }}","tag-promo":"${{ needs.tag-promo.result }}","web":"${{ needs.web.result }}","android-user":"${{ needs.android_user.result }}","android-partner":"${{ needs.android_partner.result }}","ios-user":"${{ needs.ios_user.result }}","ios-partner":"${{ needs.ios_partner.result }}"}'

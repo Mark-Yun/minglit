@@ -3,11 +3,15 @@ name: deploy-vercel
 # NOTE: Consider adding status badges to README.
 
 on:
-  schedule:
-    - cron: '0 */2 * * *'   # Every 2 hours (UTC), targets dev branch
+  workflow_call:
+    inputs:
+      deploy_branch:
+        description: Branch to deploy.
+        required: true
+        type: string
   workflow_dispatch:
     inputs:
-      branch:
+      deploy_branch:
         description: 'Branch to deploy (dev or main)'
         required: true
         default: 'dev'
@@ -17,7 +21,7 @@ on:
           - main
 
 concurrency:
-  group: deploy-vercel-${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
+  group: deploy-vercel-${{ inputs.deploy_branch || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
@@ -27,7 +31,7 @@ jobs:
       app-type: flutter
       working-directory: ./apps/app_user
       dev-domain-alias: dev.app.minglit.com
-      deploy-branch: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
+      deploy-branch: ${{ inputs.deploy_branch || github.ref_name }}
     secrets:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -47,7 +51,7 @@ jobs:
       app-type: nextjs
       working-directory: ./apps/landing_user
       dev-domain-alias: dev.minglit.com
-      deploy-branch: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
+      deploy-branch: ${{ inputs.deploy_branch || github.ref_name }}
     secrets:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -59,7 +63,7 @@ jobs:
       app-type: nextjs
       working-directory: ./apps/landing_partner
       dev-domain-alias: dev.partner.minglit.com
-      deploy-branch: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
+      deploy-branch: ${{ inputs.deploy_branch || github.ref_name }}
     secrets:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -71,7 +75,7 @@ jobs:
       app-type: flutter
       working-directory: ./apps/app_partner
       dev-domain-alias: dev.app.partner.minglit.com
-      deploy-branch: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
+      deploy-branch: ${{ inputs.deploy_branch || github.ref_name }}
     secrets:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -96,7 +100,7 @@ jobs:
       app-type: nextjs
       working-directory: ./apps/mds/docs
       dev-domain-alias: dev.design.minglit.com
-      deploy-branch: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
+      deploy-branch: ${{ inputs.deploy_branch || github.ref_name }}
     secrets:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -107,7 +111,7 @@ jobs:
     if: success()
     runs-on: ubuntu-latest
     env:
-      IS_PROD: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' }}
+      IS_PROD: ${{ (inputs.deploy_branch || github.ref_name) == 'main' }}
     steps:
       - name: Set URLs and bypass tokens
         id: urls

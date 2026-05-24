@@ -27,6 +27,11 @@ on:
         description: 'Workflow name for failure notification'
         required: true
         type: string
+      target-ref:
+        description: 'Git ref to checkout. Defaults to the caller ref.'
+        required: false
+        type: string
+        default: ''
     secrets:
       APPLE_CERTIFICATE_BASE64:
         required: true
@@ -69,6 +74,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.target-ref || github.ref }}
 
       - name: iOS Deploy
         uses: ./.github/actions/ios-deploy
