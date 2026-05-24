@@ -7,7 +7,8 @@
 1. **`rc-cut`** — weekly cron, dev 의 latest `rc-gate-pass` commit 에서 branch out
 2. **`rc-pr-gate`** — hotfix PR 머지 전 검증
 3. **`rc-post-merge-sync`** — hotfix 머지 직후 (`_rc-NN` bump)
-4. **`rc-soak-check`** — daily cron, RC HEAD commit 의 committer date 가 5일 이전이면 rc → main PR 자동 생성
+4. **`rc-deploy`** — RC Supabase branch 에 migration/EF 적용 + pre-main validation
+5. **`main-cut`** — daily cron, RC HEAD commit 의 committer date 가 5일 이전이면 rc → main PR 자동 생성
 
 ## `rc-cut`
 
@@ -21,7 +22,7 @@
   2. 없으면 dev 의 최신 `rc-gate-pass` status 부여된 commit 찾기 (GitHub API: `GET /repos/.../commits/{sha}/status`)
   3. 못 찾으면 cut 보류 (현재 구현은 초기 no-pass 상태를 skip, 3일+ green 없음 alert 는 후속 PR)
   4. 찾았으면 그 commit 에서 `rc/YYYY-Wxx` branch cut
-  5. Supabase branch 생성 (`rc-YYYY-Wxx`) + RC env 에 migration/EF deploy (후속 PR)
+  5. Supabase branch 생성/검증은 `rc-deploy` 에 위임 (후속 PR)
   6. `bump-version.sh {ver}-rc-01` 실행 → tag `v{ver}-rc-01` + `promo/rc-YYYY-Wxx`
   7. Branch protection 활성화 (direct push 금지, hotfix PR 만)
   8. active RC marker 기록 + Slack `#release` 알림 + soak 시작
@@ -54,13 +55,24 @@ Hotfix PR 머지 직후 자동:
 5. RC Supabase branch 에 migration/EF 재적용
 ```
 
-**Soak 시계 자동 리셋** — 새 commit 의 committer date 가 최신이므로 `rc-soak-check` 가 자연스럽게 카운트 다시 시작.
+**Soak 시계 자동 리셋** — 새 commit 의 committer date 가 최신이므로 `main-cut` 이 자연스럽게 카운트 다시 시작.
 
 ### Hotfix 카운트 결정
 
 `bump-version.sh` 가 현재 RC 의 가장 최근 `v*-rc-NN` 태그 찾아 N + 1 로 bump. 첫 cut 이 `_rc-01`, 첫 hotfix 가 `_rc-02`.
 
-## `rc-soak-check`
+## `rc-deploy`
+
+RC branch push 마다 RC 검증 환경을 구성한다. RC 는 계속 유지되는 장기 branch 가 아니라 Supabase branching 기반의 임시 검증 환경이다.
+
+| 단계 | 동작 |
+|------|------|
+| branch 준비 | Supabase branch `rc-YYYY-Wxx` 생성/확인 |
+| backend 적용 | RC branch 에 migration/EF apply |
+| smoke | RC env smoke + backend contract 확인 |
+| batch signal | `monitor-event-flow-*` 결과를 main 배포 전 검증 signal 로 사용 |
+
+## `main-cut`
 
 ### 트리거 / 동작
 
@@ -100,7 +112,7 @@ Mark 님 직감대로 hotfix loop 으로 RC lifecycle 이 길어지는 게 일�
             │
             ├─▶ [rc-post-merge-sync: _rc-NN bump]
             │
-            └─▶ [rc-soak-check 가 다음날부터 새 committer date 인식 → 5일 다시 측정]
+            └─▶ [main-cut 이 다음날부터 새 committer date 인식 → 5일 다시 측정]
 ```
 
 ## Hotfix Backport to dev-staging
@@ -143,22 +155,22 @@ Mobile 은 release branch 없음 (main 머지 마다 `deploy-android-*, deploy-i
 
 | 시점 | 동작 |
 |------|------|
-| `rc-cut` | Supabase branch `rc-YYYY-Wxx` 생성, RC SHA 기준 migration/EF deploy |
+| `rc-deploy` | Supabase branch `rc-YYYY-Wxx` 생성/확인, RC SHA 기준 migration/EF deploy |
 | RC soak | 내부 dogfooding 과 real-data 검증은 해당 RC branch 로만 수행 |
 | hotfix merge | 같은 RC Supabase branch 에 migration/EF 재적용 |
 | rc → main 완료 | prod deploy 후 RC Supabase branch 삭제 |
 | RC abandon | RC Supabase branch 삭제 + active RC marker 제거 |
 
-dev 의 `rc-gate-pass` 는 계속 `main-staging` env 로 deploy 된다. RC soak 는 `rc-YYYY-Wxx` branch 를 사용하므로 dev 의 후속 green commit 과 섞이지 않는다.
+`rc-gate-pass` 는 deploy marker 가 아니라 RC cut source marker 다. RC soak 는 `rc-YYYY-Wxx` Supabase branch 를 사용하므로 dev 의 후속 green commit 과 섞이지 않는다.
 
 ### 결정해야 할 것
 
 - Supabase branch TTL / 비용 알림
-- staging branch 의 seed data 정책
+- RC branch 의 seed data 정책
 
 ## Error-Backoff 정책
 
-**Workflow infra 실패** (rc-cut / rc-pr-gate / rc-soak-check workflow 자체 실패) → **P0 이슈** + on-call.
+**Workflow infra 실패** (rc-cut / rc-pr-gate / rc-deploy / main-cut workflow 자체 실패) → **P0 이슈** + on-call.
 
 **Soak 중 사용자 발견 회귀**:
 
@@ -171,7 +183,7 @@ dev 의 `rc-gate-pass` 는 계속 `main-staging` env 로 deploy 된다. RC soak 
 ## 결정해야 할 것
 
 - weekly rc-cut 요일
-- rc-soak-check daily cron 시각
+- main-cut daily cron 시각
 - RC 자체 nightly 별도 schedule 여부
 - Supabase RC branch TTL / seed data 정책
 - RC abandon 의 명확한 기준
@@ -179,7 +191,7 @@ dev 의 `rc-gate-pass` 는 계속 `main-staging` env 로 deploy 된다. RC soak 
 ## 관련
 
 - [dev-pipeline.md](./dev-pipeline.md) — rc-gate-pass status 가 rc-cut 의 source
-- [main-promotion.md](./main-promotion.md) — rc → main 머지 + deploy-android-*, deploy-ios-*
+- [main-promotion.md](./main-promotion.md) — main-cut + main-deploy + mobile deploy
 - [test-strategy.md](./test-strategy.md) — rc-pr-gate 와 mobile smoke 위치
 - [branch-flow.md](./branch-flow.md) — tag 컨벤션 + protection
 

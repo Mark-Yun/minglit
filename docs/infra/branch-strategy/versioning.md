@@ -34,7 +34,7 @@
 | `nightly-cut` | daily snapshot 생성 시 | version 변경 없음 (dev-staging 의 그대로 가져감, legacy `sync-version` dev trigger 비활성화) |
 | `rc-cut` | RC 브랜치 생성 시 | `bump-version.sh {ver}-rc-01` |
 | `rc-post-merge-sync` | RC hotfix 머지 직후 | `bump-version.sh {PR#}-rc-NN` (N 증가) |
-| `main-post-merge-promote` | rc → main 머지 직후 | `bump-version.sh {ver}` (suffix 제거) |
+| `main-deploy` | rc → main 머지 직후 | `bump-version.sh {ver}` (suffix 제거) |
 
 ## Tag 컨벤션
 
@@ -88,4 +88,4 @@ PR# 가 dev-staging 에서 부여되고 같은 PR# 가 후속 단계에서 suffi
 - 기존 [CLAUDE.md "Versioning Conventions"](../../../CLAUDE.md#versioning-conventions) — 원본
 
 ---
-_Reviewed: 2026-05-19 09:47_
+_Reviewed: 2026-05-24 10:24_
