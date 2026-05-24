@@ -453,6 +453,13 @@ jobs:
           cache: true
       - name: Install dependencies
         run: flutter pub get
+      - name: Tune Gradle memory for CI demo build
+        run: |
+          {
+            echo "org.gradle.jvmargs=-Xmx5G -XX:MaxMetaspaceSize=2G -XX:ReservedCodeCacheSize=512m -XX:+HeapDumpOnOutOfMemoryError"
+            echo "org.gradle.workers.max=2"
+          } >> android/gradle.properties
+        working-directory: ${{ matrix.directory }}
       - name: Build demo debug APK
         run: >
           flutter build apk
@@ -593,7 +600,10 @@ jobs:
       - name: Reset stale Supabase state
         run: supabase stop --no-backup 2>/dev/null || true
       - name: Start Supabase
-        run: supabase start
+        # PostgREST can be unhealthy before `supabase db reset` creates all
+        # configured schemas (for example `admin`). The DB is still available
+        # for reset, so do not fail this setup step on pre-migration REST health.
+        run: supabase start --ignore-health-check
       - name: Validate migrations (dry-run)
         run: |
           echo "🔄 Resetting DB and re-applying all migrations from scratch..."
@@ -742,7 +752,9 @@ jobs:
         run: supabase stop --no-backup 2>/dev/null || true
 
       - name: Start local Supabase
-        run: supabase start
+        # Same rationale as pgTAP: migrations run after startup, so schema-cache
+        # health can be temporarily red before `db reset --no-seed`.
+        run: supabase start --ignore-health-check
 
       - name: Apply migrations only (db reset --no-seed)
         run: supabase db reset --no-seed
