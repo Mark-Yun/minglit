@@ -16,6 +16,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  source-guard:
+    uses: ./.github/workflows/shared-pr-source-guard.yml
+    with:
+      target: main
+      normal_head_regex: '^rc/[0-9]{4}-W[0-9]{2}$'
+      hotfix_head_regex: '^main/hotfix/'
+      hotfix_label: 'hotfix:main-approved'
+      require_release_manager_label: true
+    secrets: inherit
+
   pr-gate-core:
     uses: ./.github/workflows/pr-gate.yml
     with:
@@ -24,6 +34,8 @@ jobs:
     secrets: inherit
 
   validate-rc-promotion:
+    needs: [source-guard]
+    if: needs.source-guard.outputs.mode == 'promotion'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -92,17 +104,21 @@ jobs:
           echo "::notice::Validated rc promotion: head=${HEAD_SHA}, dev_rc_source=${dev_rc_source}."
 
   main-pr-gate:
-    needs: [pr-gate-core, validate-rc-promotion]
+    needs: [source-guard, pr-gate-core, validate-rc-promotion]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Publish branch gate result
         run: |
+          if [ "${{ needs.source-guard.result }}" != "success" ]; then
+            echo "::error::source-guard result: ${{ needs.source-guard.result }}"
+            exit 1
+          fi
           if [ "${{ needs.pr-gate-core.result }}" != "success" ]; then
             echo "::error::pr-gate-core result: ${{ needs.pr-gate-core.result }}"
             exit 1
           fi
-          if [ "${{ needs.validate-rc-promotion.result }}" != "success" ]; then
+          if [ "${{ needs.source-guard.outputs.mode }}" = "promotion" ] && [ "${{ needs.validate-rc-promotion.result }}" != "success" ]; then
             echo "::error::validate-rc-promotion result: ${{ needs.validate-rc-promotion.result }}"
             exit 1
           fi
