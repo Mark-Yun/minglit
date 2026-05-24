@@ -164,4 +164,4 @@ flutter test integration_test/cuj/ \
 - 시각 회귀: [`mds-emulator-render/BLUEDOC.md`](../mds-emulator-render/BLUEDOC.md)
 
 ---
-_Reviewed: 2026-05-24 09:04_
+_Reviewed: 2026-05-24 10:29_
