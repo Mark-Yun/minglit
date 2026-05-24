@@ -73,7 +73,7 @@
 | 2c | `version-bump` reusable extract (sync-version 의 핵심 로직) | sync-version 의 caller 가 reusable 호출하게 변경 |
 | 2d | `minglit-release-bot` 생성 + App ID/private key 등록 + workflow permission 최소화 | protected branch/tag push 를 human 대신 bot 으로 수행 |
 | 2e | `auto-issue` reusable 추가 | 신규 — 기존 영향 없음 |
-| 2f | **`ci-result` 폐기** — 현 branch protection 의 required check `ci-result` 를 각 branch 의 `pr-gate` 로 변경 (Phase 4 에서 실제 적용) | 본 step 은 workflow 측 준비, 실제 protection 변경은 4 |
+| 2f | **`ci-result` 폐기** — branch protection 의 required check 를 각 branch 의 `*-pr-gate` 로 변경 | `dev-staging` 부터 적용, dev/rc/main 은 해당 workflow 가 각 branch 에 도달한 뒤 적용 |
 
 ### Rollback
 
@@ -141,7 +141,7 @@
 | 5a | `dev-staging` Ruleset 적용 (required: `dev-staging-pr-gate`) | Phase 2 1주 운영 |
 | 5b | `dev` Ruleset 갱신 (required: `dev-pr-gate`) | Phase 2 1주 |
 | 5c | `rc/**` pattern Ruleset 적용 (required: `rc-pr-gate`) | Phase 2 + RC flow 1주 |
-| 5d | `main` Ruleset 갱신 — **기존 `ci-result` required check 제거** + 추가: `main-pr-gate` 단일 required check (`dev-rc-cut-pass`, `expand-migrate-contract`, `rc-main-cut-pass` 는 내부 검증) | Phase 4 gate fill-in 안정 |
+| 5d | `main` Ruleset 갱신 — `main-pr-gate` 단일 required check (`dev-rc-cut-pass`, `expand-migrate-contract`, `rc-main-cut-pass` 는 내부 검증) | Phase 4 gate fill-in 안정 |
 | 5e | Tag protection Ruleset (`v*`, `promo/**`) + release bot tag bypass | 5d 안정 (release 가 도는 게 확인된 후) |
 | 5f | Branch creation 제한 (`rc/**` → bot only) | 5c 안정 |
 | 5g | GitHub Environment `production` 생성 + required reviewer 설정 | Phase 3 1주 |
@@ -213,7 +213,7 @@ Phase 1 (skeletal) → Phase 2 (CI/PR flow) → Phase 3 (branch CD)
 
 ## 운영 중 주의사항
 
-1. **CI 실패가 release 차단**: pr-gate 의 stage parameter 가 정확히 매칭돼야 함. *required check 이름 한 글자라도 다르면 차단*. 특히 `ci-result` → stage pr-gate 전환 시 cutover 타이밍 중요
+1. **CI 실패가 release 차단**: pr-gate 의 stage parameter 가 정확히 매칭돼야 함. *required check 이름 한 글자라도 다르면 차단*. branch ruleset 의 required check 는 각 branch 의 `*-pr-gate` 이름과 정확히 일치해야 한다
 2. **trigger 변경**: cron → push 변경 시 *겹치는 기간* 발생할 수 있음 — 한쪽 비활성화 후 다른쪽 활성화. 부분 적용 금지
 3. **status check naming**: `dev-rc-cut-pass` 같은 commit status 의 이름이 spec 과 workflow 에서 일치해야 함. branch protection 에는 직접 required 로 걸지 않고 `main-pr-gate` 내부에서 검증
 4. **AI agent 의 PR 동시성**: merge queue 없으니 race condition 발생 시 수동 conflict resolve 필요 (또는 merge queue 도입 검토)

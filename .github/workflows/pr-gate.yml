@@ -13,16 +13,11 @@ on:
         required: false
         type: string
         default: 'dev'
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main", "dev", "dev-staging" ]
-  merge_group:
 
 concurrency:
-  # merge_group 이벤트는 절대 cancel 금지 — 큐 전체가 thrash됨.
-  # PR 단계(pull_request)에서만 새 푸시 시 이전 run cancel.
-  group: pr-gate-${{ inputs.stage || github.workflow }}-${{ github.event.pull_request.number || github.event.merge_group.head_sha || github.ref }}
+  # Branch-specific wrappers own the user-facing required check name.
+  # This reusable core only needs to avoid duplicate runs for the same caller/ref.
+  group: pr-gate-core-${{ inputs.stage }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -861,38 +856,3 @@ jobs:
     with:
       app-name: partner
     secrets: inherit
-
-  ci-result:
-    needs: [static-checks, auto-format, gitleaks, test-flutter-apps, test-integration-app-user-cuj, test-integration-app-partner-cuj, lint-landing-user, lint-landing-partner, lint-mds-docs, lint-mds-icons, test-supabase, test-edge-functions, test-ef-integration]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Gate context
-        run: |
-          echo "event=${{ github.event_name }}"
-          echo "stage=${{ inputs.stage || 'dev' }}"
-          echo "base_ref=${{ inputs.base_ref || github.event.pull_request.base.ref || github.event.merge_group.base_ref || github.ref_name }}"
-      - name: Check CI results
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          # 1. Check CI job results
-          results='${{ toJSON(needs.*.result) }}'
-          echo "Job results: $results"
-          if echo "$results" | grep -Eq '"(failure|cancelled)"'; then
-            echo ""
-            echo '${{ toJSON(needs) }}' | jq -r 'to_entries[] | select(.value.result == "failure" or .value.result == "cancelled") | "❌ \(.key): \(.value.result)"'
-            exit 1
-          fi
-          echo "✅ CI jobs passed"
-
-          # CodeRabbit review wait was here. Removed: required-reviewer
-          # branch protection already gates merge on human APPROVED review,
-          # so the bot-review wait was duplicate enforcement that held a
-          # self-hosted runner slot for up to 30 minutes per PR — under
-          # cascade merges, that's the single biggest source of queue backlog.
-          # CodeRabbit still posts its review as a status (visible on the PR);
-          # we just stop blocking on it here.
-
-          echo ""
-          echo "✅ All checks passed"
