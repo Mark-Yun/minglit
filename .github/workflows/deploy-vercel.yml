@@ -22,102 +22,68 @@ concurrency:
 
 jobs:
   deploy-app_user:
-    runs-on: ubuntu-latest
-    environment: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' && 'production' || 'preview' }}
-    outputs:
-      accessible-url: ${{ steps.deploy.outputs.accessible-url }}
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
-      - name: Deploy User App
-        id: deploy
-        uses: ./.github/actions/deploy-flutter-app
-        with:
-          working-directory: ./apps/app_user
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_USER }}
-          dev-domain-alias: dev.app.minglit.com
-          deploy-branch: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
-        env:
-          SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
-          SUPABASE_DEV_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
-          GOOGLE_DEV_ID: ${{ secrets.GOOGLE_DEV_WEB_CLIENT_ID }}
-          SUPABASE_MAIN_URL: ${{ secrets.SUPABASE_MAIN_URL }}
-          SUPABASE_MAIN_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
-          GOOGLE_MAIN_ID: ${{ secrets.GOOGLE_MAIN_WEB_CLIENT_ID }}
-          SENTRY_DSN_FLUTTER: ${{ secrets.SENTRY_DSN_FLUTTER }}
-          STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
+    uses: ./.github/workflows/shared-vercel-deploy.yml
+    with:
+      app-type: flutter
+      working-directory: ./apps/app_user
+      dev-domain-alias: dev.app.minglit.com
+      deploy-branch: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
+    secrets:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_USER }}
+      SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
+      SUPABASE_DEV_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+      GOOGLE_DEV_ID: ${{ secrets.GOOGLE_DEV_WEB_CLIENT_ID }}
+      SUPABASE_MAIN_URL: ${{ secrets.SUPABASE_MAIN_URL }}
+      SUPABASE_MAIN_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
+      GOOGLE_MAIN_ID: ${{ secrets.GOOGLE_MAIN_WEB_CLIENT_ID }}
+      SENTRY_DSN_FLUTTER: ${{ secrets.SENTRY_DSN_FLUTTER }}
+      STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
 
   deploy-landing_user:
-    runs-on: ubuntu-latest
-    environment: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' && 'production' || 'preview' }}
-    outputs:
-      accessible-url: ${{ steps.deploy.outputs.accessible-url }}
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
-      - name: Deploy User Landing
-        id: deploy
-        uses: ./.github/actions/deploy-nextjs-app
-        with:
-          working-directory: ./apps/landing_user
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_LANDING_USER }}
-          dev-domain-alias: dev.minglit.com
-          deploy-branch: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
+    uses: ./.github/workflows/shared-vercel-deploy.yml
+    with:
+      app-type: nextjs
+      working-directory: ./apps/landing_user
+      dev-domain-alias: dev.minglit.com
+      deploy-branch: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
+    secrets:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_LANDING_USER }}
 
   deploy-landing_partner:
-    runs-on: ubuntu-latest
-    environment: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' && 'production' || 'preview' }}
-    outputs:
-      accessible-url: ${{ steps.deploy.outputs.accessible-url }}
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
-      - name: Deploy Partner Landing
-        id: deploy
-        uses: ./.github/actions/deploy-nextjs-app
-        with:
-          working-directory: ./apps/landing_partner
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_LANDING_PARTNER }}
-          dev-domain-alias: dev.partner.minglit.com
-          deploy-branch: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
+    uses: ./.github/workflows/shared-vercel-deploy.yml
+    with:
+      app-type: nextjs
+      working-directory: ./apps/landing_partner
+      dev-domain-alias: dev.partner.minglit.com
+      deploy-branch: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
+    secrets:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_LANDING_PARTNER }}
 
   deploy-app_partner:
-    runs-on: ubuntu-latest
-    environment: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' && 'production' || 'preview' }}
-    outputs:
-      accessible-url: ${{ steps.deploy.outputs.accessible-url }}
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
-      - name: Deploy Partner App
-        id: deploy
-        uses: ./.github/actions/deploy-flutter-app
-        with:
-          working-directory: ./apps/app_partner
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_PARTNER }}
-          dev-domain-alias: dev.app.partner.minglit.com
-          deploy-branch: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
-        env:
-          SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
-          SUPABASE_DEV_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
-          GOOGLE_DEV_ID: ${{ secrets.GOOGLE_DEV_WEB_CLIENT_ID }}
-          SUPABASE_MAIN_URL: ${{ secrets.SUPABASE_MAIN_URL }}
-          SUPABASE_MAIN_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
-          GOOGLE_MAIN_ID: ${{ secrets.GOOGLE_MAIN_WEB_CLIENT_ID }}
-          SENTRY_DSN_FLUTTER: ${{ secrets.SENTRY_DSN_FLUTTER }}
-          STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
+    uses: ./.github/workflows/shared-vercel-deploy.yml
+    with:
+      app-type: flutter
+      working-directory: ./apps/app_partner
+      dev-domain-alias: dev.app.partner.minglit.com
+      deploy-branch: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
+    secrets:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_PARTNER }}
+      SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
+      SUPABASE_DEV_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+      GOOGLE_DEV_ID: ${{ secrets.GOOGLE_DEV_WEB_CLIENT_ID }}
+      SUPABASE_MAIN_URL: ${{ secrets.SUPABASE_MAIN_URL }}
+      SUPABASE_MAIN_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
+      GOOGLE_MAIN_ID: ${{ secrets.GOOGLE_MAIN_WEB_CLIENT_ID }}
+      SENTRY_DSN_FLUTTER: ${{ secrets.SENTRY_DSN_FLUTTER }}
+      STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
 
   # TODO(Mark): Before this job will succeed, you must:
   # 1. Create a Vercel project for mds_docs (root dir: apps/mds/docs)
@@ -125,24 +91,16 @@ jobs:
   # 3. Add GitHub Actions secret: VERCEL_MDS_DOCS_PROJECT_ID = <project-id>
   # The VERCEL_TOKEN and VERCEL_ORG_ID secrets are already shared.
   deploy-mds_docs:
-    runs-on: ubuntu-latest
-    environment: ${{ ((github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name) == 'main' && 'production' || 'preview' }}
-    outputs:
-      accessible-url: ${{ steps.deploy.outputs.accessible-url }}
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
-      - name: Deploy MDS Docs
-        id: deploy
-        uses: ./.github/actions/deploy-nextjs-app
-        with:
-          working-directory: ./apps/mds/docs
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_MDS_DOCS_PROJECT_ID }}
-          dev-domain-alias: dev.design.minglit.com
-          deploy-branch: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
+    uses: ./.github/workflows/shared-vercel-deploy.yml
+    with:
+      app-type: nextjs
+      working-directory: ./apps/mds/docs
+      dev-domain-alias: dev.design.minglit.com
+      deploy-branch: ${{ (github.event_name == 'workflow_dispatch' && inputs.branch) || github.ref_name }}
+    secrets:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_MDS_DOCS_PROJECT_ID }}
 
   smoke-test:
     needs: [deploy-app_user, deploy-landing_user, deploy-landing_partner, deploy-app_partner, deploy-mds_docs]

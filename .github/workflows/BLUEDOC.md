@@ -20,7 +20,7 @@
 | `triage-` | 이슈 생성·슬래시 명령 (commit 없음) | `triage-mds-issue`, `triage-slash` |
 | `post-merge` | dev push 직후 follow-up 자동화의 단일 entry point (5 reusable orchestrator) | `post-merge` |
 | `tool-` | (수동으로 부를 때만 도는 도구) | (현재 없음 — 새 수동 도구 추가 시 prefix) |
-| `shared-` | (다른 워크플로우의 부품 — 단독 실행 X) | `shared-notify`, `shared-android-deploy`, `shared-ios-deploy`, `shared-set-commit-status`, `shared-soak-gate`, `shared-promo-tag` |
+| `shared-` | (다른 워크플로우의 부품 — 단독 실행 X) | `shared-notify`, `shared-android-deploy`, `shared-ios-deploy`, `shared-vercel-deploy`, `shared-set-commit-status`, `shared-soak-gate`, `shared-promo-tag` |
 | branch-strategy stage name | branch-strategy 문서의 stage entry workflow | `dev-staging-pr-gate`, `dev-staging-dev-cut-gate`, `dev-staging-dev-cut`, `dev-pr-gate`, `dev-rc-cut-gate`, `dev-rc-cut`, `rc-pr-gate`, `rc-main-cut-gate`, `rc-main-cut`, `main-pr-gate` |
 | reusable no-prefix | `workflow_call` 로만 호출되는 domain reusable | `version-bump` |
 
@@ -37,7 +37,7 @@
 - `rc-main-cut-gate` 는 5일 soak 를 통과한 `rc/*` 에 `rc-main-cut-pass` 를 찍고, `rc-main-cut` 은 그 marker 를 소비해 `main` PR 을 만든다.
 - `main-deploy` 는 main push 후 `version-bump` 로 final version/tag 를 만들고, `shared-promo-tag` 로 `promo/main-*` marker 를 만든다.
 - `shared-promo-tag` 는 `promo/rc-*`, `promo/main-*` tag 생성의 공통 release-bot 구현이다. Concrete workflow 는 target ref, tag name, commit SHA 만 넘긴다.
-- `deploy-android-*`, `deploy-ios-*` 는 앱별 entrypoint 이고, 실제 build/upload/notify 로직은 각각 `shared-android-deploy`, `shared-ios-deploy` 에 둔다.
+- `deploy-android-*`, `deploy-ios-*`, `deploy-vercel` 의 프로젝트별 jobs 는 앱별 entrypoint 이고, 실제 build/upload/notify 로직은 각각 `shared-android-deploy`, `shared-ios-deploy`, `shared-vercel-deploy` 에 둔다.
 - deploy entry 는 후속 단계에서 `[branch]-deploy` 로 통일한다 (`dev-deploy`, `rc-deploy`, `main-deploy`). `monitor-event-flow-*` 는 deploy 가 아니라 지속 batch signal 이다.
 - `set-dev-soak-status` / `set-rc-soak-status` 는 workflow 와 AI agent 가 사용하는 공개 status write API 다. 내부에서는 `shared-set-commit-status` 를 호출한다.
 - protected branch/tag 에 직접 push 하는 workflow 는 `minglit-release-bot` GitHub App token 을 사용한다. App credential 은 `minglit_env/{stage}/github.env` 파일에서 먼저 읽고, 공통 token mint 는 `.github/actions/release-bot-token` 에서 처리한다.
