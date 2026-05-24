@@ -146,9 +146,7 @@ void main() {
         );
         expect(nextBtn.onPressed, isNull);
 
-        verifyNever(
-          () => coordinator.pushInfo(reason: any(named: 'reason')),
-        );
+        verifyNever(() => coordinator.pushInfo(reason: any(named: 'reason')));
       },
     );
   });
@@ -221,10 +219,7 @@ void main() {
       body: (t) async {
         // 소셜 유저: 비밀번호 필드 없음, 안내 카드만
         expect(find.text('비밀번호'), findsNothing);
-        expect(
-          find.textContaining('소셜 로그인 계정은'),
-          findsOneWidget,
-        );
+        expect(find.textContaining('소셜 로그인 계정은'), findsOneWidget);
         expect(find.text('탈퇴 요청'), findsOneWidget);
       },
     );
@@ -249,9 +244,7 @@ void main() {
         await t.pumpAndSettle();
 
         expect(find.text('비밀번호를 입력해주세요.'), findsOneWidget);
-        verifyNever(
-          () => coordinator.goComplete(),
-        );
+        verifyNever(() => coordinator.goComplete());
       },
     );
   });
@@ -353,10 +346,17 @@ void main() {
       app: const DeletionReasonPage(),
       overrides: base,
       body: (t) async {
-        await t.tap(find.text('직접 입력할게요'));
+        final otherReasonTile = find.byWidgetPredicate(
+          (widget) =>
+              widget is RadioListTile<WithdrawalReasonCode> &&
+              widget.value == WithdrawalReasonCode.other,
+        );
+        await t.ensureVisible(otherReasonTile);
+        await t.tap(otherReasonTile);
         await t.pumpAndSettle();
 
-        await t.enterText(find.byType(MinglitTextField), '탈퇴 사유 상세 입력');
+        expect(find.byType(EditableText), findsOneWidget);
+        await t.enterText(find.byType(EditableText), '탈퇴 사유 상세 입력');
         await t.pumpAndSettle();
 
         await t.tap(find.text('다음'));
