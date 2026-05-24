@@ -4,44 +4,77 @@ on:
   push:
     branches: [dev]
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Plan only; do not deploy web/mobile artifacts.
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: dev-deploy
   cancel-in-progress: true
 
 jobs:
+  plan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Summarize dev deploy plan
+        run: |
+          {
+            echo "## dev-deploy plan"
+            echo ""
+            echo "| Field | Value |"
+            echo "|---|---|"
+            echo "| dry_run | ${{ inputs.dry_run || false }} |"
+            echo "| target_ref | dev |"
+            echo "| web | deploy-vercel(dev) |"
+            echo "| android | deploy-android-user, deploy-android-partner |"
+            echo "| ios | deploy-ios-user, deploy-ios-partner |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
   web:
+    needs: [plan]
+    if: inputs.dry_run != true
     uses: ./.github/workflows/deploy-vercel.yml
     with:
       deploy_branch: dev
     secrets: inherit
 
   android_user:
+    needs: [plan]
+    if: inputs.dry_run != true
     uses: ./.github/workflows/deploy-android-user.yml
     with:
       target-ref: dev
     secrets: inherit
 
   android_partner:
+    needs: [plan]
+    if: inputs.dry_run != true
     uses: ./.github/workflows/deploy-android-partner.yml
     with:
       target-ref: dev
     secrets: inherit
 
   ios_user:
+    needs: [plan]
+    if: inputs.dry_run != true
     uses: ./.github/workflows/deploy-ios-user.yml
     with:
       target-ref: dev
     secrets: inherit
 
   ios_partner:
+    needs: [plan]
+    if: inputs.dry_run != true
     uses: ./.github/workflows/deploy-ios-partner.yml
     with:
       target-ref: dev
     secrets: inherit
 
   notify-failure:
-    needs: [web, android_user, android_partner, ios_user, ios_partner]
+    needs: [plan, web, android_user, android_partner, ios_user, ios_partner]
     if: always()
     permissions:
       actions: read
@@ -50,7 +83,7 @@ jobs:
       statuses: write
     uses: ./.github/workflows/shared-notify.yml
     with:
-      failed: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+      failed: ${{ inputs.dry_run != true && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) }}
       workflow_name: 'Dev Deploy'
       severity: 'P1-high'
       job_results: '{"web":"${{ needs.web.result }}","android-user":"${{ needs.android_user.result }}","android-partner":"${{ needs.android_partner.result }}","ios-user":"${{ needs.ios_user.result }}","ios-partner":"${{ needs.ios_partner.result }}"}'

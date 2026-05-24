@@ -39,6 +39,11 @@ on:
         type: string
         required: true
         description: 'Description for the final pass marker.'
+      dry_run:
+        type: boolean
+        required: false
+        default: false
+        description: 'Evaluate only; do not write commit statuses.'
     outputs:
       skipped:
         description: 'true when candidate is not eligible yet.'
@@ -95,6 +100,7 @@ jobs:
           INPUT_SUCCESS_CONTEXTS: ${{ inputs.success_contexts }}
           INPUT_PASS_CONTEXT: ${{ inputs.pass_context }}
           INPUT_PASS_DESCRIPTION: ${{ inputs.pass_description }}
+          INPUT_DRY_RUN: ${{ inputs.dry_run }}
         run: |
           set -euo pipefail
 
@@ -207,6 +213,10 @@ jobs:
             local context="$1"
             local description="$2"
             [ -z "${context}" ] && return 0
+            if [ "${INPUT_DRY_RUN}" = "true" ]; then
+              echo "::notice::dry-run: would set ${context}=success on ${CANDIDATE_SHA}"
+              return 0
+            fi
             gh api "repos/${GITHUB_REPOSITORY}/statuses/${CANDIDATE_SHA}" \
               --method POST \
               -f state=success \
@@ -224,3 +234,16 @@ jobs:
 
           echo "skipped=false" >> "${GITHUB_OUTPUT}"
           echo "reason=passed" >> "${GITHUB_OUTPUT}"
+
+          {
+            echo "## shared-soak-gate result"
+            echo ""
+            echo "| Field | Value |"
+            echo "|---|---|"
+            echo "| dry_run | ${INPUT_DRY_RUN} |"
+            echo "| candidate_ref | ${INPUT_CANDIDATE_REF} |"
+            echo "| candidate_sha | ${CANDIDATE_SHA} |"
+            echo "| age_hours | ${AGE_HOURS} |"
+            echo "| min_soak_hours | ${INPUT_MIN_SOAK_HOURS} |"
+            echo "| pass_context | ${INPUT_PASS_CONTEXT} |"
+          } >> "$GITHUB_STEP_SUMMARY"

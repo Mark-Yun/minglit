@@ -19,6 +19,11 @@ on:
         required: false
         type: boolean
         default: false
+      dry_run:
+        description: Plan only; do not create rc branch, bump version, or tag.
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: dev-rc-cut
@@ -64,6 +69,7 @@ jobs:
           REQUESTED_SOURCE_SHA: ${{ inputs.source_sha || '' }}
           REQUESTED_RC_WEEK: ${{ inputs.rc_week || '' }}
           ALLOW_ACTIVE_RC: ${{ inputs.allow_active_rc || false }}
+          DRY_RUN: ${{ inputs.dry_run || false }}
         run: |
           set -euo pipefail
 
@@ -139,7 +145,9 @@ jobs:
             exit 1
           fi
 
-          git push origin "${SOURCE_SHA}:refs/heads/${RC_BRANCH}"
+          if [ "${DRY_RUN}" != "true" ]; then
+            git push origin "${SOURCE_SHA}:refs/heads/${RC_BRANCH}"
+          fi
           git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
 
           echo "skipped=false" >> "$GITHUB_OUTPUT"
@@ -151,9 +159,23 @@ jobs:
           echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
           echo "promo_tag=${PROMO_TAG}" >> "$GITHUB_OUTPUT"
 
+          {
+            echo "## dev-rc-cut plan"
+            echo ""
+            echo "| Field | Value |"
+            echo "|---|---|"
+            echo "| dry_run | ${DRY_RUN} |"
+            echo "| source_sha | ${SOURCE_SHA} |"
+            echo "| rc_branch | ${RC_BRANCH} |"
+            echo "| version | ${VERSION} |"
+            echo "| release_version | ${RELEASE_VERSION} |"
+            echo "| tag_name | ${TAG_NAME} |"
+            echo "| promo_tag | ${PROMO_TAG} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
   bump:
     needs: [plan]
-    if: needs.plan.outputs.skipped != 'true'
+    if: needs.plan.outputs.skipped != 'true' && inputs.dry_run != true
     uses: ./.github/workflows/version-bump.yml
     with:
       target_ref: ${{ needs.plan.outputs.rc_branch }}
@@ -165,7 +187,7 @@ jobs:
 
   tag-promo:
     needs: [plan, bump]
-    if: needs.plan.outputs.skipped != 'true'
+    if: needs.plan.outputs.skipped != 'true' && inputs.dry_run != true
     uses: ./.github/workflows/shared-promo-tag.yml
     with:
       target_ref: ${{ needs.plan.outputs.rc_branch }}
@@ -186,6 +208,7 @@ jobs:
       failed: >-
         ${{
           needs.plan.outputs.skipped != 'true' &&
+          inputs.dry_run != true &&
           (
             needs.plan.result != 'success' ||
             needs.bump.result != 'success' ||

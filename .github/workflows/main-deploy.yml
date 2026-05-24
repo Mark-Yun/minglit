@@ -9,6 +9,11 @@ on:
         description: Optional final version, e.g. 26.05.2572. Defaults to current rc version without suffix.
         required: false
         type: string
+      dry_run:
+        description: Plan only; do not bump version, tag, or deploy.
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: main-deploy
@@ -65,9 +70,22 @@ jobs:
           echo "tag_name=v${release_version}" >> "$GITHUB_OUTPUT"
           echo "promo_tag=promo/main-${promo_week}" >> "$GITHUB_OUTPUT"
 
+          {
+            echo "## main-deploy plan"
+            echo ""
+            echo "| Field | Value |"
+            echo "|---|---|"
+            echo "| dry_run | ${{ inputs.dry_run || false }} |"
+            echo "| current_version | ${current_version} |"
+            echo "| release_version | ${release_version} |"
+            echo "| tag_name | v${release_version} |"
+            echo "| promo_tag | promo/main-${promo_week} |"
+            echo "| deploy | web + android + ios main |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
   finalize-version:
     needs: [plan]
-    if: needs.plan.outputs.skipped != 'true'
+    if: needs.plan.outputs.skipped != 'true' && inputs.dry_run != true
     uses: ./.github/workflows/version-bump.yml
     with:
       target_ref: main
@@ -80,7 +98,7 @@ jobs:
 
   tag-promo:
     needs: [plan, finalize-version]
-    if: needs.plan.outputs.skipped != 'true'
+    if: needs.plan.outputs.skipped != 'true' && inputs.dry_run != true
     uses: ./.github/workflows/shared-promo-tag.yml
     with:
       target_ref: main
@@ -90,7 +108,7 @@ jobs:
 
   web:
     needs: [plan, finalize-version, tag-promo]
-    if: needs.plan.outputs.skipped != 'true'
+    if: needs.plan.outputs.skipped != 'true' && inputs.dry_run != true
     uses: ./.github/workflows/deploy-vercel.yml
     with:
       deploy_branch: main
@@ -98,7 +116,7 @@ jobs:
 
   android_user:
     needs: [plan, finalize-version, tag-promo]
-    if: needs.plan.outputs.skipped != 'true'
+    if: needs.plan.outputs.skipped != 'true' && inputs.dry_run != true
     uses: ./.github/workflows/deploy-android-user.yml
     with:
       target-ref: main
@@ -106,7 +124,7 @@ jobs:
 
   android_partner:
     needs: [plan, finalize-version, tag-promo]
-    if: needs.plan.outputs.skipped != 'true'
+    if: needs.plan.outputs.skipped != 'true' && inputs.dry_run != true
     uses: ./.github/workflows/deploy-android-partner.yml
     with:
       target-ref: main
@@ -114,7 +132,7 @@ jobs:
 
   ios_user:
     needs: [plan, finalize-version, tag-promo]
-    if: needs.plan.outputs.skipped != 'true'
+    if: needs.plan.outputs.skipped != 'true' && inputs.dry_run != true
     uses: ./.github/workflows/deploy-ios-user.yml
     with:
       target-ref: main
@@ -122,7 +140,7 @@ jobs:
 
   ios_partner:
     needs: [plan, finalize-version, tag-promo]
-    if: needs.plan.outputs.skipped != 'true'
+    if: needs.plan.outputs.skipped != 'true' && inputs.dry_run != true
     uses: ./.github/workflows/deploy-ios-partner.yml
     with:
       target-ref: main
@@ -141,6 +159,7 @@ jobs:
       failed: >-
         ${{
           needs.plan.outputs.skipped != 'true' &&
+          inputs.dry_run != true &&
           (
             needs.plan.result != 'success' ||
             needs.finalize-version.result != 'success' ||

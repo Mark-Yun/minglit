@@ -15,6 +15,11 @@ on:
         required: false
         type: string
         default: '5'
+      dry_run:
+        description: Evaluate only; do not write rc-main-cut-pass commit status.
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: rc-main-cut-gate
@@ -110,6 +115,7 @@ jobs:
         rc-soak/dogfooding
       pass_context: rc-main-cut-pass
       pass_description: 'rc-main-cut-gate passed; this RC can be promoted to main'
+      dry_run: ${{ inputs.dry_run || false }}
     secrets: inherit
 
   notify-failure:

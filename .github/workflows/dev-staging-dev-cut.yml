@@ -10,6 +10,11 @@ on:
         description: Optional v*-dev-staging tag to promote instead of the latest one.
         required: false
         type: string
+      dry_run:
+        description: Plan only; do not push branch, create PR, or enable auto-merge.
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: dev-staging-dev-cut
@@ -48,6 +53,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_BOT_TOKEN: ${{ steps.release-bot.outputs.token }}
           REQUESTED_TAG: ${{ inputs.tag_name || '' }}
+          DRY_RUN: ${{ inputs.dry_run || false }}
         run: |
           set -euo pipefail
 
@@ -108,8 +114,20 @@ jobs:
           echo "tag_sha=${TAG_SHA}" >> "$GITHUB_OUTPUT"
           echo "branch_name=${BRANCH_NAME}" >> "$GITHUB_OUTPUT"
 
+          {
+            echo "## dev-staging-dev-cut plan"
+            echo ""
+            echo "| Field | Value |"
+            echo "|---|---|"
+            echo "| dry_run | ${DRY_RUN} |"
+            echo "| tag_name | ${TAG_NAME} |"
+            echo "| tag_sha | ${TAG_SHA} |"
+            echo "| branch_name | ${BRANCH_NAME} |"
+            echo "| action | create PR ${BRANCH_NAME} -> dev |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Push dev promotion branch
-        if: steps.plan.outputs.skipped != 'true'
+        if: steps.plan.outputs.skipped != 'true' && inputs.dry_run != true
         env:
           RELEASE_BOT_TOKEN: ${{ steps.release-bot.outputs.token }}
           TAG_SHA: ${{ steps.plan.outputs.tag_sha }}
@@ -122,7 +140,7 @@ jobs:
 
       - name: Create dev promotion PR and enable auto-merge
         id: pr
-        if: steps.plan.outputs.skipped != 'true'
+        if: steps.plan.outputs.skipped != 'true' && inputs.dry_run != true
         env:
           GH_TOKEN: ${{ steps.release-bot.outputs.token }}
           TAG_NAME: ${{ steps.plan.outputs.tag_name }}
@@ -148,6 +166,11 @@ jobs:
 
           gh pr merge "${PR_NUMBER}" --auto --rebase --delete-branch
           echo "pr_number=${PR_NUMBER}" >> "$GITHUB_OUTPUT"
+
+      - name: Dry run summary
+        if: steps.plan.outputs.skipped != 'true' && inputs.dry_run == true
+        run: |
+          echo "Dry-run complete. No branch, PR, or auto-merge was created."
 
   notify-failure:
     needs: [create-dev-cut-pr]

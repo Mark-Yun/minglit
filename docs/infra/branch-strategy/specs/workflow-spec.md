@@ -333,6 +333,22 @@ Cross-branch cherry-pick PR 자동 생성.
 (Tier 2b hard kill = 내부 admin page manual operation, workflow 없음 — catastrophic incident response 용. admin page 구현은 별도 작업)
 ```
 
+## Dry Run Verification
+
+Promotion/deploy entry workflows support `workflow_dispatch` dry-run where mutation steps are skipped and the calculated plan is written to the job summary.
+
+| Workflow | Dry-run behavior |
+|----------|------------------|
+| `dev-staging-dev-cut` | selects `v*-dev-staging`, computes cut branch, skips branch push/PR/auto-merge |
+| `dev-rc-cut-gate` | evaluates soak/run/status inputs, skips `dev-soak/*` and `dev-rc-cut-pass` status writes |
+| `dev-rc-cut` | selects source SHA/version/RC week, skips RC branch push/version bump/tags |
+| `rc-main-cut-gate` | selects RC branch and evaluates soak, skips `rc-main-cut-pass` status write |
+| `rc-main-cut` | selects RC branch, skips main PR/auto-merge |
+| `dev-deploy` | summarizes web/mobile dev deploy plan, skips deploy jobs |
+| `main-deploy` | computes final version/tags/deploy targets, skips version bump/tags/deploy jobs |
+
+Use dry-run before connecting new deploy backends or changing branch rulesets. Dry-run verifies workflow planning and guard logic without mutating GitHub, Supabase, Vercel, App Store, or Play Store.
+
 ## 결정해야 할 것
 
 - `pr-gate-core` 의 stage 별 `extra_steps` 명세

@@ -10,6 +10,11 @@ on:
         description: Optional rc branch, e.g. rc/2026-W22. Defaults to latest rc-main-cut-pass.
         required: false
         type: string
+      dry_run:
+        description: Plan only; do not create main PR or enable auto-merge.
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: rc-main-cut
@@ -47,6 +52,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           REQUESTED_RC_BRANCH: ${{ inputs.rc_branch || '' }}
+          DRY_RUN: ${{ inputs.dry_run || false }}
         run: |
           set -euo pipefail
 
@@ -114,9 +120,20 @@ jobs:
           echo "rc_branch=${RC_BRANCH}" >> "$GITHUB_OUTPUT"
           echo "rc_sha=${RC_SHA}" >> "$GITHUB_OUTPUT"
 
+          {
+            echo "## rc-main-cut plan"
+            echo ""
+            echo "| Field | Value |"
+            echo "|---|---|"
+            echo "| dry_run | ${DRY_RUN} |"
+            echo "| rc_branch | ${RC_BRANCH} |"
+            echo "| rc_sha | ${RC_SHA} |"
+            echo "| action | create PR ${RC_BRANCH} -> main |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Create main promotion PR and enable auto-merge
         id: pr
-        if: steps.plan.outputs.skipped != 'true'
+        if: steps.plan.outputs.skipped != 'true' && inputs.dry_run != true
         env:
           GH_TOKEN: ${{ steps.release-bot.outputs.token }}
           RC_BRANCH: ${{ steps.plan.outputs.rc_branch }}
@@ -149,6 +166,11 @@ jobs:
 
           gh pr merge "${PR_NUMBER}" --auto --rebase --delete-branch
           echo "pr_number=${PR_NUMBER}" >> "$GITHUB_OUTPUT"
+
+      - name: Dry run summary
+        if: steps.plan.outputs.skipped != 'true' && inputs.dry_run == true
+        run: |
+          echo "Dry-run complete. No main PR or auto-merge was created."
 
   notify-failure:
     needs: [create-main-pr]
