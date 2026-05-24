@@ -20,7 +20,7 @@
 | `triage-` | 이슈 생성·슬래시 명령 (commit 없음) | `triage-mds-issue`, `triage-slash` |
 | `post-merge` | dev push 직후 follow-up 자동화의 단일 entry point (5 reusable orchestrator) | `post-merge` |
 | `tool-` | (수동으로 부를 때만 도는 도구) | (현재 없음 — 새 수동 도구 추가 시 prefix) |
-| `shared-` | (다른 워크플로우의 부품 — 단독 실행 X) | `shared-notify`, `shared-android-deploy`, `shared-set-commit-status` |
+| `shared-` | (다른 워크플로우의 부품 — 단독 실행 X) | `shared-notify`, `shared-android-deploy`, `shared-set-commit-status`, `shared-soak-gate` |
 | branch-strategy stage name | branch-strategy 문서의 stage entry workflow | `dev-staging-pr-gate`, `dev-staging-dev-cut-gate`, `dev-staging-dev-cut`, `dev-pr-gate`, `dev-rc-cut-gate`, `dev-rc-cut`, `rc-pr-gate`, `rc-main-cut-gate`, `rc-main-cut`, `main-pr-gate` |
 | reusable no-prefix | `workflow_call` 로만 호출되는 domain reusable | `version-bump` |
 
@@ -32,7 +32,7 @@
 - Branch ruleset 의 required check 는 `dev-staging-pr-gate`, `dev-pr-gate`, `rc-pr-gate`, `main-pr-gate` 같은 branch별 wrapper job 이름을 사용한다. `ci-result` summary job 은 폐기한다.
 - `dev-staging-pr-gate`, `dev-pr-gate`, `rc-pr-gate`, `main-pr-gate` 는 얇은 wrapper 로 시작한다. 내부에서는 `pr-gate.yml` reusable core 를 호출하고, wrapper job 이 최종 required check context 를 제공한다.
 - `dev-staging-dev-cut-gate` 가 dev-staging 의 PR-number CalVer bump/tag 를 담당한다. `sync-version` 은 legacy main release bump 만 담당하며, `dev` promotion 은 `dev-staging-dev-cut` 에서 version 변경 없이 처리한다.
-- `dev-rc-cut-gate` 는 cut 직전 evaluator 다. `set-dev-soak-status` 로 기록된 `dev-soak/*` status 와 monitor run history 를 확인하고, 통과한 commit 에만 `dev-rc-cut-pass` status 를 찍는다.
+- `dev-rc-cut-gate` 는 cut 직전 evaluator 다. 내부에서 `shared-soak-gate` 를 호출해 `dev-soak/*` status 와 monitor run history 를 확인하고, 통과한 commit 에만 `dev-rc-cut-pass` status 를 찍는다.
 - `dev-rc-cut` 은 latest `dev-rc-cut-pass` dev commit 에서 `rc/YYYY-Wxx` branch 를 만들고 `version-bump` 로 `v*-rc-01` + `promo/rc-*` tag 를 생성한다.
 - `rc-main-cut-gate` 는 5일 soak 를 통과한 `rc/*` 에 `rc-main-cut-pass` 를 찍고, `rc-main-cut` 은 그 marker 를 소비해 `main` PR 을 만든다.
 - deploy entry 는 후속 단계에서 `[branch]-deploy` 로 통일한다 (`dev-deploy`, `rc-deploy`, `main-deploy`). `monitor-event-flow-*` 는 deploy 가 아니라 지속 batch signal 이다.
@@ -58,4 +58,4 @@
 - [CLAUDE.md](../../CLAUDE.md) `## PR Conventions` — branch별 required check / auto-merge 흐름
 
 ---
-_Reviewed: 2026-05-24 16:31_
+_Reviewed: 2026-05-24 16:45_

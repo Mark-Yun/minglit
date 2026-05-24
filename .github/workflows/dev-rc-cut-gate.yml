@@ -1,63 +1,54 @@
 name: dev-rc-cut-gate
 
 on:
-  push:
-    branches: [ "dev" ]
+  schedule:
+    # 01:30 KST daily, before dev-rc-cut.
+    - cron: '30 16 * * *'
   workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: Optional full dev candidate SHA. Defaults to latest origin/dev.
+        required: false
+        type: string
+      min_soak_hours:
+        description: Minimum candidate age in hours.
+        required: false
+        type: string
+        default: '24'
 
 concurrency:
-  group: dev-rc-cut-gate-${{ github.ref }}
+  group: dev-rc-cut-gate
   cancel-in-progress: false
 
 permissions:
+  actions: read
   contents: read
-  statuses: write
   issues: write
+  statuses: write
 
 jobs:
-  cuj-integration-user:
-    name: cuj-integration-user
-    uses: ./.github/workflows/shared-cuj-integration.yml
+  evaluate-dev-soak:
+    name: evaluate-dev-soak
+    uses: ./.github/workflows/shared-soak-gate.yml
     with:
-      app-name: user
+      candidate_ref: dev
+      candidate_sha: ${{ inputs.candidate_sha || '' }}
+      min_soak_hours: ${{ inputs.min_soak_hours || '24' }}
+      required_runs_json: >-
+        [
+          {"workflow":"monitor-event-flow-hourly.yml","branch":"dev-staging","min_success":20},
+          {"workflow":"monitor-event-flow-daily.yml","branch":"dev-staging","min_success":1}
+        ]
+      failure_contexts: |
+        dev-soak/backend-simulator
+      success_contexts: |
+        dev-soak/backend-simulator
+      pass_context: dev-rc-cut-pass
+      pass_description: 'dev-rc-cut-gate passed; this dev commit can be cut to RC'
     secrets: inherit
-
-  cuj-integration-partner:
-    name: cuj-integration-partner
-    uses: ./.github/workflows/shared-cuj-integration.yml
-    with:
-      app-name: partner
-    secrets: inherit
-
-  set-dev-rc-cut-status:
-    name: set-dev-rc-cut-status
-    needs: [cuj-integration-user, cuj-integration-partner]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Mark commit as RC eligible
-        if: ${{ needs.cuj-integration-user.result == 'success' && needs.cuj-integration-partner.result == 'success' }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          gh api "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
-            --method POST \
-            -f state=success \
-            -f context=dev-rc-cut-pass \
-            -f description="dev-rc-cut-gate passed; this dev commit can be cut to RC" \
-            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-
-      - name: Fail dev-rc-cut-gate without publishing dev-rc-cut-pass
-        if: ${{ needs.cuj-integration-user.result != 'success' || needs.cuj-integration-partner.result != 'success' }}
-        run: |
-          echo "::error::dev-rc-cut-gate failed; dev-rc-cut-pass status was not set."
-          echo "cuj-integration-user=${{ needs.cuj-integration-user.result }}"
-          echo "cuj-integration-partner=${{ needs.cuj-integration-partner.result }}"
-          exit 1
 
   notify-failure:
-    needs: [cuj-integration-user, cuj-integration-partner, set-dev-rc-cut-status]
+    needs: [evaluate-dev-soak]
     if: always()
     permissions:
       actions: read
@@ -66,14 +57,8 @@ jobs:
       statuses: write
     uses: ./.github/workflows/shared-notify.yml
     with:
-      failed: >-
-        ${{
-          (
-            needs.cuj-integration-user.result != 'success' ||
-            needs.cuj-integration-partner.result != 'success' ||
-            needs.set-dev-rc-cut-status.result != 'success'
-          )
-        }}
+      failed: ${{ needs.evaluate-dev-soak.result != 'success' }}
       workflow_name: 'Dev RC Cut Gate'
       severity: 'P1-high'
-      job_results: '{"cuj-integration-user":"${{ needs.cuj-integration-user.result }}","cuj-integration-partner":"${{ needs.cuj-integration-partner.result }}","set-dev-rc-cut-status":"${{ needs.set-dev-rc-cut-status.result }}"}'
+      job_results: '{"evaluate-dev-soak":"${{ needs.evaluate-dev-soak.result }}","skipped":"${{ needs.evaluate-dev-soak.outputs.skipped }}","reason":"${{ needs.evaluate-dev-soak.outputs.reason }}","candidate_sha":"${{ needs.evaluate-dev-soak.outputs.candidate_sha }}"}'
+    secrets: inherit

@@ -3,6 +3,7 @@ name: shared-notify
 on:
   workflow_call:
     inputs:
+      # Failure-first contract: callers pass `failed=true` only when notification is needed.
       failed:
         type: boolean
         required: true

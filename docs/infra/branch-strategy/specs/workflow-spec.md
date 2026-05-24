@@ -81,6 +81,19 @@ RC soak status write API. dev 와 signal set 이 다를 수 있으므로 별도 
 
 Issue 는 audit/log surface 이며 gate 판정 source-of-truth 가 아니다.
 
+### `shared-soak-gate`
+
+Soak window, workflow run history, commit status failure context 를 평가하고 통과 시 success marker 를 쓰는 reusable evaluator. Stage-specific promotion 의미는 갖지 않는다.
+
+| 항목 | 값 |
+|------|----|
+| Trigger | `workflow_call` |
+| Inputs | `candidate_ref`, `candidate_sha`, `min_soak_hours`, `required_runs_json`, `failure_contexts`, `success_contexts`, `pass_context`, `pass_description` |
+| Outputs | `skipped`, `reason`, `candidate_sha` |
+| Called by | `dev-rc-cut-gate`, later `rc-main-cut-gate` |
+
+`required_runs_json` 은 workflow run history 조건을 담는다. 기본은 candidate commit 이후의 성공 run 수를 세며, 필요 시 `match_head_sha=true` 로 head SHA 일치를 강제할 수 있다.
+
 ### `auto-issue`
 
 GitHub issue 자동 생성 + Slack 알림.
@@ -154,7 +167,7 @@ Cross-branch cherry-pick PR 자동 생성.
 | Trigger | `schedule` (cut 직전, TBD) + `workflow_dispatch` |
 | Inputs | optional `candidate_sha` (default: latest `origin/dev` HEAD) |
 | Outputs | commit status `dev-rc-cut-pass` (success only) + `dev-soak/*` success confirmations |
-| Steps | (1) latest `origin/dev` HEAD 를 candidate 로 선택 (2) candidate age >= 24h 확인 (3) `monitor-event-flow-hourly` success run >= 20, `monitor-event-flow-daily` success run >= 1 확인 (4) candidate 의 최신 `dev-soak/backend-simulator`, `dev-soak/real-device`, `dev-soak/app-ai-review` status 가 failure 가 아닌지 확인 (5) real-device/app AI review pass signal 확인 (6) 통과 시 `set-dev-soak-status` 로 `dev-soak/*` success 작성 + `shared-set-commit-status` 로 `dev-rc-cut-pass` success set |
+| Steps | calls `shared-soak-gate` with candidate=`origin/dev`, min_soak_hours=24, required runs=`monitor-event-flow-hourly>=20` + `monitor-event-flow-daily>=1`, failure context=`dev-soak/backend-simulator`, success context=`dev-soak/backend-simulator`, pass context=`dev-rc-cut-pass` |
 | Failure path | 조건 미충족이면 `dev-rc-cut-pass` 를 쓰지 않는다. 실패를 발견한 monitor/AI agent 가 이미 `dev-soak/*` failure 를 쓴다 |
 
 > **No auto-revert** — snapshot 모델: 실패 = no `dev-rc-cut-pass`, dev keeps moving, 새 fix 가 자연스럽게 다음 dev-staging-dev-cut 후 새 candidate 로 검증됨.
@@ -346,4 +359,4 @@ Cross-branch cherry-pick PR 자동 생성.
 - `execution-plan.md` (예정) — 기존 workflow refactor + 구현 순서
 
 ---
-_Reviewed: 2026-05-24 10:24_
+_Reviewed: 2026-05-24 16:45_
