@@ -90,7 +90,7 @@ Soak window, workflow run history, commit status failure context 를 평가하�
 | Trigger | `workflow_call` |
 | Inputs | `candidate_ref`, `candidate_sha`, `min_soak_hours`, `required_runs_json`, `failure_contexts`, `success_contexts`, `pass_context`, `pass_description` |
 | Outputs | `skipped`, `reason`, `candidate_sha` |
-| Called by | `dev-rc-cut-gate`, later `rc-main-cut-gate` |
+| Called by | `dev-rc-cut-gate`, `rc-main-cut-gate` |
 
 `required_runs_json` 은 workflow run history 조건을 담는다. 기본은 candidate commit 이후의 성공 run 수를 세며, 필요 시 `match_head_sha=true` 로 head SHA 일치를 강제할 수 있다.
 
@@ -233,7 +233,7 @@ Cross-branch cherry-pick PR 자동 생성.
 |------|----|
 | Trigger | `schedule` (daily KST TBD) + `workflow_dispatch` |
 | Outputs | marker `rc-main-cut-pass` on current RC head, or skip/fail |
-| Steps | (1) active `rc/*` 확인 → 없으면 종료 (2) rc HEAD 의 `committer date` 가 5일 이전인지 확인 (3) `rc-deploy`/pre-main validation/event-flow signal green 확인 (4) main promotion 차단 조건(`dev-rc-cut-gate-degraded`, P0/P1 blocker 등) 확인 (5) 통과 시 RC HEAD/active marker 에 `rc-main-cut-pass` 부여 |
+| Steps | (1) active `rc/*` 확인 → 없으면 종료 (2) calls `shared-soak-gate` with candidate=selected RC HEAD, min_soak_hours=120, failure contexts=`rc-soak/*`, pass context=`rc-main-cut-pass` (3) main promotion 차단 조건(`dev-rc-cut-gate-degraded`, P0/P1 blocker 등)은 후속 확장 |
 | Note | promotion PR 을 만들지 않는다. main 으로 보낼 RC 를 선별하는 gate 전용 workflow 다 |
 
 #### `rc-main-cut`
