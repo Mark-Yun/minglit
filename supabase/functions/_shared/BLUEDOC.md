@@ -1,60 +1,36 @@
 # _shared
 
-모든 Edge Function 이 import 하는 공용 라이브러리. EF 아님 (`_` prefix). 변경 시 영향 큼.
+모든 Edge Function 이 import 하는 공용 라이브러리. `_` prefix 라 EF entrypoint 아님.
 
-## 파일 그룹
+## 이정표
 
-### Wrapper / Auth (EF 진입점 표준)
-- `edge_function.ts` — `minglitEdgeFunction(handler)` wrapper. auth-manifest 기반 envs/role 가드 + logger / sentry 통합. **모든 신규 EF 가 사용해야 함**
-- `env_keystore.ts` — env-manifest 기반 환경변수 typed 접근
+| 항목 | 역할 |
+|---|---|
+| `edge_function.ts` | `minglitEdgeFunction(handler)` wrapper. manifest env/caller 가드 + logging/Sentry |
+| `env_keystore.ts` | env-manifest 기반 환경변수 typed 접근 |
+| `request_utils.ts` / `response_utils.ts` | request body parsing, CORS/success/error response |
+| `supabase_client.ts` | service/user Supabase client 생성 |
+| `logger.ts` / `axiom_logger.ts` / `statsig_utils.ts` | local/Axiom/Statsig observability |
+| `iamport_client.ts` / `portone_client.ts` | 결제 외부 client |
+| `partner_permissions.ts` / `refund_utils.ts` / `worker_utils.ts` | IO 포함 공용 helper |
+| `validation_utils.ts` / `temporal_utils.ts` | 입력/시간 helper |
+| [domains/](domains/BLUEDOC.md) | pure business rule core (`event`, `payment`, `order`) |
+| [_testing/](_testing/BLUEDOC.md) | L3 handler unit test (`fakeSupabase`, fixtures, `makeCtx`) |
+| [ai/](ai/) | AI adapter abstraction |
 
-### Logging / Observability
-- `logger.ts` — 콘솔 logger (local 전용)
-- `axiom_logger.ts` — Axiom 구조화 로깅 (dev/prod). withHandler 가 자동 호출
-- `statsig_utils.ts` — Statsig 이벤트 logging (no-op when key missing)
-- `pii_masker.ts` — 로그 출력 시 PII 마스킹
+## 핵심 컨벤션
 
-### HTTP
-- `request_utils.ts` — request body 파싱 helper
-- `response_utils.ts` — corsResponse / errorResponse / successResponse
-
-### DB
-- `supabase_client.ts` — `createServiceClient()` / `createUserClient(token)`
-
-### 외부 client
-- `iamport_client.ts` — Iamport (구) PortOne v1 client
-- `portone_client.ts` — PortOne v2 client
-
-### 도메인 helper (IO 포함)
-- `partner_permissions.ts` — partner_members role 검증
-- `refund_utils.ts` — PortOne 환불 IO (`executeRefund`, `RefundError`). 정책은 `domains/payment/refund_policy.ts` 로 이동
-- `temporal_utils.ts` — 시간/timezone 유틸
-- `validation_utils.ts` — 입력 검증
-- `worker_utils.ts` — PGMQ worker 패턴
-
-### Pure 도메인 코어
-- `domains/` — 도메인별 pure 비즈니스 로직 (IO 없음). [domains/BLUEDOC.md](domains/BLUEDOC.md)
-  - `domains/payment/` — application status 분류, 환불 정책
-  - `domains/event/` — event status / capacity / 시작 시각 / participant
-
-### AI
-- `ai/` — AI 어댑터 추상화 (OpenAI embedding / LLM)
-
-### Test 인프라
-- `_testing/` — L3 EF handler unit test (`fakeSupabase` + `makeCtx` + fixtures). [_testing/BLUEDOC.md](_testing/BLUEDOC.md)
-
-### Tests
-각 `*.ts` 의 `*_test.ts` 동반.
-
-## 변경 정책
-
-breaking change → 모든 EF 영향, 전수 회귀 필요. 신규 utility → 자유. deprecation → 단계적 (legacy 유지 → 마이그 PR → 삭제).
+- 신규 EF 는 `edge_function.ts` wrapper 와 `auth-manifest.json` 을 사용한다.
+- business rule 은 가능하면 `domains/` 로 분리하고 IO helper 와 섞지 않는다.
+- `_shared` breaking change 는 모든 EF 영향이므로 전수 회귀가 필요하다.
+- 신규 utility 는 동반 `*_test.ts` 를 기본으로 둔다.
 
 ## 관련
 
-- [edge-function-auth.md](../../../docs/architecture/edge-function-auth.md) — minglitEdgeFunction wrapper 상세
-- [edge-functions.md](../../../docs/operations/edge-functions.md) — axiom / sentry 디버깅
-- [functions/BLUEDOC.md](../BLUEDOC.md) — EF 디렉토리 진입점
+- [functions/architecture.md](../architecture.md) — EF 레이어 표준
+- [edge-function-auth.md](../../../docs/architecture/edge-function-auth.md)
+- [edge-functions.md](../../../docs/operations/edge-functions.md)
+- [functions/BLUEDOC.md](../BLUEDOC.md)
 
 ---
-_Reviewed: 2026-05-17 22:32_
+_Reviewed: 2026-05-24 00:00_
