@@ -47,5 +47,20 @@
 - **Hotfix 는 rc 에서, dev-staging 으로 자동 backport** ([rc-promotion.md](./rc-promotion.md))
 - Tag regex 는 `RELEASE.md` lock (TODO)
 
+### Promotion PR Title
+
+Promotion PR 제목은 workflow 이름과 source artifact 를 앞에 둔다. PR list 와 git log 만 보고 어떤 workflow 가 무엇을 promote 했는지 알 수 있어야 한다.
+
+| 단계 | 제목 형식 |
+|------|-----------|
+| dev-staging → dev | `ci(nightly-cut): promote v26.05.2722-dev-staging to dev` |
+| dev → rc | `ci(rc-cut): cut rc/2026-W22 from <source>` |
+| rc → main | `ci(rc-soak): promote rc/2026-W22 to main` |
+| rc hotfix backport | `ci(rc-backport): backport rc hotfix #1234 to dev-staging` |
+
+### RC Eligibility Marker
+
+RC cut 의 source-of-truth status 이름은 **`rc-gate-pass`** 이다. `rc-eligible` 은 현재 구현된 workflow/status 명칭이 아니며, 새 이름으로 바꾸려면 `rc-gate`, `rc-cut`, `main-pr-gate`, 문서 전체를 같은 PR 에서 일괄 변경한다.
+
 ---
 _Reviewed: 2026-05-19 09:47_
