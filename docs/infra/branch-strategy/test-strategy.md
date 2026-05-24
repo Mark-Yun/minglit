@@ -1,6 +1,6 @@
 # Test Strategy
 
-4-stage 모델 (`dev-staging → dev → rc → main`) + flag staged rollout 환경에서, *어떤 테스트가 어느 단계에서 도는가* 의 단일 source. 빠른 검사 = `pr-gate` (각 단계), 무거운 검사 = `dev-rc-cut-gate` (dev 의 post-merge), 프로덕션 검증 = `deploy-android-*, deploy-ios-*` smoke + flag staged.
+4-stage 모델 (`dev-staging → dev → rc → main`) + flag staged rollout 환경에서, *어떤 테스트가 어느 단계에서 도는가* 의 단일 source. 빠른 검사 = branch별 `*-pr-gate`, 지속 소킹 = `monitor-event-flow-*`/real-device/app AI review, RC 후보 판정 = `dev-rc-cut-gate`, 프로덕션 검증 = `deploy-android-*, deploy-ios-*` smoke + flag staged.
 
 ## 단계별 게이트
 
@@ -8,11 +8,12 @@
 |------|--------|------|---------|
 | dev-staging 머지 전 | `dev-staging-pr-gate` (unit · lint · analyze · pgTAP · EF test · migration check · `expand-migrate-contract` · `flag-registration` · gitleaks) | < 10분 | auto-merge 보류 |
 | dev 머지 전 | `dev-pr-gate` (dev-staging-pr-gate 와 동일 — defensive) | < 10분 | dev-staging-dev-cut PR drop |
-| dev 머지 후 (자동) | `dev-rc-cut-gate` (CUJ matrix happy/unhappy/chaos · integration · e2e · Test Lab smoke) | 30-60분 | 자동 이슈 + AI fix flow via dev-staging. `dev-rc-cut-pass` 미부여 |
+| dev 머지 후 24h soak | `monitor-event-flow-*` + real-device/app AI review status writer | 24h | 실패 즉시 `dev-soak/*` failure status + release-blocker issue |
+| RC cut 직전 | `dev-rc-cut-gate` evaluator (24h run history + `dev-soak/*` status 확인) | 분 | `dev-rc-cut-pass` 미부여 |
 | rc 머지 전 (hotfix) | `rc-pr-gate` (pr-gate + mobile smoke) | < 15분 | hotfix PR drop |
 | main 머지 전 (rc → main) | `main-pr-gate` (pr-gate + `expand-migrate-contract` 재검증 + RC HEAD 의 `dev-rc-cut-pass` 확인 + `rc-main-cut-pass` marker 확인) | 분 | promotion PR 보류 |
 | rc → main PR | workflow auto-merge (모든 check 통과 시) | 분 | check 실패 시 PR hold + alert |
-| Backend/Web auto-deploy 후 | post-deploy smoke + Sentry/Crashlytics 알람 임계 | 분 | auto-rollback ([main-promotion.md](./main-promotion.md)) |
+| main deploy 후 | backend/web/mobile smoke + Sentry/Crashlytics 알람 임계 | 분 | rollback ([main-promotion.md](./main-promotion.md)) |
 | deploy-android-*, deploy-ios-* 후 | mobile build smoke (Fastlane upload 검증) | 시간 | retry 1회 → auto-issue + mobile 팀 |
 | Flag canary (allowlist) | Statsig metric gates | 며칠 | flag flip OFF |
 | Flag staged (5/25/100%) | Statsig one-sided sequential | 48h/72h/7일 | hold or rollback |
@@ -39,15 +40,25 @@
 
 `dev-staging-pr-gate` 와 동일한 test suite. 환경 차이로 인한 회귀만 잡는 defensive 검증. 대부분 통과.
 
-### dev-rc-cut-gate — Heavy Integration
+### dev soak signals
 
-dev 머지 후 자동 발동. 통과 시 commit 에 GitHub status `dev-rc-cut-pass` set + `backend-auto-deploy` + `web-auto-deploy` chain.
+dev 에 들어간 latest HEAD 만 RC candidate 로 평가한다. 새 dev commit 이 들어오면 candidate 와 24h soak clock 은 reset 된다.
 
-- CUJ (app_user, app_partner)
-- Integration tests (backend, edge functions)
-- Simulator happy/chaos 시나리오
-- 풀 e2e
-- Firebase Test Lab smoke (실 디바이스 다양성)
+| Signal | 실행자 | 실패 status | 성공 status |
+|--------|--------|-------------|-------------|
+| backend simulator | `monitor-event-flow-hourly`, `monitor-event-flow-daily` | `dev-soak/backend-simulator` failure 즉시 | `dev-rc-cut-gate` 가 run history 확인 후 success |
+| real device | Test Lab/실디바이스 workflow | `dev-soak/real-device` failure 즉시 | `dev-rc-cut-gate` 가 required signal 확인 후 success |
+| app AI review | AI agent | `dev-soak/app-ai-review` failure 즉시 | `dev-rc-cut-gate` 가 pass signal 확인 후 success |
+
+### dev-rc-cut-gate — Evaluator
+
+cut 직전 schedule/manual 로 실행한다. 통과 시 commit 에 GitHub status `dev-rc-cut-pass` 를 set 한다.
+
+- candidate age >= 24h
+- `monitor-event-flow-hourly` success run >= 20 since candidate
+- `monitor-event-flow-daily` success run >= 1 since candidate
+- candidate 의 최신 `dev-soak/*` status 가 failure 가 아님
+- real-device/app AI review required signal 충족
 
 상세: [dev-pipeline.md](./dev-pipeline.md)
 
@@ -78,18 +89,19 @@ RC 의 hotfix 만 받음. `pr-gate` + 추가 mobile smoke. 머지 시 `rc-post-m
 | 테스트 성격 | 배치 위치 | 이유 |
 |-------------|-----------|------|
 | 결정론적, < 10분 | `dev-staging-pr-gate` | PR 사이클 안 막음 |
-| flaky 또는 느림 (10분+) | `dev-rc-cut-gate` | PR 머지 게이트의 신뢰도 보호 |
-| 외부 의존성 (실 결제 등) | `dev-rc-cut-gate` + flag canary | 비용·side effect 통제 |
-| 부하/성능 | `dev-rc-cut-gate` (주 1회) or staged rollout 메트릭 | 매일 무거움 |
+| flaky 또는 느림 (10분+) | dev soak monitor / real-device workflow | PR 머지 게이트의 신뢰도 보호 |
+| 외부 의존성 (실 결제 등) | dev soak + flag canary | 비용·side effect 통제 |
+| 부하/성능 | scheduled monitor or staged rollout 메트릭 | 매일 무거움 |
 | backend ↔ mobile 계약 호환 | `expand-migrate-contract` CI + flag canary 메트릭 | 다층 안전망 |
-| 실 디바이스 다양성 | `dev-rc-cut-gate` 의 Firebase Test Lab | 시뮬레이터 한계 보완 |
+| 실 디바이스 다양성 | real-device workflow + `dev-soak/real-device` status | 시뮬레이터 한계 보완 |
 | Mobile 회귀 (deploy 직후) | `deploy-android-*, deploy-ios-*` 의 build smoke | store upload 전 마지막 |
 
 ## 결정해야 할 것
 
 - nightly cron 시각
 - 부하 테스트 도구 (k6 / Artillery / 자체)
-- mobile smoke 5개 핵심 경로 정의
+- mobile smoke 5개 핵심 경로 정의 + `dev-soak/real-device` status writer
+- AI app soak pass/fail status writer 구현
 - 카나리 cohort 정의 (내부 직원 group)
 - `expand-migrate-contract` 구현 디테일 (Option C: DB schema only)
 

@@ -1,12 +1,12 @@
 # Dev Pipeline
 
-`dev` 브랜치가 trunk 역할: dev-staging 의 daily snapshot 을 받고, post-merge 로 full integration suite (`dev-rc-cut-gate`) 를 돌린다. RC 는 `dev-rc-cut-pass` status 를 보고 cut 한다. 이벤트 플로우 시뮬레이터는 `monitor-event-flow-*` batch 로 계속 돌며, backend prod deploy 는 main 머지 후 `main-deploy` 에서 수행한다.
+`dev` 브랜치가 trunk 역할: dev-staging 의 daily snapshot 을 받고, 24h soak 후 `dev-rc-cut-gate` 가 commit status 와 monitor run history 를 평가한다. RC 는 `dev-rc-cut-pass` status 를 보고 cut 한다. 이벤트 플로우 시뮬레이터는 `monitor-event-flow-*` batch 로 계속 돌며, backend prod deploy 는 main 머지 후 `main-deploy` 에서 수행한다.
 
 ## 4가지 workflow
 
 1. **`dev-staging-dev-cut`** — daily cron, dev-staging tip 의 snapshot 으로 PR 생성
 2. **`dev-pr-gate`** — snapshot PR 머지 전 검증 (defensive)
-3. **`dev-rc-cut-gate`** — dev 머지 후 자동 발동, full integration suite, 통과 시 status `dev-rc-cut-pass` set
+3. **`dev-rc-cut-gate`** — cut 직전 evaluator. 24h soak + commit status + run history 확인 후 `dev-rc-cut-pass` set
 4. **`dev-deploy` / monitor jobs** — dev 환경 deploy/smoke 가 필요할 때만 수행. 이벤트 플로우 시뮬레이터는 `monitor-event-flow-*` 로 별도 운영
 
 ## `dev-staging-dev-cut`
@@ -32,32 +32,44 @@
 
 (상세는 [dev-staging-pipeline.md](./dev-staging-pipeline.md))
 
-## `dev-rc-cut-gate` — Heavy Integration
+## `dev-rc-cut-gate` — Soak Evaluator
 
-dev 머지 후 자동 발동. 통과 = "이 commit 은 RC cut source 로 사용할 수 있음".
+cut 직전 schedule/manual 로 실행된다. 통과 = "이 dev HEAD commit 은 RC cut source 로 사용할 수 있음".
 
-> **Current implementation**: first operational version runs user/partner CUJ integration directly and sets `dev-rc-cut-pass` on success. Backend simulation/Test Lab 확장은 후속이다.
+> **정책 변경**: `dev-rc-cut-gate` 는 heavy test runner 가 아니라 evaluator 다. 테스트/모니터는 별도 workflow 또는 AI agent 가 돌고, 실패 즉시 commit status 를 남긴다. `dev-rc-cut-gate` 는 24h soak 가 실제로 돌았는지 확인한 뒤 성공 status 를 확정한다.
 
-### 무엇을 도는가
+### Source of truth
 
-매트릭스 병렬. 하나라도 실패 = dev-rc-cut-gate 전체 실패.
+GitHub Issue 는 source-of-truth 가 아니다. Gate 판정은 commit status context 와 GitHub Actions run history 를 사용한다.
 
-매트릭스 (app × scenario) 병렬. 하나라도 실패 = dev-rc-cut-gate 전체 실패.
+| Context | failure 작성자 | success 작성자 |
+|---------|---------------|----------------|
+| `dev-soak/backend-simulator` | `monitor-event-flow-*` 실패 path (`shared-notify`) | `dev-rc-cut-gate` |
+| `dev-soak/real-device` | real-device/Test Lab workflow 또는 AI agent | `dev-rc-cut-gate` |
+| `dev-soak/app-ai-review` | AI agent | `dev-rc-cut-gate` |
+| `dev-rc-cut-pass` | 없음 | `dev-rc-cut-gate` |
 
-| job | 대상 | 비고 |
-|-----|------|------|
-| `cuj-app-user` × {happy, unhappy, chaos} | `apps/app_user/patrol_test/cuj/*` | `--flavor dev --dart-define-from-file=.../dev/flutter.env`. scenario 별 sub-suite. chaos 미정의 시 후속 정의 (TBD) |
-| `cuj-app-partner` × {happy, unhappy, chaos} | `apps/app_partner/patrol_test/cuj/*` | 동일 |
-| `integration-backend` | `tests/backend_integration/**` | Supabase staging or ephemeral branch |
-| `integration-edge-functions` | `tests/ef_integration/**` | EF 통합 시나리오 |
-| `test-lab-smoke` | Firebase Test Lab — 실 디바이스 4종 | 디바이스 다양성 보강 |
+상세 status model 은 [dev-soak-status-model.md](./dev-soak-status-model.md) 를 따른다.
+
+### 무엇을 확인하는가
+
+`dev-rc-cut-gate` 는 latest `origin/dev` HEAD 만 평가한다. dev 에 새 commit 이 들어오면 candidate 와 24h soak clock 은 reset 된다.
+
+| 검증 | 조건 |
+|------|------|
+| Soak duration | candidate age >= 24h |
+| Hourly backend simulator | `candidate_since` 이후 `monitor-event-flow-hourly` success run >= 20 |
+| Daily backend simulator | `candidate_since` 이후 `monitor-event-flow-daily` success run >= 1 |
+| Real device | candidate 기준 required real-device signal success >= 1 (workflow TBD) |
+| App AI review | AI agent 가 candidate 기준 app-soak pass signal 제공 (입력 방식 TBD) |
+| Failure status | `dev-soak/*` context 의 최신 state 가 `failure` 가 아니어야 함 |
 
 ### 통과 시 (dev-rc-cut-pass)
 
 ```
 1. dev HEAD commit 에 GitHub commit status `dev-rc-cut-pass` set
-2. `dev-rc-cut` 이 이 status 를 source-of-truth 로 사용
-3. 이벤트 플로우 시뮬레이터는 `monitor-event-flow-*` batch 로 계속 별도 관찰
+2. `dev-soak/backend-simulator`, `dev-soak/real-device`, `dev-soak/app-ai-review` 도 evaluator 가 success 로 확정
+3. `dev-rc-cut` 이 `dev-rc-cut-pass` 를 source-of-truth 로 사용
 4. Mobile + backend prod 은 main 머지 후 `main-deploy` 에서 처리
 ```
 
@@ -68,6 +80,8 @@ dev 머지 후 자동 발동. 통과 = "이 commit 은 RC cut source 로 사용�
 Snapshot 모델 — **auto-revert 없음**. dev 가 broken 상태로 잠시 머묾, AI agent 가 fix PR 을 normal flow 로 처리.
 
 - Status 미부여 (`dev-rc-cut-pass` 없음 → dev-rc-cut 이 이 commit 안 골라잡음)
+- 실패를 발견한 monitor/AI agent 가 `dev-soak/*` failure status 를 즉시 작성
+- `shared-notify` 가 release-blocker issue 를 생성/갱신하되, issue 상태는 gate 판정 source-of-truth 로 쓰지 않음
 - 자동 이슈 + `P1-high` 라벨 + 직전 `dev-rc-cut-pass` 이후 머지된 PR 작성자들 assignee (AI agent 포함)
 - AI agent 가 fix PR 을 dev-staging 으로 작성 → dev-staging-pr-gate → 다음 dev-staging-dev-cut → 다음 dev-rc-cut-gate 가 검증
 - dev 는 *broken integration 상태* 지만 `pr-gate-core` 가 compile/unit 잡아주니 다른 PR 진입 자체는 OK
@@ -102,16 +116,16 @@ Snapshot 모델 — **auto-revert 없음**. dev 가 broken 상태로 잠시 머�
 
 ## Artifact / 보존
 
-- 실패한 dev-rc-cut-gate: 30일 (스크린샷, 로그, APK)
-- 성공: 7일
+- 실패한 monitor/soak workflow: 30일 (스크린샷, 로그, APK)
+- 성공한 `dev-rc-cut-gate` evaluator run: 7일
 
 ## 결정해야 할 것
 
 - dev-staging-dev-cut cron 시각
 - backoff 임계 (3회 차단이 적정한가)
-- CUJ chaos 시나리오 정의 (현재 미정의)
+- real-device/app AI review status writer 구현 방식
+- `shared-notify` 의 release signal metadata/log tail 확장
 - Supabase RC branch TTL / seed data 정책
-- dev-rc-cut-gate selective run 도입 시점
 
 ## 관련
 

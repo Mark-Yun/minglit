@@ -9,8 +9,9 @@
 | 개발자 로컬 | LSP, analyze, unit | 컴파일/타입/단위 | 초~분 |
 | dev-staging PR gate | `dev-staging-pr-gate` (unit, lint, pgTAP, EF, migration, `expand-migrate-contract`, `flag-registration`, gitleaks) | PR 회귀, 보안, migration 충돌, flag 미등록, contract 위반 | < 10분 |
 | dev-staging-dev-cut PR | `dev-pr-gate` (defensive) | 환경 차이 회귀 | < 10분 |
-| dev 머지 후 (자동) | `dev-rc-cut-gate` (CUJ matrix happy/unhappy/chaos, integration, e2e, Test Lab) | 통합 회귀, 시나리오, 외부 의존, 디바이스 | 30-60분 |
-| Backend/Web auto-deploy | post-deploy smoke, Sentry release marker | deploy infra 회귀 | 분 |
+| dev soak | `monitor-event-flow-*`, real-device workflow, AI app soak status writer via `set-dev-soak-status` | backend simulator, 외부 의존, 디바이스, UX/blocker | 즉시~24h |
+| RC cut 직전 | `dev-rc-cut-gate` evaluator | 24h soak 미충족, `dev-soak/*` failure status, monitor 미실행 | 분 |
+| Backend/Web deploy validation | post-deploy smoke, Sentry release marker | deploy infra 회귀 | 분 |
 | rc soak (5일) | rc 의 nightly 재실행 + 내부 dogfooding | 누적 회귀, real-data 이슈 | 일 단위 |
 | main 머지 후 (auto-deploy) | smoke + Sentry/Crashlytics 알람 임계 | prod 회귀 | 분 |
 | deploy-android-*, deploy-ios-* 후 | mobile build smoke + Crashlytics dSYM/mapping 등록 | mobile build 회귀, sign 실패 | 시간 |
@@ -32,7 +33,7 @@
 
 ### Firebase Test Lab
 - 실 디바이스 farm 에서 CUJ/smoke
-- `dev-rc-cut-gate` 의 mobile 부분 일부 위임
+- 실패 즉시 `dev-soak/real-device` commit status 를 failure 로 기록
 - 상세: [../firebase/BLUEDOC.md](../firebase/BLUEDOC.md)
 
 ### Statsig
@@ -45,16 +46,18 @@
 - 참고: `docs/operations/edge-functions.md`
 
 ### GitHub Actions
-- pr-gate / dev-rc-cut-gate / promotion workflow 의 자동 이슈 생성
-- **workflow infra 실패 → P0**, test 실패 → P1-high
+- pr-gate / monitor / promotion workflow 의 자동 이슈 생성
+- `shared-notify` 는 release blocker incident 를 issue 로 남기고, gate 판정용 commit status 를 기록
+- **workflow infra 실패 → P0**, test/soak 실패 → P1-high
 
 ## Detection → Action 책임
 
 | Detection 신호 | 누가 받음 | 어디서 | Action |
 |---------------|----------|--------|--------|
 | pr-gate 실패 (어느 단계든) | PR 작성자 | GitHub PR | 본인 fix → re-push → auto-merge 재대기 |
-| `dev-rc-cut-gate` 실패 (dev 머지 후) | 직전 dev-rc-cut-pass 이후 머지된 PR 작성자들 + AI agent | GitHub issue + Slack `#nightly` | AI agent fix PR via dev-staging — dev keeps moving ([dev-pipeline.md](./dev-pipeline.md)) |
-| Backend/web staging deploy 실패 (dev dev-rc-cut-pass) | on-call | Slack `#release` | retry → P0 이슈, RC 진행 차단 (staging 도달 못함) |
+| `dev-soak/*` failure status | 직전 dev-rc-cut-pass 이후 머지된 PR 작성자들 + AI agent | commit status + GitHub issue + Slack `#nightly` | AI agent fix PR via dev-staging — dev keeps moving ([dev-pipeline.md](./dev-pipeline.md)) |
+| `dev-rc-cut-gate` evaluator 미충족 | release manager / AI agent | GitHub Actions run summary | RC cut 보류. failure status 또는 monitor run history 부족 원인 확인 |
+| Backend/web deploy validation 실패 | on-call | Slack `#release` | retry → P0 이슈, 해당 promotion/deploy 진행 차단 |
 | Backend/web/mobile prod deploy 실패 (main 머지) | on-call | Slack `#release` | retry → rollback ([main-promotion.md](./main-promotion.md) error-backoff) |
 | rc soak 중 회귀 | RC owner | Slack `#release` | hotfix PR → rc | 
 | deploy-android-*, deploy-ios-* 실패 | mobile 팀 | GitHub issue + Slack | retry + auto-issue ([main-promotion.md](./main-promotion.md) error-backoff) |
