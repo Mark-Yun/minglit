@@ -104,9 +104,10 @@ Cross-branch cherry-pick PR 자동 생성.
 | 항목 | 값 |
 |------|----|
 | Trigger | `schedule` (daily KST 02:00 TBD) + `workflow_dispatch` |
-| Inputs | (none, or optional ref override) |
+| Inputs | optional `tag_name` (`v*-dev-staging`) |
 | Outputs | PR number (dev-staging → dev) or skip |
-| Steps | (1) 이전 `nightly-cut` PR open 이면 skip + Slack (2) 가장 최근 `v*-dev-staging` tag SHA 조회 (3) dev 가 그 SHA 를 이미 포함하면 skip ("no new commits") (4) `nightly/YYYY-MM-DD-{sha8}` promotion branch 를 tag SHA 에서 생성 (5) `gh pr create` (base=dev, head=nightly/YYYY-MM-DD-{sha8}) + auto-merge 활성화 (`rebase`, active dev ruleset 의 linear history 와 호환) |
+| PR title | `ci(nightly-cut): promote {tag_name} to dev` |
+| Steps | (1) 이전 `nightly-cut` PR open 이면 skip + Slack (2) 가장 최근 `v*-dev-staging` tag SHA 조회, 또는 입력 `tag_name` 사용 (3) dev 가 그 SHA 를 이미 포함하면 skip ("no new commits") (4) `nightly/YYYY-MM-DD-{sha8}` promotion branch 를 tag SHA 에서 생성 (5) `gh pr create` (base=dev, head=nightly/YYYY-MM-DD-{sha8}) + auto-merge 활성화 (`rebase`, active dev ruleset 의 linear history 와 호환) |
 
 #### `nightly-pr-gate`
 
@@ -126,6 +127,7 @@ Cross-branch cherry-pick PR 자동 생성.
 | Backoff | 같은 area 3회 연속 실패 시 `rc-cut` 자동 차단 (다음 weekly cut PR 안 만듦) |
 
 > **No auto-revert** — snapshot 모델: 실패 = no tag, dev keeps moving, 새 fix 가 자연스럽게 다음 rc-gate 에서 검증됨.
+> **Naming** — `rc-gate-pass` 가 canonical RC eligibility marker 이다. `rc-eligible` 은 현재 workflow/status 명칭이 아니다.
 
 #### `deploy-supabase` (기존, refactor 대상)
 

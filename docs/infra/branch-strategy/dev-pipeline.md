@@ -17,7 +17,7 @@
 - **manual**: `workflow_dispatch`
 - 동작:
   1. 가장 최근 `v*-dev-staging` 태그 (dev-staging 의 latest coherent snapshot) 찾기
-  2. PR 생성: `chore(promo): dev-staging → dev YYYY-MM-DD` (base=dev, head=`nightly/YYYY-MM-DD-{sha8}` at that tag)
+  2. PR 생성: `ci(nightly-cut): promote v26.05.2722-dev-staging to dev` (base=dev, head=`nightly/YYYY-MM-DD-{sha8}` at that tag)
   3. `nightly-pr-gate` 자동 발동
   4. 통과 시 auto-merge (rebase — active `dev` ruleset 의 linear history 와 호환)
 
