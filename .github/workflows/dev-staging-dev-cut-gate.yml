@@ -1,4 +1,4 @@
-name: dev-staging-post-merge-sync
+name: dev-staging-dev-cut-gate
 
 on:
   push:
@@ -11,7 +11,7 @@ on:
         type: string
 
 concurrency:
-  group: dev-staging-post-merge-sync
+  group: dev-staging-dev-cut-gate
   cancel-in-progress: false
 
 permissions:
@@ -94,5 +94,5 @@ jobs:
           (needs.calculate-version.result == 'success' || needs.calculate-version.result == 'skipped') &&
           (needs.bump.result == 'success' || needs.bump.result == 'skipped')
         }}
-      workflow_name: 'Dev-Staging Post-Merge Sync'
+      workflow_name: 'Dev-Staging Dev Cut Gate'
       job_results: '{"calculate-version":"${{ needs.calculate-version.result }}","bump":"${{ needs.bump.result }}"}'

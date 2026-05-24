@@ -19,7 +19,7 @@
 | Stage | Suffix | 예시 |
 |-------|--------|------|
 | dev-staging | `-dev-staging` | `26.05.2572-dev-staging` |
-| dev (nightly-cut snapshot) | (동일 suffix 유지, 새 bump 없음) | `26.05.2572-dev-staging` |
+| dev (dev-staging-dev-cut snapshot) | (동일 suffix 유지, 새 bump 없음) | `26.05.2572-dev-staging` |
 | rc (cut) | `-rc-NN` (N = 1) | `26.05.2572-rc-01` |
 | rc (hotfix) | `-rc-NN` (N 증가) | `26.05.2585-rc-02` |
 | main (final) | (없음) | `26.05.2585` |
@@ -30,9 +30,9 @@
 
 | Workflow | When | What |
 |----------|------|------|
-| `dev-staging-post-merge-sync` | dev-staging PR 머지 직후 | `bump-version.sh {PR#}-dev-staging` |
-| `nightly-cut` | daily snapshot 생성 시 | version 변경 없음 (dev-staging 의 그대로 가져감, legacy `sync-version` dev trigger 비활성화) |
-| `rc-cut` | RC 브랜치 생성 시 | `bump-version.sh {ver}-rc-01` |
+| `dev-staging-dev-cut-gate` | dev-staging PR 머지 직후 | `bump-version.sh {PR#}-dev-staging` |
+| `dev-staging-dev-cut` | daily snapshot 생성 시 | version 변경 없음 (dev-staging 의 그대로 가져감, legacy `sync-version` dev trigger 비활성화) |
+| `dev-rc-cut` | RC 브랜치 생성 시 | `bump-version.sh {ver}-rc-01` |
 | `rc-post-merge-sync` | RC hotfix 머지 직후 | `bump-version.sh {PR#}-rc-NN` (N 증가) |
 | `main-deploy` | rc → main 머지 직후 | `bump-version.sh {ver}` (suffix 제거) |
 
@@ -41,9 +41,9 @@
 | Tag / Status | 시점 | 예시 | 부여자 |
 |--------------|------|------|--------|
 | `v{ver}-dev-staging` (tag) | dev-staging post-merge | `v26.05.2572-dev-staging` | workflow |
-| `rc-gate-pass` (commit status) | dev 머지 후 rc-gate green | (status only, tag 없음) | workflow |
-| `v{ver}-rc-NN` (tag) | rc-cut + hotfix | `v26.05.2572-rc-01`, `v26.05.2585-rc-02` | workflow |
-| `promo/rc-YYYY-Wxx` (tag) | rc-cut 직후 | `promo/rc-2026-W20` | workflow |
+| `dev-rc-cut-pass` (commit status) | dev 머지 후 dev-rc-cut-gate green | (status only, tag 없음) | workflow |
+| `v{ver}-rc-NN` (tag) | dev-rc-cut + hotfix | `v26.05.2572-rc-01`, `v26.05.2585-rc-02` | workflow |
+| `promo/rc-YYYY-Wxx` (tag) | dev-rc-cut 직후 | `promo/rc-2026-W20` | workflow |
 | `v{ver}` (tag) | main 머지 직후 | `v26.05.2585` | workflow |
 | `promo/main-YYYY-Wxx` (tag) | main 머지 직후 (동시) | `promo/main-2026-W20` | workflow |
 
@@ -55,14 +55,14 @@
 - `git tag -l 'v*'` (모든 release version)
 - `git tag -l 'promo/main-*'` (weekly main promotion event)
 - `git log --first-parent main` (main 의 promotion 이벤트, rebase 라 사실상 linear)
-- `gh api repos/.../commits/{sha}/status` (rc-gate-pass 확인)
+- `gh api repos/.../commits/{sha}/status` (dev-rc-cut-pass 확인)
 
 ## 동일 PR# 가 여러 단계 등장하는 의미
 
 | 상태 | 의미 |
 |------|------|
 | `26.05.2572-dev-staging` | dev-staging 에 PR# 2572 머지된 시점 |
-| `26.05.2572-rc-01` | 그 commit 이 rc 로 cut 된 시점 (rc-gate 통과 후) |
+| `26.05.2572-rc-01` | 그 commit 이 rc 로 cut 된 시점 (dev-rc-cut-gate 통과 후) |
 | `26.05.2585-rc-02` | RC 에 hotfix PR# 2585 가 머지된 시점 |
 | `26.05.2585` | rc → main 머지 시 final version (RC 의 최종 hotfix version) |
 

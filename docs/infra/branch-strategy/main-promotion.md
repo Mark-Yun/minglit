@@ -4,21 +4,21 @@
 
 ## 두 가지 이벤트
 
-1. **rc → main 머지** — `main-cut` 이 자동 PR 생성 + 모든 check 통과 시 workflow auto-merge
+1. **rc → main 머지** — `rc-main-cut` 이 자동 PR 생성 + 모든 check 통과 시 workflow auto-merge
 2. **main push → prod deploy chain** — `main-deploy` 가 backend, web, mobile prod deploy 를 orchestrate. store review + staged rollout 은 store-side
 
 ## `main-pr-gate`
 
-`main-cut` 이 자동 생성한 promotion PR 에 적용:
+`rc-main-cut` 이 자동 생성한 promotion PR 에 적용:
 
 | Check | 내용 |
 |-------|------|
 | `pr-gate` 재실행 | dev-staging-pr-gate 와 동일 — defensive 검증 |
 | `expand-migrate-contract` (재검증) | RC 5일 동안 dev 가 더 나갔을 수 있음. 재확인 |
-| RC HEAD 의 `rc-gate-pass` status 확인 | 마지막 hotfix 이 rc-gate 통과했는지 |
-| `rc-soak-passed` 자동 마커 | main-cut 이 5일 무커밋 확인 후 부여 |
+| RC HEAD 의 `dev-rc-cut-pass` status 확인 | 마지막 hotfix 이 dev-rc-cut-gate 통과했는지 |
+| `rc-main-cut-pass` 자동 마커 | `rc-main-cut-gate` 가 5일 무커밋 + pre-main signal 확인 후 부여 |
 
-GitHub Ruleset 의 required check 는 `main-pr-gate` 하나로 둔다. `rc-gate-pass`, `expand-migrate-contract`, `rc-soak-passed` 는 PR head SHA 와 별도 commit/label 상태가 섞일 수 있으므로 `main-pr-gate` 내부 검증으로 처리한다. 모든 check 통과 시 workflow 가 auto-merge (rebase + fast-forward) 한다. 어느 하나라도 실패 시 PR hold + Slack 알림 → human 개입 (edge case).
+GitHub Ruleset 의 required check 는 `main-pr-gate` 하나로 둔다. `dev-rc-cut-pass`, `expand-migrate-contract`, `rc-main-cut-pass` 는 PR head SHA 와 별도 commit/label 상태가 섞일 수 있으므로 `main-pr-gate` 내부 검증으로 처리한다. 모든 check 통과 시 workflow 가 auto-merge (rebase + fast-forward) 한다. 어느 하나라도 실패 시 PR hold + Slack 알림 → human 개입 (edge case).
 
 ## `main-deploy`
 
@@ -131,7 +131,7 @@ main push trigger 로 자동 발동되는 기존 workflows:
 
 | 조건 | 동작 |
 |------|------|
-| `rc-gate-degraded` (dev-pipeline backoff) | rc → main PR 자동 close + 코멘트 ("recovery 후 재시도") |
+| `dev-rc-cut-gate-degraded` (dev-pipeline backoff) | rc → main PR 자동 close + 코멘트 ("recovery 후 재시도") |
 | `expand-migrate-contract` 검사 실패 | PR 자동 close |
 
 ### Mobile deploy (`deploy-android-*` / `deploy-ios-*`) 실패
@@ -158,11 +158,11 @@ main push trigger 로 자동 발동되는 기존 workflows:
 
 ## 관련
 
-- [dev-pipeline.md](./dev-pipeline.md) — rc-gate-pass marker 와 dev validation 위치
+- [dev-pipeline.md](./dev-pipeline.md) — dev-rc-cut-pass marker 와 dev validation 위치
 - [rc-promotion.md](./rc-promotion.md) — rc → main PR 의 생성
 - [life-of-flag.md](./life-of-flag.md) — flag rollout 은 main 머지와 별도
 - [branch-flow.md](./branch-flow.md) — tag 컨벤션 + protection
-- [specs/workflow-spec.md](./specs/workflow-spec.md) — main-cut/main-deploy workflow 계약
+- [specs/workflow-spec.md](./specs/workflow-spec.md) — rc-main-cut/main-deploy workflow 계약
 
 ---
 _Reviewed: 2026-05-24 10:24_

@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       stage:
-        description: 'Logical gate stage: dev, dev-staging, nightly, rc, or main'
+        description: 'Logical gate stage: dev-staging, dev, rc, or main'
         required: false
         type: string
         default: 'dev'
