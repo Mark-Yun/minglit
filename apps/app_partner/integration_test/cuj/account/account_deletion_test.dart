@@ -241,7 +241,7 @@ void main() {
       body: (t) async {
         expect(find.text('계속 보존되는 정보'), findsOneWidget);
         expect(find.textContaining('정산 기록'), findsOneWidget);
-        expect(find.textContaining('세무'), findsOneWidget);
+        expect(find.textContaining('법적 의무 대응'), findsOneWidget);
       },
     );
 

@@ -353,7 +353,7 @@ void main() {
       app: const DeletionReasonPage(),
       overrides: base,
       body: (t) async {
-        await t.tap(find.text('기타'));
+        await t.tap(find.text('직접 입력할게요'));
         await t.pumpAndSettle();
 
         await t.enterText(find.byType(MinglitTextField), '탈퇴 사유 상세 입력');
