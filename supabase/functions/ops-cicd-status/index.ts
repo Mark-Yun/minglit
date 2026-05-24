@@ -266,9 +266,16 @@ async function getBranch(
     }
   }
 
-  const branches = await client.get<GitHubBranch[]>("/branches", {
-    per_page: 100,
-  });
+  const branches: GitHubBranch[] = [];
+  for (let page = 1; page <= 10; page += 1) {
+    const items = await client.get<GitHubBranch[]>("/branches", {
+      per_page: 100,
+      page,
+    });
+    branches.push(...items);
+    if (items.length < 100) break;
+  }
+
   return branches
     .filter((item) => item.name.startsWith("rc/"))
     .sort((a, b) => b.name.localeCompare(a.name))[0] ?? null;

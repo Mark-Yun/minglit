@@ -92,7 +92,17 @@ Deno.test("ops-cicd-status - returns normalized branch and issue snapshot", asyn
           jsonResponse({ name: "main", commit: { sha: "sha-main", url: "" } }),
       },
       {
-        matcher: /\/branches\?per_page=100$/,
+        matcher: /\/branches\?per_page=100&page=1$/,
+        handler: () =>
+          jsonResponse(
+            Array.from({ length: 100 }, (_, index) => ({
+              name: `feature/${index}`,
+              commit: { sha: `sha-feature-${index}`, url: "" },
+            })),
+          ),
+      },
+      {
+        matcher: /\/branches\?per_page=100&page=2$/,
         handler: () =>
           jsonResponse([{
             name: "rc/26.05.1",
@@ -208,7 +218,7 @@ Deno.test("ops-cicd-status - handles missing branches, missing workflows, and mi
           }),
       },
       {
-        matcher: /\/branches\?per_page=100$/,
+        matcher: /\/branches\?per_page=100&page=1$/,
         handler: () => jsonResponse([]),
       },
       {

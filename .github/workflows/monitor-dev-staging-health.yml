@@ -125,7 +125,9 @@ jobs:
         run: supabase stop --no-backup 2>/dev/null || true
 
       - name: Start local Supabase
-        run: supabase start
+        # PostgREST can report unhealthy before `db reset --no-seed` creates
+        # configured schemas. The DB is still available for the reset step.
+        run: supabase start --ignore-health-check
 
       - name: Apply migrations only
         run: supabase db reset --no-seed
