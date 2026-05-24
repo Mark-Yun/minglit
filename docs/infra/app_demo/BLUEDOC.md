@@ -12,17 +12,20 @@
 |---|---|
 | [`architecture.md`](./architecture.md) | 설계 — 패키지 레이아웃, override 전략, 라우터·뷰 재활용 표, drift 방지 규칙 |
 | [`plan.md`](./plan.md) | 단계별 작업 (P0-P8) 체크리스트 + acceptance criteria |
-| `shared/packages/minglit_demo/` *(P1 산출, 예정)* | fixture + ProviderScope override 빌더 |
-| `apps/app_user/lib/main_demo.dart` *(P4 산출, 예정)* | 사용자 앱 데모 entry |
-| `apps/app_partner/lib/main_demo.dart` *(P4 산출, 예정)* | 파트너 앱 데모 entry |
+| [`shared/packages/minglit_demo/`](../../../shared/packages/minglit_demo/) | fixture + ProviderScope override 빌더 |
+| [`apps/app_user/lib/main_demo.dart`](../../../apps/app_user/lib/main_demo.dart) | 사용자 앱 데모 entry |
+| [`apps/app_partner/lib/main_demo.dart`](../../../apps/app_partner/lib/main_demo.dart) | 파트너 앱 데모 entry |
+| `apps/*/android/app/src/demo/google-services.json` | demo Android variant 빌드용 non-secret Firebase placeholder |
+| `minglit_env/demo/flutter.env` | demo compile-time env (`IS_DEMO=true`, placeholder keys) |
+| [`.github/workflows/pr-gate.yml`](../../../.github/workflows/pr-gate.yml) | demo Android debug APK 빌드 gate |
 
 ## 핵심 컨벤션
 
 - **데모 ≠ 시나리오 선택 화면**: 실제 라우터 그대로, 자동 로그인된 데모 유저로 부팅. 사용자는 평범하게 네비게이션
 - **fixture SSoT**: `shared/packages/minglit_demo/lib/fixtures/` 한 곳. unit test·emulator-render·데모 앱 모두 여기서 import
 - **prod 격리**: `Supabase.instance.client` 직접 호출 금지 → `dart-custom-lint` 룰로 강제 (P0)
-- **외부 SDK init 가드**: `appStartup()` 안의 모든 network SDK init 은 `kIsDemo` 분기 안에서 skip 가능해야 함
-- **별도 ApplicationId**: `com.minglit.demo.user`, `com.minglit.demo.partner` → 실 앱과 나란히 설치
+- **외부 SDK init 가드**: `EnvKeyStore.isDemo` 분기에서 network SDK init 을 skip
+- **별도 ApplicationId**: `com.minglit.app_user.demo`, `com.minglit.app_partner.demo` → 실 앱과 나란히 설치
 
 ## 관련
 
@@ -33,4 +36,4 @@
 - [apps/app_user/integration_test/mds-emulator-render/BLUEDOC.md](../../../apps/app_user/integration_test/mds-emulator-render/BLUEDOC.md) — fixture 패키지 공동 소비자
 
 ---
-_Reviewed: 2026-05-18 19:30_
+_Reviewed: 2026-05-24 16:30_

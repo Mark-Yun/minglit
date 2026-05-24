@@ -147,6 +147,7 @@ jobs:
       app_user: ${{ steps.filter.outputs.app_user }}
       app_partner: ${{ steps.filter.outputs.app_partner }}
       minglit_kit: ${{ steps.filter.outputs.minglit_kit }}
+      demo_android: ${{ steps.filter.outputs.demo_android }}
       mds_core: ${{ steps.filter.outputs.mds_core }}
       app_user_or_kit: ${{ steps.filter.outputs.app_user == 'true' || steps.filter.outputs.minglit_kit == 'true' || steps.filter.outputs.mds_core == 'true' }}
       app_partner_or_kit: ${{ steps.filter.outputs.app_partner == 'true' || steps.filter.outputs.minglit_kit == 'true' || steps.filter.outputs.mds_core == 'true' }}
@@ -183,6 +184,19 @@ jobs:
           minglit_kit:
             - 'shared/packages/minglit_kit/**'
             - 'shared/packages/**'
+          demo_android:
+            - '.github/workflows/pr-gate.yml'
+            - 'pubspec.yaml'
+            - 'pubspec.lock'
+            - 'shared/packages/minglit_demo/**'
+            - 'apps/app_user/lib/main_demo.dart'
+            - 'apps/app_partner/lib/main_demo.dart'
+            - 'apps/app_user/pubspec.yaml'
+            - 'apps/app_partner/pubspec.yaml'
+            - 'apps/app_user/android/app/build.gradle.kts'
+            - 'apps/app_partner/android/app/build.gradle.kts'
+            - 'apps/app_user/android/app/src/demo/**'
+            - 'apps/app_partner/android/app/src/demo/**'
           mds_core:
             - 'shared/packages/mds/core/**'
           landing_user:
@@ -411,6 +425,45 @@ jobs:
           flags: ${{ matrix.coverage_flag_logic }}
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
+
+  build-demo-android:
+    name: build-demo-android
+    needs: changes
+    if: ${{ needs.changes.outputs.demo_android == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: app_user
+            directory: apps/app_user
+          - app: app_partner
+            directory: apps/app_partner
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9'
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Build demo debug APK
+        run: >
+          flutter build apk
+          --debug
+          --flavor demo
+          --target lib/main_demo.dart
+          --dart-define=ENVIRONMENT=demo
+          --dart-define=IS_DEMO=true
+          --dart-define=SUPABASE_URL=https://demo.invalid
+          --dart-define=SUPABASE_PUBLISHABLE_KEY=demo-publishable-key-not-used
+        working-directory: ${{ matrix.directory }}
 
   # Landing User CI
   lint-landing-user:
