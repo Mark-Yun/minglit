@@ -154,9 +154,13 @@ jobs:
     needs: [create-main-pr]
     if: always()
     permissions:
+      actions: read
+      contents: read
       issues: write
+      statuses: write
     uses: ./.github/workflows/shared-notify.yml
     with:
-      success: ${{ needs.create-main-pr.result == 'success' || needs.create-main-pr.outputs.skipped == 'true' }}
+      failed: ${{ needs.create-main-pr.result != 'success' && needs.create-main-pr.outputs.skipped != 'true' }}
       workflow_name: 'RC Main Cut'
+      severity: 'P1-high'
       job_results: '{"create-main-pr":"${{ needs.create-main-pr.result }}"}'

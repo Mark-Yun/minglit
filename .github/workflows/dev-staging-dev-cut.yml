@@ -153,9 +153,13 @@ jobs:
     needs: [create-dev-cut-pr]
     if: always()
     permissions:
+      actions: read
+      contents: read
       issues: write
+      statuses: write
     uses: ./.github/workflows/shared-notify.yml
     with:
-      success: ${{ needs.create-dev-cut-pr.result == 'success' || needs.create-dev-cut-pr.result == 'skipped' }}
+      failed: ${{ needs.create-dev-cut-pr.result != 'success' && needs.create-dev-cut-pr.result != 'skipped' }}
       workflow_name: 'Dev-Staging Dev Cut'
+      severity: 'P1-high'
       job_results: '{"create-dev-cut-pr":"${{ needs.create-dev-cut-pr.result }}"}'

@@ -117,9 +117,13 @@ jobs:
     needs: [mark-main-cut-eligible]
     if: always()
     permissions:
+      actions: read
+      contents: read
       issues: write
+      statuses: write
     uses: ./.github/workflows/shared-notify.yml
     with:
-      success: ${{ needs.mark-main-cut-eligible.result == 'success' || needs.mark-main-cut-eligible.outputs.skipped == 'true' }}
+      failed: ${{ needs.mark-main-cut-eligible.result != 'success' && needs.mark-main-cut-eligible.outputs.skipped != 'true' }}
       workflow_name: 'RC Main Cut Gate'
+      severity: 'P1-high'
       job_results: '{"mark-main-cut-eligible":"${{ needs.mark-main-cut-eligible.result }}"}'
