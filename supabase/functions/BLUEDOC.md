@@ -17,6 +17,7 @@ minglit 의 backend API 진입점. 60+ EF 와 공용 `_shared/`, 테스트 유�
 | [event-flow-simulator/](./event-flow-simulator/BLUEDOC.md)             | 이벤트 lifecycle funnel 시뮬레이터                               |
 | [user-create-order/](./user-create-order/BLUEDOC.md)                   | 이벤트 신청/주문 생성 EF                                         |
 | [payment-verify/](./payment-verify/BLUEDOC.md)                         | PortOne 결제 검증/승인 EF                                        |
+| [user-cancel-order/](./user-cancel-order/BLUEDOC.md)                   | 유저 신청 취소/환불 EF                                           |
 
 ## 핵심 컨벤션
 

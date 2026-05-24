@@ -3,28 +3,35 @@
 // Lazy-loads the handler via dynamic import with Deno.serve stubbed to prevent
 // a real HTTP server from being started (same pattern as payment-webhook/index_test.ts).
 
-import { assertEquals } from "jsr:@std/assert@1";
+import { assertEquals } from "@std/assert";
 import {
   buildApplication,
   fakeSupabase,
+  type Handler,
   makeCtx,
   readJson,
   runHandler,
-  type Handler,
 } from "../_shared/_testing/mod.ts";
 
 let _handler: Handler | null = null;
 async function getHandler(): Promise<Handler> {
   if (_handler) return _handler;
-  const denoAsAny = Deno as unknown as { serve: (...args: unknown[]) => Deno.HttpServer };
+  const denoAsAny = Deno as unknown as {
+    serve: (...args: unknown[]) => Deno.HttpServer;
+  };
   const origServe = denoAsAny.serve;
-  denoAsAny.serve = () => ({ shutdown() {}, finished: Promise.resolve() } as Deno.HttpServer);
+  denoAsAny.serve =
+    () => ({ shutdown() {}, finished: Promise.resolve() } as Deno.HttpServer);
   const origSetInterval = globalThis.setInterval;
   const origClearInterval = globalThis.clearInterval;
-  globalThis.setInterval = ((_cb: () => void) => 0 as unknown as ReturnType<typeof setInterval>) as typeof setInterval;
-  globalThis.clearInterval = ((_id?: ReturnType<typeof setInterval>) => {}) as typeof clearInterval;
+  globalThis.setInterval =
+    ((_cb: () => void) =>
+      0 as unknown as ReturnType<typeof setInterval>) as typeof setInterval;
+  globalThis.clearInterval =
+    ((_id?: ReturnType<typeof setInterval>) => {}) as typeof clearInterval;
   try {
-    _handler = (await import(`./index.ts?unit=${crypto.randomUUID()}`)).handler as Handler;
+    _handler = (await import(`./index.ts?unit=${crypto.randomUUID()}`))
+      .handler as Handler;
   } finally {
     denoAsAny.serve = origServe;
     globalThis.setInterval = origSetInterval;
@@ -70,7 +77,9 @@ Deno.test("user-cancel-order :: status=cancelled (final) → 400", async () => {
 Deno.test("user-cancel-order :: status=pending (pre-payment) → 200 + 2 deletes", async () => {
   const handler = await getHandler();
   const sb = fakeSupabase()
-    .on("event_applications", "select", { data: buildApplication({ status: "pending" }) })
+    .on("event_applications", "select", {
+      data: buildApplication({ status: "pending" }),
+    })
     .on("verification_submissions", "delete", { error: null })
     .on("event_applications", "delete", { error: null });
   const res = await runHandler(handler, {
@@ -126,7 +135,9 @@ Deno.test("user-cancel-order :: free event but 이벤트 이미 시작 → 400 (
     ctx: makeCtx({ supabase: sb, userId: "u-1" }),
   });
   assertEquals(res.status, 400);
-  const body = await readJson<{ error: string; details?: { reason?: string } }>(res);
+  const body = await readJson<{ error: string; details?: { reason?: string } }>(
+    res,
+  );
   assertEquals(body.error, "refund_not_eligible");
   assertEquals(body.details?.reason, "event_already_started");
 });

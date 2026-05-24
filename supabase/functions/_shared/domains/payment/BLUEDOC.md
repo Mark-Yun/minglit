@@ -1,51 +1,31 @@
 # _shared/domains/payment
 
-결제 / 환불 도메인의 **순수 비즈니스 로직** 모음. IO (DB / 외부 API / HTTP)
-없음. 모든 payment-* EF 가 import.
+결제/환불 도메인의 **순수 비즈니스 로직**. IO (DB / 외부 API / HTTP) 없음.
 
-## 위치 — Supabase 제약 반영
+## 이정표
 
-Hexagonal 의 도메인 코어를 nested EF 폴더에 못 둠 (Supabase CLI Issue #3676 —
-nested entrypoint 미지원). 차선: `_shared/` 안 도메인별 grouping. EF 폴더는 flat
-유지.
+| 파일                             | 역할                                             |
+| -------------------------------- | ------------------------------------------------ |
+| `application_status.ts`          | application status 분류, 무료 여부, 재신청 차단  |
+| `cancel_order_policy.ts`         | user-cancel-order 취소 경로 결정                 |
+| `payment_verification_policy.ts` | payment-verify 소유자/멱등성/결제 상태/금액 검증 |
+| `refund_policy.ts`               | grace period + cutoff + 이벤트 시작 가드         |
+| `*_test.ts`                      | 각 policy 의 mock 없는 unit tests                |
 
-## 파일
+## 핵심 컨벤션
 
-| 파일                                                  | 역할                                                                                                                                                            |
-| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `application_status.ts`                               | application status 분류 (`isPaid` / `isPrePayment` / `isFinal`) + `isFreeApplication` + `blocksReapplication` (중복 신청 가드). 모든 payment / apply EF 가 사용 |
-| `application_status_test.ts`                          | pure unit tests (mock 0)                                                                                                                                        |
-| `payment_verification_policy.ts`                      | payment-verify 의 소유자/멱등성/결제 상태/금액 검증 policy                                                                                                      |
-| `payment_verification_policy_test.ts`                 | payment verification pure unit tests                                                                                                                            |
-| (관련 도메인) `_shared/domains/event/availability.ts` | `isEventStarted` (refund cutoff 등에서 사용)                                                                                                                    |
-| `refund_policy.ts`                                    | `verifyRefundEligibility` — grace period + cutoff + 이벤트 시작 가드 (Fix #1235)                                                                                |
-| `refund_policy_test.ts`                               | pure unit tests (mock 0)                                                                                                                                        |
-| (예정) `refund_amount.ts`                             | 환불 금액 계산 (Fix #2131 후속)                                                                                                                                 |
-
-## 사용 패턴
-
-```ts
-// payment EF index.ts
-import { classifyApplicationStatus } from "../_shared/domains/payment/application_status.ts";
-
-const { isPaid, isPrePayment } = classifyApplicationStatus(application.status);
-if (isPrePayment) { /* pre-payment 분기 */ }
-if (isPaid) { /* paid 분기 */ }
-```
-
-## 변경 정책
-
-- pure 함수만 — IO / Deno API / Date.now() 호출 시 인자로 받음 (testable)
-- breaking change → 모든 payment EF 영향 → 전수 unit test 가 자동 가드
-- 새 함수 추가 자유 (사용 안 하면 cost 0)
+- pure 함수만 둔다. IO / Deno API / Date.now() 필요 시 인자로 받는다.
+- payment-* EF 는 handler/service 에서 record 를 load 한 뒤 policy 에 snapshot
+  을 넘긴다.
+- 환불/승인/정산 같은 write 원자성은 EF policy 가 아니라 Postgres RPC 책임이다.
+- breaking change 는 모든 payment EF 영향 → domain unit test + EF
+  service/handler test 를 함께 확인한다.
 
 ## 관련
 
-- [_shared/BLUEDOC.md](../../BLUEDOC.md) — _shared 전체
-- [EF 아키텍처 RFC](../../../../../docs/architecture/) (예정) — 갈래 A 의 도입
-  배경
-- [Issue #3676](https://github.com/supabase/cli/issues/3676) — nested entrypoint
-  미지원 (본 구조 선택 이유)
+- [../BLUEDOC.md](../BLUEDOC.md)
+- [../../architecture.md](../../architecture.md)
+- [Issue #3676](https://github.com/supabase/cli/issues/3676)
 
 ---
 
