@@ -8,6 +8,7 @@
 | 항목                                                             | 역할                                                                              |
 | ---------------------------------------------------------------- | --------------------------------------------------------------------------------- |
 | `edge_function.ts`                                               | `minglitEdgeFunction(handler)` wrapper. manifest env/caller 가드 + logging/Sentry |
+| `edge_function_*_test.ts`                                        | wrapper auth/external/deprecation 회귀 테스트                                      |
 | `env_keystore.ts`                                                | env-manifest 기반 환경변수 typed 접근                                             |
 | `request_utils.ts` / `input_validation.ts` / `response_utils.ts` | request parsing, typed input field validation, CORS/success/error response        |
 | `supabase_client.ts`                                             | service/user Supabase client 생성                                                 |
@@ -35,4 +36,4 @@
 
 ---
 
-_Reviewed: 2026-05-24 00:00_
+_Reviewed: 2026-05-24 16:45_

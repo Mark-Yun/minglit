@@ -9,7 +9,7 @@ Minglit의 모든 Edge Function (EF) 인증/인가 모델을 기술한다.
 
 ### 1.1 현재 문제점 (이 설계 도입 전)
 
-47개 `verify_jwt = false` EF + 13개 `verify_jwt = true` EF (총 ~60개) 의 인증 보호가 **분산 관리** 되어 다음 문제 발생:
+다수의 Edge Function 인증 보호가 **분산 관리** 되어 다음 문제 발생:
 
 | 항목 | 현재 상태 |
 |---|---|
@@ -36,22 +36,28 @@ Minglit의 모든 Edge Function (EF) 인증/인가 모델을 기술한다.
 | EF 별 환경 가드 (dev-only / prod-only) | ❌ | ✅ 본 설계 |
 | Unprotected EF 자동 검출 | ❌ | ✅ CI lint |
 
-### 1.4 service_role 형식 일관성 요건 ⚠️
+### 1.4 system key 형식 일관성 요건 ⚠️
 
-`system` caller 검증은 cron 이 보낸 `Bearer <token>` 과 EF 내부 `Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")` 의 **exact string match** 다. 두 값의 출처:
+`system` caller 검증은 두 경로를 허용한다.
+
+1. legacy: `Authorization: Bearer <token>` 과 EF 내부 `Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")` 의 **exact string match**
+2. 신규 secret key: `apikey: <token>` 과 EF 내부 `Deno.env.get("SUPABASE_SERVICE_ROLE_SECRET")` 의 **exact string match**
+
+두 값의 출처:
 
 ```
-GH Secret (SUPABASE_*_SECRET_KEY)
-  ├─→ EF env (Supabase 플랫폼 자동 주입 — deploy-supabase.yml 의 supabase secrets set 안 거침)
-  └─→ Vault (CI sync — deploy-supabase.yml 의 Sync Vault secrets step)
-        └─→ cron 이 SELECT 하여 Bearer 헤더에 사용
+GH Secret / Supabase Secret
+  ├─→ EF env (SUPABASE_SERVICE_ROLE_KEY / SUPABASE_SERVICE_ROLE_SECRET)
+  └─→ Vault 또는 caller secret
+        └─→ cron/service caller 가 Authorization 또는 apikey 헤더에 사용
 ```
 
-두 경로가 같은 GH Secret 에서 나오므로 형식 일치는 자동. 단 **GH Secret 형식이 EF 게이트웨이의 verify_jwt 와 호환되어야** 함:
+형식별 gateway 호환성:
+
 - legacy JWT (`eyJ...`): verify_jwt=true / false 모두 호환
-- 신규 sb_secret_: verify_jwt=false 전용 (게이트웨이가 JWT 시그니처 검증 못함)
+- 신규 `sb_secret_...`: verify_jwt=false 전용. JWT가 아니므로 `Authorization: Bearer sb_secret_...` 로 보내면 gateway JWT 검증을 통과하지 못한다.
 
-**현재 정책**: legacy JWT 형식 사용. 신규 형식은 `verify_jwt=true` EF 가 cron 호출 받는 한 부적합 (별도 이슈에서 마이그레이션 검토).
+**현재 정책**: legacy JWT bearer 경로는 유지하고, `sb_secret_...` 전환 준비를 위해 `apikey` 경로를 추가한다. `system` caller EF 중 신규 secret key를 받을 수 있어야 하는 함수는 `verify_jwt=false` 로 전환하고 wrapper 내부 인증에 의존한다.
 
 ---
 
@@ -61,7 +67,7 @@ EF 가 받을 수 있는 호출자 분류. manifest 의 `callers` 배열에 명�
 
 | 타입 | 의미 | 검증 방법 |
 |---|---|---|
-| **`system`** | cron, 시스템 우회 | `Authorization: Bearer ${EF_ENV.SUPABASE_SERVICE_ROLE_KEY}` exact match (§1.4 의 EF env 값과 비교) |
+| **`system`** | cron, 시스템 우회 | legacy `Authorization: Bearer ${EF_ENV.SUPABASE_SERVICE_ROLE_KEY}` 또는 신규 `apikey: ${EF_ENV.SUPABASE_SERVICE_ROLE_SECRET}` exact match (§1.4) |
 | **`user`** | 인증된 사용자/파트너 | `supabase.auth.getUser(token)` 으로 decode + claims 추출 → `auth.userId` |
 | **`external`** | 외부 시스템 (webhook 등) | manifest 의 `external_auth` 정책에 따라 IP / HMAC / signature 검증. **Authorization 헤더 무관** |
 | **`public`** | 익명 OK | check 없음. 보통 `envs: ["dev"]` 와 결합하여 prod 노출 차단 |
@@ -78,23 +84,23 @@ EF 가 받을 수 있는 호출자 분류. manifest 의 `callers` 배열에 명�
 
 ### 2.2 caller 검증 우선순위 (성능 최적화)
 
-`Authorization` 헤더 형식과 manifest.callers 조합으로 분기. cheap check 먼저:
+`Authorization` / `apikey` 헤더와 manifest.callers 조합으로 분기. cheap check 먼저:
 
 ```
 0. (선결) Env 가드: ENVIRONMENT ∉ policy.envs → 403 (auth 검증 자체 skip)
 
-1. Authorization 헤더 있음 + Bearer 형식
-   ├─ Bearer == EF_ENV.SUPABASE_SERVICE_ROLE_KEY
-   │   └─ "system" ∈ callers → ✅ pass (cheap, env var 비교만)
-   │   └─ 아니면 → 403
-   └─ Else
-       ├─ "user" ∈ callers → supabase.auth.getUser() (expensive)
-       │   └─ success → ✅ pass + userId
-       │   └─ fail → 401
-       └─ "user" ∉ callers + "external" ∈ callers → external_auth 검증 (auth 헤더 무시, IP 등 다른 신호 사용)
-       └─ 둘 다 ∉ → 403
+1. "system" ∈ callers
+   ├─ Authorization Bearer == EF_ENV.SUPABASE_SERVICE_ROLE_KEY → ✅ pass (keyFormat=legacy)
+   ├─ apikey == EF_ENV.SUPABASE_SERVICE_ROLE_SECRET → ✅ pass (keyFormat=secret)
+   └─ Else → 다음 caller 검증으로 진행
 
-2. Authorization 헤더 없음 또는 Bearer 형식 아님
+2. Authorization 헤더 있음 + Bearer 형식
+   ├─ "user" ∈ callers → supabase.auth.getUser() (expensive)
+   │   └─ success → ✅ pass + userId
+   │   └─ fail → 401
+   └─ "user" ∉ callers + "external" ∈ callers → external_auth 검증 (auth 헤더 무시, IP 등 다른 신호 사용)
+
+3. Authorization 헤더 없음 또는 Bearer 형식 아님
    ├─ "external" ∈ callers → external_auth 검증
    ├─ "public" ∈ callers → ✅ pass (auth check 없음)
    └─ 둘 다 ∉ → 401
@@ -215,7 +221,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Logger } from "./logger.ts";
 
 export type AuthContext =
-  | { type: "system" }
+  | { type: "system"; keyFormat?: "legacy" | "secret" }
   | { type: "user"; userId: string }
   | { type: "external"; reason: string }   // e.g., "ip_allowlist:52.78.100.19"
   | { type: "public" };
@@ -429,7 +435,7 @@ sequenceDiagram
     participant Handler as EF Handler
     participant DB as Postgres
 
-    Caller->>Gateway: POST /functions/v1/<fn-name><br/>Authorization: Bearer <token>
+    Caller->>Gateway: POST /functions/v1/<fn-name><br/>Authorization: Bearer <JWT/legacy key><br/>or apikey: sb_secret_...
 
     alt verify_jwt = true (config.toml)
         Gateway->>Gateway: JWT 시그니처 검증
@@ -459,13 +465,13 @@ sequenceDiagram
 flowchart TD
     Req[Request 도착] --> EnvCheck{ENVIRONMENT<br/>∈ policy.envs?}
     EnvCheck -- No --> E403_env[403 Function disabled]
-    EnvCheck -- Yes --> AuthHeader{Authorization<br/>Bearer 있음?}
+    EnvCheck -- Yes --> SysAllow{'system'<br/>∈ callers?}
+    SysAllow -- Yes --> SysMatch{Legacy bearer<br/>or secret apikey<br/>matches EF env?}
+    SysMatch -- Yes --> Pass_sys[type=system]
+    SysMatch -- No --> AuthHeader{Authorization<br/>Bearer 있음?}
+    SysAllow -- No --> AuthHeader
 
-    AuthHeader -- Yes --> SysMatch{Bearer ==<br/>EF_ENV.<br/>SERVICE_ROLE_KEY?}
-    SysMatch -- Yes --> Sys{'system'<br/>∈ callers?}
-    Sys -- Yes --> Pass_sys[type=system]
-    Sys -- No --> E403_sys[403]
-    SysMatch -- No --> UserAllow{'user'<br/>∈ callers?}
+    AuthHeader -- Yes --> UserAllow{'user'<br/>∈ callers?}
     UserAllow -- Yes --> Decode[supabase.auth.getUser]
     Decode -- success --> Pass_user[type=user, userId]
     Decode -- fail --> E401_user[401]
@@ -588,7 +594,7 @@ EFContext
 
 ## 8. Migration Plan
 
-총 대상: **verify_jwt=false EF 47개 + verify_jwt=true EF 13개 = 약 60개**. 두 그룹 모두 wrapper 로 통합 (verify_jwt 설정은 config.toml 그대로 유지 — 게이트웨이 보호는 별도).
+총 대상: `supabase/config.toml` 에 등록된 EF 전체. 모든 함수는 wrapper 로 통합하고, `verify_jwt` 설정은 호출 방식에 맞춰 별도 관리한다.
 
 | Phase | 작업 | PR 단위 | 영향 |
 |---|---|---|---|
