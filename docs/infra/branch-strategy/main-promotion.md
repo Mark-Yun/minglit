@@ -1,28 +1,28 @@
 # Main Promotion
 
-`rc/YYYY-Wxx` 의 soak 통과 시 `main` 으로 머지, main push 직후 **backend + mobile 모두 prod 로 deploy**. Backend 의 staging deploy 는 dev 의 rc-gate-pass 에서 일어남 (main-staging env, [dev-pipeline.md](./dev-pipeline.md)). prod deploy 는 main 머지에서 — 사용자 서버에 검증 안 된 코드 직접 들어가지 않게 RC soak 통과 후만.
+`rc/YYYY-Wxx` 의 soak 통과 시 `main` 으로 머지, main push 직후 **backend + mobile 모두 prod 로 deploy**. Backend prod deploy 는 `main-deploy` 에서 한 번에 수행한다. 이벤트 플로우 시뮬레이터는 별도 batch monitor 로 계속 돌며, RC 에서는 main 배포 전 검증 signal 로 사용한다.
 
 ## 두 가지 이벤트
 
-1. **rc → main 머지** — `rc-soak-check` 가 자동 PR 생성 + 모든 check 통과 시 workflow auto-merge
-2. **main push → prod deploy chain** — backend (`deploy-supabase` target=main), web (Vercel native), mobile (`deploy-android-*`, `deploy-ios-*`) 모두 prod 로 병렬 deploy. store review + staged rollout 은 store-side
+1. **rc → main 머지** — `rc-main-cut` 이 자동 PR 생성 + 모든 check 통과 시 workflow auto-merge
+2. **main push → prod deploy chain** — `main-deploy` 가 backend, web, mobile prod deploy 를 orchestrate. store review + staged rollout 은 store-side
 
 ## `main-pr-gate`
 
-`rc-soak-check` 가 자동 생성한 promotion PR 에 적용:
+`rc-main-cut` 이 자동 생성한 promotion PR 에 적용:
 
 | Check | 내용 |
 |-------|------|
 | `pr-gate` 재실행 | dev-staging-pr-gate 와 동일 — defensive 검증 |
 | `expand-migrate-contract` (재검증) | RC 5일 동안 dev 가 더 나갔을 수 있음. 재확인 |
-| RC HEAD 의 `rc-gate-pass` status 확인 | 마지막 hotfix 이 rc-gate 통과했는지 |
-| `rc-soak-passed` 자동 마커 | rc-soak-check 가 5일 무커밋 확인 후 부여 |
+| RC HEAD 의 `dev-rc-cut-pass` status 확인 | 마지막 hotfix 이 dev-rc-cut-gate 통과했는지 |
+| `rc-main-cut-pass` 자동 마커 | `rc-main-cut-gate` 가 5일 무커밋 + pre-main signal 확인 후 부여 |
 
-GitHub Ruleset 의 required check 는 `main-pr-gate` 하나로 둔다. `rc-gate-pass`, `expand-migrate-contract`, `rc-soak-passed` 는 PR head SHA 와 별도 commit/label 상태가 섞일 수 있으므로 `main-pr-gate` 내부 검증으로 처리한다. 모든 check 통과 시 workflow 가 auto-merge (rebase + fast-forward) 한다. 어느 하나라도 실패 시 PR hold + Slack 알림 → human 개입 (edge case).
+GitHub Ruleset 의 required check 는 `main-pr-gate` 하나로 둔다. `dev-rc-cut-pass`, `expand-migrate-contract`, `rc-main-cut-pass` 는 PR head SHA 와 별도 commit/label 상태가 섞일 수 있으므로 `main-pr-gate` 내부 검증으로 처리한다. 모든 check 통과 시 workflow 가 auto-merge (rebase + fast-forward) 한다. 어느 하나라도 실패 시 PR hold + Slack 알림 → human 개입 (edge case).
 
-## `main-post-merge-promote`
+## `main-deploy`
 
-auto-merge 직후 자동 (promote + prod deploy chain):
+main push 직후 자동 (finalize + prod deploy chain):
 
 ```
 1. bump-version.sh {ver}  (suffix 제거 — main 은 final version)
@@ -33,14 +33,14 @@ auto-merge 직후 자동 (promote + prod deploy chain):
 6. Sentry release marker 부여 (v{ver})
 7. Firebase RC `latest_version` = v{ver} (Admin SDK)
 8. parallel deploy chain (모두 target=main):
-   - deploy-supabase (prod Supabase: migration + EF)
+   - backend prod deploy (Supabase migration + EF)
    - deploy-android-{user,partner}
    - deploy-ios-{user,partner}
    - (Vercel: native build 가 main push 자동 감지)
 9. RC Supabase branch 삭제 + active RC marker 제거
 ```
 
-> Backend/web staging deploy 는 dev 의 rc-gate-pass 에서 수행되고, backend/web prod deploy 는 main 머지 후 수행한다. Mobile deploy 는 main push 이후 별도 workflow 로 수행한다.
+> Backend prod deploy 는 main 머지 후 수행한다. Mobile deploy 는 main push 이후 별도 workflow 로 수행한다.
 
 ## 기존 Mobile Deploy Workflows (재사용)
 
@@ -65,7 +65,7 @@ main push trigger 로 자동 발동되는 기존 workflows:
 
 | Tier | 메커니즘 | RC param | Trigger |
 |------|----------|----------|---------|
-| **2a. Soft kill** | client 가 `latest_version` (RC) 와 자기 버전 비교 + app store 의 새 버전 가용성 확인 후 soft prompt | `latest_version` | `main-post-merge-promote` 가 매 main 머지마다 자동 update |
+| **2a. Soft kill** | client 가 `latest_version` (RC) 와 자기 버전 비교 + app store 의 새 버전 가용성 확인 후 soft prompt | `latest_version` | `main-deploy` 가 매 main 머지마다 자동 update |
 | **2b. Hard kill** | EF middleware 가 `kill_list_hard` (RC) + `X-App-Version` header 비교 → HTTP 426 reject | `kill_list_hard` | **내부 admin page manual** (catastrophic incident 시 release manager / on-call). 인증·audit log·role 권한·version dropdown 등이 RC 콘솔 직접 변경보다 안전. **admin page 구현은 본 docs scope 밖, 별도 작업 (TBD)** |
 
 ### Tier 2a: Soft Kill 흐름
@@ -125,13 +125,13 @@ main push trigger 로 자동 발동되는 기존 workflows:
 
 ## Error-Backoff 정책
 
-**Workflow infra 실패** (main-pr-gate / main-post-merge-promote / deploy-* workflow 자체 실패) → **P0 이슈** + on-call.
+**Workflow infra 실패** (main-pr-gate / main-deploy / deploy-* workflow 자체 실패) → **P0 이슈** + on-call.
 
 ### rc → main 머지 차단
 
 | 조건 | 동작 |
 |------|------|
-| `rc-gate-degraded` (dev-pipeline backoff) | rc → main PR 자동 close + 코멘트 ("recovery 후 재시도") |
+| `dev-rc-cut-gate-degraded` (dev-pipeline backoff) | rc → main PR 자동 close + 코멘트 ("recovery 후 재시도") |
 | `expand-migrate-contract` 검사 실패 | PR 자동 close |
 
 ### Mobile deploy (`deploy-android-*` / `deploy-ios-*`) 실패
@@ -143,9 +143,9 @@ main push trigger 로 자동 발동되는 기존 workflows:
 | Store upload 실패 (Fastlane) | retry 1회 → `auto-issue` (P1) |
 | Store 검수 reject | mobile 팀이 reject reason 확인 → fix PR via 정상 flow (dev-staging → ... → main → 다음 deploy 사이클) |
 
-### Backend/web auto-deploy 실패 (참고)
+### Backend/web deploy 실패
 
-main 머지와 무관 (이미 dev 에서 deploy). 상세는 [dev-pipeline.md](./dev-pipeline.md) error-backoff.
+`main-deploy` 의 backend prod deploy 실패는 P0/P1로 처리한다. 상세 detection layer 는 [error-detection.md](./error-detection.md) 를 따른다.
 
 ## 결정해야 할 것
 
@@ -158,11 +158,11 @@ main 머지와 무관 (이미 dev 에서 deploy). 상세는 [dev-pipeline.md](./
 
 ## 관련
 
-- [dev-pipeline.md](./dev-pipeline.md) — backend/web auto-deploy 의 실제 위치 (dev 의 rc-gate-pass)
+- [dev-pipeline.md](./dev-pipeline.md) — dev-rc-cut-pass marker 와 dev validation 위치
 - [rc-promotion.md](./rc-promotion.md) — rc → main PR 의 생성
 - [life-of-flag.md](./life-of-flag.md) — flag rollout 은 main 머지와 별도
 - [branch-flow.md](./branch-flow.md) — tag 컨벤션 + protection
-- [specs/workflow-spec.md](./specs/workflow-spec.md) — 기존 deploy-* workflow 의 refactor 상세
+- [specs/workflow-spec.md](./specs/workflow-spec.md) — rc-main-cut/main-deploy workflow 계약
 
 ---
-_Reviewed: 2026-05-19 09:47_
+_Reviewed: 2026-05-24 10:24_

@@ -1,16 +1,16 @@
 # Test Strategy
 
-4-stage 모델 (`dev-staging → dev → rc → main`) + flag staged rollout 환경에서, *어떤 테스트가 어느 단계에서 도는가* 의 단일 source. 빠른 검사 = `pr-gate` (각 단계), 무거운 검사 = `rc-gate` (dev 의 post-merge), 프로덕션 검증 = `deploy-android-*, deploy-ios-*` smoke + flag staged.
+4-stage 모델 (`dev-staging → dev → rc → main`) + flag staged rollout 환경에서, *어떤 테스트가 어느 단계에서 도는가* 의 단일 source. 빠른 검사 = `pr-gate` (각 단계), 무거운 검사 = `dev-rc-cut-gate` (dev 의 post-merge), 프로덕션 검증 = `deploy-android-*, deploy-ios-*` smoke + flag staged.
 
 ## 단계별 게이트
 
 | 단계 | 게이트 | 소요 | 실패 시 |
 |------|--------|------|---------|
 | dev-staging 머지 전 | `dev-staging-pr-gate` (unit · lint · analyze · pgTAP · EF test · migration check · `expand-migrate-contract` · `flag-registration` · gitleaks) | < 10분 | auto-merge 보류 |
-| dev 머지 전 | `nightly-pr-gate` (dev-staging-pr-gate 와 동일 — defensive) | < 10분 | nightly-cut PR drop |
-| dev 머지 후 (자동) | `rc-gate` (CUJ matrix happy/unhappy/chaos · integration · e2e · Test Lab smoke) | 30-60분 | 자동 이슈 + AI fix flow via dev-staging. `rc-gate-pass` 미부여 |
+| dev 머지 전 | `dev-pr-gate` (dev-staging-pr-gate 와 동일 — defensive) | < 10분 | dev-staging-dev-cut PR drop |
+| dev 머지 후 (자동) | `dev-rc-cut-gate` (CUJ matrix happy/unhappy/chaos · integration · e2e · Test Lab smoke) | 30-60분 | 자동 이슈 + AI fix flow via dev-staging. `dev-rc-cut-pass` 미부여 |
 | rc 머지 전 (hotfix) | `rc-pr-gate` (pr-gate + mobile smoke) | < 15분 | hotfix PR drop |
-| main 머지 전 (rc → main) | `main-pr-gate` (pr-gate + `expand-migrate-contract` 재검증 + RC HEAD 의 `rc-gate-pass` 확인 + `rc-soak-passed` marker 확인) | 분 | promotion PR 보류 |
+| main 머지 전 (rc → main) | `main-pr-gate` (pr-gate + `expand-migrate-contract` 재검증 + RC HEAD 의 `dev-rc-cut-pass` 확인 + `rc-main-cut-pass` marker 확인) | 분 | promotion PR 보류 |
 | rc → main PR | workflow auto-merge (모든 check 통과 시) | 분 | check 실패 시 PR hold + alert |
 | Backend/Web auto-deploy 후 | post-deploy smoke + Sentry/Crashlytics 알람 임계 | 분 | auto-rollback ([main-promotion.md](./main-promotion.md)) |
 | deploy-android-*, deploy-ios-* 후 | mobile build smoke (Fastlane upload 검증) | 시간 | retry 1회 → auto-issue + mobile 팀 |
@@ -33,15 +33,15 @@
 - `gitleaks`
 - CodeRabbit 리뷰 (최대 30분 대기)
 
-룰: 10분 넘으면 `rc-gate` 로 이동.
+룰: 10분 넘으면 `dev-rc-cut-gate` 로 이동.
 
-### nightly-pr-gate
+### dev-pr-gate
 
 `dev-staging-pr-gate` 와 동일한 test suite. 환경 차이로 인한 회귀만 잡는 defensive 검증. 대부분 통과.
 
-### rc-gate — Heavy Integration
+### dev-rc-cut-gate — Heavy Integration
 
-dev 머지 후 자동 발동. 통과 시 commit 에 GitHub status `rc-gate-pass` set + `backend-auto-deploy` + `web-auto-deploy` chain.
+dev 머지 후 자동 발동. 통과 시 commit 에 GitHub status `dev-rc-cut-pass` set + `backend-auto-deploy` + `web-auto-deploy` chain.
 
 - CUJ (app_user, app_partner)
 - Integration tests (backend, edge functions)
@@ -57,10 +57,10 @@ RC 의 hotfix 만 받음. `pr-gate` + 추가 mobile smoke. 머지 시 `rc-post-m
 
 ### main-pr-gate
 
-`rc-soak-check` 가 자동 생성한 promotion PR 에 적용:
+`rc-main-cut` 이 자동 생성한 promotion PR 에 적용:
 - pr-gate 재실행
 - `expand-migrate-contract` 다시 검증 (RC 5일 동안 dev 가 더 나갔을 수 있음)
-- RC HEAD 의 `rc-gate-pass` status 확인 (마지막 hotfix 이 rc-gate 통과했는지)
+- RC HEAD 의 `dev-rc-cut-pass` status 확인 (마지막 hotfix 이 dev-rc-cut-gate 통과했는지)
 
 모든 check 통과 시 workflow auto-merge (rebase + ff).
 
@@ -78,11 +78,11 @@ RC 의 hotfix 만 받음. `pr-gate` + 추가 mobile smoke. 머지 시 `rc-post-m
 | 테스트 성격 | 배치 위치 | 이유 |
 |-------------|-----------|------|
 | 결정론적, < 10분 | `dev-staging-pr-gate` | PR 사이클 안 막음 |
-| flaky 또는 느림 (10분+) | `rc-gate` | PR 머지 게이트의 신뢰도 보호 |
-| 외부 의존성 (실 결제 등) | `rc-gate` + flag canary | 비용·side effect 통제 |
-| 부하/성능 | `rc-gate` (주 1회) or staged rollout 메트릭 | 매일 무거움 |
+| flaky 또는 느림 (10분+) | `dev-rc-cut-gate` | PR 머지 게이트의 신뢰도 보호 |
+| 외부 의존성 (실 결제 등) | `dev-rc-cut-gate` + flag canary | 비용·side effect 통제 |
+| 부하/성능 | `dev-rc-cut-gate` (주 1회) or staged rollout 메트릭 | 매일 무거움 |
 | backend ↔ mobile 계약 호환 | `expand-migrate-contract` CI + flag canary 메트릭 | 다층 안전망 |
-| 실 디바이스 다양성 | `rc-gate` 의 Firebase Test Lab | 시뮬레이터 한계 보완 |
+| 실 디바이스 다양성 | `dev-rc-cut-gate` 의 Firebase Test Lab | 시뮬레이터 한계 보완 |
 | Mobile 회귀 (deploy 직후) | `deploy-android-*, deploy-ios-*` 의 build smoke | store upload 전 마지막 |
 
 ## 결정해야 할 것

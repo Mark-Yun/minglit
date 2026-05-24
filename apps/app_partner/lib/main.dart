@@ -1,24 +1,14 @@
 import 'dart:async';
-import 'dart:io';
 
-import 'package:app_partner/firebase_options.dart';
+import 'package:app_partner/src/bootstrap/partner_startup.dart';
 import 'package:app_partner/src/l10n/generated/app_localizations.dart';
 import 'package:app_partner/src/routing/app_router.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
-import 'package:intl/date_symbol_data_local.dart';
-import 'package:kakao_map_plugin/kakao_map_plugin.dart' as kakao;
 import 'package:minglit_kit/minglit_kit.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
-
-part 'main.g.dart';
 
 // Fix #1538: 테스트에서 production delegate 목록을 참조할 수 있도록 상수로 추출.
 // 이 상수가 변경되면 party_description_input_test.dart도 자동으로 반영된다.
@@ -30,33 +20,9 @@ const List<LocalizationsDelegate<Object>> kPartnerLocalizationsDelegates = [
   quill.FlutterQuillLocalizations.delegate,
 ];
 
-/// Android 는 `com.google.gms.google-services` Gradle plugin 으로 native auto-init
-/// (`src/<flavor>/google-services.json` 사용). iOS 는 Dart options 사용 (TODO: plist).
-/// Dart 측에서 잘못된 placeholder options 를 SDK 에 넘겨 init 가 hang 되는 문제 회피.
-Future<FirebaseApp> _initFirebase() {
-  if (!kIsWeb && Platform.isAndroid) {
-    return Firebase.initializeApp();
-  }
-  return Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-}
-
 Future<void> main() async {
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
-
-  // perf: Request high refresh rate (120Hz/ProMotion) on Android.
-  // No-op on iOS (handled by the OS) and web (not applicable).
-  if (!kIsWeb && Platform.isAndroid) {
-    try {
-      await FlutterDisplayMode.setHighRefreshRate();
-    } on Object catch (_) {
-      // Some devices don't support configurable display modes; fail silently.
-    }
-  }
-
-  EnvKeyStore.validate();
 
   const sentryDsn = String.fromEnvironment('SENTRY_DSN');
   const environment = String.fromEnvironment(
@@ -112,77 +78,6 @@ Future<void> main() async {
   }
 }
 
-@riverpod
-Future<void> appStartup(Ref ref) async {
-  await initializeDateFormatting('ko_KR');
-
-  // P3: demo flavor short-circuits all network SDK init. See
-  // docs/infra/app_demo/architecture.md "부팅 흐름".
-  if (EnvKeyStore.isDemo) return;
-
-  const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
-  const supabasePublishableKey = String.fromEnvironment(
-    'SUPABASE_PUBLISHABLE_KEY',
-  );
-  if (supabaseUrl.isEmpty || supabasePublishableKey.isEmpty) {
-    throw StateError(
-      'SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY must be set.\n'
-      'Run with: flutter run --dart-define-from-file=../../minglit_env/local/flutter.env',
-    );
-  }
-
-  try {
-    await Future.wait([
-      _initSupabase(supabaseUrl, supabasePublishableKey),
-      _initFirebase(),
-      _initKakao(),
-    ]);
-  } on Exception catch (e) {
-    Log.e('App startup warning', e);
-  }
-
-  const environment = String.fromEnvironment(
-    'ENVIRONMENT',
-    defaultValue: 'local',
-  );
-  await _initStatsig(environment);
-  StatsigAnalytics.logEvent(MingLitEvent.appOpened);
-
-  // Sync Statsig user context with auth state changes
-  ref.listen(authStateChangesProvider, (_, next) {
-    next.whenData((authState) {
-      final userId = authState.session?.user.id;
-      if (userId != null) {
-        unawaited(StatsigAnalytics.updateUser(userId));
-      } else {
-        // Fix #155: shutdown() kills _initialized flag, blocking all future
-        // events. Reset to anonymous instead of shutting down the SDK.
-        unawaited(StatsigAnalytics.updateUser(''));
-      }
-    });
-  });
-}
-
-// P3: composable init helpers. Each can be invoked independently in tests
-// and is bypassed entirely in demo flavor via the early return above.
-
-Future<void> _initSupabase(String url, String anonKey) =>
-    Supabase.initialize(url: url, anonKey: anonKey);
-
-Future<void> _initKakao() async {
-  const kakaoMapKey = String.fromEnvironment('KAKAO_MAP_JAVASCRIPT_KEY');
-  if (kakaoMapKey.isNotEmpty) {
-    kakao.AuthRepository.initialize(appKey: kakaoMapKey);
-  } else {
-    Log.w('Kakao Map Key is missing in environment variables');
-  }
-}
-
-Future<void> _initStatsig(String environment) async {
-  const statsigClientKey = String.fromEnvironment('STATSIG_CLIENT_KEY');
-  await StatsigAnalytics.initialize(statsigClientKey, tier: environment);
-}
-
 class MinglitPartnerApp extends StatelessWidget {
   const MinglitPartnerApp({super.key});
 
@@ -199,13 +94,14 @@ class _AppView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final startupState = ref.watch(appStartupProvider);
     final goRouter = ref.watch(goRouterProvider);
-    // Activate notification initializer to listen for sign-in events
-    ref
-      ..watch(notificationInitializerProvider)
-      // Remove native splash when startup completes (or fails).
-      ..listen(appStartupProvider, (prev, next) {
-        if (next is! AsyncLoading) FlutterNativeSplash.remove();
-      });
+    if (startupState is AsyncData<void>) {
+      // Activate notification initializer only after critical startup succeeds.
+      ref.watch(notificationInitializerProvider);
+    }
+    // Remove native splash when startup completes (or fails).
+    ref.listen(appStartupProvider, (prev, next) {
+      if (next is! AsyncLoading) FlutterNativeSplash.remove();
+    });
 
     // ignore: use_minglit_async_value_widget - This is the app entry point, MaterialApp is not yet available.
     return MaterialApp.router(
@@ -231,7 +127,10 @@ class _AppView extends ConsumerWidget {
           ),
           // Hidden behind native splash — show nothing.
           loading: () => const SizedBox.shrink(),
-          error: (e, st) => Scaffold(body: Center(child: Text('Error: $e'))),
+          error: (e, st) => StartupFatalErrorView(
+            error: e,
+            onRetry: () => ref.invalidate(appStartupProvider),
+          ),
         );
       },
     );

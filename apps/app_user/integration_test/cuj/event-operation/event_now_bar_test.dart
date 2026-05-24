@@ -340,12 +340,9 @@ void main() {
           ),
         ];
       },
+      // Fix #2705: results 상태의 pulse animation 이 반복되어 초기 pumpAndSettle 이 timeout 된다.
+      afterPump: (t) => t.pump(const Duration(milliseconds: 50)),
       body: (t) async {
-        await t.pump();
-        // pump 고정 횟수 — results 상태의 AnimationController.repeat()가
-        // pumpAndSettle을 무한 block하므로 고정 pump 사용
-        await t.pump(const Duration(milliseconds: 50));
-
         expect(find.text('결과 확인'), findsOneWidget);
       },
     );
@@ -367,10 +364,9 @@ void main() {
           ),
         ];
       },
+      // Fix #2705: results 상태의 pulse animation 이 반복되어 초기 pumpAndSettle 이 timeout 된다.
+      afterPump: (t) => t.pump(const Duration(milliseconds: 50)),
       body: (t) async {
-        await t.pump();
-        await t.pump(const Duration(milliseconds: 50));
-
         // 결과 0건이어도 상태는 results 유지 — 바텀시트 내용이 빈 상태 표시
         expect(find.text('결과 확인'), findsOneWidget);
       },
@@ -702,11 +698,9 @@ void main() {
           ),
         ];
       },
+      // Fix #2705: results 상태의 pulse animation 이 반복되어 초기 pumpAndSettle 이 timeout 된다.
+      afterPump: (t) => t.pump(const Duration(milliseconds: 50)),
       body: (t) async {
-        await t.pump();
-        // results 상태: AnimationController.repeat() → pumpAndSettle 무한 block 방지
-        await t.pump(const Duration(milliseconds: 50));
-
         // 포그라운드 복귀 후 re-fetch → 결과 발표 상태 반영
         expect(find.text('결과 확인'), findsOneWidget);
       },

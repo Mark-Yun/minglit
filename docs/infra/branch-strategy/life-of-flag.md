@@ -80,7 +80,7 @@ Feature flag (Statsig + Firebase Remote Config) 의 생성·soak·rollout·**자
 
 | Stage | Cohort | 기간 | Exit |
 |-------|--------|------|------|
-| 1. dev | 개발자 (Statsig env=dev / RC condition) | **1주** | rc-gate green + 코드 dev 진입 |
+| 1. dev | 개발자 (Statsig env=dev / RC condition) | **1주** | dev-rc-cut-gate green + 코드 dev 진입 |
 | 2. prod allowlist | 내부 직원 user_id allowlist | **2주** | 카나리 메트릭 OK |
 | 3a. backend staged | prod backend 5% → 25% → 100% | 48h → 72h → 7일 | error rate < baseline +X% |
 | 3b. backend soak | - | 1주 | 무이슈 (mobile 활성화 게이트) |
@@ -152,8 +152,8 @@ Feature flag (Statsig + Firebase Remote Config) 의 생성·soak·rollout·**자
 
 | 항목 | 코드 release | 기능 release |
 |------|--------------|--------------|
-| 트리거 | backend/web staging: dev rc-gate-pass (main-staging env) / backend/web prod + mobile: main 머지 | flag ON 조작 |
-| cadence | staging: 시간 단위 / prod (backend + mobile): hotfix 없으면 weekly (rc → main 주기) | feature 별 비동기 |
+| 트리거 | RC 검증: `rc-deploy` / backend prod + mobile: main 머지 후 `main-deploy` | flag ON 조작 |
+| cadence | RC: hotfix loop 에 따라 유동 / prod (backend + mobile): hotfix 없으면 weekly (rc → main 주기) | feature 별 비동기 |
 | rollback | redeploy 이전 commit (분) | flag flip (즉시) |
 | 통제 권한 | 릴리즈 매니저 | feature owner |
 
@@ -173,7 +173,7 @@ Feature flag (Statsig + Firebase Remote Config) 의 생성·soak·rollout·**자
 - [branch-flow.md](./branch-flow.md) — 코드 promotion 의 그림
 - [main-promotion.md](./main-promotion.md) — min-version + expand-migrate-contract
 - [dev-staging-pipeline.md](./dev-staging-pipeline.md) — flag-registration CI
-- [dev-pipeline.md](./dev-pipeline.md) — backend/web auto-deploy
+- [dev-pipeline.md](./dev-pipeline.md) — dev-rc-cut-pass marker 와 dev validation
 - [test-strategy.md](./test-strategy.md) — flag staged rollout 의 게이트
 - [error-detection.md](./error-detection.md) — flag 메트릭의 detection layer
 - [../firebase/BLUEDOC.md](../firebase/BLUEDOC.md), [../statsig/BLUEDOC.md](../statsig/BLUEDOC.md)

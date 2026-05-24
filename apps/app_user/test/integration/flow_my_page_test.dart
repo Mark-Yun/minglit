@@ -321,6 +321,7 @@ void main() {
             purchaseHistoryControllerProvider.overrideWith(
               () => _MockPurchaseHistoryWithData([refundableApp]),
             ),
+            eventRepositoryProvider.overrideWithValue(MockEventRepository()),
           ],
         ),
       );

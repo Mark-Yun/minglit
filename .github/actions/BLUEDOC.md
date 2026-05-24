@@ -1,28 +1,21 @@
-# .github/actions/
+# GitHub Actions
 
-워크플로우가 `uses: ./.github/actions/<name>` 로 호출하는 **composite actions**. 여러 step 을 묶어 워크플로우 파일의 중복 제거.
+`.github/actions/` 는 workflow 에서 재사용하는 local action 의 진입점이다. 새 action 을 추가할 때는 이 파일의 이정표를 갱신한다.
 
 ## 이정표
 
-| Action | 역할 | 호출자 |
-|---|---|---|
-| [`deploy-flutter-app/`](./deploy-flutter-app/) | Flutter web 앱 → Vercel 배포 (build + alias + smoke) | `deploy-vercel` (app_user, app_partner) |
-| [`deploy-nextjs-app/`](./deploy-nextjs-app/) | Next.js 앱 → Vercel 배포 (env-manifest 복사 + node 설치 + vercel CLI) | `deploy-vercel` (landing_user, landing_partner, mds_docs) |
-| [`ios-deploy/`](./ios-deploy/) | iOS 앱 → TestFlight 배포 (signing cert / provisioning profile + xcodebuild + altool) | `deploy-ios-user`, `deploy-ios-partner` |
+| Action | 내용 |
+|--------|------|
+| [deploy-flutter-app](./deploy-flutter-app/action.yml) | Flutter app deploy 공통 action |
+| [deploy-nextjs-app](./deploy-nextjs-app/action.yml) | Next.js app deploy 공통 action |
+| [ios-deploy](./ios-deploy/action.yml) | iOS deploy 공통 action |
+| [release-bot-token](./release-bot-token/action.yml) | `minglit_env/{stage}/github.env` 우선 로드 + `minglit-release-bot` GitHub App installation token mint |
 
-각 action 의 inputs/outputs 는 해당 폴더의 `action.yml` 참고.
+## 컨벤션
 
-## 핵심 컨벤션
-
-- **`runs: using: "composite"`** — Docker 액션 X, JavaScript 액션 X. 모든 자체 action 은 shell step 묶음 composite.
-- **여러 워크플로우에서 같은 step 체인을 반복할 때만 composite 로 추출** — 단발성 외부 액션 호출 (checkout, setup-node 등) 은 워크플로우에서 직접 `uses:` OK. 중복 / 멀티-step orchestration 만 composite.
-- **action 변경 시 호출자 워크플로우 회귀 검증** — 한 PR 에서 action.yml 만 바뀌어도 호출하는 deploy-* 워크플로우 다음 cron 까지 영향.
-- **secrets 는 action 의 input 으로 전달** — action.yml 안에서 `${{ secrets.* }}` 직접 참조 금지 (calling workflow 의 책임).
-
-## 관련
-
-- [workflows/BLUEDOC.md](../workflows/BLUEDOC.md) — 어느 워크플로우가 어느 action 호출하는지
-- [.github/BLUEDOC.md](../BLUEDOC.md) — 상위 진입점
+- Local action 은 workflow 내부 반복을 줄일 때만 추가한다.
+- Secret 은 action 안에서 직접 참조하지 않고 input 으로 받는다.
+- Protected branch/tag write 용 token 은 `release-bot-token` 을 통해 mint 한다.
 
 ---
-_Reviewed: 2026-05-17 22:32_
+_Reviewed: 2026-05-23 10:00_

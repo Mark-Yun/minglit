@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       stage:
-        description: 'Logical gate stage: dev, dev-staging, nightly, rc, or main'
+        description: 'Logical gate stage: dev-staging, dev, rc, or main'
         required: false
         type: string
         default: 'dev'
@@ -16,13 +16,13 @@ on:
   push:
     branches: [ "main" ]
   pull_request:
-    branches: [ "main", "dev" ]
+    branches: [ "main", "dev", "dev-staging" ]
   merge_group:
 
 concurrency:
   # merge_group 이벤트는 절대 cancel 금지 — 큐 전체가 thrash됨.
   # PR 단계(pull_request)에서만 새 푸시 시 이전 run cancel.
-  group: pr-gate-${{ github.event.pull_request.number || github.event.merge_group.head_sha || github.ref }}
+  group: pr-gate-${{ inputs.stage || github.workflow }}-${{ github.event.pull_request.number || github.event.merge_group.head_sha || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -728,23 +728,25 @@ jobs:
     permissions:
       contents: write
     steps:
-      # Mint a fresh 1h installation token from the minglit-agent-code-review
-      # GitHub App. Replaces the prior GH_PAT_VERSION_BUMP PAT which 403'd after
-      # the team-minglit org transfer (org policy rejects user-scoped classic
-      # PATs for write ops). App credentials don't expire — only the per-run
-      # token does, and that's minted automatically. Pushes attributed to the
-      # App identity still trigger downstream workflows (unlike default
-      # GITHUB_TOKEN-authored pushes, which GitHub anti-loop-blocks).
-      - name: Generate App token
-        id: app-token
-        uses: actions/create-github-app-token@v2
+      - uses: actions/checkout@v6
         with:
-          app-id: '3672607'
-          private-key: ${{ secrets.REVIEWER_BOT_PRIVATE_KEY }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      # Use the same release bot for workflow write-backs. The old
+      # minglit-agent-code-review app credentials are no longer part of the
+      # branch-policy bot set.
+      - name: Generate release bot token
+        id: release-bot
+        uses: ./.github/actions/release-bot-token
+        with:
+          fallback-app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
+          fallback-private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
+
       - uses: actions/checkout@v6
         with:
           ref: ${{ github.head_ref }}
-          token: ${{ steps.app-token.outputs.token }}
+          token: ${{ steps.release-bot.outputs.token }}
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.41.9'  # Fix #2640: flutter_quill 11.5.0 incompatible with Flutter 3.44.0
@@ -764,8 +766,8 @@ jobs:
       - name: Commit changes if needed
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
-            git config user.name "minglit-agent-code-review[bot]"
-            git config user.email "minglit-agent-code-review[bot]@users.noreply.github.com"
+            git config user.name "minglit-release-bot"
+            git config user.email "minglit-release-bot@users.noreply.github.com"
             git add -- '**/*.dart'
             git commit -m "chore: auto-format"
             git push origin HEAD:"${GITHUB_HEAD_REF}"
@@ -877,9 +879,9 @@ jobs:
           # 1. Check CI job results
           results='${{ toJSON(needs.*.result) }}'
           echo "Job results: $results"
-          if echo "$results" | grep -q '"failure"'; then
+          if echo "$results" | grep -Eq '"(failure|cancelled)"'; then
             echo ""
-            echo '${{ toJSON(needs) }}' | jq -r 'to_entries[] | select(.value.result == "failure") | "❌ \(.key)"'
+            echo '${{ toJSON(needs) }}' | jq -r 'to_entries[] | select(.value.result == "failure" or .value.result == "cancelled") | "❌ \(.key): \(.value.result)"'
             exit 1
           fi
           echo "✅ CI jobs passed"

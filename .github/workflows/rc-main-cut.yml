@@ -1,0 +1,162 @@
+name: rc-main-cut
+
+on:
+  schedule:
+    # 09:15 KST daily, after rc-main-cut-gate.
+    - cron: '15 0 * * *'
+  workflow_dispatch:
+    inputs:
+      rc_branch:
+        description: Optional rc branch, e.g. rc/2026-W22. Defaults to latest rc-main-cut-pass.
+        required: false
+        type: string
+
+concurrency:
+  group: rc-main-cut
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  statuses: read
+  issues: write
+
+jobs:
+  create-main-pr:
+    runs-on: ubuntu-latest
+    outputs:
+      skipped: ${{ steps.plan.outputs.skipped }}
+      pr_number: ${{ steps.pr.outputs.pr_number }}
+      rc_branch: ${{ steps.plan.outputs.rc_branch }}
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Generate release bot token
+        id: release-bot
+        uses: ./.github/actions/release-bot-token
+        with:
+          fallback-app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
+          fallback-private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
+
+      - name: Plan main promotion
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUESTED_RC_BRANCH: ${{ inputs.rc_branch || '' }}
+        run: |
+          set -euo pipefail
+
+          git fetch origin main --tags --force
+          if ! git ls-remote --exit-code --heads origin 'rc/*' >/dev/null 2>&1; then
+            echo "No rc/* branch exists; skipping."
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git fetch origin '+refs/heads/rc/*:refs/remotes/origin/rc/*' --force
+
+          OPEN_PR="$(gh pr list \
+            --base main \
+            --state open \
+            --json number,headRefName \
+            --jq '[.[] | select(.headRefName | startswith("rc/"))][0].number // empty')"
+          if [ -n "${OPEN_PR}" ]; then
+            echo "rc-main-cut PR #${OPEN_PR} is already open; skipping."
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          RC_BRANCH="${REQUESTED_RC_BRANCH}"
+          if [ -z "${RC_BRANCH}" ]; then
+            while read -r candidate; do
+              [ -n "${candidate}" ] || continue
+              sha="$(git rev-parse "origin/${candidate}")"
+              state="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${sha}/status" \
+                --jq '[.statuses[] | select(.context == "rc-main-cut-pass")][0].state // empty' || true)"
+              if [ "${state}" = "success" ]; then
+                RC_BRANCH="${candidate}"
+                break
+              fi
+            done < <(git for-each-ref --sort=-committerdate --format='%(refname:short)' refs/remotes/origin/rc | sed 's#^origin/##')
+          fi
+
+          if [ -z "${RC_BRANCH}" ]; then
+            echo "No rc/* branch with rc-main-cut-pass exists; skipping."
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! [[ "${RC_BRANCH}" =~ ^rc/[0-9]{4}-W[0-9]{2}$ ]]; then
+            echo "::error::Invalid rc_branch: ${RC_BRANCH}. Expected rc/YYYY-Www."
+            exit 1
+          fi
+
+          RC_SHA="$(git rev-parse "origin/${RC_BRANCH}")"
+          state="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${RC_SHA}/status" \
+            --jq '[.statuses[] | select(.context == "rc-main-cut-pass")][0].state // empty' || true)"
+          if [ "${state}" != "success" ]; then
+            echo "RC ${RC_BRANCH} does not have rc-main-cut-pass; skipping."
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+            echo "rc_branch=${RC_BRANCH}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if git merge-base --is-ancestor "${RC_SHA}" origin/main; then
+            echo "origin/main already contains ${RC_BRANCH}; skipping."
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+            echo "rc_branch=${RC_BRANCH}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "skipped=false" >> "$GITHUB_OUTPUT"
+          echo "rc_branch=${RC_BRANCH}" >> "$GITHUB_OUTPUT"
+          echo "rc_sha=${RC_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Create main promotion PR and enable auto-merge
+        id: pr
+        if: steps.plan.outputs.skipped != 'true'
+        env:
+          GH_TOKEN: ${{ steps.release-bot.outputs.token }}
+          RC_BRANCH: ${{ steps.plan.outputs.rc_branch }}
+          RC_SHA: ${{ steps.plan.outputs.rc_sha }}
+        run: |
+          set -euo pipefail
+
+          gh label create rc-main-cut-pass \
+            --description "RC passed rc-main-cut-gate" \
+            --color 0E8A16 \
+            --force
+
+          BODY="$(cat <<EOF
+          Promotes \`${RC_BRANCH}\` to \`main\`.
+
+          - Source branch: ${RC_BRANCH}
+          - Source SHA: ${RC_SHA}
+          - Required marker: rc-main-cut-pass
+          - Merge mode: rebase, because main requires linear history.
+          EOF
+          )"
+
+          PR_URL="$(gh pr create \
+            --base main \
+            --head "${RC_BRANCH}" \
+            --title "ci(rc-main-cut): promote ${RC_BRANCH} to main" \
+            --body "${BODY}" \
+            --label rc-main-cut-pass)"
+          PR_NUMBER="${PR_URL##*/}"
+
+          gh pr merge "${PR_NUMBER}" --auto --rebase --delete-branch
+          echo "pr_number=${PR_NUMBER}" >> "$GITHUB_OUTPUT"
+
+  notify-failure:
+    needs: [create-main-pr]
+    if: always()
+    permissions:
+      issues: write
+    uses: ./.github/workflows/shared-notify.yml
+    with:
+      success: ${{ needs.create-main-pr.result == 'success' || needs.create-main-pr.outputs.skipped == 'true' }}
+      workflow_name: 'RC Main Cut'
+      job_results: '{"create-main-pr":"${{ needs.create-main-pr.result }}"}'

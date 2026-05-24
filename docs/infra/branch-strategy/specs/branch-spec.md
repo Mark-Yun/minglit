@@ -44,14 +44,14 @@
 | Direct push | 금지 |
 | Force push | 금지 |
 | Branch deletion | 금지 |
-| Required status checks | `nightly-pr-gate` (dev-staging 의 snapshot PR 에 대해) |
+| Required status checks | `dev-pr-gate` (dev-staging 의 snapshot PR 에 대해) |
 | Required reviewers | 0 |
 | Require conversation resolution | yes |
 | Require linear history | **yes** (nightly snapshot PR 만 들어옴, snapshot 자체가 linear) |
 | Allowed merge methods | merge commit (snapshot 보존용) |
 | Bypass roles | `minglit-release-bot` only for promotion/version metadata push |
 
-> dev 는 사람이 직접 PR 안 만듦. `nightly-cut` workflow 만 PR 생성. branch protection 이 사실상 workflow 만 허용하는 효과.
+> dev 는 사람이 직접 PR 안 만듦. `dev-staging-dev-cut` workflow 만 PR 생성. branch protection 이 사실상 workflow 만 허용하는 효과.
 
 ### `main`
 
@@ -61,8 +61,8 @@
 | Direct push | 금지 |
 | Force push | 금지 |
 | Branch deletion | 금지 |
-| Required status checks | `main-pr-gate` (RC HEAD 의 `rc-gate-pass`, `expand-migrate-contract`, `rc-soak-passed` marker 를 내부 검증) |
-| Required PR labels | GitHub Ruleset 직접 요구 없음. `main-pr-gate` 가 `rc-soak-passed` marker 를 검증 |
+| Required status checks | `main-pr-gate` (RC HEAD 의 `dev-rc-cut-pass`, `expand-migrate-contract`, `rc-main-cut-pass` marker 를 내부 검증) |
+| Required PR labels | GitHub Ruleset 직접 요구 없음. `main-pr-gate` 가 `rc-main-cut-pass` marker 를 검증 |
 | Required reviewers | 0 (workflow auto-merge) |
 | Require conversation resolution | yes |
 | Require linear history | **yes** |
@@ -70,7 +70,7 @@
 | Auto-delete head branch on merge | yes (`rc/*` branch 는 main merge 후 삭제, 이력은 protected tag 로 보존) |
 | Bypass roles | `minglit-release-bot` for final version/tag push, release manager only for catastrophic incident response |
 
-> rc → main PR 만 받음. GitHub Ruleset 은 `main-pr-gate` 하나만 required 로 두고, `main-pr-gate` 내부에서 RC HEAD status, soak marker, contract 재검증을 수행한다. PR head SHA 와 dev commit status 가 다를 수 있으므로 `rc-gate-pass` 를 branch protection 의 독립 required check 로 걸지 않는다.
+> rc → main PR 만 받음. GitHub Ruleset 은 `main-pr-gate` 하나만 required 로 두고, `main-pr-gate` 내부에서 RC HEAD status, soak marker, contract 재검증을 수행한다. PR head SHA 와 dev commit status 가 다를 수 있으므로 `dev-rc-cut-pass` 를 branch protection 의 독립 required check 로 걸지 않는다.
 
 ## Pattern Branch 설정
 
@@ -89,7 +89,7 @@
 | Auto-delete head branch on merge | yes (hotfix branch 자동 삭제) |
 | Bypass roles | `minglit-release-bot` only for RC version bump/tag push and RC branch cleanup |
 
-> `rc-cut` workflow 가 branch 생성 후 이 protection ruleset 을 REST API 로 활성화. RC 종료 후 `minglit-release-bot` 이 branch 를 삭제하고, 릴리즈 이력은 `promo/rc-*`, `v*-rc-*`, `promo/main-*` protected tag 로 보존한다.
+> `dev-rc-cut` workflow 가 branch 생성 후 이 protection ruleset 을 REST API 로 활성화. RC 종료 후 `minglit-release-bot` 이 branch 를 삭제하고, 릴리즈 이력은 `promo/rc-*`, `v*-rc-*`, `promo/main-*` protected tag 로 보존한다.
 
 ### `feat/*`, `fix/*`, `chore/*`, `docs/*`, `hotfix/*`
 
@@ -146,7 +146,7 @@ Bypass: 없음 (catastrophic 한 경우만 admin 명시 승인).
 
 | Pattern | 생성 권한 |
 |---------|----------|
-| `rc/YYYY-Wxx` | `rc-cut` workflow (GitHub Actions bot) only — human 직접 생성 금지 |
+| `rc/YYYY-Wxx` | `dev-rc-cut` workflow (GitHub Actions bot) only — human 직접 생성 금지 |
 | `release/**` | (현재 사용 안 함, 향후 추가 시 정의) |
 | `backport/**` | `rc-hotfix-backport` workflow only |
 
@@ -159,8 +159,8 @@ Protected branch 에 대한 direct push 는 human 에게 허용하지 않는다.
 | 항목 | 값 |
 |------|----|
 | Actor | `minglit-release-bot` (GitHub App 권장, 대안: fine-grained PAT 전용 bot account) |
-| Token secret | `MINGLIT_RELEASE_BOT_TOKEN` |
-| 사용 workflow | `dev-staging-post-merge-sync`, `nightly-cut`, `rc-cut`, `rc-post-merge-sync`, `rc-soak-check`, `rc-hotfix-backport`, `main-post-merge-promote` |
+| Token source | GitHub App installation token minted from `minglit_env/{stage}/github.env` (`MINGLIT_RELEASE_BOT_APP_ID` + `MINGLIT_RELEASE_BOT_PRIVATE_KEY_BASE64`) |
+| 사용 workflow | `dev-staging-dev-cut-gate`, `dev-staging-dev-cut`, `dev-rc-cut`, `rc-post-merge-sync`, `rc-main-cut`, `rc-hotfix-backport`, `main-deploy` |
 | Ruleset bypass | `dev-staging`, `dev`, `rc/**`, `main`, protected tag push (`v*`, `promo/**`) |
 | Human 사용 | 금지. 로컬/수동 CLI 에서 token 사용 금지 |
 | Audit | 모든 bot push 는 workflow run URL, actor, target ref, tag 목록을 PR/issue 또는 job summary 에 남김 |
@@ -172,8 +172,8 @@ GitHub App 기준 권장 permission:
 | Permission | Level | 이유 |
 |------------|-------|------|
 | Contents | Read/write | version bump commit, branch 생성/삭제, tag push |
-| Pull requests | Read/write | nightly/promotion/backport PR 생성, auto-merge enable |
-| Commit statuses | Read/write | `rc-gate-pass` status set |
+| Pull requests | Read/write | promotion/backport PR 생성, auto-merge enable |
+| Commit statuses | Read/write | `dev-rc-cut-pass` status set |
 | Checks | Read | gate 상태 조회 |
 | Issues | Read/write | auto-issue 생성/댓글 |
 | Metadata | Read | GitHub App 기본 권한 |
@@ -186,7 +186,7 @@ Deploy 권한·secret 격리·required reviewer 등은 GitHub Environment 단위
 
 | Environment | 용도 | 설정 |
 |-------------|------|------|
-| `dev` | dev 의 rc-gate-pass commit 으로 backend/web 자동 deploy | 자동 (no reviewer), Firebase service-account 등 dev secret |
+| `dev` | dev 의 dev-rc-cut-pass commit 으로 backend/web 자동 deploy | 자동 (no reviewer), Firebase service-account 등 dev secret |
 | `production` | main push 로 mobile build + store upload | **required reviewer (release manager)** — store upload 직전에 사람 1 명 승인. Apple/Google secret 격리. Sentry production project token |
 | `staging` (옵션) | RC Supabase branch 관리와 staging secret 격리 | TBD |
 
@@ -224,7 +224,7 @@ CODEOWNERS 가 required reviewer 와 결합하면 자동으로 review 요청 + �
 | version bump/tag push | `minglit-release-bot` | Ruleset bypass, workflow 내부에서만 |
 | nightly red 인데 main 핫픽스 필요 | release manager | `--admin` bypass + 명시 승인 (CLAUDE.md 룰) |
 | catastrophic incident (Tier 2b hard kill) | release manager / on-call | branch 변경 아님 (admin page 로 RC 콘솔 변경) |
-| RC abandon (TBD 시나리오) | RC owner | rc branch 삭제 + workflow_dispatch 로 새 rc-cut |
+| RC abandon (TBD 시나리오) | RC owner | rc branch 삭제 + workflow_dispatch 로 새 dev-rc-cut |
 
 ## 결정해야 할 것
 

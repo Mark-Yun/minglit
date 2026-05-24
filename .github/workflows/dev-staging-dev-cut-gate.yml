@@ -1,0 +1,98 @@
+name: dev-staging-dev-cut-gate
+
+on:
+  push:
+    branches: [dev-staging]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: PR number to use for the dev-staging CalVer revision.
+        required: true
+        type: string
+
+concurrency:
+  group: dev-staging-dev-cut-gate
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  calculate-version:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      !startsWith(github.event.head_commit.message || '', 'chore: bump version')
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.new }}
+      release_version: ${{ steps.version.outputs.base }}
+      tag_name: ${{ steps.version.outputs.tag }}
+
+    steps:
+      - name: Calculate dev-staging CalVer version
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MANUAL_PR_NUMBER: ${{ inputs.pr_number || '' }}
+          HEAD_SHA: ${{ github.sha }}
+          HEAD_MESSAGE: ${{ github.event.head_commit.message || '' }}
+        run: |
+          set -euo pipefail
+
+          if [ -n "${MANUAL_PR_NUMBER}" ]; then
+            PR_NUM="${MANUAL_PR_NUMBER}"
+          else
+            PR_NUM="$(gh api \
+              "repos/${GITHUB_REPOSITORY}/commits/${HEAD_SHA}/pulls" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              --jq '.[0].number // empty')"
+
+            if [ -z "${PR_NUM}" ]; then
+              PR_NUM="$(printf '%s\n' "${HEAD_MESSAGE}" | sed -nE 's/.*\(#([0-9]+)\).*/\1/p' | head -n 1)"
+            fi
+          fi
+
+          if ! [[ "${PR_NUM}" =~ ^[0-9]+$ ]]; then
+            echo "::error::Unable to determine merged PR number for dev-staging version bump."
+            exit 1
+          fi
+
+          NOW_YY="$(date -u +%y)"
+          NOW_MM="$(date -u +%m)"
+          BASE="${NOW_YY}.${NOW_MM}.${PR_NUM}"
+          NEW_VERSION="${BASE}-dev-staging"
+          TAG_NAME="v${NEW_VERSION}"
+
+          echo "new=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "base=${BASE}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG_NAME}" >> "$GITHUB_OUTPUT"
+          echo "Bumping dev-staging to ${NEW_VERSION}"
+
+  bump:
+    needs: [calculate-version]
+    uses: ./.github/workflows/version-bump.yml
+    with:
+      target_ref: dev-staging
+      version: ${{ needs.calculate-version.outputs.version }}
+      release_version: ${{ needs.calculate-version.outputs.release_version }}
+      tag_name: ${{ needs.calculate-version.outputs.tag_name }}
+      skip_ci: false
+    secrets: inherit
+
+  notify-failure:
+    needs: [calculate-version, bump]
+    if: always()
+    permissions:
+      issues: write
+    uses: ./.github/workflows/shared-notify.yml
+    with:
+      success: >-
+        ${{
+          (needs.calculate-version.result == 'success' || needs.calculate-version.result == 'skipped') &&
+          (needs.bump.result == 'success' || needs.bump.result == 'skipped')
+        }}
+      workflow_name: 'Dev-Staging Dev Cut Gate'
+      job_results: '{"calculate-version":"${{ needs.calculate-version.result }}","bump":"${{ needs.bump.result }}"}'

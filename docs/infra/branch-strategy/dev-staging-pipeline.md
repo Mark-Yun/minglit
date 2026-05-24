@@ -1,11 +1,11 @@
 # Dev-Staging Pipeline
 
-AI agent 와 feature/fix/chore PR 이 `dev-staging` 브랜치로 들어오는 진입점. 일반 PR + auto-merge 로 처리하고, `dev-staging-pr-gate` 가 가벼운 검증, 머지 후 `dev-staging-post-merge-sync` 가 release bot 권한으로 version bump.
+AI agent 와 feature/fix/chore PR 이 `dev-staging` 브랜치로 들어오는 진입점. 일반 PR + auto-merge 로 처리하고, `dev-staging-pr-gate` 가 가벼운 검증, 머지 후 `dev-staging-dev-cut-gate` 가 release bot 권한으로 version bump.
 
 ## 두 가지 workflow
 
 1. **`dev-staging-pr-gate`** — PR 머지 전
-2. **`dev-staging-post-merge-sync`** — PR 머지 직후 (version bump + tag)
+2. **`dev-staging-dev-cut-gate`** — PR 머지 직후 (version bump + tag)
 
 ## PR + Auto-Merge
 
@@ -22,7 +22,7 @@ AI agent 와 feature/fix/chore PR 이 `dev-staging` 브랜치로 들어오는 �
     ↓
 [통과 시 squash merge to dev-staging]
     ↓
-[dev-staging-post-merge-sync 자동 발동]
+[dev-staging-dev-cut-gate 자동 발동]
 ```
 
 ### 왜 merge queue 를 보류하나
@@ -81,22 +81,22 @@ AI agent 와 feature/fix/chore PR 이 `dev-staging` 브랜치로 들어오는 �
 
 **현재 상태**: TODO — AST 검출 로직 + 예외 라벨 운영 룰 + 분기별 우회 통계.
 
-## `dev-staging-post-merge-sync`
+## `dev-staging-dev-cut-gate`
 
-PR 머지 직후 자동 발동.
+PR 머지 직후 자동 발동. 운영 복구용으로 `workflow_dispatch` 도 제공하며, 수동 실행 시 version 에 사용할 PR 번호를 입력한다.
 
 ```
-1. bump-version.sh {PR번호}-dev-staging  # 8개 파일 version 일괄 업데이트
-2. git commit -m "chore: bump version to v{ver}-dev-staging [skip ci]"
+1. `version-bump` reusable 호출: `bump-version.sh YY.MM.{PR번호}-dev-staging`
+2. git commit -m "chore: bump version to v{ver}-dev-staging"
 3. git tag v{ver}-dev-staging
 4. git push (tag + commit)
 ```
 
 `git push` 는 human 권한이 아니라 `minglit-release-bot` 전용 token 으로 실행한다. Ruleset bypass 는 이 bot actor 에만 부여하고, workflow permission 은 `contents: write` 및 tag/status 갱신에 필요한 최소 권한으로 제한한다.
 
-Tag `v{ver}-dev-staging` 는 다음 단계의 `nightly-cut` workflow 가 query 해서 "가장 최근 dev-staging 의 coherent snapshot" 찾는 데 사용.
+Tag `v{ver}-dev-staging` 는 다음 단계의 `dev-staging-dev-cut` workflow 가 query 해서 "가장 최근 dev-staging 의 coherent snapshot" 찾는 데 사용.
 
-> **구현 디테일**: bump 커밋이 별도로 만들어지는 게 깔끔 vs squash 커밋에 inline 시키는 게 깔끔 — workflow 디자인 결정 (TBD).
+> **구현 결정**: bump 커밋은 PR squash commit 과 분리한다. release bot 전용 커밋으로 남겨 branch/tag write 권한과 human PR 변경을 분리한다. `[skip ci]` 는 쓰지 않는다. nightly PR 의 HEAD 가 이 bump 커밋이므로 `[skip ci]` 를 넣으면 required check 가 생성되지 않는다. 루프 방지는 `dev-staging-dev-cut-gate` 의 commit message guard 로 처리한다.
 
 ## Error-Backoff
 
@@ -124,4 +124,4 @@ destructive pattern 검출이 too aggressive 한 경우:
 - [branch-flow.md](./branch-flow.md) — protection + tag
 
 ---
-_Reviewed: 2026-05-19 09:47_
+_Reviewed: 2026-05-23 16:18_

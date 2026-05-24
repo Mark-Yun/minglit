@@ -3,7 +3,7 @@ name: sync-version
 on:
   pull_request:
     types: [closed]
-    branches: [dev, main]
+    branches: [main]
 
 concurrency:
   group: sync-version-${{ github.base_ref }}
@@ -14,32 +14,20 @@ permissions:
   pull-requests: write
 
 jobs:
-  bump:
+  calculate-version:
     if: >-
       github.event.pull_request.merged == true &&
       !startsWith(github.event.pull_request.title, 'chore: bump version')
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.new }}
+      release_version: ${{ steps.version.outputs.base }}
 
     steps:
       - uses: actions/checkout@v6
         with:
           ref: ${{ github.base_ref }}
           fetch-depth: 0
-          persist-credentials: false
-
-      - name: Validate release bot token
-        env:
-          MINGLIT_RELEASE_BOT_TOKEN: ${{ secrets.MINGLIT_RELEASE_BOT_TOKEN }}
-        run: |
-          if [ -z "${MINGLIT_RELEASE_BOT_TOKEN}" ]; then
-            echo "::error::MINGLIT_RELEASE_BOT_TOKEN is required for protected branch version bump pushes"
-            exit 1
-          fi
-
-      - name: Setup Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.x'
 
       - name: Calculate next CalVer version
         id: version
@@ -57,72 +45,33 @@ jobs:
 
           BASE="${NOW_YY}.${NOW_MM}.${PR_NUM}"
 
-          if [ "$BRANCH" = "dev" ]; then
-            NEW_VERSION="${BASE}-dev"
-          else
-            NEW_VERSION="${BASE}"
-          fi
+          NEW_VERSION="${BASE}"
 
           echo "new=$NEW_VERSION" >> "$GITHUB_OUTPUT"
           echo "base=$BASE" >> "$GITHUB_OUTPUT"
           echo "Bumping $CURRENT → $NEW_VERSION"
 
-      - name: Run bump-version.sh
-        run: bash scripts/bump-version.sh "${{ steps.version.outputs.new }}"
-
-      - name: Commit and push version bump
-        env:
-          MINGLIT_RELEASE_BOT_TOKEN: ${{ secrets.MINGLIT_RELEASE_BOT_TOKEN }}
-        run: |
-          NEW_VERSION="${{ steps.version.outputs.new }}"
-          BRANCH="${{ github.base_ref }}"
-
-          git config user.name "minglit-release-bot"
-          git config user.email "minglit-release-bot@users.noreply.github.com"
-          git remote set-url origin "https://x-access-token:${MINGLIT_RELEASE_BOT_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-
-          git add -A
-          git diff --cached --quiet && { echo "No version changes to commit."; exit 0; }
-          git commit -m "chore: bump version to v${NEW_VERSION} [skip ci]"
-
-          # Fix #1506: push race — dev가 다른 경로로 전진할 수 있어 pull --rebase + retry
-          MAX_ATTEMPTS=5
-          ATTEMPT=0
-          until git push origin HEAD:${BRANCH}; do
-            ATTEMPT=$((ATTEMPT+1))
-            if [ $ATTEMPT -ge $MAX_ATTEMPTS ]; then
-              echo "::error::push failed after $MAX_ATTEMPTS attempts"
-              exit 1
-            fi
-            echo "::warning::push rejected (attempt $ATTEMPT/$MAX_ATTEMPTS), rebasing on origin/${BRANCH} and retrying..."
-            git fetch origin ${BRANCH}
-            git rebase origin/${BRANCH} || {
-              echo "::error::rebase failed — manual resolution required"
-              exit 1
-            }
-            # linear backoff: 2s, 4s, 6s, 8s
-            sleep $((2 * ATTEMPT))
-          done
-          git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
-
-      - name: Create GitHub release (main only)
-        if: github.base_ref == 'main'
-        env:
-          GH_TOKEN: ${{ secrets.MINGLIT_RELEASE_BOT_TOKEN }}
-        run: |
-          VERSION="${{ steps.version.outputs.base }}"
-          gh release create "v${VERSION}" \
-            --generate-notes \
-            --target main \
-            --title "v${VERSION}"
+  bump:
+    needs: [calculate-version]
+    uses: ./.github/workflows/version-bump.yml
+    with:
+      target_ref: ${{ github.base_ref }}
+      version: ${{ needs.calculate-version.outputs.version }}
+      release_version: ${{ needs.calculate-version.outputs.release_version }}
+      create_release: ${{ github.base_ref == 'main' }}
+    secrets: inherit
 
   notify-failure:
-    needs: [bump]
+    needs: [calculate-version, bump]
     if: always()
     permissions:
       issues: write
     uses: ./.github/workflows/shared-notify.yml
     with:
-      success: ${{ needs.bump.result == 'success' || needs.bump.result == 'skipped' }}
+      success: >-
+        ${{
+          (needs.calculate-version.result == 'success' || needs.calculate-version.result == 'skipped') &&
+          (needs.bump.result == 'success' || needs.bump.result == 'skipped')
+        }}
       workflow_name: 'Version Bump'
-      job_results: '{"bump":"${{ needs.bump.result }}"}'
+      job_results: '{"calculate-version":"${{ needs.calculate-version.result }}","bump":"${{ needs.bump.result }}"}'
