@@ -16,6 +16,7 @@ minglit 의 backend API 진입점. 60+ EF 와 공용 `_shared/`, 테스트 유�
 | [_payment_integration_tests/](./_payment_integration_tests/BLUEDOC.md) | 결제 chaining 시뮬. 추후 `_integration_tests/` 흡수              |
 | [event-flow-simulator/](./event-flow-simulator/BLUEDOC.md)             | 이벤트 lifecycle funnel 시뮬레이터                               |
 | [user-create-order/](./user-create-order/BLUEDOC.md)                   | 이벤트 신청/주문 생성 EF                                         |
+| [payment-verify/](./payment-verify/BLUEDOC.md)                         | PortOne 결제 검증/승인 EF                                        |
 
 ## 핵심 컨벤션
 
