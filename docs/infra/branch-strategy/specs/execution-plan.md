@@ -23,16 +23,16 @@
 |---------------|----------|----------|
 | `pr-gate-core` (reusable) | `pr-gate` 의 step 들을 reusable workflow_call 로 추출 + stage parameter 추가 | **refactor** |
 | `version-bump` (reusable) | `sync-version` 의 핵심 로직 → reusable 분리 | **refactor** |
-| `rc-gate-suite` (reusable) | 기존 `monitor-patrol-e2e`, `monitor-cuj-coverage` 등을 통합해 reusable suite 구성 | **신규 (조합)** |
+| `dev-rc-cut-gate-suite` (reusable) | 기존 `monitor-patrol-e2e`, `monitor-cuj-coverage` 등을 통합해 reusable suite 구성 | **신규 (조합)** |
 | `auto-issue` (reusable) | (없음) | **신규** |
 | `backport-pr` (reusable) | (없음) | **신규** |
 | `dev-staging-pr-gate` | `pr-gate` 를 dev-staging base 로 재사용 (stage=dev-staging) | **신규 (얇은 wrapper)** |
-| `dev-staging-post-merge-sync` | `post-merge` + `sync-version` orchestration | **신규 (조합)** |
-| `nightly-cut` | (없음) | **신규** |
-| `nightly-pr-gate` | `dev-staging-pr-gate` 와 동일 (stage=nightly) | **신규 (얇은 wrapper)** |
-| `rc-gate` | (없음) — rc-gate-suite 호출 + status set | **신규** |
+| `dev-staging-dev-cut-gate` | `post-merge` + `sync-version` orchestration | **신규 (조합)** |
+| `dev-staging-dev-cut` | (없음) | **신규** |
+| `dev-pr-gate` | `dev-staging-pr-gate` 와 동일 (stage=dev) | **신규 (얇은 wrapper)** |
+| `dev-rc-cut-gate` | 기존 `rc-gate` rename + `dev-rc-cut-pass` status set. full suite 는 후속 gate 확장 | **rename/refactor** |
 | `dev-deploy` | dev deploy/smoke entrypoint (범위 TBD), event-flow 는 monitor 로 유지 | **신규/선택** |
-| `rc-cut`, `rc-pr-gate`, `rc-post-merge-sync`, `rc-deploy`, `main-cut`, `rc-hotfix-backport` | (모두 없음) | **신규** |
+| `dev-rc-cut`, `rc-pr-gate`, `rc-post-merge-sync`, `rc-deploy`, `rc-main-cut-gate`, `rc-main-cut`, `rc-hotfix-backport` | 기존 `rc-cut` rename + 신규 wrapper/cut flow | **신규/rename** |
 | `main-pr-gate`, `main-deploy` | (없음, 부분적으로 `sync-version` / `deploy-*`) | **신규 + refactor** |
 | backend prod deploy | `deploy-supabase` 로직을 `main-deploy` 하위 job/reusable 로 흡수 | **refactor** |
 | web deploy | Vercel native build 로 전환 | **external config** |
@@ -60,9 +60,9 @@
 
 - 어느 시점에 default branch 를 dev-staging 으로 바꿀지 (Phase 4 까지 dev 유지)
 
-## Phase 2: Workflow refactor
+## Phase 2: CI flow / PR flow
 
-**위험도**: 중간. 기존 PR 흐름에 영향 가능.
+**위험도**: 중간. 기존 PR 흐름에 영향 가능. 목표는 gate 조건을 깊게 채우기 전에 PR 이 올바른 브랜치로 흐르는 entry workflow 를 먼저 만드는 것이다.
 
 ### Steps (순차)
 
@@ -74,8 +74,6 @@
 | 2d | `minglit-release-bot` 생성 + App ID/private key 등록 + workflow permission 최소화 | protected branch/tag push 를 human 대신 bot 으로 수행 |
 | 2e | `auto-issue` reusable 추가 | 신규 — 기존 영향 없음 |
 | 2f | **`ci-result` 폐기** — 현 branch protection 의 required check `ci-result` 를 각 branch 의 `pr-gate` 로 변경 (Phase 4 에서 실제 적용) | 본 step 은 workflow 측 준비, 실제 protection 변경은 4 |
-| 2g | backend deploy 로직을 `main-deploy` 하위 job/reusable 로 정리. dev 에서는 prod backend deploy 하지 않음 | prod deploy 의 단일 진입점 확정 |
-| 2h | **`deploy-vercel` 폐기** — 자체 빌드 워크플로우 제거. **Vercel native build 로 전환** (Vercel-GitHub 연결, Vercel-side: main=production) | Vercel-side 설정 필요, workflow 측 작업 없음 |
 
 ### Rollback
 
@@ -87,7 +85,21 @@
 - 기존 `pr-gate.yml` 파일을 그대로 두고 reusable 내부 사용 vs `pr-gate-core.yml` 신규 파일 (기존 파일은 trigger 만 정의)
 - 2c 의 sync-version 도 그대로 두고 reusable 호출 vs 완전 흡수
 
-## Phase 3: Workflow 신규 구현
+## Phase 3: Branch CD flow
+
+**위험도**: 중간. CI/promotion entrypoint 가 안정된 뒤 branch별 deploy entrypoint 를 정리한다.
+
+### Steps
+
+| Step | 작업 | 의존 |
+|------|------|------|
+| 3a | `dev-deploy` entrypoint: dev 환경 backend deploy/smoke. event-flow simulator 는 `monitor-event-flow-*` batch 로 유지 | Phase 2 |
+| 3b | `rc-deploy` entrypoint: Supabase branching 기반 RC branch 생성/적용/검증 | Phase 2 + Supabase branching 설정 |
+| 3c | `main-deploy` entrypoint: final version/tag + backend prod deploy. mobile deploy workflows 는 기존 `deploy-android-*`, `deploy-ios-*` 재사용 | Phase 2 |
+| 3d | backend deploy 로직을 `main-deploy` 하위 job/reusable 로 정리. dev 에서는 prod backend deploy 하지 않음 | 3c |
+| 3e | **`deploy-vercel` 폐기** — 자체 빌드 워크플로우 제거. **Vercel native build 로 전환** (Vercel-GitHub 연결, Vercel-side: main=production) | Vercel-side 설정 필요 |
+
+## Phase 4: Gate fill-in
 
 **위험도**: 중간~높음. 새 흐름 도입.
 
@@ -95,13 +107,10 @@
 
 | Step | 작업 | 의존 |
 |------|------|------|
-| 3a | `dev-staging-pr-gate`, `dev-staging-post-merge-sync` | 2a, 2b, 2c, 2d |
-| 3b | `nightly-cut`, `nightly-pr-gate` | 3a + dev-staging branch 존재 (Phase 1) |
-| 3c | `rc-gate-suite` reusable 조립 (CUJ × matrix + integration + Test Lab) | 2a |
-| 3d | `rc-gate` (호출 + status set) | 3c + 2f |
-| 3e | `rc-cut`, `rc-pr-gate`, `rc-post-merge-sync`, `rc-deploy`, `main-cut` | 3d + rc/* branch 패턴 확정 + Supabase branching 설정 |
-| 3f | `backport-pr` reusable, `rc-hotfix-backport` | 2a |
-| 3g | `main-pr-gate`, `main-deploy` | 3d (rc-gate-pass status 필요) |
+| 4a | `dev-rc-cut-gate-suite` reusable 조립 (CUJ × matrix + integration + Test Lab) | Phase 2 |
+| 4b | `dev-rc-cut-gate` 에 full suite 연결 + failure auto-issue/backoff | 4a |
+| 4c | `main-pr-gate` 에 RC lineage / `rc-main-cut-pass` / contract 재검증 추가 | Phase 2 |
+| 4d | `backport-pr` reusable, `rc-hotfix-backport` | Phase 2 |
 
 ### Verification 단계
 
@@ -117,11 +126,11 @@
 
 ### 결정
 
-- 신규 workflow 도입 순서가 정확히 위 순서 맞는지 (3a-3g)
+- 신규 workflow 도입 순서가 정확히 위 순서 맞는지
 - 각 verification 기간 (1주 vs 더 짧게/길게)
 - 운영 중 issue 발견 시 다음 step 진행 여부
 
-## Phase 4: Branch rule 적용
+## Phase 5: Branch rule 적용
 
 **위험도**: 가장 높음. required check 잘못 지정 시 모든 PR 머지 차단.
 
@@ -129,39 +138,39 @@
 
 | Step | 작업 | Pre-condition |
 |------|------|---------------|
-| 4a | `dev-staging` Ruleset 적용 (required: `dev-staging-pr-gate`) | 3a 1주 운영 |
-| 4b | `dev` Ruleset 갱신 (required: `nightly-pr-gate`) | 3b 1주 |
-| 4c | `rc/**` pattern Ruleset 적용 (required: `rc-pr-gate`) | 3e 1주 |
-| 4d | `main` Ruleset 갱신 — **기존 `ci-result` required check 제거** + 추가: `main-pr-gate` 단일 required check (`rc-gate-pass`, `expand-migrate-contract`, `rc-soak-passed` 는 내부 검증) | 3g 1주 + 3d 안정 |
-| 4e | Tag protection Ruleset (`v*`, `promo/**`) + release bot tag bypass | 4d 안정 (release 가 도는 게 확인된 후) |
-| 4f | Branch creation 제한 (`rc/**` → bot only) | 4c 안정 |
-| 4g | GitHub Environment `production` 생성 + required reviewer 설정 | 3g 1주 |
-| 4h | **Default branch 변경**: `dev` → `dev-staging` | 모든 위 단계 안정 |
+| 5a | `dev-staging` Ruleset 적용 (required: `dev-staging-pr-gate`) | Phase 2 1주 운영 |
+| 5b | `dev` Ruleset 갱신 (required: `dev-pr-gate`) | Phase 2 1주 |
+| 5c | `rc/**` pattern Ruleset 적용 (required: `rc-pr-gate`) | Phase 2 + RC flow 1주 |
+| 5d | `main` Ruleset 갱신 — **기존 `ci-result` required check 제거** + 추가: `main-pr-gate` 단일 required check (`dev-rc-cut-pass`, `expand-migrate-contract`, `rc-main-cut-pass` 는 내부 검증) | Phase 4 gate fill-in 안정 |
+| 5e | Tag protection Ruleset (`v*`, `promo/**`) + release bot tag bypass | 5d 안정 (release 가 도는 게 확인된 후) |
+| 5f | Branch creation 제한 (`rc/**` → bot only) | 5c 안정 |
+| 5g | GitHub Environment `production` 생성 + required reviewer 설정 | Phase 3 1주 |
+| 5h | **Default branch 변경**: `dev` → `dev-staging` | 모든 위 단계 안정 |
 
 ### Rollback
 
 - 각 Ruleset 은 GitHub 콘솔에서 즉시 disable 가능
 - Default branch 변경은 rollback 가능 (수동)
-- 가장 위험: 4d (main 의 required check) — 잘못 적용 시 모든 release 차단. **항상 단계별로 우선 *warn-only* 모드로 적용 후 *enforced* 전환**
+- 가장 위험: 5d (main 의 required check) — 잘못 적용 시 모든 release 차단. **항상 단계별로 우선 *warn-only* 모드로 적용 후 *enforced* 전환**
 
 ### 결정
 
 - 각 Ruleset 의 bypass list (admin / release manager)
-- 4h 시점 (Phase 4 끝일까, 운영 1개월 후일까)
+- 5h 시점 (Phase 5 끝일까, 운영 1개월 후일까)
 
 ## 우선순위 / Critical Path
 
 가장 critical 한 path (block 면 전체 멈춤):
 
 ```
-Phase 1 (skeletal) → Phase 2a-2c (pr-gate refactor) → Phase 3a (dev-staging workflow)
-    → Phase 3d (rc-gate, 가장 큰 신규) → Phase 4a (첫 protection 적용)
+Phase 1 (skeletal) → Phase 2 (CI/PR flow) → Phase 3 (branch CD)
+    → Phase 4 (gate fill-in) → Phase 5a (첫 protection 적용)
 ```
 
 비-critical (병렬 가능):
 - Phase 2e (`auto-issue` reusable) — 신규, 의존 없음
-- Phase 2f/2g (deploy trigger refactor) — Phase 3 이전에 끝나면 OK
-- 3c (rc-gate-suite) — 3d 이전에만 끝나면 OK
+- Phase 3 (deploy trigger refactor) — Phase 5 이전에 끝나면 OK
+- Phase 4a (dev-rc-cut-gate-suite) — Phase 4b 이전에만 끝나면 OK
 
 ## Secret Management 정리 (별도 작업, user 와 함께)
 
@@ -206,7 +215,7 @@ Phase 1 (skeletal) → Phase 2a-2c (pr-gate refactor) → Phase 3a (dev-staging 
 
 1. **CI 실패가 release 차단**: pr-gate 의 stage parameter 가 정확히 매칭돼야 함. *required check 이름 한 글자라도 다르면 차단*. 특히 `ci-result` → stage pr-gate 전환 시 cutover 타이밍 중요
 2. **trigger 변경**: cron → push 변경 시 *겹치는 기간* 발생할 수 있음 — 한쪽 비활성화 후 다른쪽 활성화. 부분 적용 금지
-3. **status check naming**: `rc-gate-pass` 같은 commit status 의 이름이 spec 과 workflow 에서 일치해야 함. branch protection 에는 직접 required 로 걸지 않고 `main-pr-gate` 내부에서 검증
+3. **status check naming**: `dev-rc-cut-pass` 같은 commit status 의 이름이 spec 과 workflow 에서 일치해야 함. branch protection 에는 직접 required 로 걸지 않고 `main-pr-gate` 내부에서 검증
 4. **AI agent 의 PR 동시성**: merge queue 없으니 race condition 발생 시 수동 conflict resolve 필요 (또는 merge queue 도입 검토)
 5. **Release bot token 실패**: GitHub App ID/private key 누락 또는 App 권한 부족이면 version bump/tag/promotion workflow 가 막힘. 최초 도입 시 dry-run branch 로 push/tag/delete까지 검증
 6. **Secret 마이그레이션 중 workflow 실패**: file 기반과 GH secret 참조가 섞이는 transition 기간 — env 변수 누락 시 즉시 발견 (CI 통과 못함)
@@ -215,17 +224,17 @@ Phase 1 (skeletal) → Phase 2a-2c (pr-gate refactor) → Phase 3a (dev-staging 
 
 내부 검토 결과 — **현재 순서 (3a → 3b → 3c → 3d → 3e → 3f → 3g) OK**, 단 다음 minor 개선:
 
-- **3a / 3b 병렬 가능**: dev-staging-pr-gate (3a) 와 nightly-cut (3b) 는 서로 의존이 약함. 단 version bump/tag push 검증에는 release bot 준비가 선행되어야 함
-- **3c → 3d 사이 verification 불필요**: rc-gate-suite (3c) 는 reusable, 호출은 rc-gate (3d) 에서. 3c 자체로는 동작 없음 → 3d 와 동일 PR 또는 직후 PR 가능
+- **3a / 3b 병렬 가능**: dev-staging-pr-gate (3a) 와 dev-staging-dev-cut (3b) 는 서로 의존이 약함. 단 version bump/tag push 검증에는 release bot 준비가 선행되어야 함
+- **3c → 3d 사이 verification 불필요**: dev-rc-cut-gate-suite (3c) 는 reusable, 호출은 dev-rc-cut-gate (3d) 에서. 3c 자체로는 동작 없음 → 3d 와 동일 PR 또는 직후 PR 가능
 - **3f 는 3e 와 같이**: rc-hotfix-backport 가 rc-promotion 흐름의 일부라 같은 시점에 도입이 자연스러움
-- **가장 critical**: 3d (rc-gate) — 첫 verification 기간 1주 이상 추천 (다른 stage 와 달리 60분 비용 + 통합 시나리오 복잡)
+- **가장 critical**: 3d (dev-rc-cut-gate) — 첫 verification 기간 1주 이상 추천 (다른 stage 와 달리 60분 비용 + 통합 시나리오 복잡)
 
 권장 변경 없음. 위 순서 그대로 진행.
 
 ## TBD (구현 중 결정)
 
 - `auto-issue` 의 P0/P1/P2 라벨 컨벤션 표준 (현재 minglit 의 `P0-critical` 등 따름)
-- `rc-gate-suite` 매트릭스 분할 (60분 예산 안에 들어오게)
+- `dev-rc-cut-gate-suite` 매트릭스 분할 (60분 예산 안에 들어오게)
 - 4d 의 main protection 적용을 *warn-only* → *enforced* 전환 일자
 - Vercel native build 전환 시점 + Vercel-GitHub 연결 설정 (Vercel-side 작업)
 - Secret 마이그레이션 timing (user 와 함께 — Phase 2/3 와 별도)
