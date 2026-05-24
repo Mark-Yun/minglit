@@ -207,8 +207,8 @@ void main() {
         expect(switches.contains('서비스 이용약관'), isFalse);
         expect(switches.contains('개인정보 수집·이용'), isFalse);
 
-        // 필수 항목은 ListTile로 존재 (read-only)
-        expect(find.text('서비스 이용약관'), findsOneWidget);
+        // 약관 보기 섹션에도 동일 텍스트가 있으므로 개수는 고정하지 않는다.
+        expect(find.text('서비스 이용약관'), findsWidgets);
         expect(find.text('개인정보 수집·이용'), findsOneWidget);
       },
     );
@@ -235,7 +235,15 @@ void main() {
         return base();
       },
       body: (t) async {
-        expect(find.text('동의됨'), findsOneWidget);
+        final identityInfoTile = find.ancestor(
+          of: find.text('본인인증 정보'),
+          matching: find.byType(ListTile),
+        );
+        expect(identityInfoTile, findsOneWidget);
+        expect(
+          find.descendant(of: identityInfoTile, matching: find.text('동의됨')),
+          findsOneWidget,
+        );
       },
     );
   });
