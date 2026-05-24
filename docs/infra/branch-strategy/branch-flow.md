@@ -90,6 +90,11 @@ monitor-event-flow-*:
   schedule: continuous
   branch: dev
   purpose: backend/event-flow simulation signal
+
+monitor-dev-staging-health:
+  schedule: every 6 hours
+  branch: dev-staging
+  purpose: EF unit/integration + user/partner CUJ early regression signal
 ```
 
 ### main push → prod deploy chain

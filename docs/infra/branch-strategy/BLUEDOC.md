@@ -47,6 +47,7 @@ flowchart LR
 | 단계 | Entry workflow | 역할 |
 |------|----------------|------|
 | dev-staging PR | `dev-staging-pr-gate` | feature/agent PR 의 빠른 CI gate |
+| dev-staging 지속 검증 | `monitor-dev-staging-health` | 6시간마다 EF unit/integration + user/partner CUJ 로 nightly 전 회귀 감지 |
 | dev-staging → dev cut gate | `dev-staging-dev-cut-gate` | dev 로 promote 할 coherent dev-staging snapshot 을 `v*-dev-staging` tag 로 선별 |
 | dev-staging → dev cut | `dev-staging-dev-cut` + `dev-pr-gate` | gate 가 선별한 snapshot 을 dev PR 로 promote |
 | dev → rc cut gate | `dev-rc-cut-gate` | 24h dev soak status/run history 확인 후 `dev-rc-cut-pass` status 부여 |

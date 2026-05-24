@@ -7,6 +7,7 @@
 | 단계 | 게이트 | 소요 | 실패 시 |
 |------|--------|------|---------|
 | dev-staging 머지 전 | `dev-staging-pr-gate` (unit · lint · analyze · pgTAP · EF test · migration check · `expand-migrate-contract` · `flag-registration` · gitleaks) | < 10분 | auto-merge 보류 |
+| dev-staging 머지 후 지속 검증 | `monitor-dev-staging-health` (EF unit/integration + user/partner CUJ) | 6시간마다 | 실패 즉시 issue/notify + `dev-staging-health/*` status |
 | dev 머지 전 | `dev-pr-gate` (dev-staging-pr-gate 와 동일 — defensive) | < 10분 | dev-staging-dev-cut PR drop |
 | dev 머지 후 24h soak | `monitor-event-flow-*` + real-device/app AI review status writer | 24h | 실패 즉시 `dev-soak/*` failure status + release-blocker issue |
 | RC cut 직전 | `dev-rc-cut-gate` evaluator (24h run history + `dev-soak/*` status 확인) | 분 | `dev-rc-cut-pass` 미부여 |
@@ -35,6 +36,17 @@
 - CodeRabbit 리뷰 (최대 30분 대기)
 
 룰: 10분 넘으면 `dev-rc-cut-gate` 로 이동.
+
+### monitor-dev-staging-health — 6시간 health monitor
+
+`dev-staging` HEAD 를 하루 4번 검증한다. PR required check 는 아니며, nightly/dev cut 전에 앱/백엔드 계약 회귀를 빨리 발견하기 위한 지속 monitor 다.
+
+- `ef-unit`: Edge Function Deno unit test + EF auth/lint guard
+- `ef-integration`: local Supabase + migration-only DB 에서 EF CUJ integration test
+- `cuj-user`: app_user emulator CUJ
+- `cuj-partner`: app_partner emulator CUJ
+
+결과는 candidate SHA 에 `dev-staging-health/ef-unit`, `dev-staging-health/ef-integration`, `dev-staging-health/cuj-user`, `dev-staging-health/cuj-partner` commit status 로 남긴다. 초기에는 alert/issue 용 signal 로만 사용하고, 안정화 후 `dev-staging-dev-cut-gate` 가 failure status 를 보면 dev promotion 을 보류하도록 연결한다.
 
 ### dev-pr-gate
 
@@ -90,6 +102,7 @@ RC 의 hotfix 만 받음. `pr-gate` + 추가 mobile smoke. 머지 시 `rc-post-m
 |-------------|-----------|------|
 | 결정론적, < 10분 | `dev-staging-pr-gate` | PR 사이클 안 막음 |
 | flaky 또는 느림 (10분+) | dev soak monitor / real-device workflow | PR 머지 게이트의 신뢰도 보호 |
+| 10분+ 이지만 nightly 전에 잡아야 하는 앱/EF 회귀 | `monitor-dev-staging-health` | dev-staging 머지는 빠르게 유지하고 최대 6시간 내 발견 |
 | 외부 의존성 (실 결제 등) | dev soak + flag canary | 비용·side effect 통제 |
 | 부하/성능 | scheduled monitor or staged rollout 메트릭 | 매일 무거움 |
 | backend ↔ mobile 계약 호환 | `expand-migrate-contract` CI + flag canary 메트릭 | 다층 안전망 |
