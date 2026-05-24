@@ -20,7 +20,7 @@
 | `post-merge` | dev push 직후 follow-up 자동화의 단일 entry point (5 reusable orchestrator) | `post-merge` |
 | `tool-` | (수동으로 부를 때만 도는 도구) | (현재 없음 — 새 수동 도구 추가 시 prefix) |
 | `shared-` | (다른 워크플로우의 부품 — 단독 실행 X) | `shared-notify`, `shared-android-deploy` |
-| branch-strategy stage name | branch-strategy 문서의 stage entry workflow | `dev-staging-post-merge-sync`, `nightly-cut`, `rc-gate`, `rc-cut` |
+| branch-strategy stage name | branch-strategy 문서의 stage entry workflow | `dev-staging-post-merge-sync`, `nightly-cut`, `rc-gate`, `dev-deploy`, `rc-cut`, `rc-deploy`, `main-cut`, `main-deploy` |
 | reusable no-prefix | `workflow_call` 로만 호출되는 domain reusable | `version-bump` |
 
 ## Reusable Gates
@@ -30,7 +30,9 @@
 - 기존 required check 는 아직 `ci-result` 그대로 유지한다. stage 별 required check 전환은 branch-strategy Phase 4 에서 Ruleset 과 함께 적용한다.
 - `dev-staging-post-merge-sync` 가 dev-staging 의 PR-number CalVer bump/tag 를 담당한다. `sync-version` 은 legacy main release bump 만 담당하며, `dev` promotion 은 `nightly-cut` 에서 version 변경 없이 처리한다.
 - `rc-gate` 는 dev push 후 user/partner CUJ integration 을 직접 실행하고, 통과한 commit 에만 `rc-gate-pass` status 를 찍는다. backend/EF/Test Lab 을 포함한 full `rc-gate-suite` matrix 는 후속 확장이다.
-- `rc-cut` 은 latest `rc-gate-pass` dev commit 에서 `rc/YYYY-Www` branch 를 만들고 `version-bump` 로 `v*-rc-01` + `promo/rc-*` tag 를 생성한다.
+- `rc-cut` 은 latest `rc-gate-pass` dev commit 에서 `rc/YYYY-Wxx` branch 를 만들고 `version-bump` 로 `v*-rc-01` + `promo/rc-*` tag 를 생성한다.
+- `main-cut` 은 5일 soak 를 통과한 `rc/*` 를 `main` PR 로 promote 한다.
+- deploy entry 는 `[branch]-deploy` 로 통일한다 (`dev-deploy`, `rc-deploy`, `main-deploy`). `monitor-event-flow-*` 는 deploy 가 아니라 지속 batch signal 이다.
 - protected branch/tag 에 직접 push 하는 workflow 는 `minglit-release-bot` GitHub App token 을 사용한다. App credential 은 `minglit_env/{stage}/github.env` 파일에서 먼저 읽고, 공통 token mint 는 `.github/actions/release-bot-token` 에서 처리한다.
 
 ## 컨벤션
@@ -51,4 +53,4 @@
 - [CLAUDE.md](../../CLAUDE.md) `## PR Conventions` — required check (`ci-result` job = `pr-gate.yml` 내부) / auto-merge 흐름
 
 ---
-_Reviewed: 2026-05-24 09:24_
+_Reviewed: 2026-05-24 10:24_
