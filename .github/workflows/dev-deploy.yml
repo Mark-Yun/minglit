@@ -47,6 +47,7 @@ jobs:
     uses: ./.github/workflows/deploy-android-user.yml
     with:
       target-ref: dev
+      deploy-stage: dev
     secrets: inherit
 
   android_partner:
@@ -55,6 +56,7 @@ jobs:
     uses: ./.github/workflows/deploy-android-partner.yml
     with:
       target-ref: dev
+      deploy-stage: dev
     secrets: inherit
 
   ios_user:
@@ -63,6 +65,7 @@ jobs:
     uses: ./.github/workflows/deploy-ios-user.yml
     with:
       target-ref: dev
+      deploy-stage: dev
     secrets: inherit
 
   ios_partner:
@@ -71,6 +74,7 @@ jobs:
     uses: ./.github/workflows/deploy-ios-partner.yml
     with:
       target-ref: dev
+      deploy-stage: dev
     secrets: inherit
 
   notify-failure:

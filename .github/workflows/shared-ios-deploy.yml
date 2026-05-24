@@ -32,6 +32,10 @@ on:
         required: false
         type: string
         default: ''
+      deploy-stage:
+        description: 'Deployment stage used for signing/env selection (dev or main).'
+        required: true
+        type: string
     secrets:
       APPLE_CERTIFICATE_BASE64:
         required: true
@@ -68,7 +72,7 @@ jobs:
   ios-deploy:
     runs-on: macos-15  # Fix #2371: connectivity_plus 7.1.1 requires iOS 18 SDK / Xcode 16+.
     timeout-minutes: 60
-    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+    environment: ${{ inputs.deploy-stage == 'main' && 'production' || 'preview' }}
     permissions:
       contents: read
     steps:
@@ -76,6 +80,16 @@ jobs:
         uses: actions/checkout@v6
         with:
           ref: ${{ inputs.target-ref || github.ref }}
+
+      - name: Validate deploy stage
+        run: |
+          case "${{ inputs.deploy-stage }}" in
+            dev|main) ;;
+            *)
+              echo "::error::Unsupported deploy-stage '${{ inputs.deploy-stage }}'. Expected dev or main."
+              exit 1
+              ;;
+          esac
 
       - name: iOS Deploy
         uses: ./.github/actions/ios-deploy
@@ -85,7 +99,7 @@ jobs:
           bundle-id: ${{ inputs.bundle-id }}
           provisioning-profile-dev-specifier: ${{ inputs.provisioning-profile-dev-specifier }}
           provisioning-profile-prod-specifier: ${{ inputs.provisioning-profile-prod-specifier }}
-          git-ref: ${{ github.ref }}
+          git-ref: refs/heads/${{ inputs.deploy-stage }}
           run-number: ${{ github.run_number }}
           APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}

@@ -98,7 +98,8 @@ monitor-event-flow-*:
 # 개념 — backend + mobile 모두 prod
 main-deploy (on push to main):
   steps:
-    - tag v{ver} + promo/main-Wxx + Sentry marker
+    - if current version is rc: tag v{ver} + promo/main-Wxx + Sentry marker
+    - if current version is already final: skip version finalization, continue deploy
     - Firebase RC `latest_version` = v{ver} 자동 update
   parallel:
     - backend prod deploy  # Supabase migration + EF
@@ -108,6 +109,8 @@ main-deploy (on push to main):
 ```
 
 상세: [specs/workflow-spec.md](./specs/workflow-spec.md).
+
+Mobile APK/AAB/IPA archive 는 GitHub Release asset 이 canonical 이다. Actions artifact 는 workflow 실패 분석용 테스트 리포트/스크린샷/로그 같은 단기 디버깅 산출물에만 사용한다.
 
 ## Safety Nets 위치
 

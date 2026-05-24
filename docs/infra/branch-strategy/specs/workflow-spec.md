@@ -268,15 +268,17 @@ Cross-branch cherry-pick PR 자동 생성.
 
 | 항목 | 값 |
 |------|----|
-| Trigger | `push` to `main` (rc → main auto-merge 직후) |
+| Trigger | `push` to `main` (rc → main auto-merge 또는 승인된 `main/hotfix/*` 머지 직후) |
 | Outputs | tag `v{ver}` + tag `promo/main-YYYY-Wxx` + Sentry marker + Firebase RC `latest_version` update + parallel deploy chain |
-| Steps | (1) calls `version-bump` (suffix="") using release bot (2) `git tag promo/main-YYYY-Wxx` + push (3) Sentry release marker `v{ver}` (4) Firebase RC `latest_version` = `v{ver}` (Admin SDK) (5) **parallel deploy chain** (모두 target=main env): backend prod deploy, mobile deploy workflows (6) RC Supabase branch 삭제 |
+| Steps | (1) plan `finalize_required` vs `deploy_required` (2) RC promotion 이면 calls `version-bump` (suffix="") + `promo/main-YYYY-Wxx` tag (3) 이미 final version 인 hotfix push 면 version/tag finalization skip (4) Sentry release marker `v{ver}` (5) Firebase RC `latest_version` = `v{ver}` (Admin SDK) (6) **parallel deploy chain** (모두 target=main env): backend prod deploy, mobile deploy workflows (7) RC Supabase branch 삭제 |
 
 > `main-deploy` 내부 또는 하위 workflow 로 실행되는 deploy jobs:
 > - backend prod deploy (Supabase migration + EF)
 > - `deploy-android-user`, `deploy-android-partner` (each calls `shared-android-deploy`)
 > - `deploy-ios-user`, `deploy-ios-partner` (TBD: shared-ios-deploy reusable)
 > - Vercel: native build 가 main push 자동 감지 (workflow_call 아님)
+
+> Mobile APK/AAB/IPA 는 GitHub Release asset 이 canonical archive 다. Actions artifact 는 coverage, screenshot diff, test report, runner log 같은 단기 디버깅 산출물에만 사용한다.
 
 > Cadence: backend prod + mobile 모두 weekly (rc → main 머지 마다, hotfix 없으면). store review + staged rollout 은 store-side.
 

@@ -36,6 +36,10 @@ on:
         required: false
         type: string
         default: ''
+      deploy-stage:
+        description: 'Deployment stage used for flavor/env selection (dev or main).'
+        required: true
+        type: string
     secrets:
       ANDROID_KEYSTORE_BASE64:
         required: true
@@ -70,7 +74,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+    environment: ${{ inputs.deploy-stage == 'main' && 'production' || 'preview' }}
     defaults:
       run:
         working-directory: ./${{ inputs.app-directory }}
@@ -108,6 +112,16 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
+      - name: Validate deploy stage
+        run: |
+          case "${{ inputs.deploy-stage }}" in
+            dev|main) ;;
+            *)
+              echo "::error::Unsupported deploy-stage '${{ inputs.deploy-stage }}'. Expected dev or main."
+              exit 1
+              ;;
+          esac
+
       - name: Validate JUSO key for partner
         if: ${{ inputs.app-name == 'partner' }}
         env:
@@ -136,22 +150,22 @@ jobs:
           echo "storeFile=upload-keystore.jks" >> android/key.properties
 
       - name: Build APK (Dev)
-        if: github.ref == 'refs/heads/dev'
+        if: inputs.deploy-stage == 'dev'
         run: flutter build apk --flavor dev --release --build-number=${{ github.run_number }} --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_DEV_URL }} --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }} --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN_FLUTTER }} --dart-define=ENVIRONMENT=development --dart-define=JUSO_CONFIRM_KEY=${{ secrets.JUSO_CONFIRM_KEY }}
 
       - name: Build AAB (Main)
-        if: github.ref == 'refs/heads/main'
+        if: inputs.deploy-stage == 'main'
         run: flutter build appbundle --flavor prod --release --build-number=${{ github.run_number }} --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_MAIN_URL }} --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }} --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN_FLUTTER }} --dart-define=ENVIRONMENT=production --dart-define=JUSO_CONFIRM_KEY=${{ secrets.JUSO_CONFIRM_KEY }}
 
       - name: Upload Artifact (Dev APK)
-        if: github.ref == 'refs/heads/dev'
+        if: inputs.deploy-stage == 'dev'
         uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.artifact-name-apk }}
           path: ${{ inputs.app-directory }}/build/app/outputs/flutter-apk/app-dev-release.apk
 
       - name: Upload Artifact (Prod AAB)
-        if: github.ref == 'refs/heads/main'
+        if: inputs.deploy-stage == 'main'
         uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.artifact-name-aab }}
@@ -160,7 +174,7 @@ jobs:
       # Publish to GitHub Releases (Firebase App Distribution 와 별개로,
       # 외부 공유 URL + 버전별 historical archive 제공).
       - name: Publish APK/AAB to Releases (Dev)
-        if: github.ref == 'refs/heads/dev'
+        if: inputs.deploy-stage == 'dev'
         env:
           GH_TOKEN: ${{ secrets.GH_PAT_VERSION_BUMP }}
           REPO: ${{ github.repository }}
@@ -195,7 +209,7 @@ jobs:
             "/tmp/${ASSET}"
 
       - name: Publish AAB to Releases (Main)
-        if: github.ref == 'refs/heads/main'
+        if: inputs.deploy-stage == 'main'
         env:
           GH_TOKEN: ${{ secrets.GH_PAT_VERSION_BUMP }}
           REPO: ${{ github.repository }}
@@ -228,7 +242,7 @@ jobs:
             "/tmp/${ASSET}"
 
       - name: Upload to Firebase App Distribution (Dev)
-        if: github.ref == 'refs/heads/dev'
+        if: inputs.deploy-stage == 'dev'
         uses: w9jds/firebase-action@0a4f77dac6df6028b126dd9635acbb7ec0b714cc # v15.18.0
         with:
           args: appdistribution:distribute ${{ inputs.app-directory }}/build/app/outputs/flutter-apk/app-dev-release.apk --app ${{ secrets.FIREBASE_APP_ID_ANDROID }} --release-notes Dev-Build-${{ github.run_number }} --groups testers
@@ -236,7 +250,7 @@ jobs:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON_DEV }}
 
       - name: Upload to Google Play (Prod)
-        if: github.ref == 'refs/heads/main'
+        if: inputs.deploy-stage == 'main'
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
