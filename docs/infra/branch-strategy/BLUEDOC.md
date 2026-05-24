@@ -87,6 +87,7 @@ flowchart LR
 | [dev-soak-status-model.md](./dev-soak-status-model.md) | dev soak commit status contexts + run history based `dev-rc-cut-gate` 판정 |
 | [rc-promotion.md](./rc-promotion.md) | dev-rc-cut + soak + hotfix + backport |
 | [main-promotion.md](./main-promotion.md) | rc → main + main-deploy + min-version |
+| [hotfix-policy.md](./hotfix-policy.md) | dev/rc/main 직접 PR 차단 + branch별 hotfix 승인 규칙 |
 | [life-of-flag.md](./life-of-flag.md) | flag lifecycle |
 | [versioning.md](./versioning.md) | CalVer + tag |
 | [specs/](./specs/BLUEDOC.md) | workflow spec, branch spec, execution plan (구현 계약) |
@@ -104,7 +105,8 @@ flowchart LR
 - Protected branch 직접 push 는 human 금지. version bump/tag/promotion 처리는 `minglit-release-bot` 전용 token + Ruleset bypass 로만 허용
 - `monitor-event-flow-*` 는 release promotion 과 독립적인 batch signal. dev 에서 계속 돌고, RC 에서는 main 배포 전 검증 signal 로 사용한다
 - main 머지 = backend + mobile 모두 prod deploy. backend prod deploy 는 `main-deploy` 에서 한 번에 수행한다
-- **Hotfix 는 rc 에서, dev-staging 으로 자동 backport** ([rc-promotion.md](./rc-promotion.md))
+- 일반 PR 은 `dev-staging` 으로만 진입한다. `dev`, `rc/*`, `main` 직접 PR 은 promotion 또는 승인된 hotfix 만 허용한다 ([hotfix-policy.md](./hotfix-policy.md))
+- **Hotfix 는 merge 후 dev-staging 으로 backport** ([hotfix-policy.md](./hotfix-policy.md), [rc-promotion.md](./rc-promotion.md))
 - Tag regex 는 `RELEASE.md` lock (TODO)
 
 ### Promotion PR Title
