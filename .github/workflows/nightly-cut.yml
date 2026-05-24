@@ -130,9 +130,8 @@ jobs:
           BRANCH_NAME: ${{ steps.plan.outputs.branch_name }}
         run: |
           set -euo pipefail
-          RUN_DATE="$(TZ=Asia/Seoul date +%Y-%m-%d)"
           BODY="$(cat <<EOF
-          Promotes the latest coherent dev-staging snapshot to dev.
+          Promotes \`${TAG_NAME}\` from \`dev-staging\` to \`dev\`.
 
           - Source tag: ${TAG_NAME}
           - Source SHA: ${TAG_SHA}
@@ -143,7 +142,7 @@ jobs:
           PR_URL="$(gh pr create \
             --base dev \
             --head "${BRANCH_NAME}" \
-            --title "chore(promo): dev-staging to dev ${RUN_DATE}" \
+            --title "ci(nightly-cut): promote ${TAG_NAME} to dev" \
             --body "${BODY}")"
           PR_NUMBER="${PR_URL##*/}"
 
