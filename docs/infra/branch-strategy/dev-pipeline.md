@@ -1,13 +1,13 @@
 # Dev Pipeline
 
-`dev` 브랜치가 trunk 역할: dev-staging 의 daily snapshot 을 받고, post-merge 로 full integration suite (`rc-gate`) 를 돌려, 통과한 commit 마다 backend/web auto-deploy. RC 는 이 status 를 보고 cut.
+`dev` 브랜치가 trunk 역할: dev-staging 의 daily snapshot 을 받고, post-merge 로 full integration suite (`rc-gate`) 를 돌린다. RC 는 `rc-gate-pass` status 를 보고 cut 한다. 이벤트 플로우 시뮬레이터는 `monitor-event-flow-*` batch 로 계속 돌며, backend prod deploy 는 main 머지 후 `main-deploy` 에서 수행한다.
 
 ## 4가지 workflow
 
 1. **`nightly-cut`** — daily cron, dev-staging tip 의 snapshot 으로 PR 생성
 2. **`nightly-pr-gate`** — snapshot PR 머지 전 검증 (defensive)
 3. **`rc-gate`** — dev 머지 후 자동 발동, full integration suite, 통과 시 status `rc-gate-pass` set
-4. **Auto-deploy chain** — `rc-gate-pass` 시점에 `backend-auto-deploy` + `web-auto-deploy` 동시 trigger
+4. **`dev-deploy` / monitor jobs** — dev 환경 deploy/smoke 가 필요할 때만 수행. 이벤트 플로우 시뮬레이터는 `monitor-event-flow-*` 로 별도 운영
 
 ## `nightly-cut`
 
@@ -34,9 +34,9 @@
 
 ## `rc-gate` — Heavy Integration
 
-dev 머지 후 자동 발동. 통과 = "이 commit 은 RC 가능 + backend/web prod 배포 가능".
+dev 머지 후 자동 발동. 통과 = "이 commit 은 RC cut source 로 사용할 수 있음".
 
-> **Current implementation**: first operational version runs user/partner CUJ integration directly and sets `rc-gate-pass` on success. Backend/EF/Test Lab and the deploy chain are follow-up expansions.
+> **Current implementation**: first operational version runs user/partner CUJ integration directly and sets `rc-gate-pass` on success. Backend simulation/Test Lab 확장은 후속이다.
 
 ### 무엇을 도는가
 
@@ -56,13 +56,12 @@ dev 머지 후 자동 발동. 통과 = "이 commit 은 RC 가능 + backend/web p
 
 ```
 1. dev HEAD commit 에 GitHub commit status `rc-gate-pass` set
-2. Auto-deploy chain workflow_call (parallel, target=main-staging):
-   - deploy-supabase (staging Supabase project: EF + migration apply)
-   - (Vercel native: dev branch → preview deployment)
-3. (Mobile + backend prod 은 별도 — main 머지 후 deploy chain)
+2. `rc-cut` 이 이 status 를 source-of-truth 로 사용
+3. 이벤트 플로우 시뮬레이터는 `monitor-event-flow-*` batch 로 계속 별도 관찰
+4. Mobile + backend prod 은 main 머지 후 `main-deploy` 에서 처리
 ```
 
-> **사용자 서버 영향 X** — rc-gate-pass deploy 는 main-staging env (별도 Supabase project) 만. prod 는 main 머지에서.
+> **사용자 서버 영향 X** — `rc-gate-pass` 는 prod deploy 가 아니라 RC 후보 marker 다. prod 는 main 머지에서만 배포한다.
 
 ### 실패 시
 
@@ -79,7 +78,7 @@ Snapshot 모델 — **auto-revert 없음**. dev 가 broken 상태로 잠시 머�
 
 ## Error-Backoff 정책
 
-**Workflow infra 실패** (`rc-gate` script 에러, runner 다운, deploy hook 실패 등) → **P0 이슈 자동 생성** + on-call. 아래는 *rc-gate test* 실패 escalation.
+**Workflow infra 실패** (`rc-gate` script 에러, runner 다운 등) → **P0 이슈 자동 생성** + on-call. 아래는 *rc-gate test* 실패 escalation.
 
 | 연속 실패 | 동작 |
 |----------|------|
@@ -89,20 +88,17 @@ Snapshot 모델 — **auto-revert 없음**. dev 가 broken 상태로 잠시 머�
 
 **Recovery**: 다음 rc-gate green → 자동 차단 해제, 누적 이슈 verify 코멘트.
 
-## Auto-deploy 워크플로우
+## Dev Validation / Monitor
 
-### `deploy-supabase`
+### `dev-deploy`
 
-- Supabase EF 배포 (deno deploy)
-- Migration apply (Supabase CLI)
-- Sentry release marker 부여 (`v{ver}-dev` 형식)
-- 실패 시: retry 1회 → 실패 시 P0 이슈 + on-call
+`dev-deploy` 는 dev 환경 deploy/smoke 가 필요할 때의 branch-level entrypoint 다. 현재 release policy 에서는 backend prod deploy 를 여기서 하지 않는다.
 
-### `deploy-vercel`
+### `monitor-event-flow-*`
 
-- Vercel native build 사용. `dev` 는 preview deployment, `main` 은 production deployment
-- 기존 cron/deploy hook 워크플로우는 전환 완료 후 폐기
-- 실패 시: retry 1회 → 실패 시 P0 이슈
+- 이벤트 플로우 시뮬레이터 batch (`monitor-event-flow-hourly`, `monitor-event-flow-daily`)
+- release promotion 과 독립적으로 계속 돈다
+- RC 에서는 main 배포 전 pre-main validation signal 로 사용한다
 
 ## Artifact / 보존
 
@@ -121,9 +117,9 @@ Snapshot 모델 — **auto-revert 없음**. dev 가 broken 상태로 잠시 머�
 
 - [dev-staging-pipeline.md](./dev-staging-pipeline.md) — dev-staging 의 pr-gate + safety net
 - [rc-promotion.md](./rc-promotion.md) — rc-gate-pass 가 rc-cut 의 source
-- [main-promotion.md](./main-promotion.md) — auto-deploy 실패 시 rollback
+- [main-promotion.md](./main-promotion.md) — main-deploy 와 prod deploy failure handling
 - [test-strategy.md](./test-strategy.md) — rc-gate 의 단계별 위치
-- [branch-flow.md](./branch-flow.md) — auto-deploy chain 그림
+- [branch-flow.md](./branch-flow.md) — workflow chain 그림
 
 ---
-_Reviewed: 2026-05-24 09:24_
+_Reviewed: 2026-05-24 10:24_

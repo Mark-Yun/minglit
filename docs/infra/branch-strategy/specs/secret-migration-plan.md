@@ -22,12 +22,12 @@ minglit_env/
 ├── local/.env          # 로컬 개발자 환경
 ├── dev/.env            # CI 테스트 + dev workflow config
 ├── dev-staging → dev   # symlink (같은 env)
-├── main-staging/.env   # RC 가 deploy 되는 staging Supabase project (dev rc-gate-pass 가 deploy)
+├── rc/.env             # RC Supabase branching workflow config (ephemeral rc-YYYY-Wxx branches)
 ├── main/.env           # production (main 머지가 deploy)
 └── README.md           # 컨벤션 + 변수 카탈로그
 ```
 
-> **main-staging env 의 역할**: dev 가 계속 움직이는 동안 RC soak 가 *frozen 환경* 에서 검증되도록 staging Supabase project 를 별도 운영. dev rc-gate-pass 마다 deploy 되지만 사용자 서버 (main env) 영향 X.
+> **RC env 의 역할**: `rc-deploy` 가 Supabase branching 으로 `rc-YYYY-Wxx` 임시 branch 를 만들고 main 배포 전 backend 검증에 사용한다. `rc-gate-pass` 는 deploy trigger 가 아니라 RC cut source marker 다.
 
 기존 도메인별 파일 (`flutter.env`, `supabase.env`, `nextjs.env`, `metabase.env`) 은 통합 후 폐기.
 

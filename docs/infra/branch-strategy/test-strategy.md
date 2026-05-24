@@ -57,7 +57,7 @@ RC 의 hotfix 만 받음. `pr-gate` + 추가 mobile smoke. 머지 시 `rc-post-m
 
 ### main-pr-gate
 
-`rc-soak-check` 가 자동 생성한 promotion PR 에 적용:
+`main-cut` 이 자동 생성한 promotion PR 에 적용:
 - pr-gate 재실행
 - `expand-migrate-contract` 다시 검증 (RC 5일 동안 dev 가 더 나갔을 수 있음)
 - RC HEAD 의 `rc-gate-pass` status 확인 (마지막 hotfix 이 rc-gate 통과했는지)
