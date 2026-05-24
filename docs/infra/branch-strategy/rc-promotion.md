@@ -15,11 +15,11 @@
 
 - **cron**: 매주 X 요일 KST 10:00 (TBD)
 - **manual**: `workflow_dispatch` (긴급 cut)
-- **현재 구현**: 매주 월요일 KST 10:00. 수동 실행은 `source_sha`, `rc_week`, `allow_active_rc` 입력을 지원한다.
+- **현재 구현**: 매주 월요일 KST 10:00. 수동 실행은 `source_sha`, `rc_week`, `allow_active_rc` 입력을 지원한다. `rc-gate-pass` commit 이 아직 없으면 실패 알림 없이 skip 한다.
 - 동작:
   1. **active RC marker 확인** → 있으면 skip + Slack `#release` 알림 (이전 RC 가 hotfix 로 길어지는 중)
   2. 없으면 dev 의 최신 `rc-gate-pass` status 부여된 commit 찾기 (GitHub API: `GET /repos/.../commits/{sha}/status`)
-  3. 못 찾으면 (3일+ green 없음) → alert + cut 보류
+  3. 못 찾으면 cut 보류 (현재 구현은 초기 no-pass 상태를 skip, 3일+ green 없음 alert 는 후속 PR)
   4. 찾았으면 그 commit 에서 `rc/YYYY-Wxx` branch cut
   5. Supabase branch 생성 (`rc-YYYY-Wxx`) + RC env 에 migration/EF deploy (후속 PR)
   6. `bump-version.sh {ver}-rc-01` 실행 → tag `v{ver}-rc-01` + `promo/rc-YYYY-Wxx`
