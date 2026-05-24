@@ -27,6 +27,7 @@
 
 - `pr-gate.yml` 은 `workflow_call` 전용 reusable CI core 다. 직접 `push`/`pull_request`/`merge_group` 로 실행하지 않는다.
 - 호출자는 `stage` (`dev-staging`, `dev`, `rc`, `main`) 와 `base_ref` 를 넘겨 동일한 CI 코어를 stage 별 gate 로 재사용한다.
+- `pr-gate.yml` 의 `build-demo-android` 잡은 `minglit_demo`, `main_demo.dart`, Android demo flavor 변경 시 양 앱 demo debug APK 빌드를 검증한다.
 - Branch ruleset 의 required check 는 `dev-staging-pr-gate`, `dev-pr-gate`, `rc-pr-gate`, `main-pr-gate` 같은 branch별 wrapper job 이름을 사용한다. `ci-result` summary job 은 폐기한다.
 - `dev-staging-pr-gate`, `dev-pr-gate`, `rc-pr-gate`, `main-pr-gate` 는 얇은 wrapper 로 시작한다. 내부에서는 `pr-gate.yml` reusable core 를 호출하고, wrapper job 이 최종 required check context 를 제공한다.
 - `dev-staging-dev-cut-gate` 가 dev-staging 의 PR-number CalVer bump/tag 를 담당한다. `sync-version` 은 legacy main release bump 만 담당하며, `dev` promotion 은 `dev-staging-dev-cut` 에서 version 변경 없이 처리한다.
@@ -54,4 +55,4 @@
 - [CLAUDE.md](../../CLAUDE.md) `## PR Conventions` — branch별 required check / auto-merge 흐름
 
 ---
-_Reviewed: 2026-05-24 10:24_
+_Reviewed: 2026-05-24 16:30_
