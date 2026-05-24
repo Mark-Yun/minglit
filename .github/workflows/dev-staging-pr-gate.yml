@@ -1,0 +1,36 @@
+name: dev-staging-pr-gate
+
+on:
+  pull_request:
+    branches: [dev-staging]
+
+permissions:
+  contents: write
+  pull-requests: read
+  checks: write
+  issues: write
+
+concurrency:
+  group: dev-staging-pr-gate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pr-gate-core:
+    uses: ./.github/workflows/pr-gate.yml
+    with:
+      stage: dev-staging
+      base_ref: dev-staging
+    secrets: inherit
+
+  dev-staging-pr-gate:
+    needs: [pr-gate-core]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish branch gate result
+        run: |
+          if [ "${{ needs.pr-gate-core.result }}" != "success" ]; then
+            echo "::error::pr-gate-core result: ${{ needs.pr-gate-core.result }}"
+            exit 1
+          fi
+          echo "dev-staging-pr-gate passed"

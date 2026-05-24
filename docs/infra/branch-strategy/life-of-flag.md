@@ -80,7 +80,7 @@ Feature flag (Statsig + Firebase Remote Config) 의 생성·soak·rollout·**자
 
 | Stage | Cohort | 기간 | Exit |
 |-------|--------|------|------|
-| 1. dev | 개발자 (Statsig env=dev / RC condition) | **1주** | rc-gate green + 코드 dev 진입 |
+| 1. dev | 개발자 (Statsig env=dev / RC condition) | **1주** | dev-rc-cut-gate green + 코드 dev 진입 |
 | 2. prod allowlist | 내부 직원 user_id allowlist | **2주** | 카나리 메트릭 OK |
 | 3a. backend staged | prod backend 5% → 25% → 100% | 48h → 72h → 7일 | error rate < baseline +X% |
 | 3b. backend soak | - | 1주 | 무이슈 (mobile 활성화 게이트) |
@@ -173,7 +173,7 @@ Feature flag (Statsig + Firebase Remote Config) 의 생성·soak·rollout·**자
 - [branch-flow.md](./branch-flow.md) — 코드 promotion 의 그림
 - [main-promotion.md](./main-promotion.md) — min-version + expand-migrate-contract
 - [dev-staging-pipeline.md](./dev-staging-pipeline.md) — flag-registration CI
-- [dev-pipeline.md](./dev-pipeline.md) — rc-gate-pass marker 와 dev validation
+- [dev-pipeline.md](./dev-pipeline.md) — dev-rc-cut-pass marker 와 dev validation
 - [test-strategy.md](./test-strategy.md) — flag staged rollout 의 게이트
 - [error-detection.md](./error-detection.md) — flag 메트릭의 detection layer
 - [../firebase/BLUEDOC.md](../firebase/BLUEDOC.md), [../statsig/BLUEDOC.md](../statsig/BLUEDOC.md)

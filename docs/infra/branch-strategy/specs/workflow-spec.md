@@ -4,10 +4,13 @@
 
 ## 명명 컨벤션
 
-- **Entry workflow**: `<stage>-<action>` 패턴 (예: `dev-staging-pr-gate`, `rc-cut`, `main-deploy`)
+- **Entry workflow**: `<stage>-<action>` 패턴 (예: `dev-staging-pr-gate`, `dev-rc-cut`, `main-deploy`)
 - **Reusable workflow** (`workflow_call`): 명사·동사형 (예: `pr-gate-core`, `version-bump`)
 - File 이름 = workflow 이름 + `.yml`
-- Stage prefix: `dev-staging-` · `nightly-` · `rc-` · `main-`
+- Stage prefix: `dev-staging-` · `dev-` · `rc-` · `main-`
+- `*-cut-gate`: 다음 브랜치로 promote 할 source artifact 를 검증/선별하고 marker 를 남긴다
+- `*-cut`: gate 가 남긴 marker 를 소비해서 실제 promotion PR 또는 branch 를 만든다
+- Branch PR gate 는 `<branch>-pr-gate` 로만 부른다: `dev-staging-pr-gate`, `dev-pr-gate`, `rc-pr-gate`, `main-pr-gate`
 - Reusable 은 prefix 없음
 - Deploy entry workflow 는 `[branch]-deploy` 로 통일한다: `dev-deploy`, `rc-deploy`, `main-deploy`
 - 기존 domain deploy workflow (`deploy-supabase`, `deploy-android-user` 등) 는 entrypoint 가 아니라 하위 구현/재사용 대상이다
@@ -22,10 +25,10 @@
 | 항목 | 값 |
 |------|----|
 | Trigger | `workflow_call` |
-| Inputs | `stage`: dev-staging\|nightly\|rc\|main / `ref`: branch ref / `extra_steps`: array (optional) |
+| Inputs | `stage`: dev-staging\|dev\|rc\|main / `ref`: branch ref / `extra_steps`: array (optional) |
 | Outputs | `status`: pass\|fail / `report_url` |
 | 핵심 steps | test-flutter-apps (matrix) · lint-landing-* · test-supabase (pgTAP) · test-edge-functions (Deno) · check-migration-versions · `expand-migrate-contract` · `flag-registration-check` · gitleaks · CodeRabbit (≤30분 wait) |
-| Called by | `dev-staging-pr-gate`, `nightly-pr-gate`, `rc-pr-gate`, `main-pr-gate` |
+| Called by | `dev-staging-pr-gate`, `dev-pr-gate`, `rc-pr-gate`, `main-pr-gate` |
 
 ### `version-bump`
 
@@ -37,9 +40,9 @@
 | Inputs | `version`: YY.MM.PR# / `suffix`: ""\|`-dev-staging`\|`-rc-NN` / `commit_message`: string |
 | Outputs | `commit_sha`, `tag_name` |
 | 핵심 steps | `bash scripts/bump-version.sh {version}{suffix}` · commit (`skip_ci` option) · `git tag v{version}{suffix}` · push |
-| Called by | `dev-staging-post-merge-sync`, `rc-cut`, `rc-post-merge-sync`, `main-deploy` |
+| Called by | `dev-staging-dev-cut-gate`, `dev-rc-cut`, `rc-post-merge-sync`, `main-deploy` |
 
-### `rc-gate-suite`
+### `dev-rc-cut-gate-suite`
 
 Heavy integration test suite. 60분 예산.
 
@@ -49,7 +52,7 @@ Heavy integration test suite. 60분 예산.
 | Inputs | `ref`: dev commit SHA |
 | Outputs | `status`: pass\|fail / `failed_jobs`: array |
 | Matrix | (app × scenario): `cuj-app-user × {happy, unhappy, chaos}` + `cuj-app-partner × {happy, unhappy, chaos}` + `integration-backend` + `integration-edge-functions` + `test-lab-smoke` |
-| Called by | `rc-gate` |
+| Called by | `dev-rc-cut-gate` |
 
 > chaos 시나리오 미정의면 CUJ 로 추후 정의 (TBD).
 
@@ -90,7 +93,7 @@ Cross-branch cherry-pick PR 자동 생성.
 | Steps | calls `pr-gate-core` (stage=dev-staging) |
 | Required for | dev-staging PR merge |
 
-#### `dev-staging-post-merge-sync`
+#### `dev-staging-dev-cut-gate`
 
 | 항목 | 값 |
 |------|----|
@@ -99,37 +102,37 @@ Cross-branch cherry-pick PR 자동 생성.
 | Outputs | tag `v{YY.MM.PR#}-dev-staging` |
 | Steps | calls `version-bump` (suffix=`-dev-staging`, version=`{YY.MM.PR#}`) using release bot GitHub App token |
 
-### nightly (dev 진입)
+### dev-staging → dev
 
-#### `nightly-cut`
+#### `dev-staging-dev-cut`
 
 | 항목 | 값 |
 |------|----|
 | Trigger | `schedule` (daily KST 02:00 TBD) + `workflow_dispatch` |
 | Inputs | optional `tag_name` (`v*-dev-staging`) |
 | Outputs | PR number (dev-staging → dev) or skip |
-| PR title | `ci(nightly-cut): promote {tag_name} to dev` |
-| Steps | (1) 이전 `nightly-cut` PR open 이면 skip + Slack (2) 가장 최근 `v*-dev-staging` tag SHA 조회, 또는 입력 `tag_name` 사용 (3) dev 가 그 SHA 를 이미 포함하면 skip ("no new commits") (4) `nightly/YYYY-MM-DD-{sha8}` promotion branch 를 tag SHA 에서 생성 (5) `gh pr create` (base=dev, head=nightly/YYYY-MM-DD-{sha8}) + auto-merge 활성화 (`rebase`, active dev ruleset 의 linear history 와 호환) |
+| PR title | `ci(dev-staging-dev-cut): promote {tag_name} to dev` |
+| Steps | (1) 이전 `dev-staging-dev-cut` PR open 이면 skip + Slack (2) 가장 최근 `v*-dev-staging` tag SHA 조회, 또는 입력 `tag_name` 사용 (3) dev 가 그 SHA 를 이미 포함하면 skip ("no new commits") (4) `cut/dev-staging-dev/YYYY-MM-DD-{sha8}` promotion branch 를 tag SHA 에서 생성 (5) `gh pr create` (base=dev, head=`cut/dev-staging-dev/YYYY-MM-DD-{sha8}`) + auto-merge 활성화 (`rebase`, active dev ruleset 의 linear history 와 호환) |
 
-#### `nightly-pr-gate`
+#### `dev-pr-gate`
 
 | 항목 | 값 |
 |------|----|
 | Trigger | `pull_request` (base: `dev`) |
-| Steps | calls `pr-gate-core` (stage=nightly) |
+| Steps | calls `pr-gate-core` (stage=dev) |
 | Required for | dev branch protection |
 
-#### `rc-gate`
+#### `dev-rc-cut-gate`
 
 | 항목 | 값 |
 |------|----|
-| Trigger | `push` to `dev` (= nightly-cut PR merge 직후) |
-| Outputs | commit status `rc-gate-pass` (success only) |
-| Steps | (1) calls `rc-gate-suite` (2) **success**: set commit status `rc-gate-pass` (3) **failure**: `auto-issue` (P1, label `rc-gate-failure`, assignee=직전 rc-gate-pass 이후 머지된 PR 작성자들). dev 는 broken 상태로 잠시 머묾, AI agent 가 fix PR 을 dev-staging 으로 normal flow 로 작성 → 다음 nightly-cut → 다음 rc-gate 가 검증 |
-| Backoff | 같은 area 3회 연속 실패 시 `rc-cut` 자동 차단 (다음 weekly cut PR 안 만듦) |
+| Trigger | `push` to `dev` (= dev-staging-dev-cut PR merge 직후) |
+| Outputs | commit status `dev-rc-cut-pass` (success only) |
+| Steps | (1) calls `dev-rc-cut-gate-suite` (2) **success**: set commit status `dev-rc-cut-pass` (3) **failure**: `auto-issue` (P1, label `dev-rc-cut-gate-failure`, assignee=직전 dev-rc-cut-pass 이후 머지된 PR 작성자들). dev 는 broken 상태로 잠시 머묾, AI agent 가 fix PR 을 dev-staging 으로 normal flow 로 작성 → 다음 dev-staging-dev-cut → 다음 dev-rc-cut-gate 가 검증 |
+| Backoff | 같은 area 3회 연속 실패 시 `dev-rc-cut` 자동 차단 (다음 weekly cut PR 안 만듦) |
 
-> **No auto-revert** — snapshot 모델: 실패 = no tag, dev keeps moving, 새 fix 가 자연스럽게 다음 rc-gate 에서 검증됨.
-> **Naming** — `rc-gate-pass` 가 canonical RC eligibility marker 이다. `rc-eligible` 은 현재 workflow/status 명칭이 아니다.
+> **No auto-revert** — snapshot 모델: 실패 = no tag, dev keeps moving, 새 fix 가 자연스럽게 다음 dev-rc-cut-gate 에서 검증됨.
+> **Naming** — `dev-rc-cut-pass` 가 canonical RC eligibility marker 이다. `rc-eligible` 은 현재 workflow/status 명칭이 아니다.
 
 #### `dev-deploy`
 
@@ -151,13 +154,13 @@ Cross-branch cherry-pick PR 자동 생성.
 
 ### rc
 
-#### `rc-cut`
+#### `dev-rc-cut`
 
 | 항목 | 값 |
 |------|----|
 | Trigger | `schedule` (weekly KST TBD) + `workflow_dispatch` |
 | Outputs | branch `rc/YYYY-Wxx` + tag `v{ver}-rc-01` + tag `promo/rc-YYYY-Wxx` |
-| Steps | (1) active RC marker 가 있으면 skip + Slack `#release` (hotfix 로 길어지는 중) (2) dev 의 최신 `rc-gate-pass` status SHA query (`gh api`) (3) 없으면 cut 보류 (4) `git branch rc/YYYY-Wxx <SHA>` + push using release bot (5) calls `version-bump` (suffix=`-rc-01`) (6) `git tag promo/rc-YYYY-Wxx` + push (7) branch protection 활성화 (8) Slack `#release` 알림 |
+| Steps | (1) active RC marker 가 있으면 skip + Slack `#release` (hotfix 로 길어지는 중) (2) dev 의 최신 `dev-rc-cut-pass` status SHA query (`gh api`) (3) 없으면 cut 보류 (4) `git branch rc/YYYY-Wxx <SHA>` + push using release bot (5) calls `version-bump` (suffix=`-rc-01`) (6) `git tag promo/rc-YYYY-Wxx` + push (7) branch protection 활성화 (8) Slack `#release` 알림 |
 
 #### `rc-pr-gate`
 
@@ -184,13 +187,24 @@ Cross-branch cherry-pick PR 자동 생성.
 | Steps | (1) Supabase branch `rc-YYYY-Wxx` 생성/확인 (2) migration/EF apply to RC branch (3) RC env smoke (4) event-flow simulation signal 확인 (5) 실패 시 `auto-issue` |
 | Note | RC 는 계속 유지되는 장기 branch 가 아니라 Supabase branching 기반의 임시 검증 환경이다 |
 
-#### `main-cut`
+#### `rc-main-cut-gate`
 
 | 항목 | 값 |
 |------|----|
-| Trigger | `schedule` (daily KST TBD) |
-| Outputs | rc → main PR (5일 무커밋 시) or skip |
-| Steps | (1) `rc/*` 존재 확인 → 없으면 종료 (2) rc HEAD 의 `committer date` 조회 (3) committer date 가 5일 이전이면: `gh pr create base=main head=rc/YYYY-Wxx` + label `rc-soak-passed` + auto-merge 활성화 |
+| Trigger | `schedule` (daily KST TBD) + `workflow_dispatch` |
+| Outputs | marker `rc-main-cut-pass` on current RC head, or skip/fail |
+| Steps | (1) active `rc/*` 확인 → 없으면 종료 (2) rc HEAD 의 `committer date` 가 5일 이전인지 확인 (3) `rc-deploy`/pre-main validation/event-flow signal green 확인 (4) main promotion 차단 조건(`dev-rc-cut-gate-degraded`, P0/P1 blocker 등) 확인 (5) 통과 시 RC HEAD/active marker 에 `rc-main-cut-pass` 부여 |
+| Note | promotion PR 을 만들지 않는다. main 으로 보낼 RC 를 선별하는 gate 전용 workflow 다 |
+
+#### `rc-main-cut`
+
+| 항목 | 값 |
+|------|----|
+| Trigger | `schedule` (daily KST TBD, after `rc-main-cut-gate`) + `workflow_dispatch` |
+| Outputs | rc → main PR or skip |
+| PR title | `ci(rc-main-cut): promote rc/YYYY-Wxx to main` |
+| Steps | (1) `rc-main-cut-pass` marker 가 있는 active `rc/*` 확인 → 없으면 종료 (2) 이미 open rc → main PR 이 있으면 skip (3) `gh pr create base=main head=rc/YYYY-Wxx` + label `rc-main-cut-pass` + auto-merge 활성화 |
+| Note | soak/validation 판단은 `rc-main-cut-gate` 책임이다. `rc-main-cut` 은 marker 소비와 PR 생성만 담당한다 |
 
 #### `rc-hotfix-backport`
 
@@ -207,7 +221,7 @@ Cross-branch cherry-pick PR 자동 생성.
 | 항목 | 값 |
 |------|----|
 | Trigger | `pull_request` (base: `main`) |
-| Steps | (1) calls `pr-gate-core` (stage=main) (2) RC HEAD 의 `rc-gate-pass` commit status 확인 (3) PR 의 `rc-soak-passed` label 확인 |
+| Steps | (1) calls `pr-gate-core` (stage=main) (2) RC lineage 의 `dev-rc-cut-pass` commit status 확인 (3) PR 의 `rc-main-cut-pass` label/marker 확인 |
 | Required for | main branch protection |
 
 #### `main-deploy`
@@ -233,23 +247,23 @@ Cross-branch cherry-pick PR 자동 생성.
        ↓
 [dev-staging-pr-gate] ──auto-merge──▶ dev-staging push
                                                 ↓
-                                         [dev-staging-post-merge-sync]
+                                         [dev-staging-dev-cut-gate]
                                                 ↓ tag v{ver}-dev-staging
 
 [daily KST 02:00]
     ↓
-[nightly-cut] ──PR created──▶ [nightly-pr-gate] ──auto-merge──▶ dev push
+[dev-staging-dev-cut] ──PR created──▶ [dev-pr-gate] ──auto-merge──▶ dev push
                                                                     ↓
-                                                              [rc-gate]
-                                                              ├ success ─▶ status rc-gate-pass
+                                                              [dev-rc-cut-gate]
+                                                              ├ success ─▶ status dev-rc-cut-pass
                                                               │              ↓ monitor-event-flow-* continuous signal
                                                               │
                                                               └ failure ─▶ [auto-issue P1] (AI agent assignee → dev-staging fix PR)
-                                                                          (no auto-revert — dev 잠시 broken, 다음 fix 가 다음 rc-gate 에서 검증)
+                                                                          (no auto-revert — dev 잠시 broken, 다음 fix 가 다음 dev-rc-cut-gate 에서 검증)
 
 [weekly cron]
     ↓
-[rc-cut] ──branch out from latest rc-gate-pass commit──▶ rc/YYYY-Wxx (+ v{ver}-rc-01)
+[dev-rc-cut] ──branch out from latest dev-rc-cut-pass commit──▶ rc/YYYY-Wxx (+ v{ver}-rc-01)
                                                                 ↓ (soak, hotfix 가능)
                                                                 │
                                                           [rc-pr-gate] (hotfix PR)
@@ -257,15 +271,17 @@ Cross-branch cherry-pick PR 자동 생성.
                                                                 ↓ (parallel)
                                                           [rc-post-merge-sync] ──▶ v{ver}-rc-NN
                                                           [rc-hotfix-backport]  ──▶ backport PR to dev-staging
-                                                          [rc-deploy]           ──▶ Supabase branch + pre-main validation
+[rc-deploy]           ──▶ Supabase branch + pre-main validation
 
 [daily cron, rc 존재 시]
     ↓
-[main-cut] ──5일 무커밋──▶ rc → main PR (label rc-soak-passed)
-                                       ↓ [main-pr-gate] → auto-merge
-                                       ↓ main push
-                                       ↓
-                                 [main-deploy]
+[rc-main-cut-gate] ──5일 무커밋 + pre-main signal green──▶ marker rc-main-cut-pass
+                                                                  ↓
+                                                           [rc-main-cut] ──▶ rc → main PR
+                                                                  ↓ [main-pr-gate] → auto-merge
+                                                                  ↓ main push
+                                                                  ↓
+                                                            [main-deploy]
                                        ↓ tag v{ver} + promo/main-Wxx + Sentry release
                                        ↓ Firebase RC `latest_version` = v{ver}
                                        ↓ (parallel)
@@ -281,7 +297,7 @@ Cross-branch cherry-pick PR 자동 생성.
 
 - `pr-gate-core` 의 stage 별 `extra_steps` 명세
 - `version-bump` 의 commit 방식 (별도 commit vs squash inline)
-- `rc-gate-suite` matrix 분할 (60분 예산)
+- `dev-rc-cut-gate-suite` matrix 분할 (60분 예산)
 - `dev-deploy` 가 실제로 맡을 dev deploy/smoke 범위
 - `rc-deploy` 의 Supabase branch seed data 와 event-flow simulation contract
 - CUJ chaos 시나리오 정의 (현재 미정의)
@@ -293,7 +309,7 @@ Cross-branch cherry-pick PR 자동 생성.
 ## 관련
 
 - [../branch-flow.md](../branch-flow.md) — workflow 가 흘러가는 branch 그림
-- [../test-strategy.md](../test-strategy.md) — pr-gate-core 와 rc-gate-suite 의 test 내용
+- [../test-strategy.md](../test-strategy.md) — pr-gate-core 와 dev-rc-cut-gate-suite 의 test 내용
 - [../error-detection.md](../error-detection.md) — auto-issue 의 priority 와 채널
 - [../life-of-flag.md](../life-of-flag.md) — flag lifecycle
 - [../versioning.md](../versioning.md) — version-bump 의 suffix 진행

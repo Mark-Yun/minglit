@@ -8,8 +8,8 @@
 |-------|----------------|----------|---------|
 | 개발자 로컬 | LSP, analyze, unit | 컴파일/타입/단위 | 초~분 |
 | dev-staging PR gate | `dev-staging-pr-gate` (unit, lint, pgTAP, EF, migration, `expand-migrate-contract`, `flag-registration`, gitleaks) | PR 회귀, 보안, migration 충돌, flag 미등록, contract 위반 | < 10분 |
-| nightly-cut PR | `nightly-pr-gate` (defensive) | 환경 차이 회귀 | < 10분 |
-| dev 머지 후 (자동) | `rc-gate` (CUJ matrix happy/unhappy/chaos, integration, e2e, Test Lab) | 통합 회귀, 시나리오, 외부 의존, 디바이스 | 30-60분 |
+| dev-staging-dev-cut PR | `dev-pr-gate` (defensive) | 환경 차이 회귀 | < 10분 |
+| dev 머지 후 (자동) | `dev-rc-cut-gate` (CUJ matrix happy/unhappy/chaos, integration, e2e, Test Lab) | 통합 회귀, 시나리오, 외부 의존, 디바이스 | 30-60분 |
 | Backend/Web auto-deploy | post-deploy smoke, Sentry release marker | deploy infra 회귀 | 분 |
 | rc soak (5일) | rc 의 nightly 재실행 + 내부 dogfooding | 누적 회귀, real-data 이슈 | 일 단위 |
 | main 머지 후 (auto-deploy) | smoke + Sentry/Crashlytics 알람 임계 | prod 회귀 | 분 |
@@ -32,7 +32,7 @@
 
 ### Firebase Test Lab
 - 실 디바이스 farm 에서 CUJ/smoke
-- `rc-gate` 의 mobile 부분 일부 위임
+- `dev-rc-cut-gate` 의 mobile 부분 일부 위임
 - 상세: [../firebase/BLUEDOC.md](../firebase/BLUEDOC.md)
 
 ### Statsig
@@ -45,7 +45,7 @@
 - 참고: `docs/operations/edge-functions.md`
 
 ### GitHub Actions
-- pr-gate / rc-gate / promotion workflow 의 자동 이슈 생성
+- pr-gate / dev-rc-cut-gate / promotion workflow 의 자동 이슈 생성
 - **workflow infra 실패 → P0**, test 실패 → P1-high
 
 ## Detection → Action 책임
@@ -53,8 +53,8 @@
 | Detection 신호 | 누가 받음 | 어디서 | Action |
 |---------------|----------|--------|--------|
 | pr-gate 실패 (어느 단계든) | PR 작성자 | GitHub PR | 본인 fix → re-push → auto-merge 재대기 |
-| `rc-gate` 실패 (dev 머지 후) | 직전 rc-gate-pass 이후 머지된 PR 작성자들 + AI agent | GitHub issue + Slack `#nightly` | AI agent fix PR via dev-staging — dev keeps moving ([dev-pipeline.md](./dev-pipeline.md)) |
-| Backend/web staging deploy 실패 (dev rc-gate-pass) | on-call | Slack `#release` | retry → P0 이슈, RC 진행 차단 (staging 도달 못함) |
+| `dev-rc-cut-gate` 실패 (dev 머지 후) | 직전 dev-rc-cut-pass 이후 머지된 PR 작성자들 + AI agent | GitHub issue + Slack `#nightly` | AI agent fix PR via dev-staging — dev keeps moving ([dev-pipeline.md](./dev-pipeline.md)) |
+| Backend/web staging deploy 실패 (dev dev-rc-cut-pass) | on-call | Slack `#release` | retry → P0 이슈, RC 진행 차단 (staging 도달 못함) |
 | Backend/web/mobile prod deploy 실패 (main 머지) | on-call | Slack `#release` | retry → rollback ([main-promotion.md](./main-promotion.md) error-backoff) |
 | rc soak 중 회귀 | RC owner | Slack `#release` | hotfix PR → rc | 
 | deploy-android-*, deploy-ios-* 실패 | mobile 팀 | GitHub issue + Slack | retry + auto-issue ([main-promotion.md](./main-promotion.md) error-backoff) |
@@ -80,7 +80,7 @@
 ## 관련
 
 - [test-strategy.md](./test-strategy.md) — 어떤 테스트
-- [dev-pipeline.md](./dev-pipeline.md) — rc-gate detection → backoff
+- [dev-pipeline.md](./dev-pipeline.md) — dev-rc-cut-gate detection → backoff
 - [main-promotion.md](./main-promotion.md) — deploy detection → rollback
 - [life-of-flag.md](./life-of-flag.md) — flag 메트릭 → flip
 - [../firebase/BLUEDOC.md](../firebase/BLUEDOC.md), [../statsig/BLUEDOC.md](../statsig/BLUEDOC.md)
