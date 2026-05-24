@@ -51,7 +51,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: dev-staging
+          ref: ${{ needs.plan.outputs.candidate_sha }}
           fetch-depth: 1
 
       - uses: denoland/setup-deno@v2
@@ -110,7 +110,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: dev-staging
+          ref: ${{ needs.plan.outputs.candidate_sha }}
           fetch-depth: 1
 
       - uses: supabase/setup-cli@v2
@@ -156,7 +156,7 @@ jobs:
     uses: ./.github/workflows/shared-cuj-integration.yml
     with:
       app-name: user
-      target-ref: dev-staging
+      target-ref: ${{ needs.plan.outputs.candidate_sha }}
     secrets: inherit
 
   cuj-partner:
@@ -164,7 +164,7 @@ jobs:
     uses: ./.github/workflows/shared-cuj-integration.yml
     with:
       app-name: partner
-      target-ref: dev-staging
+      target-ref: ${{ needs.plan.outputs.candidate_sha }}
     secrets: inherit
 
   status-ef-unit:

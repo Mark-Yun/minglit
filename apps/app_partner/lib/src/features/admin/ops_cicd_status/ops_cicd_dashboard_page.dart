@@ -101,25 +101,27 @@ class _HeroSummary extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(MinglitSpacing.large),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF102A43), Color(0xFF0B4F6C)],
+        gradient: LinearGradient(
+          colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(MinglitRadius.dialog),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             snapshot.repository,
-            style: theme.textTheme.labelLarge?.copyWith(color: Colors.white70),
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: theme.colorScheme.onPrimary.withValues(alpha: 0.8),
+            ),
           ),
           const SizedBox(height: MinglitSpacing.small),
           Text(
             failed == 0 ? '배포 흐름 정상 감시 중' : '$failed개 브랜치에 실패 신호',
             style: theme.textTheme.headlineSmall?.copyWith(
-              color: Colors.white,
+              color: theme.colorScheme.onPrimary,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -166,13 +168,17 @@ class _MetricPill extends StatelessWidget {
         vertical: MinglitSpacing.small,
       ),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+        color: theme.colorScheme.onPrimary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(MinglitRadius.card),
+        border: Border.all(
+          color: theme.colorScheme.onPrimary.withValues(alpha: 0.2),
+        ),
       ),
       child: Text(
         '$label $value',
-        style: theme.textTheme.labelMedium?.copyWith(color: Colors.white),
+        style: theme.textTheme.labelMedium?.copyWith(
+          color: theme.colorScheme.onPrimary,
+        ),
       ),
     );
   }
@@ -191,11 +197,11 @@ class _BranchLane extends StatelessWidget {
       padding: const EdgeInsets.all(MinglitSpacing.medium),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: color.withValues(alpha: 0.32), width: 1.4),
+        borderRadius: BorderRadius.circular(MinglitRadius.card),
+        border: Border.all(color: color.withValues(alpha: 0.32)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: theme.colorScheme.shadow.withValues(alpha: 0.05),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -263,7 +269,7 @@ class _WorkflowNode extends StatelessWidget {
     final theme = Theme.of(context);
     final color = _stateColor(workflow.state);
     return InkWell(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(MinglitRadius.card),
       onTap: workflow.runUrl == null
           ? null
           : () => unawaited(launchUrl(Uri.parse(workflow.runUrl!))),
@@ -272,7 +278,7 @@ class _WorkflowNode extends StatelessWidget {
         padding: const EdgeInsets.all(MinglitSpacing.medium),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(MinglitRadius.card),
           border: Border.all(color: color.withValues(alpha: 0.35)),
         ),
         child: Column(
@@ -322,10 +328,10 @@ class _CommitStatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = status.state == 'success'
-        ? const Color(0xFF18864B)
+        ? MinglitColors.success
         : status.state == 'pending'
-        ? const Color(0xFFC97705)
-        : const Color(0xFFD92D20);
+        ? MinglitColors.warning
+        : MinglitColors.error;
     return Chip(
       visualDensity: VisualDensity.compact,
       avatar: Icon(Icons.circle, size: 8, color: color),
@@ -344,7 +350,9 @@ class _IssueTile extends StatelessWidget {
     final theme = Theme.of(context);
     return Card(
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(MinglitRadius.card),
+      ),
       child: ListTile(
         leading: const Icon(Icons.bug_report_outlined),
         title: Text(
@@ -371,7 +379,9 @@ class _EmptyIssuesCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(MinglitRadius.card),
+      ),
       child: const Padding(
         padding: EdgeInsets.all(MinglitSpacing.large),
         child: Text('열린 ci-failure 이슈가 없습니다.'),
@@ -426,10 +436,10 @@ class _StateDot extends StatelessWidget {
 
 Color _stateColor(OpsCicdState state) {
   return switch (state) {
-    OpsCicdState.success => const Color(0xFF18864B),
-    OpsCicdState.warning => const Color(0xFFC97705),
-    OpsCicdState.failure => const Color(0xFFD92D20),
-    OpsCicdState.running => const Color(0xFF2E6FD8),
-    OpsCicdState.unknown => const Color(0xFF667085),
+    OpsCicdState.success => MinglitColors.success,
+    OpsCicdState.warning => MinglitColors.warning,
+    OpsCicdState.failure => MinglitColors.error,
+    OpsCicdState.running => MinglitColors.info,
+    OpsCicdState.unknown => MinglitColors.textSecondary,
   };
 }
