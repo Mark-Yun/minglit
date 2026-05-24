@@ -29,7 +29,7 @@ async function withNightTimers(fn: () => Promise<void>) {
   globalThis.setTimeout = ((callback: () => void) => {
     callback();
     return 0;
-  }) as typeof setTimeout;
+  }) as unknown as typeof setTimeout;
 
   try {
     await fn();
@@ -55,7 +55,7 @@ async function withDayTimers(fn: () => Promise<void>) {
   globalThis.setTimeout = ((callback: () => void) => {
     callback();
     return 0;
-  }) as typeof setTimeout;
+  }) as unknown as typeof setTimeout;
 
   try {
     await fn();
@@ -77,7 +77,7 @@ async function withFastTimers(fn: () => Promise<void>) {
   globalThis.setTimeout = ((callback: () => void) => {
     callback();
     return 0;
-  }) as typeof setTimeout;
+  }) as unknown as typeof setTimeout;
 
   try {
     await fn();

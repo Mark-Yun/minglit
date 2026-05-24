@@ -117,7 +117,7 @@ export async function withNoIntervals<T>(fn: () => Promise<T>) {
   globalThis.setInterval = ((callback: () => void) => {
     callback();
     return 0 as unknown as number;
-  }) as typeof setInterval;
+  }) as unknown as typeof setInterval;
   globalThis.clearInterval = ((_id?: number) => {}) as typeof clearInterval;
 
   try {
@@ -169,7 +169,7 @@ export async function captureServeHandler(moduleUrl: string | URL): Promise<Requ
   globalThis.setInterval = ((callback: () => void) => {
     callback();
     return 0 as unknown as number;
-  }) as typeof setInterval;
+  }) as unknown as typeof setInterval;
   globalThis.clearInterval = ((_id?: number) => {}) as typeof clearInterval;
 
   const serveStub = stub(serveOwner, "serve", (arg1: unknown, arg2?: unknown) => {
