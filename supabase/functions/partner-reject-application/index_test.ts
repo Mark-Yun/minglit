@@ -3,33 +3,23 @@
 // Lazy-loads the handler via dynamic import with Deno.serve stubbed to prevent
 // a real HTTP server from being started (same pattern as payment-webhook/index_test.ts).
 
-import { assertEquals } from "jsr:@std/assert@1";
+import { assertEquals } from "@std/assert";
 import {
   buildApplication,
   fakeSupabase,
+  type Handler,
   makeCtx,
   readJson,
   runHandler,
-  type Handler,
 } from "../_shared/_testing/mod.ts";
+import { importHandlerWithStubbedServe } from "../_test_utils/mock_http.ts";
 
 let _handler: Handler | null = null;
 async function getHandler(): Promise<Handler> {
   if (_handler) return _handler;
-  const denoAsAny = Deno as unknown as { serve: (...args: unknown[]) => Deno.HttpServer };
-  const origServe = denoAsAny.serve;
-  denoAsAny.serve = () => ({ shutdown() {}, finished: Promise.resolve() } as Deno.HttpServer);
-  const origSetInterval = globalThis.setInterval;
-  const origClearInterval = globalThis.clearInterval;
-  globalThis.setInterval = ((_cb: () => void) => 0 as unknown as ReturnType<typeof setInterval>) as typeof setInterval;
-  globalThis.clearInterval = ((_id?: ReturnType<typeof setInterval>) => {}) as typeof clearInterval;
-  try {
-    _handler = (await import(`./index.ts?unit=${crypto.randomUUID()}`)).handler as Handler;
-  } finally {
-    denoAsAny.serve = origServe;
-    globalThis.setInterval = origSetInterval;
-    globalThis.clearInterval = origClearInterval;
-  }
+  _handler = await importHandlerWithStubbedServe<Handler>(
+    new URL("./index.ts", import.meta.url),
+  );
   return _handler!;
 }
 
@@ -149,7 +139,10 @@ Deno.test("partner-reject-application :: status=paid (non-rejectable) → 400", 
   });
   assertEquals(res.status, 400);
   const body = await readJson<{ error: string }>(res);
-  assertEquals(body.error.startsWith("Cannot reject application with status"), true);
+  assertEquals(
+    body.error.startsWith("Cannot reject application with status"),
+    true,
+  );
 });
 
 Deno.test("partner-reject-application :: status=rejected (already rejected) → 400", async () => {
@@ -204,7 +197,9 @@ Deno.test("partner-reject-application :: DB error on update → 500", async () =
   const sb = fakeSupabase()
     .on("event_applications", "select", { data: buildAppRow("pending") })
     .on("partner_member_permissions", "select", { data: OWNER_PERM })
-    .on("event_applications", "update", { error: { message: "deadlock", code: "40P01" } });
+    .on("event_applications", "update", {
+      error: { message: "deadlock", code: "40P01" },
+    });
   const res = await runHandler(handler, {
     body: { application_id: APP_ID, reason: "Not a fit" },
     ctx: makeCtx({ supabase: sb, userId: "u-partner" }),
@@ -227,7 +222,9 @@ Deno.test("partner-reject-application :: status=pending + owner role → 200", a
     ctx: makeCtx({ supabase: sb, userId: "u-partner" }),
   });
   assertEquals(res.status, 200);
-  const body = await readJson<{ rejected: number; application_id: string }>(res);
+  const body = await readJson<{ rejected: number; application_id: string }>(
+    res,
+  );
   assertEquals(body.rejected, 1);
   assertEquals(body.application_id, APP_ID);
 

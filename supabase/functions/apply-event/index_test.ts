@@ -3,35 +3,25 @@
 // Lazy-loads the handler via dynamic import with Deno.serve stubbed to prevent
 // a real HTTP server from being started (same pattern as payment-webhook/index_test.ts).
 
-import { assertEquals } from "jsr:@std/assert@1";
+import { assertEquals } from "@std/assert";
 import {
   buildApplication,
   buildEvent,
   buildTicket,
   fakeSupabase,
+  type Handler,
   makeCtx,
   readJson,
   runHandler,
-  type Handler,
 } from "../_shared/_testing/mod.ts";
+import { importHandlerWithStubbedServe } from "../_test_utils/mock_http.ts";
 
 let _handler: Handler | null = null;
 async function getHandler(): Promise<Handler> {
   if (_handler) return _handler;
-  const denoAsAny = Deno as unknown as { serve: (...args: unknown[]) => Deno.HttpServer };
-  const origServe = denoAsAny.serve;
-  denoAsAny.serve = () => ({ shutdown() {}, finished: Promise.resolve() } as Deno.HttpServer);
-  const origSetInterval = globalThis.setInterval;
-  const origClearInterval = globalThis.clearInterval;
-  globalThis.setInterval = ((_cb: () => void) => 0 as unknown as ReturnType<typeof setInterval>) as typeof setInterval;
-  globalThis.clearInterval = ((_id?: ReturnType<typeof setInterval>) => {}) as typeof clearInterval;
-  try {
-    _handler = (await import(`./index.ts?unit=${crypto.randomUUID()}`)).handler as Handler;
-  } finally {
-    denoAsAny.serve = origServe;
-    globalThis.setInterval = origSetInterval;
-    globalThis.clearInterval = origClearInterval;
-  }
+  _handler = await importHandlerWithStubbedServe<Handler>(
+    new URL("./index.ts", import.meta.url),
+  );
   return _handler!;
 }
 
@@ -125,7 +115,9 @@ Deno.test("apply-event :: ticket not found → 404", async () => {
   const handler = await getHandler();
   const sb = fakeSupabase()
     .on("events", "select", { data: buildEvent() })
-    .on("tickets", "select", { error: { message: "no rows", code: "PGRST116" } });
+    .on("tickets", "select", {
+      error: { message: "no rows", code: "PGRST116" },
+    });
   const res = await runHandler(handler, {
     body: BASE_BODY,
     ctx: makeCtx({ supabase: sb, userId: "u-1" }),
@@ -195,7 +187,11 @@ Deno.test("apply-event :: duplicate application (status=pending) → 409 ALREADY
     .on("events", "select", { data: buildEvent() })
     .on("tickets", "select", { data: buildTicket() })
     .on("event_applications", "select", {
-      data: buildApplication({ status: "pending", event_id: "ev-1", user_id: "u-1" }),
+      data: buildApplication({
+        status: "pending",
+        event_id: "ev-1",
+        user_id: "u-1",
+      }),
     });
   const res = await runHandler(handler, {
     body: BASE_BODY,
@@ -222,7 +218,9 @@ Deno.test("apply-event :: verification requirements not met → 403", async () =
     ctx: makeCtx({ supabase: sb, userId: "u-1" }),
   });
   assertEquals(res.status, 403);
-  const body = await readJson<{ error: string; details: { missing_verification_ids: string[] } }>(res);
+  const body = await readJson<
+    { error: string; details: { missing_verification_ids: string[] } }
+  >(res);
   assertEquals(body.error, "Eligibility requirements not met");
   assertEquals(body.details.missing_verification_ids, ["verif-A"]);
 });
@@ -302,7 +300,12 @@ Deno.test("apply-event :: free ticket, cancelled re-application → 200 + update
     .on("events", "select", { data: buildEvent() })
     .on("tickets", "select", { data: buildTicket({ price: 0 }) })
     .on("event_applications", "select", {
-      data: buildApplication({ id: "app-old", status: "cancelled", event_id: "ev-1", user_id: "u-1" }),
+      data: buildApplication({
+        id: "app-old",
+        status: "cancelled",
+        event_id: "ev-1",
+        user_id: "u-1",
+      }),
     })
     .on("check_party_balance", "rpc", { data: { allowed: true, reason: null } })
     .on("event_applications", "update", { error: null });

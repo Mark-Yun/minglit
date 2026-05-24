@@ -3,36 +3,26 @@
 // Lazy-loads the handler via dynamic import with Deno.serve stubbed to prevent
 // a real HTTP server from being started (same pattern as payment-webhook/index_test.ts).
 
-import { assertEquals } from "jsr:@std/assert@1";
+import { assertEquals } from "@std/assert";
 import {
   buildApplication,
   buildEvent,
   buildTicket,
   buildUserProfile,
   fakeSupabase,
+  type Handler,
   makeCtx,
   readJson,
   runHandler,
-  type Handler,
 } from "../_shared/_testing/mod.ts";
+import { importHandlerWithStubbedServe } from "../_test_utils/mock_http.ts";
 
 let _handler: Handler | null = null;
 async function getHandler(): Promise<Handler> {
   if (_handler) return _handler;
-  const denoAsAny = Deno as unknown as { serve: (...args: unknown[]) => Deno.HttpServer };
-  const origServe = denoAsAny.serve;
-  denoAsAny.serve = () => ({ shutdown() {}, finished: Promise.resolve() } as Deno.HttpServer);
-  const origSetInterval = globalThis.setInterval;
-  const origClearInterval = globalThis.clearInterval;
-  globalThis.setInterval = ((_cb: () => void) => 0 as unknown as ReturnType<typeof setInterval>) as typeof setInterval;
-  globalThis.clearInterval = ((_id?: ReturnType<typeof setInterval>) => {}) as typeof clearInterval;
-  try {
-    _handler = (await import(`./index.ts?unit=${crypto.randomUUID()}`)).handler as Handler;
-  } finally {
-    denoAsAny.serve = origServe;
-    globalThis.setInterval = origSetInterval;
-    globalThis.clearInterval = origClearInterval;
-  }
+  _handler = await importHandlerWithStubbedServe<Handler>(
+    new URL("./index.ts", import.meta.url),
+  );
   return _handler!;
 }
 
@@ -47,9 +37,13 @@ function happyPathFake(overrides: {
   return fakeSupabase()
     .on("events", "select", { data: buildEvent(overrides.event) })
     .on("tickets", "select", { data: buildTicket(overrides.ticket) })
-    .on("user_profiles", "select", { data: buildUserProfile(overrides.profile) })
+    .on("user_profiles", "select", {
+      data: buildUserProfile(overrides.profile),
+    })
     .on("check_party_balance", "rpc", { data: { allowed: true } })
-    .on("event_applications", "select", { error: { message: "no rows", code: "PGRST116" } })
+    .on("event_applications", "select", {
+      error: { message: "no rows", code: "PGRST116" },
+    })
     .on("apply_event", "rpc", { data: "app-new-1" })
     .on("event_applications", "update", { error: null });
 }
@@ -78,6 +72,32 @@ Deno.test("user-create-order :: missing ticket_id → 400", async () => {
   assertEquals(res.status, 400);
   const body = await readJson<{ error: string }>(res);
   assertEquals(body.error.toLowerCase().includes("ticket_id"), true);
+});
+
+Deno.test("user-create-order :: non-string event_id → 400 before DB access", async () => {
+  const handler = await getHandler();
+  const sb = fakeSupabase();
+  const res = await runHandler(handler, {
+    body: { event_id: 123, ticket_id: "tk-1" },
+    ctx: makeCtx({ supabase: sb, userId: "u-1" }),
+  });
+  assertEquals(res.status, 400);
+  assertEquals(sb.getCalls().length, 0);
+});
+
+Deno.test("user-create-order :: invalid verification_data shape → 400 before DB access", async () => {
+  const handler = await getHandler();
+  const sb = fakeSupabase();
+  const res = await runHandler(handler, {
+    body: {
+      event_id: "ev-1",
+      ticket_id: "tk-1",
+      verification_data: { verification_id: 123, data: {} },
+    },
+    ctx: makeCtx({ supabase: sb, userId: "u-1" }),
+  });
+  assertEquals(res.status, 400);
+  assertEquals(sb.getCalls().length, 0);
 });
 
 // ── event checks ───────────────────────────────────────────────────────────────
@@ -111,7 +131,10 @@ Deno.test("user-create-order :: event status=cancelled → 400 EVENT_CLOSED", as
 Deno.test("user-create-order :: event already started → 400 EVENT_NOT_SCHEDULED", async () => {
   const handler = await getHandler();
   const sb = fakeSupabase().on("events", "select", {
-    data: buildEvent({ status: "scheduled", start_time: "2020-01-01T00:00:00Z" }),
+    data: buildEvent({
+      status: "scheduled",
+      start_time: "2020-01-01T00:00:00Z",
+    }),
   });
   const res = await runHandler(handler, {
     body: { event_id: "ev-1", ticket_id: "tk-1" },
@@ -128,7 +151,9 @@ Deno.test("user-create-order :: ticket not found → 404", async () => {
   const handler = await getHandler();
   const sb = fakeSupabase()
     .on("events", "select", { data: buildEvent() })
-    .on("tickets", "select", { error: { message: "no rows", code: "PGRST116" } });
+    .on("tickets", "select", {
+      error: { message: "no rows", code: "PGRST116" },
+    });
   const res = await runHandler(handler, {
     body: { event_id: "ev-1", ticket_id: "tk-1" },
     ctx: makeCtx({ supabase: sb, userId: "u-1" }),
@@ -152,7 +177,9 @@ Deno.test("user-create-order :: ticket sold out → 400 TICKET_SOLD_OUT", async 
   const handler = await getHandler();
   const sb = fakeSupabase()
     .on("events", "select", { data: buildEvent() })
-    .on("tickets", "select", { data: buildTicket({ sold_count: 30, quantity: 30 }) });
+    .on("tickets", "select", {
+      data: buildTicket({ sold_count: 30, quantity: 30 }),
+    });
   const res = await runHandler(handler, {
     body: { event_id: "ev-1", ticket_id: "tk-1" },
     ctx: makeCtx({ supabase: sb, userId: "u-1" }),
@@ -185,7 +212,9 @@ Deno.test("user-create-order :: user profile not found → 404", async () => {
   const sb = fakeSupabase()
     .on("events", "select", { data: buildEvent() })
     .on("tickets", "select", { data: buildTicket() })
-    .on("user_profiles", "select", { error: { message: "no rows", code: "PGRST116" } });
+    .on("user_profiles", "select", {
+      error: { message: "no rows", code: "PGRST116" },
+    });
   const res = await runHandler(handler, {
     body: { event_id: "ev-1", ticket_id: "tk-1" },
     ctx: makeCtx({ supabase: sb, userId: "u-1" }),
@@ -198,7 +227,9 @@ Deno.test("user-create-order :: user not verified → 400 IDENTITY_REQUIRED", as
   const sb = fakeSupabase()
     .on("events", "select", { data: buildEvent() })
     .on("tickets", "select", { data: buildTicket() })
-    .on("user_profiles", "select", { data: buildUserProfile({ is_verified: false }) });
+    .on("user_profiles", "select", {
+      data: buildUserProfile({ is_verified: false }),
+    });
   const res = await runHandler(handler, {
     body: { event_id: "ev-1", ticket_id: "tk-1" },
     ctx: makeCtx({ supabase: sb, userId: "u-1" }),
@@ -246,7 +277,9 @@ Deno.test("user-create-order :: existing application (cancelled) → reapplicati
     ctx: makeCtx({ supabase: sb, userId: "u-1" }),
   });
   assertEquals(res.status, 200);
-  const body = await readJson<{ success: boolean; application_id: string }>(res);
+  const body = await readJson<{ success: boolean; application_id: string }>(
+    res,
+  );
   assertEquals(body.success, true);
   assertEquals(body.application_id, "app-reused-1");
   // update path for existing app was taken
@@ -318,8 +351,33 @@ Deno.test("user-create-order :: apply_event RPC error → 500", async () => {
     .on("tickets", "select", { data: buildTicket() })
     .on("user_profiles", "select", { data: buildUserProfile() })
     .on("check_party_balance", "rpc", { data: { allowed: true } })
-    .on("event_applications", "select", { error: { message: "no rows", code: "PGRST116" } })
-    .on("apply_event", "rpc", { error: { message: "constraint violation", code: "23505" } });
+    .on("event_applications", "select", {
+      error: { message: "no rows", code: "PGRST116" },
+    })
+    .on("apply_event", "rpc", {
+      error: { message: "constraint violation", code: "23505" },
+    });
+  const res = await runHandler(handler, {
+    body: { event_id: "ev-1", ticket_id: "tk-1" },
+    ctx: makeCtx({ supabase: sb, userId: "u-1" }),
+  });
+  assertEquals(res.status, 500);
+});
+
+Deno.test("user-create-order :: application update error after RPC → 500", async () => {
+  const handler = await getHandler();
+  const sb = fakeSupabase()
+    .on("events", "select", { data: buildEvent() })
+    .on("tickets", "select", { data: buildTicket() })
+    .on("user_profiles", "select", { data: buildUserProfile() })
+    .on("check_party_balance", "rpc", { data: { allowed: true } })
+    .on("event_applications", "select", {
+      error: { message: "no rows", code: "PGRST116" },
+    })
+    .on("apply_event", "rpc", { data: "app-new-1" })
+    .on("event_applications", "update", {
+      error: { message: "update failed", code: "XX000" },
+    });
   const res = await runHandler(handler, {
     body: { event_id: "ev-1", ticket_id: "tk-1" },
     ctx: makeCtx({ supabase: sb, userId: "u-1" }),

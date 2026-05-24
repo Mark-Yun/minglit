@@ -1,17 +1,18 @@
 // Fix #2185 (Batch 8): migrate to minglitEdgeFunction wrapper — auth via manifest
 // Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
-import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
-import { nowISO } from "../_shared/temporal_utils.ts";
-import { IamportClient } from "../_shared/iamport_client.ts";
 import {
-  errorResponse,
-  successResponse,
-} from "../_shared/response_utils.ts";
+  type EFContext,
+  minglitEdgeFunction,
+} from "../_shared/edge_function.ts";
+import { IamportClient } from "../_shared/iamport_client.ts";
+import { errorResponse, successResponse } from "../_shared/response_utils.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
-import { log, withSpan } from "../_shared/logger.ts";
+import { log } from "../_shared/logger.ts";
+import { initStatsig } from "../_shared/statsig_utils.ts";
+import { parsePaymentVerifyInput } from "./input.ts";
+import { verifyPayment } from "./verify_payment_service.ts";
 
 const FN = "payment-verify";
-import { initStatsig, logStatsigEvent } from "../_shared/statsig_utils.ts";
 
 const IMP_KEY = Deno.env.get("PORTONE_API_KEY");
 const IMP_SECRET = Deno.env.get("PORTONE_API_SECRET");
@@ -24,126 +25,37 @@ if (!IMP_KEY || !IMP_SECRET) {
 
 initStatsig();
 
-export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
-  const { supabase } = ctx;
-  if (ctx.auth.type !== "user") return errorResponse("Unexpected auth type", 500);
-  const userId = ctx.auth.userId;
+export const handler = async (
+  req: Request,
+  ctx: EFContext,
+): Promise<Response> => {
+  if (ctx.auth.type !== "user") {
+    return errorResponse("Unexpected auth type", 500);
+  }
 
   try {
     const body = await parseJsonBody(req);
     if (body instanceof Response) return body;
-    const { imp_uid, merchant_uid } = body as {
-      imp_uid?: string;
-      merchant_uid?: string;
-    };
 
-    if (!imp_uid || !merchant_uid) {
-      return errorResponse("Missing required parameters", 400);
+    const input = parsePaymentVerifyInput(body);
+    if (input instanceof Response) return input;
+
+    const result = await verifyPayment({
+      supabase: ctx.supabase,
+      userId: ctx.auth.userId,
+      input,
+      iamportClient: new IamportClient(IMP_KEY, IMP_SECRET),
+    });
+
+    if (!result.ok) {
+      return errorResponse(result.message, result.status, result.details);
     }
 
-    // 1. DB에서 주문 정보 조회 (금액 확인)
-    const { data: order, error: orderError } = await withSpan(
-      "db.query.event_applications",
-      "db.query",
-      async () =>
-        supabase
-          .from("event_applications")
-          .select("payment_amount, status, user_id")
-          .eq("id", merchant_uid)
-          .single(),
-    );
-
-    if (orderError || !order) {
-      return errorResponse("Order not found", 404);
-    }
-
-    // Fix #1490: 호출자가 신청자 본인인지 검증 — service role은 RLS를 우회하므로 명시적 확인 필요
-    if (order.user_id !== userId) {
-      return errorResponse("Forbidden", 403);
-    }
-
-    // 이미 처리된 주문인지 확인
-    if (order.status === "approved" || order.status === "paid") {
+    if (result.alreadyProcessed) {
       return successResponse({ success: true, message: "Already processed" });
     }
 
-    // 2. Iamport V1 API 조회
-    const client = new IamportClient(IMP_KEY, IMP_SECRET);
-    const payment = await client.getPayment(imp_uid);
-
-    // 3. 결제 상태 및 금액 검증
-    if (payment.status !== "paid") {
-      logStatsigEvent(userId, "payment_failed", undefined, {
-        reason: "payment_not_completed",
-        imp_uid,
-      }).catch(() => {});
-      return errorResponse("Payment not completed", 400, {
-        status: payment.status,
-      });
-    }
-
-    if (payment.amount !== order.payment_amount) {
-      await client.cancelPayment(imp_uid, "결제 금액 위변조로 자동 취소").catch(
-        (e: unknown) => {
-          const msg = e instanceof Error ? e.message : String(e);
-          log({
-            function: FN,
-            level: "error",
-            message: "Cancel on mismatch failed",
-            metadata: { detail: msg },
-          });
-        },
-      );
-      logStatsigEvent(userId, "payment_failed", undefined, {
-        reason: "amount_mismatch",
-        imp_uid,
-      }).catch(() => {});
-      return errorResponse("Amount mismatch", 400, {
-        expected: order.payment_amount,
-        actual: payment.amount,
-      });
-    }
-
-    // Fix #133: paid_at 없을 때 now 폴백하면 재시도마다 값이 밀려 멱등성 깨짐 — payment-webhook과 동일하게 null 처리
-    const paidAtIso = payment.paid_at && payment.paid_at > 0
-      ? Temporal.Instant.fromEpochMilliseconds(payment.paid_at * 1000)
-        .toString()
-      : null;
-
-    const { error: updateError } = await withSpan(
-      "db.update.event_applications",
-      "db.update",
-      async () =>
-        supabase
-          .from("event_applications")
-          .update({
-            status: "approved",
-            payment_id: imp_uid,
-            ...(paidAtIso ? { paid_at: paidAtIso } : {}),
-            updated_at: nowISO(),
-          })
-          .eq("id", merchant_uid),
-    );
-
-    if (updateError) {
-      log({
-        function: FN,
-        level: "error",
-        message: "DB Update Error",
-        metadata: { detail: updateError },
-      });
-      logStatsigEvent(userId, "payment_failed", undefined, {
-        reason: "db_update_error",
-        imp_uid,
-      }).catch(() => {});
-      return errorResponse("Failed to update order status", 500);
-    }
-
-    logStatsigEvent(userId, "payment_completed", payment.amount, {
-      imp_uid,
-      merchant_uid,
-    }).catch(() => {});
-    return successResponse({ success: true, imp_uid });
+    return successResponse({ success: true, imp_uid: result.impUid });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     log({
@@ -154,6 +66,6 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
     });
     return errorResponse(message, 500);
   }
-}
+};
 
 minglitEdgeFunction(handler);

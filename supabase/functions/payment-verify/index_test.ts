@@ -7,15 +7,18 @@
 // 격리: env 는 withEnv 로 import 시점에만 set + 복원. top-level Deno.env.set 절대 금지
 // (Fix #2526: 다른 EF 의 wrapper 가 stale MINGLIT_EF_TEST_FN_NAME 읽어 wrong policy 로딩).
 
-import { assertEquals } from "jsr:@std/assert@1";
+import { assertEquals } from "@std/assert";
 import {
   fakeSupabase,
+  type Handler,
   makeCtx,
   readJson,
   runHandler,
-  type Handler,
 } from "../_shared/_testing/mod.ts";
-import { withEnv } from "../_test_utils/mock_http.ts";
+import {
+  importHandlerWithStubbedServe,
+  withEnv,
+} from "../_test_utils/mock_http.ts";
 
 const PORTONE_ENV = {
   PORTONE_API_KEY: "test-key",
@@ -25,23 +28,13 @@ const PORTONE_ENV = {
 let _handler: Handler | null = null;
 async function getHandler(): Promise<Handler> {
   if (_handler) return _handler;
-  const denoAsAny = Deno as unknown as { serve: (...args: unknown[]) => Deno.HttpServer };
-  const origServe = denoAsAny.serve;
-  denoAsAny.serve = () => ({ shutdown() {}, finished: Promise.resolve() } as Deno.HttpServer);
-  const origSetInterval = globalThis.setInterval;
-  const origClearInterval = globalThis.clearInterval;
-  globalThis.setInterval = ((_cb: () => void) => 0 as unknown as ReturnType<typeof setInterval>) as typeof setInterval;
-  globalThis.clearInterval = ((_id?: ReturnType<typeof setInterval>) => {}) as typeof clearInterval;
-  try {
-    _handler = await withEnv(PORTONE_ENV, async () => {
-      const mod = await import(`./index.ts?unit=${crypto.randomUUID()}`);
-      return mod.handler as Handler;
-    });
-  } finally {
-    denoAsAny.serve = origServe;
-    globalThis.setInterval = origSetInterval;
-    globalThis.clearInterval = origClearInterval;
-  }
+  _handler = await withEnv(
+    PORTONE_ENV,
+    () =>
+      importHandlerWithStubbedServe<Handler>(
+        new URL("./index.ts", import.meta.url),
+      ),
+  );
   return _handler!;
 }
 
@@ -71,16 +64,26 @@ function makePortOneFetch(paymentOverrides: Record<string, unknown> = {}) {
     ...paymentOverrides,
   };
 
-  return (input: string | URL | Request, _init?: RequestInit): Promise<Response> => {
-    const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+  return (
+    input: string | URL | Request,
+    _init?: RequestInit,
+  ): Promise<Response> => {
+    const url = typeof input === "string"
+      ? input
+      : input instanceof URL
+      ? input.href
+      : input.url;
 
     // Token endpoint
     if (url.includes("/users/getToken")) {
       return Promise.resolve(
-        new Response(JSON.stringify({ code: 0, response: { access_token: "tok-test" } }), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        }),
+        new Response(
+          JSON.stringify({ code: 0, response: { access_token: "tok-test" } }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        ),
       );
     }
     // Payment lookup
@@ -101,7 +104,9 @@ function makePortOneFetch(paymentOverrides: Record<string, unknown> = {}) {
         }),
       );
     }
-    return Promise.resolve(new Response("unexpected fetch: " + url, { status: 500 }));
+    return Promise.resolve(
+      new Response("unexpected fetch: " + url, { status: 500 }),
+    );
   };
 }
 
@@ -213,7 +218,10 @@ Deno.test("payment-verify :: PortOne amount mismatch → 400 (cancel triggered)"
   const handler = await getHandler();
   const origFetch = globalThis.fetch;
   // PortOne returns amount=999 but order expects 10000
-  globalThis.fetch = makePortOneFetch({ status: "paid", amount: 999 }) as typeof fetch;
+  globalThis.fetch = makePortOneFetch({
+    status: "paid",
+    amount: 999,
+  }) as typeof fetch;
   try {
     const sb = fakeSupabase().on("event_applications", "select", {
       data: buildOrder({ status: "pending", payment_amount: 10000 }),
@@ -223,7 +231,9 @@ Deno.test("payment-verify :: PortOne amount mismatch → 400 (cancel triggered)"
       ctx: makeCtx({ supabase: sb, userId: USER_ID }),
     });
     assertEquals(res.status, 400);
-    const body = await readJson<{ error: string; details: { expected: number; actual: number } }>(res);
+    const body = await readJson<
+      { error: string; details: { expected: number; actual: number } }
+    >(res);
     assertEquals(body.error, "Amount mismatch");
     assertEquals(body.details.expected, 10000);
     assertEquals(body.details.actual, 999);
@@ -238,7 +248,9 @@ Deno.test("payment-verify :: happy path → 200 + DB updated to approved", async
   globalThis.fetch = makePortOneFetch() as typeof fetch;
   try {
     const sb = fakeSupabase()
-      .on("event_applications", "select", { data: buildOrder({ status: "pending" }) })
+      .on("event_applications", "select", {
+        data: buildOrder({ status: "pending" }),
+      })
       .on("event_applications", "update", { error: null });
 
     const res = await runHandler(handler, {
@@ -267,7 +279,9 @@ Deno.test("payment-verify :: happy path with paid_at=null → approved with no p
   globalThis.fetch = makePortOneFetch({ paid_at: null }) as typeof fetch;
   try {
     const sb = fakeSupabase()
-      .on("event_applications", "select", { data: buildOrder({ status: "pending" }) })
+      .on("event_applications", "select", {
+        data: buildOrder({ status: "pending" }),
+      })
       .on("event_applications", "update", { error: null });
 
     const res = await runHandler(handler, {
@@ -292,7 +306,9 @@ Deno.test("payment-verify :: DB update fails after payment verified → 500", as
   globalThis.fetch = makePortOneFetch() as typeof fetch;
   try {
     const sb = fakeSupabase()
-      .on("event_applications", "select", { data: buildOrder({ status: "pending" }) })
+      .on("event_applications", "select", {
+        data: buildOrder({ status: "pending" }),
+      })
       .on("event_applications", "update", {
         error: { message: "db error", code: "23000" },
       });
