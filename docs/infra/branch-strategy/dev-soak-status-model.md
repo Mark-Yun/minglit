@@ -122,12 +122,12 @@ Issue label 은 분류용이다. Gate 판정에는 사용하지 않는다.
 ```bash
 gh run list \
   --workflow monitor-event-flow-distributed.yml \
-  --branch dev \
+  --branch dev-staging \
   --created ">=2026-05-24T00:00:00Z" \
   --json databaseId,status,conclusion,createdAt,headSha
 ```
 
-Scheduled workflow 의 `headSha` 는 실행 시점의 `dev` HEAD 다. 따라서 run 의 `headSha` 가 candidate 와 다르면 latest candidate 가 바뀐 것으로 보고 그 run 은 현재 candidate 의 soak 증거로 쓰지 않는다.
+Scheduled workflow run 의 `headBranch` / `headSha` 는 default branch (`dev-staging`) 기준으로 기록된다. `monitor-event-flow-distributed` 내부에서 `origin/dev` 를 fetch 해 실제 simulator target 을 정하므로, gate run history 는 `--branch dev-staging` 으로 조회하고 candidate 이후 성공 run 수를 센다.
 
 ## Failure Recording
 
