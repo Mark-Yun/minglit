@@ -112,8 +112,8 @@ Issue label 은 분류용이다. Gate 판정에는 사용하지 않는다.
 
 | Signal | 최소 조건 |
 |--------|-----------|
-| `monitor-event-flow-hourly` | `candidate_since` 이후 `success` run >= 20 |
-| `monitor-event-flow-daily` | `candidate_since` 이후 `success` run >= 1 |
+| `monitor-event-flow-distributed` | `candidate_since` 이후 `success` run >= 250 |
+| legacy `monitor-event-flow-hourly/daily` | 수동 smoke 전용. gate run requirement 에서 제외 |
 | real-device smoke | candidate 기준 required run/signal success >= 1 (workflow 이름 TBD) |
 | app AI review | AI agent 가 candidate 기준 pass signal 제공 (workflow/status 입력 방식 TBD) |
 
@@ -121,13 +121,14 @@ Issue label 은 분류용이다. Gate 판정에는 사용하지 않는다.
 
 ```bash
 gh run list \
-  --workflow monitor-event-flow-hourly.yml \
-  --branch dev \
+  --workflow monitor-event-flow-distributed.yml \
+  --branch dev-staging \
   --created ">=2026-05-24T00:00:00Z" \
+  --limit 500 \
   --json databaseId,status,conclusion,createdAt,headSha
 ```
 
-Scheduled workflow 의 `headSha` 는 실행 시점의 `dev` HEAD 다. 따라서 run 의 `headSha` 가 candidate 와 다르면 latest candidate 가 바뀐 것으로 보고 그 run 은 현재 candidate 의 soak 증거로 쓰지 않는다.
+Scheduled workflow run 의 `headBranch` / `headSha` 는 default branch (`dev-staging`) 기준으로 기록된다. `monitor-event-flow-distributed` 내부에서 `origin/dev` 를 fetch 해 실제 simulator target 을 정하므로, gate run history 는 `--branch dev-staging` 으로 조회한다. `shared-soak-gate` 는 `--created >= candidate_since` 와 `run_limit >= min_success` 로 candidate 이후 성공 run 수를 센다.
 
 ## Failure Recording
 
@@ -155,7 +156,7 @@ Issue body 에는 machine-readable metadata 를 남긴다. 단, gate 판정은 �
 <!-- minglit-release-signal
 stage: dev-soak
 signal: backend-simulator
-workflow: monitor-event-flow-hourly
+workflow: monitor-event-flow-distributed
 branch: dev
 commit: abc123...
 run_id: 263...

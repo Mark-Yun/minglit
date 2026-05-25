@@ -21,11 +21,12 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # Consolidated fast read-only static checks: 7 verifications that previously each
-  # ran in its own ubuntu-latest job (migration version uniqueness + same-day gap
-  # warning, env-manifest ↔ EnvKeyStore drift, workflow YAML parse validity,
-  # androidx.test runner/orchestrator version alignment, cross-feature import
-  # baseline, BLUEDOC freshness, dev-staging PR issue lifecycle intent).
+  # Consolidated fast read-only static checks that previously each ran in its own
+  # ubuntu-latest job: migration version uniqueness + same-day gap warning,
+  # env-manifest ↔ EnvKeyStore drift, workflow YAML parse validity, workflow
+  # contract checks, androidx.test runner/orchestrator version alignment,
+  # cross-feature import baseline, BLUEDOC freshness, and dev-staging PR issue
+  # lifecycle intent.
   #
   # Why merge: each separate job paid runner startup + actions/checkout overhead
   # (~10-15s × 6 = ~70s of Actions minutes per PR). Combined into one job with a
@@ -108,6 +109,10 @@ jobs:
       - name: Check Android deploy release archive contract
         if: ${{ !cancelled() }}
         run: python3 .github/scripts/check-android-deploy-workflow-contract.py
+
+      - name: Check dev soak workflow contract
+        if: ${{ !cancelled() }}
+        run: python3 .github/scripts/check-dev-soak-workflow-contract.py
 
       - name: Verify androidx.test runner/orchestrator version alignment
         if: ${{ !cancelled() }}
