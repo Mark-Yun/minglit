@@ -6,6 +6,7 @@
 
 | Action | 내용 |
 |--------|------|
+| [cut-issue](./cut-issue/action.yml) | cut-gate tracking issue 생성/갱신/닫기 공통 action |
 | [deploy-flutter-app](./deploy-flutter-app/action.yml) | Flutter app deploy 공통 action |
 | [deploy-nextjs-app](./deploy-nextjs-app/action.yml) | Next.js app deploy 공통 action |
 | [ios-deploy](./ios-deploy/action.yml) | iOS deploy 공통 action |
@@ -18,4 +19,4 @@
 - Protected branch/tag write 용 token 은 `release-bot-token` 을 통해 mint 한다.
 
 ---
-_Reviewed: 2026-05-23 10:00_
+_Reviewed: 2026-05-25 11:40_
