@@ -104,10 +104,16 @@ Deno.test("ops-cicd-status - returns normalized branch and issue snapshot", asyn
       {
         matcher: /\/branches\?per_page=100&page=2$/,
         handler: () =>
-          jsonResponse([{
-            name: "rc/26.05.1",
-            commit: { sha: "sha-rc", url: "" },
-          }]),
+          jsonResponse([
+            {
+              name: "rc/hotfix/main-payment",
+              commit: { sha: "sha-rc-hotfix", url: "" },
+            },
+            {
+              name: "rc/2026-W22",
+              commit: { sha: "sha-rc", url: "" },
+            },
+          ]),
       },
       {
         matcher: /\/actions\/workflows\/\d+\/runs/,
@@ -157,6 +163,8 @@ Deno.test("ops-cicd-status - returns normalized branch and issue snapshot", asyn
       assertEquals(body.branches.length, 4);
       assertEquals(body.branches[0].key, "dev-staging");
       assertEquals(body.branches[0].workflows.length, 4);
+      assertEquals(body.branches[2].branch_name, "rc/2026-W22");
+      assertEquals(body.branches[2].head_sha, "sha-rc");
       assertEquals(body.issues[0].number, 42);
     });
   });

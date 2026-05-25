@@ -6,6 +6,7 @@ import {
 
 const DEFAULT_REPO = "Mark-Yun/minglit";
 const GITHUB_API = "https://api.github.com";
+const ACTIVE_RC_BRANCH_PATTERN = /^rc\/[0-9]{4}-W[0-9]{2}$/;
 
 type DashboardState = "success" | "warning" | "failure" | "running" | "unknown";
 
@@ -277,7 +278,7 @@ async function getBranch(
   }
 
   return branches
-    .filter((item) => item.name.startsWith("rc/"))
+    .filter((item) => ACTIVE_RC_BRANCH_PATTERN.test(item.name))
     .sort((a, b) => b.name.localeCompare(a.name))[0] ?? null;
 }
 
