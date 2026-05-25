@@ -16,23 +16,24 @@
 
 ## 실행 단계
 
-1. `dev` 브랜치 checkout (`GH_PAT_VERSION_BUMP` 시크릿 사용 — 보호된 브랜치에 직접 push 가능)
-2. Python 3 환경 설정
-3. `pip install graphifyy==0.4.23` (버전 핀)
-4. `graphify update . --no-viz` 실행 (viz 단계는 노드 수 5000+ 에서 실패하므로 건너뜀)
-5. `graphify-out/` 에 변경이 있으면:
+1. `dev` 브랜치 checkout
+2. `release-bot-token` action 으로 `minglit-release-bot` GitHub App token 생성
+3. Python 3 환경 설정
+4. `pip install graphifyy==0.8.8` (버전 핀)
+5. `graphify update .` 실행
+6. `graphify-out/` 에 변경이 있으면:
    - `chore(graphify): auto-update [skip ci]` 커밋
    - `dev` 에 직접 push (CI 재실행 방지 위해 `[skip ci]`)
-6. 변경 없으면 종료
+7. 변경 없으면 종료
 
 ## 동시 실행 방지
 
-`concurrency.group: graphify-update` 로 동일 그룹의 워크플로우가 동시에 돌지 않게 한다. 푸시가 빠르게 연속되면 큐잉되어 순차 실행된다. `cancel-in-progress: false` — 이미 시작된 갱신을 중간에 끊지 않는다.
+`concurrency.group: sync-graphify` 로 동일 그룹의 워크플로우가 동시에 돌지 않게 한다. 푸시가 빠르게 연속되면 큐잉되어 순차 실행된다. `cancel-in-progress: false` — 이미 시작된 갱신을 중간에 끊지 않는다.
 
 ## 권한
 
 - `contents: write` — graphify-out 갱신 커밋용
-- `GH_PAT_VERSION_BUMP` 시크릿 — 보호된 `dev` 에 직접 push (sync-version.yml 과 동일 패턴)
+- `MINGLIT_RELEASE_BOT_APP_ID`, `MINGLIT_RELEASE_BOT_PRIVATE_KEY` — 보호된 `dev` 에 직접 push 할 release bot token 발급용
 
 ## 실패 시 동작
 

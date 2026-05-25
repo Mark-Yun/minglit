@@ -1,0 +1,111 @@
+name: shared-vercel-deploy
+
+on:
+  workflow_call:
+    inputs:
+      app-type:
+        description: 'Vercel app type: flutter or nextjs.'
+        required: true
+        type: string
+      working-directory:
+        description: 'App working directory.'
+        required: true
+        type: string
+      dev-domain-alias:
+        description: 'Domain alias for dev/preview deployments.'
+        required: true
+        type: string
+      deploy-branch:
+        description: 'Branch name to deploy.'
+        required: true
+        type: string
+    outputs:
+      accessible-url:
+        description: 'URL that passed connectivity fallback selection.'
+        value: ${{ jobs.deploy.outputs.accessible-url }}
+    secrets:
+      VERCEL_TOKEN:
+        required: true
+      VERCEL_ORG_ID:
+        required: true
+      VERCEL_PROJECT_ID:
+        required: true
+      SUPABASE_DEV_URL:
+        required: false
+      SUPABASE_DEV_KEY:
+        required: false
+      GOOGLE_DEV_ID:
+        required: false
+      SUPABASE_MAIN_URL:
+        required: false
+      SUPABASE_MAIN_KEY:
+        required: false
+      GOOGLE_MAIN_ID:
+        required: false
+      SENTRY_DSN_FLUTTER:
+        required: false
+      STATSIG_CLIENT_KEY:
+        required: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.deploy-branch == 'main' && 'production' || 'preview' }}
+    outputs:
+      accessible-url: ${{ steps.deploy.outputs.accessible-url }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.deploy-branch }}
+
+      - name: Validate app type
+        run: |
+          case "${{ inputs.app-type }}" in
+            flutter|nextjs) ;;
+            *)
+              echo "::error::app-type must be 'flutter' or 'nextjs'."
+              exit 1
+              ;;
+          esac
+
+      - name: Deploy Flutter app
+        if: ${{ inputs.app-type == 'flutter' }}
+        id: deploy_flutter
+        uses: ./.github/actions/deploy-flutter-app
+        with:
+          working-directory: ${{ inputs.working-directory }}
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          dev-domain-alias: ${{ inputs.dev-domain-alias }}
+          deploy-branch: ${{ inputs.deploy-branch }}
+        env:
+          SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
+          SUPABASE_DEV_KEY: ${{ secrets.SUPABASE_DEV_KEY }}
+          GOOGLE_DEV_ID: ${{ secrets.GOOGLE_DEV_ID }}
+          SUPABASE_MAIN_URL: ${{ secrets.SUPABASE_MAIN_URL }}
+          SUPABASE_MAIN_KEY: ${{ secrets.SUPABASE_MAIN_KEY }}
+          GOOGLE_MAIN_ID: ${{ secrets.GOOGLE_MAIN_ID }}
+          SENTRY_DSN_FLUTTER: ${{ secrets.SENTRY_DSN_FLUTTER }}
+          STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
+
+      - name: Deploy Next.js app
+        if: ${{ inputs.app-type == 'nextjs' }}
+        id: deploy_nextjs
+        uses: ./.github/actions/deploy-nextjs-app
+        with:
+          working-directory: ${{ inputs.working-directory }}
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          dev-domain-alias: ${{ inputs.dev-domain-alias }}
+          deploy-branch: ${{ inputs.deploy-branch }}
+
+      - name: Export accessible URL
+        id: deploy
+        run: |
+          if [ "${{ inputs.app-type }}" = "flutter" ]; then
+            echo "accessible-url=${{ steps.deploy_flutter.outputs.accessible-url }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "accessible-url=${{ steps.deploy_nextjs.outputs.accessible-url }}" >> "$GITHUB_OUTPUT"
+          fi

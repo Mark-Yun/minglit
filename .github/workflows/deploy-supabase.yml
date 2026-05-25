@@ -353,9 +353,13 @@ jobs:
     needs: [deploy]
     if: always()
     permissions:
+      actions: read
+      contents: read
       issues: write
+      statuses: write
     uses: ./.github/workflows/shared-notify.yml
     with:
-      success: ${{ needs.deploy.result == 'success' }}
+      failed: ${{ needs.deploy.result != 'success' }}
       workflow_name: 'Deploy Supabase Migrations'
+      severity: 'P0-critical'
       job_results: '{"deploy":"${{ needs.deploy.result }}"}'

@@ -202,9 +202,13 @@ jobs:
     needs: [audit]
     if: always() && needs.audit.result == 'failure'
     permissions:
+      actions: read
+      contents: read
       issues: write
+      statuses: write
     uses: ./.github/workflows/shared-notify.yml
     with:
-      success: false
+      failed: true
       workflow_name: 'Supabase Security/Performance Advisor Audit'
+      severity: 'P1-high'
       job_results: '{"audit":"${{ needs.audit.result }}"}'

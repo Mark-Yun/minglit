@@ -20,8 +20,9 @@ GitHub App permission 은 아래만 부여한다.
 |------------|-------|------|
 | Contents | Read/write | version bump commit, branch 생성/삭제, tag push, release asset/source 접근 |
 | Pull requests | Read/write | promotion/backport PR 생성, auto-merge enable |
-| Commit statuses | Read/write | `dev-rc-cut-pass` 같은 commit status 설정 |
+| Commit statuses | Read/write | `dev-soak/*`, `dev-rc-cut-pass`, `rc-main-cut-pass` 같은 gate marker 설정 |
 | Checks | Read | required check / gate 상태 조회 |
+| Actions | Read | `dev-rc-cut-gate` 가 monitor workflow run history 를 조회 |
 | Issues | Read/write | release 자동 이슈 생성, failure comment |
 | Metadata | Read | GitHub App 기본 권한 |
 
@@ -30,7 +31,7 @@ GitHub App permission 은 아래만 부여한다.
 | Permission | 이유 |
 |------------|------|
 | Administration | Ruleset 수정은 초기 수동 설정 또는 별도 infra workflow 에서만 수행 |
-| Actions | workflow 실행/수정 권한은 상시 release path 에 불필요 |
+| Actions write | workflow 실행/수정 권한은 상시 release path 에 불필요. run history 조회용 read 만 허용 |
 | Secrets | secret 조회/수정 금지 |
 | Members / Organization administration | repo release automation 범위 초과 |
 
@@ -86,6 +87,12 @@ git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
 | `sync-version` | dev/main version bump commit, main release tag |
 | `dev-staging-dev-cut-gate` | dev-staging version bump/tag |
 | `dev-staging-dev-cut` | immutable nightly branch 생성, dev PR 생성 |
+| `shared-set-commit-status` | commit status 를 쓰는 low-level reusable |
+| `set-dev-soak-status` | dev soak signal 을 `dev-soak/*` context 로 매핑 |
+| `set-rc-soak-status` | rc soak signal 을 `rc-soak/*` context 로 매핑 |
+| `monitor-event-flow-*` / `shared-notify` | backend simulator 실패 시 `set-dev-soak-status` 로 failure status + issue 기록 |
+| AI app soak status writer | 앱 소킹/실디바이스 이상 발견 시 `set-dev-soak-status` 로 failure status 기록 |
+| `dev-rc-cut-gate` | 24h soak run history 확인 후 `set-dev-soak-status` 로 `dev-soak/*` success + `dev-rc-cut-pass` status 기록 |
 | `dev-rc-cut` | `rc/YYYY-Wxx` branch 생성, RC tag |
 | `rc-post-merge-sync` | RC hotfix version bump/tag |
 | `rc-main-cut` | rc → main promotion PR 생성/auto-merge |

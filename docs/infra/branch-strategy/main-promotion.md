@@ -15,10 +15,10 @@
 |-------|------|
 | `pr-gate` 재실행 | dev-staging-pr-gate 와 동일 — defensive 검증 |
 | `expand-migrate-contract` (재검증) | RC 5일 동안 dev 가 더 나갔을 수 있음. 재확인 |
-| RC HEAD 의 `dev-rc-cut-pass` status 확인 | 마지막 hotfix 이 dev-rc-cut-gate 통과했는지 |
+| RC first-parent lineage 의 `dev-rc-cut-pass` source 확인 | RC 가 검증된 dev cut source 에서 출발했는지 |
 | `rc-main-cut-pass` 자동 마커 | `rc-main-cut-gate` 가 5일 무커밋 + pre-main signal 확인 후 부여 |
 
-GitHub Ruleset 의 required check 는 `main-pr-gate` 하나로 둔다. `dev-rc-cut-pass`, `expand-migrate-contract`, `rc-main-cut-pass` 는 PR head SHA 와 별도 commit/label 상태가 섞일 수 있으므로 `main-pr-gate` 내부 검증으로 처리한다. 모든 check 통과 시 workflow 가 auto-merge (rebase + fast-forward) 한다. 어느 하나라도 실패 시 PR hold + Slack 알림 → human 개입 (edge case).
+GitHub Ruleset 의 required check 는 `main-pr-gate` 하나로 둔다. `dev-rc-cut-pass`, `expand-migrate-contract`, `rc-main-cut-pass` 는 PR head SHA 와 별도 commit/label 상태가 섞일 수 있으므로 `main-pr-gate` 내부 검증으로 처리한다. `dev-rc-cut-pass` 는 RC HEAD 직접 status 가 아니라 RC first-parent lineage 안의 source commit status 로 확인한다. 모든 check 통과 시 workflow 가 auto-merge (rebase + fast-forward) 한다. 어느 하나라도 실패 시 PR hold + Slack 알림 → human 개입 (edge case).
 
 ## `main-deploy`
 

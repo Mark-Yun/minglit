@@ -3,79 +3,201 @@ name: shared-notify
 on:
   workflow_call:
     inputs:
-      success:
+      # Failure-first contract: callers pass `failed=true` only when notification is needed.
+      failed:
         type: boolean
         required: true
-        description: Whether the workflow succeeded
+        description: 'Whether the caller workflow failed.'
       workflow_name:
         type: string
         required: true
-        description: Name of the workflow that ran
+        description: 'Name of the workflow that ran.'
+      severity:
+        type: string
+        required: true
+        description: 'Issue priority label, e.g. P0-critical or P1-high.'
       job_results:
         type: string
         required: false
         default: ''
-        description: 'JSON string of job results, e.g. {"build":"success","test":"failure"}'
-      create_issue:
+        description: 'JSON string of job results, e.g. {"build":"success","test":"failure"}.'
+      stage:
+        type: string
+        required: false
+        default: ''
+        description: 'Optional release signal stage, e.g. dev-soak.'
+      signal:
+        type: string
+        required: false
+        default: ''
+        description: 'Optional release signal name, e.g. backend-simulator.'
+      blocks_rc_cut:
         type: boolean
         required: false
-        default: true
-        description: 'Whether to create/comment a GitHub issue on failure. Set false for PR-triggered workflows to avoid noise.'
+        default: false
+        description: 'If true, write a dev-soak failure status for the target commit.'
+      commit_sha:
+        type: string
+        required: false
+        default: ''
+        description: 'Target commit SHA for release signal status. Defaults to github.sha.'
+      target_url:
+        type: string
+        required: false
+        default: ''
+        description: 'Optional status target URL. Defaults to this workflow run.'
+      status_description:
+        type: string
+        required: false
+        default: ''
+        description: 'Optional commit status description.'
 
 jobs:
+  set-dev-soak-failure:
+    if: ${{ inputs.failed && inputs.blocks_rc_cut && inputs.stage == 'dev-soak' }}
+    uses: ./.github/workflows/set-dev-soak-status.yml
+    permissions:
+      contents: read
+      statuses: write
+    secrets: inherit
+    with:
+      signal: ${{ inputs.signal }}
+      state: failure
+      sha: ${{ inputs.commit_sha || github.sha }}
+      target_url: ${{ inputs.target_url || format('{0}/{1}/actions/runs/{2}', github.server_url, github.repository, github.run_id) }}
+      description: ${{ inputs.status_description || format('{0} failed', inputs.workflow_name) }}
+
   notify:
+    needs: [set-dev-soak-failure]
+    if: always()
     runs-on: ubuntu-latest
     permissions:
+      actions: read
       issues: write
     steps:
-      - name: Create or comment on issue for CI failure
+      - name: Create or update failure issue
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          JOB_RESULTS: ${{ inputs.job_results }}
-        continue-on-error: true
+          GH_TOKEN: ${{ github.token }}
+          INPUT_FAILED: ${{ inputs.failed }}
+          INPUT_WORKFLOW_NAME: ${{ inputs.workflow_name }}
+          INPUT_SEVERITY: ${{ inputs.severity }}
+          INPUT_JOB_RESULTS: ${{ inputs.job_results }}
+          INPUT_STAGE: ${{ inputs.stage }}
+          INPUT_SIGNAL: ${{ inputs.signal }}
+          INPUT_BLOCKS_RC_CUT: ${{ inputs.blocks_rc_cut }}
+          INPUT_COMMIT_SHA: ${{ inputs.commit_sha || github.sha }}
+          INPUT_TARGET_URL: ${{ inputs.target_url || format('{0}/{1}/actions/runs/{2}', github.server_url, github.repository, github.run_id) }}
+          PR_NUMBER: ${{ github.event.pull_request.number || '' }}
+          PR_TITLE: ${{ github.event.pull_request.title || '' }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref || '' }}
+          BASE_REF: ${{ github.event.pull_request.base.ref || '' }}
         run: |
-          TITLE="🚨 ${{ inputs.workflow_name }} failed on ${{ github.ref_name }}"
-          BODY="**Workflow**: ${{ inputs.workflow_name }}
-          **Branch**: ${{ github.ref_name }}
-          **Commit**: ${{ github.sha }}
-          **Run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          **Triggered by**: ${{ github.event.head_commit.message || github.event.pull_request.title || 'N/A' }}
-          **Actor**: ${{ github.actor }}"
+          set -euo pipefail
 
-          if [ -n "$JOB_RESULTS" ]; then
-            JOB_LOG=$(echo "$JOB_RESULTS" | python3 -c "
-          import sys, json
+          if [ "${INPUT_FAILED}" != "true" ]; then
+            echo "Caller did not fail; skipping notification."
+            exit 0
+          fi
+
+          TITLE="[${INPUT_SEVERITY}] ${INPUT_WORKFLOW_NAME} failed on ${{ github.ref_name }}"
+          if [ -n "${INPUT_STAGE}" ] && [ -n "${INPUT_SIGNAL}" ]; then
+            TITLE="[${INPUT_SEVERITY}] ${INPUT_STAGE}/${INPUT_SIGNAL}: ${INPUT_WORKFLOW_NAME} failed on ${{ github.ref_name }}"
+          fi
+
+          JOB_LOG="(not provided)"
+          if [ -n "${INPUT_JOB_RESULTS}" ]; then
+            JOB_LOG="$(echo "${INPUT_JOB_RESULTS}" | python3 -c "
+          import json, sys
           try:
-            data = json.load(sys.stdin)
-            for k, v in data.items():
-              icon = '✅' if v == 'success' else '⏭️' if v == 'skipped' else '❌'
-              print(f'  {icon} {k}: {v}')
-          except: pass
-          " 2>/dev/null || echo "  (parse error)")
-            BODY="${BODY}
-
-          **Job Results**:
-          ${JOB_LOG}"
+              data = json.load(sys.stdin)
+              for key, value in data.items():
+                  icon = 'PASS' if value == 'success' else 'SKIP' if value == 'skipped' else 'FAIL'
+                  print(f'- {icon} {key}: {value}')
+          except Exception as exc:
+              print(f'- parse error: {exc}')
+          " 2>/dev/null || echo "- parse error")"
           fi
 
-          if [ "${{ inputs.success }}" = "true" ]; then
-            echo "✅ Workflow succeeded, no issue needed."
-            exit 0
+          LOG_TAIL_FILE="$(mktemp)"
+          if gh run view "${GITHUB_RUN_ID}" --log-failed > "${LOG_TAIL_FILE}" 2>/tmp/shared-notify-log-error; then
+            FAILED_LOG_TAIL="$(tail -n 200 "${LOG_TAIL_FILE}")"
+          else
+            FAILED_LOG_TAIL="Failed log tail unavailable. $(cat /tmp/shared-notify-log-error 2>/dev/null || true)"
           fi
 
-          if [ "${{ inputs.create_issue }}" = "false" ]; then
-            echo "ℹ️ create_issue=false — skipping issue creation for PR-triggered workflow."
-            exit 0
-          fi
+          BODY_FILE="$(mktemp)"
+          {
+            echo "## Failure"
+            echo ""
+            echo "| Field | Value |"
+            echo "|-------|-------|"
+            echo "| Workflow | ${INPUT_WORKFLOW_NAME} |"
+            echo "| Branch | ${{ github.ref_name }} |"
+            echo "| Commit | ${INPUT_COMMIT_SHA} |"
+            echo "| Run | ${INPUT_TARGET_URL} |"
+            echo "| Actor | ${{ github.actor }} |"
+            if [ -n "${PR_NUMBER}" ]; then
+              echo "| PR | #${PR_NUMBER} ${PR_TITLE} |"
+              echo "| PR refs | ${HEAD_REF} -> ${BASE_REF} |"
+            fi
+            if [ -n "${INPUT_STAGE}" ] || [ -n "${INPUT_SIGNAL}" ]; then
+              echo "| Release signal | ${INPUT_STAGE}/${INPUT_SIGNAL} |"
+              echo "| Blocks RC cut | ${INPUT_BLOCKS_RC_CUT} |"
+            fi
+            echo ""
+            echo "## Job Results"
+            echo ""
+            echo "${JOB_LOG}"
 
-          echo "::warning::Workflow failed. Creating/updating issue."
+            if [ -n "${INPUT_STAGE}" ] || [ -n "${INPUT_SIGNAL}" ]; then
+              echo ""
+              echo "<!-- minglit-release-signal"
+              echo "stage: ${INPUT_STAGE}"
+              echo "signal: ${INPUT_SIGNAL}"
+              echo "workflow: ${INPUT_WORKFLOW_NAME}"
+              echo "branch: ${{ github.ref_name }}"
+              echo "commit: ${INPUT_COMMIT_SHA}"
+              echo "run_id: ${GITHUB_RUN_ID}"
+              echo "severity: ${INPUT_SEVERITY}"
+              echo "blocks_rc_cut: ${INPUT_BLOCKS_RC_CUT}"
+              echo "-->"
+            fi
+
+            echo ""
+            echo "## Failed Log Tail"
+            echo ""
+            echo '```text'
+            echo "${FAILED_LOG_TAIL}"
+            echo '```'
+          } > "${BODY_FILE}"
 
           REPO="${{ github.repository }}"
-          EXISTING=$(gh issue list --repo "$REPO" --search "\"${TITLE}\" in:title" --state open --label ci-failure --json number --jq '.[0].number' 2>/dev/null || echo "")
-          if [ -n "$EXISTING" ]; then
-            echo "🔁 Found existing issue #$EXISTING, adding comment..."
-            gh issue comment "$EXISTING" --repo "$REPO" --body "$BODY"
+          EXISTING="$(gh issue list \
+            --repo "${REPO}" \
+            --search "\"${TITLE}\" in:title" \
+            --state open \
+            --label ci-failure \
+            --json number \
+            --jq '.[0].number' 2>/dev/null || true)"
+
+          if [ -n "${EXISTING}" ]; then
+            echo "Found existing issue #${EXISTING}; adding comment."
+            gh issue comment "${EXISTING}" --repo "${REPO}" --body-file "${BODY_FILE}"
+            ISSUE_NUMBER="${EXISTING}"
           else
-            echo "🆕 Creating new issue..."
-            gh issue create --repo "$REPO" --title "$TITLE" --body "$BODY" --label "ci-failure" --label "P0-critical"
+            echo "Creating new issue."
+            ISSUE_URL="$(gh issue create \
+              --repo "${REPO}" \
+              --title "${TITLE}" \
+              --body-file "${BODY_FILE}" \
+              --label ci-failure \
+              --label "${INPUT_SEVERITY}")"
+            ISSUE_NUMBER="${ISSUE_URL##*/}"
+          fi
+
+          if [ -n "${INPUT_STAGE}" ]; then
+            gh issue edit "${ISSUE_NUMBER}" --repo "${REPO}" --add-label "${INPUT_STAGE}" || true
+          fi
+          if [ -n "${INPUT_SIGNAL}" ]; then
+            gh issue edit "${ISSUE_NUMBER}" --repo "${REPO}" --add-label "${INPUT_SIGNAL}" || true
           fi

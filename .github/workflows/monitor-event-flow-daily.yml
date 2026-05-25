@@ -14,8 +14,27 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  resolve-dev-sha:
+    name: Resolve current dev HEAD
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      dev_sha: ${{ steps.resolve.outputs.dev_sha }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+      - name: Resolve origin/dev
+        id: resolve
+        run: |
+          set -euo pipefail
+          git fetch origin dev --depth=1
+          echo "dev_sha=$(git rev-parse origin/dev)" >> "${GITHUB_OUTPUT}"
+
   seed-and-simulate:
     name: Seed + event-flow cascade (daily)
+    needs: [resolve-dev-sha]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -69,12 +88,22 @@ jobs:
           jq -e '.success == true' /tmp/sim_response.json
 
   notify-failure:
-    needs: [seed-and-simulate]
+    needs: [resolve-dev-sha, seed-and-simulate]
     if: always()
     permissions:
+      actions: read
+      contents: read
       issues: write
+      statuses: write
     uses: ./.github/workflows/shared-notify.yml
     with:
-      success: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
+      failed: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
       workflow_name: 'monitor-event-flow-daily'
+      severity: 'P1-high'
+      job_results: '{"resolve-dev-sha":"${{ needs.resolve-dev-sha.result }}","seed-and-simulate":"${{ needs.seed-and-simulate.result }}"}'
+      stage: 'dev-soak'
+      signal: 'backend-simulator'
+      blocks_rc_cut: true
+      commit_sha: ${{ needs.resolve-dev-sha.outputs.dev_sha }}
+      status_description: 'monitor-event-flow-daily failed'
     secrets: inherit

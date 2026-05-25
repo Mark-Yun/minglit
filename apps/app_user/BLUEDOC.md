@@ -6,7 +6,7 @@ Minglit 의 **일반 사용자 Flutter 앱**. 파티 탐색·참여 신청·결�
 
 | 항목 | 무엇 |
 |---|---|
-| `lib/main.dart` / `lib/main_demo.dart` | 프로덕션 / demo flavor 엔트리포인트 |
+| `lib/main.dart` / `lib/main_demo.dart` | 프로덕션 / demo flavor 엔트리포인트 (`main_demo.dart` 는 `minglit_demo` fixtures + Android `demo` flavor 사용) |
 | [`lib/src/features/`](./lib/src/features/) | 기능별 모듈 (아래 표) |
 | [`lib/src/routing/`](./lib/src/routing/) | `app_router` (GoRouter) + `app_routes` (Type-safe) + `app_coordinator` |
 | [`lib/src/logic/`](./lib/src/logic/) | 앱-레벨 Coordinator / Provider (`event_coordinator`, `auth_coordinator`, `feed_state_provider`) |
@@ -39,6 +39,7 @@ Minglit 의 **일반 사용자 Flutter 앱**. 파티 탐색·참여 신청·결�
 - **Cross-feature import 금지** — `pr-gate.check-cross-feature-imports` 가 차단.
 - **화면 이동은 Coordinator 경유** — UI 가 `context.push` 직접 호출 X.
 - **공통 아키텍처는 [`apps/architecture.md`](../architecture.md) 참고** — Tech Stack, Coordinator/Routing/Repository pattern.
+- **demo flavor 는 서버 0 연결** — `main_demo.dart` + `android/app/src/demo/google-services.json` + `minglit_env/demo/flutter.env` 조합으로 빌드.
 
 ## 관련
 
@@ -47,4 +48,4 @@ Minglit 의 **일반 사용자 Flutter 앱**. 파티 탐색·참여 신청·결�
 - [README.md](./README.md) — 빌드·실행 / [integration_test](./integration_test/BLUEDOC.md) — 통합 테스트
 
 ---
-_Reviewed: 2026-05-23 00:00_
+_Reviewed: 2026-05-24 16:30_

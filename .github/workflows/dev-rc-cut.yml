@@ -19,6 +19,11 @@ on:
         required: false
         type: boolean
         default: false
+      dry_run:
+        description: Plan only; do not create rc branch, bump version, or tag.
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: dev-rc-cut
@@ -64,6 +69,7 @@ jobs:
           REQUESTED_SOURCE_SHA: ${{ inputs.source_sha || '' }}
           REQUESTED_RC_WEEK: ${{ inputs.rc_week || '' }}
           ALLOW_ACTIVE_RC: ${{ inputs.allow_active_rc || false }}
+          DRY_RUN: ${{ inputs.dry_run || false }}
         run: |
           set -euo pipefail
 
@@ -139,7 +145,9 @@ jobs:
             exit 1
           fi
 
-          git push origin "${SOURCE_SHA}:refs/heads/${RC_BRANCH}"
+          if [ "${DRY_RUN}" != "true" ]; then
+            git push origin "${SOURCE_SHA}:refs/heads/${RC_BRANCH}"
+          fi
           git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
 
           echo "skipped=false" >> "$GITHUB_OUTPUT"
@@ -151,9 +159,43 @@ jobs:
           echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
           echo "promo_tag=${PROMO_TAG}" >> "$GITHUB_OUTPUT"
 
+          {
+            echo "## dev-rc-cut plan"
+            echo ""
+            echo "| Field | Value |"
+            echo "|---|---|"
+            echo "| dry_run | ${DRY_RUN} |"
+            echo "| source_sha | ${SOURCE_SHA} |"
+            echo "| rc_branch | ${RC_BRANCH} |"
+            echo "| version | ${VERSION} |"
+            echo "| release_version | ${RELEASE_VERSION} |"
+            echo "| tag_name | ${TAG_NAME} |"
+            echo "| promo_tag | ${PROMO_TAG} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Track dev -> rc cut issue
+        id: cut-issue
+        if: steps.plan.outputs.skipped != 'true'
+        uses: ./.github/actions/cut-issue
+        with:
+          github-token: ${{ github.token }}
+          operation: upsert
+          gate-key: dev-rc
+          subject-id: ${{ steps.plan.outputs.source_sha }}
+          title: 'cut-gate(dev-rc): ${{ steps.plan.outputs.source_sha }}'
+          status: ${{ inputs.dry_run == true && 'ready' || 'promoting' }}
+          summary: 'dev -> rc cut is planned for `${{ steps.plan.outputs.source_sha }}`.'
+          details: |
+            - Source SHA: `${{ steps.plan.outputs.source_sha }}`
+            - RC branch: `${{ steps.plan.outputs.rc_branch }}`
+            - Version: `${{ steps.plan.outputs.version }}`
+            - Tag: `${{ steps.plan.outputs.tag_name }}`
+            - Promo tag: `${{ steps.plan.outputs.promo_tag }}`
+            - Dry run: `${{ inputs.dry_run || false }}`
+
   bump:
     needs: [plan]
-    if: needs.plan.outputs.skipped != 'true'
+    if: needs.plan.outputs.skipped != 'true' && inputs.dry_run != true
     uses: ./.github/workflows/version-bump.yml
     with:
       target_ref: ${{ needs.plan.outputs.rc_branch }}
@@ -165,56 +207,60 @@ jobs:
 
   tag-promo:
     needs: [plan, bump]
-    if: needs.plan.outputs.skipped != 'true'
+    if: needs.plan.outputs.skipped != 'true' && inputs.dry_run != true
+    uses: ./.github/workflows/shared-promo-tag.yml
+    with:
+      target_ref: ${{ needs.plan.outputs.rc_branch }}
+      tag_name: ${{ needs.plan.outputs.promo_tag }}
+      commit_sha: ${{ needs.bump.outputs.commit_sha }}
+    secrets: inherit
+
+  close-cut-issue:
+    needs: [plan, bump, tag-promo]
+    if: needs.plan.outputs.skipped != 'true' && inputs.dry_run != true && needs.tag-promo.result == 'success'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
     steps:
       - uses: actions/checkout@v6
+      - name: Close dev -> rc cut issue
+        uses: ./.github/actions/cut-issue
         with:
-          ref: ${{ needs.plan.outputs.rc_branch }}
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Generate release bot token
-        id: release-bot
-        uses: ./.github/actions/release-bot-token
-        with:
-          fallback-app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
-          fallback-private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
-
-      - name: Tag promotion marker
-        env:
-          RELEASE_BOT_TOKEN: ${{ steps.release-bot.outputs.token }}
-          PROMO_TAG: ${{ needs.plan.outputs.promo_tag }}
-          COMMIT_SHA: ${{ needs.bump.outputs.commit_sha }}
-        run: |
-          set -euo pipefail
-          git remote set-url origin "https://x-access-token:${RELEASE_BOT_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git fetch origin "${{ needs.plan.outputs.rc_branch }}" --tags --force
-
-          if git ls-remote --exit-code --tags origin "refs/tags/${PROMO_TAG}" >/dev/null 2>&1; then
-            echo "Tag ${PROMO_TAG} already exists; skipping."
-            exit 0
-          fi
-
-          git tag "${PROMO_TAG}" "${COMMIT_SHA}"
-          git push origin "refs/tags/${PROMO_TAG}"
-          git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          github-token: ${{ github.token }}
+          operation: close
+          gate-key: dev-rc
+          subject-id: ${{ needs.plan.outputs.source_sha }}
+          title: 'cut-gate(dev-rc): ${{ needs.plan.outputs.source_sha }}'
+          status: done
+          summary: 'dev -> rc cut completed for `${{ needs.plan.outputs.source_sha }}`.'
+          details: |
+            - RC branch: `${{ needs.plan.outputs.rc_branch }}`
+            - Version: `${{ needs.plan.outputs.version }}`
+            - Tag: `${{ needs.plan.outputs.tag_name }}`
+            - Promo tag: `${{ needs.plan.outputs.promo_tag }}`
+          close-comment: 'dev-rc-cut completed: `${{ needs.plan.outputs.rc_branch }}` was created and tagged.'
 
   notify-failure:
-    needs: [plan, bump, tag-promo]
+    needs: [plan, bump, tag-promo, close-cut-issue]
     if: always()
     permissions:
+      actions: read
+      contents: read
       issues: write
+      statuses: write
     uses: ./.github/workflows/shared-notify.yml
     with:
-      success: >-
+      failed: >-
         ${{
-          needs.plan.outputs.skipped == 'true' ||
+          needs.plan.outputs.skipped != 'true' &&
+          inputs.dry_run != true &&
           (
-            needs.plan.result == 'success' &&
-            needs.bump.result == 'success' &&
-            needs.tag-promo.result == 'success'
+            needs.plan.result != 'success' ||
+            needs.bump.result != 'success' ||
+            needs.tag-promo.result != 'success'
           )
         }}
       workflow_name: 'Dev RC Cut'
+      severity: 'P1-high'
       job_results: '{"plan":"${{ needs.plan.result }}","bump":"${{ needs.bump.result }}","tag-promo":"${{ needs.tag-promo.result }}"}'

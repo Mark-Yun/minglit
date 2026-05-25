@@ -24,9 +24,10 @@ import authManifest from "../auth-manifest.json" with { type: "json" };
 
 export type Caller = "system" | "user" | "external" | "public";
 export type Environment = "local" | "development" | "dev" | "production";
+export type SystemKeyFormat = "legacy" | "secret";
 
 export type AuthContext =
-  | { type: "system" }
+  | { type: "system"; keyFormat?: SystemKeyFormat }
   | { type: "user"; userId: string }
   | { type: "external"; reason: string }
   | { type: "public" };
@@ -225,7 +226,37 @@ export async function checkExternalAuth(
   }
 }
 
-async function verifyAuth(
+/**
+ * Checks system caller credentials.
+ *
+ * Legacy service_role stays on `Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>`.
+ * New Supabase secret keys (`sb_secret_...`) are not JWTs and must use `apikey`.
+ * Exported for unit testing; not part of the stable public API.
+ */
+export function checkSystemAuth(
+  req: Request,
+): { ok: true; keyFormat: SystemKeyFormat } | { ok: false } {
+  const authHeader = req.headers.get("Authorization") ?? "";
+  if (authHeader.startsWith("Bearer ")) {
+    const token = authHeader.slice(7);
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (serviceKey && token === serviceKey) {
+      return { ok: true, keyFormat: "legacy" };
+    }
+  }
+
+  const apiKey = req.headers.get("apikey") ?? "";
+  const serviceSecret = Deno.env.get("SUPABASE_SERVICE_ROLE_SECRET");
+  if (serviceSecret && apiKey === serviceSecret) {
+    return { ok: true, keyFormat: "secret" };
+  }
+
+  return { ok: false };
+}
+
+// Exported for unit testing; not part of the stable public API.
+export async function verifyAuth(
   req: Request,
   policy: EFPolicy,
   fnName: string,
@@ -233,14 +264,18 @@ async function verifyAuth(
   const allow = (c: Caller) => policy.callers.includes(c);
   const authHeader = req.headers.get("Authorization") ?? "";
 
-  // Bearer 형식 토큰이 있으면 우선 system → user 순으로 검증 (cheap → expensive)
+  // system auth is cheap and independent of JWT verification. Check it before
+  // user auth so service-to-service callers can use only `apikey`.
+  if (allow("system")) {
+    const system = checkSystemAuth(req);
+    if (system.ok) {
+      return { type: "system", keyFormat: system.keyFormat };
+    }
+  }
+
+  // Bearer 형식 토큰이 있으면 user JWT 검증 (expensive)
   if (authHeader.startsWith("Bearer ")) {
     const token = authHeader.slice(7);
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-
-    if (allow("system") && serviceKey && token === serviceKey) {
-      return { type: "system" };
-    }
 
     if (allow("user")) {
       const supabase = createServiceClient();
@@ -335,6 +370,14 @@ export function minglitEdgeFunction(handler: EFHandler, opts: MinglitEFOptions =
       // Auth 검증
       const auth = await verifyAuth(req, policy, fnName);
       if (auth instanceof Response) return auth;
+      if (auth.type === "system") {
+        axiomLog({
+          function: fnName,
+          level: "info",
+          message: "system auth accepted",
+          metadata: { requestId, keyFormat: auth.keyFormat ?? "unknown" },
+        });
+      }
 
       // Context + handler 호출
       const ctx = makeContext({ auth, fnName, env, requestId });
