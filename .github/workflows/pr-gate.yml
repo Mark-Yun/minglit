@@ -161,6 +161,7 @@ jobs:
       app_user: ${{ steps.filter.outputs.app_user }}
       app_partner: ${{ steps.filter.outputs.app_partner }}
       minglit_kit: ${{ steps.filter.outputs.minglit_kit }}
+      ios_connectivity_plus_cap: ${{ steps.filter.outputs.ios_connectivity_plus_cap }}
       demo_android: ${{ steps.filter.outputs.demo_android }}
       mds_core: ${{ steps.filter.outputs.mds_core }}
       app_user_or_kit: ${{ steps.filter.outputs.app_user == 'true' || steps.filter.outputs.minglit_kit == 'true' || steps.filter.outputs.mds_core == 'true' }}
@@ -199,6 +200,14 @@ jobs:
           minglit_kit:
             - 'shared/packages/minglit_kit/**'
             - 'shared/packages/**'
+          ios_connectivity_plus_cap:
+            - 'pubspec.yaml'
+            - 'pubspec.lock'
+            - 'apps/app_user/pubspec.yaml'
+            - 'apps/app_partner/pubspec.yaml'
+            - 'shared/packages/minglit_kit/pubspec.yaml'
+            - '.github/scripts/check-ios-connectivity-plus-cap.sh'
+            - '.github/workflows/pr-gate.yml'
           demo_android:
             - '.github/workflows/pr-gate.yml'
             - 'pubspec.yaml'
@@ -254,6 +263,33 @@ jobs:
             - 'supabase/functions/**/*.json'
             - 'supabase/functions/**/.npmrc'
             - 'supabase/deno.json'
+
+  guard-ios-connectivity-plus-cap:
+    name: guard-ios-connectivity-plus-cap
+    needs: changes
+    if: ${{ needs.changes.outputs.ios_connectivity_plus_cap == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref || github.ref }}
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9'  # Fix #2640: flutter_quill 11.5.0 incompatible with Flutter 3.44.0
+          cache: true
+      - name: Cache pub packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-ios-connectivity-plus-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Guard iOS connectivity_plus cap
+        run: bash .github/scripts/check-ios-connectivity-plus-cap.sh
 
   # App CI (User + Partner)
   test-flutter-apps:
