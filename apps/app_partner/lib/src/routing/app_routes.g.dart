@@ -342,10 +342,6 @@ RouteBase get $partnerShellRoute => StatefulShellRouteData.$route(
               ],
             ),
             GoRouteData.$route(
-              path: 'ops/cicd-status',
-              factory: $OpsCicdStatusRoute._fromState,
-            ),
-            GoRouteData.$route(
               path: 'account',
               factory: $PartnerAccountManagementRoute._fromState,
             ),
@@ -1184,27 +1180,6 @@ mixin $MemberPermissionRoute on GoRouteData {
   String get location => GoRouteData.$location(
     '/more/partners/${Uri.encodeComponent(_self.partnerId)}/members/${Uri.encodeComponent(_self.targetUserId)}/permission',
   );
-
-  @override
-  void go(BuildContext context) => context.go(location);
-
-  @override
-  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
-
-  @override
-  void pushReplacement(BuildContext context) =>
-      context.pushReplacement(location);
-
-  @override
-  void replace(BuildContext context) => context.replace(location);
-}
-
-mixin $OpsCicdStatusRoute on GoRouteData {
-  static OpsCicdStatusRoute _fromState(GoRouterState state) =>
-      const OpsCicdStatusRoute();
-
-  @override
-  String get location => GoRouteData.$location('/more/ops/cicd-status');
 
   @override
   void go(BuildContext context) => context.go(location);

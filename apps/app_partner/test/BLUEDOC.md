@@ -6,7 +6,7 @@
 
 | 항목 | 무엇 |
 |---|---|
-| [`src/`](./src/) | unit + widget 테스트 (lib/src/ 미러링, admin CI/CD dashboard 포함) |
+| [`src/`](./src/) | unit + widget 테스트 (lib/src/ 미러링) |
 | [`integration/`](./integration/) | Integration 테스트 (CI 의 `pr-gate.test-integration-app-partner-cuj` 실행) |
 | [`alchemist/`](./alchemist/) | Alchemist golden 설정·고정 골든 |
 | [`visual_qa/`](./visual_qa/) | 시각 QA 캡처 |
@@ -41,4 +41,4 @@ CI 자동 실행: `pr-gate.test-flutter-apps` matrix. 커버리지 dev 자동 �
 - [tests/_coverage/BLUEDOC](../../../tests/_coverage/BLUEDOC.md)
 
 ---
-_Reviewed: 2026-05-24 22:16_
+_Reviewed: 2026-05-20 09:10_

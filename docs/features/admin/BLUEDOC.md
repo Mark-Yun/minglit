@@ -5,7 +5,6 @@
 ## 포함된 피쳐
 
 - [admin-dashboard](./admin-dashboard/) — 관리자 대시보드
-- [cicd-status-dashboard](./cicd-status-dashboard/) — CI/CD 상태, 배포 흐름, 파일링된 실패 이슈 추적
 - [statistics-tools](./statistics-tools/) — 통계/분석 도구
 
 ## 리포트

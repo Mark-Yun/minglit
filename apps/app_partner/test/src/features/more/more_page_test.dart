@@ -125,9 +125,6 @@ void main() {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
-      await tester.scrollUntilVisible(find.text('계정 관리'), 100);
-      await tester.drag(find.byType(ListView), const Offset(0, -120));
-      await tester.pumpAndSettle();
       await tester.tap(find.text('계정 관리'));
       await tester.pumpAndSettle();
 
@@ -165,9 +162,6 @@ void main() {
       await tester.pumpWidget(buildSubject());
       await tester.pumpAndSettle();
 
-      await tester.scrollUntilVisible(find.text('계정 관리'), 100);
-      await tester.drag(find.byType(ListView), const Offset(0, -120));
-      await tester.pumpAndSettle();
       await tester.tap(find.text('계정 관리'));
       await tester.pumpAndSettle();
 
@@ -234,19 +228,19 @@ void main() {
     testWidgets(
       'shows Icons.store fallback when profileImageUrl is null',
       (tester) async {
-        // testPartner has no profileImageUrl, so fallback avatar is rendered.
+        // testPartner has no profileImageUrl, so MinglitAvatarImage renders CircleAvatar fallback
         await tester.pumpWidget(buildSubject());
         await tester.pumpAndSettle();
 
         expect(find.byType(MinglitAvatarImage), findsOneWidget);
         expect(find.byIcon(Icons.store), findsOneWidget);
-        // No ClipOval: null url renders CircleAvatar directly.
+        // No ClipOval: url is null so MinglitAvatarImage renders CircleAvatar directly
         expect(find.byType(ClipOval), findsNothing);
       },
     );
 
     testWidgets(
-      'renders MinglitAvatarImage when profileImageUrl is set',
+      'renders MinglitAvatarImage (not CircleAvatar+NetworkImage) when profileImageUrl is set',
       (tester) async {
         const partnerWithAvatar = Partner(
           id: 'test-partner-id',
@@ -265,7 +259,7 @@ void main() {
         expect(find.byType(MinglitAvatarImage), findsOneWidget);
         // With a URL, MinglitAvatarImage wraps MinglitImage in ClipOval
         expect(find.byType(ClipOval), findsOneWidget);
-        // Bare CircleAvatar is only inside the error fallback, not on screen.
+        // No bare CircleAvatar visible (it's inside the error fallback, not on screen)
         expect(
           find.ancestor(
             of: find.byType(ClipOval),

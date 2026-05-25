@@ -73,14 +73,6 @@ List<dynamic> _base() {
   ];
 }
 
-Future<void> _tapVisible(WidgetTester tester, String label) async {
-  final finder = find.text(label);
-  expect(finder, findsOneWidget);
-  await tester.ensureVisible(finder);
-  await tester.pumpAndSettle();
-  await tester.tap(finder);
-}
-
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -98,7 +90,8 @@ void main() {
         // Fix #2589: set AFTER pumpWidget — dartPluginClass auto-registration
         // must not override our fake.
         UrlLauncherPlatform.instance = _FakeUrlLauncher(launchedUrls);
-        await _tapVisible(t, '이용약관');
+        expect(find.text('이용약관'), findsOneWidget);
+        await t.tap(find.text('이용약관'));
         await t.pump();
         expect(launchedUrls, ['$_testUserWeb/terms']);
       },
@@ -117,7 +110,8 @@ void main() {
       body: (t) async {
         final launchedUrls = <String>[];
         UrlLauncherPlatform.instance = _FakeUrlLauncher(launchedUrls);
-        await _tapVisible(t, '개인정보처리방침');
+        expect(find.text('개인정보처리방침'), findsOneWidget);
+        await t.tap(find.text('개인정보처리방침'));
         await t.pump();
         expect(launchedUrls, ['$_testUserWeb/privacy']);
       },

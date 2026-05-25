@@ -15,7 +15,6 @@ minglit 의 backend API 진입점. 60+ EF 와 공용 `_shared/`, 테스트 유�
 | [_integration_tests/](./_integration_tests/BLUEDOC.md)                   | local Supabase + 외부 mock integration/CUJ                       |
 | [_payment_integration_tests/](./_payment_integration_tests/BLUEDOC.md)   | 결제 chaining 시뮬. 추후 `_integration_tests/` 흡수              |
 | [event-flow-simulator/](./event-flow-simulator/BLUEDOC.md)               | 이벤트 lifecycle funnel 시뮬레이터                               |
-| [ops-cicd-status/](./ops-cicd-status/)                                   | 운영자 CI/CD dashboard 용 GitHub Actions/issue status 조회       |
 | [user-create-order/](./user-create-order/BLUEDOC.md)                     | 이벤트 신청/주문 생성 EF                                         |
 | [payment-verify/](./payment-verify/BLUEDOC.md)                           | PortOne 결제 검증/승인 EF                                        |
 | [user-cancel-order/](./user-cancel-order/BLUEDOC.md)                     | 유저 신청 취소/환불 EF                                           |
@@ -41,4 +40,4 @@ minglit 의 backend API 진입점. 60+ EF 와 공용 `_shared/`, 테스트 유�
 
 ---
 
-_Reviewed: 2026-05-24 22:16_
+_Reviewed: 2026-05-24 00:00_
