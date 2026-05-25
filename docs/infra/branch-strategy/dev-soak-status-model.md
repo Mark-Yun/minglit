@@ -124,10 +124,11 @@ gh run list \
   --workflow monitor-event-flow-distributed.yml \
   --branch dev-staging \
   --created ">=2026-05-24T00:00:00Z" \
+  --limit 500 \
   --json databaseId,status,conclusion,createdAt,headSha
 ```
 
-Scheduled workflow run 의 `headBranch` / `headSha` 는 default branch (`dev-staging`) 기준으로 기록된다. `monitor-event-flow-distributed` 내부에서 `origin/dev` 를 fetch 해 실제 simulator target 을 정하므로, gate run history 는 `--branch dev-staging` 으로 조회하고 candidate 이후 성공 run 수를 센다.
+Scheduled workflow run 의 `headBranch` / `headSha` 는 default branch (`dev-staging`) 기준으로 기록된다. `monitor-event-flow-distributed` 내부에서 `origin/dev` 를 fetch 해 실제 simulator target 을 정하므로, gate run history 는 `--branch dev-staging` 으로 조회한다. `shared-soak-gate` 는 `--created >= candidate_since` 와 `run_limit >= min_success` 로 candidate 이후 성공 run 수를 센다.
 
 ## Failure Recording
 
