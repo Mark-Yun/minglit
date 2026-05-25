@@ -75,6 +75,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     environment: ${{ inputs.deploy-stage == 'main' && 'production' || 'preview' }}
+    permissions:
+      contents: write
     defaults:
       run:
         working-directory: ./${{ inputs.app-directory }}
@@ -176,7 +178,7 @@ jobs:
       - name: Publish APK/AAB to Releases (Dev)
         if: inputs.deploy-stage == 'dev'
         env:
-          GH_TOKEN: ${{ secrets.GH_PAT_VERSION_BUMP }}
+          GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           APP: ${{ inputs.app-name }}
           APP_DIR: ${{ inputs.app-directory }}
@@ -192,12 +194,16 @@ jobs:
           NIGHTLY="nightly-android-${APP}-dev"
 
           # Versioned (영구, retention cron 으로 14 일 후 정리)
-          gh release create "$HIST" \
-            --title "android • app_${APP} (dev) v${VERSION}" \
-            --notes "Built from ${GITHUB_SHA}" \
-            --prerelease \
-            --repo "$REPO" \
-            "/tmp/${ASSET}" || echo "::notice::$HIST 이미 존재 — skip"
+          if gh release view "$HIST" --repo "$REPO" >/dev/null 2>&1; then
+            echo "::notice::$HIST already exists - skip"
+          else
+            gh release create "$HIST" \
+              --title "android • app_${APP} (dev) v${VERSION}" \
+              --notes "Built from ${GITHUB_SHA}" \
+              --prerelease \
+              --repo "$REPO" \
+              "/tmp/${ASSET}"
+          fi
 
           # Nightly pointer (overwrite)
           gh release delete "$NIGHTLY" --yes --cleanup-tag --repo "$REPO" 2>/dev/null || true
@@ -211,7 +217,7 @@ jobs:
       - name: Publish AAB to Releases (Main)
         if: inputs.deploy-stage == 'main'
         env:
-          GH_TOKEN: ${{ secrets.GH_PAT_VERSION_BUMP }}
+          GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           APP: ${{ inputs.app-name }}
           APP_DIR: ${{ inputs.app-directory }}
@@ -226,12 +232,16 @@ jobs:
           HIST="build-android-${APP}-main-v${VERSION}"
           NIGHTLY="nightly-android-${APP}-main"
 
-          gh release create "$HIST" \
-            --title "android • app_${APP} (main) v${VERSION}" \
-            --notes "Built from ${GITHUB_SHA}" \
-            --prerelease \
-            --repo "$REPO" \
-            "/tmp/${ASSET}" || echo "::notice::$HIST 이미 존재 — skip"
+          if gh release view "$HIST" --repo "$REPO" >/dev/null 2>&1; then
+            echo "::notice::$HIST already exists - skip"
+          else
+            gh release create "$HIST" \
+              --title "android • app_${APP} (main) v${VERSION}" \
+              --notes "Built from ${GITHUB_SHA}" \
+              --prerelease \
+              --repo "$REPO" \
+              "/tmp/${ASSET}"
+          fi
 
           gh release delete "$NIGHTLY" --yes --cleanup-tag --repo "$REPO" 2>/dev/null || true
           gh release create "$NIGHTLY" \
