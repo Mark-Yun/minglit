@@ -10,6 +10,7 @@
 | [`run-user-cuj.sh`](./run-user-cuj.sh) | `apps/app_user/integration_test/cuj/` 의 CUJ 테스트 실행 (emulator) | `shared-cuj-integration` (app-name=user 일 때) |
 | [`run-partner-cuj.sh`](./run-partner-cuj.sh) | `apps/app_partner/integration_test/cuj/` CUJ 실행 | `shared-cuj-integration` (app-name=partner 일 때) |
 | [`check-bluedoc-freshness.sh`](./check-bluedoc-freshness.sh) | PR 에서 새/삭제 파일에 대해 가장 가까운 ancestor BLUEDOC.md 갱신 강제. 통과: 이정표 표 갱신 또는 BLUEDOC 의 `_Reviewed_` 날짜 bump. + 모든 BLUEDOC.md 의 Reviewed 형식 검증 | `pr-gate.check-bluedoc-freshness` (required check) |
+| [`check-pr-issue-reference.sh`](./check-pr-issue-reference.sh) | dev-staging PR 본문에 이슈 종료 의도(`Closes/Fixes/Resolves`) 또는 명시적 비종료 사유(`Refs` + 이유 / `No linked issue`)가 있는지 검사 | `pr-gate.static-checks` |
 | [`check-ios-deploy-branch-conditions.sh`](./check-ios-deploy-branch-conditions.sh) | `ios-deploy` action 의 브랜치 분기(`main` vs `non-main`) 회귀 검증 | 수동 실행 (`bash .github/scripts/check-ios-deploy-branch-conditions.sh`) |
 | [`check-android-deploy-workflow-contract.py`](./check-android-deploy-workflow-contract.py) | Android deploy release archive 가 `github.token` + `contents: write` 를 사용하고 PAT caller 계약을 요구하지 않는지 검증 | `pr-gate.static-checks` |
 | [`scan-build-artifact-secrets.py`](./scan-build-artifact-secrets.py) | APK/AAB/`.next` 등 빌드 산출물에서 Supabase service-role secret 패턴을 redacted summary 로 검사 | `pr-gate.scan-build-artifact-secrets` |
@@ -29,4 +30,4 @@
 - [.github/BLUEDOC.md](../BLUEDOC.md) — 상위 진입점
 
 ---
-_Reviewed: 2026-05-24 21:30_
+_Reviewed: 2026-05-25 12:00_

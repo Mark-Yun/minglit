@@ -10,7 +10,7 @@
 
 | Prefix | 빨갛게 뜨면 = | 예시 파일 |
 |---|---|---|
-| `pr-gate-` | **머지 못 함** (required check — Gitleaks 시크릿 검사 포함) | `pr-gate.yml`, `pr-gate-fresh-doc.yml` |
+| `pr-gate-` | **머지 못 함** (required check — static PR 메시지 검사 + Gitleaks 시크릿 검사 포함) | `pr-gate.yml`, `pr-gate-fresh-doc.yml` |
 | `pr-setup-` | PR push 마다 PR 브랜치를 mutate 하는 자동화 (포맷 등) | (현재 없음 — `pr-setup-format` 은 #2627 에서 `pr-gate-format-check` 잡으로 대체) |
 | `pr-review-setup-` | PR 의 "리뷰 준비" 자동화 — auto-merge enable + 조건 충족 시 `needs-review` 라벨 부여 | `pr-review-setup` |
 | `deploy-` | 사용자·dev 환경에 코드·스키마·시드가 안 갔음 | `dev-deploy`, `main-deploy`, `deploy-vercel`, `deploy-supabase`, `deploy-android-user`, `deploy-ios-user`, `deploy-dev-seed` |
@@ -69,4 +69,4 @@
 - [CLAUDE.md](../../CLAUDE.md) `## PR Conventions` — branch별 required check / auto-merge 흐름
 
 ---
-_Reviewed: 2026-05-24 16:45_
+_Reviewed: 2026-05-25 12:00_

@@ -105,7 +105,7 @@ jobs:
 
   main-pr-gate:
     needs: [source-guard, pr-gate-core, validate-rc-promotion]
-    if: always()
+    if: ${{ always() && !cancelled() }}
     runs-on: ubuntu-latest
     steps:
       - name: Publish branch gate result
