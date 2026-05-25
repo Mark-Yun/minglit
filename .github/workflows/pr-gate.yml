@@ -114,6 +114,10 @@ jobs:
         if: ${{ !cancelled() }}
         run: python3 .github/scripts/check-dev-soak-workflow-contract.py
 
+      - name: Check dev cut workflow contract
+        if: ${{ !cancelled() }}
+        run: python3 .github/scripts/check-dev-cut-workflow-contract.py
+
       - name: Verify androidx.test runner/orchestrator version alignment
         if: ${{ !cancelled() }}
         # Fix #1780: runner와 orchestrator는 동일 major.minor 계열이어야 함 — Gradle
