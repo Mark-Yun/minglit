@@ -67,9 +67,6 @@ on:
         required: true
       JUSO_CONFIRM_KEY:
         required: false
-      GH_PAT_VERSION_BUMP:
-        description: 'PAT for GitHub Releases publish'
-        required: true
 
 jobs:
   build:
