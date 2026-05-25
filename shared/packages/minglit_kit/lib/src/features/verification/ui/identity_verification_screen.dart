@@ -29,10 +29,17 @@ typedef IdentityVerificationStarter =
 /// A screen where users verify their real identity via Iamport (V2).
 class IdentityVerificationScreen extends ConsumerStatefulWidget {
   /// Creates an identity verification screen.
-  const IdentityVerificationScreen({super.key, this.certificationStarter});
+  const IdentityVerificationScreen({
+    super.key,
+    this.certificationStarter,
+    this.certificationService,
+  });
 
   /// Optional test/render hook for the external certification flow.
   final IdentityVerificationStarter? certificationStarter;
+
+  /// Optional test hook for the certification service implementation.
+  final CertificationService? certificationService;
 
   /// Creates the state for the identity verification screen.
   @override
@@ -108,20 +115,22 @@ class _IdentityVerificationScreenState
   Future<void> _startVerification() async {
     final merchantUid = 'IDV_${DateTime.now().millisecondsSinceEpoch}';
     final config = ref.read(iamportConfigProvider);
+    final starter = widget.certificationStarter;
 
-    final verificationId =
-        await (widget.certificationStarter?.call(
-              context: context,
-              userCode: config.userCode,
-              merchantUid: merchantUid,
-              mRedirectUrl: config.mobileRedirectUrl,
-            ) ??
-            getCertificationService().verify(
-              context: context,
-              userCode: config.userCode,
-              merchantUid: merchantUid,
-              mRedirectUrl: config.mobileRedirectUrl,
-            ));
+    final verificationId = starter != null
+        ? await starter(
+            context: context,
+            userCode: config.userCode,
+            merchantUid: merchantUid,
+            mRedirectUrl: config.mobileRedirectUrl,
+          )
+        : await (widget.certificationService ?? getCertificationService())
+              .verify(
+                context: context,
+                userCode: config.userCode,
+                merchantUid: merchantUid,
+                mRedirectUrl: config.mobileRedirectUrl,
+              );
 
     if (verificationId == null) {
       // User cancelled or window blocked

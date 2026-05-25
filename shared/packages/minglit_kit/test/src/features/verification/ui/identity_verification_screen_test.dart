@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:minglit_iamport_v1/minglit_iamport_v1.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -9,6 +10,10 @@ class _MockSupabaseClient extends Mock implements SupabaseClient {}
 class _MockUser extends Mock implements User {}
 
 class _MockIamportRepository extends Mock implements IamportRepository {}
+
+class _MockCertificationService extends Mock implements CertificationService {}
+
+class _FakeBuildContext extends Fake implements BuildContext {}
 
 class _IdentityConsentRepository extends ConsentRepository {
   _IdentityConsentRepository() : super(_MockSupabaseClient());
@@ -58,6 +63,10 @@ base class _TestNavigatorObserver extends NavigatorObserver {
 }
 
 void main() {
+  setUpAll(() {
+    registerFallbackValue(_FakeBuildContext());
+  });
+
   group('IdentityVerificationScreen', () {
     // Fix #1271: consentControllerProvider (isAutoDispose=true)이 build()에서
     // watch되지 않으면 비동기 toggleConsent 호출 시 "Ref disposed" 에러 발생 (regression 방지).
@@ -113,6 +122,50 @@ void main() {
 
         // 첫 프레임: loading state
         expect(find.byType(CircularProgressIndicator), findsAny);
+      },
+    );
+
+    testWidgets(
+      'uses certificationService fallback when certificationStarter is null',
+      (tester) async {
+        final certificationService = _MockCertificationService();
+        when(
+          () => certificationService.verify(
+            context: any(named: 'context'),
+            userCode: any(named: 'userCode'),
+            merchantUid: any(named: 'merchantUid'),
+            mRedirectUrl: any(named: 'mRedirectUrl'),
+          ),
+        ).thenAnswer((_) async => null);
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              currentUserProvider.overrideWithValue(_makeUser()),
+              consentRepositoryProvider.overrideWithValue(
+                _IdentityConsentRepository(),
+              ),
+            ],
+            child: MaterialApp(
+              home: IdentityVerificationScreen(
+                certificationService: certificationService,
+              ),
+            ),
+          ),
+        );
+
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        verify(
+          () => certificationService.verify(
+            context: any(named: 'context'),
+            userCode: any(named: 'userCode'),
+            merchantUid: any(named: 'merchantUid'),
+            mRedirectUrl: any(named: 'mRedirectUrl'),
+          ),
+        ).called(1);
+        expect(find.text('인증이 취소되었거나 창이 열리지 않았습니다.'), findsOne);
       },
     );
 
