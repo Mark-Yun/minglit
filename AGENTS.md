@@ -25,7 +25,7 @@ BLUEDOC은 폴더의 진입점과 이정표다. 상세 정책, 아키텍처, 빌
 
 - 아키텍처/코드베이스 질문 전에는 `graphify-out/GRAPH_REPORT.md`의 god node와 community 구조를 먼저 확인한다.
 - cross-module 관계 질문은 가능하면 `graphify query`, `graphify path`, `graphify explain`을 우선 사용한다.
-- `graphify-out/` 갱신은 workflow가 담당한다. 로컬에서 수동 `graphify update .`를 돌리거나 graph 산출물을 커밋하지 않는다.
+- `graphify-out/` 갱신은 `.github/workflows/sync-graphify.yml`가 담당한다. 코드/문서 수정 후에도 로컬에서 수동 `graphify update .`를 돌리지 않고, graph 산출물을 커밋하지 않는다.
 
 ## Branch / PR
 

@@ -15,6 +15,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  source-guard:
+    uses: ./.github/workflows/shared-pr-source-guard.yml
+    with:
+      target: rc
+      normal_head_regex: ''
+      hotfix_head_regex: '^rc/hotfix/'
+      hotfix_label: 'hotfix:rc-approved'
+    secrets: inherit
+
   pr-gate-core:
     uses: ./.github/workflows/pr-gate.yml
     with:
@@ -23,12 +32,16 @@ jobs:
     secrets: inherit
 
   rc-pr-gate:
-    needs: [pr-gate-core]
+    needs: [source-guard, pr-gate-core]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Publish branch gate result
         run: |
+          if [ "${{ needs.source-guard.result }}" != "success" ]; then
+            echo "::error::source-guard result: ${{ needs.source-guard.result }}"
+            exit 1
+          fi
           if [ "${{ needs.pr-gate-core.result }}" != "success" ]; then
             echo "::error::pr-gate-core result: ${{ needs.pr-gate-core.result }}"
             exit 1

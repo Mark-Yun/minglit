@@ -31,13 +31,15 @@
                                                                                                                                                               └─▶ Vercel production (native, main branch)
 ```
 
-**Hotfix backport 흐름** (rc → dev-staging):
+**Hotfix backport 흐름** (dev/rc/main hotfix → dev-staging):
 
 ```
-rc/* hotfix 머지 ──auto cherry-pick──▶ backport-branch ──PR──▶ dev-staging
+dev/hotfix/* ──PR──▶ dev
+rc/hotfix/*  ──PR──▶ rc/YYYY-Wxx ──auto cherry-pick──▶ backport-branch ──PR──▶ dev-staging
+main/hotfix/* ──PR──▶ main ──backport──▶ dev-staging (+ active rc/* if needed)
 ```
 
-상세는 [rc-promotion.md](./rc-promotion.md).
+상세는 [hotfix-policy.md](./hotfix-policy.md) 와 [rc-promotion.md](./rc-promotion.md).
 
 > Mobile cadence = hotfix 없으면 weekly (rc → main 머지 마다 자동 build/deploy). store review + staged rollout 은 외부 (workflow 밖).
 
@@ -47,8 +49,10 @@ rc/* hotfix 머지 ──auto cherry-pick──▶ backport-branch ──PR─�
 |-----------|-------------|--------|-----------|-----------|
 | feature/agent → dev-staging | `dev-staging` ← `feat/*`, `fix/*`, `chore/*`, `docs/*` | PR + auto-merge | **squash** | `dev-staging-pr-gate` |
 | dev-staging → dev | `dev` ← `cut/dev-staging-dev/YYYY-MM-DD-{sha8}` at latest `v*-dev-staging` tag | daily cron `dev-staging-dev-cut` | rebase (linear snapshot) | `dev-pr-gate` |
-| hotfix → rc | `rc/YYYY-Wxx` ← hotfix branch | hotfix only | rebase | `rc-pr-gate` |
+| hotfix → dev | `dev` ← `dev/hotfix/*` | approved hotfix only | rebase | `dev-pr-gate` |
+| hotfix → rc | `rc/YYYY-Wxx` ← `rc/hotfix/*` | approved hotfix only | rebase | `rc-pr-gate` |
 | rc → main | `main` ← `rc/YYYY-Wxx` | `rc-main-cut` 이 5일 무커밋 시 PR 생성 + auto-merge | rebase + ff | `main-pr-gate` |
+| hotfix → main | `main` ← `main/hotfix/*` | approved + release-manager hotfix only | rebase + ff | `main-pr-gate` |
 
 ## Branch Protection 설정
 
@@ -86,6 +90,11 @@ monitor-event-flow-*:
   schedule: continuous
   branch: dev
   purpose: backend/event-flow simulation signal
+
+monitor-dev-staging-health:
+  schedule: every 6 hours
+  branch: dev-staging
+  purpose: EF unit/integration + user/partner CUJ early regression signal
 ```
 
 ### main push → prod deploy chain
@@ -94,7 +103,8 @@ monitor-event-flow-*:
 # 개념 — backend + mobile 모두 prod
 main-deploy (on push to main):
   steps:
-    - tag v{ver} + promo/main-Wxx + Sentry marker
+    - if current version is rc: tag v{ver} + promo/main-Wxx + Sentry marker
+    - if current version is already final: skip version finalization, continue deploy
     - Firebase RC `latest_version` = v{ver} 자동 update
   parallel:
     - backend prod deploy  # Supabase migration + EF
@@ -104,6 +114,8 @@ main-deploy (on push to main):
 ```
 
 상세: [specs/workflow-spec.md](./specs/workflow-spec.md).
+
+Mobile APK/AAB/IPA archive 는 GitHub Release asset 이 canonical 이다. Actions artifact 는 workflow 실패 분석용 테스트 리포트/스크린샷/로그 같은 단기 디버깅 산출물에만 사용한다.
 
 ## Safety Nets 위치
 

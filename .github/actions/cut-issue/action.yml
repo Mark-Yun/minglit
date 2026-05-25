@@ -1,0 +1,193 @@
+name: cut-issue
+description: Create, update, or close deterministic cut-gate tracking issues.
+
+inputs:
+  github-token:
+    description: GitHub token with issues:write permission.
+    required: true
+  operation:
+    description: upsert or close.
+    required: true
+  gate-key:
+    description: Gate key, e.g. dev-rc or rc-main.
+    required: true
+  subject-id:
+    description: Stable subject id, e.g. tag, candidate SHA, or rc branch.
+    required: true
+  title:
+    description: Issue title.
+    required: true
+  status:
+    description: waiting, blocked, ready, promoting, or done.
+    required: false
+    default: waiting
+  summary:
+    description: Short markdown summary.
+    required: false
+    default: ''
+  details:
+    description: Additional markdown details.
+    required: false
+    default: ''
+  close-comment:
+    description: Comment used when closing an issue.
+    required: false
+    default: ''
+
+outputs:
+  issue-number:
+    description: Matched or created issue number.
+    value: ${{ steps.issue.outputs.issue_number }}
+  issue-url:
+    description: Matched or created issue URL.
+    value: ${{ steps.issue.outputs.issue_url }}
+
+runs:
+  using: composite
+  steps:
+    - name: Upsert or close cut issue
+      id: issue
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        INPUT_OPERATION: ${{ inputs.operation }}
+        INPUT_GATE_KEY: ${{ inputs.gate-key }}
+        INPUT_SUBJECT_ID: ${{ inputs.subject-id }}
+        INPUT_TITLE: ${{ inputs.title }}
+        INPUT_STATUS: ${{ inputs.status }}
+        INPUT_SUMMARY: ${{ inputs.summary }}
+        INPUT_DETAILS: ${{ inputs.details }}
+        INPUT_CLOSE_COMMENT: ${{ inputs.close-comment }}
+      run: |
+        set -euo pipefail
+
+        if [ -z "${INPUT_SUBJECT_ID}" ]; then
+          echo "No subject id provided; skipping cut issue tracking."
+          echo "issue_number=" >> "${GITHUB_OUTPUT}"
+          echo "issue_url=" >> "${GITHUB_OUTPUT}"
+          exit 0
+        fi
+        if [ "${INPUT_OPERATION}" != "upsert" ] && [ "${INPUT_OPERATION}" != "close" ]; then
+          echo "::error::operation must be upsert or close."
+          exit 1
+        fi
+        if ! [[ "${INPUT_STATUS}" =~ ^(waiting|blocked|ready|promoting|done)$ ]]; then
+          echo "::error::status must be waiting, blocked, ready, promoting, or done."
+          exit 1
+        fi
+
+        REPO="${GITHUB_REPOSITORY}"
+        MARKER="<!-- minglit:cut-gate:${INPUT_GATE_KEY}:${INPUT_SUBJECT_ID} -->"
+        GATE_LABEL="gate/${INPUT_GATE_KEY}"
+        STATUS_LABEL="status/${INPUT_STATUS}"
+        RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+        create_label() {
+          local name="$1"
+          local color="$2"
+          local description="$3"
+          gh label create "${name}" \
+            --repo "${REPO}" \
+            --color "${color}" \
+            --description "${description}" \
+            --force >/dev/null
+        }
+
+        create_label "cut-gate" "5319E7" "Cut-gate tracking issue"
+        create_label "${GATE_LABEL}" "0969DA" "Cut-gate lane: ${INPUT_GATE_KEY}"
+        create_label "status/waiting" "FBCA04" "Cut gate is waiting for prerequisites"
+        create_label "status/blocked" "D93F0B" "Cut gate is blocked"
+        create_label "status/ready" "0E8A16" "Cut gate is ready"
+        create_label "status/promoting" "1D76DB" "Promotion is in progress"
+        create_label "status/done" "C2E0C6" "Cut gate tracking is complete"
+
+        ISSUE_NUMBER="$(gh api \
+          --method GET \
+          search/issues \
+          -f q="repo:${REPO} is:issue \"${MARKER}\"" \
+          --jq '.items[0].number // empty')"
+
+        BODY_FILE="$(mktemp)"
+        UPDATED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        {
+          echo "${MARKER}"
+          echo ""
+          echo "## Cut Gate"
+          echo ""
+          echo "| Field | Value |"
+          echo "|---|---|"
+          echo "| Gate | ${INPUT_GATE_KEY} |"
+          echo "| Subject | ${INPUT_SUBJECT_ID} |"
+          echo "| Status | ${INPUT_STATUS} |"
+          echo "| Workflow run | ${RUN_URL} |"
+          echo "| Updated | ${UPDATED_AT} |"
+          echo ""
+          echo "## Summary"
+          echo ""
+          if [ -n "${INPUT_SUMMARY}" ]; then
+            echo "${INPUT_SUMMARY}"
+          else
+            echo "(not provided)"
+          fi
+          echo ""
+          echo "## Details"
+          echo ""
+          if [ -n "${INPUT_DETAILS}" ]; then
+            echo "${INPUT_DETAILS}"
+          else
+            echo "(not provided)"
+          fi
+        } > "${BODY_FILE}"
+
+        if [ -z "${ISSUE_NUMBER}" ] && [ "${INPUT_OPERATION}" = "close" ]; then
+          echo "No cut issue found for ${INPUT_GATE_KEY}/${INPUT_SUBJECT_ID}; nothing to close."
+          echo "issue_number=" >> "${GITHUB_OUTPUT}"
+          echo "issue_url=" >> "${GITHUB_OUTPUT}"
+          exit 0
+        fi
+
+        if [ -z "${ISSUE_NUMBER}" ]; then
+          ISSUE_URL="$(gh issue create \
+            --repo "${REPO}" \
+            --title "${INPUT_TITLE}" \
+            --body-file "${BODY_FILE}" \
+            --label cut-gate \
+            --label "${GATE_LABEL}" \
+            --label "${STATUS_LABEL}")"
+          ISSUE_NUMBER="${ISSUE_URL##*/}"
+        else
+          ISSUE_URL="${GITHUB_SERVER_URL}/${REPO}/issues/${ISSUE_NUMBER}"
+          if [ "${INPUT_OPERATION}" = "upsert" ]; then
+            gh issue reopen "${ISSUE_NUMBER}" --repo "${REPO}" >/dev/null 2>&1 || true
+            gh issue edit "${ISSUE_NUMBER}" \
+              --repo "${REPO}" \
+              --title "${INPUT_TITLE}" \
+              --body-file "${BODY_FILE}"
+          fi
+        fi
+
+        while IFS= read -r label; do
+          [ -n "${label}" ] || continue
+          if [ "${label}" != "${STATUS_LABEL}" ]; then
+            gh issue edit "${ISSUE_NUMBER}" \
+              --repo "${REPO}" \
+              --remove-label "${label}" >/dev/null 2>&1 || true
+          fi
+        done < <(gh issue view "${ISSUE_NUMBER}" --repo "${REPO}" --json labels --jq '.labels[].name' | grep '^status/' || true)
+        gh issue edit "${ISSUE_NUMBER}" \
+          --repo "${REPO}" \
+          --add-label "cut-gate,${GATE_LABEL},${STATUS_LABEL}" >/dev/null
+
+        if [ "${INPUT_OPERATION}" = "close" ]; then
+          COMMENT="${INPUT_CLOSE_COMMENT}"
+          if [ -z "${COMMENT}" ]; then
+            COMMENT="Cut gate ${INPUT_GATE_KEY}/${INPUT_SUBJECT_ID} completed."
+          fi
+          gh issue close "${ISSUE_NUMBER}" \
+            --repo "${REPO}" \
+            --reason completed \
+            --comment "${COMMENT}" >/dev/null
+        fi
+
+        echo "issue_number=${ISSUE_NUMBER}" >> "${GITHUB_OUTPUT}"
+        echo "issue_url=${ISSUE_URL}" >> "${GITHUB_OUTPUT}"

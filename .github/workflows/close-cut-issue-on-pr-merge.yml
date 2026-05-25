@@ -1,0 +1,70 @@
+name: close-cut-issue-on-pr-merge
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
+jobs:
+  close-cut-issue:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close cut issue marker from merged PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_BODY: ${{ github.event.pull_request.body || '' }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          ISSUE_NUMBER="$(python3 - <<'PY'
+          import os
+          import re
+
+          body = os.environ.get("PR_BODY", "")
+          match = re.search(r"<!--\s*minglit:cut-issue-number:([0-9]+)\s*-->", body)
+          print(match.group(1) if match else "")
+          PY
+          )"
+
+          if [ -z "${ISSUE_NUMBER}" ]; then
+            echo "No cut issue marker found in merged PR #${PR_NUMBER}; skipping."
+            exit 0
+          fi
+
+          IS_CUT_GATE="$(gh issue view "${ISSUE_NUMBER}" \
+            --repo "${REPO}" \
+            --json labels \
+            --jq '[.labels[].name] | index("cut-gate") != null')"
+          if [ "${IS_CUT_GATE}" != "true" ]; then
+            echo "::warning::Issue #${ISSUE_NUMBER} is not labeled cut-gate; refusing to close it from PR marker."
+            exit 0
+          fi
+
+          gh label create status/done \
+            --repo "${REPO}" \
+            --description "Cut gate tracking is complete" \
+            --color C2E0C6 \
+            --force >/dev/null
+
+          while IFS= read -r label; do
+            [ -n "${label}" ] || continue
+            if [ "${label}" != "status/done" ]; then
+              gh issue edit "${ISSUE_NUMBER}" --repo "${REPO}" --remove-label "${label}" >/dev/null 2>&1 || true
+            fi
+          done < <(gh issue view "${ISSUE_NUMBER}" --repo "${REPO}" --json labels --jq '.labels[].name' | grep '^status/' || true)
+
+          gh issue edit "${ISSUE_NUMBER}" --repo "${REPO}" --add-label status/done >/dev/null
+          gh issue close "${ISSUE_NUMBER}" \
+            --repo "${REPO}" \
+            --reason completed \
+            --comment "Promotion PR #${PR_NUMBER} merged: ${PR_TITLE} (${PR_URL})" \
+            >/dev/null

@@ -1,0 +1,242 @@
+name: monitor-dev-staging-health
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: monitor-dev-staging-health
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+  statuses: write
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      candidate_sha: ${{ steps.plan.outputs.candidate_sha }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: dev-staging
+          fetch-depth: 1
+
+      - name: Plan dev-staging health check
+        id: plan
+        run: |
+          set -euo pipefail
+
+          CANDIDATE_SHA="$(git rev-parse HEAD)"
+          echo "candidate_sha=${CANDIDATE_SHA}" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## monitor-dev-staging-health"
+            echo ""
+            echo "| Field | Value |"
+            echo "|---|---|"
+            echo "| target_ref | dev-staging |"
+            echo "| candidate_sha | ${CANDIDATE_SHA} |"
+            echo "| cadence | every 6 hours |"
+            echo "| checks | EF unit, EF integration, user CUJ, partner CUJ |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  ef-unit:
+    needs: [plan]
+    runs-on: [self-hosted, ephemeral]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.plan.outputs.candidate_sha }}
+          fetch-depth: 1
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Cache Deno deps
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cache/deno
+            ~/.deno
+          key: ${{ runner.os }}-deno-${{ hashFiles('supabase/functions/**/deno.lock', 'supabase/functions/**/deno.json') }}
+          restore-keys: ${{ runner.os }}-deno-
+
+      - name: Validate deno.json presence
+        run: |
+          missing=()
+          for dir in functions/*/; do
+            name=$(basename "$dir")
+            if [[ "$name" != _* ]] && [ ! -f "${dir}deno.json" ]; then
+              missing+=("$name")
+            fi
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "deno.json missing in the following Edge Functions:"
+            printf '  - %s\n' "${missing[@]}"
+            exit 1
+          fi
+        working-directory: supabase
+
+      - name: Lint no legacy auth helpers
+        run: |
+          violations=()
+          for f in functions/*/index.ts; do
+            ef=$(basename "$(dirname "$f")")
+            if grep -v '^\s*//' "$f" | grep -qE 'from.*_shared/auth_utils|withHandler\b|withSentry\b|withSentryHandler\b|requireServiceRole\b|requireAuth\b|optionalAuth\b'; then
+              violations+=("$ef")
+            fi
+          done
+          if [ ${#violations[@]} -gt 0 ]; then
+            echo "Legacy auth helpers found in the following Edge Functions:"
+            printf '  - %s\n' "${violations[@]}"
+            exit 1
+          fi
+        working-directory: supabase
+
+      - name: Test Edge Functions
+        run: deno test --allow-all --coverage=cov_profile functions/
+        working-directory: supabase
+
+  ef-integration:
+    needs: [plan]
+    runs-on: [self-hosted, ephemeral]
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.plan.outputs.candidate_sha }}
+          fetch-depth: 1
+
+      - uses: supabase/setup-cli@v2
+        with:
+          version: latest
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Reset stale Supabase state
+        run: supabase stop --no-backup 2>/dev/null || true
+
+      - name: Start local Supabase
+        # PostgREST can report unhealthy before `db reset --no-seed` creates
+        # configured schemas. The DB is still available for the reset step.
+        run: supabase start --ignore-health-check
+
+      - name: Apply migrations only
+        run: supabase db reset --no-seed
+
+      - name: Capture Supabase env
+        id: env
+        run: |
+          {
+            echo "url=$(supabase status -o env | grep '^API_URL=' | cut -d= -f2-)"
+            echo "service_role_key=$(supabase status -o env | grep '^SERVICE_ROLE_KEY=' | cut -d= -f2-)"
+            echo "anon_key=$(supabase status -o env | grep '^ANON_KEY=' | cut -d= -f2-)"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Run EF integration tests
+        env:
+          SUPABASE_URL: ${{ steps.env.outputs.url }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ steps.env.outputs.service_role_key }}
+          SUPABASE_ANON_KEY: ${{ steps.env.outputs.anon_key }}
+          SIM_USER_PASSWORD: ${{ secrets.SIM_USER_PASSWORD }}
+        run: deno test --allow-all supabase/functions/_integration_tests/cuj/
+
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop --no-backup || true
+
+  cuj-user:
+    needs: [plan]
+    uses: ./.github/workflows/shared-cuj-integration.yml
+    with:
+      app-name: user
+      target-ref: ${{ needs.plan.outputs.candidate_sha }}
+    secrets: inherit
+
+  cuj-partner:
+    needs: [plan]
+    uses: ./.github/workflows/shared-cuj-integration.yml
+    with:
+      app-name: partner
+      target-ref: ${{ needs.plan.outputs.candidate_sha }}
+    secrets: inherit
+
+  status-ef-unit:
+    needs: [plan, ef-unit]
+    if: always() && needs.plan.result == 'success'
+    permissions:
+      contents: read
+      statuses: write
+    uses: ./.github/workflows/shared-set-commit-status.yml
+    with:
+      sha: ${{ needs.plan.outputs.candidate_sha }}
+      context: dev-staging-health/ef-unit
+      state: ${{ needs['ef-unit'].result == 'success' && 'success' || 'failure' }}
+      description: ${{ needs['ef-unit'].result == 'success' && 'EF unit health passed' || 'EF unit health failed' }}
+    secrets: inherit
+
+  status-ef-integration:
+    needs: [plan, ef-integration]
+    if: always() && needs.plan.result == 'success'
+    permissions:
+      contents: read
+      statuses: write
+    uses: ./.github/workflows/shared-set-commit-status.yml
+    with:
+      sha: ${{ needs.plan.outputs.candidate_sha }}
+      context: dev-staging-health/ef-integration
+      state: ${{ needs['ef-integration'].result == 'success' && 'success' || 'failure' }}
+      description: ${{ needs['ef-integration'].result == 'success' && 'EF integration health passed' || 'EF integration health failed' }}
+    secrets: inherit
+
+  status-cuj-user:
+    needs: [plan, cuj-user]
+    if: always() && needs.plan.result == 'success'
+    permissions:
+      contents: read
+      statuses: write
+    uses: ./.github/workflows/shared-set-commit-status.yml
+    with:
+      sha: ${{ needs.plan.outputs.candidate_sha }}
+      context: dev-staging-health/cuj-user
+      state: ${{ needs['cuj-user'].result == 'success' && 'success' || 'failure' }}
+      description: ${{ needs['cuj-user'].result == 'success' && 'User CUJ health passed' || 'User CUJ health failed' }}
+    secrets: inherit
+
+  status-cuj-partner:
+    needs: [plan, cuj-partner]
+    if: always() && needs.plan.result == 'success'
+    permissions:
+      contents: read
+      statuses: write
+    uses: ./.github/workflows/shared-set-commit-status.yml
+    with:
+      sha: ${{ needs.plan.outputs.candidate_sha }}
+      context: dev-staging-health/cuj-partner
+      state: ${{ needs['cuj-partner'].result == 'success' && 'success' || 'failure' }}
+      description: ${{ needs['cuj-partner'].result == 'success' && 'Partner CUJ health passed' || 'Partner CUJ health failed' }}
+    secrets: inherit
+
+  notify-failure:
+    needs: [plan, ef-unit, ef-integration, cuj-user, cuj-partner]
+    if: always()
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+    uses: ./.github/workflows/shared-notify.yml
+    with:
+      failed: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+      workflow_name: Dev Staging Health Monitor
+      severity: P1-high
+      commit_sha: ${{ needs.plan.outputs.candidate_sha }}
+      target_url: ${{ format('{0}/{1}/actions/runs/{2}', github.server_url, github.repository, github.run_id) }}
+      job_results: '{"ef-unit":"${{ needs[''ef-unit''].result }}","ef-integration":"${{ needs[''ef-integration''].result }}","cuj-user":"${{ needs[''cuj-user''].result }}","cuj-partner":"${{ needs[''cuj-partner''].result }}"}'
