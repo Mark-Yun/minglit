@@ -40,7 +40,7 @@ RULES: tuple[Rule, ...] = (
     ),
     Rule(
         "supabase-legacy-jwt",
-        "Supabase legacy JWT",
+        "Supabase legacy service-role JWT",
         re.compile(
             rb"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\."
             rb"[A-Za-z0-9_-]{60,}\.[A-Za-z0-9_-]{40,}"
@@ -163,6 +163,11 @@ def run_self_test() -> int:
         clean = root / "clean.next"
         clean.mkdir()
         (clean / "chunk.js").write_bytes(b"public_jwt=" + fake_jwt("anon"))
+
+        clean_findings = scan_paths([clean])
+        if clean_findings:
+            print(f"self-test failed: anon JWT produced findings {clean_findings}", file=sys.stderr)
+            return 1
 
         findings = scan_paths([plain, archive, clean])
         rule_ids = {finding.rule_id for finding in findings}
