@@ -33,7 +33,7 @@ jobs:
 
   dev-pr-gate:
     needs: [source-guard, pr-gate-core]
-    if: always()
+    if: ${{ always() && !cancelled() }}
     runs-on: ubuntu-latest
     steps:
       - name: Publish branch gate result

@@ -25,7 +25,7 @@ jobs:
 
   dev-staging-pr-gate:
     needs: [pr-gate-core]
-    if: always()
+    if: ${{ always() && !cancelled() }}
     runs-on: ubuntu-latest
     steps:
       - name: Publish branch gate result
