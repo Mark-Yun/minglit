@@ -105,7 +105,7 @@ flowchart LR
 - cut-gate Issue 는 사람이 진행 상태를 추적하기 위한 projection 이다. 생성/갱신/닫기는 `.github/actions/cut-issue` 와 `close-cut-issue-on-pr-merge` 가 담당하며, promotion 판정 SSOT 로 사용하지 않는다
 - 모든 branch linear ON — dev-staging: squash, dev/rc/main: rebase
 - Protected branch 직접 push 는 human 금지. version bump/tag/promotion 처리는 `minglit-release-bot` 전용 token + Ruleset bypass 로만 허용
-- `monitor-event-flow-*` 는 release promotion 과 독립적인 batch signal. dev 에서 계속 돌고, RC 에서는 main 배포 전 검증 signal 로 사용한다
+- `monitor-event-flow-*` 는 release promotion 과 독립적인 batch signal. target 은 dev 5분 distributed tick 이고, RC 에서는 main 배포 전 검증 signal 로 사용한다
 - main 머지 = backend + mobile 모두 prod deploy. backend prod deploy 는 `main-deploy` 에서 한 번에 수행한다
 - `main-deploy` 는 version finalization 과 deploy execution 을 분리한다. RC promotion 은 final version/tag 를 만들고 deploy 하며, `main/hotfix/*` 처럼 이미 final version 인 main push 는 version bump 없이 prod deploy 만 실행한다
 - 모바일 배포 산출물(APK/AAB/IPA)은 GitHub Release asset 이 canonical archive 다. Actions artifact 는 테스트 리포트/스크린샷/로그 같은 단기 디버깅 산출물에만 사용한다
@@ -129,4 +129,4 @@ Promotion PR 제목은 workflow 이름과 source artifact 를 앞에 둔다. PR 
 RC cut 의 source-of-truth status 이름은 **`dev-rc-cut-pass`** 이다. `rc-eligible` 은 현재 구현된 workflow/status 명칭이 아니며, 새 이름으로 바꾸려면 `dev-rc-cut-gate`, `dev-rc-cut`, `main-pr-gate`, 문서 전체를 같은 PR 에서 일괄 변경한다.
 
 ---
-_Reviewed: 2026-05-24 10:24_
+_Reviewed: 2026-05-25 16:20_

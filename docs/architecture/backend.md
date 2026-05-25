@@ -260,7 +260,7 @@ Supabase Edge Functions는 Deno 런타임 기반이며, `supabase/functions/` �
 | `health` | System | 시스템 헬스 체크 |
 | `dev-seed` | Dev | 테스트 데이터 시딩 (dev only) |
 | `dev-session-switch` | Dev | 테스트 유저 전환 (dev only) |
-| `backend-simulator` | Dev | 백엔드 시뮬레이터 (dev only) |
+| `event-flow-simulator` | Dev | dev 5분 distributed backend flow 시뮬레이터 (dev only) |
 | `dev-mock-portone` | Dev | Portone 목업 서버 (dev only) |
 | `metrics-alert` | Monitoring | 정산 메트릭 알람 발송 |
 | `payout-sync` | Payment | 지급 상태 동기화 |

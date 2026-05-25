@@ -1,11 +1,8 @@
 name: monitor-event-flow-hourly
 
-# 매시 :30 — event-flow-simulator 짧은 cascade 실행 (스모크)
-# 길이가 긴 cascade + SQL seed 는 monitor-event-flow-daily 가 담당.
+# Legacy manual smoke. Scheduled execution moved to monitor-event-flow-distributed.
 
 on:
-  schedule:
-    - cron: '30 * * * *'
   workflow_dispatch:
 
 concurrency:

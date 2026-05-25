@@ -1,0 +1,190 @@
+name: monitor-event-flow-distributed
+
+# Every 5 minutes — one small event-flow-simulator tick.
+# schedule always targets dev. Manual dispatch accepts dev or rc/YYYY-Www.
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+    inputs:
+      target_ref:
+        description: 'Target branch. Allowed: dev or rc/YYYY-Www.'
+        required: false
+        type: string
+        default: dev
+      ticks:
+        description: Cascade ticks per run.
+        required: false
+        type: string
+        default: '1'
+      users_per_tick:
+        description: Random seed users per run.
+        required: false
+        type: string
+        default: '5'
+      partners_per_tick:
+        description: Random seed partners per run.
+        required: false
+        type: string
+        default: '2'
+      delay_between_calls_ms:
+        description: Throttle between EF calls.
+        required: false
+        type: string
+        default: '400'
+
+concurrency:
+  group: monitor-event-flow-distributed-${{ inputs.target_ref || 'dev' }}
+  cancel-in-progress: false
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+  statuses: write
+
+jobs:
+  resolve-target:
+    name: Resolve target branch
+    runs-on: ubuntu-latest
+    outputs:
+      target_ref: ${{ steps.resolve.outputs.target_ref }}
+      target_sha: ${{ steps.resolve.outputs.target_sha }}
+      soak_stage: ${{ steps.resolve.outputs.soak_stage }}
+      supabase_stage: ${{ steps.resolve.outputs.supabase_stage }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Resolve monitored ref
+        id: resolve
+        env:
+          REQUESTED_TARGET_REF: ${{ inputs.target_ref || 'dev' }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+
+          TARGET_REF="${REQUESTED_TARGET_REF}"
+          if [ "${EVENT_NAME}" = "schedule" ]; then
+            TARGET_REF="dev"
+          fi
+
+          case "${TARGET_REF}" in
+            dev)
+              SOAK_STAGE="dev-soak"
+              SUPABASE_STAGE="dev"
+              ;;
+            rc/[0-9][0-9][0-9][0-9]-W[0-9][0-9])
+              SOAK_STAGE="rc-soak"
+              SUPABASE_STAGE="rc"
+              ;;
+            *)
+              echo "::error::target_ref must be dev or rc/YYYY-Www. Got: ${TARGET_REF}"
+              exit 1
+              ;;
+          esac
+
+          git fetch origin "${TARGET_REF}" --depth=1
+          TARGET_SHA="$(git rev-parse "origin/${TARGET_REF}")"
+
+          echo "target_ref=${TARGET_REF}" >> "${GITHUB_OUTPUT}"
+          echo "target_sha=${TARGET_SHA}" >> "${GITHUB_OUTPUT}"
+          echo "soak_stage=${SOAK_STAGE}" >> "${GITHUB_OUTPUT}"
+          echo "supabase_stage=${SUPABASE_STAGE}" >> "${GITHUB_OUTPUT}"
+
+  simulate:
+    name: Run distributed event-flow tick
+    needs: [resolve-target]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Invoke event-flow-simulator
+        env:
+          TARGET_REF: ${{ needs.resolve-target.outputs.target_ref }}
+          SUPABASE_STAGE: ${{ needs.resolve-target.outputs.supabase_stage }}
+          SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
+          SUPABASE_DEV_SECRET_KEY: ${{ secrets.SUPABASE_DEV_SECRET_KEY }}
+          SUPABASE_RC_URL: ${{ secrets.SUPABASE_RC_URL }}
+          SUPABASE_RC_SECRET_KEY: ${{ secrets.SUPABASE_RC_SECRET_KEY }}
+          INPUT_TICKS: ${{ inputs.ticks || '1' }}
+          INPUT_USERS_PER_TICK: ${{ inputs.users_per_tick || '5' }}
+          INPUT_PARTNERS_PER_TICK: ${{ inputs.partners_per_tick || '2' }}
+          INPUT_DELAY_BETWEEN_CALLS_MS: ${{ inputs.delay_between_calls_ms || '400' }}
+        run: |
+          set -euo pipefail
+
+          require_uint() {
+            local name="$1"
+            local value="$2"
+            if ! [[ "${value}" =~ ^[0-9]+$ ]]; then
+              echo "::error::${name} must be a non-negative integer. Got: ${value}"
+              exit 1
+            fi
+          }
+
+          require_uint ticks "${INPUT_TICKS}"
+          require_uint users_per_tick "${INPUT_USERS_PER_TICK}"
+          require_uint partners_per_tick "${INPUT_PARTNERS_PER_TICK}"
+          require_uint delay_between_calls_ms "${INPUT_DELAY_BETWEEN_CALLS_MS}"
+
+          if [ "${SUPABASE_STAGE}" = "rc" ]; then
+            SUPABASE_URL="${SUPABASE_RC_URL}"
+            SUPABASE_SECRET_KEY="${SUPABASE_RC_SECRET_KEY}"
+          else
+            SUPABASE_URL="${SUPABASE_DEV_URL}"
+            SUPABASE_SECRET_KEY="${SUPABASE_DEV_SECRET_KEY}"
+          fi
+
+          if [ -z "${SUPABASE_URL}" ] || [ -z "${SUPABASE_SECRET_KEY}" ]; then
+            echo "::error::Missing Supabase ${SUPABASE_STAGE} simulator secrets."
+            exit 1
+          fi
+
+          SEED="$(date -u +%s)"
+          jq -n \
+            --argjson ticks "${INPUT_TICKS}" \
+            --argjson usersPerTick "${INPUT_USERS_PER_TICK}" \
+            --argjson partnersPerTick "${INPUT_PARTNERS_PER_TICK}" \
+            --argjson delayBetweenCallsMs "${INPUT_DELAY_BETWEEN_CALLS_MS}" \
+            --argjson seed "${SEED}" \
+            '{
+              ticks: $ticks,
+              usersPerTick: $usersPerTick,
+              partnersPerTick: $partnersPerTick,
+              delayBetweenCallsMs: $delayBetweenCallsMs,
+              seed: $seed
+            }' > /tmp/sim_payload.json
+
+          echo "target_ref=${TARGET_REF}"
+          cat /tmp/sim_payload.json
+
+          http_code=$(curl -s -o /tmp/sim_response.json -w "%{http_code}" -X POST \
+            "${SUPABASE_URL}/functions/v1/event-flow-simulator" \
+            -H "Authorization: Bearer ${SUPABASE_SECRET_KEY}" \
+            -H "Content-Type: application/json" \
+            -d @/tmp/sim_payload.json \
+            --max-time 240)
+          cat /tmp/sim_response.json
+          if [ "${http_code}" -lt 200 ] || [ "${http_code}" -ge 300 ]; then
+            echo "::error::event-flow-simulator returned HTTP ${http_code}"
+            exit 1
+          fi
+          jq -e '.success == true' /tmp/sim_response.json
+
+  notify-failure:
+    needs: [resolve-target, simulate]
+    if: always()
+    uses: ./.github/workflows/shared-notify.yml
+    with:
+      failed: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+      workflow_name: 'monitor-event-flow-distributed'
+      severity: 'P1-high'
+      job_results: '{"resolve-target":"${{ needs.resolve-target.result }}","simulate":"${{ needs.simulate.result }}","target_ref":"${{ needs.resolve-target.outputs.target_ref }}","target_sha":"${{ needs.resolve-target.outputs.target_sha }}"}'
+      stage: ${{ needs.resolve-target.outputs.soak_stage }}
+      signal: 'backend-simulator'
+      blocks_rc_cut: true
+      commit_sha: ${{ needs.resolve-target.outputs.target_sha }}
+      status_description: 'monitor-event-flow-distributed failed'
+    secrets: inherit

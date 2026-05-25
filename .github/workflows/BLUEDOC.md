@@ -14,7 +14,7 @@
 | `pr-setup-` | PR push 마다 PR 브랜치를 mutate 하는 자동화 (포맷 등) | (현재 없음 — `pr-setup-format` 은 #2627 에서 `pr-gate-format-check` 잡으로 대체) |
 | `pr-review-setup-` | PR 의 "리뷰 준비" 자동화 — auto-merge enable + 조건 충족 시 `needs-review` 라벨 부여 | `pr-review-setup` |
 | `deploy-` | 사용자·dev 환경에 코드·스키마·시드가 안 갔음 | `dev-deploy`, `main-deploy`, `deploy-vercel`, `deploy-supabase`, `deploy-android-user`, `deploy-ios-user`, `deploy-dev-seed` |
-| `monitor-` | 운영·테스트 시스템 헬스 이상 / 스케줄 유지보수 | `monitor-dev-staging-health`, `monitor-db-invariants`, `monitor-event-flow-hourly`, `monitor-event-flow-daily`, `monitor-mds-render-coverage`, `monitor-patrol-e2e`, `monitor-allure`, `monitor-build-retention`, `monitor-security-advisor`, `monitor-doc-freshness` |
+| `monitor-` | 운영·테스트 시스템 헬스 이상 / 스케줄 유지보수 | `monitor-dev-staging-health`, `monitor-db-invariants`, `monitor-event-flow-distributed`, `monitor-event-flow-hourly`, `monitor-event-flow-daily`, `monitor-mds-render-coverage`, `monitor-patrol-e2e`, `monitor-allure`, `monitor-build-retention`, `monitor-security-advisor`, `monitor-doc-freshness` |
 | `sync-` | repo 에 자동 commit/push 가 실패함 (dev push 또는 merge 기반) | `sync-version`, `sync-graphify`, `sync-mds-mockups`, `sync-pr-branches`, `sync-test-coverage` |
 | `set-` | GitHub status/metadata 를 쓰는 수동·자동 API entrypoint 실패 | `set-dev-soak-status`, `set-rc-soak-status` |
 | `triage-` | 이슈 생성·슬래시 명령 (commit 없음) | `triage-mds-issue`, `triage-slash` |
@@ -35,7 +35,7 @@
 - `dev-pr-gate`, `rc-pr-gate`, `main-pr-gate` 는 `shared-pr-source-guard` 로 직접 PR 을 차단한다. 정상 진입점은 `dev-staging` 이고, 예외는 branch별 approved hotfix 뿐이다.
 - `monitor-dev-staging-health` 는 required check 가 아니다. 6시간마다 `dev-staging` HEAD 에서 EF unit/integration + user/partner CUJ 를 돌려 nightly 전에 회귀를 발견하고, 결과를 `dev-staging-health/*` commit status 로 남긴다.
 - `dev-staging-dev-cut-gate` 가 dev-staging 의 PR-number CalVer bump/tag 를 담당한다. `sync-version` 은 legacy main release bump 만 담당하며, `dev` promotion 은 `dev-staging-dev-cut` 에서 version 변경 없이 처리한다.
-- `dev-rc-cut-gate` 는 cut 직전 evaluator 다. 내부에서 `shared-soak-gate` 를 호출해 `dev-soak/*` status 와 monitor run history 를 확인하고, 통과한 commit 에만 `dev-rc-cut-pass` status 를 찍는다.
+- `dev-rc-cut-gate` 는 cut 직전 evaluator 다. 내부에서 `shared-soak-gate` 를 호출해 `dev-soak/*` status 와 `monitor-event-flow-distributed` run history 를 확인하고, 통과한 commit 에만 `dev-rc-cut-pass` status 를 찍는다.
 - `dev-rc-cut` 은 latest `dev-rc-cut-pass` dev commit 에서 `rc/YYYY-Wxx` branch 를 만들고 `version-bump` 로 `v*-rc-01` + `promo/rc-*` tag 를 생성한다.
 - `rc-main-cut-gate` 는 5일 soak 를 통과한 `rc/*` 에 `rc-main-cut-pass` 를 찍고, `rc-main-cut` 은 그 marker 를 소비해 `main` PR 을 만든다.
 - `.github/actions/cut-issue` 는 cut-gate tracking issue 를 생성/갱신/닫는 composite action 이다. Issue 는 운영자가 보는 추적 surface 이며 gate 판정 SSOT 는 commit status/workflow result 다.
@@ -43,6 +43,7 @@
 - `dev-deploy` 는 dev push 후 web + mobile dev 배포를 orchestrate 한다.
 - `main-deploy` 는 main push 후 prod 배포를 orchestrate 한다. RC promotion 이면 `version-bump` 로 final version/tag 를 만들고 `shared-promo-tag` 로 `promo/main-*` marker 를 만든다. 이미 final version 인 `main/hotfix/*` 머지는 version/tag finalization 없이 prod deploy 만 실행한다.
 - `shared-promo-tag` 는 `promo/rc-*`, `promo/main-*` tag 생성의 공통 release-bot 구현이다. Concrete workflow 는 target ref, tag name, commit SHA 만 넘긴다.
+- `monitor-event-flow-distributed` 는 schedule 에서 `origin/dev` 를 대상으로 5분 distributed tick 을 호출하고, 수동 실행은 `dev` 또는 `rc/YYYY-Www` 만 허용한다. `monitor-event-flow-hourly` / `monitor-event-flow-daily` 는 legacy manual smoke 다.
 - `deploy-android-*`, `deploy-ios-*`, `deploy-vercel` 은 branch-level deploy 에서 호출하는 concrete adapter 다. 직접 push/schedule 로 실행하지 않는다.
 - 실제 build/upload/notify 로직은 각각 `shared-android-deploy`, `shared-ios-deploy`, `shared-vercel-deploy` 에 둔다.
 - 모바일 배포 산출물(APK/AAB/IPA)은 GitHub Release asset 으로 보관한다. Actions artifact 는 테스트/디버깅 산출물용이며, deploy archive 의 source-of-truth 로 쓰지 않는다.

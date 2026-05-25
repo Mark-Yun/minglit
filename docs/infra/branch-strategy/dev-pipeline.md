@@ -58,8 +58,8 @@ GitHub Issue 는 source-of-truth 가 아니다. Gate 판정은 commit status con
 | 검증 | 조건 |
 |------|------|
 | Soak duration | candidate age >= 24h |
-| Hourly backend simulator | `candidate_since` 이후 `monitor-event-flow-hourly` success run >= 20 |
-| Daily backend simulator | `candidate_since` 이후 `monitor-event-flow-daily` success run >= 1 |
+| Event-flow distributed simulator | `candidate_since` 이후 `monitor-event-flow-distributed` success run >= 250 |
+| Legacy hourly/daily simulator | 수동 smoke 전용. RC cut gate 조건에서 제외 |
 | Real device | candidate 기준 required real-device signal success >= 1 (workflow TBD) |
 | App AI review | AI agent 가 candidate 기준 app-soak pass signal 제공 (입력 방식 TBD) |
 | Failure status | `dev-soak/*` context 의 최신 state 가 `failure` 가 아니어야 함 |
@@ -110,7 +110,11 @@ Snapshot 모델 — **auto-revert 없음**. dev 가 broken 상태로 잠시 머�
 
 ### `monitor-event-flow-*`
 
-- 이벤트 플로우 시뮬레이터 batch (`monitor-event-flow-hourly`, `monitor-event-flow-daily`)
+- 이벤트 플로우 시뮬레이터 batch. target 은 `monitor-event-flow-distributed` 5분 주기 small tick
+- 시간은 고정 5분, 랜덤은 actor/user/partner/event sampling 에 적용한다
+- `seed.dev.sql` 은 계정/파트너 base 만 담당하고 party/event/ticket 은 EF 경유로 만든다
+- 유저 신청 대상은 DB prefix 필터가 아니라 `user-event-feed` 결과에서 선택한다
+- `monitor-event-flow-hourly` / `monitor-event-flow-daily` 는 legacy manual smoke
 - release promotion 과 독립적으로 계속 돈다
 - RC 에서는 main 배포 전 pre-main validation signal 로 사용한다
 

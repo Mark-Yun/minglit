@@ -112,8 +112,8 @@ Issue label 은 분류용이다. Gate 판정에는 사용하지 않는다.
 
 | Signal | 최소 조건 |
 |--------|-----------|
-| `monitor-event-flow-hourly` | `candidate_since` 이후 `success` run >= 20 |
-| `monitor-event-flow-daily` | `candidate_since` 이후 `success` run >= 1 |
+| `monitor-event-flow-distributed` | `candidate_since` 이후 `success` run >= 250 |
+| legacy `monitor-event-flow-hourly/daily` | 수동 smoke 전용. gate run requirement 에서 제외 |
 | real-device smoke | candidate 기준 required run/signal success >= 1 (workflow 이름 TBD) |
 | app AI review | AI agent 가 candidate 기준 pass signal 제공 (workflow/status 입력 방식 TBD) |
 
@@ -121,7 +121,7 @@ Issue label 은 분류용이다. Gate 판정에는 사용하지 않는다.
 
 ```bash
 gh run list \
-  --workflow monitor-event-flow-hourly.yml \
+  --workflow monitor-event-flow-distributed.yml \
   --branch dev \
   --created ">=2026-05-24T00:00:00Z" \
   --json databaseId,status,conclusion,createdAt,headSha
@@ -155,7 +155,7 @@ Issue body 에는 machine-readable metadata 를 남긴다. 단, gate 판정은 �
 <!-- minglit-release-signal
 stage: dev-soak
 signal: backend-simulator
-workflow: monitor-event-flow-hourly
+workflow: monitor-event-flow-distributed
 branch: dev
 commit: abc123...
 run_id: 263...
