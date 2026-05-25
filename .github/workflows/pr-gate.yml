@@ -717,7 +717,7 @@ jobs:
     needs: changes
     # migrations / pgTAP tests / seed / config 변경 시만. EF source 만 바뀌면 skip.
     if: ${{ needs.changes.outputs.supabase_db_stack == 'true' }}
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: supabase/setup-cli@v2
@@ -728,11 +728,8 @@ jobs:
         with:
           flutter-version: '3.41.9'  # Fix #2640: flutter_quill 11.5.0 incompatible with Flutter 3.44.0
           cache: true
-      # Wipe any volume left by a prior run on this host so `supabase start`
-      # initializes a fresh DB and auto-applies all migrations from scratch.
-      # Required on shared self-hosted runners — otherwise the next start
-      # restores from the previous volume (which may pre-date schema-touching
-      # migrations like admin/) and PostgREST 503s on schema cache load.
+      # Defensive cleanup in case the runner image or a retry leaves local
+      # Supabase containers/volumes behind.
       - name: Reset stale Supabase state
         run: supabase stop --no-backup 2>/dev/null || true
       - name: Start Supabase
@@ -759,7 +756,7 @@ jobs:
     needs: changes
     # EF source / deno.json 변경 시만. migrations / 문서 only 면 skip.
     if: ${{ needs.changes.outputs.supabase_functions == 'true' }}
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
         with:
@@ -864,14 +861,14 @@ jobs:
     # migrations 또는 EF source 변경 시 (full stack 가드). 문서/pgTAP only 면 skip.
     # Supabase CLI uses the configured project id for local Docker container
     # names, so pgTAP and EF integration must not start the same stack in
-    # parallel on shared self-hosted runners.
+    # parallel on the same runner.
     if: >-
       ${{
         !cancelled() &&
         needs.changes.outputs.supabase_ef_stack == 'true' &&
         (needs.test-supabase.result == 'success' || needs.test-supabase.result == 'skipped')
       }}
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
@@ -882,8 +879,7 @@ jobs:
         with:
           deno-version: v2.x
 
-      # Wipe stale volume from any prior run on this host so `supabase start`
-      # initializes a fresh DB. See test-pgtap above for the rationale.
+      # Defensive cleanup in case a retry leaves local Supabase containers behind.
       - name: Reset stale Supabase state
         run: supabase stop --no-backup 2>/dev/null || true
 

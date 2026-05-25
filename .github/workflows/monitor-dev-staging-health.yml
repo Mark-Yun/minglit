@@ -46,7 +46,7 @@ jobs:
 
   ef-unit:
     needs: [plan]
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
@@ -105,7 +105,7 @@ jobs:
 
   ef-integration:
     needs: [plan]
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v6
