@@ -21,11 +21,11 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # Consolidated fast read-only static checks: 6 verifications that previously each
+  # Consolidated fast read-only static checks: 7 verifications that previously each
   # ran in its own ubuntu-latest job (migration version uniqueness + same-day gap
   # warning, env-manifest ↔ EnvKeyStore drift, workflow YAML parse validity,
   # androidx.test runner/orchestrator version alignment, cross-feature import
-  # baseline, BLUEDOC freshness).
+  # baseline, BLUEDOC freshness, dev-staging PR issue lifecycle intent).
   #
   # Why merge: each separate job paid runner startup + actions/checkout overhead
   # (~10-15s × 6 = ~70s of Actions minutes per PR). Combined into one job with a
@@ -43,6 +43,12 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0  # BLUEDOC freshness needs history for base-ref diff
+
+      - name: Check PR issue reference
+        if: ${{ !cancelled() }}
+        env:
+          PR_GATE_STAGE: ${{ inputs.stage }}
+        run: bash .github/scripts/check-pr-issue-reference.sh
 
       - name: Check duplicate migration versions
         if: ${{ !cancelled() }}
