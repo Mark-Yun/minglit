@@ -118,8 +118,36 @@ jobs:
       dry_run: ${{ inputs.dry_run || false }}
     secrets: inherit
 
-  notify-failure:
+  track-cut-gate:
     needs: [select-rc-candidate, evaluate-rc-soak]
+    if: needs.select-rc-candidate.outputs.skipped != 'true' && needs.evaluate-rc-soak.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v6
+      - name: Track rc -> main cut gate
+        uses: ./.github/actions/cut-issue
+        with:
+          github-token: ${{ github.token }}
+          operation: upsert
+          gate-key: rc-main
+          subject-id: ${{ needs.select-rc-candidate.outputs.rc_branch }}
+          title: 'cut-gate(rc-main): ${{ needs.select-rc-candidate.outputs.rc_branch }}'
+          status: ${{ needs.evaluate-rc-soak.outputs.skipped == 'true' && 'waiting' || 'ready' }}
+          summary: 'rc -> main cut gate evaluated `${{ needs.select-rc-candidate.outputs.rc_branch }}`.'
+          details: |
+            - RC branch: `${{ needs.select-rc-candidate.outputs.rc_branch }}`
+            - Candidate SHA: `${{ needs.select-rc-candidate.outputs.rc_sha }}`
+            - Minimum soak hours: `${{ needs.select-rc-candidate.outputs.min_soak_hours }}`
+            - Gate skipped: `${{ needs.evaluate-rc-soak.outputs.skipped }}`
+            - Reason: `${{ needs.evaluate-rc-soak.outputs.reason }}`
+            - Dry run: `${{ inputs.dry_run || false }}`
+            - Next workflow: `rc-main-cut`
+
+  notify-failure:
+    needs: [select-rc-candidate, evaluate-rc-soak, track-cut-gate]
     if: always()
     permissions:
       actions: read

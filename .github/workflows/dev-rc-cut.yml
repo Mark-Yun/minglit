@@ -173,6 +173,26 @@ jobs:
             echo "| promo_tag | ${PROMO_TAG} |"
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Track dev -> rc cut issue
+        id: cut-issue
+        if: steps.plan.outputs.skipped != 'true'
+        uses: ./.github/actions/cut-issue
+        with:
+          github-token: ${{ github.token }}
+          operation: upsert
+          gate-key: dev-rc
+          subject-id: ${{ steps.plan.outputs.source_sha }}
+          title: 'cut-gate(dev-rc): ${{ steps.plan.outputs.source_sha }}'
+          status: ${{ inputs.dry_run == true && 'ready' || 'promoting' }}
+          summary: 'dev -> rc cut is planned for `${{ steps.plan.outputs.source_sha }}`.'
+          details: |
+            - Source SHA: `${{ steps.plan.outputs.source_sha }}`
+            - RC branch: `${{ steps.plan.outputs.rc_branch }}`
+            - Version: `${{ steps.plan.outputs.version }}`
+            - Tag: `${{ steps.plan.outputs.tag_name }}`
+            - Promo tag: `${{ steps.plan.outputs.promo_tag }}`
+            - Dry run: `${{ inputs.dry_run || false }}`
+
   bump:
     needs: [plan]
     if: needs.plan.outputs.skipped != 'true' && inputs.dry_run != true
@@ -195,8 +215,34 @@ jobs:
       commit_sha: ${{ needs.bump.outputs.commit_sha }}
     secrets: inherit
 
-  notify-failure:
+  close-cut-issue:
     needs: [plan, bump, tag-promo]
+    if: needs.plan.outputs.skipped != 'true' && inputs.dry_run != true && needs.tag-promo.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v6
+      - name: Close dev -> rc cut issue
+        uses: ./.github/actions/cut-issue
+        with:
+          github-token: ${{ github.token }}
+          operation: close
+          gate-key: dev-rc
+          subject-id: ${{ needs.plan.outputs.source_sha }}
+          title: 'cut-gate(dev-rc): ${{ needs.plan.outputs.source_sha }}'
+          status: done
+          summary: 'dev -> rc cut completed for `${{ needs.plan.outputs.source_sha }}`.'
+          details: |
+            - RC branch: `${{ needs.plan.outputs.rc_branch }}`
+            - Version: `${{ needs.plan.outputs.version }}`
+            - Tag: `${{ needs.plan.outputs.tag_name }}`
+            - Promo tag: `${{ needs.plan.outputs.promo_tag }}`
+          close-comment: 'dev-rc-cut completed: `${{ needs.plan.outputs.rc_branch }}` was created and tagged.'
+
+  notify-failure:
+    needs: [plan, bump, tag-promo, close-cut-issue]
     if: always()
     permissions:
       actions: read

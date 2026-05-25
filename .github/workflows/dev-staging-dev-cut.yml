@@ -138,6 +138,24 @@ jobs:
           git push origin "${TAG_SHA}:refs/heads/${BRANCH_NAME}"
           git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
 
+      - name: Track dev promotion issue
+        id: cut-issue
+        if: steps.plan.outputs.skipped != 'true'
+        uses: ./.github/actions/cut-issue
+        with:
+          github-token: ${{ github.token }}
+          operation: upsert
+          gate-key: dev-staging-dev
+          subject-id: ${{ steps.plan.outputs.tag_name }}
+          title: 'cut-gate(dev-staging-dev): ${{ steps.plan.outputs.tag_name }}'
+          status: ${{ inputs.dry_run == true && 'ready' || 'promoting' }}
+          summary: 'dev-staging -> dev promotion is planned for `${{ steps.plan.outputs.tag_name }}`.'
+          details: |
+            - Source tag: `${{ steps.plan.outputs.tag_name }}`
+            - Source SHA: `${{ steps.plan.outputs.tag_sha }}`
+            - Promotion branch: `${{ steps.plan.outputs.branch_name }}`
+            - Dry run: `${{ inputs.dry_run || false }}`
+
       - name: Create dev promotion PR and enable auto-merge
         id: pr
         if: steps.plan.outputs.skipped != 'true' && inputs.dry_run != true
@@ -146,14 +164,26 @@ jobs:
           TAG_NAME: ${{ steps.plan.outputs.tag_name }}
           TAG_SHA: ${{ steps.plan.outputs.tag_sha }}
           BRANCH_NAME: ${{ steps.plan.outputs.branch_name }}
+          CUT_ISSUE_NUMBER: ${{ steps.cut-issue.outputs.issue-number }}
         run: |
           set -euo pipefail
+          CUT_ISSUE_CLOSER=""
+          CUT_ISSUE_MARKER=""
+          if [ -n "${CUT_ISSUE_NUMBER}" ]; then
+            CUT_ISSUE_CLOSER="Closes #${CUT_ISSUE_NUMBER}"
+            CUT_ISSUE_MARKER="<!-- minglit:cut-issue-number:${CUT_ISSUE_NUMBER} -->"
+          fi
+
           BODY="$(cat <<EOF
           Promotes \`${TAG_NAME}\` from \`dev-staging\` to \`dev\`.
 
           - Source tag: ${TAG_NAME}
           - Source SHA: ${TAG_SHA}
           - Merge mode: rebase, because the active dev ruleset requires linear history.
+
+          ${CUT_ISSUE_CLOSER}
+
+          ${CUT_ISSUE_MARKER}
           EOF
           )"
 

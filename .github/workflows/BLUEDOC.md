@@ -23,6 +23,7 @@
 | `shared-` | (다른 워크플로우의 부품 — 단독 실행 X) | `shared-notify`, `shared-android-deploy`, `shared-ios-deploy`, `shared-vercel-deploy`, `shared-set-commit-status`, `shared-soak-gate`, `shared-promo-tag`, `shared-pr-source-guard` |
 | branch-strategy stage name | branch-strategy 문서의 stage entry workflow | `dev-staging-pr-gate`, `dev-staging-dev-cut-gate`, `dev-staging-dev-cut`, `dev-pr-gate`, `dev-rc-cut-gate`, `dev-rc-cut`, `rc-pr-gate`, `rc-main-cut-gate`, `rc-main-cut`, `main-pr-gate` |
 | reusable no-prefix | `workflow_call` 로만 호출되는 domain reusable | `version-bump` |
+| event utility | 특정 GitHub event 에 반응해 release bookkeeping 을 정리 | `close-cut-issue-on-pr-merge` |
 
 ## Reusable Gates
 
@@ -37,6 +38,8 @@
 - `dev-rc-cut-gate` 는 cut 직전 evaluator 다. 내부에서 `shared-soak-gate` 를 호출해 `dev-soak/*` status 와 monitor run history 를 확인하고, 통과한 commit 에만 `dev-rc-cut-pass` status 를 찍는다.
 - `dev-rc-cut` 은 latest `dev-rc-cut-pass` dev commit 에서 `rc/YYYY-Wxx` branch 를 만들고 `version-bump` 로 `v*-rc-01` + `promo/rc-*` tag 를 생성한다.
 - `rc-main-cut-gate` 는 5일 soak 를 통과한 `rc/*` 에 `rc-main-cut-pass` 를 찍고, `rc-main-cut` 은 그 marker 를 소비해 `main` PR 을 만든다.
+- `.github/actions/cut-issue` 는 cut-gate tracking issue 를 생성/갱신/닫는 composite action 이다. Issue 는 운영자가 보는 추적 surface 이며 gate 판정 SSOT 는 commit status/workflow result 다.
+- `close-cut-issue-on-pr-merge` 는 promotion PR body 의 `minglit:cut-issue-number` marker 를 보고 PR merge 시 해당 cut issue 를 닫는다.
 - `dev-deploy` 는 dev push 후 web + mobile dev 배포를 orchestrate 한다.
 - `main-deploy` 는 main push 후 prod 배포를 orchestrate 한다. RC promotion 이면 `version-bump` 로 final version/tag 를 만들고 `shared-promo-tag` 로 `promo/main-*` marker 를 만든다. 이미 final version 인 `main/hotfix/*` 머지는 version/tag finalization 없이 prod deploy 만 실행한다.
 - `shared-promo-tag` 는 `promo/rc-*`, `promo/main-*` tag 생성의 공통 release-bot 구현이다. Concrete workflow 는 target ref, tag name, commit SHA 만 넘긴다.

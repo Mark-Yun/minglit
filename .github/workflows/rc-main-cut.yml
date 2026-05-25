@@ -131,6 +131,24 @@ jobs:
             echo "| action | create PR ${RC_BRANCH} -> main |"
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Track rc -> main cut issue
+        id: cut-issue
+        if: steps.plan.outputs.skipped != 'true'
+        uses: ./.github/actions/cut-issue
+        with:
+          github-token: ${{ github.token }}
+          operation: upsert
+          gate-key: rc-main
+          subject-id: ${{ steps.plan.outputs.rc_branch }}
+          title: 'cut-gate(rc-main): ${{ steps.plan.outputs.rc_branch }}'
+          status: ${{ inputs.dry_run == true && 'ready' || 'promoting' }}
+          summary: 'rc -> main promotion is planned for `${{ steps.plan.outputs.rc_branch }}`.'
+          details: |
+            - RC branch: `${{ steps.plan.outputs.rc_branch }}`
+            - RC SHA: `${{ steps.plan.outputs.rc_sha }}`
+            - Required marker: `rc-main-cut-pass`
+            - Dry run: `${{ inputs.dry_run || false }}`
+
       - name: Create main promotion PR and enable auto-merge
         id: pr
         if: steps.plan.outputs.skipped != 'true' && inputs.dry_run != true
@@ -138,8 +156,15 @@ jobs:
           GH_TOKEN: ${{ steps.release-bot.outputs.token }}
           RC_BRANCH: ${{ steps.plan.outputs.rc_branch }}
           RC_SHA: ${{ steps.plan.outputs.rc_sha }}
+          CUT_ISSUE_NUMBER: ${{ steps.cut-issue.outputs.issue-number }}
         run: |
           set -euo pipefail
+          CUT_ISSUE_CLOSER=""
+          CUT_ISSUE_MARKER=""
+          if [ -n "${CUT_ISSUE_NUMBER}" ]; then
+            CUT_ISSUE_CLOSER="Closes #${CUT_ISSUE_NUMBER}"
+            CUT_ISSUE_MARKER="<!-- minglit:cut-issue-number:${CUT_ISSUE_NUMBER} -->"
+          fi
 
           gh label create rc-main-cut-pass \
             --description "RC passed rc-main-cut-gate" \
@@ -153,6 +178,10 @@ jobs:
           - Source SHA: ${RC_SHA}
           - Required marker: rc-main-cut-pass
           - Merge mode: rebase, because main requires linear history.
+
+          ${CUT_ISSUE_CLOSER}
+
+          ${CUT_ISSUE_MARKER}
           EOF
           )"
 
