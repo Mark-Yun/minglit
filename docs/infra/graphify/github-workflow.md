@@ -8,7 +8,7 @@
 
 | 트리거 | 조건 | 용도 |
 |--------|------|------|
-| `push` | `dev` 브랜치, `graphify-out/**` 외 변경 | PR 머지 직후 즉시 갱신 |
+| `push` | `dev-staging` 브랜치, `graphify-out/**` 외 변경 | PR 머지 직후 즉시 갱신 |
 | `schedule` | 매일 04:00 UTC (13:00 KST) | 누락 보정용 안전망 |
 | `workflow_dispatch` | 수동 | 디버깅 / 강제 갱신 |
 
@@ -16,14 +16,14 @@
 
 ## 실행 단계
 
-1. `dev` 브랜치 checkout
+1. `dev-staging` 브랜치 checkout
 2. `release-bot-token` action 으로 `minglit-release-bot` GitHub App token 생성
 3. Python 3 환경 설정
 4. `pip install graphifyy==0.8.8` (버전 핀)
 5. `graphify update .` 실행
 6. `graphify-out/` 에 변경이 있으면:
    - `chore(graphify): auto-update [skip ci]` 커밋
-   - `dev` 에 직접 push (CI 재실행 방지 위해 `[skip ci]`)
+   - `dev-staging` 에 직접 push (CI 재실행 방지 위해 `[skip ci]`)
 7. 변경 없으면 종료
 
 ## 동시 실행 방지
@@ -33,7 +33,7 @@
 ## 권한
 
 - `contents: write` — graphify-out 갱신 커밋용
-- `MINGLIT_RELEASE_BOT_APP_ID`, `MINGLIT_RELEASE_BOT_PRIVATE_KEY` — 보호된 `dev` 에 직접 push 할 release bot token 발급용
+- `MINGLIT_RELEASE_BOT_APP_ID`, `MINGLIT_RELEASE_BOT_PRIVATE_KEY` — 보호된 `dev-staging` 에 직접 push 할 release bot token 발급용
 
 ## 실패 시 동작
 
@@ -46,4 +46,4 @@
 ## 비용
 
 - AST 추출 only (LLM 호출 없음) → CI 분당 비용 ~30초 ~ 1분 수준
-- 매 dev push 마다 실행되므로 트래픽 많은 날 ~10회 실행 추정
+- 매 dev-staging push 마다 실행되므로 트래픽 많은 날 ~10회 실행 추정
