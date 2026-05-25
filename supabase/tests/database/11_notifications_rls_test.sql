@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(6);
+SELECT plan(9);
 
 SELECT tests.create_supabase_user('user_a', 'a@test.com');
 SELECT tests.create_supabase_user('user_b', 'b@test.com');
@@ -29,6 +29,51 @@ WITH notif_b AS (
   RETURNING id
 )
 SELECT set_config('tests.notif_b', id::text, true) FROM notif_b;
+
+SELECT lives_ok(
+  format(
+    $$
+      INSERT INTO public.user_notifications (user_id, title, body, category)
+      VALUES ('%s', 'Service insert', 'Service body', 'service')
+    $$,
+    tests.get_supabase_uid('user_a')
+  ),
+  'service_role can insert notifications'
+);
+
+SELECT tests.clear_authentication();
+
+SAVEPOINT before_anon_notification_insert;
+SELECT throws_ok(
+  format(
+    $$
+      INSERT INTO public.user_notifications (user_id, title, body, category)
+      VALUES ('%s', 'Anon insert', 'Anon body', 'service')
+    $$,
+    tests.get_supabase_uid('user_a')
+  ),
+  NULL,
+  NULL,
+  'anon cannot insert arbitrary notifications'
+);
+ROLLBACK TO SAVEPOINT before_anon_notification_insert;
+
+SELECT tests.authenticate_as('user_a');
+
+SAVEPOINT before_authenticated_notification_insert;
+SELECT throws_ok(
+  format(
+    $$
+      INSERT INTO public.user_notifications (user_id, title, body, category)
+      VALUES ('%s', 'Authenticated insert', 'Authenticated body', 'service')
+    $$,
+    tests.get_supabase_uid('user_a')
+  ),
+  NULL,
+  NULL,
+  'authenticated users cannot insert arbitrary notifications'
+);
+ROLLBACK TO SAVEPOINT before_authenticated_notification_insert;
 
 SELECT tests.clear_authentication();
 SELECT is_empty(
