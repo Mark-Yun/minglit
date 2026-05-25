@@ -717,6 +717,9 @@ jobs:
         continue-on-error: true
       - run: npm run lint
       - run: npm run build
+      - name: Build from repo root
+        working-directory: .
+        run: ./apps/mds/docs/node_modules/.bin/next build apps/mds/docs
 
   # MDS Icons CI — flutter analyze + npm build (codegen)
   lint-mds-icons:
