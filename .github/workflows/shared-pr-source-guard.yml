@@ -1,0 +1,133 @@
+name: shared-pr-source-guard
+
+on:
+  workflow_call:
+    inputs:
+      target:
+        description: 'Target branch family: dev, rc, or main.'
+        required: true
+        type: string
+      normal_head_regex:
+        description: 'Allowed non-hotfix head branch regex. Empty means no normal PR path.'
+        required: false
+        type: string
+        default: ''
+      hotfix_head_regex:
+        description: 'Allowed hotfix head branch regex.'
+        required: true
+        type: string
+      hotfix_label:
+        description: 'Required hotfix approval label on both PR and at least one linked issue.'
+        required: true
+        type: string
+      require_release_manager_label:
+        description: 'Whether PR must also have release-manager-approved.'
+        required: false
+        type: boolean
+        default: false
+    outputs:
+      mode:
+        description: 'Allowed PR mode: promotion or hotfix.'
+        value: ${{ jobs.guard.outputs.mode }}
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    outputs:
+      mode: ${{ steps.guard.outputs.mode }}
+    steps:
+      - name: Validate PR source policy
+        id: guard
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          TARGET: ${{ inputs.target }}
+          NORMAL_HEAD_REGEX: ${{ inputs.normal_head_regex }}
+          HOTFIX_HEAD_REGEX: ${{ inputs.hotfix_head_regex }}
+          HOTFIX_LABEL: ${{ inputs.hotfix_label }}
+          REQUIRE_RELEASE_MANAGER_LABEL: ${{ inputs.require_release_manager_label }}
+        run: |
+          set -euo pipefail
+
+          blocked_message() {
+            cat <<EOF
+          Direct PRs to dev/rc/main are blocked.
+          Use dev-staging as the normal entry branch.
+          For emergency changes, create a ${TARGET}/hotfix/* branch and get the required hotfix approval labels on the linked issue and PR.
+          EOF
+          }
+
+          if [ -n "${NORMAL_HEAD_REGEX}" ] && [[ "${HEAD_REF}" =~ ${NORMAL_HEAD_REGEX} ]]; then
+            echo "mode=promotion" >> "$GITHUB_OUTPUT"
+            echo "::notice::Allowed ${BASE_REF} promotion PR from ${HEAD_REF}."
+            exit 0
+          fi
+
+          if ! [[ "${HEAD_REF}" =~ ${HOTFIX_HEAD_REGEX} ]]; then
+            blocked_message | while IFS= read -r line; do echo "::error::${line}"; done
+            echo "::error::Head branch '${HEAD_REF}' is not allowed for base '${BASE_REF}'."
+            exit 1
+          fi
+
+          pr_labels="$(gh pr view "${PR_NUMBER}" --repo "${GITHUB_REPOSITORY}" --json labels --jq '.labels[].name')"
+          if ! grep -Fxq "${HOTFIX_LABEL}" <<< "${pr_labels}"; then
+            blocked_message | while IFS= read -r line; do echo "::error::${line}"; done
+            echo "::error::Missing required PR label: ${HOTFIX_LABEL}."
+            exit 1
+          fi
+
+          if [ "${REQUIRE_RELEASE_MANAGER_LABEL}" = "true" ] && ! grep -Fxq "release-manager-approved" <<< "${pr_labels}"; then
+            blocked_message | while IFS= read -r line; do echo "::error::${line}"; done
+            echo "::error::Missing required PR label: release-manager-approved."
+            exit 1
+          fi
+
+          owner="${GITHUB_REPOSITORY_OWNER}"
+          repo="${GITHUB_REPOSITORY#*/}"
+          issue_numbers="$(gh api graphql \
+            -f owner="${owner}" \
+            -f name="${repo}" \
+            -F number="${PR_NUMBER}" \
+            -f query='
+              query($owner: String!, $name: String!, $number: Int!) {
+                repository(owner: $owner, name: $name) {
+                  pullRequest(number: $number) {
+                    closingIssuesReferences(first: 20) {
+                      nodes {
+                        number
+                      }
+                    }
+                  }
+                }
+              }
+            ' \
+            --jq '.data.repository.pullRequest.closingIssuesReferences.nodes[].number')"
+          if [ -z "${issue_numbers}" ]; then
+            blocked_message | while IFS= read -r line; do echo "::error::${line}"; done
+            echo "::error::Hotfix PR must link an issue with Closes/Fixes/Resolves #<number>."
+            exit 1
+          fi
+
+          issue_has_approval=false
+          for issue in ${issue_numbers}; do
+            if gh issue view "${issue}" --repo "${GITHUB_REPOSITORY}" --json labels --jq '.labels[].name' | grep -Fxq "${HOTFIX_LABEL}"; then
+              issue_has_approval=true
+              break
+            fi
+          done
+
+          if [ "${issue_has_approval}" != "true" ]; then
+            blocked_message | while IFS= read -r line; do echo "::error::${line}"; done
+            echo "::error::At least one linked issue must have label: ${HOTFIX_LABEL}."
+            exit 1
+          fi
+
+          echo "mode=hotfix" >> "$GITHUB_OUTPUT"
+          echo "::notice::Allowed ${BASE_REF} hotfix PR from ${HEAD_REF}."

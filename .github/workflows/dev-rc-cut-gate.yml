@@ -15,6 +15,11 @@ on:
         required: false
         type: string
         default: '24'
+      dry_run:
+        description: Evaluate only; do not write dev soak/pass commit statuses.
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: dev-rc-cut-gate
@@ -45,10 +50,38 @@ jobs:
         dev-soak/backend-simulator
       pass_context: dev-rc-cut-pass
       pass_description: 'dev-rc-cut-gate passed; this dev commit can be cut to RC'
+      dry_run: ${{ inputs.dry_run || false }}
     secrets: inherit
 
-  notify-failure:
+  track-cut-gate:
     needs: [evaluate-dev-soak]
+    if: needs.evaluate-dev-soak.result == 'success' && needs.evaluate-dev-soak.outputs.candidate_sha != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v6
+      - name: Track dev -> rc cut gate
+        uses: ./.github/actions/cut-issue
+        with:
+          github-token: ${{ github.token }}
+          operation: upsert
+          gate-key: dev-rc
+          subject-id: ${{ needs.evaluate-dev-soak.outputs.candidate_sha }}
+          title: 'cut-gate(dev-rc): ${{ needs.evaluate-dev-soak.outputs.candidate_sha }}'
+          status: ${{ needs.evaluate-dev-soak.outputs.skipped == 'true' && 'waiting' || 'ready' }}
+          summary: 'dev -> rc cut gate evaluated `${{ needs.evaluate-dev-soak.outputs.candidate_sha }}`.'
+          details: |
+            - Candidate ref: `dev`
+            - Candidate SHA: `${{ needs.evaluate-dev-soak.outputs.candidate_sha }}`
+            - Gate skipped: `${{ needs.evaluate-dev-soak.outputs.skipped }}`
+            - Reason: `${{ needs.evaluate-dev-soak.outputs.reason }}`
+            - Dry run: `${{ inputs.dry_run || false }}`
+            - Next workflow: `dev-rc-cut`
+
+  notify-failure:
+    needs: [evaluate-dev-soak, track-cut-gate]
     if: always()
     permissions:
       actions: read

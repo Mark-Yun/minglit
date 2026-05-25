@@ -47,6 +47,7 @@ flowchart LR
 | 단계 | Entry workflow | 역할 |
 |------|----------------|------|
 | dev-staging PR | `dev-staging-pr-gate` | feature/agent PR 의 빠른 CI gate |
+| dev-staging 지속 검증 | `monitor-dev-staging-health` | 6시간마다 EF unit/integration + user/partner CUJ 로 nightly 전 회귀 감지 |
 | dev-staging → dev cut gate | `dev-staging-dev-cut-gate` | dev 로 promote 할 coherent dev-staging snapshot 을 `v*-dev-staging` tag 로 선별 |
 | dev-staging → dev cut | `dev-staging-dev-cut` + `dev-pr-gate` | gate 가 선별한 snapshot 을 dev PR 로 promote |
 | dev → rc cut gate | `dev-rc-cut-gate` | 24h dev soak status/run history 확인 후 `dev-rc-cut-pass` status 부여 |
@@ -87,6 +88,7 @@ flowchart LR
 | [dev-soak-status-model.md](./dev-soak-status-model.md) | dev soak commit status contexts + run history based `dev-rc-cut-gate` 판정 |
 | [rc-promotion.md](./rc-promotion.md) | dev-rc-cut + soak + hotfix + backport |
 | [main-promotion.md](./main-promotion.md) | rc → main + main-deploy + min-version |
+| [hotfix-policy.md](./hotfix-policy.md) | dev/rc/main 직접 PR 차단 + branch별 hotfix 승인 규칙 |
 | [life-of-flag.md](./life-of-flag.md) | flag lifecycle |
 | [versioning.md](./versioning.md) | CalVer + tag |
 | [specs/](./specs/BLUEDOC.md) | workflow spec, branch spec, execution plan (구현 계약) |
@@ -100,11 +102,15 @@ flowchart LR
 - 코드 promotion = 한 방향 PR, 기능 promotion = flag flip
 - `*-cut-gate` = 다음 브랜치로 promote 할 source artifact 선별/마킹, `*-cut` = 그 artifact 로 PR/branch 생성. 검증과 promotion 을 같은 workflow 에 섞지 않는다
 - dev soak 판정의 source-of-truth 는 GitHub Issue/label 이 아니라 commit status context + workflow run history 다 ([dev-soak-status-model.md](./dev-soak-status-model.md))
+- cut-gate Issue 는 사람이 진행 상태를 추적하기 위한 projection 이다. 생성/갱신/닫기는 `.github/actions/cut-issue` 와 `close-cut-issue-on-pr-merge` 가 담당하며, promotion 판정 SSOT 로 사용하지 않는다
 - 모든 branch linear ON — dev-staging: squash, dev/rc/main: rebase
 - Protected branch 직접 push 는 human 금지. version bump/tag/promotion 처리는 `minglit-release-bot` 전용 token + Ruleset bypass 로만 허용
 - `monitor-event-flow-*` 는 release promotion 과 독립적인 batch signal. dev 에서 계속 돌고, RC 에서는 main 배포 전 검증 signal 로 사용한다
 - main 머지 = backend + mobile 모두 prod deploy. backend prod deploy 는 `main-deploy` 에서 한 번에 수행한다
-- **Hotfix 는 rc 에서, dev-staging 으로 자동 backport** ([rc-promotion.md](./rc-promotion.md))
+- `main-deploy` 는 version finalization 과 deploy execution 을 분리한다. RC promotion 은 final version/tag 를 만들고 deploy 하며, `main/hotfix/*` 처럼 이미 final version 인 main push 는 version bump 없이 prod deploy 만 실행한다
+- 모바일 배포 산출물(APK/AAB/IPA)은 GitHub Release asset 이 canonical archive 다. Actions artifact 는 테스트 리포트/스크린샷/로그 같은 단기 디버깅 산출물에만 사용한다
+- 일반 PR 은 `dev-staging` 으로만 진입한다. `dev`, `rc/*`, `main` 직접 PR 은 promotion 또는 승인된 hotfix 만 허용한다 ([hotfix-policy.md](./hotfix-policy.md))
+- **Hotfix 는 merge 후 dev-staging 으로 backport** ([hotfix-policy.md](./hotfix-policy.md), [rc-promotion.md](./rc-promotion.md))
 - Tag regex 는 `RELEASE.md` lock (TODO)
 
 ### Promotion PR Title
