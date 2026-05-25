@@ -40,18 +40,21 @@ case "$author" in
     ;;
 esac
 
-if printf '%s\n' "$title" | grep -Eiq '^(backport|release)(\(|:)|^ci\(dev-staging-dev-cut\):'; then
-  echo "Release/backport PR title; skipping PR issue reference check."
+if printf '%s\n' "$title" | grep -Eiq '^ci\(rc-backport\): backport rc hotfix #[0-9]+ to dev-staging$'; then
+  echo "Release-bot RC hotfix backport PR title; skipping PR issue reference check."
   exit 0
 fi
 
-if printf '%s\n' "$body" | grep -Eiq '(^|[^[:alnum:]_-])(close[sd]?|fix(e[sd])?|resolve[sd]?)[[:space:]]+((#[0-9]+)|([[:alnum:]_.-]+/[[:alnum:]_.-]+#[0-9]+)|(https://github[.]com/[^[:space:]]+/issues/[0-9]+))'; then
+issue_ref='((#[0-9]+)|([[:alnum:]_.-]+/[[:alnum:]_.-]+#[0-9]+)|(https://github[.]com/[^[:space:]]+/issues/[0-9]+))'
+keyword_separator='([[:space:]]+|[[:space:]]*:[[:space:]]*)'
+
+if printf '%s\n' "$body" | grep -Eiq "(^|[^[:alnum:]_-])(close[sd]?|fix(e[sd])?|resolve[sd]?)${keyword_separator}${issue_ref}"; then
   echo "PR body contains a closing issue keyword."
   exit 0
 fi
 
 has_refs=false
-if printf '%s\n' "$body" | grep -Eiq '(^|[^[:alnum:]_-])(refs?|references?)[[:space:]]+((#[0-9]+)|([[:alnum:]_.-]+/[[:alnum:]_.-]+#[0-9]+)|(https://github[.]com/[^[:space:]]+/issues/[0-9]+))'; then
+if printf '%s\n' "$body" | grep -Eiq "(^|[^[:alnum:]_-])(refs?|references?)${keyword_separator}${issue_ref}"; then
   has_refs=true
 fi
 
