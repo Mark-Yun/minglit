@@ -89,7 +89,26 @@ jobs:
             exit 1
           fi
 
-          issue_numbers="$(gh pr view "${PR_NUMBER}" --json closingIssuesReferences --jq '.closingIssuesReferences[].number')"
+          owner="${GITHUB_REPOSITORY_OWNER}"
+          repo="${GITHUB_REPOSITORY#*/}"
+          issue_numbers="$(gh api graphql \
+            -f owner="${owner}" \
+            -f name="${repo}" \
+            -F number="${PR_NUMBER}" \
+            -f query='
+              query($owner: String!, $name: String!, $number: Int!) {
+                repository(owner: $owner, name: $name) {
+                  pullRequest(number: $number) {
+                    closingIssuesReferences(first: 20) {
+                      nodes {
+                        number
+                      }
+                    }
+                  }
+                }
+              }
+            ' \
+            --jq '.data.repository.pullRequest.closingIssuesReferences.nodes[].number')"
           if [ -z "${issue_numbers}" ]; then
             blocked_message | while IFS= read -r line; do echo "::error::${line}"; done
             echo "::error::Hotfix PR must link an issue with Closes/Fixes/Resolves #<number>."
