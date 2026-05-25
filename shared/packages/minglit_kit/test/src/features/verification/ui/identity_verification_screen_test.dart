@@ -8,6 +8,8 @@ class _MockSupabaseClient extends Mock implements SupabaseClient {}
 
 class _MockUser extends Mock implements User {}
 
+class _MockIamportRepository extends Mock implements IamportRepository {}
+
 class _IdentityConsentRepository extends ConsentRepository {
   _IdentityConsentRepository() : super(_MockSupabaseClient());
 
@@ -42,6 +44,16 @@ base class _ProviderInitObserver extends ProviderObserver {
   void didAddProvider(ProviderObserverContext context, Object? value) {
     final name = context.provider.name ?? 'unnamed';
     initialized.add(name);
+  }
+}
+
+base class _TestNavigatorObserver extends NavigatorObserver {
+  bool popped = false;
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    popped = true;
+    super.didPop(route, previousRoute);
   }
 }
 
@@ -133,6 +145,103 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('인증이 취소되었거나 창이 열리지 않았습니다.'), findsOne);
+        expect(find.text('본인인증 다시 시도하기'), findsOne);
+      },
+    );
+
+    testWidgets(
+      'verifies certification and pops screen when certification succeeds',
+      (tester) async {
+        final iamportRepository = _MockIamportRepository();
+        final observer = _TestNavigatorObserver();
+
+        when(
+          () => iamportRepository.verifyCertification(any()),
+        ).thenAnswer((_) async => <String, dynamic>{'ok': true});
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              currentUserProvider.overrideWithValue(_makeUser()),
+              consentRepositoryProvider.overrideWithValue(
+                _IdentityConsentRepository(),
+              ),
+              iamportRepositoryProvider.overrideWithValue(iamportRepository),
+            ],
+            child: MaterialApp(
+              navigatorObservers: [observer],
+              home: Builder(
+                builder: (context) {
+                  return Scaffold(
+                    body: Center(
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => IdentityVerificationScreen(
+                                certificationStarter:
+                                    ({
+                                      required context,
+                                      required userCode,
+                                      required merchantUid,
+                                      mRedirectUrl,
+                                    }) async => 'imp_123',
+                              ),
+                            ),
+                          );
+                        },
+                        child: const Text('open'),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('open'));
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        verify(
+          () => iamportRepository.verifyCertification('imp_123'),
+        ).called(1);
+        expect(observer.popped, isTrue);
+      },
+    );
+
+    testWidgets(
+      'renders generic error when certification starter throws',
+      (tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              currentUserProvider.overrideWithValue(_makeUser()),
+              consentRepositoryProvider.overrideWithValue(
+                _IdentityConsentRepository(),
+              ),
+            ],
+            child: MaterialApp(
+              home: IdentityVerificationScreen(
+                certificationStarter:
+                    ({
+                      required context,
+                      required userCode,
+                      required merchantUid,
+                      mRedirectUrl,
+                    }) async {
+                      throw Exception('boom');
+                    },
+              ),
+            ),
+          ),
+        );
+
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        expect(find.text('인증 중 오류가 발생했습니다.'), findsOne);
         expect(find.text('본인인증 다시 시도하기'), findsOne);
       },
     );

@@ -109,13 +109,19 @@ class _IdentityVerificationScreenState
     final merchantUid = 'IDV_${DateTime.now().millisecondsSinceEpoch}';
     final config = ref.read(iamportConfigProvider);
 
-    final starter = widget.certificationStarter ?? _startIamportCertification;
-    final verificationId = await starter(
-      context: context,
-      userCode: config.userCode,
-      merchantUid: merchantUid,
-      mRedirectUrl: config.mobileRedirectUrl,
-    );
+    final verificationId =
+        await (widget.certificationStarter?.call(
+              context: context,
+              userCode: config.userCode,
+              merchantUid: merchantUid,
+              mRedirectUrl: config.mobileRedirectUrl,
+            ) ??
+            getCertificationService().verify(
+              context: context,
+              userCode: config.userCode,
+              merchantUid: merchantUid,
+              mRedirectUrl: config.mobileRedirectUrl,
+            ));
 
     if (verificationId == null) {
       // User cancelled or window blocked
@@ -135,21 +141,6 @@ class _IdentityVerificationScreenState
       ).showSnackBar(const SnackBar(content: Text('✅ 본인인증이 성공적으로 완료되었습니다.')));
       Navigator.of(context).pop(true);
     }
-  }
-
-  Future<String?> _startIamportCertification({
-    required BuildContext context,
-    required String userCode,
-    required String merchantUid,
-    String? mRedirectUrl,
-  }) {
-    final service = getCertificationService();
-    return service.verify(
-      context: context,
-      userCode: userCode,
-      merchantUid: merchantUid,
-      mRedirectUrl: mRedirectUrl,
-    );
   }
 
   @override
