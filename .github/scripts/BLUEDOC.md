@@ -1,6 +1,6 @@
 # .github/scripts/
 
-워크플로우가 `bash .github/scripts/<name>.sh` 로 실행하는 **shell 헬퍼**. composite action 을 만들 만큼 무겁지 않은 명령 묶음.
+워크플로우가 `.github/scripts/<name>` 로 실행하는 **가벼운 스크립트 헬퍼**. composite action 을 만들 만큼 무겁지 않은 명령 묶음.
 
 ## 이정표
 
@@ -11,6 +11,7 @@
 | [`run-partner-cuj.sh`](./run-partner-cuj.sh) | `apps/app_partner/integration_test/cuj/` CUJ 실행 | `shared-cuj-integration` (app-name=partner 일 때) |
 | [`check-bluedoc-freshness.sh`](./check-bluedoc-freshness.sh) | PR 에서 새/삭제 파일에 대해 가장 가까운 ancestor BLUEDOC.md 갱신 강제. 통과: 이정표 표 갱신 또는 BLUEDOC 의 `_Reviewed_` 날짜 bump. + 모든 BLUEDOC.md 의 Reviewed 형식 검증 | `pr-gate.check-bluedoc-freshness` (required check) |
 | [`check-ios-deploy-branch-conditions.sh`](./check-ios-deploy-branch-conditions.sh) | `ios-deploy` action 의 브랜치 분기(`main` vs `non-main`) 회귀 검증 | 수동 실행 (`bash .github/scripts/check-ios-deploy-branch-conditions.sh`) |
+| [`scan-build-artifact-secrets.py`](./scan-build-artifact-secrets.py) | APK/AAB/`.next` 등 빌드 산출물에서 Supabase service-role secret 패턴을 redacted summary 로 검사 | `pr-gate.scan-build-artifact-secrets` |
 
 ## 핵심 컨벤션
 
