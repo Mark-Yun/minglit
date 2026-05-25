@@ -79,12 +79,27 @@ function flattenTokens(
 }
 
 // ---------------------------------------------------------------------------
-// Token directory — resolved relative to repo root from mds/docs
+// Token directory — local Next builds run from apps/mds/docs, while Vercel
+// deploy builds may run from the repo root.
 // ---------------------------------------------------------------------------
-const TOKEN_DIR = path.resolve(
-  process.cwd(),
-  '../../../shared/packages/mds/tokens/tokens',
-);
+const TOKEN_DIR_CANDIDATES = [
+  path.resolve(process.cwd(), '../../../shared/packages/mds/tokens/tokens'),
+  path.resolve(process.cwd(), 'shared/packages/mds/tokens/tokens'),
+];
+
+function resolveTokenDir(): string {
+  for (const candidate of TOKEN_DIR_CANDIDATES) {
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+
+  throw new Error(
+    `Unable to locate MDS token JSON directory. Tried: ${TOKEN_DIR_CANDIDATES.join(', ')}`,
+  );
+}
+
+const TOKEN_DIR = resolveTokenDir();
 
 function readTokenFile(filename: string): TokenGroup {
   const filePath = path.join(TOKEN_DIR, filename);
