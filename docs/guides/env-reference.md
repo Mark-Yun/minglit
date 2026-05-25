@@ -25,6 +25,7 @@
 |-----|-------------|----------|
 | `SUPABASE_URL` | Supabase project URL (auto-injected) | Yes |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service role JWT (auto-injected) | Yes |
+| `SUPABASE_SERVICE_ROLE_SECRET` | Supabase `sb_secret_...` key for system callers using the `apikey` header | No |
 | `SENTRY_DSN` | Sentry error tracking | No |
 | `AXIOM_API_TOKEN` | Axiom structured logging | No |
 | `AXIOM_DATASET` | Axiom dataset name | No |
@@ -173,4 +174,3 @@
 |-----|-------------|----------|
 | `publishable_key` | Legacy anon JWT for pg_cron -> EF auth | Yes |
 | `supabase_url` | Project URL for pg_cron -> EF calls | Yes |
-

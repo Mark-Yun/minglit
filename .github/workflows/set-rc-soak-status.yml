@@ -1,0 +1,140 @@
+name: set-rc-soak-status
+
+on:
+  workflow_call:
+    inputs:
+      signal:
+        type: string
+        required: true
+        description: 'RC soak signal. Allowed: backend-simulator, real-device, dogfooding.'
+      state:
+        type: string
+        required: true
+        description: 'Commit status state. Allowed: failure, pending, success.'
+      sha:
+        type: string
+        required: true
+        description: 'Full RC commit SHA to attach the status to.'
+      target_url:
+        type: string
+        required: false
+        default: ''
+        description: 'Optional run, artifact, screenshot, or review URL.'
+      description:
+        type: string
+        required: false
+        default: ''
+        description: 'Optional short status description.'
+    outputs:
+      context:
+        description: 'Mapped commit status context.'
+        value: ${{ jobs.map-rc-soak-status.outputs.context }}
+    secrets:
+      MINGLIT_RELEASE_BOT_APP_ID:
+        required: false
+        description: 'Fallback GitHub App ID for minglit-release-bot.'
+      MINGLIT_RELEASE_BOT_PRIVATE_KEY:
+        required: false
+        description: 'Fallback GitHub App private key for minglit-release-bot.'
+  workflow_dispatch:
+    inputs:
+      signal:
+        description: RC soak signal.
+        required: true
+        type: choice
+        options:
+          - backend-simulator
+          - real-device
+          - dogfooding
+      state:
+        description: Commit status state.
+        required: true
+        type: choice
+        options:
+          - failure
+          - pending
+          - success
+      sha:
+        description: Full RC commit SHA to attach the status to.
+        required: true
+        type: string
+      target_url:
+        description: Optional run, artifact, screenshot, or review URL.
+        required: false
+        type: string
+      description:
+        description: Optional short status description.
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  statuses: write
+
+jobs:
+  map-rc-soak-status:
+    name: map-rc-soak-status
+    runs-on: ubuntu-latest
+    outputs:
+      context: ${{ steps.map.outputs.context }}
+      description: ${{ steps.map.outputs.description }}
+      target_url: ${{ steps.map.outputs.target_url }}
+    steps:
+      - name: Map RC soak signal to status context
+        id: map
+        env:
+          INPUT_SIGNAL: ${{ inputs.signal }}
+          INPUT_STATE: ${{ inputs.state }}
+          INPUT_TARGET_URL: ${{ inputs.target_url || '' }}
+          INPUT_DESCRIPTION: ${{ inputs.description || '' }}
+        run: |
+          set -euo pipefail
+
+          case "${INPUT_SIGNAL}" in
+            backend-simulator) CONTEXT="rc-soak/backend-simulator" ;;
+            real-device) CONTEXT="rc-soak/real-device" ;;
+            dogfooding) CONTEXT="rc-soak/dogfooding" ;;
+            *)
+              echo "::error::signal must be one of: backend-simulator, real-device, dogfooding."
+              exit 1
+              ;;
+          esac
+
+          case "${INPUT_STATE}" in
+            failure|pending|success) ;;
+            *)
+              echo "::error::state must be one of: failure, pending, success."
+              exit 1
+              ;;
+          esac
+
+          DESCRIPTION="${INPUT_DESCRIPTION}"
+          if [ -z "${DESCRIPTION}" ]; then
+            DESCRIPTION="${CONTEXT}: ${INPUT_STATE}"
+          fi
+          DESCRIPTION="${DESCRIPTION//$'\r'/ }"
+          DESCRIPTION="${DESCRIPTION//$'\n'/ }"
+
+          TARGET_URL="${INPUT_TARGET_URL}"
+          if [ -z "${TARGET_URL}" ]; then
+            TARGET_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          fi
+
+          echo "context=${CONTEXT}" >> "${GITHUB_OUTPUT}"
+          echo "description=${DESCRIPTION}" >> "${GITHUB_OUTPUT}"
+          echo "target_url=${TARGET_URL}" >> "${GITHUB_OUTPUT}"
+
+  write-rc-soak-status:
+    name: write-rc-soak-status
+    needs: map-rc-soak-status
+    uses: ./.github/workflows/shared-set-commit-status.yml
+    permissions:
+      contents: read
+      statuses: write
+    secrets: inherit
+    with:
+      sha: ${{ inputs.sha }}
+      context: ${{ needs.map-rc-soak-status.outputs.context }}
+      state: ${{ inputs.state }}
+      target_url: ${{ needs.map-rc-soak-status.outputs.target_url }}
+      description: ${{ needs.map-rc-soak-status.outputs.description }}

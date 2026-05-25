@@ -22,16 +22,17 @@ SELECT ok(
   'authenticated INSERT 정책이 storage.objects에 존재해야 함'
 );
 
--- SELECT 정책 존재 확인
+-- public bucket URL 접근은 storage.buckets.public 으로 유지하고,
+-- storage.objects SELECT 정책으로 bucket listing 을 열지 않는다.
 SELECT ok(
-  EXISTS (
+  NOT EXISTS (
     SELECT 1 FROM pg_policies
     WHERE schemaname = 'storage'
       AND tablename = 'objects'
       AND policyname = 'Public read for bug report attachments'
       AND cmd = 'SELECT'
   ),
-  'public SELECT 정책이 storage.objects에 존재해야 함'
+  'bug-report-attachments public SELECT/list 정책이 없어야 함'
 );
 
 -- anon 사용자는 bug-report-attachments에 INSERT 불가 (RLS 42501 exception 발생)

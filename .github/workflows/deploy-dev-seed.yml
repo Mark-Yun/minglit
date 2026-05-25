@@ -62,8 +62,12 @@ jobs:
     needs: [seed]
     if: ${{ always() && needs.seed.result == 'failure' }}
     permissions:
+      actions: read
+      contents: read
       issues: write
+      statuses: write
     uses: ./.github/workflows/shared-notify.yml
     with:
-      success: ${{ needs.seed.result == 'success' }}
+      failed: ${{ needs.seed.result != 'success' }}
       workflow_name: 'Seed Dev'
+      severity: 'P0-critical'

@@ -83,6 +83,12 @@ curl -s -X POST "http://localhost:54321/functions/v1/<function-name>" \
   -H "Content-Type: application/json" \
   -d '{"key": "value"}'
 
+# sb_secret_ 형식 secret key로 system caller 호출
+curl -s -X POST "http://localhost:54321/functions/v1/<function-name>" \
+  -H "apikey: <SUPABASE_SERVICE_ROLE_SECRET>" \
+  -H "Content-Type: application/json" \
+  -d '{"key": "value"}'
+
 # 응답 포맷팅
 curl -s ... | python3 -m json.tool
 ```
@@ -97,6 +103,12 @@ curl -s ... | python3 -m json.tool
 # Dev 서버 직접 호출
 curl -s -X POST "https://<project-ref>.supabase.co/functions/v1/<function-name>" \
   -H "Authorization: Bearer <SERVICE_ROLE_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{"phase": "verify"}'
+
+# sb_secret_ 형식은 Bearer가 아니라 apikey 헤더로 호출
+curl -s -X POST "https://<project-ref>.supabase.co/functions/v1/<function-name>" \
+  -H "apikey: <SERVICE_ROLE_SECRET>" \
   -H "Content-Type: application/json" \
   -d '{"phase": "verify"}'
 ```
@@ -219,6 +231,7 @@ Assertion 실패 시 GitHub 이슈가 자동 생성되며, 이슈에 Axiom 쿼�
 | `SENTRY_DSN` | Sentry 에러 트래킹 | 미설정 (비활성) | 설정됨 | 설정됨 |
 | `SUPABASE_URL` | Supabase API URL | `http://localhost:54321` | `https://<ref>.supabase.co` | `https://<ref>.supabase.co` |
 | `SUPABASE_SERVICE_ROLE_KEY` | 관리자 키 | 로컬 키 | 시크릿 | 시크릿 |
+| `SUPABASE_SERVICE_ROLE_SECRET` | `sb_secret_...` system caller 키 | 선택 | 시크릿 | 시크릿 |
 
 ## 트러블슈팅
 

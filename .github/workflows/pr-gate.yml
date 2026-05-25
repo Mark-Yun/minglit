@@ -151,6 +151,7 @@ jobs:
       app_user: ${{ steps.filter.outputs.app_user }}
       app_partner: ${{ steps.filter.outputs.app_partner }}
       minglit_kit: ${{ steps.filter.outputs.minglit_kit }}
+      demo_android: ${{ steps.filter.outputs.demo_android }}
       mds_core: ${{ steps.filter.outputs.mds_core }}
       app_user_or_kit: ${{ steps.filter.outputs.app_user == 'true' || steps.filter.outputs.minglit_kit == 'true' || steps.filter.outputs.mds_core == 'true' }}
       app_partner_or_kit: ${{ steps.filter.outputs.app_partner == 'true' || steps.filter.outputs.minglit_kit == 'true' || steps.filter.outputs.mds_core == 'true' }}
@@ -188,6 +189,19 @@ jobs:
           minglit_kit:
             - 'shared/packages/minglit_kit/**'
             - 'shared/packages/**'
+          demo_android:
+            - '.github/workflows/pr-gate.yml'
+            - 'pubspec.yaml'
+            - 'pubspec.lock'
+            - 'shared/packages/minglit_demo/**'
+            - 'apps/app_user/lib/main_demo.dart'
+            - 'apps/app_partner/lib/main_demo.dart'
+            - 'apps/app_user/pubspec.yaml'
+            - 'apps/app_partner/pubspec.yaml'
+            - 'apps/app_user/android/app/build.gradle.kts'
+            - 'apps/app_partner/android/app/build.gradle.kts'
+            - 'apps/app_user/android/app/src/demo/**'
+            - 'apps/app_partner/android/app/src/demo/**'
           mds_core:
             - 'shared/packages/mds/core/**'
           landing_user:
@@ -420,6 +434,52 @@ jobs:
           flags: ${{ matrix.coverage_flag_logic }}
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
+
+  build-demo-android:
+    name: build-demo-android
+    needs: changes
+    if: ${{ needs.changes.outputs.demo_android == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: app_user
+            directory: apps/app_user
+          - app: app_partner
+            directory: apps/app_partner
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9'
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Tune Gradle memory for CI demo build
+        run: |
+          {
+            echo "org.gradle.jvmargs=-Xmx5G -XX:MaxMetaspaceSize=2G -XX:ReservedCodeCacheSize=512m -XX:+HeapDumpOnOutOfMemoryError"
+            echo "org.gradle.workers.max=2"
+          } >> android/gradle.properties
+        working-directory: ${{ matrix.directory }}
+      - name: Build demo debug APK
+        run: >
+          flutter build apk
+          --debug
+          --flavor demo
+          --target lib/main_demo.dart
+          --dart-define=ENVIRONMENT=demo
+          --dart-define=IS_DEMO=true
+          --dart-define=SUPABASE_URL=https://demo.invalid
+          --dart-define=SUPABASE_PUBLISHABLE_KEY=demo-publishable-key-not-used
+        working-directory: ${{ matrix.directory }}
 
   # Landing User CI
   lint-landing-user:
@@ -657,7 +717,7 @@ jobs:
     needs: changes
     # migrations / pgTAP tests / seed / config 변경 시만. EF source 만 바뀌면 skip.
     if: ${{ needs.changes.outputs.supabase_db_stack == 'true' }}
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: supabase/setup-cli@v2
@@ -668,15 +728,15 @@ jobs:
         with:
           flutter-version: '3.41.9'  # Fix #2640: flutter_quill 11.5.0 incompatible with Flutter 3.44.0
           cache: true
-      # Wipe any volume left by a prior run on this host so `supabase start`
-      # initializes a fresh DB and auto-applies all migrations from scratch.
-      # Required on shared self-hosted runners — otherwise the next start
-      # restores from the previous volume (which may pre-date schema-touching
-      # migrations like admin/) and PostgREST 503s on schema cache load.
+      # Defensive cleanup in case the runner image or a retry leaves local
+      # Supabase containers/volumes behind.
       - name: Reset stale Supabase state
         run: supabase stop --no-backup 2>/dev/null || true
       - name: Start Supabase
-        run: supabase start
+        # PostgREST can be unhealthy before `supabase db reset` creates all
+        # configured schemas (for example `admin`). The DB is still available
+        # for reset, so do not fail this setup step on pre-migration REST health.
+        run: supabase start --ignore-health-check
       - name: Validate migrations (dry-run)
         run: |
           echo "🔄 Resetting DB and re-applying all migrations from scratch..."
@@ -696,7 +756,7 @@ jobs:
     needs: changes
     # EF source / deno.json 변경 시만. migrations / 문서 only 면 skip.
     if: ${{ needs.changes.outputs.supabase_functions == 'true' }}
-    runs-on: [self-hosted, ephemeral]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
         with:
@@ -797,10 +857,18 @@ jobs:
   # 설계: supabase/functions/_integration_tests/architecture.md
   test-ef-integration:
     name: test-ef-integration
-    needs: changes
+    needs: [changes, test-supabase]
     # migrations 또는 EF source 변경 시 (full stack 가드). 문서/pgTAP only 면 skip.
-    if: ${{ needs.changes.outputs.supabase_ef_stack == 'true' }}
-    runs-on: [self-hosted, ephemeral]
+    # Supabase CLI uses the configured project id for local Docker container
+    # names, so pgTAP and EF integration must not start the same stack in
+    # parallel on the same runner.
+    if: >-
+      ${{
+        !cancelled() &&
+        needs.changes.outputs.supabase_ef_stack == 'true' &&
+        (needs.test-supabase.result == 'success' || needs.test-supabase.result == 'skipped')
+      }}
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
@@ -811,13 +879,14 @@ jobs:
         with:
           deno-version: v2.x
 
-      # Wipe stale volume from any prior run on this host so `supabase start`
-      # initializes a fresh DB. See test-pgtap above for the rationale.
+      # Defensive cleanup in case a retry leaves local Supabase containers behind.
       - name: Reset stale Supabase state
         run: supabase stop --no-backup 2>/dev/null || true
 
       - name: Start local Supabase
-        run: supabase start
+        # Same rationale as pgTAP: migrations run after startup, so schema-cache
+        # health can be temporarily red before `db reset --no-seed`.
+        run: supabase start --ignore-health-check
 
       - name: Apply migrations only (db reset --no-seed)
         run: supabase db reset --no-seed

@@ -1,0 +1,103 @@
+name: shared-set-commit-status
+
+on:
+  workflow_call:
+    inputs:
+      sha:
+        type: string
+        required: true
+        description: 'Full commit SHA to attach the status to.'
+      context:
+        type: string
+        required: true
+        description: 'Commit status context, e.g. dev-soak/backend-simulator.'
+      state:
+        type: string
+        required: true
+        description: 'Commit status state. Allowed: failure, pending, success.'
+      target_url:
+        type: string
+        required: false
+        default: ''
+        description: 'Optional run, artifact, screenshot, or review URL.'
+      description:
+        type: string
+        required: false
+        default: ''
+        description: 'Optional short status description.'
+    secrets:
+      MINGLIT_RELEASE_BOT_APP_ID:
+        required: false
+        description: 'Fallback GitHub App ID for minglit-release-bot.'
+      MINGLIT_RELEASE_BOT_PRIVATE_KEY:
+        required: false
+        description: 'Fallback GitHub App private key for minglit-release-bot.'
+
+permissions:
+  contents: read
+  statuses: write
+
+jobs:
+  set-commit-status:
+    name: set-commit-status
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Generate release bot token
+        id: release-bot
+        uses: ./.github/actions/release-bot-token
+        with:
+          fallback-app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
+          fallback-private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
+
+      - name: Validate inputs and write commit status
+        env:
+          GH_TOKEN: ${{ steps.release-bot.outputs.token }}
+          INPUT_SHA: ${{ inputs.sha }}
+          INPUT_CONTEXT: ${{ inputs.context }}
+          INPUT_STATE: ${{ inputs.state }}
+          INPUT_TARGET_URL: ${{ inputs.target_url }}
+          INPUT_DESCRIPTION: ${{ inputs.description }}
+        run: |
+          set -euo pipefail
+
+          if [[ ! "${INPUT_SHA}" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "::error::sha must be a full 40-character commit SHA."
+            exit 1
+          fi
+
+          if [ -z "${INPUT_CONTEXT}" ]; then
+            echo "::error::context is required."
+            exit 1
+          fi
+
+          case "${INPUT_STATE}" in
+            failure|pending|success) ;;
+            *)
+              echo "::error::state must be one of: failure, pending, success."
+              exit 1
+              ;;
+          esac
+
+          TARGET_URL="${INPUT_TARGET_URL}"
+          if [ -z "${TARGET_URL}" ]; then
+            TARGET_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          fi
+
+          DESCRIPTION="${INPUT_DESCRIPTION}"
+          if [ -z "${DESCRIPTION}" ]; then
+            DESCRIPTION="${INPUT_CONTEXT}: ${INPUT_STATE}"
+          fi
+          DESCRIPTION="${DESCRIPTION//$'\r'/ }"
+          DESCRIPTION="${DESCRIPTION//$'\n'/ }"
+          DESCRIPTION="${DESCRIPTION:0:140}"
+
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${INPUT_SHA}" \
+            --method POST \
+            -f state="${INPUT_STATE}" \
+            -f context="${INPUT_CONTEXT}" \
+            -f description="${DESCRIPTION}" \
+            -f target_url="${TARGET_URL}"

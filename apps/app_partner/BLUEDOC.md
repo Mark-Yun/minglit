@@ -6,7 +6,7 @@ Minglit 의 **파트너 사장님 Flutter 앱**. 매장 관리·멤버 초대·�
 
 | 항목 | 무엇 |
 |---|---|
-| `lib/main.dart` / `lib/main_demo.dart` | 프로덕션 / demo flavor 엔트리포인트 |
+| `lib/main.dart` / `lib/main_demo.dart` | 프로덕션 / demo flavor 엔트리포인트 (`main_demo.dart` 는 `minglit_demo` fixtures + Android `demo` flavor 사용) |
 | [`lib/src/features/`](./lib/src/features/) | 기능별 모듈 (아래 표) |
 | [`lib/src/routing/`](./lib/src/routing/) | `app_router` (auth + 권한 + 온보딩 redirect) + `app_routes` (Type-safe) |
 | [`lib/src/logic/`](./lib/src/logic/) | 앱-레벨 Provider (`current_partner_provider`, `onboarding_state_provider` 등) |
@@ -39,6 +39,7 @@ Minglit 의 **파트너 사장님 Flutter 앱**. 매장 관리·멤버 초대·�
 - **Cross-feature import 금지** — `pr-gate.check-cross-feature-imports` 가 차단.
 - **권한 분기는 router redirect 에서** — feature 안에 권한 체크 흩뿌리지 않음.
 - **공통 Flutter 아키텍처는 [`apps/architecture.md`](../architecture.md)** — Tech Stack, Coordinator/Routing/Repository pattern.
+- **demo flavor 는 서버 0 연결** — `main_demo.dart` + `android/app/src/demo/google-services.json` + `minglit_env/demo/flutter.env` 조합으로 빌드.
 
 ## 관련
 
@@ -47,4 +48,4 @@ Minglit 의 **파트너 사장님 Flutter 앱**. 매장 관리·멤버 초대·�
 - [README.md](./README.md) — 빌드·실행 / [integration_test/cuj](./integration_test/cuj/BLUEDOC.md) — CUJ
 
 ---
-_Reviewed: 2026-05-23 00:00_
+_Reviewed: 2026-05-24 16:30_
