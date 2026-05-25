@@ -21,6 +21,7 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_URL: ${{ github.event.pull_request.html_url }}
+          REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
 
@@ -40,6 +41,7 @@ jobs:
           fi
 
           IS_CUT_GATE="$(gh issue view "${ISSUE_NUMBER}" \
+            --repo "${REPO}" \
             --json labels \
             --jq '[.labels[].name] | index("cut-gate") != null')"
           if [ "${IS_CUT_GATE}" != "true" ]; then
@@ -48,6 +50,7 @@ jobs:
           fi
 
           gh label create status/done \
+            --repo "${REPO}" \
             --description "Cut gate tracking is complete" \
             --color C2E0C6 \
             --force >/dev/null
@@ -55,12 +58,13 @@ jobs:
           while IFS= read -r label; do
             [ -n "${label}" ] || continue
             if [ "${label}" != "status/done" ]; then
-              gh issue edit "${ISSUE_NUMBER}" --remove-label "${label}" >/dev/null 2>&1 || true
+              gh issue edit "${ISSUE_NUMBER}" --repo "${REPO}" --remove-label "${label}" >/dev/null 2>&1 || true
             fi
-          done < <(gh issue view "${ISSUE_NUMBER}" --json labels --jq '.labels[].name' | grep '^status/' || true)
+          done < <(gh issue view "${ISSUE_NUMBER}" --repo "${REPO}" --json labels --jq '.labels[].name' | grep '^status/' || true)
 
-          gh issue edit "${ISSUE_NUMBER}" --add-label status/done >/dev/null
+          gh issue edit "${ISSUE_NUMBER}" --repo "${REPO}" --add-label status/done >/dev/null
           gh issue close "${ISSUE_NUMBER}" \
+            --repo "${REPO}" \
             --reason completed \
             --comment "Promotion PR #${PR_NUMBER} merged: ${PR_TITLE} (${PR_URL})" \
             >/dev/null
