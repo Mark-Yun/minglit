@@ -1,7 +1,7 @@
 // LocationGuidePageBuilder — location_guide_page 전용 fluent API.
 //
 // LocationGuidePage 는 정적 안내 화면이므로 provider 의존 없이 렌더 가능.
-// spec state_2(loading) 재현을 위해 loading 모드에서 스피너 화면을 노출한다.
+// loading 모드에서도 기본 레이아웃(AppBar 포함)을 유지하고 스피너만 오버레이한다.
 
 import 'dart:async';
 
@@ -34,10 +34,17 @@ class LocationGuidePageBuilder extends MdsScreenBuilder<LocationGuidePage> {
   @override
   Widget build() {
     final home = _isLoading
-        ? const Scaffold(
-            body: Center(
-              child: MinglitCircularProgressIndicator(),
-            ),
+        ? const Stack(
+            children: [
+              LocationGuidePage(),
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: Center(
+                    child: MinglitCircularProgressIndicator(),
+                  ),
+                ),
+              ),
+            ],
           )
         : const LocationGuidePage();
 
