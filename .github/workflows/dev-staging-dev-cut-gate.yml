@@ -17,7 +17,6 @@ concurrency:
 permissions:
   contents: write
   pull-requests: write
-  issues: write
 
 jobs:
   calculate-version:
@@ -82,33 +81,8 @@ jobs:
       skip_ci: false
     secrets: inherit
 
-  track-cut-gate:
-    needs: [calculate-version]
-    if: needs.calculate-version.result == 'success'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      issues: write
-    steps:
-      - uses: actions/checkout@v6
-      - name: Track dev-staging -> dev cut gate
-        uses: ./.github/actions/cut-issue
-        with:
-          github-token: ${{ github.token }}
-          operation: upsert
-          gate-key: dev-staging-dev
-          subject-id: ${{ needs.calculate-version.outputs.tag_name }}
-          title: 'cut-gate(dev-staging-dev): ${{ needs.calculate-version.outputs.tag_name }}'
-          status: ready
-          summary: 'dev-staging version cut gate selected `${{ needs.calculate-version.outputs.tag_name }}` for promotion to `dev`.'
-          details: |
-            - Version: `${{ needs.calculate-version.outputs.version }}`
-            - Release version: `${{ needs.calculate-version.outputs.release_version }}`
-            - Tag: `${{ needs.calculate-version.outputs.tag_name }}`
-            - Next workflow: `dev-staging-dev-cut`
-
   notify-failure:
-    needs: [calculate-version, bump, track-cut-gate]
+    needs: [calculate-version, bump]
     if: always()
     permissions:
       actions: read

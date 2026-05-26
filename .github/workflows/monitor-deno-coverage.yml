@@ -1,10 +1,8 @@
 name: monitor-deno-coverage
 
-# dev push 시 supabase/functions/** 변경 감지 → deno coverage → markdown 리포트 자동 갱신
-# coverage.ts 자체는 제외 (self-loop 방지)
-# 같은 동작 PR 마다는 pr-gate 의 test-edge-functions 잡이 diff-cover 로 별도 처리
-
-# Invoked by post-merge.yml on push to dev (paths filter applied at caller level).
+# Manual coverage inspection only. This workflow intentionally does not commit
+# generated reports back to protected branches; dev/rc/main must stay immutable
+# except for human-reviewed PR merges and promotion operations.
 on:
   workflow_call:
   workflow_dispatch:
@@ -18,12 +16,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
-      contents: write
+      contents: read
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          token: ${{ secrets.GH_PAT_FOR_BUG_REPORT }}     # 자동 commit 푸시용 PAT
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
@@ -43,14 +40,16 @@ jobs:
             --out=functions/_coverage/coverage-report.md
         working-directory: supabase
 
-      - name: Commit + push if changed
+      - name: Summarize coverage report delta
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           if git diff --quiet supabase/functions/_coverage/coverage-report.md; then
-            echo "no coverage delta — skip commit"
+            echo "coverage report is unchanged" >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          git add supabase/functions/_coverage/coverage-report.md
-          git commit -m "chore(coverage): update deno coverage report [skip ci]"
-          git push
+          {
+            echo "coverage report would change; no commit was created"
+            echo ""
+            echo '```diff'
+            git diff -- supabase/functions/_coverage/coverage-report.md | sed -n '1,200p'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
