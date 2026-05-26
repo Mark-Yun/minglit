@@ -22,25 +22,22 @@ GitHub Ruleset 의 required check 는 `main-pr-gate` 하나로 둔다. `dev-rc-c
 
 ## `main-deploy`
 
-main push 직후 자동 (finalize + prod deploy chain):
+main push 직후 자동 (prod deploy chain):
 
 ```
-1. bump-version.sh {ver}  (suffix 제거 — main 은 final version)
-2. git commit -m "chore: bump version to v{ver} [skip ci]"
-3. git tag v{ver}
-4. git tag promo/main-YYYY-Wxx
-5. git push (tags + commit)
-6. Sentry release marker 부여 (v{ver})
-7. Firebase RC `latest_version` = v{ver} (Admin SDK)
-8. parallel deploy chain (모두 target=main):
+1. shared-version-metadata(channel=main) 로 deploy version 계산
+2. git tag promo/main-YYYY-Wxx
+3. Sentry release marker 부여 (computed version)
+4. Firebase RC `latest_version` = computed version (Admin SDK)
+5. parallel deploy chain (모두 target=main):
    - backend prod deploy (Supabase migration + EF)
    - deploy-android-{user,partner}
    - deploy-ios-{user,partner}
    - (Vercel: native build 가 main push 자동 감지)
-9. RC Supabase branch 삭제 + active RC marker 제거
+6. RC Supabase branch 삭제 + active RC marker 제거
 ```
 
-> Backend prod deploy 는 main 머지 후 수행한다. Mobile deploy 는 main push 이후 별도 workflow 로 수행한다.
+> Backend prod deploy 는 main 머지 후 수행한다. Mobile deploy 는 main push 이후 별도 workflow 로 수행한다. main branch 에 version bump commit 은 만들지 않는다.
 
 ## 기존 Mobile Deploy Workflows (재사용)
 
@@ -50,10 +47,10 @@ main push trigger 로 자동 발동되는 기존 workflows:
 |----------|------|---------------|
 | `deploy-android-user` | Android (app_user) | `shared-android-deploy.yml` |
 | `deploy-android-partner` | Android (app_partner) | `shared-android-deploy.yml` |
-| `deploy-ios-user` | iOS (app_user) | shared-ios-deploy 가 있는지 확인 (TBD) |
-| `deploy-ios-partner` | iOS (app_partner) | 동일 |
+| `deploy-ios-user` | iOS (app_user) | `shared-ios-deploy.yml` |
+| `deploy-ios-partner` | iOS (app_partner) | `shared-ios-deploy.yml` |
 
-**현재 도구**: 기존 workflow 가 어떤 도구 (Fastlane / native CLI / GitHub Action) 쓰는지 그대로 사용. **Fastlane 통일은 후속 (TBD)**.
+**현재 도구**: 기존 workflow 가 쓰는 native CLI / GitHub Action 을 유지한다. Fastlane 통일은 후속 (TBD).
 
 > Mobile cadence = hotfix 없으면 weekly (rc → main 머지 마다). hotfix 로 RC 가 길어지면 자연스럽게 늦어짐.
 

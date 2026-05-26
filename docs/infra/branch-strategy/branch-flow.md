@@ -63,7 +63,7 @@ main/hotfix/* ──PR──▶ main ──backport──▶ dev-staging (+ acti
 | `rc/YYYY-Wxx` | 금지 | **ON** | `rc-pr-gate` | rebase |
 | `main` | 금지 (release bot 예외) | **ON** | `main-pr-gate` | rebase |
 
-Hybrid linear history 금지 — 각 branch 내 일관 (squash or rebase 한 가지). `dev` 는 active ruleset 의 linear history 와 맞추기 위해 `dev-staging-dev-cut` promotion 도 rebase 를 사용한다. Protected branch 직접 push 는 `minglit-release-bot` 의 version bump/tag/promotion commit 에만 Ruleset bypass 로 허용한다.
+Hybrid linear history 금지 — 각 branch 내 일관 (squash or rebase 한 가지). `dev` 는 active ruleset 의 linear history 와 맞추기 위해 `dev-staging-dev-cut` promotion 도 rebase 를 사용한다. Protected branch 직접 push 는 `minglit-release-bot` 의 dev-staging version bump, promotion branch/tag, RC cleanup 에만 Ruleset bypass 로 허용한다.
 
 ## Promotion Tag 컨벤션
 
@@ -72,9 +72,8 @@ Hybrid linear history 금지 — 각 branch 내 일관 (squash or rebase 한 가
 | `v{ver}-dev-staging` (tag) | dev-staging-dev-cut-gate | `v26.05.2572-dev-staging` | workflow |
 | `dev-rc-cut-pass` (commit status) | dev-rc-cut-gate green 시 dev commit 에 | (status only, tag 없음) | workflow |
 | `promo/rc-YYYY-Wxx` (tag) | dev-rc-cut 직후 | `promo/rc-2026-W20` | workflow |
-| `v{ver}-rc-NN` (tag) | dev-rc-cut + hotfix | `v26.05.2572-rc-01`, `v26.05.2585-rc-02` | workflow |
 | `promo/main-YYYY-Wxx` (tag) | main 머지 직후 | `promo/main-2026-W20` | workflow |
-| `v{ver}` (tag) | main 머지 직후 (동시) | `v26.05.2585` | workflow |
+| `build-{channel}-v{version}` (GitHub Release) | deploy artifact archive | `build-dev-v2026.5.2572-dev` | deploy workflow |
 
 > **Tag naming regex 는 [`RELEASE.md`](../../../RELEASE.md) lock** (TODO). 외부 도구 (Sentry, Statsig, Vercel, App Store, Play Console) 가 pin → rename = 모든 dashboard 깨짐.
 
@@ -103,9 +102,9 @@ monitor-dev-staging-health:
 # 개념 — backend + mobile 모두 prod
 main-deploy (on push to main):
   steps:
-    - if current version is rc: tag v{ver} + promo/main-Wxx + Sentry marker
-    - if current version is already final: skip version finalization, continue deploy
-    - Firebase RC `latest_version` = v{ver} 자동 update
+    - compute deploy-time version metadata: YYYY.M.PR#
+    - tag promo/main-Wxx + Sentry marker
+    - Firebase RC `latest_version` = computed version 자동 update
   parallel:
     - backend prod deploy  # Supabase migration + EF
     - uses: ./.github/workflows/deploy-android-{user,partner}.yml

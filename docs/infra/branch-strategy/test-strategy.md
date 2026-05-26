@@ -76,7 +76,7 @@ cut 직전 schedule/manual 로 실행한다. 통과 시 commit 에 GitHub status
 
 ### rc-pr-gate
 
-RC 의 hotfix 만 받음. `pr-gate` + 추가 mobile smoke. 머지 시 `rc-post-merge-sync` 가 `_rc-NN` bump.
+RC 의 hotfix 만 받음. `pr-gate` + 추가 mobile smoke. 머지 시 version bump commit 은 만들지 않고 `rc-deploy` 가 RC 환경을 재적용한다.
 
 ### main-pr-gate
 

@@ -1,14 +1,14 @@
 # RC Promotion
 
-`rc/YYYY-Wxx` 브랜치의 lifecycle: weekly cut from dev 의 `dev-rc-cut-pass` commit, RC 전용 Supabase branch 생성, 5일 soak (hotfix 시 시계 리셋), soak 통과 시 main 으로 머지 후 RC branch 정리.
+`rc/YYYY-Wxx` 브랜치의 lifecycle: weekly cut from dev 의 `dev-rc-cut-pass` commit, RC 전용 Supabase branch 생성, 5일 soak (hotfix 시 시계 리셋), soak 통과 시 main 으로 머지 후 RC branch 정리. RC branch 에 version bump commit 은 만들지 않고, RC artifact version 은 deploy-time metadata 로 주입한다.
 
 ## 4가지 workflow
 
 1. **`dev-rc-cut`** — weekly cron, dev 의 latest `dev-rc-cut-pass` commit 에서 branch out
 2. **`rc-pr-gate`** — hotfix PR 머지 전 검증
-3. **`rc-post-merge-sync`** — hotfix 머지 직후 (`_rc-NN` bump)
-4. **`rc-deploy`** — RC Supabase branch 에 migration/EF 적용 + pre-main validation
-5. **`rc-main-cut`** — daily cron, RC HEAD commit 의 committer date 가 5일 이전이면 rc → main PR 자동 생성
+3. **`rc-deploy`** — RC Supabase branch 에 migration/EF 적용 + pre-main validation
+4. **`rc-main-cut-gate`** — daily cron, RC HEAD commit 의 committer date 가 5일 이전이면 `rc-main-cut-pass` marker 부여
+5. **`rc-main-cut`** — marker 가 있는 RC 를 main PR 로 promote
 
 ## `dev-rc-cut`
 
@@ -23,7 +23,7 @@
   3. 못 찾으면 cut 보류 (현재 구현은 초기 no-pass 상태를 skip, 3일+ green 없음 alert 는 후속 PR)
   4. 찾았으면 그 commit 에서 `rc/YYYY-Wxx` branch cut
   5. Supabase branch 생성/검증은 `rc-deploy` 에 위임 (후속 PR)
-  6. `bump-version.sh {ver}-rc-01` 실행 → tag `v{ver}-rc-01` + `promo/rc-YYYY-Wxx`
+  6. `promo/rc-YYYY-Wxx` tag 생성
   7. Branch protection 활성화 (direct push 금지, hotfix PR 만)
   8. active RC marker 기록 + Slack `#release` 알림 + soak 시작
 
@@ -32,7 +32,7 @@
 - "active RC marker 있음" → skip + 다음 주 cron 까지 대기
 - "dev-rc-cut-pass commit 없음 (3일+)" → cut 보류 + alert (운영자 개입 필요)
 
-`rc/*` git branch 는 릴리즈 이력 보존 수단이 아니다. RC 종료 후 삭제할 수 있으며, 이력은 `promo/rc-*`, `v*-rc-*`, `promo/main-*` protected tag 로 보존한다.
+`rc/*` git branch 는 릴리즈 이력 보존 수단이 아니다. RC 종료 후 삭제할 수 있으며, 이력은 `promo/rc-*`, `promo/main-*`, GitHub Release asset 으로 보존한다.
 
 ## `rc-pr-gate`
 
@@ -43,23 +43,18 @@ RC 브랜치는 hotfix PR 만 받음. `dev-staging-pr-gate` 와 동일 + 추가 
 | (dev-staging-pr-gate 와 동일) | unit, lint, pgTAP, EF, migration, expand-migrate-contract, flag-registration, gitleaks |
 | `rc-mobile-smoke` (추가) | mobile build 가능성 + 기본 navigation 동작 | 
 
-## `rc-post-merge-sync`
+## RC hotfix merge 후 처리
 
-Hotfix PR 머지 직후 자동:
+Hotfix PR 머지 직후에는 RC branch 에 version bump commit 을 추가하지 않는다.
 
 ```
-1. bump-version.sh {PR번호}-rc-NN  (NN = 현재 RC 의 hotfix 카운트 + 1)
-2. git commit -m "chore: bump RC version [skip ci]"
-3. git tag v{ver}-rc-NN
-4. git push
-5. RC Supabase branch 에 migration/EF 재적용
+1. rc-pr-gate 통과 후 hotfix PR 이 rc/YYYY-Wxx 에 merge
+2. 새 commit 의 committer date 로 5일 soak clock 이 자연스럽게 reset
+3. rc-deploy 가 같은 RC Supabase branch 에 migration/EF 를 재적용
+4. rc-hotfix-backport 가 hotfix commit 을 dev-staging 으로 backport PR 생성
 ```
 
-**Soak 시계 자동 리셋** — 새 commit 의 committer date 가 최신이므로 `rc-main-cut` 이 자연스럽게 카운트 다시 시작.
-
-### Hotfix 카운트 결정
-
-`bump-version.sh` 가 현재 RC 의 가장 최근 `v*-rc-NN` 태그 찾아 N + 1 로 bump. 첫 cut 이 `_rc-01`, 첫 hotfix 가 `_rc-02`.
+RC artifact version 은 `shared-version-metadata(channel=rc)` 가 latest RC HEAD 의 PR 번호로 계산한다.
 
 ## `rc-deploy`
 
@@ -99,7 +94,7 @@ Mark 님 직감대로 hotfix loop 으로 RC lifecycle 이 길어지는 게 일�
 | 검증 | 도구 |
 |------|------|
 | 누적 회귀 | rc 의 nightly 재실행 (선택 — RC 별도 nightly schedule TBD) |
-| 내부 dogfooding | 내부 직원 cohort 가 `_rc-NN` 빌드 사용 |
+| 내부 dogfooding | 내부 직원 cohort 가 `YYYY.M.PR#-rc` 빌드 사용 |
 | Real-data 이슈 | RC 전용 Supabase branch (`rc-YYYY-Wxx`) |
 | 외부 의존성 동작 (실 결제, 실 메시지) | 내부 사용자가 실제로 사용해보며 검증 |
 
@@ -114,9 +109,9 @@ Mark 님 직감대로 hotfix loop 으로 RC lifecycle 이 길어지는 게 일�
             │
             ├─▶ [merge to rc (rebase)]
             │
-            ├─▶ [rc-post-merge-sync: _rc-NN bump]
+            ├─▶ [rc-deploy: RC env 재적용]
             │
-            └─▶ [rc-main-cut 이 다음날부터 새 committer date 인식 → 5일 다시 측정]
+            └─▶ [rc-main-cut-gate 이 다음날부터 새 committer date 인식 → 5일 다시 측정]
 ```
 
 ## Hotfix Backport to dev-staging
@@ -145,7 +140,7 @@ RC 는 dev-staging 에서 cut 됐지만 RC 가 사는 동안 dev-staging 이 앞
 - AI 가 resolve 후 push
 - pr-gate 통과 시 머지
 
-`rc-hotfix-backport` 는 hotfix PR 의 merged commits 만 cherry-pick 한다. `rc-post-merge-sync` 가 만든 version bump commit 은 backport 대상에서 제외한다.
+`rc-hotfix-backport` 는 hotfix PR 의 merged commits 만 cherry-pick 한다. RC 에 version bump commit 을 만들지 않으므로 backport 대상에서 제외할 version commit 도 없다.
 
 ### Mobile 의 backport 불필요
 
@@ -180,7 +175,7 @@ Mobile 은 release branch 없음 (main 머지 마다 `deploy-android-*, deploy-i
 
 | 심각도 | 동작 |
 |--------|------|
-| Minor (UI, edge case) | hotfix PR → rc-post-merge-sync → soak 시계 리셋 |
+| Minor (UI, edge case) | hotfix PR → rc-deploy → soak 시계 리셋 |
 | Critical (crash, data loss) | flag 로 즉시 OFF (코드 release 와 분리 — life-of-flag 참고) + hotfix PR 병행 |
 | Catastrophic (전체 깨짐) | RC abandon — git rc branch + Supabase branch 삭제, active marker 제거, 다음 weekly cut 새로 시작 |
 

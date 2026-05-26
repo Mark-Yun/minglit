@@ -24,9 +24,8 @@ flowchart LR
   rcut --> rc["rc/YYYY-Wxx"]
 
   rc --> rpg[rc-pr-gate]
-  rpg --> rps[rc-post-merge-sync]
-  rps --> rc
-  rps --> rbp[rc-hotfix-backport]
+  rpg --> rc
+  rc --> rbp[rc-hotfix-backport]
   rbp --> ds
 
   rc --> rcd[rc-deploy]
@@ -53,11 +52,11 @@ flowchart LR
 | dev → rc cut gate | `dev-rc-cut-gate` | 24h dev soak status/run history 확인 후 `dev-rc-cut-pass` status 부여 |
 | dev deploy/validation | `dev-deploy` | dev 환경 deploy/validation orchestrator. 이벤트 플로우 시뮬레이터는 `monitor-event-flow-*` batch 로 별도 운영 |
 | dev → rc cut | `dev-rc-cut` | latest `dev-rc-cut-pass` commit 에서 `rc/YYYY-Wxx` 생성 |
-| rc hotfix | `rc-pr-gate` + `rc-post-merge-sync` + `rc-hotfix-backport` | RC hotfix 검증, RC version bump, dev-staging backport |
+| rc hotfix | `rc-pr-gate` + `rc-hotfix-backport` | RC hotfix 검증, dev-staging backport |
 | rc deploy/validation | `rc-deploy` | Supabase branching 기반 RC 검증 환경 구성 + pre-main validation |
 | rc → main cut gate | `rc-main-cut-gate` | soak/pre-main validation 통과 RC 에 `rc-main-cut-pass` marker 부여 |
 | rc → main cut | `rc-main-cut` + `main-pr-gate` | gate 가 선별한 RC 를 main PR 로 promote |
-| prod deploy | `main-deploy` | final version/tag, prod backend/mobile deploy, RC cleanup |
+| prod deploy | `main-deploy` | prod backend/mobile deploy, deploy-time version metadata, RC cleanup |
 
 ## 4-stage 모델
 
@@ -104,10 +103,11 @@ flowchart LR
 - dev soak 판정의 source-of-truth 는 GitHub Issue/label 이 아니라 commit status context + workflow run history 다 ([dev-soak-status-model.md](./dev-soak-status-model.md))
 - cut-gate Issue 는 사람이 진행 상태를 추적하기 위한 projection 이다. 생성/갱신/닫기는 `.github/actions/cut-issue` 와 `close-cut-issue-on-pr-merge` 가 담당하며, promotion 판정 SSOT 로 사용하지 않는다
 - 모든 branch linear ON — dev-staging: squash, dev/rc/main: rebase
-- Protected branch 직접 push 는 human 금지. version bump/tag/promotion 처리는 `minglit-release-bot` 전용 token + Ruleset bypass 로만 허용
+- Protected branch 직접 push 는 human 금지. dev-staging version bump, promotion branch/tag, RC cleanup 은 `minglit-release-bot` 전용 token + Ruleset bypass 로만 허용
 - `monitor-event-flow-*` 는 release promotion 과 독립적인 batch signal. target 은 dev 5분 distributed tick 이고, RC 에서는 main 배포 전 검증 signal 로 사용한다
 - main 머지 = backend + mobile 모두 prod deploy. backend prod deploy 는 `main-deploy` 에서 한 번에 수행한다
-- `main-deploy` 는 version finalization 과 deploy execution 을 분리한다. RC promotion 은 final version/tag 를 만들고 deploy 하며, `main/hotfix/*` 처럼 이미 final version 인 main push 는 version bump 없이 prod deploy 만 실행한다
+- 소스 파일 version bump 는 `dev-staging-dev-cut-gate` 에만 남긴다. `dev`/`rc`/`main` 은 branch state 를 바꾸지 않고 deploy workflow 가 `YYYY.M.PR#[-channel]` metadata 를 build-time 에 주입한다
+- `main-deploy` 는 prod deploy execution 을 담당한다. main push 에서 version bump commit 을 만들지 않고, release asset/tag/marker 는 deploy metadata 를 기준으로 생성한다
 - 모바일 배포 산출물(APK/AAB/IPA)은 GitHub Release asset 이 canonical archive 다. Actions artifact 는 테스트 리포트/스크린샷/로그 같은 단기 디버깅 산출물에만 사용한다
 - 일반 PR 은 `dev-staging` 으로만 진입한다. `dev`, `rc/*`, `main` 직접 PR 은 promotion 또는 승인된 hotfix 만 허용한다 ([hotfix-policy.md](./hotfix-policy.md))
 - **Hotfix 는 merge 후 dev-staging 으로 backport** ([hotfix-policy.md](./hotfix-policy.md), [rc-promotion.md](./rc-promotion.md))

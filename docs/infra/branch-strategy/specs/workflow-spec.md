@@ -37,10 +37,26 @@
 | 항목 | 값 |
 |------|----|
 | Trigger | `workflow_call` |
-| Inputs | `version`: YY.MM.PR# / `suffix`: ""\|`-dev-staging`\|`-rc-NN` / `commit_message`: string |
+| Inputs | `version`: YY.MM.PR# / `suffix`: `-dev-staging` / `commit_message`: string |
 | Outputs | `commit_sha`, `tag_name` |
 | 핵심 steps | `bash scripts/bump-version.sh {version}{suffix}` · commit (`skip_ci` option) · `git tag v{version}{suffix}` · push |
-| Called by | `dev-staging-dev-cut-gate`, `dev-rc-cut`, `rc-post-merge-sync`, `main-deploy` |
+| Called by | `dev-staging-dev-cut-gate` |
+
+`dev`/`rc`/`main` promotion 은 version bump commit 을 만들지 않는다. 앱/스토어/릴리즈 에셋에 노출되는 version 은 deploy workflow 가 `shared-version-metadata` 로 계산해 build command 에 주입한다.
+
+### `shared-version-metadata`
+
+Deploy artifact version metadata 를 계산하는 reusable workflow.
+
+| 항목 | 값 |
+|------|----|
+| Trigger | `workflow_call` |
+| Inputs | `channel`: dev\|rc\|main, `source-ref`: ref/SHA |
+| Outputs | `base_version`, `version_name`, `build_number`, `release_tag`, `release_name`, `pr_number`, `source_sha` |
+| 규칙 | `version_name = YYYY.M.PR#[-channel]`, `build_number = PR#` |
+| Called by | `shared-android-deploy`, `shared-ios-deploy`, 후속 `rc-deploy` |
+
+source-ref HEAD 가 graphify/coverage 같은 자동 commit 이면 first-parent history 를 거슬러 실제 PR 번호를 찾는다.
 
 ### `shared-set-commit-status`
 
@@ -151,8 +167,10 @@ Cross-branch cherry-pick PR 자동 생성.
 |------|----|
 | Trigger | `push` to `dev-staging` (PR squash merge 후) |
 | Inputs | (from event) PR number, merged SHA |
-| Outputs | tag `v{YY.MM.PR#}-dev-staging`, cut issue `gate/dev-staging-dev` |
-| Steps | calls `version-bump` (suffix=`-dev-staging`, version=`{YY.MM.PR#}`) using release bot GitHub App token, then upserts cut tracking issue as `status/ready` |
+| Outputs | tag `v{YY.MM.PR#}-dev-staging` |
+| Steps | calls `version-bump` (suffix=`-dev-staging`, version=`{YY.MM.PR#}`) using release bot GitHub App token |
+
+`dev-staging-dev-cut-gate` 는 dev-staging merge 마다 실행되므로 cut tracking issue 를 만들지 않는다. 하루 1회 실제 promotion 을 만드는 `dev-staging-dev-cut` 이 tracking issue 를 `status/promoting` 으로 생성/갱신한다.
 
 ### dev-staging → dev
 
@@ -213,8 +231,8 @@ Cross-branch cherry-pick PR 자동 생성.
 | 항목 | 값 |
 |------|----|
 | Trigger | `schedule` (weekly KST TBD) + `workflow_dispatch` |
-| Outputs | branch `rc/YYYY-Wxx` + tag `v{ver}-rc-01` + tag `promo/rc-YYYY-Wxx` |
-| Steps | (1) active RC marker 가 있으면 skip + Slack `#release` (hotfix 로 길어지는 중) (2) dev 의 최신 `dev-rc-cut-pass` status SHA query (`gh api`) (3) 없으면 cut 보류 (4) cut issue 를 `status/promoting` 으로 갱신 (5) `git branch rc/YYYY-Wxx <SHA>` + push using release bot (6) calls `version-bump` (suffix=`-rc-01`) (7) `git tag promo/rc-YYYY-Wxx` + push (8) cut issue close (9) branch protection 활성화 (10) Slack `#release` 알림 |
+| Outputs | branch `rc/YYYY-Wxx` + tag `promo/rc-YYYY-Wxx` |
+| Steps | (1) active RC marker 가 있으면 skip + Slack `#release` (hotfix 로 길어지는 중) (2) dev 의 최신 `dev-rc-cut-pass` status SHA query (`gh api`) (3) 없으면 cut 보류 (4) cut issue 를 `status/promoting` 으로 갱신 (5) `git branch rc/YYYY-Wxx <SHA>` + push using release bot (6) `git tag promo/rc-YYYY-Wxx` + push (7) cut issue close (8) branch protection 활성화 (9) Slack `#release` 알림 |
 
 #### `rc-pr-gate`
 
@@ -224,13 +242,9 @@ Cross-branch cherry-pick PR 자동 생성.
 | Steps | calls `pr-gate-core` (stage=rc) |
 | Required for | rc branch protection |
 
-#### `rc-post-merge-sync`
+#### RC hotfix post-merge behavior
 
-| 항목 | 값 |
-|------|----|
-| Trigger | `push` to `rc/*` (hotfix merge 후) |
-| Outputs | tag `v{ver}-rc-NN` (NN+1) |
-| Steps | (1) 현 rc 의 마지막 `v*-rc-*` tag 의 NN 파싱 (2) calls `version-bump` (suffix=`-rc-{NN+1}`) using release bot |
+RC branch 에 version bump commit/tag 를 만들던 이전 설계. 최신 정책에서는 RC hotfix merge 후에도 branch state 를 바꾸지 않는다. RC deploy artifact version 은 `shared-version-metadata(channel=rc)` 가 source commit 의 PR 번호로 계산한다.
 
 #### `rc-deploy`
 
@@ -266,7 +280,7 @@ Cross-branch cherry-pick PR 자동 생성.
 |------|----|
 | Trigger | `pull_request` closed/merged (base: `rc/*`) |
 | Outputs | backport PR (rc/* → dev-staging) |
-| Steps | calls `backport-pr` (source=`rc/*`, target=dev-staging, commits=[merged PR commits only]) · 충돌 시 `auto-issue` (P1, AI agent assignee). `rc-post-merge-sync` 의 version bump commit 은 backport 대상에서 제외 |
+| Steps | calls `backport-pr` (source=`rc/*`, target=dev-staging, commits=[merged PR commits only]) · 충돌 시 `auto-issue` (P1, AI agent assignee) |
 
 ### main
 
@@ -283,8 +297,8 @@ Cross-branch cherry-pick PR 자동 생성.
 | 항목 | 값 |
 |------|----|
 | Trigger | `push` to `main` (rc → main auto-merge 또는 승인된 `main/hotfix/*` 머지 직후) |
-| Outputs | tag `v{ver}` + tag `promo/main-YYYY-Wxx` + Sentry marker + Firebase RC `latest_version` update + parallel deploy chain |
-| Steps | (1) plan `finalize_required` vs `deploy_required` (2) RC promotion 이면 calls `version-bump` (suffix="") + `promo/main-YYYY-Wxx` tag (3) 이미 final version 인 hotfix push 면 version/tag finalization skip (4) Sentry release marker `v{ver}` (5) Firebase RC `latest_version` = `v{ver}` (Admin SDK) (6) **parallel deploy chain** (모두 target=main env): backend prod deploy, mobile deploy workflows (7) RC Supabase branch 삭제 |
+| Outputs | tag `promo/main-YYYY-Wxx` + Sentry marker + Firebase RC `latest_version` update + parallel deploy chain |
+| Steps | (1) compute deploy metadata with `shared-version-metadata(channel=main)` (2) `promo/main-YYYY-Wxx` tag (3) Sentry release marker from computed version (4) Firebase RC `latest_version` = computed version (Admin SDK) (5) **parallel deploy chain** (모두 target=main env): backend prod deploy, mobile deploy workflows (6) RC Supabase branch 삭제 |
 
 > `main-deploy` 내부 또는 하위 workflow 로 실행되는 deploy jobs:
 > - backend prod deploy (Supabase migration + EF)
@@ -319,13 +333,13 @@ Cross-branch cherry-pick PR 자동 생성.
 
 [weekly cron]
     ↓
-[dev-rc-cut] ──branch out from latest dev-rc-cut-pass commit──▶ rc/YYYY-Wxx (+ v{ver}-rc-01)
+[dev-rc-cut] ──branch out from latest dev-rc-cut-pass commit──▶ rc/YYYY-Wxx (+ promo/rc-Wxx)
                                                                 ↓ (soak, hotfix 가능)
                                                                 │
                                                           [rc-pr-gate] (hotfix PR)
                                                                 ↓ rc push
                                                                 ↓ (parallel)
-                                                          [rc-post-merge-sync] ──▶ v{ver}-rc-NN
+                                                          [rc-deploy] ──▶ deploy-time rc metadata
                                                           [rc-hotfix-backport]  ──▶ backport PR to dev-staging
 [rc-deploy]           ──▶ Supabase branch + pre-main validation
 
@@ -338,8 +352,8 @@ Cross-branch cherry-pick PR 자동 생성.
                                                                   ↓ main push
                                                                   ↓
                                                             [main-deploy]
-                                       ↓ tag v{ver} + promo/main-Wxx + Sentry release
-                                       ↓ Firebase RC `latest_version` = v{ver}
+                                       ↓ compute version metadata + promo/main-Wxx + Sentry release
+                                       ↓ Firebase RC `latest_version` = computed version
                                        ↓ (parallel)
                                  [backend prod deploy] ──▶ Supabase main
                                  [deploy-android-user, deploy-android-partner] ──▶ Play Store
@@ -357,18 +371,17 @@ Promotion/deploy entry workflows support `workflow_dispatch` dry-run where mutat
 |----------|------------------|
 | `dev-staging-dev-cut` | selects `v*-dev-staging`, computes cut branch, skips branch push/PR/auto-merge |
 | `dev-rc-cut-gate` | evaluates soak/run/status inputs, skips `dev-soak/*` and `dev-rc-cut-pass` status writes |
-| `dev-rc-cut` | selects source SHA/version/RC week, skips RC branch push/version bump/tags |
+| `dev-rc-cut` | selects source SHA/RC week, skips RC branch push/promo tag |
 | `rc-main-cut-gate` | selects RC branch and evaluates soak, skips `rc-main-cut-pass` status write |
 | `rc-main-cut` | selects RC branch, skips main PR/auto-merge |
 | `dev-deploy` | summarizes web/mobile dev deploy plan, skips deploy jobs |
-| `main-deploy` | computes final version/tags/deploy targets, skips version bump/tags/deploy jobs |
+| `main-deploy` | computes deploy version metadata/tags/deploy targets, skips tags/deploy jobs |
 
 Use dry-run before connecting new deploy backends or changing branch rulesets. Dry-run verifies workflow planning and guard logic without mutating GitHub, Supabase, Vercel, App Store, or Play Store.
 
 ## 결정해야 할 것
 
 - `pr-gate-core` 의 stage 별 `extra_steps` 명세
-- `version-bump` 의 commit 방식 (별도 commit vs squash inline)
 - `set-dev-soak-status` / `set-rc-soak-status` 의 signal set 확정
 - real-device / app AI review 가 어떤 workflow 또는 agent 에서 pass/failure status 를 쓸지 확정
 - `dev-deploy` 가 실제로 맡을 dev deploy/smoke 범위
@@ -386,7 +399,7 @@ Use dry-run before connecting new deploy backends or changing branch rulesets. D
 - [../dev-soak-status-model.md](../dev-soak-status-model.md) — dev soak commit status / run history SSOT
 - [../error-detection.md](../error-detection.md) — auto-issue 의 priority 와 채널
 - [../life-of-flag.md](../life-of-flag.md) — flag lifecycle
-- [../versioning.md](../versioning.md) — version-bump 의 suffix 진행
+- [../versioning.md](../versioning.md) — source snapshot version + deploy metadata
 - `branch-spec.md` (예정) — 각 entry workflow 가 어느 branch protection 의 required check 인지
 - `execution-plan.md` (예정) — 기존 workflow refactor + 구현 순서
 
