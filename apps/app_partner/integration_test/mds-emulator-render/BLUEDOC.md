@@ -24,6 +24,7 @@ flutter drive \
 | `bank_account_page` | loading · no-account · with-account · dark |
 | `checkin_placeholder_page` | loading · error · empty · selection · selection-dark |
 | `create_verification_page` | empty · with-fields · dark |
+| `location_guide_page` | default · loading |
 | `more_page` | default · limited-permissions |
 | `recurrence_management_screen` | active · paused · cancelled · no-rule · action-loading · loading · active-dark |
 | `verification_manage_page` | loading · active-empty · active-with-items · archived-with-items · dark |
@@ -51,6 +52,9 @@ mds-emulator-render/
 ├── create_verification_page/
 │   ├── builder.dart
 │   └── create_verification_page_test.dart
+├── location_guide_page/
+│   ├── builder.dart
+│   └── location_guide_page_test.dart
 ├── more_page/
 │   ├── builder.dart
 │   └── more_page_test.dart
