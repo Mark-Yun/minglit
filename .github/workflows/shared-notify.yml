@@ -133,7 +133,7 @@ jobs:
           fi
 
           LOG_TAIL_FILE="$(mktemp)"
-          if gh run view "${GITHUB_RUN_ID}" --log-failed > "${LOG_TAIL_FILE}" 2>/tmp/shared-notify-log-error; then
+          if gh run view "${GITHUB_RUN_ID}" --repo "${GITHUB_REPOSITORY}" --log-failed > "${LOG_TAIL_FILE}" 2>/tmp/shared-notify-log-error; then
             FAILED_LOG_TAIL="$(tail -n 200 "${LOG_TAIL_FILE}")"
           else
             FAILED_LOG_TAIL="Failed log tail unavailable. $(cat /tmp/shared-notify-log-error 2>/dev/null || true)"

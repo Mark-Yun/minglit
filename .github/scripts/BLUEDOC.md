@@ -14,6 +14,7 @@
 | [`check-ios-deploy-branch-conditions.sh`](./check-ios-deploy-branch-conditions.sh) | `ios-deploy` action 의 브랜치 분기(`main` vs `non-main`) 회귀 검증 | 수동 실행 (`bash .github/scripts/check-ios-deploy-branch-conditions.sh`) |
 | [`check-android-deploy-workflow-contract.py`](./check-android-deploy-workflow-contract.py) | Android deploy release archive 가 `github.token` + `contents: write` 를 사용하고 PAT caller 계약을 요구하지 않는지 검증 | `pr-gate.static-checks` |
 | [`check-dev-soak-workflow-contract.py`](./check-dev-soak-workflow-contract.py) | `monitor-event-flow-distributed` + `dev-rc-cut-gate` + `shared-soak-gate` 의 run-history 판정 계약 검증 | `pr-gate.static-checks` |
+| [`check-dev-cut-workflow-contract.py`](./check-dev-cut-workflow-contract.py) | `dev-staging-dev-cut` 의 full-history checkout(`fetch-depth: 0`)과 `shared-notify` 의 `gh run view --repo` 컨텍스트 계약을 검증 | `pr-gate.static-checks` |
 | [`check-ios-connectivity-plus-cap.sh`](./check-ios-connectivity-plus-cap.sh) | iOS deploy runner 가 지원할 때까지 `connectivity_plus <7.1.0` resolution 강제 | `pr-gate.guard-ios-connectivity-plus-cap` |
 | [`scan-build-artifact-secrets.py`](./scan-build-artifact-secrets.py) | APK/AAB/`.next` 등 빌드 산출물에서 Supabase service-role secret 패턴을 redacted summary 로 검사 | `pr-gate.scan-build-artifact-secrets` |
 
@@ -32,4 +33,4 @@
 - [.github/BLUEDOC.md](../BLUEDOC.md) — 상위 진입점
 
 ---
-_Reviewed: 2026-05-25 12:00_
+_Reviewed: 2026-05-26 04:47_
