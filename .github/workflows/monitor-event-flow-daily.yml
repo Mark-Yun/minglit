@@ -1,12 +1,9 @@
 name: monitor-event-flow-daily
 
-# KST 07:00 매일 — SQL seed 초기화 후 긴 cascade 실행 (data 다양성 + 회귀 가드)
-# 1차 fixture 는 supabase/seed.dev.sql 로 박음 (Fix #1413 — EF 시딩 timeout 회피).
-# Patrol CUJ 테스트는 monitor-patrol-e2e.yml 이 별도 담당.
+# Legacy manual seed + long cascade. Scheduled execution moved to
+# monitor-event-flow-distributed.
 
 on:
-  schedule:
-    - cron: '0 22 * * *'    # UTC 22:00 = KST 07:00
   workflow_dispatch:
 
 concurrency:

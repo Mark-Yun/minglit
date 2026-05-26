@@ -8,6 +8,9 @@ import 'checkin_placeholder_page/checkin_placeholder_page_test.dart'
     as checkin_placeholder_page;
 import 'create_verification_page/create_verification_page_test.dart'
     as create_verification_page;
+import 'location_guide_page/location_guide_page_test.dart'
+    as location_guide_page;
+import 'more_page/more_page_test.dart' as more_page;
 import 'recurrence_management_screen/recurrence_management_screen_test.dart'
     as recurrence_management_screen;
 import 'verification_manage_page/verification_manage_page_test.dart'
@@ -18,6 +21,8 @@ final List<Object> catalogs = [
   bank_account_page.catalog,
   checkin_placeholder_page.catalog,
   create_verification_page.catalog,
+  location_guide_page.catalog,
+  more_page.catalog,
   recurrence_management_screen.catalog,
   verification_manage_page.catalog,
 ];

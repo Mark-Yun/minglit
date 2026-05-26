@@ -28,6 +28,8 @@ jobs:
       version: ${{ steps.version.outputs.new }}
       release_version: ${{ steps.version.outputs.base }}
       tag_name: ${{ steps.version.outputs.tag }}
+      source_pr_number: ${{ steps.version.outputs.source_pr_number }}
+      source_pr_url: ${{ steps.version.outputs.source_pr_url }}
 
     steps:
       - name: Calculate dev-staging CalVer version
@@ -64,10 +66,13 @@ jobs:
           BASE="${NOW_YY}.${NOW_MM}.${PR_NUM}"
           NEW_VERSION="${BASE}-dev-staging"
           TAG_NAME="v${NEW_VERSION}"
+          SOURCE_PR_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/pull/${PR_NUM}"
 
           echo "new=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
           echo "base=${BASE}" >> "$GITHUB_OUTPUT"
           echo "tag=${TAG_NAME}" >> "$GITHUB_OUTPUT"
+          echo "source_pr_number=${PR_NUM}" >> "$GITHUB_OUTPUT"
+          echo "source_pr_url=${SOURCE_PR_URL}" >> "$GITHUB_OUTPUT"
           echo "Bumping dev-staging to ${NEW_VERSION}"
 
   bump:

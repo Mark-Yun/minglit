@@ -3,6 +3,7 @@ name: dev-staging-pr-gate
 on:
   pull_request:
     branches: [dev-staging]
+    types: [opened, synchronize, reopened, ready_for_review, edited]
 
 permissions:
   contents: write
@@ -24,7 +25,7 @@ jobs:
 
   dev-staging-pr-gate:
     needs: [pr-gate-core]
-    if: always()
+    if: ${{ always() && !cancelled() }}
     runs-on: ubuntu-latest
     steps:
       - name: Publish branch gate result
