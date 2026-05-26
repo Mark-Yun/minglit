@@ -23,10 +23,9 @@ flowchart LR
   rgp --> rcut[dev-rc-cut]
   rcut --> rc["rc/YYYY-Wxx"]
 
-  rc --> rpg[rc-pr-gate]
+  ds --> rhf[rc hotfix source commit]
+  rhf --> rpg[rc-pr-gate]
   rpg --> rc
-  rc --> rbp[rc-hotfix-backport]
-  rbp --> ds
 
   rc --> rcd[rc-deploy]
   rc --> rmcg[rc-main-cut-gate]
@@ -52,7 +51,7 @@ flowchart LR
 | dev → rc cut gate | `dev-rc-cut-gate` | 24h dev soak status/run history 확인 후 `dev-rc-cut-pass` status 부여 |
 | dev deploy/validation | `dev-deploy` | dev 환경 deploy/validation orchestrator. 이벤트 플로우 시뮬레이터는 `monitor-event-flow-*` batch 로 별도 운영 |
 | dev → rc cut | `dev-rc-cut` | latest `dev-rc-cut-pass` commit 에서 `rc/YYYY-Wxx` 생성 |
-| rc hotfix | `rc-pr-gate` + `rc-hotfix-backport` | RC hotfix 검증, dev-staging backport |
+| rc hotfix | dev-staging fix PR + `rc-pr-gate` | dev-staging 에 먼저 반영된 fix commit 을 active RC 로 cherry-pick/promote |
 | rc deploy/validation | `rc-deploy` | Supabase branching 기반 RC 검증 환경 구성 + pre-main validation |
 | rc → main cut gate | `rc-main-cut-gate` | soak/pre-main validation 통과 RC 에 `rc-main-cut-pass` marker 부여 |
 | rc → main cut | `rc-main-cut` + `main-pr-gate` | gate 가 선별한 RC 를 main PR 로 promote |
@@ -79,13 +78,13 @@ flowchart LR
 
 | 문서 | 내용 |
 |------|------|
-| [branch-flow.md](./branch-flow.md) | flow + protection + tag + backport |
+| [branch-flow.md](./branch-flow.md) | flow + protection + tag + hotfix |
 | [test-strategy.md](./test-strategy.md) | per-stage gates |
 | [error-detection.md](./error-detection.md) | detection layers |
 | [dev-staging-pipeline.md](./dev-staging-pipeline.md) | 일반 PR/auto-merge + pr-gate + safety net CI |
 | [dev-pipeline.md](./dev-pipeline.md) | dev-staging-dev-cut + dev-rc-cut-gate + auto-deploy chain |
 | [dev-soak-status-model.md](./dev-soak-status-model.md) | dev soak commit status contexts + run history based `dev-rc-cut-gate` 판정 |
-| [rc-promotion.md](./rc-promotion.md) | dev-rc-cut + soak + hotfix + backport |
+| [rc-promotion.md](./rc-promotion.md) | dev-rc-cut + soak + dev-staging-first hotfix |
 | [main-promotion.md](./main-promotion.md) | rc → main + main-deploy + min-version |
 | [hotfix-policy.md](./hotfix-policy.md) | dev/rc/main 직접 PR 차단 + branch별 hotfix 승인 규칙 |
 | [life-of-flag.md](./life-of-flag.md) | flag lifecycle |
@@ -100,6 +99,7 @@ flowchart LR
 
 - 코드 promotion = 한 방향 PR, 기능 promotion = flag flip
 - `*-cut-gate` = 다음 브랜치로 promote 할 source artifact 선별/마킹, `*-cut` = 그 artifact 로 PR/branch 생성. 검증과 promotion 을 같은 workflow 에 섞지 않는다
+- dev/rc release 판정은 **true evidence 기반**이다. failure issue/status 가 없다는 것은 `unknown` 이며 pass 가 아니다. cut-gate 는 명시적인 success status, required workflow run history, git lineage 같은 positive evidence 만 소비한다
 - dev soak 판정의 source-of-truth 는 GitHub Issue/label 이 아니라 commit status context + workflow run history 다 ([dev-soak-status-model.md](./dev-soak-status-model.md))
 - cut-gate Issue 는 사람이 진행 상태를 추적하기 위한 projection 이다. 생성/갱신/닫기는 `.github/actions/cut-issue` 와 `close-cut-issue-on-pr-merge` 가 담당하며, promotion 판정 SSOT 로 사용하지 않는다
 - 모든 branch linear ON — dev-staging: squash, dev/rc/main: rebase
@@ -110,7 +110,7 @@ flowchart LR
 - `main-deploy` 는 prod deploy execution 을 담당한다. main push 에서 version bump commit 을 만들지 않고, release asset/tag/marker 는 deploy metadata 를 기준으로 생성한다
 - 모바일 배포 산출물(APK/AAB/IPA)은 GitHub Release asset 이 canonical archive 다. Actions artifact 는 테스트 리포트/스크린샷/로그 같은 단기 디버깅 산출물에만 사용한다
 - 일반 PR 은 `dev-staging` 으로만 진입한다. `dev`, `rc/*`, `main` 직접 PR 은 promotion 또는 승인된 hotfix 만 허용한다 ([hotfix-policy.md](./hotfix-policy.md))
-- **Hotfix 는 merge 후 dev-staging 으로 backport** ([hotfix-policy.md](./hotfix-policy.md), [rc-promotion.md](./rc-promotion.md))
+- RC hotfix 의 source-of-truth 는 dev-staging 이다. fix 는 먼저 dev-staging 에 머지하고, 같은 commit/snapshot 을 active RC 로 cherry-pick/promote 한다. RC-only hotfix 는 release-manager override 가 필요한 예외다 ([hotfix-policy.md](./hotfix-policy.md), [rc-promotion.md](./rc-promotion.md))
 - Tag regex 는 `RELEASE.md` lock (TODO)
 
 ### Promotion PR Title
@@ -122,7 +122,7 @@ Promotion PR 제목은 workflow 이름과 source artifact 를 앞에 둔다. PR 
 | dev-staging → dev | `ci(dev-staging-dev-cut): promote v26.05.2722-dev-staging to dev` |
 | dev → rc | `ci(dev-rc-cut): cut rc/2026-W22 from <source>` |
 | rc → main | `ci(rc-main-cut): promote rc/2026-W22 to main` |
-| rc hotfix backport | `ci(rc-backport): backport rc hotfix #1234 to dev-staging` |
+| rc hotfix apply | `ci(rc-hotfix-apply): apply dev-staging fix #1234 to rc/2026-W22` |
 
 ### RC Eligibility Marker
 

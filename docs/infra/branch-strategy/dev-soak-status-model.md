@@ -13,6 +13,18 @@
 
 SHA, PR number, run id, version 은 label 로 만들지 않는다. Label 은 repo-wide category 로만 유지한다.
 
+## True Evidence Policy
+
+Release gate 는 "실패 기록이 없음" 을 pass 로 해석하지 않는다.
+
+| 상태 | 의미 | gate 동작 |
+|------|------|-----------|
+| `success` evidence 있음 | required status/run history 가 명시적으로 통과 | pass 후보 |
+| `failure` evidence 있음 | monitor/AI/workflow 가 blocker 를 발견 | fail/block |
+| evidence 없음 | 아직 검증되지 않았거나 run history 가 부족 | unknown, pass 금지 |
+
+따라서 `dev-rc-cut-pass` 는 `dev-rc-cut-gate` 가 candidate age, required run history, required signal success, failure context 부재를 모두 확인한 뒤에만 쓴다. GitHub Issue 가 열려 있지 않거나 label 이 없다는 사실은 판정에 사용하지 않는다.
+
 ## Status Write API
 
 Workflow 와 AI agent 는 commit status context 를 직접 하드코딩하지 않고 stage별 status write workflow 를 사용한다.
@@ -174,11 +186,12 @@ blocks_rc_cut: true
 1. `candidate_sha = origin/dev HEAD`
 2. candidate age 가 24h 이상인지 확인
 3. required monitor run history 가 candidate 기준으로 충분한지 확인
-4. candidate 의 최신 commit status 중 아래 context 가 `failure` 인지 확인:
+4. candidate 의 required signal success evidence 가 존재하는지 확인
+5. candidate 의 최신 commit status 중 아래 context 가 `failure` 인지 확인:
    - `dev-soak/backend-simulator`
    - `dev-soak/real-device`
    - `dev-soak/app-ai-review`
-5. 모두 통과하면 각 `dev-soak/*` status 를 `success` 로 찍고 `dev-rc-cut-pass` 를 `success` 로 찍는다
+6. 모두 통과하면 각 `dev-soak/*` status 를 `success` 로 찍고 `dev-rc-cut-pass` 를 `success` 로 찍는다
 
 실패 또는 미충족 시 `dev-rc-cut-pass` 는 쓰지 않는다.
 

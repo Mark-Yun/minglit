@@ -19,7 +19,7 @@ GitHub App permission 은 아래만 부여한다.
 | Permission | Level | 이유 |
 |------------|-------|------|
 | Contents | Read/write | version bump commit, branch 생성/삭제, tag push, release asset/source 접근 |
-| Pull requests | Read/write | promotion/backport PR 생성, auto-merge enable |
+| Pull requests | Read/write | promotion/cherry-pick PR 생성, auto-merge enable |
 | Commit statuses | Read/write | `dev-soak/*`, `dev-rc-cut-pass`, `rc-main-cut-pass` 같은 gate marker 설정 |
 | Checks | Read | required check / gate 상태 조회 |
 | Actions | Read | `dev-rc-cut-gate` 가 monitor workflow run history 를 조회 |
@@ -94,7 +94,7 @@ git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
 | `dev-rc-cut-gate` | 24h soak run history 확인 후 `set-dev-soak-status` 로 `dev-soak/*` success + `dev-rc-cut-pass` status 기록 |
 | `dev-rc-cut` | `rc/YYYY-Wxx` branch 생성, `promo/rc-*` tag |
 | `rc-main-cut` | rc → main promotion PR 생성/auto-merge |
-| `rc-hotfix-backport` | backport branch/PR 생성 |
+| `rc-hotfix-apply` | dev-staging fix commit 을 active RC 로 cherry-pick 하는 branch/PR 생성 |
 | `main-deploy` | `promo/main-*` tag/release marker, prod deploy, RC branch cleanup |
 
 ## Ruleset Bypass

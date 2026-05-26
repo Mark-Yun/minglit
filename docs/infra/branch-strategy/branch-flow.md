@@ -31,15 +31,17 @@
                                                                                                                                                               └─▶ Vercel production (native, main branch)
 ```
 
-**Hotfix backport 흐름** (dev/rc/main hotfix → dev-staging):
+**Hotfix 흐름** (정상 source 는 dev-staging):
 
 ```
 dev/hotfix/* ──PR──▶ dev
-rc/hotfix/*  ──PR──▶ rc/YYYY-Wxx ──auto cherry-pick──▶ backport-branch ──PR──▶ dev-staging
+dev-staging fix PR ──merge──▶ dev-staging ──cherry-pick/promote──▶ rc/YYYY-Wxx
 main/hotfix/* ──PR──▶ main ──backport──▶ dev-staging (+ active rc/* if needed)
 ```
 
 상세는 [hotfix-policy.md](./hotfix-policy.md) 와 [rc-promotion.md](./rc-promotion.md).
+
+RC hotfix 는 dev-staging-first 가 기본이다. active RC 에만 먼저 들어가는 RC-only hotfix 는 release-manager override 가 필요한 예외이며, 다음 RC 재출현 방지를 위해 dev-staging follow-up 이 필수다.
 
 > Mobile cadence = hotfix 없으면 weekly (rc → main 머지 마다 자동 build/deploy). store review + staged rollout 은 외부 (workflow 밖).
 
@@ -50,7 +52,7 @@ main/hotfix/* ──PR──▶ main ──backport──▶ dev-staging (+ acti
 | feature/agent → dev-staging | `dev-staging` ← `feat/*`, `fix/*`, `chore/*`, `docs/*` | PR + auto-merge | **squash** | `dev-staging-pr-gate` |
 | dev-staging → dev | `dev` ← `cut/dev-staging-dev/YYYY-MM-DD-{sha8}` at latest `v*-dev-staging` tag | daily cron `dev-staging-dev-cut` | rebase (linear snapshot) | `dev-pr-gate` |
 | hotfix → dev | `dev` ← `dev/hotfix/*` | approved hotfix only | rebase | `dev-pr-gate` |
-| hotfix → rc | `rc/YYYY-Wxx` ← `rc/hotfix/*` | approved hotfix only | rebase | `rc-pr-gate` |
+| hotfix → rc | `rc/YYYY-Wxx` ← dev-staging fix cherry-pick branch | dev-staging-first approved hotfix only | rebase | `rc-pr-gate` |
 | rc → main | `main` ← `rc/YYYY-Wxx` | `rc-main-cut` 이 5일 무커밋 시 PR 생성 + auto-merge | rebase + ff | `main-pr-gate` |
 | hotfix → main | `main` ← `main/hotfix/*` | approved + release-manager hotfix only | rebase + ff | `main-pr-gate` |
 

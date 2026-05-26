@@ -95,7 +95,7 @@ RC soak status write API. dev 와 signal set 이 다를 수 있으므로 별도 
 | Steps | validate signal/state → context mapping → calls `shared-set-commit-status` |
 | Called by | `rc-deploy`, real-device workflow, AI agent, `rc-main-cut-gate` |
 
-Issue 는 audit/log surface 이며 gate 판정 source-of-truth 가 아니다.
+Issue 는 audit/log surface 이며 gate 판정 source-of-truth 가 아니다. Release gate 는 true evidence 기반이다. required success status/run history/git lineage 가 없으면 `unknown` 이며, failure issue 가 없다는 사실만으로 pass 처리하지 않는다.
 
 ### `shared-soak-gate`
 
@@ -136,7 +136,7 @@ GitHub issue 자동 생성 + Slack 알림.
 | 핵심 steps | `gh issue create` + Slack webhook fire (priority 별 채널) |
 | Called by | 모든 workflow 의 실패 path |
 
-### `backport-pr`
+### `cherry-pick-pr`
 
 Cross-branch cherry-pick PR 자동 생성.
 
@@ -145,8 +145,8 @@ Cross-branch cherry-pick PR 자동 생성.
 | Trigger | `workflow_call` |
 | Inputs | `source_branch`, `target_branch`, `commits`: SHA array |
 | Outputs | `pr_number`, `has_conflict`: bool |
-| 핵심 steps | `git cherry-pick` · 충돌 시 partial commit + label `backport-conflict` · push to `backport/{source}-{target}-{sha8}` · `gh pr create` |
-| Called by | `rc-hotfix-backport` |
+| 핵심 steps | `git cherry-pick` · 충돌 시 partial commit + label `cherry-pick-conflict` · push to `cherry-pick/{source}-{target}-{sha8}` · `gh pr create` |
+| Called by | `rc-hotfix-apply`, main hotfix follow-up |
 
 ## Entry Workflows
 
@@ -200,11 +200,12 @@ Cross-branch cherry-pick PR 자동 생성.
 | Inputs | optional `candidate_sha` (default: latest `origin/dev` HEAD) |
 | Outputs | commit status `dev-rc-cut-pass` (success only) + `dev-soak/*` success confirmations + cut issue `gate/dev-rc` |
 | Steps | calls `shared-soak-gate` with candidate=`origin/dev`, min_soak_hours=24, required runs=`monitor-event-flow-distributed>=250`, failure context=`dev-soak/backend-simulator`, success context=`dev-soak/backend-simulator`, pass context=`dev-rc-cut-pass`; then upserts cut issue as `status/waiting` or `status/ready` |
-| Failure path | 조건 미충족이면 `dev-rc-cut-pass` 를 쓰지 않는다. 실패를 발견한 monitor/AI agent 가 이미 `dev-soak/*` failure 를 쓴다 |
+| Failure path | 조건 미충족 또는 required success evidence 누락이면 `dev-rc-cut-pass` 를 쓰지 않는다. 실패를 발견한 monitor/AI agent 가 이미 `dev-soak/*` failure 를 쓴다 |
 
 > **No auto-revert** — snapshot 모델: 실패 = no `dev-rc-cut-pass`, dev keeps moving, 새 fix 가 자연스럽게 다음 dev-staging-dev-cut 후 새 candidate 로 검증됨.
 > **Naming** — `dev-rc-cut-pass` 가 canonical RC eligibility marker 이다. `rc-eligible` 은 현재 workflow/status 명칭이 아니다.
 > **SSOT** — dev soak 판정은 [../dev-soak-status-model.md](../dev-soak-status-model.md) 의 commit status + run history 를 따른다. GitHub Issue 는 사람이 보는 incident/audit surface 다.
+> **True evidence** — failure status/issue 가 없다는 것은 `unknown` 이다. pass marker 는 required success status 와 run history 가 모두 존재할 때만 쓴다.
 
 #### `dev-deploy`
 
@@ -232,7 +233,7 @@ Cross-branch cherry-pick PR 자동 생성.
 |------|----|
 | Trigger | `schedule` (weekly KST TBD) + `workflow_dispatch` |
 | Outputs | branch `rc/YYYY-Wxx` + tag `promo/rc-YYYY-Wxx` |
-| Steps | (1) active RC marker 가 있으면 skip + Slack `#release` (hotfix 로 길어지는 중) (2) dev 의 최신 `dev-rc-cut-pass` status SHA query (`gh api`) (3) 없으면 cut 보류 (4) cut issue 를 `status/promoting` 으로 갱신 (5) `git branch rc/YYYY-Wxx <SHA>` + push using release bot (6) `git tag promo/rc-YYYY-Wxx` + push (7) cut issue close (8) branch protection 활성화 (9) Slack `#release` 알림 |
+| Steps | (1) active RC marker 가 있으면 skip + Slack `#release` (active RC 는 기본 1개만 허용) (2) dev 의 최신 `dev-rc-cut-pass` status SHA query (`gh api`) (3) 없으면 cut 보류 (4) cut issue 를 `status/promoting` 으로 갱신 (5) `git branch rc/YYYY-Wxx <SHA>` + push using release bot (6) `git tag promo/rc-YYYY-Wxx` + push (7) cut issue close (8) branch protection 활성화 (9) Slack `#release` 알림 |
 
 #### `rc-pr-gate`
 
@@ -241,6 +242,7 @@ Cross-branch cherry-pick PR 자동 생성.
 | Trigger | `pull_request` (base: `rc/*`) |
 | Steps | calls `pr-gate-core` (stage=rc) |
 | Required for | rc branch protection |
+| Source rule | 기본은 dev-staging 에 먼저 머지된 fix commit/snapshot 의 cherry-pick PR. RC-only 선머지는 release-manager override 필요 |
 
 #### RC hotfix post-merge behavior
 
@@ -261,7 +263,7 @@ RC branch 에 version bump commit/tag 를 만들던 이전 설계. 최신 정책
 |------|----|
 | Trigger | `schedule` (daily KST TBD) + `workflow_dispatch` |
 | Outputs | marker `rc-main-cut-pass` on current RC head, or skip/fail + cut issue `gate/rc-main` |
-| Steps | (1) active `rc/*` 확인 → 없으면 종료 (2) calls `shared-soak-gate` with candidate=selected RC HEAD, min_soak_hours=120, failure contexts=`rc-soak/*`, pass context=`rc-main-cut-pass` (3) cut issue 를 `status/waiting` 또는 `status/ready` 로 갱신 (4) main promotion 차단 조건(`dev-rc-cut-gate-degraded`, P0/P1 blocker 등)은 후속 확장 |
+| Steps | (1) active `rc/*` 확인 → 없으면 종료 (2) calls `shared-soak-gate` with candidate=selected RC HEAD, min_soak_hours=120, required RC run/success evidence, failure contexts=`rc-soak/*`, pass context=`rc-main-cut-pass` (3) RC hotfix lineage 가 dev-staging-first cherry-pick 인지 확인 (4) cut issue 를 `status/waiting` 또는 `status/ready` 로 갱신 (5) main promotion 차단 조건(`dev-rc-cut-gate-degraded`, P0/P1 blocker 등)은 후속 확장 |
 | Note | promotion PR 을 만들지 않는다. main 으로 보낼 RC 를 선별하는 gate 전용 workflow 다 |
 
 #### `rc-main-cut`
@@ -274,13 +276,14 @@ RC branch 에 version bump commit/tag 를 만들던 이전 설계. 최신 정책
 | Steps | (1) `rc-main-cut-pass` marker 가 있는 active `rc/*` 확인 → 없으면 종료 (2) 이미 open rc → main PR 이 있으면 skip (3) cut issue 를 `status/promoting` 으로 갱신 (4) `gh pr create base=main head=rc/YYYY-Wxx` + issue close marker + label `rc-main-cut-pass` + auto-merge 활성화 |
 | Note | soak/validation 판단은 `rc-main-cut-gate` 책임이다. `rc-main-cut` 은 marker 소비와 PR 생성만 담당한다 |
 
-#### `rc-hotfix-backport`
+#### `rc-hotfix-apply`
 
 | 항목 | 값 |
 |------|----|
-| Trigger | `pull_request` closed/merged (base: `rc/*`) |
-| Outputs | backport PR (rc/* → dev-staging) |
-| Steps | calls `backport-pr` (source=`rc/*`, target=dev-staging, commits=[merged PR commits only]) · 충돌 시 `auto-issue` (P1, AI agent assignee) |
+| Trigger | `workflow_dispatch` or dev-staging fix PR closed/merged |
+| Outputs | cherry-pick PR (dev-staging fix commit → active rc/*) |
+| Steps | calls `cherry-pick-pr` (source=dev-staging fix commit, target=active `rc/*`) · PR body 에 source dev-staging PR/commit 기록 · 충돌 시 `auto-issue` (P1, AI agent assignee) |
+| Note | `rc-hotfix-backport` 는 이전 RC-first 설계명이다. 최신 정책은 dev-staging-first 이므로 backport issue 를 gate SSOT 로 쓰지 않는다 |
 
 ### main
 
@@ -336,16 +339,15 @@ RC branch 에 version bump commit/tag 를 만들던 이전 설계. 최신 정책
 [dev-rc-cut] ──branch out from latest dev-rc-cut-pass commit──▶ rc/YYYY-Wxx (+ promo/rc-Wxx)
                                                                 ↓ (soak, hotfix 가능)
                                                                 │
-                                                          [rc-pr-gate] (hotfix PR)
+dev-staging fix PR ──merge──▶ [rc-hotfix-apply] ──cherry-pick PR──▶ [rc-pr-gate]
                                                                 ↓ rc push
                                                                 ↓ (parallel)
                                                           [rc-deploy] ──▶ deploy-time rc metadata
-                                                          [rc-hotfix-backport]  ──▶ backport PR to dev-staging
 [rc-deploy]           ──▶ Supabase branch + pre-main validation
 
 [daily cron, rc 존재 시]
     ↓
-[rc-main-cut-gate] ──5일 무커밋 + pre-main signal green──▶ marker rc-main-cut-pass
+[rc-main-cut-gate] ──5일 무커밋 + positive pre-main evidence──▶ marker rc-main-cut-pass
                                                                   ↓
                                                            [rc-main-cut] ──▶ rc → main PR
                                                                   ↓ [main-pr-gate] → auto-merge

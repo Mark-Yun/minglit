@@ -27,14 +27,14 @@
 | `set-dev-soak-status`, `set-rc-soak-status` | stage별 soak status write API (`workflow_call` + `workflow_dispatch`) | **신규** |
 | dev soak monitor/status model | 기존 `monitor-event-flow-*`, real-device workflow, AI agent signal 을 `dev-soak/*` commit status 로 통합 | **신규 (조합)** |
 | `auto-issue` (reusable) | (없음) | **신규** |
-| `backport-pr` (reusable) | (없음) | **신규** |
+| `cherry-pick-pr` (reusable) | (없음) | **신규** |
 | `dev-staging-pr-gate` | `pr-gate` 를 dev-staging base 로 재사용 (stage=dev-staging) | **신규 (얇은 wrapper)** |
 | `dev-staging-dev-cut-gate` | dev-staging post-merge version bump/tag orchestration | **신규 (조합)** |
 | `dev-staging-dev-cut` | (없음) | **신규** |
 | `dev-pr-gate` | `dev-staging-pr-gate` 와 동일 (stage=dev) | **신규 (얇은 wrapper)** |
 | `dev-rc-cut-gate` | 기존 `rc-gate` rename + `dev-rc-cut-pass` status set. full suite 는 후속 gate 확장 | **rename/refactor** |
 | `dev-deploy` | dev deploy/smoke entrypoint (범위 TBD), event-flow 는 monitor 로 유지 | **신규/선택** |
-| `dev-rc-cut`, `rc-pr-gate`, `rc-deploy`, `rc-main-cut-gate`, `rc-main-cut`, `rc-hotfix-backport` | 기존 `rc-cut` rename + 신규 wrapper/cut flow | **신규/rename** |
+| `dev-rc-cut`, `rc-pr-gate`, `rc-deploy`, `rc-main-cut-gate`, `rc-main-cut`, `rc-hotfix-apply` | 기존 `rc-cut` rename + 신규 wrapper/cut flow | **신규/rename** |
 | `main-pr-gate`, `main-deploy` | (없음, 부분적으로 `deploy-*`) | **신규 + refactor** |
 | backend prod deploy | `deploy-supabase` 로직을 `main-deploy` 하위 job/reusable 로 흡수 | **refactor** |
 | web deploy | Vercel native build 로 전환 | **external config** |
@@ -113,7 +113,7 @@
 | 4b | `shared-notify` 가 실패 시 `set-dev-soak-status` 호출 + issue title/body/log tail 개선 | 4a |
 | 4c | `dev-rc-cut-gate` 를 24h soak evaluator 로 변경 (run history + `dev-soak/*` status 확인) | 4a, 4b |
 | 4d | `main-pr-gate` 에 RC lineage / `rc-main-cut-pass` / contract 재검증 추가 | Phase 2 |
-| 4e | `backport-pr` reusable, `rc-hotfix-backport` | Phase 2 |
+| 4e | `cherry-pick-pr` reusable, `rc-hotfix-apply` | Phase 2 |
 
 ### Verification 단계
 
@@ -229,7 +229,7 @@ Phase 1 (skeletal) → Phase 2 (CI/PR flow) → Phase 3 (branch CD)
 
 - **4a / 4b 는 같은 PR 가능**: `shared-set-commit-status` 와 `shared-notify` 연동은 API contract 가 작아서 같이 검증 가능하다. 단 `set-dev-soak-status` 수동 dispatch dry-run 은 먼저 통과해야 한다
 - **status write API → evaluator 사이 verification 필요**: `set-dev-soak-status` 는 AI agent/monitor 가 직접 쓰는 public API 이므로 context mapping, 권한, target SHA 를 먼저 검증한다
-- **4e 는 4d 와 독립 가능**: rc-hotfix-backport 는 rc promotion 흐름의 일부지만 main protection 적용과 직접 의존하지 않는다
+- **4e 는 4d 와 독립 가능**: rc-hotfix-apply 는 rc promotion 흐름의 일부지만 main protection 적용과 직접 의존하지 않는다
 - **가장 critical**: `dev-rc-cut-gate` evaluator — 첫 verification 기간 1주 이상 추천 (24h soak/run history/status context 판정이 release cut 을 직접 막음)
 
 권장 변경 없음. 위 순서 그대로 진행.

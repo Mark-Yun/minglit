@@ -11,7 +11,7 @@
 | dev 머지 전 | `dev-pr-gate` (dev-staging-pr-gate 와 동일 — defensive) | < 10분 | dev-staging-dev-cut PR drop |
 | dev 머지 후 24h soak | `monitor-event-flow-*` + real-device/app AI review status writer | 24h | 실패 즉시 `dev-soak/*` failure status + release-blocker issue |
 | RC cut 직전 | `dev-rc-cut-gate` evaluator (24h run history + `dev-soak/*` status 확인) | 분 | `dev-rc-cut-pass` 미부여 |
-| rc 머지 전 (hotfix) | `rc-pr-gate` (pr-gate + mobile smoke) | < 15분 | hotfix PR drop |
+| rc 머지 전 (hotfix) | dev-staging-first fix cherry-pick PR + `rc-pr-gate` (pr-gate + mobile smoke) | < 15분 | hotfix PR drop |
 | main 머지 전 (rc → main) | `main-pr-gate` (pr-gate + `expand-migrate-contract` 재검증 + RC HEAD 의 `dev-rc-cut-pass` 확인 + `rc-main-cut-pass` marker 확인) | 분 | promotion PR 보류 |
 | rc → main PR | workflow auto-merge (모든 check 통과 시) | 분 | check 실패 시 PR hold + alert |
 | main deploy 후 | backend/web/mobile smoke + Sentry/Crashlytics 알람 임계 | 분 | rollback ([main-promotion.md](./main-promotion.md)) |
@@ -71,12 +71,15 @@ cut 직전 schedule/manual 로 실행한다. 통과 시 commit 에 GitHub status
 - legacy hourly/daily 는 수동 smoke 로만 실행
 - candidate 의 최신 `dev-soak/*` status 가 failure 가 아님
 - real-device/app AI review required signal 충족
+- required success evidence 가 없으면 `unknown` 으로 보고 pass 금지. issue/failure 가 없다는 사실만으로 pass 하지 않음
 
 상세: [dev-pipeline.md](./dev-pipeline.md)
 
 ### rc-pr-gate
 
-RC 의 hotfix 만 받음. `pr-gate` + 추가 mobile smoke. 머지 시 version bump commit 은 만들지 않고 `rc-deploy` 가 RC 환경을 재적용한다.
+RC 의 hotfix 만 받음. 기본은 dev-staging 에 먼저 머지된 fix commit/snapshot 의 cherry-pick PR 이다. `pr-gate` + 추가 mobile smoke. 머지 시 version bump commit 은 만들지 않고 `rc-deploy` 가 RC 환경을 재적용한다.
+
+`rc-main-cut-gate` 도 true evidence 기반이다. 마지막 RC commit 이후 5일 soak, required `rc-soak/*` success signal, pre-main validation, dev-staging-first hotfix lineage 가 모두 확인되어야 `rc-main-cut-pass` 를 쓴다.
 
 ### main-pr-gate
 

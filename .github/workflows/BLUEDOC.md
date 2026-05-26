@@ -36,8 +36,11 @@
 - `monitor-dev-staging-health` 는 required check 가 아니다. 6시간마다 `dev-staging` HEAD 에서 EF unit/integration + user/partner CUJ 를 돌려 nightly 전에 회귀를 발견하고, 결과를 `dev-staging-health/*` commit status 로 남긴다.
 - `dev-staging-dev-cut-gate` 가 dev-staging 의 PR-number CalVer bump/tag 를 담당한다. `dev`/`rc`/`main` promotion 은 source-controlled version 변경 없이 처리한다.
 - `dev-rc-cut-gate` 는 cut 직전 evaluator 다. 내부에서 `shared-soak-gate` 를 호출해 `dev-soak/*` status 와 `monitor-event-flow-distributed` candidate 이후 run history 를 확인하고, 통과한 commit 에만 `dev-rc-cut-pass` status 를 찍는다.
+- Release gate 는 true evidence 기반이다. required success status/run history/git lineage 가 없으면 `unknown` 이며, failure issue 가 없다는 이유만으로 `dev-rc-cut-pass` 또는 `rc-main-cut-pass` 를 쓰지 않는다.
 - `dev-rc-cut` 은 latest `dev-rc-cut-pass` dev commit 에서 `rc/YYYY-Wxx` branch 를 만들고 `promo/rc-*` tag 를 생성한다. RC branch 에 version bump commit 을 만들지 않는다.
-- `rc-main-cut-gate` 는 5일 soak 를 통과한 `rc/*` 에 `rc-main-cut-pass` 를 찍고, `rc-main-cut` 은 그 marker 를 소비해 `main` PR 을 만든다.
+- `dev-rc-cut` 은 active RC 가 있으면 기본 skip 한다. active RC 는 1개만 유지하고, 예외는 release-manager override 로만 허용한다.
+- `rc-main-cut-gate` 는 5일 soak, required RC success evidence, pre-main validation, dev-staging-first hotfix lineage 를 통과한 `rc/*` 에만 `rc-main-cut-pass` 를 찍고, `rc-main-cut` 은 그 marker 를 소비해 `main` PR 을 만든다.
+- RC hotfix 는 dev-staging-first 다. fix 를 먼저 dev-staging 에 머지하고, active RC 에는 같은 commit/snapshot 을 `rc-hotfix-apply`/cherry-pick PR 로 반영한다. RC-only 선머지는 release-manager override 가 필요한 예외다.
 - `.github/actions/cut-issue` 는 cut-gate tracking issue 를 생성/갱신/닫는 composite action 이다. Issue 는 운영자가 보는 추적 surface 이며 gate 판정 SSOT 는 commit status/workflow result 다.
 - `close-cut-issue-on-pr-merge` 는 promotion PR body 의 `minglit:cut-issue-number` marker 를 보고 PR merge 시 해당 cut issue 를 닫는다.
 - `dev-deploy` 는 dev push 후 web + mobile dev 배포를 orchestrate 한다.
