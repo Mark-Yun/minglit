@@ -5,6 +5,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -57,26 +58,77 @@ class _RuntimeToggleHost extends StatelessWidget {
   }
 }
 
-class _RedirectHost extends StatelessWidget {
-  const _RedirectHost({required this.redirected});
-
-  final ValueNotifier<bool> redirected;
+class _RedirectEntryPage extends StatelessWidget {
+  const _RedirectEntryPage();
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: redirected,
-      builder: (context, isRedirected, _) {
-        if (isRedirected) {
-          return _loginScreen();
-        }
+    return Scaffold(
+      body: Center(
+        child: FilledButton(
+          onPressed: () => context.go('/my'),
+          child: const Text('보호 화면 진입'),
+        ),
+      ),
+    );
+  }
+}
 
-        return Scaffold(
-          body: Center(
-            child: FilledButton(
-              onPressed: () => redirected.value = true,
-              child: const Text('보호 화면 진입'),
-            ),
+class _AuthRedirectRouterHost extends StatefulWidget {
+  const _AuthRedirectRouterHost({required this.mode});
+
+  final ValueNotifier<ThemeMode> mode;
+
+  @override
+  State<_AuthRedirectRouterHost> createState() =>
+      _AuthRedirectRouterHostState();
+}
+
+class _AuthRedirectRouterHostState extends State<_AuthRedirectRouterHost> {
+  late final GoRouter _router = GoRouter(
+    initialLocation: '/',
+    routes: <RouteBase>[
+      GoRoute(
+        path: '/',
+        builder: (context, state) => const _RedirectEntryPage(),
+      ),
+      GoRoute(
+        path: '/my',
+        builder: (context, state) => const SizedBox.shrink(),
+      ),
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => _loginScreen(),
+      ),
+    ],
+    redirect: (context, state) {
+      if (state.uri.path == '/my') {
+        return Uri(
+          path: '/login',
+          queryParameters: const <String, String>{'from': '/my'},
+        ).toString();
+      }
+      return null;
+    },
+  );
+
+  @override
+  void dispose() {
+    _router.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: widget.mode,
+      builder: (context, themeMode, _) {
+        return ProviderScope(
+          child: MaterialApp.router(
+            theme: MinglitTheme.materialTheme,
+            darkTheme: MinglitTheme.materialThemeDark,
+            themeMode: themeMode,
+            routerConfig: _router,
           ),
         );
       },
@@ -265,56 +317,44 @@ void main() {
   cujGroup('3-1', '보호 경로 redirect 시 깜빡임 제거', () {
     cujCase(
       'happy: 다크 보호 화면에서 로그인 redirect 후 배경 톤 유지',
-      app: _ThemeHost(
-        mode: ThemeMode.dark,
-        child: _RedirectHost(redirected: ValueNotifier<bool>(false)),
+      app: _AuthRedirectRouterHost(
+        mode: ValueNotifier<ThemeMode>(ThemeMode.dark),
       ),
       body: (t) async {
-        final redirected = ValueNotifier<bool>(false);
-        await t.pumpWidget(
-          _ThemeHost(
-            mode: ThemeMode.dark,
-            child: _RedirectHost(redirected: redirected),
-          ),
-        );
+        final mode = ValueNotifier<ThemeMode>(ThemeMode.dark);
+        await t.pumpWidget(_AuthRedirectRouterHost(mode: mode));
         await t.pumpAndSettle();
 
-        final beforeRedirect = _canvasMaterialColor(t);
-        expect(beforeRedirect, MinglitColorsDark.background);
+        expect(_canvasMaterialColor(t), MinglitColorsDark.background);
 
         await t.tap(find.text('보호 화면 진입'));
-        await t.pumpAndSettle();
+        await t.pump();
 
-        final afterRedirect = _canvasMaterialColor(t);
-        expect(afterRedirect, beforeRedirect);
+        // Redirect transition 첫 프레임에서도 밝은 flash 없이 dark 배경 유지되어야 한다.
+        expect(_canvasMaterialColor(t), MinglitColorsDark.background);
+
+        await t.pumpAndSettle();
+        expect(_canvasMaterialColor(t), MinglitColorsDark.background);
       },
     );
 
     cujCase(
       'edge: redirect 직전에 테마 전환해도 로그인 도착 프레임의 배경 일치',
-      app: _RuntimeToggleHost(mode: ValueNotifier<ThemeMode>(ThemeMode.dark)),
+      app: _AuthRedirectRouterHost(
+        mode: ValueNotifier<ThemeMode>(ThemeMode.dark),
+      ),
       body: (t) async {
         final mode = ValueNotifier<ThemeMode>(ThemeMode.dark);
-        final redirected = ValueNotifier<bool>(false);
-        await t.pumpWidget(
-          ValueListenableBuilder<ThemeMode>(
-            valueListenable: mode,
-            builder: (context, themeMode, _) {
-              return ProviderScope(
-                child: MaterialApp(
-                  theme: MinglitTheme.materialTheme,
-                  darkTheme: MinglitTheme.materialThemeDark,
-                  themeMode: themeMode,
-                  home: _RedirectHost(redirected: redirected),
-                ),
-              );
-            },
-          ),
-        );
+        await t.pumpWidget(_AuthRedirectRouterHost(mode: mode));
         await t.pumpAndSettle();
 
         mode.value = ThemeMode.light;
-        redirected.value = true;
+        await t.pump();
+
+        await t.tap(find.text('보호 화면 진입'));
+        await t.pump();
+        expect(_canvasMaterialColor(t), MinglitColors.surface);
+
         await t.pumpAndSettle();
 
         expect(_canvasMaterialColor(t), MinglitColors.surface);
