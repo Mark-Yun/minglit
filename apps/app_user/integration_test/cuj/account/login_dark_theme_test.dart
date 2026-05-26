@@ -315,16 +315,20 @@ void main() {
   });
 
   cujGroup('3-1', '보호 경로 redirect 시 깜빡임 제거', () {
+    late ValueNotifier<ThemeMode> mode;
+
+    setUp(() {
+      mode = ValueNotifier<ThemeMode>(ThemeMode.dark);
+    });
+
+    tearDown(() {
+      mode.dispose();
+    });
+
     cujCase(
       'happy: 다크 보호 화면에서 로그인 redirect 후 배경 톤 유지',
-      app: _AuthRedirectRouterHost(
-        mode: ValueNotifier<ThemeMode>(ThemeMode.dark),
-      ),
+      app: _AuthRedirectRouterHost(mode: mode),
       body: (t) async {
-        final mode = ValueNotifier<ThemeMode>(ThemeMode.dark);
-        await t.pumpWidget(_AuthRedirectRouterHost(mode: mode));
-        await t.pumpAndSettle();
-
         expect(_canvasMaterialColor(t), MinglitColorsDark.background);
 
         await t.tap(find.text('보호 화면 진입'));
@@ -340,14 +344,8 @@ void main() {
 
     cujCase(
       'edge: redirect 직전에 테마 전환해도 로그인 도착 프레임의 배경 일치',
-      app: _AuthRedirectRouterHost(
-        mode: ValueNotifier<ThemeMode>(ThemeMode.dark),
-      ),
+      app: _AuthRedirectRouterHost(mode: mode),
       body: (t) async {
-        final mode = ValueNotifier<ThemeMode>(ThemeMode.dark);
-        await t.pumpWidget(_AuthRedirectRouterHost(mode: mode));
-        await t.pumpAndSettle();
-
         mode.value = ThemeMode.light;
         await t.pump();
 
