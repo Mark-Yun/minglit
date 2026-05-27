@@ -36,6 +36,14 @@
       "widget": "EventApplicationWizardPage",
       "file": "apps/app_user/lib/src/features/event/admission/event_application_wizard_page.dart"
     },
+    "EventCheckInRoute": {
+      "widget": "EventCheckInScreen",
+      "file": null
+    },
+    "EventCheckedInRoute": {
+      "widget": "EventCheckedInScreen",
+      "file": null
+    },
     "MyTicketsRoute": {
       "widget": "MyTicketsPage",
       "file": "apps/app_user/lib/src/features/my_tickets/ui/my_tickets_page.dart"
@@ -104,6 +112,14 @@
       "widget": "EventMatchingScreen",
       "file": "apps/app_user/lib/src/features/event/matching/ui/event_matching_screen.dart"
     },
+    "EventResultsRoute": {
+      "widget": "EventResultsScreen",
+      "file": null
+    },
+    "EventReviewRoute": {
+      "widget": "EventReviewScreen",
+      "file": null
+    },
     "EventApplicationConfirmationRoute": {
       "widget": "MinglitConfirmationPage",
       "file": "shared/packages/minglit_kit/lib/src/components/feedback/minglit_confirmation_page.dart"
@@ -154,6 +170,18 @@
       "widget": "EventApplicationDetailPage",
       "file": "apps/app_partner/lib/src/features/application/event_application_detail_page.dart"
     },
+    "EventApplicationListRoute": {
+      "widget": "EventApplicationListPage",
+      "file": "apps/app_partner/lib/src/features/party/event/detail/event_application_list_page.dart"
+    },
+    "EventApplicationReviewCarouselRoute": {
+      "widget": "EventApplicationReviewCarouselPage",
+      "file": "apps/app_partner/lib/src/features/party/event/review/event_application_review_carousel_page.dart"
+    },
+    "EventApplicationReviewConfirmRoute": {
+      "widget": "EventApplicationReviewConfirmPage",
+      "file": "apps/app_partner/lib/src/features/party/event/review/event_application_review_confirm_page.dart"
+    },
     "ApplicationDetailRoute": {
       "widget": "PartnerApplicationDetailPage",
       "file": "apps/app_partner/lib/src/features/admin/partner_application_detail_page.dart"
@@ -193,6 +221,10 @@
     "EventDetailRoute": {
       "widget": "EventDetailPage",
       "file": "apps/app_partner/lib/src/features/party/event/detail/event_detail_page.dart"
+    },
+    "EventEditRoute": {
+      "widget": "EventEditPage",
+      "file": "apps/app_partner/lib/src/features/party/event/edit/event_edit_page.dart"
     },
     "TicketCreateRoute": {
       "widget": "TicketCreatePage",
