@@ -241,9 +241,9 @@ export function widgetNameFor(app: 'user' | 'partner', route: string): string | 
  * the partner index from claiming user-only specs.
  *
  * Default mapping rule: RouteName → snake_case basename + `_page` suffix.
- *   `EventDetailRoute` → `event_detail_page.html`
- *   `MyPageRoute`      → `my_page.html` (already ends with `_page`)
- *   `LoginRoute`       → `login_page.html`
+ *   `EventDetailRoute` → `event_detail_page/index.html`
+ *   `MyPageRoute`      → `my_page/index.html` (already ends with `_page`)
+ *   `LoginRoute`       → `login_page/index.html`
  *
  * Special cases (shared specs across apps, non-default basenames) →
  * ROUTE_DESIGN_OVERRIDES.
@@ -398,7 +398,7 @@ export interface SubComponentSpec {
   widget: string;          // e.g. 'EventBottomTicketBar'
   parentRoute: string;     // e.g. 'EventDetailRoute' — must exist in route diagrams
   filePath: string;        // dart source (relative to repo root)
-  specBasename: string;    // public/specs/ filename without .html
+  specBasename: string;    // public/specs/<basename>/index.html folder basename
 }
 
 const SUB_COMPONENT_SPECS: { user: SubComponentSpec[]; partner: SubComponentSpec[] } = {
@@ -450,7 +450,7 @@ export function designUrlFor(app: 'user' | 'partner', route: string): string | n
   const override = ROUTE_DESIGN_OVERRIDES[`${app}-${route}`];
   if (override) return override;
   const basename = deriveSpecBasename(route);
-  return KNOWN_SPEC_FILES[app].has(basename) ? `/specs/${basename}.html` : null;
+  return KNOWN_SPEC_FILES[app].has(basename) ? `/specs/${basename}/index.html` : null;
 }
 
 /**
