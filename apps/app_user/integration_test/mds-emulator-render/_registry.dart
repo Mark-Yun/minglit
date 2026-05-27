@@ -35,6 +35,8 @@ import 'notification_list_screen/notification_list_screen_test.dart'
 import 'notification_settings_screen/notification_settings_screen_test.dart'
     as notification_settings_screen;
 import 'privacy_page/privacy_page_test.dart' as privacy_page;
+import 'purchase_history_page/purchase_history_page_test.dart'
+    as purchase_history_page;
 import 'search_page/search_page_test.dart' as search_page;
 import 'signup_consent_page/signup_consent_page_test.dart'
     as signup_consent_page;
@@ -64,6 +66,7 @@ final List<MdsCatalog<MdsScreenBuilder<dynamic>>> allCatalogs = [
   notification_list_screen.catalog,
   notification_settings_screen.catalog,
   privacy_page.catalog,
+  purchase_history_page.catalog,
   search_page.catalog,
   signup_consent_page.catalog,
   tag_event_list_page.catalog,
