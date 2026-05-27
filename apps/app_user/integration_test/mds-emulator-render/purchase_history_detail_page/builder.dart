@@ -74,7 +74,7 @@ EventApplication _application({
 final EventApplication _defaultApplication = _application(
   status: 'paid',
   refundStatus: 'none',
-  eventStartTime: DateTime.now().add(const Duration(days: 3)),
+  eventStartTime: _base.add(const Duration(days: 3)),
   paymentId: 'pay-render-1',
   paymentAmount: 29000,
 );
@@ -82,7 +82,7 @@ final EventApplication _defaultApplication = _application(
 final EventApplication _disabledCancelApplication = _application(
   status: 'paid',
   refundStatus: 'none',
-  eventStartTime: DateTime.now().subtract(const Duration(days: 1)),
+  eventStartTime: _base.subtract(const Duration(days: 1)),
   paymentId: 'pay-render-2',
   paymentAmount: 29000,
 );
@@ -90,7 +90,7 @@ final EventApplication _disabledCancelApplication = _application(
 final EventApplication _refundedApplication = _application(
   status: 'cancelled',
   refundStatus: 'completed',
-  eventStartTime: DateTime.now().add(const Duration(days: 3)),
+  eventStartTime: _base.add(const Duration(days: 3)),
   paymentId: 'pay-render-3',
   paymentAmount: 29000,
 );
@@ -98,7 +98,7 @@ final EventApplication _refundedApplication = _application(
 final EventApplication _paymentFailedApplication = _application(
   status: 'payment_failed',
   refundStatus: 'none',
-  eventStartTime: DateTime.now().add(const Duration(days: 3)),
+  eventStartTime: _base.add(const Duration(days: 3)),
   paymentId: '',
   paymentAmount: 29000,
 );
