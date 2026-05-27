@@ -95,6 +95,17 @@ def assert_dev_cron_deploy_contract() -> None:
     if install.get("if") != "github.ref == 'refs/heads/dev'":
         fail("deploy-dev-event-flow-cron install job must guard github.ref == refs/heads/dev")
 
+    wait_script = run_block(install, "Wait for deploy-supabase on dev SHA")
+    required_wait_fragments = [
+        'wait_for_deploy="false"',
+        "changed_files=",
+        "supabase/(migrations|functions)",
+        "Skipping deploy-supabase wait.",
+    ]
+    for fragment in required_wait_fragments:
+        if fragment not in wait_script:
+            fail(f"deploy-dev-event-flow-cron wait step missing fragment: {fragment}")
+
     script_path = ROOT / ".github/scripts/install-dev-event-flow-cron.sh"
     script = script_path.read_text(encoding="utf-8")
     required_fragments = [
