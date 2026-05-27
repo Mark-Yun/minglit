@@ -130,13 +130,13 @@ void main() {
       expect(widget.variant, equals(MinglitEmptyStateVariant.fullPage));
     });
 
-    testWidgets('fullPage renders 48px icon (display size)', (tester) async {
+    testWidgets('fullPage renders 64px icon (hero size)', (tester) async {
       await tester.pumpWidget(
         wrap(const MinglitEmptyState(title: '빈 상태')),
       );
 
       final icon = tester.widget<Icon>(find.byType(Icon));
-      expect(icon.size, equals(MinglitIconSize.display));
+      expect(icon.size, equals(MinglitIconSize.hero));
     });
 
     testWidgets(

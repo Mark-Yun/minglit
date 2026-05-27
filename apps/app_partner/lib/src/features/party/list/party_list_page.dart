@@ -106,8 +106,8 @@ class _PartyListEmptyState extends StatelessWidget {
           children: [
             Icon(
               Icons.celebration_outlined,
-              // Fix #2423: spec 64×64 — was hardcoded 56
-              size: MinglitIconSize.xlarge * 2,
+              // Fix #2423/#2422: full-page empty states use canonical hero icon size token.
+              size: MinglitIconSize.hero,
               color: theme.colorScheme.outlineVariant,
             ),
             const SizedBox(height: MinglitSpacing.medium),
