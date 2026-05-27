@@ -4,7 +4,7 @@ MDS spec 의 각 화면을 실제 Flutter 앱으로 에뮬레이터에서 렌더
 
 ## 왜 있나
 
-이전 alchemist 골든 테스트가 실제 UI defect 를 못 잡았다 (블록 폰트, 실 viewport 부재, 실제 navigation 누락). 에뮬레이터 위 mock 주입 렌더링이 동일 결정성을 유지하면서 실 폰트·viewport·전환을 모두 잡는다.
+이전 위젯 단위 스냅샷 테스트가 실제 UI defect 를 못 잡았다 (블록 폰트, 실 viewport 부재, 실제 navigation 누락). 에뮬레이터 위 mock 주입 렌더링이 동일 결정성을 유지하면서 실 폰트·viewport·전환을 모두 잡는다.
 
 ## 트리거
 

@@ -34,7 +34,7 @@
 - `dev-staging-pr-gate`, `dev-pr-gate`, `rc-pr-gate`, `main-pr-gate` 는 얇은 wrapper 로 시작한다. 내부에서는 `pr-gate.yml` reusable core 를 호출하고, wrapper job 이 최종 required check context 를 제공한다.
 - `dev-pr-gate`, `rc-pr-gate`, `main-pr-gate` 는 `shared-pr-source-guard` 로 직접 PR 을 차단한다. 정상 진입점은 `dev-staging` 이고, 예외는 branch별 approved hotfix 뿐이다.
 - `monitor-dev-staging-health` 는 required check 가 아니다. 6시간마다 `dev-staging` HEAD 에서 EF unit/integration + user/partner CUJ 를 돌려 nightly 전에 회귀를 발견하고, 결과를 `dev-staging-health/*` commit status 로 남긴다.
-- `dev-staging-dev-cut-gate` 가 dev-staging 의 PR-number CalVer bump/tag 를 담당한다. `dev`/`rc`/`main` promotion 은 source-controlled version 변경 없이 처리한다.
+- `dev-staging-dev-cut-gate` 가 날짜 기반 dev-staging version-bump PR 을 만들고, 그 PR 번호를 mobile build number 로 사용한다. merge 후 `vYY.MM.DD+BUILD_PR-dev-staging` tag 를 생성한다. `dev`/`rc`/`main` promotion 은 source-controlled version 변경 없이 처리한다.
 - `dev-rc-cut-gate` 는 cut 직전 evaluator 다. 내부에서 `shared-soak-gate` 를 호출해 `dev-soak/*` status 와 `monitor-event-flow-distributed` candidate 이후 run history 를 확인하고, 통과한 commit 에만 `dev-rc-cut-pass` status 를 찍는다.
 - Release gate 는 true evidence 기반이다. required success status/run history/git lineage 가 없으면 `unknown` 이며, failure issue 가 없다는 이유만으로 `dev-rc-cut-pass` 또는 `rc-main-cut-pass` 를 쓰지 않는다.
 - `dev-rc-cut` 은 latest `dev-rc-cut-pass` dev commit 에서 `rc/YYYY-Wxx` branch 를 만들고 `promo/rc-*` tag 를 생성한다. RC branch 에 version bump commit 을 만들지 않는다.
@@ -53,7 +53,7 @@
 - deploy entry 는 후속 단계에서 `[branch]-deploy` 로 통일한다 (`dev-deploy`, `rc-deploy`, `main-deploy`). `monitor-event-flow-*` 는 deploy 가 아니라 지속 batch signal 이다.
 - `set-dev-soak-status` / `set-rc-soak-status` 는 workflow 와 AI agent 가 사용하는 공개 status write API 다. 내부에서는 `shared-set-commit-status` 를 호출한다.
 - protected branch/tag 에 직접 push 하는 workflow 는 `minglit-release-bot` GitHub App token 을 사용한다. App credential 은 `minglit_env/{stage}/github.env` 파일에서 먼저 읽고, 공통 token mint 는 `.github/actions/release-bot-token` 에서 처리한다.
-- `version-bump` 는 source-controlled version file 변경용 reusable 이며 현재 일반 promotion 중에서는 `dev-staging-dev-cut-gate` 만 사용한다. 앱 deploy version 은 `shared-version-metadata` 가 계산해 Android/iOS build command 에 주입한다.
+- `version-bump` 는 source-controlled version file 변경용 reusable 이며 현재 일반 promotion 중에서는 `dev-staging-dev-cut-gate` 의 version-bump PR 안에서만 사용한다. 앱 deploy version 은 `shared-version-metadata` 가 latest version-bump PR number 를 찾아 Android/iOS build command 에 주입한다.
 
 ## 컨벤션
 

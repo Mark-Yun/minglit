@@ -1,6 +1,6 @@
 # app_user/test — 테스트
 
-`app_user` 의 unit · widget · integration · golden 테스트. `lib/src/` 구조를 그대로 미러링.
+`app_user` 의 unit · widget · integration 테스트. `lib/src/` 구조를 그대로 미러링.
 
 ## 이정표
 
@@ -19,7 +19,6 @@
 
 - **Unit/widget 테스트는 `src/<sub>/<feature>_test.dart` 패턴** — `lib/src/` 의 구조 미러링.
 - **Integration 테스트는 `integration_test/` 사용** (CUJ 패턴) — `test/integration/` 은 일반 통합, `integration_test/cuj/` 는 emulator 기반 CUJ.
-- **Golden 테스트는 `--tags golden`** — Alchemist 가 처리, CI 에서 별도 step.
 - **공용 mock/util 은 [`utils/`](./utils/)** — feature 별로 흩뿌리지 않음.
 
 ## 실행
@@ -28,7 +27,6 @@
 flutter test                       # unit + widget (전체)
 flutter test test/src/features/auth/   # 특정 feature
 flutter test --coverage             # 커버리지 측정 → coverage/lcov.info
-flutter test --tags golden          # Alchemist golden
 ```
 
 CI 자동 실행은 `pr-gate.test-flutter-apps` (matrix). 커버리지 dev 자동 갱신은 [`sync-test-coverage`](../../../.github/workflows/sync-test-coverage.yml) → [`tests/_coverage/app_user/`](../../../tests/_coverage/app_user/).

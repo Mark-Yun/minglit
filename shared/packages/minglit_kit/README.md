@@ -8,7 +8,6 @@
 flutter pub get
 flutter analyze --no-fatal-infos
 flutter test                           # unit + widget
-flutter test --tags golden             # golden (kit 의 공용 위젯)
 dart format .
 ```
 

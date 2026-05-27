@@ -22,6 +22,7 @@ jobs:
     with:
       stage: dev-staging
       base_ref: dev-staging
+      run_cuj_integration: false
     secrets: inherit
 
   dev-staging-pr-gate:

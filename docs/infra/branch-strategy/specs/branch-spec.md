@@ -134,7 +134,7 @@ Rulesets 의 장점 (legacy 대비):
 
 | Tag pattern | 보호 |
 |-------------|------|
-| `v*` (예: `v26.05.2572`, `v26.05.2572-rc-01`) | 삭제 금지, force-push 금지 |
+| `v*` (예: `v26.05.27+2832-dev-staging`) | 삭제 금지, force-push 금지 |
 | `promo/**` (예: `promo/main-2026-W20`) | 삭제 금지, force-push 금지 |
 | `mobile-released/**` (있다면) | 삭제 금지 |
 

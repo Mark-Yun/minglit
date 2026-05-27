@@ -1,6 +1,6 @@
 # minglit_kit/test — 테스트
 
-`minglit_kit` 공용 패키지의 unit · widget · golden · contract 테스트. `lib/src/` 구조 미러링 + Repository 계약 테스트.
+`minglit_kit` 공용 패키지의 unit · widget · contract 테스트. `lib/src/` 구조 미러링 + Repository 계약 테스트.
 
 ## 이정표
 
@@ -8,7 +8,6 @@
 |---|---|
 | [`src/`](./src/) | unit + widget 테스트 (lib/src/ 미러링: bootstrap/components/config/data/features/logic/theme/ui/utils) |
 | [`contract/`](./contract/) | Repository 계약 테스트 — Supabase schema 와의 동기화 검증 |
-| [`goldens/`](./goldens/) | Golden 테스트 (Alchemist) — 공용 위젯 시각 회귀 |
 | [`logic/`](./logic/) | 글로벌 logic 테스트 (auth, provider 등) |
 | [`services/`](./services/) | 외부 SDK 래퍼 테스트 |
 | [`ui/`](./ui/) | UI / Design System 테스트 |
@@ -23,15 +22,12 @@
 
 - **계약 테스트 (`contract/`)** — Repository 가 wrapping 하는 Supabase 테이블/RPC 의 schema 가 변경되면 즉시 fail. 백엔드와 클라이언트 동기화 보장.
 - **`lib/src/` 의 모든 폴더는 대응 `test/src/` 폴더를 가진다.**
-- **Golden 은 Alchemist 사용** — `apps/app_user`/`app_partner` 와 동일.
-
 ## 실행
 
 ```bash
 flutter test                       # 전체
 flutter test test/contract/        # 계약 테스트만
 flutter test --coverage             # 커버리지 → coverage/lcov.info
-flutter test --tags golden          # Alchemist golden
 ```
 
 CI 자동 실행: `pr-gate.test-flutter-apps` matrix (minglit_kit 변경 시). 커버리지 dev 자동 갱신: [`sync-test-coverage`](../../../../.github/workflows/sync-test-coverage.yml) → [`tests/_coverage/minglit_kit/`](../../../../tests/_coverage/minglit_kit/).

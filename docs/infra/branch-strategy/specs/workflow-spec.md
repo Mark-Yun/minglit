@@ -32,14 +32,14 @@
 
 ### `version-bump`
 
-`bump-version.sh` 실행 + commit + tag.
+`bump-version.sh` 실행 + commit. dev-staging 에서는 direct push 하지 않고 version-bump PR 안에서 사용한다.
 
 | 항목 | 값 |
 |------|----|
 | Trigger | `workflow_call` |
-| Inputs | `version`: YY.MM.PR# / `suffix`: `-dev-staging` / `commit_message`: string |
+| Inputs | `version`: YY.MM.DD[-stage], optional `build_number`: version-bump PR number |
 | Outputs | `commit_sha`, `tag_name` |
-| 핵심 steps | `bash scripts/bump-version.sh {version}{suffix}` · commit (`skip_ci` option) · `git tag v{version}{suffix}` · push |
+| 핵심 steps | `bash scripts/bump-version.sh {version} {build_number}` · commit |
 | Called by | `dev-staging-dev-cut-gate` |
 
 `dev`/`rc`/`main` promotion 은 version bump commit 을 만들지 않는다. 앱/스토어/릴리즈 에셋에 노출되는 version 은 deploy workflow 가 `shared-version-metadata` 로 계산해 build command 에 주입한다.
@@ -53,10 +53,10 @@ Deploy artifact version metadata 를 계산하는 reusable workflow.
 | Trigger | `workflow_call` |
 | Inputs | `channel`: dev\|rc\|main, `source-ref`: ref/SHA |
 | Outputs | `base_version`, `version_name`, `build_number`, `release_tag`, `release_name`, `pr_number`, `source_sha` |
-| 규칙 | `version_name = YYYY.M.PR#[-channel]`, `build_number = PR#` |
+| 규칙 | `version_name = YY.MM.DD[-channel]`, `build_number = version-bump PR number` |
 | Called by | `shared-android-deploy`, `shared-ios-deploy`, 후속 `rc-deploy` |
 
-source-ref HEAD 가 graphify/coverage 같은 자동 commit 이면 first-parent history 를 거슬러 실제 PR 번호를 찾는다.
+source-ref 의 first-parent history 에서 latest version-bump squash commit 을 찾고, commit title/tag 에 포함된 version-bump PR number 를 build number 로 사용한다. source PR 번호는 release note/trace metadata 로만 사용한다.
 
 ### `shared-set-commit-status`
 
@@ -167,8 +167,8 @@ Cross-branch cherry-pick PR 자동 생성.
 |------|----|
 | Trigger | `push` to `dev-staging` (PR squash merge 후) |
 | Inputs | (from event) PR number, merged SHA |
-| Outputs | tag `v{YY.MM.PR#}-dev-staging` |
-| Steps | calls `version-bump` (suffix=`-dev-staging`, version=`{YY.MM.PR#}`) using release bot GitHub App token |
+| Outputs | version-bump PR + tag `v{YY.MM.DD}+{BUILD_PR#}-dev-staging` after merge |
+| Steps | (1) skip generated bump/graphify commits (2) close stale open `version-bump/dev-staging/*` PRs (3) create version-bump PR from current snapshot (4) amend bump commit so Flutter build number equals that PR number (5) enable auto-merge (6) on bump PR merge, create dev-staging snapshot tag |
 
 `dev-staging-dev-cut-gate` 는 dev-staging merge 마다 실행되므로 cut tracking issue 를 만들지 않는다. 하루 1회 실제 promotion 을 만드는 `dev-staging-dev-cut` 이 tracking issue 를 `status/promoting` 으로 생성/갱신한다.
 
@@ -246,7 +246,7 @@ Cross-branch cherry-pick PR 자동 생성.
 
 #### RC hotfix post-merge behavior
 
-RC branch 에 version bump commit/tag 를 만들던 이전 설계. 최신 정책에서는 RC hotfix merge 후에도 branch state 를 바꾸지 않는다. RC deploy artifact version 은 `shared-version-metadata(channel=rc)` 가 source commit 의 PR 번호로 계산한다.
+RC branch 에 version bump commit/tag 를 만들던 이전 설계. 최신 정책에서는 RC hotfix merge 후에도 branch state 를 바꾸지 않는다. RC deploy artifact version 은 `shared-version-metadata(channel=rc)` 가 latest version-bump PR number 로 계산한다.
 
 #### `rc-deploy`
 
@@ -321,7 +321,7 @@ RC branch 에 version bump commit/tag 를 만들던 이전 설계. 최신 정책
 [dev-staging-pr-gate] ──auto-merge──▶ dev-staging push
                                                 ↓
                                          [dev-staging-dev-cut-gate]
-                                                ↓ tag v{ver}-dev-staging
+                                                ↓ tag v{YY.MM.DD}+{BUILD_PR#}-dev-staging
 
 [daily KST 02:00]
     ↓
