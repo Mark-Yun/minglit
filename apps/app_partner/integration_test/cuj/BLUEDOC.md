@@ -50,7 +50,7 @@ integration_test/cuj/
 | `account/partner_account_deletion_test.dart` | `docs/features/account/partner-account-deletion/spec.md` | 탈퇴 사유 화면 |
 | `checkin/partner_qr_checkin_ux_test.dart` | `docs/features/event-operation/partner-qr-checkin-ux/spec.md` | 1-1~1-4 (스캔 결과 배너), 2-1~2-3 (체크인 탭 진입), 3-1~3-6 (수동 체크인) |
 | `event/event_edit_cancel_test.dart` | `docs/features/event/event-edit-cancel/spec.md` | 1-1~4-2 (13개 그룹) |
-| `event/recurring_events_test.dart` | `docs/features/event/recurring-events/spec.md` | 1-1, 1-2, 1-4, 3-1, 3-2, 3-4 |
+| `event/recurring_events_test.dart` | `docs/features/event/recurring-events/spec.md` | 1-1~1-4, 2-1~2-3, 3-1~3-4, 4-1~4-2 |
 | `event/partner_dashboard_test.dart` | `docs/features/event/partner-dashboard/spec.md` | 1-1~1-5, 2-1~2-5, 3-1~3-3, 4-2~4-3, 5-1~5-2 |
 | `event-operation/partner_qr_checkin_ux_test.dart` | `docs/features/event-operation/partner-qr-checkin-ux/spec.md` | 1-1, 1-2, 1-3, 3-1, 3-2, 5-4 (6/13) |
 | `event-operation/manual_checkin_test.dart` | `docs/features/event-operation/partner-qr-checkin-ux/spec.md` | 3-1 (수동 체크인 시트 진입 + 참가자 목록), 3-2 (수동 체크인 처리) |
@@ -58,4 +58,4 @@ integration_test/cuj/
 Flutter 범위 외 CUJ (landing_partner 웹 기능 또는 미구현): 1-2, 1-3, 2-2~2-4, 3-1~3-2.
 
 ---
-_Reviewed: 2026-05-27 22:58_
+_Reviewed: 2026-05-28 04:10_
