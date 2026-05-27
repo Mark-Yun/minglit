@@ -6,7 +6,9 @@ import {
   hasDesignFor,
   designUrlFor,
   subComponentsFor,
+  standaloneSpecsFor,
   type SubComponentSpec,
+  type StandaloneSpec,
 } from '@/lib/flow-data';
 
 const APP_LABELS = { user: 'app_user', partner: 'app_partner' } as const;
@@ -41,6 +43,31 @@ function SubComponentRow({ sub, parentRoute }: { sub: SubComponentSpec; parentRo
         >
           code ↗
         </a>
+      </td>
+    </tr>
+  );
+}
+
+function StandaloneSpecRow({ spec }: { spec: StandaloneSpec }) {
+  const specUrl = `/specs/${spec.specBasename}/index.html`;
+  return (
+    <tr className="hover:bg-[var(--color-surface)] bg-[var(--color-surface)]/30">
+      <td className="px-4 py-2">
+        <a
+          href={specUrl}
+          className="font-mono text-xs text-[var(--color-primary)] hover:underline"
+          title="Open spec"
+        >
+          {spec.widget}
+        </a>
+      </td>
+      <td className="px-4 py-2">
+        <span className="font-mono text-xs text-[var(--color-text-secondary)] italic">
+          {spec.note}
+        </span>
+      </td>
+      <td className="px-4 py-2">
+        <span className="text-xs text-[var(--color-divider)]">—</span>
       </td>
     </tr>
   );
@@ -137,6 +164,9 @@ export default function RouteScreenIndex() {
                     </Fragment>
                   );
                 })}
+                {standaloneSpecsFor(app).map((spec) => (
+                  <StandaloneSpecRow key={spec.specBasename} spec={spec} />
+                ))}
               </tbody>
             </table>
           </div>

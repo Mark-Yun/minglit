@@ -9,7 +9,7 @@ Minglit Design System 의 **시각 SSOT + 문서 사이트**. 화면 spec, 컴�
 | [`src/app/`](./src/app/) | Next.js route pages (`/`, `/tokens`, `/components`, `/screens`, `/icons`, `/flows`) |
 | [`src/lib/components.ts`](./src/lib/components.ts) | MDS 컴포넌트 manifest SSOT |
 | [`src/components/specs/`](./src/components/specs/) | 컴포넌트별 inline visual playground |
-| [`public/specs/`](./public/specs/) | 화면 spec HTML/MD/PNG (`<screen>/index.html`, `state_*.png`) |
+| [`public/specs/`](./public/specs/) | 화면 spec source HTML + generated MD/PNG |
 | [`scripts/render-spec-mockups.js`](./scripts/render-spec-mockups.js) | 화면 spec PNG + index.md 생성 |
 | [`scripts/sync-icons-data.mjs`](./scripts/sync-icons-data.mjs) | icon manifest 를 docs 데이터로 동기화 |
 | [`package.json`](./package.json) | dev/build/lint 및 token/icon sync 명령 |
@@ -20,7 +20,8 @@ Minglit Design System 의 **시각 SSOT + 문서 사이트**. 화면 spec, 컴�
 - **런타임 검증은 mock app 중심** — emulator render catalog 가 실제 Flutter 화면 캡처를 담당한다.
 - **토큰 SSOT 는 `shared/packages/mds/tokens/`** — docs 는 generated CSS 를 `public/tokens.css` 로 sync 한다.
 - **아이콘 SSOT 는 `shared/packages/mds/icons/`** — docs 의 React icon copy/data 는 sync script 로 갱신한다.
-- **화면 PNG 는 자동 산출물** — `sync-mds-mockups.yml` 이 post-merge 에서 `public/specs/**/state_*.png` 와 `index.md` 를 갱신한다.
+- **화면 spec source 는 `public/specs/<screen>/index.html`** — screen 변경은 여기만 직접 수정한다.
+- **`index.md` / `state_*.png` / `blueprint*.png` 는 자동 산출물** — `render-spec-mockups.js` / `sync-mds-mockups.yml` 이 HTML 에서 재생성한다.
 
 ## 자주 쓰는 명령
 
@@ -41,4 +42,4 @@ npm run icons:sync && npm run icons:sync-data
 - [`../../../scripts/mds_render_coverage.dart`](../../../scripts/mds_render_coverage.dart) — MDS spec ↔ emulator render coverage
 
 ---
-_Reviewed: 2026-05-27 21:56_
+_Reviewed: 2026-05-27 22:28_
