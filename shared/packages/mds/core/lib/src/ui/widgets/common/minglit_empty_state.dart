@@ -4,7 +4,7 @@ import 'package:mds/src/theme/minglit_theme.dart';
 /// Visual variant of [MinglitEmptyState].
 enum MinglitEmptyStateVariant {
   /// Full-page empty state — tab or page level.
-  /// Shows 48px icon with `outline` color. Transparent background. Optional CTA.
+  /// Shows 64px icon with `outline` color. Transparent background. Optional CTA.
   fullPage,
 
   /// Card/section-level empty state.
@@ -102,7 +102,7 @@ class MinglitEmptyState extends StatelessWidget {
                 icon,
                 size: variant == MinglitEmptyStateVariant.card
                     ? MinglitIconSize.xlarge
-                    : MinglitIconSize.display,
+                    : MinglitIconSize.hero,
                 color: variant == MinglitEmptyStateVariant.card
                     ? theme.colorScheme.outlineVariant
                     : theme.colorScheme.outline,
