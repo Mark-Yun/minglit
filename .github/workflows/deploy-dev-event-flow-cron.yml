@@ -3,11 +3,6 @@ name: deploy-dev-event-flow-cron
 on:
   push:
     branches: [dev]
-    paths:
-      - '.github/scripts/install-dev-event-flow-cron.sh'
-      - '.github/workflows/deploy-dev-event-flow-cron.yml'
-      - 'supabase/functions/event-flow-simulator/**'
-      - 'supabase/functions/auth-manifest.json'
   workflow_dispatch:
     inputs:
       wait_for_deploy_supabase:
