@@ -5,14 +5,13 @@
 //
 // 커버 범위:
 //   - CUJ 1-1, 1-2, 1-4 (반복 설정 섹션 — 토글/패턴/미리보기)
-//   - CUJ 3-1, 3-2, 3-4 (반복 규칙 관리 화면 — 일시정지/재개/취소)
+//   - CUJ 3-1, 3-2, 3-3, 3-4 (반복 규칙 관리 화면 — 일시정지/재개/수정/취소)
 //
 // 미커버:
-//   - CUJ 1-3: 저장 → 일괄 생성 — 전체 EventCreate submit 흐름 필요
+//   - CUJ 1-3: 저장 → 일괄 생성 — EventCreate submit 전체 동선 필요
 //   - CUJ 2-1, 2-2: 개별 회차 수정/취소 — event-edit-cancel 테스트 범위
-//   - CUJ 2-3: 반복 아이콘 표시 — party_detail_page 의존
-//   - CUJ 3-3: 규칙 수정 — 편집 플로우 미구현
-//   - CUJ 4-1, 4-2: 크론 잡 — 서버 사이드, Flutter 테스트 범위 외
+//   - CUJ 2-3: 반복 아이콘 표시 — party_detail_page 동선 의존
+//   - CUJ 4-1, 4-2: 크론 잡/재시도/Sentry — 서버 사이드 테스트 범위
 //
 // 설계 결정:
 //   - RecurrenceSettingsSection: 자체 내부 provider — override 불필요.
@@ -60,6 +59,8 @@ RecurrenceRule _makeRule({
   RecurrencePattern pattern = RecurrencePattern.weekly,
   RecurrenceStatus status = RecurrenceStatus.active,
   List<int> daysOfWeek = const [1],
+  String? endDate,
+  String? lastGeneratedDate,
 }) => RecurrenceRule(
   id: id,
   partyId: partyId,
@@ -70,6 +71,8 @@ RecurrenceRule _makeRule({
   updatedAt: _epoch,
   status: status,
   daysOfWeek: daysOfWeek,
+  endDate: endDate,
+  lastGeneratedDate: lastGeneratedDate,
 );
 
 // ---------------------------------------------------------------------------
@@ -180,7 +183,7 @@ void main() {
     );
   });
 
-  // CUJ 1-3 (저장 → 일괄 생성): 전체 EventCreate submit 흐름 필요 — 별도 PR
+  // CUJ 1-3: 미커버 — 저장 submit + 생성 결과 반영 동선 필요 (별도 PR)
 
   cujGroup('1-4', '반복 OFF 로 기존 단일 생성 흐름 유지', () {
     cujCase(
@@ -202,9 +205,7 @@ void main() {
   });
 
   // -------------------------------------------------------------------------
-  // CUJ 2: 미커버 — event-edit-cancel 테스트 or party_detail 의존
-  // (2-1, 2-2: event_edit_cancel_test.dart 범위 / 2-3: party_detail 의존)
-  // CUJ 3: 반복 규칙 관리 화면
+  // CUJ 2: 미커버 — event-edit-cancel 테스트 or party_detail 동선 의존
   // -------------------------------------------------------------------------
 
   cujGroup('3-1', '일시정지 — 새 생성 중단, 기존 유지', () {
@@ -298,7 +299,30 @@ void main() {
     );
   });
 
-  // CUJ 3-3: 미커버 — RecurrenceManagementScreen 편집 플로우 미구현 (후속 PR)
+  cujGroup('3-3', '규칙 수정 결과가 관리 화면에 반영', () {
+    cujCase(
+      'happy: 월간 규칙 + 종료일/마지막 생성일 표시',
+      app: const RecurrenceManagementScreen(partyId: 'party-1'),
+      overrides: () => [
+        partyRecurrenceRuleProvider('party-1').overrideWith(
+          (ref) async => _makeRule(
+            pattern: RecurrencePattern.monthly,
+            endDate: '2026-12-31',
+            lastGeneratedDate: '2026-05-20',
+          ),
+        ),
+        recurrenceRuleRepositoryProvider.overrideWithValue(mockRepo),
+        recurrenceManagementControllerProvider.overrideWith(
+          _FakeNoRuleController.new,
+        ),
+      ],
+      body: (t) async {
+        expect(find.text('매월'), findsOneWidget);
+        expect(find.text('2026-12-31'), findsOneWidget);
+        expect(find.text('2026-05-20'), findsOneWidget);
+      },
+    );
+  });
 
   cujGroup('3-4', '반복 해제 — 완전 종료 (불가역)', () {
     cujCase(
@@ -366,5 +390,5 @@ void main() {
     );
   });
 
-  // CUJ 4: 미커버 — 크론 잡 서버 사이드 (4-1, 4-2), Flutter 테스트 범위 외
+  // CUJ 4-1, 4-2: 미커버 — 크론/재시도/Sentry 는 서버 사이드 테스트 범위
 }
