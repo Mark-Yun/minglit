@@ -1,13 +1,13 @@
 # Dev Pipeline
 
-`dev` 브랜치가 trunk 역할: dev-staging 의 daily snapshot 을 받고, 24h soak 후 `dev-rc-cut-gate` 가 commit status 와 monitor run history 를 평가한다. RC 는 `dev-rc-cut-pass` status 를 보고 cut 한다. 이벤트 플로우 시뮬레이터는 `monitor-event-flow-*` batch 로 계속 돌며, backend prod deploy 는 main 머지 후 `main-deploy` 에서 수행한다.
+`dev` 브랜치가 trunk 역할: dev-staging 의 daily snapshot 을 받고, 24h soak 후 `dev-rc-cut-gate` 가 commit status 와 dev cron install signal 을 평가한다. RC 는 `dev-rc-cut-pass` status 를 보고 cut 한다. 이벤트 플로우 시뮬레이터는 dev Supabase pg_cron 으로 계속 돌며, backend prod deploy 는 main 머지 후 `main-deploy` 에서 수행한다.
 
 ## 4가지 workflow
 
 1. **`dev-staging-dev-cut`** — daily cron, dev-staging tip 의 snapshot 으로 PR 생성
 2. **`dev-pr-gate`** — snapshot PR 머지 전 검증 (defensive)
-3. **`dev-rc-cut-gate`** — cut 직전 evaluator. 24h soak + commit status + run history 확인 후 `dev-rc-cut-pass` set
-4. **`dev-deploy` / monitor jobs** — dev 환경 deploy/smoke 가 필요할 때만 수행. 이벤트 플로우 시뮬레이터는 `monitor-event-flow-*` 로 별도 운영
+3. **`dev-rc-cut-gate`** — cut 직전 evaluator. 24h soak + commit status + cron install run 확인 후 `dev-rc-cut-pass` set
+4. **`dev-deploy` / cron install** — dev 환경 deploy/smoke 가 필요할 때 수행. 이벤트 플로우 시뮬레이터는 dev pg_cron 으로 별도 운영
 
 ## `dev-staging-dev-cut`
 
@@ -46,7 +46,7 @@ GitHub Issue 는 source-of-truth 가 아니다. Gate 판정은 commit status con
 
 | Context | failure 작성자 | success 작성자 |
 |---------|---------------|----------------|
-| `dev-soak/backend-simulator` | `monitor-event-flow-*` 실패 path (`shared-notify`) | `dev-rc-cut-gate` |
+| `dev-soak/backend-simulator` | `event-flow-simulator` reporter 또는 `deploy-dev-event-flow-cron` 실패 path | `dev-rc-cut-gate` |
 | `dev-soak/real-device` | real-device/Test Lab workflow 또는 AI agent | `dev-rc-cut-gate` |
 | `dev-soak/app-ai-review` | AI agent | `dev-rc-cut-gate` |
 | `dev-rc-cut-pass` | 없음 | `dev-rc-cut-gate` |
@@ -60,7 +60,7 @@ GitHub Issue 는 source-of-truth 가 아니다. Gate 판정은 commit status con
 | 검증 | 조건 |
 |------|------|
 | Soak duration | candidate age >= 24h |
-| Event-flow distributed simulator | `candidate_since` 이후 `monitor-event-flow-distributed` success run >= 250 |
+| Event-flow distributed simulator | candidate SHA 에서 `deploy-dev-event-flow-cron` success >= 1 + `dev-soak/backend-simulator` failure 없음 |
 | Legacy hourly/daily simulator | 수동 smoke 전용. RC cut gate 조건에서 제외 |
 | Real device | candidate 기준 required real-device signal success >= 1 (workflow TBD) |
 | App AI review | AI agent 가 candidate 기준 app-soak pass signal 제공 (입력 방식 TBD) |
@@ -113,11 +113,11 @@ Snapshot 모델 — **auto-revert 없음**. dev 가 broken 상태로 잠시 머�
 
 ### `monitor-event-flow-*`
 
-- 이벤트 플로우 시뮬레이터 batch. target 은 `monitor-event-flow-distributed` 5분 주기 small tick
+- 이벤트 플로우 시뮬레이터 batch. target 은 dev Supabase pg_cron `dev-event-flow-simulator` 5분 주기 small tick
 - 시간은 고정 5분, 랜덤은 actor/user/partner/event sampling 에 적용한다
 - `seed.dev.sql` 은 계정/파트너 base 만 담당하고 party/event/ticket 은 EF 경유로 만든다
 - 유저 신청 대상은 DB prefix 필터가 아니라 `user-event-feed` 결과에서 선택한다
-- `monitor-event-flow-hourly` / `monitor-event-flow-daily` 는 legacy manual smoke
+- `monitor-event-flow-distributed` / hourly / daily 는 legacy manual smoke
 - release promotion 과 독립적으로 계속 돈다
 - RC 에서는 main 배포 전 pre-main validation signal 로 사용한다
 

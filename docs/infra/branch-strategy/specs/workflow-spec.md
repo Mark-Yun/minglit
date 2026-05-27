@@ -199,7 +199,7 @@ Cross-branch cherry-pick PR 자동 생성.
 | Trigger | `schedule` (cut 직전, TBD) + `workflow_dispatch` |
 | Inputs | optional `candidate_sha` (default: latest `origin/dev` HEAD) |
 | Outputs | commit status `dev-rc-cut-pass` (success only) + `dev-soak/*` success confirmations + cut issue `gate/dev-rc` |
-| Steps | calls `shared-soak-gate` with candidate=`origin/dev`, min_soak_hours=24, required runs=`monitor-event-flow-distributed>=250`, failure context=`dev-soak/backend-simulator`, success context=`dev-soak/backend-simulator`, pass context=`dev-rc-cut-pass`; then upserts cut issue as `status/waiting` or `status/ready` |
+| Steps | calls `shared-soak-gate` with candidate=`origin/dev`, min_soak_hours=24, required runs=`deploy-dev-event-flow-cron>=1` on matching SHA, failure context=`dev-soak/backend-simulator`, success context=`dev-soak/backend-simulator`, pass context=`dev-rc-cut-pass`; then upserts cut issue as `status/waiting` or `status/ready` |
 | Failure path | 조건 미충족 또는 required success evidence 누락이면 `dev-rc-cut-pass` 를 쓰지 않는다. 실패를 발견한 monitor/AI agent 가 이미 `dev-soak/*` failure 를 쓴다 |
 
 > **No auto-revert** — snapshot 모델: 실패 = no `dev-rc-cut-pass`, dev keeps moving, 새 fix 가 자연스럽게 다음 dev-staging-dev-cut 후 새 candidate 로 검증됨.
@@ -214,13 +214,13 @@ Cross-branch cherry-pick PR 자동 생성.
 | Trigger | TBD (`push` to `dev` 또는 `workflow_dispatch`) |
 | Outputs | dev deploy/validation status |
 | Steps | dev 환경 배포 또는 smoke 가 필요할 때만 수행. backend prod deploy 는 여기서 하지 않고 `main-deploy` 에서 수행 |
-| Note | 이벤트 플로우 시뮬레이터는 `dev-deploy` 가 아니라 `monitor-event-flow-distributed` batch 로 계속 돈다 |
+| Note | 이벤트 플로우 시뮬레이터는 `dev-deploy` 가 아니라 dev Supabase pg_cron `dev-event-flow-simulator` 로 계속 돈다 |
 
 #### `monitor-event-flow-*` (release pipeline 외부 batch)
 
 | 항목 | 값 |
 |------|----|
-| Trigger | schedule (`monitor-event-flow-distributed`: `*/5 * * * *`; legacy hourly/daily 는 수동 smoke) |
+| Trigger | `deploy-dev-event-flow-cron` installs pg_cron on `push: dev`; monitor workflows are manual smoke |
 | Branch/env | dev 를 계속 관찰. RC cut 후에는 RC env/Supabase branch 도 pre-main 검증 signal 로 사용 |
 | Outputs | event-flow simulation signal, `set-dev-soak-status(signal=backend-simulator,state=failure)`, issue/alert |
 | Note | fixed-time small tick. actor/user/partner/event sampling 만 랜덤화하고, party/event 는 partner EF, 신청 대상은 `user-event-feed` 로 만든다 |

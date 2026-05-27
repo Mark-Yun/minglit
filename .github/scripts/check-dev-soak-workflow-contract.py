@@ -13,6 +13,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 MONITOR_DISTRIBUTED = ROOT / ".github/workflows/monitor-event-flow-distributed.yml"
+DEPLOY_DEV_EVENT_FLOW_CRON = ROOT / ".github/workflows/deploy-dev-event-flow-cron.yml"
 DEV_RC_CUT_GATE = ROOT / ".github/workflows/dev-rc-cut-gate.yml"
 SHARED_SOAK_GATE = ROOT / ".github/workflows/shared-soak-gate.yml"
 
@@ -62,26 +63,73 @@ def assert_distributed_monitor_contract() -> None:
     workflow = load_workflow(MONITOR_DISTRIBUTED)
     config = on_config(workflow)
 
-    schedule = config.get("schedule", [])
-    if not isinstance(schedule, list) or not any(
-        isinstance(item, dict) and item.get("cron") == "*/5 * * * *"
-        for item in schedule
-    ):
-        fail("monitor-event-flow-distributed must run every 5 minutes")
+    if "schedule" in config:
+        fail("monitor-event-flow-distributed must not use GitHub schedule")
 
     dispatch = config.get("workflow_dispatch", {})
     inputs = dispatch.get("inputs", {}) if isinstance(dispatch, dict) else {}
-    target_ref = inputs.get("target_ref", {}) if isinstance(inputs, dict) else {}
-    if not isinstance(target_ref, dict) or target_ref.get("default") != "dev":
-        fail("monitor-event-flow-distributed workflow_dispatch target_ref must default to dev")
+    if "target_ref" in inputs:
+        fail("monitor-event-flow-distributed must not expose target_ref while rc cron is disabled")
 
     jobs = jobs_config(workflow, MONITOR_DISTRIBUTED)
     resolve_target = jobs.get("resolve-target", {})
     if not isinstance(resolve_target, dict):
         fail("monitor-event-flow-distributed must define resolve-target job")
-    script = run_block(resolve_target, "Resolve monitored ref")
-    if 'if [ "${EVENT_NAME}" = "schedule" ]; then' not in script or 'TARGET_REF="dev"' not in script:
-        fail("scheduled distributed monitor runs must force target_ref=dev")
+    script = run_block(resolve_target, "Resolve dev ref")
+    if 'GITHUB_REF' not in script or 'refs/heads/dev' not in script:
+        fail("manual distributed monitor must require --ref dev")
+
+
+def assert_dev_cron_deploy_contract() -> None:
+    workflow = load_workflow(DEPLOY_DEV_EVENT_FLOW_CRON)
+    config = on_config(workflow)
+    push = config.get("push", {})
+    branches = push.get("branches", []) if isinstance(push, dict) else []
+    if branches != ["dev"]:
+        fail("deploy-dev-event-flow-cron must run only on push to dev")
+
+    jobs = jobs_config(workflow, DEPLOY_DEV_EVENT_FLOW_CRON)
+    install = jobs.get("install", {})
+    if not isinstance(install, dict):
+        fail("deploy-dev-event-flow-cron must define install job")
+    if install.get("if") != "github.ref == 'refs/heads/dev'":
+        fail("deploy-dev-event-flow-cron install job must guard github.ref == refs/heads/dev")
+
+    wait_script = run_block(install, "Wait for deploy-supabase on dev SHA")
+    required_wait_fragments = [
+        'wait_for_deploy="false"',
+        "changed_files=",
+        "supabase/(migrations|functions)",
+        "Skipping deploy-supabase wait.",
+    ]
+    for fragment in required_wait_fragments:
+        if fragment not in wait_script:
+            fail(f"deploy-dev-event-flow-cron wait step missing fragment: {fragment}")
+
+    smoke_script = run_block(install, "Verify event-flow simulator tick")
+    required_smoke_fragments = [
+        "event-flow-simulator",
+        "targetRef: \"dev\"",
+        "targetSha: env.TARGET_SHA",
+        "jq -e '.success == true'",
+    ]
+    for fragment in required_smoke_fragments:
+        if fragment not in smoke_script:
+            fail(f"deploy-dev-event-flow-cron smoke step missing fragment: {fragment}")
+
+    script_path = ROOT / ".github/scripts/install-dev-event-flow-cron.sh"
+    script = script_path.read_text(encoding="utf-8")
+    required_fragments = [
+        "dev-event-flow-simulator",
+        "*/5 * * * *",
+        "GITHUB_ACCESS_TOKEN is required for event-flow-simulator failure reporting",
+        "'targetRef', 'dev'",
+        "'targetSha', '${target_sha_esc}'",
+        "public.ef_auth_manifest",
+    ]
+    for fragment in required_fragments:
+        if fragment not in script:
+            fail(f"install-dev-event-flow-cron.sh missing contract fragment: {fragment}")
 
 
 def assert_dev_rc_cut_gate_contract() -> None:
@@ -114,9 +162,10 @@ def assert_dev_rc_cut_gate_contract() -> None:
         fail("dev-rc-cut-gate required run contract must be an object")
 
     expected = {
-        "workflow": "monitor-event-flow-distributed.yml",
-        "branch": "dev-staging",
-        "min_success": 250,
+        "workflow": "deploy-dev-event-flow-cron.yml",
+        "branch": "dev",
+        "min_success": 1,
+        "match_head_sha": True,
     }
     for key, value in expected.items():
         if run.get(key) != value:
@@ -140,6 +189,7 @@ def assert_shared_soak_gate_contract() -> None:
 
 def main() -> None:
     assert_distributed_monitor_contract()
+    assert_dev_cron_deploy_contract()
     assert_dev_rc_cut_gate_contract()
     assert_shared_soak_gate_contract()
     print("Dev soak workflow contract OK")

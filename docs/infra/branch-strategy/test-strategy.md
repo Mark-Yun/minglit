@@ -1,6 +1,6 @@
 # Test Strategy
 
-4-stage 모델 (`dev-staging → dev → rc → main`) + flag staged rollout 환경에서, *어떤 테스트가 어느 단계에서 도는가* 의 단일 source. 빠른 검사 = branch별 `*-pr-gate`, 지속 소킹 = `monitor-event-flow-*`/real-device/app AI review, RC 후보 판정 = `dev-rc-cut-gate`, 프로덕션 검증 = `deploy-android-*, deploy-ios-*` smoke + flag staged.
+4-stage 모델 (`dev-staging → dev → rc → main`) + flag staged rollout 환경에서, *어떤 테스트가 어느 단계에서 도는가* 의 단일 source. 빠른 검사 = branch별 `*-pr-gate`, 지속 소킹 = dev Supabase pg_cron event-flow/real-device/app AI review, RC 후보 판정 = `dev-rc-cut-gate`, 프로덕션 검증 = `deploy-android-*, deploy-ios-*` smoke + flag staged.
 
 ## 단계별 게이트
 
@@ -58,7 +58,7 @@ dev 에 들어간 latest HEAD 만 RC candidate 로 평가한다. 새 dev commit 
 
 | Signal | 실행자 | 실패 status | 성공 status |
 |--------|--------|-------------|-------------|
-| backend simulator | `monitor-event-flow-distributed` (legacy hourly/daily 는 수동 smoke) | `dev-soak/backend-simulator` failure 즉시 | `dev-rc-cut-gate` 가 run history 확인 후 success |
+| backend simulator | `deploy-dev-event-flow-cron` + pg_cron `dev-event-flow-simulator` | `dev-soak/backend-simulator` failure 즉시 | `dev-rc-cut-gate` 가 cron install + 1회 simulator tick run + failure status 확인 |
 | real device | Test Lab/실디바이스 workflow | `dev-soak/real-device` failure 즉시 | `dev-rc-cut-gate` 가 required signal 확인 후 success |
 | app AI review | AI agent | `dev-soak/app-ai-review` failure 즉시 | `dev-rc-cut-gate` 가 pass signal 확인 후 success |
 
@@ -67,7 +67,8 @@ dev 에 들어간 latest HEAD 만 RC candidate 로 평가한다. 새 dev commit 
 cut 직전 schedule/manual 로 실행한다. 통과 시 commit 에 GitHub status `dev-rc-cut-pass` 를 set 한다.
 
 - candidate age >= 24h
-- `monitor-event-flow-distributed` success run >= 250 since candidate
+- candidate SHA 에서 `deploy-dev-event-flow-cron` success >= 1
+- `dev-soak/backend-simulator` failure status 없음
 - legacy hourly/daily 는 수동 smoke 로만 실행
 - candidate 의 최신 `dev-soak/*` status 가 failure 가 아님
 - real-device/app AI review required signal 충족

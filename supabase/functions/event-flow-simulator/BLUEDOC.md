@@ -15,7 +15,7 @@ curl -X POST "https://<project>.supabase.co/functions/v1/event-flow-simulator" \
   -d '{"ticks": 1, "usersPerTick": 5, "partnersPerTick": 2, "seed": 202605250905}'
 ```
 
-응답 = `{ success, run_id, actors, trace_summary, violations, github_issue_url }`. 실패 시 reporter 가 자동 GH 이슈 생성.
+응답 = `{ success, run_id, actors, trace_summary, violations, github_issue_url }`. 실패 시 reporter 가 자동 GH 이슈와 commit status 를 남긴다.
 
 ## 폴더 구조
 
@@ -29,7 +29,9 @@ curl -X POST "https://<project>.supabase.co/functions/v1/event-flow-simulator" \
 
 ## 트리거 / 환경 가드
 
-- target: `monitor-event-flow-distributed` 가 dev 에서 5분마다 작은 tick 실행 (하루 288회)
+- target: dev Supabase pg_cron `dev-event-flow-simulator` 가 5분마다 작은 tick 실행
+- install: `deploy-dev-event-flow-cron` 이 `dev` push 에서만 cron 을 설치
+- manual: `monitor-event-flow-distributed --ref dev` 는 수동 smoke 전용
 - legacy: `monitor-event-flow-hourly` / `monitor-event-flow-daily` 는 수동 smoke 전용
 - **prod 차단**: auth-manifest `envs: ["dev","development","local"]` 가드, `minglitEdgeFunction` wrapper 가 enforce
 - 필수 env: `SIM_USER_PASSWORD` (Fix #1508), `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
@@ -40,11 +42,8 @@ curl -X POST "https://<project>.supabase.co/functions/v1/event-flow-simulator" \
 - 유저는 `user-event-feed` EF 결과에서 신청 대상을 선택한다. 특정 party/event prefix 직접 필터 금지
 - party/event/ticket 생성은 seed SQL 이 아니라 partner EF 경유
 - `seed.dev.sql` 은 user / partner / permission / verification 같은 base actor 데이터만 담당
-- 액션 실패 시 `sim_reporter` 가 자동 GH 이슈 생성
+- 액션 실패 시 reporter 가 GH 이슈 + `dev-soak/backend-simulator` failure status 생성
 - 단위 테스트: `cd supabase/functions && deno test event-flow-simulator/`
-
-## 한계 / 개선 계획
-v2 **Stochastic Cascade** 모델은 도입됐지만 현재 구현은 `[E2E]` prefix snapshot 과 large daily run 흔적이 남아 있다. 다음 단계는 5분 distributed tick, actor random sampling, feed-driven apply, partner-EF-driven party/event generation 으로 정렬한다. 상세는 [architecture.md](./architecture.md).
 
 ---
 _Reviewed: 2026-05-25 16:20_

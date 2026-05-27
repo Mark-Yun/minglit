@@ -13,10 +13,11 @@
 | [`check-pr-issue-reference.sh`](./check-pr-issue-reference.sh) | dev-staging PR 본문에 이슈 종료 의도(`Closes/Fixes/Resolves`) 또는 명시적 비종료 사유(`Refs` + 이유 / `No linked issue`)가 있는지 검사 | `pr-gate.static-checks` |
 | [`check-ios-deploy-branch-conditions.sh`](./check-ios-deploy-branch-conditions.sh) | `ios-deploy` action 의 브랜치 분기(`main` vs `non-main`) 회귀 검증 | 수동 실행 (`bash .github/scripts/check-ios-deploy-branch-conditions.sh`) |
 | [`check-android-deploy-workflow-contract.py`](./check-android-deploy-workflow-contract.py) | Android deploy release archive 가 `github.token` + `contents: write` 를 사용하고 PAT caller 계약을 요구하지 않는지 검증 | `pr-gate.static-checks` |
-| [`check-dev-soak-workflow-contract.py`](./check-dev-soak-workflow-contract.py) | `monitor-event-flow-distributed` + `dev-rc-cut-gate` + `shared-soak-gate` 의 run-history 판정 계약 검증 | `pr-gate.static-checks` |
+| [`check-dev-soak-workflow-contract.py`](./check-dev-soak-workflow-contract.py) | dev event-flow cron install + `dev-rc-cut-gate` + `shared-soak-gate` 판정 계약 검증 | `pr-gate.static-checks` |
 | [`check-dev-cut-workflow-contract.py`](./check-dev-cut-workflow-contract.py) | `dev-staging-dev-cut` 의 full-history checkout(`fetch-depth: 0`)과 `shared-notify` 의 `gh run view --repo` 컨텍스트 계약을 검증 | `pr-gate.static-checks` |
 | [`check-ios-connectivity-plus-cap.sh`](./check-ios-connectivity-plus-cap.sh) | iOS deploy runner 가 지원할 때까지 `connectivity_plus <7.1.0` resolution 강제 | `pr-gate.guard-ios-connectivity-plus-cap` |
 | [`scan-build-artifact-secrets.py`](./scan-build-artifact-secrets.py) | APK/AAB/`.next` 등 빌드 산출물에서 Supabase service-role secret 패턴을 redacted summary 로 검사 | `pr-gate.scan-build-artifact-secrets` |
+| [`install-dev-event-flow-cron.sh`](./install-dev-event-flow-cron.sh) | dev Supabase `dev-event-flow-simulator` pg_cron 설치/검증 | `deploy-dev-event-flow-cron` |
 
 ## 핵심 컨벤션
 

@@ -85,7 +85,7 @@ RC soak 는 dev soak 와 signal set 이 달라질 수 있으므로 별도 entry 
 
 | Context | 작성자 | 실패 시점 | 성공 시점 | 의미 |
 |---------|--------|-----------|-----------|------|
-| `dev-soak/backend-simulator` | `set-dev-soak-status` via `monitor-event-flow-*` / `dev-rc-cut-gate` | event-flow simulator 실패 즉시 `failure` | `dev-rc-cut-gate` 가 24h run history 를 확인한 뒤 `success` | backend/event-flow soak signal |
+| `dev-soak/backend-simulator` | `event-flow-simulator` reporter / `dev-rc-cut-gate` | event-flow simulator 실패 즉시 `failure` | `dev-rc-cut-gate` 가 24h soak + cron install run 을 확인한 뒤 `success` | backend/event-flow soak signal |
 | `dev-soak/real-device` | `set-dev-soak-status` via real-device workflow / `dev-rc-cut-gate` | Firebase Test Lab 또는 실디바이스 smoke 실패 즉시 `failure` | `dev-rc-cut-gate` 가 required run/signal 을 확인한 뒤 `success` | 실제 디바이스 안정성 signal |
 | `dev-soak/app-ai-review` | `set-dev-soak-status` via AI agent / `dev-rc-cut-gate` | AI/human 앱 소킹 중 blocker 발견 즉시 `failure` | `dev-rc-cut-gate` 가 AI review pass signal 을 확인한 뒤 `success` | screenshot/UX/manual-ish app soak signal |
 | `dev-rc-cut-pass` | `dev-rc-cut-gate` | 작성하지 않음 | 모든 dev soak 조건 통과 시 `success` | RC cut source marker |
@@ -120,11 +120,11 @@ Issue label 은 분류용이다. Gate 판정에는 사용하지 않는다.
 
 ## Run History Verification
 
-`dev-rc-cut-gate` 는 GitHub Actions run history 로 "soak 이 실제로 돌았는지" 검증한다.
+`dev-rc-cut-gate` 는 GitHub Actions run history 로 "candidate SHA 에 dev cron 이 설치됐는지" 검증하고, commit status 로 simulator failure 를 확인한다.
 
 | Signal | 최소 조건 |
 |--------|-----------|
-| `monitor-event-flow-distributed` | `candidate_since` 이후 `success` run >= 250 |
+| `deploy-dev-event-flow-cron` | candidate SHA 에서 `success` run >= 1 |
 | legacy `monitor-event-flow-hourly/daily` | 수동 smoke 전용. gate run requirement 에서 제외 |
 | real-device smoke | candidate 기준 required run/signal success >= 1 (workflow 이름 TBD) |
 | app AI review | AI agent 가 candidate 기준 pass signal 제공 (workflow/status 입력 방식 TBD) |
@@ -133,14 +133,13 @@ Issue label 은 분류용이다. Gate 판정에는 사용하지 않는다.
 
 ```bash
 gh run list \
-  --workflow monitor-event-flow-distributed.yml \
-  --branch dev-staging \
+  --workflow deploy-dev-event-flow-cron.yml \
+  --branch dev \
   --created ">=2026-05-24T00:00:00Z" \
-  --limit 500 \
   --json databaseId,status,conclusion,createdAt,headSha
 ```
 
-Scheduled workflow run 의 `headBranch` / `headSha` 는 default branch (`dev-staging`) 기준으로 기록된다. `monitor-event-flow-distributed` 내부에서 `origin/dev` 를 fetch 해 실제 simulator target 을 정하므로, gate run history 는 `--branch dev-staging` 으로 조회한다. `shared-soak-gate` 는 `--created >= candidate_since` 와 `run_limit >= min_success` 로 candidate 이후 성공 run 수를 센다.
+`deploy-dev-event-flow-cron` 은 `push: dev` 에서만 실행되어 Actions `headBranch` 가 `dev` 로 기록된다. workflow 는 candidate SHA 를 body 의 `targetSha` 로 cron 에 설치한 뒤 즉시 1회 simulator tick 을 실행한다. 이후 `event-flow-simulator` 실패 시 해당 SHA 에 `dev-soak/backend-simulator` failure status 를 남긴다.
 
 ## Failure Recording
 
@@ -168,7 +167,7 @@ Issue body 에는 machine-readable metadata 를 남긴다. 단, gate 판정은 �
 <!-- minglit-release-signal
 stage: dev-soak
 signal: backend-simulator
-workflow: monitor-event-flow-distributed
+workflow: deploy-dev-event-flow-cron
 branch: dev
 commit: abc123...
 run_id: 263...
@@ -185,7 +184,7 @@ blocks_rc_cut: true
 
 1. `candidate_sha = origin/dev HEAD`
 2. candidate age 가 24h 이상인지 확인
-3. required monitor run history 가 candidate 기준으로 충분한지 확인
+3. required workflow run history 로 candidate SHA 에 dev cron 이 설치됐는지 확인
 4. candidate 의 required signal success evidence 가 존재하는지 확인
 5. candidate 의 최신 commit status 중 아래 context 가 `failure` 인지 확인:
    - `dev-soak/backend-simulator`

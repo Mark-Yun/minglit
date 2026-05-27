@@ -227,7 +227,7 @@ void main() {
 | 4 (pgTAP) | `supabase/tests/database/*.sql` | 80 |
 | 5 (Deno EF) | `supabase/functions/**/*_test.ts` | 75 |
 | 6 (DB monitor) | `check_db_invariants()` RPC | 1 RPC (매시간) |
-| 7 (event-flow simulator) | `event-flow-simulator` EF + `monitor-event-flow-*` | 5분마다 + 24h soak |
+| 7 (event-flow simulator) | `event-flow-simulator` EF + dev pg_cron `dev-event-flow-simulator` | 5분마다 + 24h soak |
 
 **핵심 갭**:
 - 🔴 **Layer 3 CUJ 이관 0%** — 37 widget flow 를 Patrol 로 전환 필요 (#1586 Phase D-2)

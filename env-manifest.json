@@ -178,6 +178,9 @@
         "required": {
           "ENVIRONMENT": {
             "desc": "Dev guard (dev)"
+          },
+          "GITHUB_ACCESS_TOKEN": {
+            "desc": "GitHub issue/status reporting for simulator failures"
           }
         }
       },

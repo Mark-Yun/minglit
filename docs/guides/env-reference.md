@@ -119,6 +119,7 @@
 | Key | Description | Required |
 |-----|-------------|----------|
 | `ENVIRONMENT` | Dev guard (must be development/dev/local) | Yes |
+| `GITHUB_ACCESS_TOKEN` | GitHub issue/status reporting for simulator failures | Yes |
 | `SUPABASE_ANON_KEY` | actor sign-in for simulated user/partner JWTs | Yes |
 | `SUPABASE_SERVICE_ROLE_KEY` | simulator service client | Yes |
 | `SIM_USER_PASSWORD` | dev seed actor password | Yes |

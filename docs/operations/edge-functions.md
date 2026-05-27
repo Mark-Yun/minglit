@@ -215,7 +215,7 @@ curl -X POST ".../functions/v1/event-flow-simulator" \
   -d '{"ticks":1,"usersPerTick":5,"partnersPerTick":2,"seed":202605250905}'
 ```
 
-시간은 5분 고정 schedule 이 담당하고, 랜덤성은 actor/user/partner/event sampling 에만 둔다. 유저 신청 대상은 DB prefix 가 아니라 `user-event-feed` 결과에서 고른다. Assertion 실패 시 GitHub 이슈가 자동 생성되며, 이슈에 Axiom 쿼리가 포함된다.
+시간은 dev Supabase pg_cron `dev-event-flow-simulator` 가 담당하고, 랜덤성은 actor/user/partner/event sampling 에만 둔다. 유저 신청 대상은 DB prefix 가 아니라 `user-event-feed` 결과에서 고른다. Assertion 실패 시 GitHub 이슈와 `dev-soak/backend-simulator` failure status 가 자동 생성된다.
 
 ## 환경변수 참조
 

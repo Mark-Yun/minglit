@@ -1,18 +1,11 @@
 name: monitor-event-flow-distributed
 
-# Every 5 minutes — one small event-flow-simulator tick.
-# schedule always targets dev. Manual dispatch accepts dev or rc/YYYY-Www.
+# Manual smoke for one small event-flow-simulator tick.
+# Continuous 5-minute execution is installed by deploy-dev-event-flow-cron.
 
 on:
-  schedule:
-    - cron: '*/5 * * * *'
   workflow_dispatch:
     inputs:
-      target_ref:
-        description: 'Target branch. Allowed: dev or rc/YYYY-Www.'
-        required: false
-        type: string
-        default: dev
       ticks:
         description: Cascade ticks per run.
         required: false
@@ -35,7 +28,7 @@ on:
         default: '400'
 
 concurrency:
-  group: monitor-event-flow-distributed-${{ inputs.target_ref || 'dev' }}
+  group: monitor-event-flow-distributed-dev
   cancel-in-progress: false
 
 permissions:
@@ -46,53 +39,31 @@ permissions:
 
 jobs:
   resolve-target:
-    name: Resolve target branch
+    name: Resolve dev branch
     runs-on: ubuntu-latest
     outputs:
       target_ref: ${{ steps.resolve.outputs.target_ref }}
       target_sha: ${{ steps.resolve.outputs.target_sha }}
-      soak_stage: ${{ steps.resolve.outputs.soak_stage }}
-      supabase_stage: ${{ steps.resolve.outputs.supabase_stage }}
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
 
-      - name: Resolve monitored ref
+      - name: Resolve dev ref
         id: resolve
-        env:
-          REQUESTED_TARGET_REF: ${{ inputs.target_ref || 'dev' }}
-          EVENT_NAME: ${{ github.event_name }}
         run: |
           set -euo pipefail
 
-          TARGET_REF="${REQUESTED_TARGET_REF}"
-          if [ "${EVENT_NAME}" = "schedule" ]; then
-            TARGET_REF="dev"
+          if [ "${GITHUB_REF}" != "refs/heads/dev" ]; then
+            echo "::error::Run this manual smoke with --ref dev. Current ref: ${GITHUB_REF}"
+            exit 1
           fi
 
-          case "${TARGET_REF}" in
-            dev)
-              SOAK_STAGE="dev-soak"
-              SUPABASE_STAGE="dev"
-              ;;
-            rc/[0-9][0-9][0-9][0-9]-W[0-9][0-9])
-              SOAK_STAGE="rc-soak"
-              SUPABASE_STAGE="rc"
-              ;;
-            *)
-              echo "::error::target_ref must be dev or rc/YYYY-Www. Got: ${TARGET_REF}"
-              exit 1
-              ;;
-          esac
+          git fetch origin dev --depth=1
+          TARGET_SHA="$(git rev-parse origin/dev)"
 
-          git fetch origin "${TARGET_REF}" --depth=1
-          TARGET_SHA="$(git rev-parse "origin/${TARGET_REF}")"
-
-          echo "target_ref=${TARGET_REF}" >> "${GITHUB_OUTPUT}"
+          echo "target_ref=dev" >> "${GITHUB_OUTPUT}"
           echo "target_sha=${TARGET_SHA}" >> "${GITHUB_OUTPUT}"
-          echo "soak_stage=${SOAK_STAGE}" >> "${GITHUB_OUTPUT}"
-          echo "supabase_stage=${SUPABASE_STAGE}" >> "${GITHUB_OUTPUT}"
 
   simulate:
     name: Run distributed event-flow tick
@@ -103,15 +74,13 @@ jobs:
       - name: Invoke event-flow-simulator
         env:
           TARGET_REF: ${{ needs.resolve-target.outputs.target_ref }}
-          SUPABASE_STAGE: ${{ needs.resolve-target.outputs.supabase_stage }}
           SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
           SUPABASE_DEV_SECRET_KEY: ${{ secrets.SUPABASE_DEV_SECRET_KEY }}
-          SUPABASE_RC_URL: ${{ secrets.SUPABASE_RC_URL }}
-          SUPABASE_RC_SECRET_KEY: ${{ secrets.SUPABASE_RC_SECRET_KEY }}
           INPUT_TICKS: ${{ inputs.ticks || '1' }}
           INPUT_USERS_PER_TICK: ${{ inputs.users_per_tick || '5' }}
           INPUT_PARTNERS_PER_TICK: ${{ inputs.partners_per_tick || '2' }}
           INPUT_DELAY_BETWEEN_CALLS_MS: ${{ inputs.delay_between_calls_ms || '400' }}
+          TARGET_SHA: ${{ needs.resolve-target.outputs.target_sha }}
         run: |
           set -euo pipefail
 
@@ -129,16 +98,11 @@ jobs:
           require_uint partners_per_tick "${INPUT_PARTNERS_PER_TICK}"
           require_uint delay_between_calls_ms "${INPUT_DELAY_BETWEEN_CALLS_MS}"
 
-          if [ "${SUPABASE_STAGE}" = "rc" ]; then
-            SUPABASE_URL="${SUPABASE_RC_URL}"
-            SUPABASE_SECRET_KEY="${SUPABASE_RC_SECRET_KEY}"
-          else
-            SUPABASE_URL="${SUPABASE_DEV_URL}"
-            SUPABASE_SECRET_KEY="${SUPABASE_DEV_SECRET_KEY}"
-          fi
+          SUPABASE_URL="${SUPABASE_DEV_URL}"
+          SUPABASE_SECRET_KEY="${SUPABASE_DEV_SECRET_KEY}"
 
           if [ -z "${SUPABASE_URL}" ] || [ -z "${SUPABASE_SECRET_KEY}" ]; then
-            echo "::error::Missing Supabase ${SUPABASE_STAGE} simulator secrets."
+            echo "::error::Missing Supabase dev simulator secrets."
             exit 1
           fi
 
@@ -154,7 +118,9 @@ jobs:
               usersPerTick: $usersPerTick,
               partnersPerTick: $partnersPerTick,
               delayBetweenCallsMs: $delayBetweenCallsMs,
-              seed: $seed
+              seed: $seed,
+              targetRef: "dev",
+              targetSha: env.TARGET_SHA
             }' > /tmp/sim_payload.json
 
           echo "target_ref=${TARGET_REF}"
@@ -182,7 +148,7 @@ jobs:
       workflow_name: 'monitor-event-flow-distributed'
       severity: 'P1-high'
       job_results: '{"resolve-target":"${{ needs.resolve-target.result }}","simulate":"${{ needs.simulate.result }}","target_ref":"${{ needs.resolve-target.outputs.target_ref }}","target_sha":"${{ needs.resolve-target.outputs.target_sha }}"}'
-      stage: ${{ needs.resolve-target.outputs.soak_stage }}
+      stage: 'dev-soak'
       signal: 'backend-simulator'
       blocks_rc_cut: true
       commit_sha: ${{ needs.resolve-target.outputs.target_sha }}
