@@ -45,6 +45,9 @@ class _PurchaseDetailBody extends ConsumerWidget {
     final event = application.event;
     final ticket = application.ticket;
     final party = event?.party;
+    final contactOptions = (event?.contactOptions.isNotEmpty ?? false)
+        ? event!.contactOptions
+        : party?.contactOptions ?? <String, dynamic>{};
     final location = event?.location ?? party?.location;
     final eventName = event?.title ?? party?.title ?? '제목 없음';
     final paymentId = application.paymentId;
@@ -248,6 +251,16 @@ class _PurchaseDetailBody extends ConsumerWidget {
                       label: const Text('영수증 보기'),
                     ),
                   ],
+                  const SizedBox(height: MinglitSpacing.small),
+                  OutlinedButton.icon(
+                    onPressed: () => _openContact(
+                      context: context,
+                      contactOptions: contactOptions,
+                      party: party,
+                    ),
+                    icon: const Icon(Icons.support_agent_outlined, size: 18),
+                    label: const Text('문의하기'),
+                  ),
                 ],
               ),
             ),
@@ -409,6 +422,54 @@ class _PurchaseDetailBody extends ConsumerWidget {
         }
       },
     );
+  }
+
+  Future<void> _openContact({
+    required BuildContext context,
+    required Map<String, dynamic> contactOptions,
+    required Party? party,
+  }) async {
+    final phone =
+        _resolveContactValue(contactOptions, 'phone') ??
+        party?.partner?.contactPhone;
+    final email =
+        _resolveContactValue(contactOptions, 'email') ??
+        party?.partner?.contactEmail;
+
+    Uri? uri;
+    if (phone != null && phone.isNotEmpty) {
+      uri = Uri.parse('tel:$phone');
+    } else if (email != null && email.isNotEmpty) {
+      uri = Uri.parse('mailto:$email');
+    }
+
+    if (uri == null) {
+      context.showMinglitWarning('연락처 정보가 없습니다.');
+      return;
+    }
+
+    final launched = await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    );
+
+    if (!launched && context.mounted) {
+      context.showMinglitWarning('연락처를 열 수 없습니다.');
+    }
+  }
+
+  String? _resolveContactValue(
+    Map<String, dynamic> contactOptions,
+    String key,
+  ) {
+    final value = contactOptions[key];
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isNotEmpty) {
+        return trimmed;
+      }
+    }
+    return null;
   }
 }
 

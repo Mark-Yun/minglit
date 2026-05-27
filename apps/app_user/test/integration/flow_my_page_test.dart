@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:plugin_platform_interface/plugin_platform_interface.dart';
+import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
 import 'utils/golden_capture.dart';
 import 'utils/test_app.dart';
@@ -384,6 +386,61 @@ void main() {
       expect(cancelButton, findsOneWidget);
       expect(tester.widget<ElevatedButton>(cancelButton).onPressed, isNull);
     });
+
+    testWidgets('카드 탭 후 상세에서 "문의하기"로 파트너 연락처를 연다', (tester) async {
+      setKoreanLocale(tester);
+      final user = createMockUserForTest();
+      final now = _fixedNow;
+      final launchedUrls = <String>[];
+      final fakeLauncher = _FakeDetailUrlLauncher(launchedUrls);
+      final originalLauncher = UrlLauncherPlatform.instance;
+      addTearDown(() => UrlLauncherPlatform.instance = originalLauncher);
+
+      final contactApp = _createApplication(
+        status: 'paid',
+        createdAt: now,
+        paymentId: 'pay-789',
+        paymentAmount: 15000,
+        event: Event(
+          id: 'evt-contact',
+          partyId: 'party-contact',
+          title: 'Contact Event',
+          startTime: DateTime(2030, 2, 1, 19),
+          endTime: DateTime(2030, 2, 1, 21),
+          createdAt: now,
+          updatedAt: now,
+          contactOptions: const {'phone': '02-1234-5678'},
+        ),
+      );
+
+      await tester.pumpWidget(
+        createTestApp(
+          isLoggedIn: true,
+          currentUser: user,
+          initialLocation: '/purchase-history',
+          additionalOverrides: [
+            purchaseHistoryControllerProvider.overrideWith(
+              () => _MockPurchaseHistoryWithData([contactApp]),
+            ),
+          ],
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      UrlLauncherPlatform.instance = fakeLauncher;
+
+      await tester.tap(find.byType(PurchaseHistoryCard));
+      await tester.pumpAndSettle();
+      expect(find.text('구매 상세'), findsOneWidget);
+
+      final contactButton = find.widgetWithText(OutlinedButton, '문의하기');
+      await tester.ensureVisible(contactButton);
+      await tester.tap(contactButton);
+      await tester.pump();
+
+      expect(launchedUrls, ['tel:02-1234-5678']);
+    });
   });
 
   // ────────────────────────────────────────────────────────────────────────
@@ -517,6 +574,25 @@ class _FakeSocialRepository implements SocialRepository {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FakeDetailUrlLauncher extends Fake
+    with MockPlatformInterfaceMixin
+    implements UrlLauncherPlatform {
+  _FakeDetailUrlLauncher(this.launchedUrls);
+  final List<String> launchedUrls;
+
+  @override
+  Future<bool> canLaunch(String url) async => true;
+
+  @override
+  Future<bool> supportsMode(PreferredLaunchMode mode) async => true;
+
+  @override
+  Future<bool> launchUrl(String url, LaunchOptions options) async {
+    launchedUrls.add(url);
+    return true;
+  }
 }
 
 // ────────────────────────────────────────────────────────────────────────
