@@ -16,7 +16,7 @@ CALLERS = [
     ROOT / ".github/workflows/deploy-android-user.yml",
     ROOT / ".github/workflows/deploy-android-partner.yml",
 ]
-EXPECTED_TOKEN = "${{ github.token }}"
+EXPECTED_TOKEN = "${{ steps.release-bot.outputs.token }}"
 
 
 def fail(message: str) -> None:
@@ -77,7 +77,7 @@ def assert_shared_android_deploy_contract() -> None:
 
         env = step.get("env", {})
         if not isinstance(env, dict) or env.get("GH_TOKEN") != EXPECTED_TOKEN:
-            fail(f"{name} must set GH_TOKEN to {EXPECTED_TOKEN}")
+            fail(f"{name} must set GH_TOKEN to release-bot output token ({EXPECTED_TOKEN})")
 
         script = step.get("run", "")
         if not isinstance(script, str):

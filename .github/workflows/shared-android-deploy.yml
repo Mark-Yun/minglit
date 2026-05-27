@@ -86,7 +86,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.deploy-stage == 'main' && 'production' || 'preview' }}
     permissions:
-      contents: read
+      contents: write
     outputs:
       version_name: ${{ needs.version.outputs.version_name }}
       build_number: ${{ needs.version.outputs.build_number }}
