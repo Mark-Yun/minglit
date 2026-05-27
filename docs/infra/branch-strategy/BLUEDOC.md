@@ -48,8 +48,8 @@ flowchart LR
 | dev-staging 지속 검증 | `monitor-dev-staging-health` | 6시간마다 EF unit/integration + user/partner CUJ 로 nightly 전 회귀 감지 |
 | dev-staging → dev cut gate | `dev-staging-dev-cut-gate` | dev 로 promote 할 coherent dev-staging snapshot 을 `v*-dev-staging` tag 로 선별 |
 | dev-staging → dev cut | `dev-staging-dev-cut` + `dev-pr-gate` | gate 가 선별한 snapshot 을 dev PR 로 promote |
-| dev → rc cut gate | `dev-rc-cut-gate` | 24h dev soak status/run history 확인 후 `dev-rc-cut-pass` status 부여 |
-| dev deploy/validation | `dev-deploy` | dev 환경 deploy/validation orchestrator. 이벤트 플로우 시뮬레이터는 `monitor-event-flow-*` batch 로 별도 운영 |
+| dev → rc cut gate | `dev-rc-cut-gate` | 24h dev soak status + dev cron install run 확인 후 `dev-rc-cut-pass` status 부여 |
+| dev deploy/validation | `dev-deploy` | dev 환경 deploy/validation orchestrator. 이벤트 플로우 시뮬레이터는 dev Supabase pg_cron 으로 별도 운영 |
 | dev → rc cut | `dev-rc-cut` | latest `dev-rc-cut-pass` commit 에서 `rc/YYYY-Wxx` 생성 |
 | rc hotfix | dev-staging fix PR + `rc-pr-gate` | dev-staging 에 먼저 반영된 fix commit 을 active RC 로 cherry-pick/promote |
 | rc deploy/validation | `rc-deploy` | Supabase branching 기반 RC 검증 환경 구성 + pre-main validation |
@@ -104,7 +104,7 @@ flowchart LR
 - cut-gate Issue 는 사람이 진행 상태를 추적하기 위한 projection 이다. 생성/갱신/닫기는 `.github/actions/cut-issue` 와 `close-cut-issue-on-pr-merge` 가 담당하며, promotion 판정 SSOT 로 사용하지 않는다
 - 모든 branch linear ON — dev-staging: squash, dev/rc/main: rebase
 - Protected branch 직접 push 는 human 금지. dev-staging version bump, promotion branch/tag, RC cleanup 은 `minglit-release-bot` 전용 token + Ruleset bypass 로만 허용
-- `monitor-event-flow-*` 는 release promotion 과 독립적인 batch signal. target 은 dev 5분 distributed tick 이고, RC 에서는 main 배포 전 검증 signal 로 사용한다
+- `deploy-dev-event-flow-cron` 은 `dev` push 에서만 `dev-event-flow-simulator` pg_cron 을 설치한다. `monitor-event-flow-*` 는 수동 smoke 이며, RC cron 은 RC project 준비 후 별도 설치한다
 - main 머지 = backend + mobile 모두 prod deploy. backend prod deploy 는 `main-deploy` 에서 한 번에 수행한다
 - 소스 파일 version bump 는 `dev-staging-dev-cut-gate` 가 만든 version-bump PR 에만 남긴다. 날짜 버전(`YY.MM.DD`) + version-bump PR 번호 build number 를 사용하고, `dev`/`rc`/`main` 은 branch state 를 바꾸지 않고 deploy workflow 가 metadata 를 build-time 에 주입한다
 - `main-deploy` 는 prod deploy execution 을 담당한다. main push 에서 version bump commit 을 만들지 않고, release asset/tag/marker 는 deploy metadata 를 기준으로 생성한다

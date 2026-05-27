@@ -10,6 +10,8 @@ export interface ReporterInput {
   runId: string;
   trace: Trace;
   violations: InvariantViolation[];
+  targetRef?: string;
+  targetSha?: string;
 }
 
 export function summarizeTrace(trace: Trace) {
@@ -23,7 +25,9 @@ export function summarizeTrace(trace: Trace) {
  * trace 실패 또는 invariant 위반 시 GH 이슈 생성.
  * 양쪽 모두 0 이면 null 반환 (이슈 생성 안 함).
  */
-export async function reportFailure(input: ReporterInput): Promise<string | null> {
+export async function reportFailure(
+  input: ReporterInput,
+): Promise<string | null> {
   const { runId, trace, violations } = input;
   const summary = summarizeTrace(trace);
 
@@ -43,7 +47,9 @@ export async function reportFailure(input: ReporterInput): Promise<string | null
     .filter((e) => !e.ok)
     .map(
       (e) =>
-        `- tick ${e.tick} | ${e.actorId} | ${e.action.type} (${e.action.ef ?? "direct"}) ` +
+        `- tick ${e.tick} | ${e.actorId} | ${e.action.type} (${
+          e.action.ef ?? "direct"
+        }) ` +
         `→ status ${e.status}${e.error ? ` (${e.error})` : ""}`,
     )
     .join("\n");
@@ -60,7 +66,8 @@ export async function reportFailure(input: ReporterInput): Promise<string | null
   if (traceBytes.length > MAX_ISSUE_BODY_BYTES) {
     let safeEnd = MAX_ISSUE_BODY_BYTES;
     while (safeEnd > 0 && (traceBytes[safeEnd] & 0xc0) === 0x80) safeEnd--;
-    truncatedTrace = new TextDecoder().decode(traceBytes.slice(0, safeEnd)) + "\n...[truncated]";
+    truncatedTrace = new TextDecoder().decode(traceBytes.slice(0, safeEnd)) +
+      "\n...[truncated]";
   }
 
   const body = `## Stochastic Cascade Failure Report
@@ -114,9 +121,64 @@ ${truncatedTrace}
     }
 
     const data = await response.json();
-    return (data as { html_url?: string }).html_url ?? null;
+    const issueUrl = (data as { html_url?: string }).html_url ?? null;
+    await writeFailureStatus({
+      token: githubToken,
+      targetRef: input.targetRef,
+      targetSha: input.targetSha,
+      targetUrl: issueUrl,
+      description:
+        `event-flow-simulator failed: ${summary.failed} action fails, ${violations.length} violations`,
+    });
+    return issueUrl;
   } catch (err) {
     console.error("[reporter] reportFailure exception:", err);
     return null;
+  }
+}
+
+async function writeFailureStatus(input: {
+  token: string;
+  targetRef?: string;
+  targetSha?: string;
+  targetUrl?: string | null;
+  description: string;
+}) {
+  const { targetSha } = input;
+  if (!targetSha || !/^[0-9a-fA-F]{40}$/.test(targetSha)) return;
+
+  const context = input.targetRef?.startsWith("rc/")
+    ? "rc-soak/backend-simulator"
+    : "dev-soak/backend-simulator";
+  const description = input.description.length > 140
+    ? input.description.slice(0, 137) + "..."
+    : input.description;
+
+  try {
+    const response = await fetch(
+      `https://api.github.com/repos/${GITHUB_REPO}/statuses/${targetSha}`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${input.token}`,
+          "Content-Type": "application/json",
+          "User-Agent": "Minglit-Cascade-Reporter",
+        },
+        body: JSON.stringify({
+          state: "failure",
+          context,
+          description,
+          target_url: input.targetUrl ?? undefined,
+        }),
+      },
+    );
+    if (!response.ok) {
+      console.error(
+        "[reporter] GitHub status API error:",
+        await response.text(),
+      );
+    }
+  } catch (err) {
+    console.error("[reporter] writeFailureStatus exception:", err);
   }
 }

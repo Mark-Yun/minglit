@@ -63,6 +63,8 @@ export const handler = async (
     usersPerTick?: number;
     partnersPerTick?: number;
     delayBetweenCallsMs?: number;
+    targetRef?: string;
+    targetSha?: string;
   } = {};
   try {
     if (req.headers.get("content-type")?.includes("application/json")) {
@@ -78,6 +80,12 @@ export const handler = async (
   const seed = positiveInteger(body.seed, Date.now());
   const usersPerTick = positiveInteger(body.usersPerTick, 10);
   const partnersPerTick = positiveInteger(body.partnersPerTick, 2);
+  const targetRef = typeof body.targetRef === "string"
+    ? body.targetRef
+    : undefined;
+  const targetSha = typeof body.targetSha === "string"
+    ? body.targetSha
+    : undefined;
   // Fix #2545: 기본 300ms throttle — Supabase 의 per-trace rate limit 회피.
   // 0 으로 명시하면 disable (unit test / 빠른 dev 용).
   const delayBetweenCallsMs = positiveInteger(body.delayBetweenCallsMs, 300);
@@ -93,6 +101,8 @@ export const handler = async (
       usersPerTick,
       partnersPerTick,
       delayBetweenCallsMs,
+      targetRef,
+      targetSha,
     },
   });
 
@@ -204,6 +214,8 @@ export const handler = async (
       runId,
       trace: cascade.trace,
       violations,
+      targetRef,
+      targetSha,
     });
 
     log({

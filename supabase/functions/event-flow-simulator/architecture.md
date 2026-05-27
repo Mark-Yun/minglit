@@ -28,11 +28,11 @@
 
 | 항목 | 정책 |
 |---|---|
-| 실행 주기 | 5분마다 1회 (`*/5 * * * *`) — 하루 288회 |
+| 실행 주기 | dev Supabase pg_cron `dev-event-flow-simulator` 가 5분마다 1회 (`*/5 * * * *`) |
 | 호출 크기 | `ticks=1`, 작은 actor set (`usersPerTick` 3-8, `partnersPerTick` 1-2) |
 | 랜덤 위치 | 시간은 고정, actor/user/partner/event 선택만 seed 기반 랜덤 |
-| 환경 | dev 전용. `auth-manifest` env guard 로 prod 차단 |
-| 실패 처리 | 실패 즉시 `dev-soak/backend-simulator` status + release-blocker issue |
+| 환경 | dev 전용. cron 설치는 `deploy-dev-event-flow-cron` 이 `push: dev` 에서만 수행 |
+| 실패 처리 | 실패 즉시 `dev-soak/backend-simulator` status + GH issue |
 
 큰 daily cascade 한 번(`ticks=3`, `usersPerTick=50`)으로 100개 이상의 nested EF 호출을 한 trace 에 몰아넣는 방식은 Supabase per-trace rate limit 에 취약하다. 총 커버리지는 24시간 누적으로 확보하고, 각 invocation 은 작게 유지한다.
 
@@ -189,7 +189,7 @@ event-flow-simulator/
 | 2 | 액션 마이그 | 기존 8 SimAction → `action/*.ts` 8 파일. 기존 *_test.ts 유지 | 1주 | 기존 deno test 통과 |
 | 3 | policy + params | `policy/user.ts`, `policy/partner.ts`, `params/default.ts` 작성 | 3-4일 | small cascade run → 액션 발생 검증 |
 | 4 | invariant 초기 set | 실 비즈니스 규칙 정의 RFC (후보: money conservation / settlement coverage / match integrity / participant ordering / event lifecycle / PGMQ DLQ) — 각 규칙은 실 코드/스키마 정합 확인 선행 필요. 가설 invariant 작성 금지 | 2-3주 | stress params 로 의도적 위반 → 잡히는지 검증 |
-| 5 | `modes/tick.ts` | 5분 distributed tick. actor random sample + small payload | 2일 | 24h run history 에서 rate limit 0건 |
+| 5 | dev pg_cron tick | 5분 distributed tick. actor random sample + small payload | 2일 | 24h cron history 에서 rate limit 0건 |
 | 6 | user/partner discovery 경로 정렬 | 유저는 `user-event-feed`, 파트너/이벤트 생성은 partner EF 경유 | 1주 | SQL party/event seed 없이 feed→apply 가능 |
 | 7 | `modes/seed.ts` + phase 삭제 | 계정/파트너 base seed 와 EF-driven state generation 분리. 옛 phase 모드 5 파일 삭제 | 3-4일 | seed 1회 실행 후 dev 상태 다양성 측정 |
 | 8 | `modes/stress.ts` | chaos params + invariant 위반 → GH 이슈 자동 생성 | 3일 | 야간 stress run → 알림 도착 검증 |
