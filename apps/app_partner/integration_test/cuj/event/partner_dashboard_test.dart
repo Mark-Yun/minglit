@@ -23,6 +23,7 @@
 
 import 'package:app_partner/src/features/application/event_application_manage_page.dart';
 import 'package:app_partner/src/features/checkin/checkin_placeholder_page.dart';
+import 'package:app_partner/src/features/checkin/qr_scanner_screen.dart';
 import 'package:app_partner/src/features/home/partner_dashboard_controller.dart';
 import 'package:app_partner/src/features/home/partner_home_coordinator.dart';
 import 'package:app_partner/src/features/home/partner_home_page.dart';
@@ -152,6 +153,19 @@ List<dynamic> _homeBase({
   ),
   partnerHomeCoordinatorProvider.overrideWith((ref) => coordinator),
 ];
+
+Future<void> _pumpUntilFound(
+  WidgetTester tester,
+  Finder finder, {
+  Duration timeout = const Duration(seconds: 8),
+  Duration step = const Duration(milliseconds: 200),
+}) async {
+  final maxPumps = timeout.inMilliseconds ~/ step.inMilliseconds;
+  for (var i = 0; i < maxPumps; i++) {
+    if (finder.evaluate().isNotEmpty) return;
+    await tester.pump(step);
+  }
+}
 
 /// 이벤트가 있는 홈 기본 상태.
 PartnerDashboardState _homeStateWithEvents({
@@ -718,7 +732,8 @@ void main() {
       ],
       afterPump: const Duration(seconds: 2),
       body: (t) async {
-        expect(find.text('티켓 스캔'), findsOneWidget);
+        await _pumpUntilFound(t, find.byType(QRScannerScreen));
+        expect(find.byType(QRScannerScreen), findsOneWidget);
         expect(find.textContaining('이벤트를 선택하세요'), findsNothing);
       },
     );
@@ -839,6 +854,7 @@ void main() {
       ],
       afterPump: const Duration(seconds: 2),
       body: (t) async {
+        await _pumpUntilFound(t, find.byType(QRScannerScreen));
         final hasDarkTheme = t
             .widgetList<Theme>(find.byType(Theme))
             .any((w) => w.data.brightness == Brightness.dark);
@@ -866,7 +882,8 @@ void main() {
         expect(rootBefore.theme?.brightness, Brightness.light);
 
         await t.tap(find.byType(Card).first);
-        await t.pumpAndSettle();
+        await t.pump(const Duration(seconds: 2));
+        await _pumpUntilFound(t, find.byType(QRScannerScreen));
 
         final hasDarkThemeOnScanner = t
             .widgetList<Theme>(find.byType(Theme))
@@ -874,7 +891,8 @@ void main() {
         expect(hasDarkThemeOnScanner, isTrue);
 
         await t.pageBack();
-        await t.pumpAndSettle();
+        await t.pump(const Duration(milliseconds: 600));
+        await _pumpUntilFound(t, find.text('이벤트를 선택하세요'));
 
         expect(find.text('이벤트를 선택하세요'), findsOneWidget);
         final rootAfter = t.widget<MaterialApp>(find.byType(MaterialApp).first);
