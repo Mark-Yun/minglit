@@ -279,7 +279,7 @@ void main() {
       expect(find.text('알수없음'), findsOneWidget);
     });
 
-    testWidgets('환불 가능 시 → "예매 취소" 버튼 표시', (tester) async {
+    testWidgets('환불 가능 시 → 카드 탭 후 상세에서 "예매 취소" 버튼 동작', (tester) async {
       setKoreanLocale(tester);
       final user = createMockUserForTest();
       final now = _fixedNow;
@@ -328,20 +328,25 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      expect(find.text('예매 취소'), findsOneWidget);
+      // 리스트 카드에는 인라인 액션이 없어야 한다.
+      expect(find.text('예매 취소'), findsNothing);
 
-      // 예매 취소 탭 → 환불 확인 다이얼로그 (금액/수수료 표시)
-      await tester.tap(find.text('예매 취소'));
+      // 카드 탭 → 상세 진입
+      await tester.tap(find.byType(PurchaseHistoryCard));
+      await tester.pumpAndSettle();
+      expect(find.text('구매 상세'), findsOneWidget);
+
+      // 상세 화면의 예매 취소 버튼 탭 → 확인 다이얼로그
+      final cancelButton = find.widgetWithText(ElevatedButton, '예매 취소');
+      await tester.ensureVisible(cancelButton);
+      await tester.tap(cancelButton);
       await tester.pumpAndSettle();
 
-      expect(find.text('예매 취소 확인'), findsOneWidget);
-      expect(find.text('30,000원'), findsWidgets); // 결제 금액
-      expect(find.text('환불 비율'), findsOneWidget);
-      expect(find.text('환불 금액'), findsOneWidget);
-      expect(find.text('수수료'), findsOneWidget);
+      expect(find.text('취소하기'), findsOneWidget);
+      expect(find.textContaining('환불됩니다.'), findsOneWidget);
     });
 
-    testWidgets('환불 불가 시 → "예매 취소" 버튼 미표시', (tester) async {
+    testWidgets('환불 불가 시 → 상세의 "예매 취소" 버튼 비활성화', (tester) async {
       setKoreanLocale(tester);
       final user = createMockUserForTest();
       final now = _fixedNow;
@@ -369,8 +374,15 @@ void main() {
       await tester.pump();
 
       expect(find.text('예매 취소'), findsNothing);
-      // 취소된 상태 배지가 표시되어야 함
       expect(find.text('취소됨'), findsOneWidget);
+
+      await tester.tap(find.byType(PurchaseHistoryCard));
+      await tester.pumpAndSettle();
+      expect(find.text('구매 상세'), findsOneWidget);
+
+      final cancelButton = find.widgetWithText(ElevatedButton, '예매 취소');
+      expect(cancelButton, findsOneWidget);
+      expect(tester.widget<ElevatedButton>(cancelButton).onPressed, isNull);
     });
   });
 
