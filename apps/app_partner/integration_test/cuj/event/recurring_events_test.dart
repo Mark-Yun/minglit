@@ -137,6 +137,12 @@ void main() {
   late _MockLocationRepository mockLocationRepo;
   late _MockPartyDetailCoordinator mockPartyDetailCoordinator;
 
+  setUpAll(() {
+    registerFallbackValue(_makeEvent());
+    registerFallbackValue(RecurrencePattern.weekly);
+    registerFallbackValue(<int>[1]);
+  });
+
   setUp(() {
     mockRepo = _MockRecurrenceRuleRepository();
     mockPartyRepo = _MockPartyRepository();
