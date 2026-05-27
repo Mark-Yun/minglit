@@ -101,3 +101,111 @@ Deno.test("reportFailure includes issue URL in failure status when issue creatio
     assertEquals((calls[1].body as { target_url: string }).target_url, htmlUrl);
   });
 });
+
+Deno.test("reportFailure still writes status when issue request throws", async () => {
+  const calls: Array<{ url: string; body: unknown }> = [];
+  await withMockedFetch((input, init) => {
+    const url = String(input);
+    calls.push({
+      url,
+      body: init?.body ? JSON.parse(String(init.body)) : null,
+    });
+    if (calls.length === 1) {
+      throw new Error("network down");
+    }
+    return new Response("{}", { status: 201 });
+  }, async () => {
+    const issueUrl = await reportFailure({
+      runId: "run-3",
+      trace: failedTrace(),
+      violations: [],
+      targetRef: "dev",
+      targetSha: TARGET_SHA,
+    });
+
+    assertEquals(issueUrl, null);
+    assertEquals(calls.length, 2);
+    assert(calls[1].url.endsWith(`/statuses/${TARGET_SHA}`));
+  });
+});
+
+Deno.test("reportFailure writes rc context and tolerates status API failure", async () => {
+  const calls: Array<{ url: string; body: unknown }> = [];
+  await withMockedFetch((input, init) => {
+    const url = String(input);
+    calls.push({
+      url,
+      body: init?.body ? JSON.parse(String(init.body)) : null,
+    });
+    if (url.endsWith("/issues")) {
+      return Response.json({ html_url: "https://example.test/issue" });
+    }
+    return new Response("status api down", { status: 500 });
+  }, async () => {
+    const issueUrl = await reportFailure({
+      runId: "run-4",
+      trace: failedTrace(),
+      violations: [],
+      targetRef: "rc/2026-W22",
+      targetSha: TARGET_SHA,
+    });
+
+    assertEquals(issueUrl, "https://example.test/issue");
+    assertEquals(
+      (calls[1].body as { context: string }).context,
+      "rc-soak/backend-simulator",
+    );
+  });
+});
+
+Deno.test("reportFailure skips status write without a valid targetSha", async () => {
+  const calls: Array<{ url: string; body: unknown }> = [];
+  await withMockedFetch((input, init) => {
+    const url = String(input);
+    calls.push({
+      url,
+      body: init?.body ? JSON.parse(String(init.body)) : null,
+    });
+    return Response.json({ html_url: "https://example.test/issue" });
+  }, async () => {
+    await reportFailure({
+      runId: "run-5",
+      trace: failedTrace(),
+      violations: [],
+      targetRef: "dev",
+      targetSha: "short-sha",
+    });
+
+    assertEquals(calls.length, 1);
+    assert(calls[0].url.endsWith("/issues"));
+  });
+});
+
+Deno.test("reportFailure truncates oversized trace body", async () => {
+  const calls: Array<{ url: string; body: unknown }> = [];
+  const trace = failedTrace();
+  trace[0].error = "x".repeat(70_000);
+  await withMockedFetch((input, init) => {
+    const url = String(input);
+    calls.push({
+      url,
+      body: init?.body ? JSON.parse(String(init.body)) : null,
+    });
+    if (url.endsWith("/issues")) {
+      return Response.json({ html_url: "https://example.test/issue" });
+    }
+    return new Response("{}", { status: 201 });
+  }, async () => {
+    await reportFailure({
+      runId: "run-6",
+      trace,
+      violations: [],
+      targetRef: "dev",
+      targetSha: TARGET_SHA,
+    });
+
+    assert(
+      (calls[0].body as { body: string }).body.includes("...[truncated]"),
+    );
+  });
+});
