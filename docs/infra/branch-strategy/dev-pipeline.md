@@ -42,6 +42,8 @@ cut 직전 schedule/manual 로 실행된다. 통과 = "이 dev HEAD commit 은 R
 
 GitHub Issue 는 source-of-truth 가 아니다. Gate 판정은 commit status context 와 GitHub Actions run history 를 사용한다.
 
+`dev-rc-cut-gate` 는 **true evidence** 만 pass 로 본다. required success status/run history 가 없으면 상태는 `unknown` 이며, failure status 나 blocker issue 가 없더라도 RC cut source 로 선택하지 않는다.
+
 | Context | failure 작성자 | success 작성자 |
 |---------|---------------|----------------|
 | `dev-soak/backend-simulator` | `monitor-event-flow-*` 실패 path (`shared-notify`) | `dev-rc-cut-gate` |
@@ -63,6 +65,7 @@ GitHub Issue 는 source-of-truth 가 아니다. Gate 판정은 commit status con
 | Real device | candidate 기준 required real-device signal success >= 1 (workflow TBD) |
 | App AI review | AI agent 가 candidate 기준 app-soak pass signal 제공 (입력 방식 TBD) |
 | Failure status | `dev-soak/*` context 의 최신 state 가 `failure` 가 아니어야 함 |
+| Positive evidence | required run history 와 required signal success 가 모두 존재해야 함. 미존재는 pass 가 아니라 unknown |
 
 ### 통과 시 (dev-rc-cut-pass)
 

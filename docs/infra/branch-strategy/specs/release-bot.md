@@ -19,7 +19,7 @@ GitHub App permission 은 아래만 부여한다.
 | Permission | Level | 이유 |
 |------------|-------|------|
 | Contents | Read/write | version bump commit, branch 생성/삭제, tag push, release asset/source 접근 |
-| Pull requests | Read/write | promotion/backport PR 생성, auto-merge enable |
+| Pull requests | Read/write | promotion/cherry-pick PR 생성, auto-merge enable |
 | Commit statuses | Read/write | `dev-soak/*`, `dev-rc-cut-pass`, `rc-main-cut-pass` 같은 gate marker 설정 |
 | Checks | Read | required check / gate 상태 조회 |
 | Actions | Read | `dev-rc-cut-gate` 가 monitor workflow run history 를 조회 |
@@ -84,7 +84,6 @@ git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
 
 | Workflow | 사용 이유 |
 |----------|-----------|
-| `sync-version` | dev/main version bump commit, main release tag |
 | `dev-staging-dev-cut-gate` | dev-staging version bump/tag |
 | `dev-staging-dev-cut` | immutable nightly branch 생성, dev PR 생성 |
 | `shared-set-commit-status` | commit status 를 쓰는 low-level reusable |
@@ -93,11 +92,10 @@ git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
 | `monitor-event-flow-*` / `shared-notify` | backend simulator 실패 시 `set-dev-soak-status` 로 failure status + issue 기록 |
 | AI app soak status writer | 앱 소킹/실디바이스 이상 발견 시 `set-dev-soak-status` 로 failure status 기록 |
 | `dev-rc-cut-gate` | 24h soak run history 확인 후 `set-dev-soak-status` 로 `dev-soak/*` success + `dev-rc-cut-pass` status 기록 |
-| `dev-rc-cut` | `rc/YYYY-Wxx` branch 생성, RC tag |
-| `rc-post-merge-sync` | RC hotfix version bump/tag |
+| `dev-rc-cut` | `rc/YYYY-Wxx` branch 생성, `promo/rc-*` tag |
 | `rc-main-cut` | rc → main promotion PR 생성/auto-merge |
-| `rc-hotfix-backport` | backport branch/PR 생성 |
-| `main-deploy` | final version/tag/release marker, prod deploy, RC branch cleanup |
+| `rc-hotfix-apply` | dev-staging fix commit 을 active RC 로 cherry-pick 하는 branch/PR 생성 |
+| `main-deploy` | `promo/main-*` tag/release marker, prod deploy, RC branch cleanup |
 
 ## Ruleset Bypass
 
@@ -106,9 +104,9 @@ Ruleset bypass actor 는 `minglit-release-bot` App installation 으로 제한한
 | Target | 허용 작업 |
 |--------|-----------|
 | `dev-staging` | version bump commit, `v*-dev-staging` tag |
-| `dev` | dev-staging-dev-cut promotion/version metadata push |
-| `rc/**` | RC branch 생성/삭제, RC hotfix version bump |
-| `main` | final version bump/tag/promotion commit |
+| `dev` | dev-staging-dev-cut promotion branch/PR support |
+| `rc/**` | RC branch 생성/삭제 |
+| `main` | promotion tag/cleanup |
 | `v*`, `promo/**` | protected tag 생성 |
 
 Human 은 release bot private key/token 을 로컬에서 사용하지 않는다. 모든 bot write 는 workflow run URL, target ref, pushed tag/commit 을 job summary 에 남긴다.

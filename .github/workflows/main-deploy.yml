@@ -5,12 +5,8 @@ on:
     branches: [main]
   workflow_dispatch:
     inputs:
-      release_version:
-        description: Optional final version, e.g. 26.05.2572. Defaults to current rc version without suffix.
-        required: false
-        type: string
       dry_run:
-        description: Plan only; do not bump version, tag, or deploy.
+        description: Plan only; do not tag or deploy.
         required: false
         type: boolean
         default: false
@@ -21,7 +17,6 @@ concurrency:
 
 permissions:
   contents: write
-  pull-requests: write
   issues: write
 
 jobs:
@@ -29,10 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       deploy_required: ${{ steps.plan.outputs.deploy_required }}
-      finalize_required: ${{ steps.plan.outputs.finalize_required }}
-      release_version: ${{ steps.plan.outputs.release_version }}
-      tag_name: ${{ steps.plan.outputs.tag_name }}
       promo_tag: ${{ steps.plan.outputs.promo_tag }}
+      source_sha: ${{ steps.plan.outputs.source_sha }}
 
     steps:
       - uses: actions/checkout@v6
@@ -42,37 +35,14 @@ jobs:
 
       - name: Plan main deployment finalization
         id: plan
-        env:
-          REQUESTED_RELEASE_VERSION: ${{ inputs.release_version || '' }}
         run: |
           set -euo pipefail
 
-          current_version="$(awk '/^version:/ {print $2; exit}' apps/app_user/pubspec.yaml | sed 's/+.*//')"
-          release_version="${REQUESTED_RELEASE_VERSION}"
-
-          if [ -z "${release_version}" ]; then
-            if [[ "${current_version}" =~ ^([0-9]{2}\.(0[1-9]|1[0-2])\.[0-9]+)-rc-[0-9]{2}$ ]]; then
-              release_version="$(printf '%s' "${current_version}" | sed -E 's/-rc-[0-9]{2}$//')"
-              finalize_required=true
-            else
-              release_version="${current_version}"
-              finalize_required=false
-            fi
-          else
-            finalize_required=true
-          fi
-
-          if ! [[ "${release_version}" =~ ^[0-9]{2}\.(0[1-9]|1[0-2])\.[0-9]+$ ]]; then
-            echo "::error::Invalid release_version: ${release_version}. Expected YY.MM.PR#."
-            exit 1
-          fi
-
+          source_sha="$(git rev-parse HEAD)"
           promo_week="$(TZ=Asia/Seoul date +%G-W%V)"
           echo "deploy_required=true" >> "$GITHUB_OUTPUT"
-          echo "finalize_required=${finalize_required}" >> "$GITHUB_OUTPUT"
-          echo "release_version=${release_version}" >> "$GITHUB_OUTPUT"
-          echo "tag_name=v${release_version}" >> "$GITHUB_OUTPUT"
           echo "promo_tag=promo/main-${promo_week}" >> "$GITHUB_OUTPUT"
+          echo "source_sha=${source_sha}" >> "$GITHUB_OUTPUT"
 
           {
             echo "## main-deploy plan"
@@ -80,39 +50,23 @@ jobs:
             echo "| Field | Value |"
             echo "|---|---|"
             echo "| dry_run | ${{ inputs.dry_run || false }} |"
-            echo "| current_version | ${current_version} |"
-            echo "| release_version | ${release_version} |"
-            echo "| finalize_required | ${finalize_required} |"
-            echo "| tag_name | v${release_version} |"
+            echo "| source_sha | ${source_sha} |"
             echo "| promo_tag | promo/main-${promo_week} |"
             echo "| deploy | web + android + ios main |"
           } >> "$GITHUB_STEP_SUMMARY"
 
-  finalize-version:
-    needs: [plan]
-    if: needs.plan.outputs.finalize_required == 'true' && inputs.dry_run != true
-    uses: ./.github/workflows/version-bump.yml
-    with:
-      target_ref: main
-      version: ${{ needs.plan.outputs.release_version }}
-      release_version: ${{ needs.plan.outputs.release_version }}
-      tag_name: ${{ needs.plan.outputs.tag_name }}
-      create_release: true
-      skip_ci: true
-    secrets: inherit
-
   tag-promo:
-    needs: [plan, finalize-version]
-    if: needs.plan.outputs.finalize_required == 'true' && inputs.dry_run != true
+    needs: [plan]
+    if: needs.plan.outputs.deploy_required == 'true' && inputs.dry_run != true
     uses: ./.github/workflows/shared-promo-tag.yml
     with:
       target_ref: main
       tag_name: ${{ needs.plan.outputs.promo_tag }}
-      commit_sha: ${{ needs.finalize-version.outputs.commit_sha }}
+      commit_sha: ${{ needs.plan.outputs.source_sha }}
     secrets: inherit
 
   web:
-    needs: [plan, finalize-version, tag-promo]
+    needs: [plan, tag-promo]
     if: always() && needs.plan.outputs.deploy_required == 'true' && inputs.dry_run != true && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     uses: ./.github/workflows/deploy-vercel.yml
     with:
@@ -120,7 +74,7 @@ jobs:
     secrets: inherit
 
   android_user:
-    needs: [plan, finalize-version, tag-promo]
+    needs: [plan, tag-promo]
     if: always() && needs.plan.outputs.deploy_required == 'true' && inputs.dry_run != true && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     uses: ./.github/workflows/deploy-android-user.yml
     with:
@@ -129,7 +83,7 @@ jobs:
     secrets: inherit
 
   android_partner:
-    needs: [plan, finalize-version, tag-promo]
+    needs: [plan, tag-promo]
     if: always() && needs.plan.outputs.deploy_required == 'true' && inputs.dry_run != true && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     uses: ./.github/workflows/deploy-android-partner.yml
     with:
@@ -138,7 +92,7 @@ jobs:
     secrets: inherit
 
   ios_user:
-    needs: [plan, finalize-version, tag-promo]
+    needs: [plan, tag-promo]
     if: always() && needs.plan.outputs.deploy_required == 'true' && inputs.dry_run != true && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     uses: ./.github/workflows/deploy-ios-user.yml
     with:
@@ -147,7 +101,7 @@ jobs:
     secrets: inherit
 
   ios_partner:
-    needs: [plan, finalize-version, tag-promo]
+    needs: [plan, tag-promo]
     if: always() && needs.plan.outputs.deploy_required == 'true' && inputs.dry_run != true && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     uses: ./.github/workflows/deploy-ios-partner.yml
     with:
@@ -156,7 +110,7 @@ jobs:
     secrets: inherit
 
   notify-failure:
-    needs: [plan, finalize-version, tag-promo, web, android_user, android_partner, ios_user, ios_partner]
+    needs: [plan, tag-promo, web, android_user, android_partner, ios_user, ios_partner]
     if: always()
     permissions:
       actions: read
@@ -171,8 +125,7 @@ jobs:
           inputs.dry_run != true &&
           (
             needs.plan.result != 'success' ||
-            contains(fromJSON('["success", "skipped"]'), needs.finalize-version.result) != true ||
-            contains(fromJSON('["success", "skipped"]'), needs.tag-promo.result) != true ||
+            needs.tag-promo.result != 'success' ||
             needs.web.result != 'success' ||
             needs.android_user.result != 'success' ||
             needs.android_partner.result != 'success' ||
@@ -182,4 +135,4 @@ jobs:
         }}
       workflow_name: 'Main Deploy'
       severity: 'P0-critical'
-      job_results: '{"plan":"${{ needs.plan.result }}","finalize-version":"${{ needs.finalize-version.result }}","tag-promo":"${{ needs.tag-promo.result }}","web":"${{ needs.web.result }}","android-user":"${{ needs.android_user.result }}","android-partner":"${{ needs.android_partner.result }}","ios-user":"${{ needs.ios_user.result }}","ios-partner":"${{ needs.ios_partner.result }}"}'
+      job_results: '{"plan":"${{ needs.plan.result }}","tag-promo":"${{ needs.tag-promo.result }}","web":"${{ needs.web.result }}","android-user":"${{ needs.android_user.result }}","android-partner":"${{ needs.android_partner.result }}","ios-user":"${{ needs.ios_user.result }}","ios-partner":"${{ needs.ios_partner.result }}"}'

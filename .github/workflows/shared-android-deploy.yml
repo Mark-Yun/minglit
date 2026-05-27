@@ -67,13 +67,29 @@ on:
         required: true
       JUSO_CONFIRM_KEY:
         required: false
+      MINGLIT_RELEASE_BOT_APP_ID:
+        description: 'GitHub App ID for GitHub Releases publish'
+        required: true
+      MINGLIT_RELEASE_BOT_PRIVATE_KEY:
+        description: 'GitHub App private key for GitHub Releases publish'
+        required: true
 
 jobs:
+  version:
+    uses: ./.github/workflows/shared-version-metadata.yml
+    with:
+      channel: ${{ inputs.deploy-stage == 'main' && 'main' || 'dev' }}
+      source-ref: ${{ inputs.target-ref || github.ref }}
+
   build:
+    needs: [version]
     runs-on: ubuntu-latest
     environment: ${{ inputs.deploy-stage == 'main' && 'production' || 'preview' }}
     permissions:
       contents: write
+    outputs:
+      version_name: ${{ needs.version.outputs.version_name }}
+      build_number: ${{ needs.version.outputs.build_number }}
     defaults:
       run:
         working-directory: ./${{ inputs.app-directory }}
@@ -150,39 +166,32 @@ jobs:
 
       - name: Build APK (Dev)
         if: inputs.deploy-stage == 'dev'
-        run: flutter build apk --flavor dev --release --build-number=${{ github.run_number }} --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_DEV_URL }} --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }} --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN_FLUTTER }} --dart-define=ENVIRONMENT=development --dart-define=JUSO_CONFIRM_KEY=${{ secrets.JUSO_CONFIRM_KEY }}
+        run: flutter build apk --flavor dev --release --build-name=${{ needs.version.outputs.version_name }} --build-number=${{ needs.version.outputs.build_number }} --dart-define=APP_VERSION=${{ needs.version.outputs.version_name }} --dart-define=APP_CHANNEL=dev --dart-define=SOURCE_BRANCH=dev --dart-define=GIT_SHA=${{ needs.version.outputs.source_sha }} --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_DEV_URL }} --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }} --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN_FLUTTER }} --dart-define=ENVIRONMENT=development --dart-define=JUSO_CONFIRM_KEY=${{ secrets.JUSO_CONFIRM_KEY }}
 
       - name: Build AAB (Main)
         if: inputs.deploy-stage == 'main'
-        run: flutter build appbundle --flavor prod --release --build-number=${{ github.run_number }} --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_MAIN_URL }} --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }} --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN_FLUTTER }} --dart-define=ENVIRONMENT=production --dart-define=JUSO_CONFIRM_KEY=${{ secrets.JUSO_CONFIRM_KEY }}
+        run: flutter build appbundle --flavor prod --release --build-name=${{ needs.version.outputs.version_name }} --build-number=${{ needs.version.outputs.build_number }} --dart-define=APP_VERSION=${{ needs.version.outputs.version_name }} --dart-define=APP_CHANNEL=main --dart-define=SOURCE_BRANCH=main --dart-define=GIT_SHA=${{ needs.version.outputs.source_sha }} --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_MAIN_URL }} --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }} --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN_FLUTTER }} --dart-define=ENVIRONMENT=production --dart-define=JUSO_CONFIRM_KEY=${{ secrets.JUSO_CONFIRM_KEY }}
 
-      - name: Upload Artifact (Dev APK)
-        if: inputs.deploy-stage == 'dev'
-        uses: actions/upload-artifact@v7
+      - name: Generate release bot token
+        id: release-bot
+        uses: ./.github/actions/release-bot-token
         with:
-          name: ${{ inputs.artifact-name-apk }}
-          path: ${{ inputs.app-directory }}/build/app/outputs/flutter-apk/app-dev-release.apk
-
-      - name: Upload Artifact (Prod AAB)
-        if: inputs.deploy-stage == 'main'
-        uses: actions/upload-artifact@v7
-        with:
-          name: ${{ inputs.artifact-name-aab }}
-          path: ${{ inputs.app-directory }}/build/app/outputs/bundle/prodRelease/app-prod-release.aab
+          fallback-app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
+          fallback-private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
 
       # Publish to GitHub Releases (Firebase App Distribution 와 별개로,
       # 외부 공유 URL + 버전별 historical archive 제공).
       - name: Publish APK/AAB to Releases (Dev)
         if: inputs.deploy-stage == 'dev'
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.release-bot.outputs.token }}
           REPO: ${{ github.repository }}
           APP: ${{ inputs.app-name }}
           APP_DIR: ${{ inputs.app-directory }}
         run: |
           set -e
           cd ../../  # back to repo root for gh release
-          VERSION=$(grep '^version:' ${APP_DIR}/pubspec.yaml | sed 's/version: //;s/+.*//')
+          VERSION="${{ needs.version.outputs.version_name }}"
           SRC="${APP_DIR}/build/app/outputs/flutter-apk/app-dev-release.apk"
           ASSET="app_${APP}-android-dev-v${VERSION}.apk"
           cp "$SRC" "/tmp/${ASSET}"
@@ -196,7 +205,7 @@ jobs:
           else
             gh release create "$HIST" \
               --title "android • app_${APP} (dev) v${VERSION}" \
-              --notes "Built from ${GITHUB_SHA}" \
+              --notes "Built from ${GITHUB_SHA} (${VERSION})" \
               --prerelease \
               --repo "$REPO" \
               "/tmp/${ASSET}"
@@ -214,14 +223,14 @@ jobs:
       - name: Publish AAB to Releases (Main)
         if: inputs.deploy-stage == 'main'
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.release-bot.outputs.token }}
           REPO: ${{ github.repository }}
           APP: ${{ inputs.app-name }}
           APP_DIR: ${{ inputs.app-directory }}
         run: |
           set -e
           cd ../../
-          VERSION=$(grep '^version:' ${APP_DIR}/pubspec.yaml | sed 's/version: //;s/+.*//')
+          VERSION="${{ needs.version.outputs.version_name }}"
           SRC="${APP_DIR}/build/app/outputs/bundle/prodRelease/app-prod-release.aab"
           ASSET="app_${APP}-android-main-v${VERSION}.aab"
           cp "$SRC" "/tmp/${ASSET}"
@@ -234,7 +243,7 @@ jobs:
           else
             gh release create "$HIST" \
               --title "android • app_${APP} (main) v${VERSION}" \
-              --notes "Built from ${GITHUB_SHA}" \
+              --notes "Built from ${GITHUB_SHA} (${VERSION})" \
               --prerelease \
               --repo "$REPO" \
               "/tmp/${ASSET}"
@@ -267,7 +276,7 @@ jobs:
           status: draft
 
   notify-failure:
-    needs: [build]
+    needs: [version, build]
     if: always()
     permissions:
       actions: read
@@ -276,6 +285,6 @@ jobs:
       statuses: write
     uses: ./.github/workflows/shared-notify.yml
     with:
-      failed: ${{ needs.build.result != 'success' }}
+      failed: ${{ needs.version.result != 'success' || needs.build.result != 'success' }}
       workflow_name: ${{ inputs.notify-workflow-name }}
       severity: 'P0-critical'

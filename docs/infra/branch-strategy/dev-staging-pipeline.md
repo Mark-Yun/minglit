@@ -115,7 +115,7 @@ destructive pattern 검출이 too aggressive 한 경우:
 - branch update 자동화 방식
 - `expand-migrate-contract` 의 6-month-old schema 보관 위치
 - `flag-registration` AST 도구 (analyzer / 자체 / Semgrep?)
-- version bump commit 별도 vs inline
+- dev-staging version bump retry/backoff 정책
 
 ## 관련
 

@@ -31,15 +31,17 @@
                                                                                                                                                               └─▶ Vercel production (native, main branch)
 ```
 
-**Hotfix backport 흐름** (dev/rc/main hotfix → dev-staging):
+**Hotfix 흐름** (정상 source 는 dev-staging):
 
 ```
 dev/hotfix/* ──PR──▶ dev
-rc/hotfix/*  ──PR──▶ rc/YYYY-Wxx ──auto cherry-pick──▶ backport-branch ──PR──▶ dev-staging
+dev-staging fix PR ──merge──▶ dev-staging ──cherry-pick/promote──▶ rc/YYYY-Wxx
 main/hotfix/* ──PR──▶ main ──backport──▶ dev-staging (+ active rc/* if needed)
 ```
 
 상세는 [hotfix-policy.md](./hotfix-policy.md) 와 [rc-promotion.md](./rc-promotion.md).
+
+RC hotfix 는 dev-staging-first 가 기본이다. active RC 에만 먼저 들어가는 RC-only hotfix 는 release-manager override 가 필요한 예외이며, 다음 RC 재출현 방지를 위해 dev-staging follow-up 이 필수다.
 
 > Mobile cadence = hotfix 없으면 weekly (rc → main 머지 마다 자동 build/deploy). store review + staged rollout 은 외부 (workflow 밖).
 
@@ -50,7 +52,7 @@ main/hotfix/* ──PR──▶ main ──backport──▶ dev-staging (+ acti
 | feature/agent → dev-staging | `dev-staging` ← `feat/*`, `fix/*`, `chore/*`, `docs/*` | PR + auto-merge | **squash** | `dev-staging-pr-gate` |
 | dev-staging → dev | `dev` ← `cut/dev-staging-dev/YYYY-MM-DD-{sha8}` at latest `v*-dev-staging` tag | daily cron `dev-staging-dev-cut` | rebase (linear snapshot) | `dev-pr-gate` |
 | hotfix → dev | `dev` ← `dev/hotfix/*` | approved hotfix only | rebase | `dev-pr-gate` |
-| hotfix → rc | `rc/YYYY-Wxx` ← `rc/hotfix/*` | approved hotfix only | rebase | `rc-pr-gate` |
+| hotfix → rc | `rc/YYYY-Wxx` ← dev-staging fix cherry-pick branch | dev-staging-first approved hotfix only | rebase | `rc-pr-gate` |
 | rc → main | `main` ← `rc/YYYY-Wxx` | `rc-main-cut` 이 5일 무커밋 시 PR 생성 + auto-merge | rebase + ff | `main-pr-gate` |
 | hotfix → main | `main` ← `main/hotfix/*` | approved + release-manager hotfix only | rebase + ff | `main-pr-gate` |
 
@@ -63,7 +65,7 @@ main/hotfix/* ──PR──▶ main ──backport──▶ dev-staging (+ acti
 | `rc/YYYY-Wxx` | 금지 | **ON** | `rc-pr-gate` | rebase |
 | `main` | 금지 (release bot 예외) | **ON** | `main-pr-gate` | rebase |
 
-Hybrid linear history 금지 — 각 branch 내 일관 (squash or rebase 한 가지). `dev` 는 active ruleset 의 linear history 와 맞추기 위해 `dev-staging-dev-cut` promotion 도 rebase 를 사용한다. Protected branch 직접 push 는 `minglit-release-bot` 의 version bump/tag/promotion commit 에만 Ruleset bypass 로 허용한다.
+Hybrid linear history 금지 — 각 branch 내 일관 (squash or rebase 한 가지). `dev` 는 active ruleset 의 linear history 와 맞추기 위해 `dev-staging-dev-cut` promotion 도 rebase 를 사용한다. Protected branch 직접 push 는 `minglit-release-bot` 의 dev-staging version bump, promotion branch/tag, RC cleanup 에만 Ruleset bypass 로 허용한다.
 
 ## Promotion Tag 컨벤션
 
@@ -72,9 +74,8 @@ Hybrid linear history 금지 — 각 branch 내 일관 (squash or rebase 한 가
 | `v{ver}-dev-staging` (tag) | dev-staging-dev-cut-gate | `v26.05.2572-dev-staging` | workflow |
 | `dev-rc-cut-pass` (commit status) | dev-rc-cut-gate green 시 dev commit 에 | (status only, tag 없음) | workflow |
 | `promo/rc-YYYY-Wxx` (tag) | dev-rc-cut 직후 | `promo/rc-2026-W20` | workflow |
-| `v{ver}-rc-NN` (tag) | dev-rc-cut + hotfix | `v26.05.2572-rc-01`, `v26.05.2585-rc-02` | workflow |
 | `promo/main-YYYY-Wxx` (tag) | main 머지 직후 | `promo/main-2026-W20` | workflow |
-| `v{ver}` (tag) | main 머지 직후 (동시) | `v26.05.2585` | workflow |
+| `build-{channel}-v{version}` (GitHub Release) | deploy artifact archive | `build-dev-v2026.5.2572-dev` | deploy workflow |
 
 > **Tag naming regex 는 [`RELEASE.md`](../../../RELEASE.md) lock** (TODO). 외부 도구 (Sentry, Statsig, Vercel, App Store, Play Console) 가 pin → rename = 모든 dashboard 깨짐.
 
@@ -103,9 +104,9 @@ monitor-dev-staging-health:
 # 개념 — backend + mobile 모두 prod
 main-deploy (on push to main):
   steps:
-    - if current version is rc: tag v{ver} + promo/main-Wxx + Sentry marker
-    - if current version is already final: skip version finalization, continue deploy
-    - Firebase RC `latest_version` = v{ver} 자동 update
+    - compute deploy-time version metadata: YYYY.M.PR#
+    - tag promo/main-Wxx + Sentry marker
+    - Firebase RC `latest_version` = computed version 자동 update
   parallel:
     - backend prod deploy  # Supabase migration + EF
     - uses: ./.github/workflows/deploy-android-{user,partner}.yml
