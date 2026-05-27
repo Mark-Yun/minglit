@@ -11,6 +11,8 @@ import '../_engine/builder.dart';
 
 const String _applicationId = 'render-app-1';
 final DateTime _base = DateTime(2026, 5, 20, 10);
+final DateTime _cancelEnabledEventStart = DateTime(2099, 1, 1, 20);
+final DateTime _cancelDisabledEventStart = DateTime(2020, 1, 1, 20);
 
 EventApplication _application({
   required String status,
@@ -74,7 +76,7 @@ EventApplication _application({
 final EventApplication _defaultApplication = _application(
   status: 'paid',
   refundStatus: 'none',
-  eventStartTime: _base.add(const Duration(days: 3)),
+  eventStartTime: _cancelEnabledEventStart,
   paymentId: 'pay-render-1',
   paymentAmount: 29000,
 );
@@ -82,7 +84,7 @@ final EventApplication _defaultApplication = _application(
 final EventApplication _disabledCancelApplication = _application(
   status: 'paid',
   refundStatus: 'none',
-  eventStartTime: _base.subtract(const Duration(days: 1)),
+  eventStartTime: _cancelDisabledEventStart,
   paymentId: 'pay-render-2',
   paymentAmount: 29000,
 );
@@ -90,7 +92,7 @@ final EventApplication _disabledCancelApplication = _application(
 final EventApplication _refundedApplication = _application(
   status: 'cancelled',
   refundStatus: 'completed',
-  eventStartTime: _base.add(const Duration(days: 3)),
+  eventStartTime: _cancelEnabledEventStart,
   paymentId: 'pay-render-3',
   paymentAmount: 29000,
 );
@@ -98,7 +100,7 @@ final EventApplication _refundedApplication = _application(
 final EventApplication _paymentFailedApplication = _application(
   status: 'payment_failed',
   refundStatus: 'none',
-  eventStartTime: _base.add(const Duration(days: 3)),
+  eventStartTime: _cancelEnabledEventStart,
   paymentId: '',
   paymentAmount: 29000,
 );
