@@ -3,6 +3,7 @@
 import 'package:app_user/src/features/home/logic/home_coordinator.dart';
 import 'package:app_user/src/features/search/logic/search_coordinator.dart';
 import 'package:app_user/src/logic/auth_coordinator.dart';
+import 'package:app_user/src/routing/app_coordinator.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockHomeCoordinator extends Mock implements HomeCoordinator {}
@@ -10,3 +11,5 @@ class MockHomeCoordinator extends Mock implements HomeCoordinator {}
 class MockAuthCoordinator extends Mock implements AuthCoordinator {}
 
 class MockSearchCoordinator extends Mock implements SearchCoordinator {}
+
+class MockAppCoordinator extends Mock implements AppCoordinator {}

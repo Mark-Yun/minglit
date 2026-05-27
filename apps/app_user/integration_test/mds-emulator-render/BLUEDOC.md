@@ -43,6 +43,7 @@ Phase 2 (TODO, follow-up PR) — `_manifest.yaml`, coverage report, scaffold 결
 | `deletion_verify_page` | email-user · social-user · dark |
 | `home_page` | default · guest · loading · feed-empty · error |
 | `login_page` | 기본 |
+| `my_tickets_page` | active-banners · empty · logged-out |
 | `notification_list_screen` | loaded · empty |
 | `notification_settings_screen` | default |
 | `privacy_page` | loading · loaded · dark |
@@ -66,4 +67,4 @@ MDS spec 디렉토리명과 동일 (per-screen, snake_case). 화면당 `builder.
 - [상위 BLUEDOC](../BLUEDOC.md) · 페어 워크플로우: `sync-mds-mockups.yml` (디자인 PNG)
 
 ---
-_Reviewed: 2026-05-21 07:00_
+_Reviewed: 2026-05-27 14:40_
