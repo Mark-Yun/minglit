@@ -5,12 +5,10 @@
 //
 // 커버리지 범위 (Flutter integration test):
 //   1-1: 이용약관 타일 노출 + launchUrl(termsUrl) 호출 확인
-//   1-2: 이용약관 빠른 진입 경로 (더보기 > 이용약관)
-//   1-3: 약관/처리방침 링크 동시 노출 확인
 //   2-1: 개인정보처리방침 타일 노출 + launchUrl(privacyUrl) 호출 확인
 //
 // Flutter 범위 외 CUJ (landing_partner 웹 기능 또는 미구현):
-//   2-2, 2-3, 2-4, 3-1, 3-2 — cuj_coverage.dart 에서 미커버 표시 유지.
+//   1-2, 1-3, 2-2, 2-3, 2-4, 3-1, 3-2 — cuj_coverage.dart 에서 미커버 표시 유지.
 //   웹 CUJ 는 landing_partner e2e 또는 page-content 검증으로 커버해야 함.
 
 import 'package:app_partner/src/features/more/more_coordinator.dart';
@@ -96,44 +94,6 @@ void main() {
         await t.tap(find.text('이용약관'));
         await t.pump();
         expect(launchedUrls, ['$_testUserWeb/terms']);
-      },
-    );
-  });
-
-  // ---------------------------------------------------------------------------
-  // CUJ 1-2: 수수료·정산 챕터 빠른 도달 (Flutter 범위: 이용약관 진입 경로)
-  // ---------------------------------------------------------------------------
-
-  cujGroup('1-2', '이용약관 빠른 진입 경로 확인', () {
-    cujCase(
-      'happy: 더보기에서 이용약관 탭 시 terms URL 런치',
-      app: const MorePage(),
-      overrides: _base,
-      body: (t) async {
-        final launchedUrls = <String>[];
-        UrlLauncherPlatform.instance = _FakeUrlLauncher(launchedUrls);
-
-        await t.tap(find.text('이용약관'));
-        await t.pump();
-
-        expect(launchedUrls, ['$_testUserWeb/terms']);
-      },
-    );
-  });
-
-  // ---------------------------------------------------------------------------
-  // CUJ 1-3: 파트너 등록 직전 약관 동의 체크 (Flutter 범위: 링크 동시 노출)
-  // ---------------------------------------------------------------------------
-
-  cujGroup('1-3', '약관/처리방침 링크 동시 노출 확인', () {
-    cujCase(
-      'happy: 더보기 > 약관 및 정보 그룹에 2개 링크 노출',
-      app: const MorePage(),
-      overrides: _base,
-      body: (t) async {
-        expect(find.text('약관 및 정보'), findsOneWidget);
-        expect(find.text('이용약관'), findsOneWidget);
-        expect(find.text('개인정보처리방침'), findsOneWidget);
       },
     );
   });
