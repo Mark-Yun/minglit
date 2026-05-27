@@ -8,8 +8,6 @@ import '_engine/builder.dart';
 import '_engine/catalog.dart';
 import 'account_management_page/account_management_page_test.dart'
     as account_management_page;
-import 'event_bottom_ticket_bar/event_bottom_ticket_bar_test.dart'
-    as event_bottom_ticket_bar;
 import 'auth_callback_page/auth_callback_page_test.dart' as auth_callback_page;
 import 'blocked_partners_page/blocked_partners_page_test.dart'
     as blocked_partners_page;
@@ -20,12 +18,15 @@ import 'deletion_reason_page/deletion_reason_page_test.dart'
     as deletion_reason_page;
 import 'deletion_verify_page/deletion_verify_page_test.dart'
     as deletion_verify_page;
+import 'event_bottom_ticket_bar/event_bottom_ticket_bar_test.dart'
+    as event_bottom_ticket_bar;
 import 'event_now_bar/event_now_bar_test.dart' as event_now_bar;
 import 'event_ongoing_banner/event_ongoing_banner_test.dart'
     as event_ongoing_banner;
 import 'home_page/home_page_test.dart' as home_page;
 import 'login_page/login_page_test.dart' as login_page;
 import 'my_page/my_page_test.dart' as my_page;
+import 'my_tickets_page/my_tickets_page_test.dart' as my_tickets_page;
 import 'notification_list_screen/notification_list_screen_test.dart'
     as notification_list_screen;
 import 'notification_settings_screen/notification_settings_screen_test.dart'
@@ -51,6 +52,7 @@ final List<MdsCatalog<MdsScreenBuilder<dynamic>>> allCatalogs = [
   event_ongoing_banner.catalog,
   home_page.catalog,
   login_page.catalog,
+  my_tickets_page.catalog,
   my_page.catalog,
   notification_list_screen.catalog,
   notification_settings_screen.catalog,
