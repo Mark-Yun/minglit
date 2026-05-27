@@ -57,9 +57,9 @@
 //   같은 provider 를 set 하면 author 가 한 쪽만 남기도록 책임진다.
 
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:app_partner/src/l10n/generated/app_localizations.dart';
 import 'package:meta/meta.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -97,14 +97,8 @@ void cujCase(
         child: MaterialApp(
           theme: MinglitTheme.materialTheme,
           debugShowCheckedModeBanner: false,
-          // Korean localization 필수 — 없으면 DatePicker 등 native dialog 가
-          // 영어 "OK"/"Cancel" 로 표시되어 find.text('확인') / '취소' 가 fail.
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: const [Locale('ko'), Locale('en')],
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           locale: const Locale('ko'),
           home: app,
         ),

@@ -326,7 +326,7 @@ void main() {
   cujGroup('2-1', '자동 생성 회차 개별 수정 → 시리즈 분리', () {
     cujCase(
       'happy: 회차 카드 탭 시 해당 event detail 진입',
-      app: PartyEventManagementTab(party: _makeParty()),
+      app: Scaffold(body: PartyEventManagementTab(party: _makeParty())),
       overrides: () => [
         partyEventsProvider('party-1').overrideWith(
           (ref) async => [
@@ -356,7 +356,7 @@ void main() {
   cujGroup('2-2', '개별 회차 취소', () {
     cujCase(
       'happy: 취소 회차와 다른 회차가 함께 유지되고 개별 진입 가능',
-      app: PartyEventManagementTab(party: _makeParty()),
+      app: Scaffold(body: PartyEventManagementTab(party: _makeParty())),
       overrides: () => [
         partyEventsProvider('party-1').overrideWith(
           (ref) async => [
