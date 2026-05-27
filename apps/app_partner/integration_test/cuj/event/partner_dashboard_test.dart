@@ -716,6 +716,7 @@ void main() {
           (ref, partnerId) async => [oneEvent],
         ),
       ],
+      afterPump: const Duration(seconds: 2),
       body: (t) async {
         expect(find.text('티켓 스캔'), findsOneWidget);
         expect(find.textContaining('이벤트를 선택하세요'), findsNothing);
@@ -836,6 +837,7 @@ void main() {
           (ref, partnerId) async => [oneEvent],
         ),
       ],
+      afterPump: const Duration(seconds: 2),
       body: (t) async {
         final hasDarkTheme = t
             .widgetList<Theme>(find.byType(Theme))
