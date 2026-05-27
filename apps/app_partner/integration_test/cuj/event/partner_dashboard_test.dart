@@ -34,6 +34,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../_engine/cuj_test.dart';
@@ -46,6 +47,62 @@ class _MockEventRepository extends Mock implements EventRepository {}
 
 class _MockPartnerHomeCoordinator extends Mock
     implements PartnerHomeCoordinator {}
+
+class _FakeMobileScannerPlatform extends MobileScannerPlatform {
+  @override
+  Stream<BarcodeCapture?> get barcodesStream => const Stream.empty();
+
+  @override
+  Stream<TorchState> get torchStateStream => const Stream.empty();
+
+  @override
+  Stream<double> get zoomScaleStateStream => const Stream.empty();
+
+  @override
+  Widget buildCameraView() => const SizedBox.shrink();
+
+  @override
+  Future<MobileScannerViewAttributes> start(StartOptions startOptions) async {
+    return const MobileScannerViewAttributes(
+      cameraDirection: CameraFacing.back,
+      currentTorchMode: TorchState.unavailable,
+      size: Size.zero,
+    );
+  }
+
+  @override
+  Future<void> stop() async {}
+
+  @override
+  Future<void> pause() async {}
+
+  @override
+  Future<void> dispose() async {}
+
+  @override
+  Future<void> toggleTorch() async {}
+
+  @override
+  Future<Set<CameraLensType>> getSupportedLenses() async => {};
+
+  @override
+  Future<void> updateScanWindow(Rect? window) async {}
+
+  @override
+  Future<void> resetZoomScale() async {}
+
+  @override
+  Future<void> setZoomScale(double zoomScale) async {}
+
+  @override
+  Future<void> setFocusPoint(Offset position) async {}
+
+  @override
+  Future<BarcodeCapture?> analyzeImage(
+    String path, {
+    List<BarcodeFormat> formats = const <BarcodeFormat>[],
+  }) async => null;
+}
 
 // ---------------------------------------------------------------------------
 // Fake providers
@@ -196,6 +253,16 @@ void main() {
 
   late _MockPartnerHomeCoordinator coordinator;
   late _MockEventRepository mockEventRepo;
+  late MobileScannerPlatform originalScannerPlatform;
+
+  setUpAll(() {
+    originalScannerPlatform = MobileScannerPlatform.instance;
+    MobileScannerPlatform.instance = _FakeMobileScannerPlatform();
+  });
+
+  tearDownAll(() {
+    MobileScannerPlatform.instance = originalScannerPlatform;
+  });
 
   setUp(() {
     coordinator = _MockPartnerHomeCoordinator();
@@ -890,7 +957,8 @@ void main() {
             .any((w) => w.data.brightness == Brightness.dark);
         expect(hasDarkThemeOnScanner, isTrue);
 
-        await t.pageBack();
+        expect(find.byType(CloseButton), findsOneWidget);
+        await t.tap(find.byType(CloseButton));
         await t.pump(const Duration(milliseconds: 600));
         await _pumpUntilFound(t, find.text('이벤트를 선택하세요'));
 
