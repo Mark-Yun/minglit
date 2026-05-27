@@ -24,6 +24,8 @@ import 'event_now_bar/event_now_bar_test.dart' as event_now_bar;
 import 'event_ongoing_banner/event_ongoing_banner_test.dart'
     as event_ongoing_banner;
 import 'home_page/home_page_test.dart' as home_page;
+import 'identity_verification_screen/identity_verification_screen_test.dart'
+    as identity_verification_screen;
 import 'login_page/login_page_test.dart' as login_page;
 import 'my_page/my_page_test.dart' as my_page;
 import 'my_tickets_page/my_tickets_page_test.dart' as my_tickets_page;
@@ -53,6 +55,7 @@ final List<MdsCatalog<MdsScreenBuilder<dynamic>>> allCatalogs = [
   event_now_bar.catalog,
   event_ongoing_banner.catalog,
   home_page.catalog,
+  identity_verification_screen.catalog,
   login_page.catalog,
   my_tickets_page.catalog,
   my_page.catalog,

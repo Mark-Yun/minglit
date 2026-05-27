@@ -42,6 +42,7 @@ Phase 2 (TODO, follow-up PR) — `_manifest.yaml`, coverage report, scaffold 결
 | `deletion_reason_page` | initial · dark |
 | `deletion_verify_page` | email-user · social-user · dark |
 | `home_page` | default · guest · loading · feed-empty · error |
+| `identity_verification_screen` | loading · consent-sheet · error-retry · dark |
 | `login_page` | 기본 |
 | `my_tickets_page` | active-banners · empty · logged-out |
 | `notification_list_screen` | loaded · empty |
