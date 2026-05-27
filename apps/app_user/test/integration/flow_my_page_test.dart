@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:plugin_platform_interface/plugin_platform_interface.dart';
+import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
 import 'utils/golden_capture.dart';
 import 'utils/test_app.dart';
@@ -279,7 +281,7 @@ void main() {
       expect(find.text('알수없음'), findsOneWidget);
     });
 
-    testWidgets('환불 가능 시 → "예매 취소" 버튼 표시', (tester) async {
+    testWidgets('환불 가능 시 → 카드 탭 후 상세에서 "예매 취소" 버튼 동작', (tester) async {
       setKoreanLocale(tester);
       final user = createMockUserForTest();
       final now = _fixedNow;
@@ -328,20 +330,25 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      expect(find.text('예매 취소'), findsOneWidget);
+      // 리스트 카드에는 인라인 액션이 없어야 한다.
+      expect(find.text('예매 취소'), findsNothing);
 
-      // 예매 취소 탭 → 환불 확인 다이얼로그 (금액/수수료 표시)
-      await tester.tap(find.text('예매 취소'));
+      // 카드 탭 → 상세 진입
+      await tester.tap(find.byType(PurchaseHistoryCard));
+      await tester.pumpAndSettle();
+      expect(find.text('구매 상세'), findsOneWidget);
+
+      // 상세 화면의 예매 취소 버튼 탭 → 확인 다이얼로그
+      final cancelButton = find.widgetWithText(ElevatedButton, '예매 취소');
+      await tester.ensureVisible(cancelButton);
+      await tester.tap(cancelButton);
       await tester.pumpAndSettle();
 
-      expect(find.text('예매 취소 확인'), findsOneWidget);
-      expect(find.text('30,000원'), findsWidgets); // 결제 금액
-      expect(find.text('환불 비율'), findsOneWidget);
-      expect(find.text('환불 금액'), findsOneWidget);
-      expect(find.text('수수료'), findsOneWidget);
+      expect(find.text('취소하기'), findsOneWidget);
+      expect(find.textContaining('환불됩니다.'), findsOneWidget);
     });
 
-    testWidgets('환불 불가 시 → "예매 취소" 버튼 미표시', (tester) async {
+    testWidgets('환불 불가 시 → 상세의 "예매 취소" 버튼 비활성화', (tester) async {
       setKoreanLocale(tester);
       final user = createMockUserForTest();
       final now = _fixedNow;
@@ -369,8 +376,127 @@ void main() {
       await tester.pump();
 
       expect(find.text('예매 취소'), findsNothing);
-      // 취소된 상태 배지가 표시되어야 함
       expect(find.text('취소됨'), findsOneWidget);
+
+      await tester.tap(find.byType(PurchaseHistoryCard));
+      await tester.pumpAndSettle();
+      expect(find.text('구매 상세'), findsOneWidget);
+
+      final cancelButton = find.widgetWithText(ElevatedButton, '예매 취소');
+      expect(cancelButton, findsOneWidget);
+      expect(tester.widget<ElevatedButton>(cancelButton).onPressed, isNull);
+    });
+
+    testWidgets('카드 탭 후 상세에서 "문의하기"로 파트너 연락처를 연다', (tester) async {
+      setKoreanLocale(tester);
+      final user = createMockUserForTest();
+      final now = _fixedNow;
+      final launchedUrls = <String>[];
+      final fakeLauncher = _FakeDetailUrlLauncher(launchedUrls);
+      final originalLauncher = UrlLauncherPlatform.instance;
+      addTearDown(() => UrlLauncherPlatform.instance = originalLauncher);
+
+      final contactApp = _createApplication(
+        status: 'paid',
+        createdAt: now,
+        paymentId: 'pay-789',
+        paymentAmount: 15000,
+        event: Event(
+          id: 'evt-contact',
+          partyId: 'party-contact',
+          title: 'Contact Event',
+          startTime: DateTime(2030, 2, 1, 19),
+          endTime: DateTime(2030, 2, 1, 21),
+          createdAt: now,
+          updatedAt: now,
+          contactOptions: const {'phone': '02-1234-5678'},
+        ),
+      );
+
+      await tester.pumpWidget(
+        createTestApp(
+          isLoggedIn: true,
+          currentUser: user,
+          initialLocation: '/purchase-history',
+          additionalOverrides: [
+            purchaseHistoryControllerProvider.overrideWith(
+              () => _MockPurchaseHistoryWithData([contactApp]),
+            ),
+          ],
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      UrlLauncherPlatform.instance = fakeLauncher;
+
+      await tester.tap(find.byType(PurchaseHistoryCard));
+      await tester.pumpAndSettle();
+      expect(find.text('구매 상세'), findsOneWidget);
+
+      final contactButton = find.widgetWithText(OutlinedButton, '문의하기');
+      await tester.ensureVisible(contactButton);
+      await tester.tap(contactButton);
+      await tester.pump();
+
+      expect(launchedUrls, ['tel:02-1234-5678']);
+    });
+
+    testWidgets('환불 완료 상태에서도 상세 "문의하기"로 파트너 연락처를 연다', (tester) async {
+      setKoreanLocale(tester);
+      final user = createMockUserForTest();
+      final now = _fixedNow;
+      final launchedUrls = <String>[];
+      final fakeLauncher = _FakeDetailUrlLauncher(launchedUrls);
+      final originalLauncher = UrlLauncherPlatform.instance;
+      addTearDown(() => UrlLauncherPlatform.instance = originalLauncher);
+
+      final refundedContactApp = _createApplication(
+        status: 'cancelled',
+        createdAt: now,
+        paymentId: 'pay-refunded',
+        paymentAmount: 15000,
+        refundStatus: 'completed',
+        refundedAt: now,
+        event: Event(
+          id: 'evt-refunded-contact',
+          partyId: 'party-refunded-contact',
+          title: 'Refunded Contact Event',
+          startTime: DateTime(2030, 2, 1, 19),
+          endTime: DateTime(2030, 2, 1, 21),
+          createdAt: now,
+          updatedAt: now,
+          contactOptions: const {'phone': '02-0000-0000'},
+        ),
+      );
+
+      await tester.pumpWidget(
+        createTestApp(
+          isLoggedIn: true,
+          currentUser: user,
+          initialLocation: '/purchase-history',
+          additionalOverrides: [
+            purchaseHistoryControllerProvider.overrideWith(
+              () => _MockPurchaseHistoryWithData([refundedContactApp]),
+            ),
+          ],
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      UrlLauncherPlatform.instance = fakeLauncher;
+
+      await tester.tap(find.byType(PurchaseHistoryCard));
+      await tester.pumpAndSettle();
+      expect(find.text('구매 상세'), findsOneWidget);
+
+      final contactButton = find.widgetWithText(OutlinedButton, '문의하기');
+      await tester.ensureVisible(contactButton);
+      await tester.tap(contactButton);
+      await tester.pump();
+
+      expect(launchedUrls, ['tel:02-0000-0000']);
     });
   });
 
@@ -507,6 +633,25 @@ class _FakeSocialRepository implements SocialRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+class _FakeDetailUrlLauncher extends Fake
+    with MockPlatformInterfaceMixin
+    implements UrlLauncherPlatform {
+  _FakeDetailUrlLauncher(this.launchedUrls);
+  final List<String> launchedUrls;
+
+  @override
+  Future<bool> canLaunch(String url) async => true;
+
+  @override
+  Future<bool> supportsMode(PreferredLaunchMode mode) async => true;
+
+  @override
+  Future<bool> launchUrl(String url, LaunchOptions options) async {
+    launchedUrls.add(url);
+    return true;
+  }
+}
+
 // ────────────────────────────────────────────────────────────────────────
 // Test Data Helpers
 // ────────────────────────────────────────────────────────────────────────
@@ -518,7 +663,9 @@ EventApplication _createApplication({
   required DateTime createdAt,
   String? paymentId,
   int? paymentAmount,
+  String refundStatus = 'none',
   DateTime? paidAt,
+  DateTime? refundedAt,
   Event? event,
   Ticket? ticket,
 }) {
@@ -533,7 +680,9 @@ EventApplication _createApplication({
     updatedAt: createdAt,
     paymentId: paymentId,
     paymentAmount: paymentAmount,
+    refundStatus: refundStatus,
     paidAt: paidAt,
+    refundedAt: refundedAt,
     event: event,
     ticket: ticket,
   );
