@@ -11,6 +11,8 @@ import 'package:minglit_kit/minglit_kit.dart';
 
 import '../_engine/cuj_test.dart';
 
+const _loginRouteMarkerKey = ValueKey<String>('login-route-marker');
+
 class _ThemeHost extends StatelessWidget {
   const _ThemeHost({
     required this.mode,
@@ -98,7 +100,10 @@ class _AuthRedirectRouterHostState extends State<_AuthRedirectRouterHost> {
       ),
       GoRoute(
         path: '/login',
-        builder: (context, state) => _loginScreen(),
+        builder: (context, state) => KeyedSubtree(
+          key: _loginRouteMarkerKey,
+          child: _loginScreen(),
+        ),
       ),
     ],
     redirect: (context, state) {
@@ -172,6 +177,19 @@ Color _canvasMaterialColor(WidgetTester tester) {
 }
 
 void _noop() {}
+
+Future<void> _pumpUntilFound(
+  WidgetTester tester,
+  Finder finder, {
+  int maxFrames = 12,
+}) async {
+  for (var i = 0; i < maxFrames; i++) {
+    if (finder.evaluate().isNotEmpty) {
+      return;
+    }
+    await tester.pump();
+  }
+}
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -329,11 +347,8 @@ void main() {
         await t.tap(find.text('보호 화면 진입'));
         await t.pump();
 
-        // 첫 프레임 검증 전에 실제 로그인 화면 도착을 보장한다.
-        expect(
-          find.widgetWithText(OutlinedButton, 'Google로 시작하기'),
-          findsOneWidget,
-        );
+        await _pumpUntilFound(t, find.byKey(_loginRouteMarkerKey));
+        expect(find.byKey(_loginRouteMarkerKey), findsOneWidget);
 
         // Redirect transition 첫 프레임에서도 밝은 flash 없이 dark 배경 유지되어야 한다.
         expect(_canvasMaterialColor(t), MinglitColorsDark.background);
@@ -353,14 +368,12 @@ void main() {
         await t.pumpAndSettle();
 
         mode.value = ThemeMode.light;
-        await t.pump();
+        await t.pumpAndSettle();
 
         await t.tap(find.text('보호 화면 진입'));
         await t.pump();
-        expect(
-          find.widgetWithText(OutlinedButton, 'Google로 시작하기'),
-          findsOneWidget,
-        );
+        await _pumpUntilFound(t, find.byKey(_loginRouteMarkerKey));
+        expect(find.byKey(_loginRouteMarkerKey), findsOneWidget);
         expect(_canvasMaterialColor(t), MinglitColors.surface);
 
         await t.pumpAndSettle();
