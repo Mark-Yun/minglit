@@ -111,6 +111,7 @@ def assert_dev_cron_deploy_contract() -> None:
     required_fragments = [
         "dev-event-flow-simulator",
         "*/5 * * * *",
+        "GITHUB_ACCESS_TOKEN is required for event-flow-simulator failure reporting",
         "'targetRef', 'dev'",
         "'targetSha', '${target_sha_esc}'",
         "public.ef_auth_manifest",

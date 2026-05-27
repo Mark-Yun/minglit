@@ -74,6 +74,10 @@ jobs:
           # process-list exposure (/proc/pid/cmdline) on shared runners.
           supabase link --project-ref $SUPABASE_PROJECT_ID
 
+          if [ -z "$GITHUB_ACCESS_TOKEN" ]; then
+            echo "::error::GH_PAT_FOR_BUG_REPORT is required for GitHub issue/status reporting"
+            exit 1
+          fi
           supabase secrets set OPENAI_API_KEY=$OPENAI_API_KEY
           supabase secrets set GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN
           supabase secrets set SENTRY_DSN=$SENTRY_DSN

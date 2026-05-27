@@ -5,6 +5,7 @@ set -euo pipefail
 : "${SUPABASE_DEV_DB_PASSWORD:?SUPABASE_DEV_DB_PASSWORD is required}"
 : "${TARGET_REF:?TARGET_REF is required}"
 : "${TARGET_SHA:?TARGET_SHA is required}"
+: "${GITHUB_ACCESS_TOKEN:?GITHUB_ACCESS_TOKEN is required for event-flow-simulator failure reporting}"
 : "${POOLER_HOST:=aws-1-ap-northeast-2.pooler.supabase.com}"
 
 if [ "${TARGET_REF}" != "dev" ]; then
