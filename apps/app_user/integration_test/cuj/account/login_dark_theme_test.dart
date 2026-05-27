@@ -349,6 +349,7 @@ void main() {
 
         await _pumpUntilFound(t, find.byKey(_loginRouteMarkerKey));
         expect(find.byKey(_loginRouteMarkerKey), findsOneWidget);
+        expect(find.text('Google로 시작하기'), findsOneWidget);
 
         // Redirect transition 첫 프레임에서도 밝은 flash 없이 dark 배경 유지되어야 한다.
         expect(_canvasMaterialColor(t), MinglitColorsDark.background);
@@ -374,6 +375,7 @@ void main() {
         await t.pump();
         await _pumpUntilFound(t, find.byKey(_loginRouteMarkerKey));
         expect(find.byKey(_loginRouteMarkerKey), findsOneWidget);
+        expect(find.text('Google로 시작하기'), findsOneWidget);
         expect(_canvasMaterialColor(t), MinglitColors.surface);
 
         await t.pumpAndSettle();
