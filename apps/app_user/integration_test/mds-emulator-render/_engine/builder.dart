@@ -15,7 +15,7 @@ import 'package:minglit_kit/minglit_kit.dart';
 // Riverpod 3.x 의 `Override` 와 `ProviderListenable` 는 sealed class /
 // internal interface 로 public export 가 없어, 외부 코드가 직접 type 으로
 // 사용 불가. ProviderScope.overrides 가 받는 type 자체가 internal `Override`.
-// alchemist 의 GoldenPageWrapper 도 동일 우회 (List<dynamic>).
+// MDS emulator render builders use the same List<dynamic> boundary.
 // 런타임 동작은 strict type 과 동일 — cast 가 실패 시 즉시 throw.
 //
 // ⚠ 함정 — provider override 중복:

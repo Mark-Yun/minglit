@@ -31,6 +31,7 @@ jobs:
     with:
       stage: main
       base_ref: main
+      run_cuj_integration: true
     secrets: inherit
 
   validate-rc-promotion:
