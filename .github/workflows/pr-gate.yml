@@ -395,6 +395,33 @@ jobs:
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' && (matrix.app == 'app_user' || matrix.app == 'app_partner') }}
         run: flutter test test/integration/
         working-directory: ${{ matrix.directory }}
+      - name: Golden Test (comparison)
+        id: golden_compare
+        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
+        continue-on-error: true
+        run: |
+          # Alchemist CI mode: compare against committed CI goldens (Ahem font).
+          # Exit 79 = no tests matched the tag.
+          set +e
+          flutter test --dart-define=CI=true --tags golden
+          rc=$?
+          set -e
+          if [ "$rc" -eq 79 ]; then exit 0; fi
+          exit "$rc"
+        working-directory: ${{ matrix.directory }}
+      - name: Upload golden failures
+        if: ${{ steps.golden_compare.outcome == 'failure' }}
+        uses: actions/upload-artifact@v7
+        continue-on-error: true
+        with:
+          name: golden-failures-${{ matrix.app }}
+          path: ${{ matrix.directory }}/test/**/failures/
+          retention-days: 14
+      - name: Fail if golden comparison detected mismatch
+        if: ${{ steps.golden_compare.outcome == 'failure' }}
+        run: |
+          echo "Golden comparison step detected mismatches."
+          exit 1
       - name: Test Report
         uses: dorny/test-reporter@v3
         if: ${{ (success() || failure()) && needs.changes.outputs[matrix.change_key] == 'true' }}
