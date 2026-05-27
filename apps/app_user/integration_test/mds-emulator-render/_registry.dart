@@ -35,6 +35,8 @@ import 'privacy_page/privacy_page_test.dart' as privacy_page;
 import 'search_page/search_page_test.dart' as search_page;
 import 'signup_consent_page/signup_consent_page_test.dart'
     as signup_consent_page;
+import 'tag_event_list_page/tag_event_list_page_test.dart'
+    as tag_event_list_page;
 import 'ticket_qr_screen/ticket_qr_screen_test.dart' as ticket_qr_screen;
 
 /// 모든 cataloged 화면의 명시적 list. 새 화면 추가 시 본 list 에 추가.
@@ -59,5 +61,6 @@ final List<MdsCatalog<MdsScreenBuilder<dynamic>>> allCatalogs = [
   privacy_page.catalog,
   search_page.catalog,
   signup_consent_page.catalog,
+  tag_event_list_page.catalog,
   ticket_qr_screen.catalog,
 ];
