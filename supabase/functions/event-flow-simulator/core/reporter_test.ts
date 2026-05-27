@@ -20,6 +20,22 @@ function failedTrace(): Trace {
   }];
 }
 
+function oversizedFailedTrace(): Trace {
+  return [{
+    tick: 1,
+    actorId: "user-1",
+    action: {
+      type: "user_apply",
+      actorId: "user-1",
+      payload: {},
+      ef: "user-create-order",
+    },
+    status: 500,
+    ok: false,
+    error: "한".repeat(70_000),
+  }];
+}
+
 async function withMockedFetch(
   handler: (input: RequestInfo | URL, init?: RequestInit) => Response,
   fn: () => Promise<void>,
@@ -71,6 +87,115 @@ Deno.test("reportFailure writes failure status even when issue creation fails", 
       (calls[1].body as { context: string }).context,
       "dev-soak/backend-simulator",
     );
+  });
+});
+
+Deno.test("reportFailure truncates oversized trace payload in issue body", async () => {
+  const calls: Array<{ url: string; body: unknown }> = [];
+  await withMockedFetch((input, init) => {
+    const url = String(input);
+    calls.push({
+      url,
+      body: init?.body ? JSON.parse(String(init.body)) : null,
+    });
+    return Response.json(
+      { html_url: "https://github.com/Mark-Yun/minglit/issues/10000" },
+      { status: 201 },
+    );
+  }, async () => {
+    const issueUrl = await reportFailure({
+      runId: "run-oversized",
+      trace: oversizedFailedTrace(),
+      violations: [],
+    });
+
+    assertEquals(issueUrl, "https://github.com/Mark-Yun/minglit/issues/10000");
+    assertEquals(calls.length, 1);
+    const issueBody = (calls[0].body as { body: string }).body;
+    assert(issueBody.includes("...[truncated]"));
+  });
+});
+
+Deno.test("reportFailure returns null when issue request throws and still writes status", async () => {
+  const calls: Array<{ url: string; body: unknown }> = [];
+  await withMockedFetch((input, init) => {
+    const url = String(input);
+    calls.push({
+      url,
+      body: init?.body ? JSON.parse(String(init.body)) : null,
+    });
+    if (url.endsWith("/issues")) {
+      throw new Error("network down");
+    }
+    return new Response("{}", { status: 201 });
+  }, async () => {
+    const issueUrl = await reportFailure({
+      runId: "run-throw",
+      trace: failedTrace(),
+      violations: [],
+      targetRef: "dev",
+      targetSha: TARGET_SHA,
+    });
+
+    assertEquals(issueUrl, null);
+    assertEquals(calls.length, 2);
+    assert(calls[1].url.endsWith(`/statuses/${TARGET_SHA}`));
+  });
+});
+
+Deno.test("reportFailure swallows status API non-ok response and keeps issue URL", async () => {
+  const calls: Array<{ url: string; body: unknown }> = [];
+  const htmlUrl = "https://github.com/Mark-Yun/minglit/issues/10001";
+  await withMockedFetch((input, init) => {
+    const url = String(input);
+    calls.push({
+      url,
+      body: init?.body ? JSON.parse(String(init.body)) : null,
+    });
+    if (url.endsWith("/issues")) {
+      return Response.json({ html_url: htmlUrl }, { status: 201 });
+    }
+    return new Response("status write denied", { status: 403 });
+  }, async () => {
+    const issueUrl = await reportFailure({
+      runId: "run-status-non-ok",
+      trace: failedTrace(),
+      violations: [],
+      targetRef: "dev",
+      targetSha: TARGET_SHA,
+    });
+
+    assertEquals(issueUrl, htmlUrl);
+    assertEquals(calls.length, 2);
+    assert(calls[1].url.endsWith(`/statuses/${TARGET_SHA}`));
+  });
+});
+
+Deno.test("reportFailure swallows status API exception and keeps issue URL", async () => {
+  const calls: Array<{ url: string; body: unknown }> = [];
+  const htmlUrl = "https://github.com/Mark-Yun/minglit/issues/10002";
+  await withMockedFetch((input, init) => {
+    const url = String(input);
+    calls.push({
+      url,
+      body: init?.body ? JSON.parse(String(init.body)) : null,
+    });
+    if (url.endsWith("/issues")) {
+      return Response.json({ html_url: htmlUrl }, { status: 201 });
+    }
+    throw new Error("status write exploded");
+  }, async () => {
+    const issueUrl = await reportFailure({
+      runId: "run-status-throw",
+      trace: failedTrace(),
+      violations: [],
+      targetRef: "rc/2026-05",
+      targetSha: TARGET_SHA,
+    });
+
+    assertEquals(issueUrl, htmlUrl);
+    assertEquals(calls.length, 2);
+    assert(calls[1].url.endsWith(`/statuses/${TARGET_SHA}`));
   });
 });
 
