@@ -1,16 +1,16 @@
 # Graph Report - minglit  (2026-05-27)
 
 ## Corpus Check
-- 2395 files · ~4,076,257 words
+- 2395 files · ~4,076,277 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 18950 nodes · 24353 edges · 1664 communities (1392 shown, 272 thin omitted)
+- 18950 nodes · 24353 edges · 1662 communities (1392 shown, 270 thin omitted)
 - Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 1297 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `5452e96d`
+- Built from commit: `91e4d613`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -956,7 +956,6 @@
 - [[_COMMUNITY_Community 1096|Community 1096]]
 - [[_COMMUNITY_Community 1097|Community 1097]]
 - [[_COMMUNITY_Community 1098|Community 1098]]
-- [[_COMMUNITY_Community 1099|Community 1099]]
 - [[_COMMUNITY_Community 1100|Community 1100]]
 - [[_COMMUNITY_Community 1101|Community 1101]]
 - [[_COMMUNITY_Community 1102|Community 1102]]
@@ -1486,7 +1485,6 @@
 - [[_COMMUNITY_Community 1627|Community 1627]]
 - [[_COMMUNITY_Community 1628|Community 1628]]
 - [[_COMMUNITY_Community 1629|Community 1629]]
-- [[_COMMUNITY_Community 1630|Community 1630]]
 - [[_COMMUNITY_Community 1631|Community 1631]]
 - [[_COMMUNITY_Community 1632|Community 1632]]
 - [[_COMMUNITY_Community 1633|Community 1633]]
@@ -1506,7 +1504,6 @@
 - [[_COMMUNITY_Community 1652|Community 1652]]
 - [[_COMMUNITY_Community 1653|Community 1653]]
 - [[_COMMUNITY_Community 1654|Community 1654]]
-- [[_COMMUNITY_Community 1655|Community 1655]]
 - [[_COMMUNITY_Community 1656|Community 1656]]
 - [[_COMMUNITY_Community 1657|Community 1657]]
 - [[_COMMUNITY_Community 1658|Community 1658]]
@@ -1736,35 +1733,35 @@
 - **EF observability (Axiom + Sentry + logger)** — ef_shared_logger, axiom_logging, sentry_tracking [EXTRACTED 0.90]
 - **Retention legal basis (PIPA + e-commerce + location + comms)** — pipa_article_21, ecommerce_law_article_6, location_law_article_16, comms_secrecy_law_15_2 [EXTRACTED 0.90]
 
-## Communities (1664 total, 272 thin omitted)
+## Communities (1662 total, 270 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.04
-Nodes (58): DefaultFirebaseOptions, UnsupportedError, _AppView, AuthConfig, build, initializeDateFormatting, _initStatsig, MinglitAsyncValueWidget (+50 more)
+Cohesion: 0.03
+Nodes (72): DefaultFirebaseOptions, UnsupportedError, _AppView, AuthConfig, build, initializeDateFormatting, _initStatsig, MinglitAsyncValueWidget (+64 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.11
-Nodes (17): package:minglit_kit/src/data/models/event_application.dart, package:minglit_kit/src/data/models/event_feed_type.dart, package:minglit_kit/src/data/models/today_active_event.dart, package:minglit_kit/src/data/repositories/event_repository.dart, CancelOrderResult, CreateOrderResult, EventRepository, _SupabaseEventContext (+9 more)
+Cohesion: 0.05
+Nodes (38): package:minglit_kit/src/data/models/deletion_status.dart, package:minglit_kit/src/data/models/event_application.dart, package:minglit_kit/src/data/models/event_feed_type.dart, package:minglit_kit/src/data/models/today_active_event.dart, package:minglit_kit/src/data/models/withdrawal_reason.dart, package:minglit_kit/src/data/repositories/account_repository.dart, package:minglit_kit/src/data/repositories/event_repository.dart, package:minglit_kit/src/data/repositories/party_repository.dart (+30 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.05
-Nodes (65): AccountDeletionController, AccountDeletionController, AccountDeletionControllerTest, AccountRepository, AppPermissionSettingsScreen, AppPermissionSettingsScreenTest, AppRouter PendingDeletionRecovery Test, AuthConfig (+57 more)
+Nodes (64): AccountDeletionController, AccountDeletionController, AccountDeletionControllerTest, AccountRepository, AppPermissionSettingsScreen, AppPermissionSettingsScreenTest, AppRouter PendingDeletionRecovery Test, AuthConfig (+56 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.04
-Nodes (42): callEdgeFunction(), getSimPartnerToken(), getSimUserToken(), checkExternalAuth(), verifyAuth(), base64UrlDecode(), checkAuth(), checkDatabase() (+34 more)
+Nodes (40): callEdgeFunction(), getSimPartnerToken(), getSimUserToken(), checkExternalAuth(), verifyAuth(), base64UrlDecode(), checkAuth(), checkDatabase() (+32 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.07
-Nodes (37): Bucket: party-assets, EF: partner-manage-event, bulk_approve_event_applications_with_capacity_guard RPC, partner-approve-application handler, approve_event_application_with_capacity_guard RPC, event_change_logs schedule-change audit, partner-manage-event (CRUD: create/update/update_status/update_tickets), target_entry_group_ids template→event remap (Fix #317) (+29 more)
+Cohesion: 0.17
+Nodes (16): bulk_approve_event_applications_with_capacity_guard RPC, partner-approve-application handler, approve_event_application_with_capacity_guard RPC, partner-reject-application handler, payment-cancel EF handler, payment-verify handler (tests), payment-webhook handler (tests), PolicyRepository (+8 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.02
-Nodes (84): package:app_partner/src/features/account_deletion/ui/deletion_complete_page.dart, package:app_partner/src/features/admin/partner_application_detail_page.dart, package:app_partner/src/features/application/event_application_detail_page.dart, package:app_partner/src/features/member/partner_member_list_page.dart, package:app_partner/src/features/member/partner_member_permission_page.dart, package:app_partner/src/features/onboarding/partner_welcome_page.dart, package:app_partner/src/features/party/create/party_create_wizard_page.dart, package:app_partner/src/features/party/detail/party_detail_page.dart (+76 more)
+Nodes (101): _FakeNoRuleController, main, _makeRule, _MockRecurrenceRuleRepository, _FakeNoRuleController, main, _makeRule, _MockRecurrenceRuleRepository (+93 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.11
-Nodes (26): AddActionCard, DevScreenItem, DevScreenList, EventCardStateTest, GoldenTestHelpers (partner), MinglitChip, MinglitChipGroup, MinglitChipGroupTest (+18 more)
+Cohesion: 0.08
+Nodes (34): AddActionCard, DevScreenItem, DevScreenList, EventCardStateTest, GoldenTestHelpers (partner), MinglitChip, MinglitChipGroup, MinglitChipGroupTest (+26 more)
 
 ### Community 7 - "Community 7"
 Cohesion: 0.11
@@ -1779,16 +1776,16 @@ Cohesion: 0.29
 Nodes (7): ips, type, payment-webhook, callers, description, envs, external_auth
 
 ### Community 10 - "Community 10"
-Cohesion: 0.13
-Nodes (21): blockAction, checkinAction, discoverAction, approvePayload, blockPayload, checkinPayload, createPayload, future (+13 more)
+Cohesion: 0.14
+Nodes (22): blockAction, checkinAction, discoverAction, approvePayload, blockPayload, checkinPayload, createPayload, future (+14 more)
 
 ### Community 11 - "Community 11"
 Cohesion: 0.06
 Nodes (31): file, widget, file, widget, file, widget, file, widget (+23 more)
 
 ### Community 12 - "Community 12"
-Cohesion: 0.04
-Nodes (41): package:app_partner/src/features/party/event/detail/event_application_list_page.dart, package:app_partner/src/features/party/event/review/event_application_review_carousel_page.dart, package:app_partner/src/features/party/event/review/event_application_review_confirm_page.dart, package:app_partner/src/features/party/event/widgets/event_application_list_view.dart, package:app_partner/src/logic/event_application_logic.dart, createContainer, main, MockEventRepository (+33 more)
+Cohesion: 0.02
+Nodes (86): body, cujCase, cujGroup, body, cujCase, cujGroup, package:app_partner/src/features/party/event/detail/event_application_list_page.dart, package:app_partner/src/features/party/event/review/event_application_review_carousel_page.dart (+78 more)
 
 ### Community 13 - "Community 13"
 Cohesion: 0.09
@@ -1803,8 +1800,8 @@ Cohesion: 0.1
 Nodes (26): Eventbrite Forced-Refund Pattern, entry_groups DB table, event_applications table, PRD: Event Edit & Cancel, event_participants DB table, events table, GitHub Issue #1338 (Blocked Integration Test), GitHub Issue #1396 (Event Edit/Cancel) (+18 more)
 
 ### Community 16 - "Community 16"
-Cohesion: 0.1
-Nodes (26): required, functions, required, bug-report, event-checkin, github-stats-sync, identity-verify, metrics-alert (+18 more)
+Cohesion: 0.12
+Nodes (22): required, functions, bug-report, github-stats-sync, identity-verify, metrics-alert, partner-sync, payout-sync (+14 more)
 
 ### Community 17 - "Community 17"
 Cohesion: 0.11
@@ -1812,15 +1809,15 @@ Nodes (20): IdentityVerificationConsentSheet, Issue #747 — Legal audit High is
 
 ### Community 18 - "Community 18"
 Cohesion: 0.07
-Nodes (33): Capture device: Galaxy S10e SM-G970N, Partner-only screens (skipped), Platform-specific OAuth (Apple iOS-only on Android dump), spec-uidump drift comparison, Test user: user_18_f_강남@test.com, LoginRoute spec_diff (1 drift: Apple absent on Android), LoginRoute uidump (Verified Vibe slogan), spec: login_page.html (+25 more)
+Nodes (34): Bug Report button (dev/debug-only artifact), Capture device: Galaxy S10e SM-G970N, Partner-only screens (skipped), spec-uidump drift comparison, Test user: user_18_f_강남@test.com, HomeRoute spec_diff (2 drift: Bug Report, EventNowBar), HomeRoute uidump (sort chips + tags), spec: home_page.html (+26 more)
 
 ### Community 19 - "Community 19"
 Cohesion: 0.03
-Nodes (87): base, EventApplication, _FakeTicketEventMeta, initializeDateFormatting, main, _makeApplication, _MockAppCoordinator, _MockEventRepository (+79 more)
+Nodes (83): base, EventApplication, _FakeTicketEventMeta, initializeDateFormatting, main, _makeApplication, _MockAppCoordinator, _MockEventRepository (+75 more)
 
 ### Community 20 - "Community 20"
-Cohesion: 0.15
-Nodes (16): EventBasicInfoSummary, EventCapacitySummary, EventContactSummary, EventCreateInfoTab, EventEntranceConditionSummary, PartyBasicInfoEditScreen, PartyBasicInfoSummary, PartyCapacityContactEditScreen (+8 more)
+Cohesion: 0.11
+Nodes (21): EventBasicInfoSummary, EventCapacitySummary, EventContactSummary, EventCreateInfoTab, EventEntranceConditionSummary, EventLocationSummary, PartyBasicInfoEditScreen, PartyBasicInfoSummary (+13 more)
 
 ### Community 21 - "Community 21"
 Cohesion: 0.12
@@ -1859,8 +1856,8 @@ Cohesion: 0.15
 Nodes (13): $description, $type, $value, bold, medium, semiBold, $description, $type (+5 more)
 
 ### Community 30 - "Community 30"
-Cohesion: 0.02
-Nodes (107): AuthState, _FakeAccountRepository, _FakeAuthController, _FakeSupabaseClient, _FakeWithdrawalReason, main, _MockCoordinator, _MockUser (+99 more)
+Cohesion: 0.04
+Nodes (46): AuthState, _FakeAccountRepository, _FakeAuthController, _FakeSupabaseClient, _FakeWithdrawalReason, main, _MockCoordinator, _MockUser (+38 more)
 
 ### Community 31 - "Community 31"
 Cohesion: 0.12
@@ -1875,8 +1872,8 @@ Cohesion: 0.22
 Nodes (19): audit-arch worker, audit-legal worker, audit-qa worker, audit-report label, audit-security worker, audit-uiux worker, Audit Workflow Pipeline, Worker Common Framework (9 sections) (+11 more)
 
 ### Community 34 - "Community 34"
-Cohesion: 0.1
-Nodes (27): appStartup riverpod provider, appStartupProvider (partner), DefaultFirebaseOptions (app_user), app_user main.dart, EnvKeyStore (minglit_kit), Firebase.initializeApp, DefaultFirebaseOptions (per-environment), DefaultFirebaseOptions (app_partner) (+19 more)
+Cohesion: 0.24
+Nodes (13): appStartup riverpod provider, appStartupProvider (partner), EnvKeyStore (minglit_kit), Firebase.initializeApp, DefaultFirebaseOptions (per-environment), GoRouterProvider, kakao AuthRepository.initialize, app_user main() entry (prod) (+5 more)
 
 ### Community 35 - "Community 35"
 Cohesion: 0.15
@@ -1908,7 +1905,7 @@ Nodes (19): 2.1 AppBar, 2.2 Filter Bar (v2 — 접힘 / 펼침), 2.2 Filter Bar 
 
 ### Community 42 - "Community 42"
 Cohesion: 0.15
-Nodes (9): 03. Patterns — UI 패턴, 11. Information Hierarchy, 1. Selectable Card, 8. Screen Layout, 9. Card Layout, Selectable Card 텍스트 스타일, Shadow / Border 프리셋, 관련 문서 (+1 more)
+Nodes (9): 03. Patterns — UI 패턴, 11. Information Hierarchy, 5. Loading State, 8. Screen Layout, 9. Card Layout, 공용 위젯, 관련 문서, 사용 원칙 (+1 more)
 
 ### Community 43 - "Community 43"
 Cohesion: 0.17
@@ -1987,8 +1984,8 @@ Cohesion: 0.04
 Nodes (43): 1. 진입점, 2. 탈퇴 플로우 (유저 앱), 3. 탈퇴 플로우 (파트너 앱), 4. 유예 기간 (7일 Soft Delete), 5. 재가입 방지, 6. 법정 보존 데이터 분리, code:block1 ([개인정보 설정] → [탈퇴 사유 선택] → [탈퇴 안내] → [본인 확인] → [최종 확인 다이얼로그] →), code:sql (-- 탈퇴 사유 (익명, 통계 목적)) (+35 more)
 
 ### Community 62 - "Community 62"
-Cohesion: 0.09
-Nodes (24): ActivityGroup (구매 내역/내 티켓), OngoingBanner (checkInReady phase), QR label diff (입장 QR 보기 vs 입장 QR 미리 보기), my_tickets_page.html spec, MyTicketsRoute spec_diff, my_tickets uidump (MyTicketsRoute screen), 사업자 정보 섹션 (상호명/대표자/사업자번호), 소개 MinglitSection (+16 more)
+Cohesion: 0.05
+Nodes (45): ActivityGroup (구매 내역/내 티켓), PrivacyGroup (개인정보/권한/차단), ProfileGroup (avatar+name+email), SettingsGroup (알림/테마), my_page.html spec, MyPageRoute spec_diff, my_page uidump (MyPageRoute screen), OngoingBanner (checkInReady phase) (+37 more)
 
 ### Community 63 - "Community 63"
 Cohesion: 0.06
@@ -2071,8 +2068,8 @@ Cohesion: 0.06
 Nodes (32): EventCreatePage, EventDetailPage (parent instance), Fix #1741 autoDispose race, GlobalLoadingOverlay, MinglitAsyncValueWidget, PartyDetailPage (parent template), PartyTicketEditRoute (template), TicketEditPage spec (app_partner) (+24 more)
 
 ### Community 83 - "Community 83"
-Cohesion: 0.1
-Nodes (24): AccountManagementPageBuilder, account_management_page catalog, MdsScreenBuilder fluent API, AuthCallbackPageBuilder, auth_callback_page catalog, BlockedPartnersPageBuilder, blocked_partners_page catalog, DeletionCompletePageBuilder (+16 more)
+Cohesion: 0.05
+Nodes (57): AccountManagementPageBuilder, account_management_page catalog, MDS Coverage Reconciler, Decorator (cross-cutting), _manifest.yaml schema, MdsCatalog (data container), MdsRenderEngine runner, MdsScreenBuilder fluent API (+49 more)
 
 ### Community 84 - "Community 84"
 Cohesion: 0.06
@@ -2132,7 +2129,7 @@ Nodes (26): §1 기본 정보 — sub-anatomy, §3 참가 현황 — sub-anatomy
 
 ### Community 98 - "Community 98"
 Cohesion: 0.02
-Nodes (139): BankAccountPageBuilder, build, dark, _FakeSettlementRepository, loading, ProviderScope, UnimplementedError, withAccount (+131 more)
+Nodes (93): build, dispose, initState, Scaffold, SettlementPage, _SettlementPageState, build, _buildApp (+85 more)
 
 ### Community 99 - "Community 99"
 Cohesion: 0.07
@@ -2163,8 +2160,8 @@ Cohesion: 0.07
 Nodes (25): 1. Layer 선택 결정 트리, 2. Layer 별 작성 규칙, 4. 새 피쳐 구현 시 체크리스트, 5. 현재 커버리지 현황 (2026-04-18), 6. 실행 명령어, 7. 주의사항, 8. CI 파이프라인 연동, 9. Mock 유틸 참조 (+17 more)
 
 ### Community 106 - "Community 106"
-Cohesion: 0.11
-Nodes (28): handler(), isCheckedIn(), isCheckedIn(), handler(), parsePartnerApproveInput(), EVENT_FIELDS, handleCreate(), handler() (+20 more)
+Cohesion: 0.17
+Nodes (11): handler(), isCheckedIn(), isCheckedIn(), RuleInput, parseJsonBody, RequestUtilsTest, EFContext, minglitEdgeFunction() (+3 more)
 
 ### Community 107 - "Community 107"
 Cohesion: 0.08
@@ -4016,51 +4013,51 @@ Nodes (20): 1-1. PRD 누락 / 부족, 1-2. spec.md 5섹션 완성도, 1-3. PRD �
 
 ### Community 978 - "Community 978"
 Cohesion: 0.05
-Nodes (46): ../../../helpers/mocks.dart, ../../../helpers/supabase_mock_helpers.dart, package:minglit_kit/src/data/models/party.dart, package:minglit_kit/src/data/models/party_entry_group.dart, package:minglit_kit/src/data/models/tag.dart, package:minglit_kit/src/data/repositories/account_repository.dart, package:minglit_kit/src/data/repositories/notification_repository.dart, package:minglit_kit/src/data/repositories/partner_repository.dart (+38 more)
+Nodes (47): dart:convert, ../../../helpers/mocks.dart, ../../../helpers/supabase_mock_helpers.dart, ../../../helpers/test_utils.dart, package:minglit_kit/src/data/repositories/matching_repository.dart, package:minglit_kit/src/data/repositories/notification_repository.dart, package:minglit_kit/src/data/repositories/partner_repository.dart, package:minglit_kit/src/data/repositories/settlement_repository.dart (+39 more)
 
 ### Community 979 - "Community 979"
-Cohesion: 0.03
-Nodes (72): build, Card, DecoratedBox, _DisabledFooterButton, EventOngoingBanner, _PhaseChip, _phaseLabel, SizedBox (+64 more)
+Cohesion: 0.02
+Nodes (96): build, Card, DecoratedBox, _DisabledFooterButton, EventOngoingBanner, _PhaseChip, _phaseLabel, SizedBox (+88 more)
 
 ### Community 980 - "Community 980"
 Cohesion: 0.02
-Nodes (97): _buildTestWidget, main, _MockGoRouter, ProviderScope, AuthGuard, build, Scaffold, SizedBox (+89 more)
+Nodes (110): _buildTestWidget, main, _MockGoRouter, ProviderScope, package:app_user/src/features/partner/detail/partner_detail_page.dart, package:app_user/src/features/partner/logic/partner_coordinator.dart, package:app_user/src/features/ticket/ui/ticket_selection_sheet.dart, package:app_user/src/routing/app_router.dart (+102 more)
 
 ### Community 981 - "Community 981"
-Cohesion: 0.07
-Nodes (24): package:app_user/src/features/partner/detail/partner_detail_page.dart, package:app_user/src/features/partner/logic/partner_coordinator.dart, package:minglit_kit/src/features/social/logic/social_interaction_controller.dart, createContainer, createTestContainer, main, MockSocialRepository, _TestSocialInteractionController (+16 more)
+Cohesion: 0.04
+Nodes (47): _FakeSupabaseClient, main, package:app_partner/src/features/party/widgets/party_status_edit_sheet.dart, package:app_user/src/features/ticket/data/ticket_token_service.dart, package:app_user/src/features/ticket/data/ticket_wallet_repository.dart, package:app_user/src/features/ticket/logic/ticket_recommendation_util.dart, package:flutter_test/flutter_test.dart, package:minglit_iamport_v1/src/implementation/payment_io.dart (+39 more)
 
 ### Community 982 - "Community 982"
-Cohesion: 0.05
-Nodes (49): base, main, _MockConsentCoordinator, _MockConsentRepository, _MockIamportRepository, _MockUser, privacyBase, verificationBase (+41 more)
+Cohesion: 0.08
+Nodes (33): base, main, _MockConsentCoordinator, _MockConsentRepository, _MockIamportRepository, _MockUser, privacyBase, verificationBase (+25 more)
 
 ### Community 983 - "Community 983"
 Cohesion: 0.18
 Nodes (10): calculateRefund, canCancel, isActiveTicket, isRefundReady, onSuccess, PurchaseHistoryController, RefundCalculation, _requestRefund (+2 more)
 
 ### Community 984 - "Community 984"
-Cohesion: 0.02
-Nodes (100): _FakeSupabaseClient, main, Event, EventApplication, main, _makeApplication, _makeEvent, _MockEventRepository (+92 more)
+Cohesion: 0.03
+Nodes (63): package:app_partner/src/features/onboarding/partner_apply_controller.dart, package:app_partner/src/features/onboarding/partner_apply_page.dart, package:app_partner/src/features/onboarding/steps/step1_basic_info.dart, package:app_partner/src/features/onboarding/steps/step5_review.dart, package:app_partner/src/features/party/event/create/event_create_controller.dart, package:app_partner/src/features/party/list/party_list_controller.dart, package:app_partner/src/features/party/logic/recurrence_settings_controller.dart, package:app_user/src/features/event/matching/logic/commit_match_likes_controller.dart (+55 more)
 
 ### Community 985 - "Community 985"
 Cohesion: 0.02
-Nodes (80): build, _FakeEventNowBarStateNotifier, _FakeEventRealtime, initState, main, _makeActiveEvent, _makeActiveEvent2, _makeActiveEvent3 (+72 more)
+Nodes (98): build, _FakeEventNowBarStateNotifier, _FakeEventRealtime, initState, main, _makeActiveEvent, _makeActiveEvent2, _makeActiveEvent3 (+90 more)
 
 ### Community 986 - "Community 986"
-Cohesion: 0.12
-Nodes (45): createActor(), resolveEmail(), resolveId(), error, update, getPartnerEmail(), handleCancel(), handleCreate() (+37 more)
+Cohesion: 0.11
+Nodes (56): createActor(), resolveEmail(), resolveId(), error, update, getPartnerEmail(), handleCancel(), handleCreate() (+48 more)
 
 ### Community 987 - "Community 987"
-Cohesion: 0.02
-Nodes (92): AuthCallbackPageBuilder, _createNoOpAuthCoordinator, dark, dark, LoginPageBuilder, authenticated, build, dark (+84 more)
+Cohesion: 0.03
+Nodes (76): main, _createApplication, EventApplication, _FakeSocialRepository, initializeDateFormatting, main, _MockConsentController, _MockEmptyPurchaseHistory (+68 more)
 
 ### Community 988 - "Community 988"
 Cohesion: 0.06
-Nodes (53): blocksReapplication(), classifyApplicationStatus(), isFreeApplication(), IamportClient, IamportClientTest, ApplicationStatus, blocksReapplication(), classifyApplicationStatus() (+45 more)
+Nodes (60): blocksReapplication(), classifyApplicationStatus(), isFreeApplication(), handleMinglitError, MinglitFeedbackX, IamportClient, IamportClientTest, Log (+52 more)
 
 ### Community 989 - "Community 989"
-Cohesion: 0.09
-Nodes (18): ../../../helpers/test_utils.dart, package:minglit_kit/src/data/models/deletion_status.dart, package:minglit_kit/src/data/models/withdrawal_reason.dart, package:minglit_kit/src/data/repositories/auth_repository.dart, package:minglit_kit/src/data/repositories/user_repository.dart, package:minglit_kit/src/logic/providers/user_profile_provider.dart, package:minglit_kit/src/utils/auth_provider_utils.dart, AccountRepository (+10 more)
+Cohesion: 0.04
+Nodes (45): package:app_user/src/features/dev/user_dev_map.dart, AccountManagementPage, AccountManagementRoute, AuthCallbackPage, AuthCallbackRoute, BlockedPartnersPage, BlockedPartnersRoute, build (+37 more)
 
 ### Community 990 - "Community 990"
 Cohesion: 0.14
@@ -4068,11 +4065,11 @@ Nodes (13): package:cryptography/cryptography.dart, package:minglit_kit/src/data
 
 ### Community 991 - "Community 991"
 Cohesion: 0.03
-Nodes (70): package:app_partner/main.dart, package:app_partner/src/features/onboarding/partner_apply_page.dart, package:app_partner/src/features/onboarding/partner_apply_status_page.dart, package:app_partner/src/features/onboarding/steps/step1_basic_info.dart, package:app_partner/src/features/onboarding/steps/step5_review.dart, package:app_partner/src/features/party/create/party_create_wizard_controller.dart, package:app_partner/src/features/party/create/steps/step1_basic_info.dart, package:app_partner/src/features/party/create/steps/step2_location.dart (+62 more)
+Nodes (65): StateError, package:app_partner/main.dart, package:app_partner/src/features/onboarding/partner_apply_status_page.dart, package:app_partner/src/features/party/create/party_create_wizard_controller.dart, package:app_partner/src/features/party/create/steps/step1_basic_info.dart, package:app_partner/src/features/party/create/steps/step2_location.dart, package:app_partner/src/features/party/create/steps/step3_capacity_contact.dart, package:app_partner/src/features/party/create/steps/step4_entry_rules.dart (+57 more)
 
 ### Community 992 - "Community 992"
-Cohesion: 0.15
-Nodes (26): CreateOrderEntryGroupSnapshot, CreateOrderErrorCode, CreateOrderEventSnapshot, CreateOrderExistingApplicationSnapshot, CreateOrderPaymentPlan, CreateOrderPolicyResult, CreateOrderTicketSnapshot, CreateOrderUserProfileSnapshot (+18 more)
+Cohesion: 0.09
+Nodes (45): handler(), parseVerifications(), SupabaseClient, upsertVerifications(), VerifItem, isEventEditableByPartner(), isEventFull(), isEventOpenForApplication() (+37 more)
 
 ### Community 993 - "Community 993"
 Cohesion: 0.12
@@ -4083,8 +4080,8 @@ Cohesion: 0.12
 Nodes (16): BoardingPassCard, _BoardingPassCardState, boardingPassStatus, build, _computeStatus, didChangeAppLifecycleState, didUpdateWidget, dispose (+8 more)
 
 ### Community 995 - "Community 995"
-Cohesion: 0.02
-Nodes (93): _FakeManualCheckinController, main, _makeEvent, _makeParticipant, body, cujCase, cujGroup, _FakeManualCheckinController (+85 more)
+Cohesion: 0.04
+Nodes (52): _FakeManualCheckinController, main, _makeEvent, _makeParticipant, _FakeManualCheckinController, main, _makeParticipant, build (+44 more)
 
 ### Community 996 - "Community 996"
 Cohesion: 0.09
@@ -4095,36 +4092,36 @@ Cohesion: 0.08
 Nodes (23): package:flutter_svg/flutter_svg.dart, package:mds/src/theme/minglit_text_theme_extension.dart, package:mds/src/ui/widgets/common/minglit_chip.dart, package:mds_tokens/mds_tokens.dart, build, MinglitFilterChip, Semantics, SizedBox (+15 more)
 
 ### Community 998 - "Community 998"
-Cohesion: 0.12
-Nodes (15): CreateOrderVerificationData, PartnerApproveInput, parsePaymentVerifyInput(), PaymentVerifyInput, InputResult, isPlainRecord(), optionalStringField(), requireStringField() (+7 more)
+Cohesion: 0.09
+Nodes (29): CreateOrderVerificationData, evaluateGatewayPayment(), isOrderOwner(), isPaymentVerifyAlreadyProcessed(), paidAtToIso(), PaymentGatewaySnapshot, PaymentVerificationOrderSnapshot, PaymentVerificationReason (+21 more)
 
 ### Community 999 - "Community 999"
-Cohesion: 0.17
-Nodes (20): handler(), parseVerifications(), SupabaseClient, upsertVerifications(), VerifItem, isEventEditableByPartner(), isEventFull(), isEventOpenForApplication() (+12 more)
+Cohesion: 0.07
+Nodes (26): package:app_user/src/features/ticket/ui/widgets/boarding_pass_card.dart, package:screen_brightness/screen_brightness.dart, build, Center, dispose, initState, Scaffold, ScreenBrightness (+18 more)
 
 ### Community 1000 - "Community 1000"
 Cohesion: 0.08
-Nodes (34): AddressSearchDialog, AddressSearchDialog Test, AdminCoordinator, AdminCoordinator Unit Test, CUJ PartnerApply Wizard Integration Test, DotIndicator, OnboardingCoordinator, onboardingCoordinatorProvider (+26 more)
+Nodes (36): AddressSearchDialog, AddressSearchDialog Test, AdminCoordinator, AdminCoordinator Unit Test, CUJ PartnerApply Wizard Integration Test, DotIndicator, OnboardingCoordinator, onboardingCoordinatorProvider (+28 more)
 
 ### Community 1001 - "Community 1001"
-Cohesion: 0.13
-Nodes (36): AdmissionActionHandler (extension), Auth Redirect Integration Test, AuthWrapper, ConsentCoordinator, ConsentDetailSheet, ConsentRedirectTest, CujCheckinMatchingTest, CujEventApplicationTest (+28 more)
+Cohesion: 0.08
+Nodes (50): AdmissionActionHandler (extension), Auth Redirect Integration Test, AuthWrapper, ConsentCoordinator, ConsentDetailSheet, ConsentInput, ConsentRedirectTest, ConsentRepository (+42 more)
 
 ### Community 1002 - "Community 1002"
-Cohesion: 0.05
-Nodes (40): _logErr, _logErr, dart:convert, dart:io, package:crypto/crypto.dart, package:google_sign_in/google_sign_in.dart, package:integration_test/integration_test_driver_extended.dart, package:minglit_kit/src/data/models/user_settings.dart (+32 more)
+Cohesion: 0.1
+Nodes (21): _logErr, _logErr, dart:io, package:integration_test/integration_test_driver_extended.dart, FeatureCoverage, main, _parseSpec, _parseTest (+13 more)
 
 ### Community 1003 - "Community 1003"
 Cohesion: 0.05
 Nodes (42): `auto-issue`, `backport-pr`, `cherry-pick-pr`, code:block1 ([agent PR opens to dev-staging]), `cut-issue` action + `close-cut-issue-on-pr-merge`, `dev-deploy`, `dev-pr-gate`, `dev-rc-cut` (+34 more)
 
 ### Community 1004 - "Community 1004"
-Cohesion: 0.06
-Nodes (38): authStateProvider (OAuth Google/Apple/Kakao), AuthCallbackPage, DevUserSwitchScreen, MinglitLoginScreen (kit-shared), LoginPage (OAuth entry), PartnerLoginPage (app_partner), LoginPage (app_user), authControllerProvider.signOut (+30 more)
+Cohesion: 0.08
+Nodes (31): authStateProvider (OAuth Google/Apple/Kakao), AuthCallbackPage, DevUserSwitchScreen, MinglitLoginScreen (kit-shared), LoginPage (OAuth entry), PartnerLoginPage (app_partner), LoginPage (app_user), authControllerProvider.signOut (+23 more)
 
 ### Community 1005 - "Community 1005"
-Cohesion: 0.16
-Nodes (25): buildAction(), getAction(), getActionsForRole(), getAvailableActions(), registry, CascadeConfig, Transport, ObservableState (+17 more)
+Cohesion: 0.22
+Nodes (15): buildAction(), getAction(), getActionsForRole(), getAvailableActions(), registry, ObservableState, PRNG, Rates (+7 more)
 
 ### Community 1006 - "Community 1006"
 Cohesion: 0.02
@@ -4139,16 +4136,16 @@ Cohesion: 0.07
 Nodes (34): ActivePartySummaryScroll Test, ClosingSoonEventsCard, ClosingSoonEventsCard Test, CUJ Team Management Integration Test (IT-P08), EligibilityFilter / BulkEligibilityData, EligibilityFilter Test, ExploreFilter Integration Test, ExploreStateProvider Test (+26 more)
 
 ### Community 1009 - "Community 1009"
-Cohesion: 0.05
-Nodes (35): package:flutter/services.dart, build, Center, dispose, Divider, ListView, ManualCheckinSheet, _ManualCheckinSheetState (+27 more)
+Cohesion: 0.11
+Nodes (17): build, Center, dispose, Divider, ListView, ManualCheckinSheet, _ManualCheckinSheetState, Material (+9 more)
 
 ### Community 1010 - "Community 1010"
 Cohesion: 0.06
 Nodes (33): code:block1 (Phase 1 (skeletal) → Phase 2 (CI/PR flow) → Phase 3 (branch ), code:yaml (# 개념), Execution Plan, Existing → Spec mapping, Phase 1: 브랜치 skeletal 셋업, Phase 2: CI flow / PR flow, Phase 3: Branch CD flow, Phase 4: Gate fill-in (+25 more)
 
 ### Community 1011 - "Community 1011"
-Cohesion: 0.14
-Nodes (25): handleMinglitError, MinglitFeedbackX, addDays(), addMonths(), addYears(), applyRetentionSpec(), blockedDiExists(), buildArchivedRecords() (+17 more)
+Cohesion: 0.22
+Nodes (18): addMonths(), addYears(), applyRetentionSpec(), blockedDiExists(), buildArchivedRecords(), deleteAuthUser(), insertArchivedRecords(), loadEventApplications() (+10 more)
 
 ### Community 1012 - "Community 1012"
 Cohesion: 0.08
@@ -4167,16 +4164,16 @@ Cohesion: 0.07
 Nodes (26): app_localizations_ko.dart, appDetail_message_processed, AppLocalizations, _AppLocalizationsDelegate, AppLocalizationsKo, FlutterError, home_welcome_user, isSupported (+18 more)
 
 ### Community 1016 - "Community 1016"
-Cohesion: 0.08
-Nodes (23): package:app_user/src/features/home/widgets/featured_tag_chip_bar.dart, package:app_user/src/logic/tag_coordinator.dart, build, Center, GestureDetector, Padding, SizedBox, _TrendingTagCard (+15 more)
+Cohesion: 0.06
+Nodes (32): base, _FakeTagCoordinator, goToTagEventList, initializeDateFormatting, main, _makeEvent, _makeTag, _MockTagRepository (+24 more)
 
 ### Community 1017 - "Community 1017"
-Cohesion: 0.09
-Nodes (26): user-cancel-order EF, iamport 영수증 (service.iamport.kr), MinglitDialog, MinglitKeyValueRow, MinglitKeyValueRowTest, color-partner-primary #6c3ce1, Payment / Settlement Pipeline, PGMQ + cron 반복 일정 생성 (+18 more)
+Cohesion: 0.05
+Nodes (41): user-cancel-order EF, iamport 영수증 (service.iamport.kr), MinglitDDayChip, MinglitDialog, MinglitHelpSheet (제안), MinglitKeyValueRow, MinglitKeyValueRowTest, minglit_kit_test (+33 more)
 
 ### Community 1018 - "Community 1018"
-Cohesion: 0.09
-Nodes (36): ActionRunner, [E2E] prefix isolation invariant, Edge Function: event-checkin, partner-approve-application EF, partner-manage-party EF, partner-reject-application EF, user-cancel-order EF, user-cast-vote EF (+28 more)
+Cohesion: 0.07
+Nodes (52): ActionRunner, RPC: admin.delete_old_rows / admin.delete_expired_rows, [E2E] prefix isolation invariant, DB Table: partner_verified_users, DB Table: settlement_items, Edge Function: event-checkin, partner-approve-application EF, partner-manage-party EF (+44 more)
 
 ### Community 1019 - "Community 1019"
 Cohesion: 0.15
@@ -4184,27 +4181,27 @@ Nodes (21): EFContext — Edge Function handler context, FakeSupabase class — 
 
 ### Community 1020 - "Community 1020"
 Cohesion: 0.09
-Nodes (28): build, _consent, EmptyNotificationListNotifier, EmptyRecommendationFeedNotifier, IdleAuthController, LoadedConsentController, LoadedNotificationSettingsNotifier, LockedSearchQueryNotifier (+20 more)
+Nodes (29): build, _consent, EmptyNotificationListNotifier, EmptyRecommendationFeedNotifier, IdleAuthController, LoadedConsentController, LoadedNotificationSettingsNotifier, LockedSearchQueryNotifier (+21 more)
 
 ### Community 1021 - "Community 1021"
 Cohesion: 0.1
 Nodes (31): CheckinController, CheckinParticipant Data Class, CheckinParticipant Data Class Unit Test, CheckinPlaceholderPage, CheckinPlaceholderPage spec, CheckinPlaceholderPage Widget Test, CheckinPlaceholderPage (bottom-nav tab child), checkinRepositoryProvider (+23 more)
 
 ### Community 1022 - "Community 1022"
-Cohesion: 0.1
-Nodes (34): callEdgeFunction(), clearTokenCache(), getPartnerEmail(), getSimPartnerToken(), getSimUserToken(), _tokenCache, CascadeResult, runCascade() (+26 more)
+Cohesion: 0.15
+Nodes (19): callEdgeFunction(), clearTokenCache(), getPartnerEmail(), getSimPartnerToken(), getSimUserToken(), _tokenCache, WorldSnapshot, ReporterInput (+11 more)
 
 ### Community 1023 - "Community 1023"
-Cohesion: 0.08
-Nodes (23): _FakeNoRuleController, main, _makeRule, _MockRecurrenceRuleRepository, build, dark, _FakeRecurrenceManagementController, loading (+15 more)
+Cohesion: 0.15
+Nodes (12): build, dark, _FakeRecurrenceManagementController, loading, ProviderScope, RecurrenceManagementScreenBuilder, withActionLoading, withActiveRule (+4 more)
 
 ### Community 1024 - "Community 1024"
 Cohesion: 0.07
 Nodes (29): 5% 의 예외 — 외부 의존 위젯, app_demo — Architecture, code:block1 (┌────────────────────────────────────┐), code:block2 (shared/packages/minglit_demo/), code:block3 (main.dart), code:block4 (main_demo.dart), code:block5 ([prod 빌드]), Drift 방지 (가장 중요) (+21 more)
 
 ### Community 1025 - "Community 1025"
-Cohesion: 0.09
-Nodes (34): activeFiltersProvider (ExploreFilters state), AppleSignInTest (emulator), CUJ Settlement Integration Test (IT-P04), currentMemberPermissionsProvider, currentPartnerInfoProvider / currentMemberPermissionsProvider, DownloadBottomSheet, ExploreFilterChipBar, FakeAuthController (+26 more)
+Cohesion: 0.1
+Nodes (31): activeFiltersProvider (ExploreFilters state), AppleSignInTest (emulator), CUJ Settlement Integration Test (IT-P04), currentMemberPermissionsProvider, currentPartnerInfoProvider / currentMemberPermissionsProvider, DownloadBottomSheet, ExploreFilterChipBar, LoginPage Integration Test (+23 more)
 
 ### Community 1026 - "Community 1026"
 Cohesion: 0.08
@@ -4231,8 +4228,8 @@ Cohesion: 0.06
 Nodes (35): 4가지 workflow, 5가지 workflow, Backport 충돌, Cherry-pick 충돌, code:block1 (1. rc-pr-gate 통과 후 hotfix PR 이 rc/YYYY-Wxx 에 merge), code:block2 ([soak 중 issue 발견]), code:block3 ([fix PR merged on dev-staging]), Cron 슬립 처리 (+27 more)
 
 ### Community 1032 - "Community 1032"
-Cohesion: 0.11
-Nodes (24): EventApplication Model, EventDetailController, EventDetailController Test, eventDetailNowProvider, _EntryConditionsSection, EventFeedProviderTest, eventMyApplicationProvider, EventMyApplicationProvider Test (+16 more)
+Cohesion: 0.09
+Nodes (27): EventApplication Model, EventDetailController, EventDetailController Test, eventDetailNowProvider, EventEditController, EventEditPage, _EntryConditionsSection, EventFeedProviderTest (+19 more)
 
 ### Community 1033 - "Community 1033"
 Cohesion: 0.08
@@ -4247,16 +4244,16 @@ Cohesion: 0.02
 Nodes (92): applied, _applyAdmission, dark, eligible, error, _ErrorAdmissionController, EventBottomTicketBarBuilder, eventEnded (+84 more)
 
 ### Community 1036 - "Community 1036"
-Cohesion: 0.13
-Nodes (23): EventOngoingBannerBuilder, event_ongoing_banner MDS render catalog, HomePageBuilder fluent API, home_page MDS render catalog, LoginPageBuilder fluent API, login_page MDS render catalog, MdsRenderEngine runner, MdsScreenBuilder base class (+15 more)
+Cohesion: 0.24
+Nodes (14): runCascade(), CascadeConfig, runCascade(), Transport, projectForPartner(), projectForUser(), lastN(), Trace (+6 more)
 
 ### Community 1037 - "Community 1037"
-Cohesion: 0.02
-Nodes (73): runAppService, dart:async, _ErrorTagEventListController, _event, Exception, _FixedTagEventListController, _LoadingTagEventListController, TagEventListPageBuilder (+65 more)
+Cohesion: 0.03
+Nodes (60): build, CreateVerificationPageBuilder, dark, empty, _FakeCreateVerificationController, ProviderScope, withFields, runAppService (+52 more)
 
 ### Community 1038 - "Community 1038"
-Cohesion: 0.12
-Nodes (22): runCascade(), Stochastic Cascade simulation model, projectForPartner(), projectForUser(), actor discovery + JWT prefetch, event-flow-simulator EF entrypoint, ObservableState (RLS-equivalent projection), projectForPartner() (+14 more)
+Cohesion: 0.13
+Nodes (19): Stochastic Cascade simulation model, actor discovery + JWT prefetch, event-flow-simulator EF entrypoint, ObservableState (RLS-equivalent projection), projectForPartner(), projectForUser(), WorldSnapshot (simulation truth), defaultRates (probability params) (+11 more)
 
 ### Community 1039 - "Community 1039"
 Cohesion: 0.04
@@ -4267,8 +4264,8 @@ Cohesion: 0.07
 Nodes (26): Data Flow, Goals, Key Goals, KPIs / Success Metrics, Launch Strategy, Legal Basis, Motivation / Problem to Solve, Non-Goals (+18 more)
 
 ### Community 1041 - "Community 1041"
-Cohesion: 0.1
-Nodes (27): AccountCard (read summary), AccountEditForm (edit form), BankAccountPage spec, BankAccountPage (app_partner widget), infiniteAnimation flag (Fix #2590 pumpAndSettle timeout), app_partner CUJ BLUEDOC, app_user CUJ BLUEDOC (canonical guide), cujCase() helper (+19 more)
+Cohesion: 0.09
+Nodes (29): AccountCard (read summary), AccountEditForm (edit form), currentPartnerInfoProvider, onboardingStateProvider, BankAccountPage spec, BankAccountPage (app_partner widget), infiniteAnimation flag (Fix #2590 pumpAndSettle timeout), app_partner CUJ BLUEDOC (+21 more)
 
 ### Community 1042 - "Community 1042"
 Cohesion: 0.13
@@ -4279,12 +4276,12 @@ Cohesion: 0.1
 Nodes (26): app_demo architecture (demo flavor design), app_demo BLUEDOC (demo flavor entry doc), app_demo plan (P0-P8 phases), appStartup() composable decomposition (P3), BLUEDOC convention (folder entry doc), pr-gate.check-bluedoc-freshness, minglitUrlConfigProvider, demo flavor APK (zero network on boot) (+18 more)
 
 ### Community 1044 - "Community 1044"
-Cohesion: 0.12
-Nodes (18): app_partner AppRouter (app_router.dart), app_partner architecture — 권한·온보딩 기반 라우팅, authStateChangesProvider (Supabase), currentMemberPermissionsProvider, currentPartnerInfoProvider, hasSettlementAccessProvider, OnboardingState (needsApplication, draftInProgress, approved), onboardingStateProvider (+10 more)
+Cohesion: 0.08
+Nodes (32): app_partner AppRouter (app_router.dart), app_partner architecture — 권한·온보딩 기반 라우팅, authStateChangesProvider (Supabase), currentMemberPermissionsProvider, hasSettlementAccessProvider, OnboardingState (needsApplication, draftInProgress, approved), partner_member_permissions (Supabase table), CheckinResult State Machine (+24 more)
 
 ### Community 1046 - "Community 1046"
 Cohesion: 0.18
-Nodes (19): Edge Function: partner-manage-verification, Edge Function: partner-review-submission, Edge Function: user-submit-verification, Edge Function: user-update-verification, SupabaseVerificationRepository, VerificationCard, VerificationCategory, _VerificationCommandRepository (+11 more)
+Nodes (18): Edge Function: partner-manage-verification, Edge Function: partner-review-submission, Edge Function: user-submit-verification, Edge Function: user-update-verification, SupabaseVerificationRepository, VerificationCard, VerificationCategory, _VerificationCommandRepository (+10 more)
 
 ### Community 1047 - "Community 1047"
 Cohesion: 0.08
@@ -4303,8 +4300,8 @@ Cohesion: 0.08
 Nodes (23): Data Flow, Goals, Key Goals, KPIs / Success Metrics, Launch Strategy, Legal Basis, Motivation / Problem to Solve, Non-Goals (+15 more)
 
 ### Community 1051 - "Community 1051"
-Cohesion: 0.13
-Nodes (24): DB Table: entry_group_templates, DB Table: parties, EntryGroup Model, EntryGroupTemplate model, EventFeedProvider, Event Model, Event Model Test, MetadataKey / MetaKeys (+16 more)
+Cohesion: 0.11
+Nodes (28): DB Table: entry_group_templates, DB Table: parties, EntryGroup Model, EntryGroupTemplate model, EventFeedProvider, Event Model, Event Model Test, LocationMap (mobile/Kakao) (+20 more)
 
 ### Community 1052 - "Community 1052"
 Cohesion: 0.08
@@ -4327,28 +4324,28 @@ Cohesion: 0.2
 Nodes (9): build, Center, DecoratedBox, _HelpHandle, HelpSection, _HelpSectionItem, _MinglitHelpSheetContent, SafeArea (+1 more)
 
 ### Community 1057 - "Community 1057"
-Cohesion: 0.08
-Nodes (29): apply-event EF handler, apply-event handler unit tests, parseVerifications, apply_event RPC (free path), upsertVerifications, check_party_balance RPC, commit-match-likes EF handler, commit_match_likes RPC (+21 more)
+Cohesion: 0.05
+Nodes (52): apply-event EF handler, apply-event handler unit tests, parseVerifications, apply_event RPC (free path), upsertVerifications, Bucket: party-assets, check_party_balance RPC, commit-match-likes EF handler (+44 more)
 
 ### Community 1058 - "Community 1058"
-Cohesion: 0.27
-Nodes (12): evaluateGatewayPayment(), isOrderOwner(), isPaymentVerifyAlreadyProcessed(), paidAtToIso(), PaymentGatewaySnapshot, PaymentVerificationOrderSnapshot, PaymentVerificationReason, PaymentVerificationResult (+4 more)
+Cohesion: 0.11
+Nodes (18): BankAccountPageBuilder, build, dark, _FakeSettlementRepository, loading, ProviderScope, UnimplementedError, withAccount (+10 more)
 
 ### Community 1059 - "Community 1059"
 Cohesion: 0.12
 Nodes (15): minglit_file_picker_image_preview.dart, minglit_file_picker_upload_button.dart, package:mds/src/ui/widgets/common/minglit_image_source_sheet.dart, build, Column, Function, initState, LinearProgressIndicator (+7 more)
 
 ### Community 1060 - "Community 1060"
-Cohesion: 0.14
-Nodes (17): createBroadMock(), isSingleQuery(), wrapSingle(), portoneOkFetch(), createFetchMock(), { fetchMock }, getHandler(), insertCalls (+9 more)
+Cohesion: 0.28
+Nodes (11): { fetchMock }, getHandler(), insertCalls, patch, payload, PORTONE_ENV, portoneOkFetch(), sb (+3 more)
 
 ### Community 1061 - "Community 1061"
-Cohesion: 0.07
-Nodes (27): package:app_user/src/features/payment/logic/purchase_history_detail_controller.dart, package:app_user/src/features/payment/ui/event_application_review_page.dart, package:app_user/src/features/payment/ui/purchase_history_detail_page.dart, _ApplicationTimeline, build, _canReapply, Center, Column (+19 more)
+Cohesion: 0.12
+Nodes (17): AuthCallbackPageBuilder, _createNoOpAuthCoordinator, dark, dark, LoginPageBuilder, authenticated, build, dark (+9 more)
 
 ### Community 1062 - "Community 1062"
-Cohesion: 0.1
-Nodes (21): PrivacyGroup (개인정보/권한/차단), ProfileGroup (avatar+name+email), SettingsGroup (알림/테마), my_page.html spec, MyPageRoute spec_diff, my_page uidump (MyPageRoute screen), 알림 빈 상태 (알림이 없습니다), notification_list_screen.html spec (+13 more)
+Cohesion: 0.19
+Nodes (14): CascadeResult, allInvariants(), checkAll(), clearInvariants(), getInvariant(), Invariant, InvariantViolation, registerInvariant() (+6 more)
 
 ### Community 1063 - "Community 1063"
 Cohesion: 0.09
@@ -4359,8 +4356,8 @@ Cohesion: 0.09
 Nodes (21): 4-flag-as-1-Unit Tooling (필수), Cleanup — 가장 critical, Cleanup 강제, code:block1 ({area}_{feature}_be    # backend (EF, server-side gating)), code:block2 ([0] flag 등록 (4-flag-as-1 tool 이 4개 자동 생성)), code:block3 ([100% rollout 통과] → [+30일] → [4-flag-as-1 tool 이 cleanup PR ), Dead Branch 통째 삭제 룰, Error-Backoff (+13 more)
 
 ### Community 1065 - "Community 1065"
-Cohesion: 0.22
-Nodes (14): MinglitIamportCertification (mobile), MinglitIamportCertification (stub), MinglitIamportCertification (web), IamportController, IamportControllerTest, IamportHelper (conditional export), IamportHelperStub, IamportHelperWeb (dart:js interop) (+6 more)
+Cohesion: 0.13
+Nodes (23): MinglitIamportCertification (mobile), MinglitIamportCertification (stub), MinglitIamportCertification (web), IamportController, IamportControllerTest, IamportHelper (conditional export), IamportHelperStub, IamportHelperWeb (dart:js interop) (+15 more)
 
 ### Community 1066 - "Community 1066"
 Cohesion: 0.25
@@ -4387,8 +4384,8 @@ Cohesion: 0.09
 Nodes (22): package:mobile_scanner/mobile_scanner.dart, build, CheckinResultBanner, CheckinScannerOverlay, _CheckinScannerOverlayState, Container, didUpdateWidget, dispose (+14 more)
 
 ### Community 1072 - "Community 1072"
-Cohesion: 0.25
-Nodes (8): desc, required, required, event-flow-simulator, ENVIRONMENT, ENVIRONMENT, SUPABASE_PUBLISHABLE_KEY, desc
+Cohesion: 0.11
+Nodes (17): package:app_user/src/features/home/widgets/trending_tag_section.dart, package:app_user/src/widgets/explore_filter_chip_bar.dart, BugReportAction, build, dispose, _eventFeedSkeleton, HomePage, _HomePageState (+9 more)
 
 ### Community 1073 - "Community 1073"
 Cohesion: 0.1
@@ -4419,8 +4416,8 @@ Cohesion: 0.14
 Nodes (19): EventApplicationManagePage Smoke Test, createPartnerTestApp, CujApplicationActionTest (IT-P06), CujApplicationReviewTest (IT-P02), CujOnboardingToEventTest (IT-P01), currentMonthNetProvider, currentPartnerInfoProvider, EventActionCard (+11 more)
 
 ### Community 1080 - "Community 1080"
-Cohesion: 0.21
-Nodes (17): APPROVABLE_APPLICATION_STATUSES, ApprovalFailure, BulkApprovalPolicyResult, fail(), firstResult(), isApplicationApprovableForPartnerApproval(), mapBulkApprovalRpcResult(), mapSingleApprovalRpcResult() (+9 more)
+Cohesion: 0.15
+Nodes (20): APPROVABLE_APPLICATION_STATUSES, ApprovalFailure, BulkApprovalPolicyResult, fail(), firstResult(), isApplicationApprovableForPartnerApproval(), mapBulkApprovalRpcResult(), mapSingleApprovalRpcResult() (+12 more)
 
 ### Community 1081 - "Community 1081"
 Cohesion: 0.17
@@ -4435,8 +4432,8 @@ Cohesion: 0.17
 Nodes (20): CujEventCreateWizardTest (IT-P15), PartyCreateStep, PartyCreateWizardController, _PartyCreateWizardLoad mixin, PartyCreateWizardPage, PartyCreateWizardPage Smoke Test, PartyCreateWizardState, _PartyCreateWizardSteps mixin (+12 more)
 
 ### Community 1084 - "Community 1084"
-Cohesion: 0.13
-Nodes (21): CUJ Recurring Event Integration Test (IT-P09), DB Table: recurrence_rules, Edge Function: recurrence-rules, RecurrenceRule model, partyRecurrenceRuleProvider, RecurrenceManagementController / partyRecurrenceRuleProvider, RecurrenceManagementController Test, RecurrenceManagementScreen (+13 more)
+Cohesion: 0.14
+Nodes (19): CUJ Recurring Event Integration Test (IT-P09), DB Table: recurrence_rules, Edge Function: recurrence-rules, RecurrenceRule model, partyRecurrenceRuleProvider, RecurrenceManagementController / partyRecurrenceRuleProvider, RecurrenceManagementController Test, RecurrenceManagementScreen (+11 more)
 
 ### Community 1085 - "Community 1085"
 Cohesion: 0.11
@@ -4451,12 +4448,12 @@ Cohesion: 0.18
 Nodes (12): ADR-001: Supabase as Backend Platform, ADR-002: PGroonga for Korean Full-Text Search, ADR-003: pgvector for Recommendation Embeddings, ADR-004: PGMQ for Async Event Pipeline, ADR-005: Coordinator + Repository Pattern (Flutter), ADR-006: Ed25519 for QR Ticket Signing, ADR-007: PortOne Multi-PG Abstraction, Architecture Decision Records (ADR) (+4 more)
 
 ### Community 1088 - "Community 1088"
-Cohesion: 0.13
-Nodes (18): checkin_placeholder_page MDS test catalog, CreateVerificationController, CreateVerificationController Test, CreateVerificationPage, CreateVerificationPageBuilder, create_verification_page MDS test catalog, EntryGroupDetail, MdsCatalog<TBuilder> (+10 more)
+Cohesion: 0.11
+Nodes (21): CreateVerificationController, CreateVerificationController Test, CreateVerificationPage, CreateVerificationPageBuilder, CreateVerificationPage spec, create_verification_page MDS test catalog, CreateVerificationPage (app_partner), EntryGroupDetail (+13 more)
 
 ### Community 1089 - "Community 1089"
-Cohesion: 0.13
-Nodes (19): EF: apply-event, EF: commit-match-likes, EF: partner-manage-match, EF: payment-cancel, EF: user-mark-match-results-viewed, _EventRepositoryCommands, EventRepository, MatchingRepository (+11 more)
+Cohesion: 0.15
+Nodes (14): MockAuthCoordinator, MockHomeCoordinator, MockSearchCoordinator, MockAppCoordinator, MockAuthCoordinator, MockEventCoordinator, MockHomeCoordinator, MockSearchCoordinator (+6 more)
 
 ### Community 1090 - "Community 1090"
 Cohesion: 0.12
@@ -4471,12 +4468,12 @@ Cohesion: 0.11
 Nodes (18): package:mds/src/ui/widgets/timeline/minglit_timeline_step.dart, AnimatedBuilder, build, _buildDot, Column, didChangeDependencies, didUpdateWidget, dispose (+10 more)
 
 ### Community 1093 - "Community 1093"
-Cohesion: 0.04
-Nodes (55): _fakePartner, _FakeUrlLauncher, main, MinglitDomains, _MockMoreCoordinator, _fakePartner, _FakeUrlLauncher, main (+47 more)
+Cohesion: 0.03
+Nodes (64): _fakePartner, _FakeUrlLauncher, main, MinglitDomains, _MockMoreCoordinator, _fakePartner, _FakeUrlLauncher, main (+56 more)
 
 ### Community 1094 - "Community 1094"
 Cohesion: 0.11
-Nodes (22): AccountManagementRoute spec_diff (0 drift), AccountManagementRoute uidump, Accessibility semantic gap (uidump misses non-semantic widgets), Account deletion flow (reason→info→verify→complete), Bug Report button (dev/debug-only artifact), DeletionInfoRoute spec_diff (1 drift: card semantics missing), DeletionInfoRoute uidump (탈퇴 전 확인), DeletionReasonRoute spec_diff (0 drift) (+14 more)
+Nodes (21): AccountManagementRoute spec_diff (0 drift), AccountManagementRoute uidump, Accessibility semantic gap (uidump misses non-semantic widgets), Account deletion flow (reason→info→verify→complete), Platform-specific OAuth (Apple iOS-only on Android dump), DeletionInfoRoute spec_diff (1 drift: card semantics missing), DeletionInfoRoute uidump (탈퇴 전 확인), DeletionReasonRoute spec_diff (0 drift) (+13 more)
 
 ### Community 1095 - "Community 1095"
 Cohesion: 0.18
@@ -4487,12 +4484,12 @@ Cohesion: 0.29
 Nodes (6): package:shimmer/shimmer.dart, build, ExcludeSemantics, Image, MinglitImage, Semantics
 
 ### Community 1097 - "Community 1097"
-Cohesion: 0.18
-Nodes (12): bug-report-attachments Storage Bucket, Edge Function: ai-embed, Edge Function: ai-extract-tags, Edge Function: event-matching, Edge Function: payment-verify, Edge Function: payout-sync, Edge Function: settlement-register-transfers, Edge Function: settlement-transfer (+4 more)
+Cohesion: 0.12
+Nodes (15): build, checkedIn, checkInReady, dark, EventApplication, EventOngoingBannerBuilder, matching, matchingReady (+7 more)
 
 ### Community 1098 - "Community 1098"
-Cohesion: 0.12
-Nodes (17): supabase/functions/auth-manifest.json, supabase/functions/_shared/edge_function.ts, event_repository_commands, notification_repository, social_repository, auth-manifest.json (EF central policy), EF Caller Types (system/user/external/public), minglitEdgeFunction wrapper (+9 more)
+Cohesion: 0.05
+Nodes (40): bug-report-attachments Storage Bucket, supabase/functions/auth-manifest.json, supabase/functions/_shared/edge_function.ts, event_repository_commands, notification_repository, social_repository, auth-manifest.json (EF central policy), EF Caller Types (system/user/external/public) (+32 more)
 
 ### Community 1100 - "Community 1100"
 Cohesion: 0.29
@@ -4500,19 +4497,19 @@ Nodes (6): build, Center, _DragHandle, MinglitBottomSheet, SafeArea, SizedBox
 
 ### Community 1101 - "Community 1101"
 Cohesion: 0.12
-Nodes (27): applyAction, payload, rng, state, stateWith(), clearRegistry(), registerAction(), cfg() (+19 more)
+Nodes (26): applyAction, payload, rng, state, stateWith(), clearRegistry(), cfg(), emptySnapshot() (+18 more)
 
 ### Community 1102 - "Community 1102"
 Cohesion: 0.12
 Nodes (17): Admin Feature Audit Report 2026-05-18, Admin Features BLUEDOC, Admin Dashboard Spec, Admin Dashboard Wireframe, analytics_reader role (PII-blocked read-only), analytics schema (daily aggregate tables), Cloudflare Tunnel + Zero Trust Access, GitHub Issues automated alert (metrics-alert label) (+9 more)
 
 ### Community 1103 - "Community 1103"
-Cohesion: 0.08
-Nodes (26): EventApplicationReviewPage Spec HTML (app_user), EventApplicationReviewPage Spec (app_user), EventApplicationWizardPage v2 Spec (HTML), EventApplicationWizardPage v2 Spec, EventBottomTicketBar Spec (HTML), EventBottomTicketBar Spec, EventCard Spec (HTML), EventCard Spec (+18 more)
+Cohesion: 0.14
+Nodes (16): EventApplicationWizardPage v2 Spec (HTML), EventApplicationWizardPage v2 Spec, EventBottomTicketBar Spec (HTML), EventBottomTicketBar Spec, handle_verification_approval() Trigger, Iamport PG WebView (external), MinglitConfirmationPage, partner_verified_users Table (+8 more)
 
 ### Community 1104 - "Community 1104"
-Cohesion: 0.17
-Nodes (20): Application (event_applications), Internal Business Plan, Check-in (QR / Manual), EntryGroup, Event (Party Instance), Domain Glossary, MatchPair (Mutual Match), MatchVote (Card Exchange) (+12 more)
+Cohesion: 0.19
+Nodes (20): Application (event_applications), Check-in (QR / Manual), EntryGroup, Event (Party Instance), Domain Glossary, MatchPair (Mutual Match), MatchVote (Card Exchange), Partner Workflow (12-step) (+12 more)
 
 ### Community 1105 - "Community 1105"
 Cohesion: 0.17
@@ -4531,16 +4528,16 @@ Cohesion: 0.18
 Nodes (10): mocks.dart, createMockSupabase, _FakeCountBuilder, _FakeFilterBuilder, FakeRpcBuilder, FakeTableBuilder, _FakeTerminalBuilder, mockTable (+2 more)
 
 ### Community 1109 - "Community 1109"
-Cohesion: 0.17
-Nodes (12): 전자상거래법 §6 Compliance (5년 보존), PIPA Compliance (개인정보보호법), public.archived_records Retention GAP, Immediate Purge on Account Deletion (CASCADE), location_access_log Retention (위치정보법 §16 완료), Privacy Retention Map (선언-구현 매핑), Review Board Member: Accounting 최회계, Virtual Advisory Board (Review Team) (+4 more)
+Cohesion: 0.13
+Nodes (17): 전자상거래법 §6 Compliance (5년 보존), PIPA Compliance (개인정보보호법), public.archived_records Retention GAP, Immediate Purge on Account Deletion (CASCADE), location_access_log Retention (위치정보법 §16 완료), Privacy Retention Map (선언-구현 매핑), Review Board Member: Accounting 최회계, Virtual Advisory Board (Review Team) (+9 more)
 
 ### Community 1110 - "Community 1110"
-Cohesion: 0.15
-Nodes (8): FakeSupabase, buildTicket(), DEFAULTS, TicketFixture, happyPathFake(), ownerPermScript(), buildEvent, buildTicket()
+Cohesion: 0.11
+Nodes (12): FakeSupabase, buildTicket(), DEFAULTS, TicketFixture, buildUserProfile(), DEFAULTS, UserProfileFixture, happyPathFake() (+4 more)
 
 ### Community 1111 - "Community 1111"
-Cohesion: 0.22
-Nodes (9): required, common, service_role_key, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_URL, desc, desc, desc (+1 more)
+Cohesion: 0.12
+Nodes (17): required, common, desc, required, required, event-flow-simulator, ENVIRONMENT, ENVIRONMENT (+9 more)
 
 ### Community 1112 - "Community 1112"
 Cohesion: 0.12
@@ -4551,8 +4548,8 @@ Cohesion: 0.15
 Nodes (17): Event model, Tag model, party_event_repository.dart, RLS Strict Migration Plan, social_repository.dart, TagEventListController, TagEventListController Test, TagEventListPage Widget (+9 more)
 
 ### Community 1114 - "Community 1114"
-Cohesion: 0.16
-Nodes (16): AI 기본법, CI/DI Encrypted Storage, 전자상거래법, Layer 1: Identity Verification, identity-verify Edge Function, Legal Context (Korea), 위치정보법, payment-cancel Edge Function (+8 more)
+Cohesion: 0.12
+Nodes (20): AI 기본법, CI/DI Encrypted Storage, cleanup-retention Edge Function, Comms Secrecy Law 15-2, Data Retention Policy, 전자상거래법, E-commerce Law Article 6, Layer 1: Identity Verification (+12 more)
 
 ### Community 1115 - "Community 1115"
 Cohesion: 0.07
@@ -4567,8 +4564,8 @@ Cohesion: 0.29
 Nodes (6): build, Center, _DefaultErrorView, Function, MinglitAsyncValueWidget, SizedBox
 
 ### Community 1118 - "Community 1118"
-Cohesion: 0.06
-Nodes (32): StateError, build, checkedIn, checkInReady, dark, EventApplication, EventOngoingBannerBuilder, matching (+24 more)
+Cohesion: 0.08
+Nodes (22): AuthConfig, StateError, _apply, build, dark, ended, EventCardBuilder, _EventCardRenderConfig (+14 more)
 
 ### Community 1119 - "Community 1119"
 Cohesion: 0.21
@@ -4600,7 +4597,7 @@ Nodes (9): Function, MdsState, main, main, main, builder.dart, main, main (+1 mo
 
 ### Community 1126 - "Community 1126"
 Cohesion: 0.03
-Nodes (68): _BoardingPassWrapper, _BoardingPassWrapperState, build, dispose, _futureMeta, initializeDateFormatting, initState, main (+60 more)
+Nodes (74): initializeDateFormatting, MdsRenderEngine, base, Event, main, _makeEvent, _MockEventRepository, _DataController (+66 more)
 
 ### Community 1127 - "Community 1127"
 Cohesion: 0.33
@@ -4624,7 +4621,7 @@ Nodes (14): minglit_design_tokens.dart (MinglitColors, MinglitSpacing, MinglitRa
 
 ### Community 1132 - "Community 1132"
 Cohesion: 0.29
-Nodes (15): Admin Dashboard Feature (PRD + Wireframe), Feature Maturity Matrix (PM 추적 도구), Legal Compliance (F1~F8 retention policies), 참여 현황 UI 재설계 (blur 리스트 + k-anonymity), Security Audit #1487 (P1×4 취약점), Trust Badge Feature (MVP 미결 6주), PM Report #1229 — 첫 QA 세션 버그 13건 + P0 인프라 차단, PM Report #1410 — QA 버그 전수 해소 + 결제 플로우 차단 (+7 more)
+Nodes (15): Admin Dashboard Feature (PRD + Wireframe), Feature Maturity Matrix (PM 추적 도구), Legal Compliance (F1~F8 retention policies), 참여 현황 UI 재설계 (blur 리스트 + k-anonymity), Security Audit #1487 (P1×4 취약점), Trust Badge UI Feature (3-Tier: Verified/Certified/Elite), PM Report #1229 — 첫 QA 세션 버그 13건 + P0 인프라 차단, PM Report #1410 — QA 버그 전수 해소 + 결제 플로우 차단 (+7 more)
 
 ### Community 1133 - "Community 1133"
 Cohesion: 0.16
@@ -4667,8 +4664,8 @@ Cohesion: 0.11
 Nodes (21): build, Center, Padding, _PartyListEmptyState, PartyListPage, Scaffold, SizedBox, build (+13 more)
 
 ### Community 1143 - "Community 1143"
-Cohesion: 0.18
-Nodes (15): Design System 07 — Accessibility Guide, Design System 02 — Component Themes, Design System 01 — Foundation Tokens, Design System 05 — Motion Guide, Design System 04 — Navigation Guide, Design System 03 — UI Patterns, Design System 06 — UX Writing Guide, hasSettlementAccessProvider (+7 more)
+Cohesion: 0.13
+Nodes (14): CancelOrderResult, ctrl, Event, EventApplication, Exception, getController, getCtrl, main (+6 more)
 
 ### Community 1144 - "Community 1144"
 Cohesion: 0.15
@@ -4723,8 +4720,8 @@ Cohesion: 0.22
 Nodes (8): AnimatedBuilder, build, Container, didChangeDependencies, dispose, initState, MinglitSkeleton, _MinglitSkeletonState
 
 ### Community 1157 - "Community 1157"
-Cohesion: 0.02
-Nodes (116): _FakeAccountRepository, _FakeSupabaseClient, _FakeWithdrawalReason, main, _MockCoordinator, _MockUser, _socialUser, initializeDateFormatting (+108 more)
+Cohesion: 0.03
+Nodes (84): _FakeAccountRepository, _FakeSupabaseClient, _FakeWithdrawalReason, main, _MockCoordinator, _MockUser, _socialUser, Event (+76 more)
 
 ### Community 1158 - "Community 1158"
 Cohesion: 0.16
@@ -4819,8 +4816,8 @@ Cohesion: 0.41
 Nodes (12): PartyDetailController, PartyDetailController Test, PartyDetailCoordinator, PartyDetailInfoTab, PartyDetailOperationTab, PartyDetailPage, PartyEntryGroupCoordinator Test (Fix #1733), PartyEntryGroup Entry Point Test (Fix #1733) (+4 more)
 
 ### Community 1181 - "Community 1181"
-Cohesion: 0.04
-Nodes (53): CheckinStats, CheckinStatsController, Duration, _startPollingFallback, _subscribeToRealtime, package:minglit_kit/src/config/url_config.dart, package:minglit_kit/src/data/models/recurrence_rule.dart, package:minglit_kit/src/data/models/settlement_item_detail.dart (+45 more)
+Cohesion: 0.03
+Nodes (78): CheckinStats, CheckinStatsController, Duration, _startPollingFallback, _subscribeToRealtime, package:crypto/crypto.dart, package:google_sign_in/google_sign_in.dart, package:minglit_kit/src/config/url_config.dart (+70 more)
 
 ### Community 1182 - "Community 1182"
 Cohesion: 0.15
@@ -4843,8 +4840,8 @@ Cohesion: 0.17
 Nodes (12): 5.1 기술 스택, 5.3.10 KPI 대시보드 (상세), 5.3.1 대시보드 (홈), 5.3.2 유저 관리, 5.3.4 이벤트 관리, 5.3.5 결제/환불, 5.3.6 정산 관리, 5.3.7 신고 처리 (+4 more)
 
 ### Community 1187 - "Community 1187"
-Cohesion: 0.27
-Nodes (10): AI-First Operating Principle, AI Worker Operating Model, Brand Anti-patterns — 외모 품평/익명성/결혼 압박 금지, Brand Identity — minglit voice + visual, Brand Visual — MZ 틱 세련됨 + 보라 그라디언트, Brand Voice — 존댓말 정중 + 무겁지 않음, Founding Story, Graphify Knowledge Graph (+2 more)
+Cohesion: 0.16
+Nodes (15): AI-First Operating Principle, AI Worker Operating Model, Brand Anti-patterns — 외모 품평/익명성/결혼 압박 금지, Brand Identity — minglit voice + visual, Brand Visual — MZ 틱 세련됨 + 보라 그라디언트, Brand Voice — 존댓말 정중 + 무겁지 않음, Internal Business Plan, Founding Story (+7 more)
 
 ### Community 1188 - "Community 1188"
 Cohesion: 0.13
@@ -4860,19 +4857,19 @@ Nodes (12): 4.1 API, 4.2 동작 (startup → request), 4.3 응답 형식, 4.4 La
 
 ### Community 1191 - "Community 1191"
 Cohesion: 0.04
-Nodes (64): dart:typed_data, package:image_picker/image_picker.dart, package:mds/src/ui/widgets/common/minglit_skeleton.dart, package:minglit_kit/src/data/models/event.dart, package:minglit_kit/src/data/models/matching.dart, package:minglit_kit/src/data/models/partner_application.dart, package:minglit_kit/src/data/models/partner.dart, package:minglit_kit/src/data/models/ticket.dart (+56 more)
+Nodes (53): dart:typed_data, package:image_picker/image_picker.dart, package:mds/src/ui/widgets/common/minglit_skeleton.dart, package:minglit_kit/src/data/models/event.dart, package:minglit_kit/src/data/models/partner_application.dart, package:minglit_kit/src/data/models/partner.dart, package:minglit_kit/src/data/models/party.dart, package:minglit_kit/src/data/models/party_entry_group.dart (+45 more)
 
 ### Community 1192 - "Community 1192"
-Cohesion: 0.01
-Nodes (125): mockPartner, mockRecurrenceRule, mockVerification, VerificationFormField, main, package:app_partner/src/features/home/home_event_phase.dart, package:app_partner/src/features/party/widgets/party_status_edit_sheet.dart, package:app_user/src/common/widgets/match_results_content.dart (+117 more)
+Cohesion: 0.02
+Nodes (104): mockPartner, mockRecurrenceRule, mockVerification, VerificationFormField, AuthGuard, build, Scaffold, SizedBox (+96 more)
 
 ### Community 1193 - "Community 1193"
 Cohesion: 0.17
 Nodes (11): 4-stage 모델, Abstract Workflow Set, Branch Strategy, code:mermaid (flowchart LR), Promotion PR Title, RC Eligibility Marker, Safety Nets 3종, Workflow Overview (+3 more)
 
 ### Community 1194 - "Community 1194"
-Cohesion: 0.13
-Nodes (14): androidDefault, build, devEnv, error, _ErrorAuthController, Exception, Function, _IdleAuthController (+6 more)
+Cohesion: 0.14
+Nodes (13): asEmailUser, asSocialUser, build, dark, DeletionVerifyPageBuilder, _FakeAccountRepository, _makeEmailUser, _makeSocialUser (+5 more)
 
 ### Community 1195 - "Community 1195"
 Cohesion: 0.17
@@ -4903,8 +4900,8 @@ Cohesion: 0.2
 Nodes (12): optional, required, optional, required, desc, desc, desc, landing_partner (+4 more)
 
 ### Community 1202 - "Community 1202"
-Cohesion: 0.14
-Nodes (14): Cross-feature controller import anti-pattern, _MinglitLintsPlugin (custom_lint), NoCrossFeatureImportsRule, NoDirectSupabaseInstanceRule, NoDirectSupabaseInstanceRule tests, NoHardcodedColorsRule, NoHardcodedPaddingRule, NoSupabaseWritesOutsideEfRule (+6 more)
+Cohesion: 0.17
+Nodes (12): _MinglitLintsPlugin (custom_lint), NoDirectSupabaseInstanceRule, NoDirectSupabaseInstanceRule tests, NoHardcodedColorsRule, NoHardcodedPaddingRule, NoSupabaseWritesOutsideEfRule, NoSupabaseWritesOutsideEfRule tests, NotificationRepository tests (+4 more)
 
 ### Community 1203 - "Community 1203"
 Cohesion: 0.33
@@ -4923,12 +4920,12 @@ Cohesion: 0.17
 Nodes (12): 4.1 운영 대시보드 (Dashboard), 4.3 DLQ 관리 (Phase 2), 4.6 감사 로그 (Audit Log), 4.8 Kill Switch / 긴급 제어판, 4. 화면별 설계, code:block10 (┌───────────────────────────────────────────────────────────), code:block15 (┌───────────────────────────────────────────────────────────), code:block18 (┌───────────────────────────────────────────────────────────) (+4 more)
 
 ### Community 1207 - "Community 1207"
-Cohesion: 0.19
-Nodes (13): RPC: admin.delete_old_rows / admin.delete_expired_rows, cleanup-retention Edge Function, Comms Secrecy Law 15-2, Data Retention Policy, E-commerce Law Article 6, Edge Function: user-event-feed, Table: location_access_log, Location Law Article 16 (+5 more)
+Cohesion: 0.14
+Nodes (13): build, dark, errorRetry, _IdentityConsentRepository, IdentityVerificationScreenBuilder, loading, _makeUser, _MockSupabaseClient (+5 more)
 
 ### Community 1208 - "Community 1208"
-Cohesion: 0.6
-Nodes (5): Trust Badge Tier 1 — Verified (인증), Trust Badge Tier 2 — Certified (자격인증), Trust Badge Tier 3 — Elite (엘리트), Trust Badge Wireframe HTML, Trust Sheet Bottom Sheet UI
+Cohesion: 0.22
+Nodes (11): dark, SearchPageBuilder, withEmpty, withNoResults, withResults, package:app_user/src/features/search/search_page.dart, dark, SearchPageBuilder (+3 more)
 
 ### Community 1209 - "Community 1209"
 Cohesion: 0.17
@@ -4959,12 +4956,12 @@ Cohesion: 0.18
 Nodes (9): 7.1 구조적 차이, 7.2 마이그레이션 전략 (제안), 7. AS-IS vs TO-BE Gap 분석, code:block19 (Phase 1: DB 스키마 확장), 목차, 밍글릿 결제/정산 시스템 아키텍처 기술서 (Architecture Description), 변경 이력, 부록 A: 용어 사전 (+1 more)
 
 ### Community 1216 - "Community 1216"
-Cohesion: 0.22
-Nodes (15): DB Table: partner_verified_users, DB Table: settlement_items, RPC: update_single_settlement_ready_status, simApproveVerifications (Phase 3), E2E Simulation Assertion Functions, sim_auth (getSimUserToken/getSimPartnerToken/getPartnerEmail/callEdgeFunction), simCreateParties / simDiscoverAndApply (Phase 1-2), simCheckin / simMatch / simCompleteEvents (Phase 5) (+7 more)
+Cohesion: 1.0
+Nodes (3): ActionRunner (tick simulation executor), SimAction Abstract Base Class, TickConfig / ActionResult / tick_types
 
 ### Community 1217 - "Community 1217"
-Cohesion: 0.04
-Nodes (53): build, _ErrorNotificationList, Event, Exception, _FakeDashboardController, _FakeNotificationList, Function, _homeStateWithEvents (+45 more)
+Cohesion: 0.02
+Nodes (103): build, _ErrorNotificationList, Event, Exception, _FakeDashboardController, _FakeNotificationList, Function, _homeStateWithEvents (+95 more)
 
 ### Community 1218 - "Community 1218"
 Cohesion: 0.27
@@ -4983,8 +4980,8 @@ Cohesion: 0.18
 Nodes (11): Auto-Merge, CI 실패 대응, CI 파이프라인, code:bash (gh pr create --base dev --title "..." --body "..."), code:bash (# 1. CI 상태 확인 (ci-result가 CodeRabbit 대기까지 포함)), code:bash (# 방법 1: GitHub API로 업데이트 (권장 — 로컬 체크아웃 불필요)), PR Conventions, PR 케어 (생성 → 머지 완료까지) (+3 more)
 
 ### Community 1222 - "Community 1222"
-Cohesion: 0.1
-Nodes (21): package:minglit_kit/src/data/models/social_interaction.dart, package:minglit_kit/src/data/repositories/social_repository.dart, _ensureSuccess, FunctionException, SocialRepository, SocialInteractionController, expectLater, main (+13 more)
+Cohesion: 0.15
+Nodes (12): _AllConsentController, allSelected, _consent, dark, _DefaultConsentController, loading, _LoadingConsentController, noneSelected (+4 more)
 
 ### Community 1223 - "Community 1223"
 Cohesion: 0.14
@@ -5119,8 +5116,8 @@ Cohesion: 0.28
 Nodes (9): pgvector Recommendation Infrastructure, 2-Layer Trust and Verification Model (Identity + Qualification), PM Daily Report 2026-03-26 (#441), PM Daily Report 2026-03-28 (#546), PM Daily Report 2026-03-28 (#655), PM Daily Report 2026-03-29 (#680), PM Daily Report 2026-03-29 (#721), PM Daily Report 2026-03-30 (#866) (+1 more)
 
 ### Community 1257 - "Community 1257"
-Cohesion: 0.18
-Nodes (10): calculateRefund, canCancel, isActiveTicket, isRefundReady, onSuccess, PurchaseHistoryController, RefundCalculation, _requestRefund (+2 more)
+Cohesion: 0.07
+Nodes (22): calculateRefund, canCancel, isActiveTicket, isRefundReady, onSuccess, PurchaseHistoryController, RefundCalculation, _requestRefund (+14 more)
 
 ### Community 1258 - "Community 1258"
 Cohesion: 0.33
@@ -5131,8 +5128,8 @@ Cohesion: 0.25
 Nodes (6): Body, 🐞 Bug Report, [Bug Report] [QA] U-S03 — EventDetailPage 참가현황 탭 permission denied: PARTY_MANAGE required, code:log ([E] TIME: 2026-05-06T06:23:46.334537 getEntryGroupParticipan), Environment, Layout Dump
 
 ### Community 1260 - "Community 1260"
-Cohesion: 0.17
-Nodes (11): package:app_partner/src/features/party/event/widgets/event_application_review_dialog.dart, _ApplicationCard, build, Card, Center, Container, EventApplicationListView, ListView (+3 more)
+Cohesion: 0.15
+Nodes (12): _ErrorTagEventListController, _event, Exception, _FixedTagEventListController, _LoadingTagEventListController, TagEventListPageBuilder, TagEventListState, withDefaultList (+4 more)
 
 ### Community 1261 - "Community 1261"
 Cohesion: 0.22
@@ -5143,8 +5140,8 @@ Cohesion: 0.2
 Nodes (9): package:app_partner/src/features/party/list/widgets/party_list_item.dart, package:app_partner/src/utils/l10n_ext.dart, build, Center, Padding, _PartyListEmptyState, PartyListPage, Scaffold (+1 more)
 
 ### Community 1263 - "Community 1263"
-Cohesion: 0.02
-Nodes (104): AccountManagementPageBuilder, build, dark, partnerMode, ProviderScope, verified, BlockedPartnersPageBuilder, dark (+96 more)
+Cohesion: 0.09
+Nodes (23): AccountManagementPageBuilder, build, dark, partnerMode, ProviderScope, verified, dark, DeletionCompletePageBuilder (+15 more)
 
 ### Community 1264 - "Community 1264"
 Cohesion: 0.5
@@ -5163,8 +5160,8 @@ Cohesion: 0.67
 Nodes (3): file, widget, AccountManagementRoute
 
 ### Community 1268 - "Community 1268"
-Cohesion: 0.14
-Nodes (16): Manual provider without @riverpod anti-pattern, kit 으로 갈 조건 3가지, Logic Provider organization, minglit_kit/logic BLUEDOC, MinglitSocialActionChip, MinglitSocialActionChip, MinglitSocialButton, ReportDetail (+8 more)
+Cohesion: 0.2
+Nodes (10): Cross-feature controller import anti-pattern, Manual provider without @riverpod anti-pattern, kit 으로 갈 조건 3가지, Logic Provider organization, minglit_kit/logic BLUEDOC, MinglitSocialActionChip, NoCrossFeatureImportsRule, SocialInteractionController (+2 more)
 
 ### Community 1269 - "Community 1269"
 Cohesion: 0.28
@@ -5195,12 +5192,16 @@ Cohesion: 0.22
 Nodes (9): $description, $type, $value, $description, $type, $value, body, button (+1 more)
 
 ### Community 1276 - "Community 1276"
-Cohesion: 0.22
-Nodes (9): MinglitDDayChip, MinglitHelpSheet (제안), PartyListCoordinator, PartyListItem, PartyListPage, PartyListPage Spec (HTML), PartyListPage Spec, PartyListPage Flutter Widget (+1 more)
+Cohesion: 0.19
+Nodes (10): package:minglit_kit/src/data/models/user_settings.dart, _ensureSuccess, FunctionException, NotificationRepository, _ensureSuccess, FunctionException, NotificationRepository, _ensureSuccess (+2 more)
 
 ### Community 1277 - "Community 1277"
 Cohesion: 0.67
 Nodes (3): file, widget, CreateVerificationRoute
+
+### Community 1278 - "Community 1278"
+Cohesion: 0.12
+Nodes (8): createBroadMock(), getHandler(), isSingleQuery(), wrapSingle(), portoneOkFetch(), captureServeHandler(), createFetchMock(), createFeedFetchMock()
 
 ### Community 1279 - "Community 1279"
 Cohesion: 0.33
@@ -5227,8 +5228,8 @@ Cohesion: 0.25
 Nodes (8): 5.1 Policy Patterns, 5.2 Policy Count by Table, 5.3 Storage Buckets, 5.4 Flutter Write Enforcement, 5. RLS (Row Level Security), code:dart (// minglit_lints: allow-supabase-write — reason: EF 마이그레이션 2), lint 룰: `no_supabase_writes_outside_ef`, 강제 수단 (다층 방어)
 
 ### Community 1285 - "Community 1285"
-Cohesion: 0.2
-Nodes (9): build, CreateVerificationPageBuilder, dark, empty, _FakeCreateVerificationController, ProviderScope, withFields, package:app_partner/src/features/verification/create/create_verification_controller.dart (+1 more)
+Cohesion: 0.15
+Nodes (12): build, Column, didUpdateWidget, dispose, IconButton, initState, NumberStepperInput, _NumberStepperInputState (+4 more)
 
 ### Community 1286 - "Community 1286"
 Cohesion: 0.25
@@ -5259,8 +5260,8 @@ Cohesion: 0.25
 Nodes (6): CUJs, Edge Cases, Functional Requirements, Non-Functional Requirements, Open Questions, Spec: 참여 현황 UI 재설계
 
 ### Community 1293 - "Community 1293"
-Cohesion: 0.25
-Nodes (7): 구현 이슈 분할 (예상), 기존 사용, 데이터 소스, 라우트 변경, 접근성, 추가 필요, 티켓 QR 화면 — Boarding Pass 리디자인 스펙
+Cohesion: 0.17
+Nodes (11): 개요, 구현 이슈 분할 (예상), 기존 사용, 데이터 소스, 디자인 레퍼런스, 라우트 변경, 접근성, 참고 앱 분석 (+3 more)
 
 ### Community 1294 - "Community 1294"
 Cohesion: 0.25
@@ -5340,7 +5341,7 @@ Nodes (3): build, DecoratedBox, MinglitBadge
 
 ### Community 1315 - "Community 1315"
 Cohesion: 0.25
-Nodes (8): MDS Coverage Reconciler, Decorator (cross-cutting), _manifest.yaml schema, MdsCatalog (data container), MdsRenderEngine runner, MDS specs (design SSoT), MdsState (declarative state), Render Catalog Engine Architecture
+Nodes (9): app_partner/test BLUEDOC, BugReportAction (app bar), BugReportFab, BugReportFab global regression test (#1858), BugReportRepository (constructed), storageRepositoryProvider, bugReporterCallbackProvider, BugReporterWrapper (+1 more)
 
 ### Community 1316 - "Community 1316"
 Cohesion: 0.33
@@ -5507,8 +5508,8 @@ Cohesion: 0.67
 Nodes (3): file, widget, EventCheckedInRoute
 
 ### Community 1357 - "Community 1357"
-Cohesion: 0.67
-Nodes (3): file, widget, MoreRoute
+Cohesion: 0.25
+Nodes (8): DefaultFirebaseOptions (app_partner), DefaultFirebaseOptions test (partner), app_partner main_demo(), app_partner main(), MinglitPartnerApp, SentryFlutter.init, visual_qa: draft_in_progress apply capture, visual_qa: unauthenticated redirect capture
 
 ### Community 1358 - "Community 1358"
 Cohesion: 0.18
@@ -5891,8 +5892,8 @@ Cohesion: 0.29
 Nodes (7): clearTokenCache(), clear, clearTokenCache(), clearInvariants(), clearRegistry(), registerAction(), setup()
 
 ### Community 1454 - "Community 1454"
-Cohesion: 0.29
-Nodes (6): build, dark, loading, LocationGuidePageBuilder, ProviderScope, package:app_partner/src/features/home/guide/location_guide_page.dart
+Cohesion: 0.61
+Nodes (5): runDbCustomFnCleanup(), runDbTableCleanup(), runPgmqArchiveCleanup(), runPolicy(), runStorageBucketCleanup()
 
 ### Community 1455 - "Community 1455"
 Cohesion: 0.29
@@ -6323,8 +6324,8 @@ Cohesion: 0.5
 Nodes (4): 2. 7-Layer Taxonomy, 📱 App Level (`apps/app_*/`), 🗄️ Backend Level (`supabase/` + EF), 보조 (taxonomy 밖, 유지)
 
 ### Community 1562 - "Community 1562"
-Cohesion: 0.33
-Nodes (6): minglit_kit_test, RefundCalculation, RefundCalculator, TicketCrypto, TicketCrypto Test Suite, TicketKeyPair
+Cohesion: 0.25
+Nodes (6): package:flutter/services.dart, build, MinglitTextField, Semantics, _loadNotoSansKR, testMain
 
 ### Community 1563 - "Community 1563"
 Cohesion: 0.5
@@ -6351,24 +6352,24 @@ Cohesion: 0.5
 Nodes (4): 개요, 설계 결정 근거, 참고 앱/트렌드, 핵심 원칙
 
 ### Community 1569 - "Community 1569"
-Cohesion: 0.4
-Nodes (5): CreateVerificationPage spec, CreateVerificationPage (app_partner), _FieldEditorCard (dynamic form builder field), 2-layer trust model (identity + qualification), VerificationManagePage (parent of create flow)
+Cohesion: 0.33
+Nodes (6): DefaultFirebaseOptions (app_user), app_user main.dart, MingLitEvent Constants, OG Edge Function (app_user), StatsigAnalytics, StatsigProvider Test
 
 ### Community 1570 - "Community 1570"
 Cohesion: 0.33
 Nodes (6): Safety Net: expand-migrate-contract (6-month compat), Safety Net: flag-registration CI, dev-staging-pr-gate workflow, main-pr-gate workflow, nightly-pr-gate workflow (defensive), rc-soak-check daily cron (5-day soak)
 
 ### Community 1571 - "Community 1571"
-Cohesion: 0.4
-Nodes (5): EventLocationSummary, PartyLocationDetailInput, PartyLocationEditScreen, PartyLocationInput, PartyLocationSummary
+Cohesion: 0.33
+Nodes (5): BlockedPartnersPageBuilder, dark, empty, loading, withPartners
 
 ### Community 1572 - "Community 1572"
 Cohesion: 0.33
 Nodes (5): build, _defaultLabel, MinglitDDayChip, Semantics, _tier
 
 ### Community 1573 - "Community 1573"
-Cohesion: 0.67
-Nodes (3): 5. Loading State, 공용 위젯, 사용 원칙
+Cohesion: 0.6
+Nodes (5): RecurrenceSettingsController, RecurrenceSettingsController Test, RecurrenceSettingsSection, RecurrenceSettingsSection Test, RecurrenceSettingsState
 
 ### Community 1574 - "Community 1574"
 Cohesion: 0.5
@@ -6495,8 +6496,8 @@ Cohesion: 0.67
 Nodes (3): file, widget, EventCreateRoute
 
 ### Community 1606 - "Community 1606"
-Cohesion: 0.47
-Nodes (4): buildUserProfile(), DEFAULTS, UserProfileFixture, buildUserProfile()
+Cohesion: 0.5
+Nodes (4): required, event-checkin, TICKET_SIGNING_PUBLIC_KEY_JWK, desc
 
 ### Community 1607 - "Community 1607"
 Cohesion: 0.4
@@ -6519,8 +6520,8 @@ Cohesion: 0.4
 Nodes (4): ../lib/overrides/demo_overrides.dart, ../lib/overrides/poison_supabase_client.dart, package:minglit_kit/minglit_logic.dart, main
 
 ### Community 1612 - "Community 1612"
-Cohesion: 0.4
-Nodes (4): AccountManagementPage, build, Scaffold, SizedBox
+Cohesion: 0.67
+Nodes (3): 1. Selectable Card, Selectable Card 텍스트 스타일, Shadow / Border 프리셋
 
 ### Community 1613 - "Community 1613"
 Cohesion: 0.4
@@ -6547,8 +6548,8 @@ Cohesion: 0.67
 Nodes (3): file, widget, EventApplicationDetailRoute
 
 ### Community 1623 - "Community 1623"
-Cohesion: 0.83
-Nodes (4): LocationMap (mobile/Kakao), LocationMap (stub), LocationMapView, LocationMap (web/JS Interop)
+Cohesion: 0.67
+Nodes (3): file, widget, EventReviewRoute
 
 ### Community 1624 - "Community 1624"
 Cohesion: 0.67
@@ -6571,12 +6572,8 @@ Cohesion: 0.67
 Nodes (3): file, widget, AuthCallbackRoute
 
 ### Community 1629 - "Community 1629"
-Cohesion: 0.5
-Nodes (4): RecurrencePattern, RecurrenceRule model, RecurrenceRuleRepository Test, RecurrenceStatus
-
-### Community 1630 - "Community 1630"
-Cohesion: 0.5
-Nodes (4): 개요, 디자인 레퍼런스, 참고 앱 분석, 핵심 원칙
+Cohesion: 0.67
+Nodes (3): file, widget, MemberListRoute
 
 ### Community 1631 - "Community 1631"
 Cohesion: 0.67
@@ -6607,16 +6604,12 @@ Cohesion: 0.25
 Nodes (7): build, ClipRRect, _ContinuousBar, MinglitCapacityBar, Row, _SegmentedBar, Stack
 
 ### Community 1653 - "Community 1653"
-Cohesion: 0.12
-Nodes (19): accountRepositoryProvider, app_partner/test BLUEDOC, BugReportAction (app bar), BugReportFab, BugReportFab global regression test (#1858), BugReportRepository (constructed), storageRepositoryProvider, bugReporterCallbackProvider (+11 more)
+Cohesion: 0.2
+Nodes (10): accountRepositoryProvider, BugReporterWrapper, BugReporterWrapper widget tests, eventRepositoryProvider, Landing Partner Root Layout, partyRepositoryProvider, StatsigAnalytics, supabaseClientProvider (+2 more)
 
 ### Community 1654 - "Community 1654"
 Cohesion: 0.67
 Nodes (3): file, widget, EventEditRoute
-
-### Community 1655 - "Community 1655"
-Cohesion: 0.67
-Nodes (3): file, widget, EventMatchingRoute
 
 ### Community 1656 - "Community 1656"
 Cohesion: 0.67
@@ -6647,8 +6640,8 @@ Cohesion: 0.67
 Nodes (3): file, widget, PurchaseHistoryRoute
 
 ### Community 1665 - "Community 1665"
-Cohesion: 0.1
-Nodes (16): build, MinglitSettingsGroup, Padding, build, Scaffold, StartupFatalErrorView, package:mds/mds.dart, build (+8 more)
+Cohesion: 0.08
+Nodes (20): build, MinglitSettingsGroup, Padding, build, Scaffold, StartupFatalErrorView, package:mds/mds.dart, build (+12 more)
 
 ## Ambiguous Edges - Review These
 - `Log utility` → `PolicyRepository`  [AMBIGUOUS]
@@ -6657,9 +6650,9 @@ Nodes (16): build, MinglitSettingsGroup, Padding, build, Scaffold, StartupFatalE
   /Users/mark/workspace/minglit-graphify-init/docs/reports/architecture/2026-04-05-issue1092-architect-audit-report-architecture-audit.md · relation: conceptually_related_to
 
 ## Knowledge Gaps
-- **10399 isolated node(s):** `dev:user`, `dev:partner`, `dev:web`, `dev:user:local`, `dev:user:dev` (+10394 more)
+- **10399 isolated node(s):** `nodeModulesDir`, `dev:user`, `dev:partner`, `dev:web`, `dev:user:local` (+10394 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **272 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **270 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
@@ -6668,13 +6661,13 @@ _Questions this graph is uniquely positioned to answer:_
   _Edge tagged AMBIGUOUS (relation: calls) - confidence is low._
 - **What is the exact relationship between `AI Basic Law Compliance (Korea 2026)` and `Architecture Audit #1092 — 2026-04-06`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
-- **Why does `handler()` connect `Community 3` to `Community 1380`, `Community 999`, `Community 1128`, `Community 106`, `Community 1101`, `Community 1038`, `Community 1011`, `Community 1045`, `Community 55`, `Community 986`, `Community 1019`, `Community 988`, `Community 1053`, `Community 1022`?**
-  _High betweenness centrality (0.081) - this node is a cross-community bridge._
-- **Why does `Log` connect `Community 1011` to `Community 992`, `Community 1058`, `Community 3`, `Community 999`, `Community 106`, `Community 272`, `Community 1138`, `Community 22`, `Community 1623`, `Community 986`, `Community 988`, `Community 1022`?**
-  _High betweenness centrality (0.064) - this node is a cross-community bridge._
-- **Why does `LocationMapView` connect `Community 1623` to `Community 1051`, `Community 6`?**
-  _High betweenness centrality (0.064) - this node is a cross-community bridge._
-- **Are the 93 inferred relationships involving `handler()` (e.g. with `errorResponse` and `parseAction`) actually correct?**
+- **Why does `handler()` connect `Community 3` to `Community 992`, `Community 1380`, `Community 1062`, `Community 1128`, `Community 106`, `Community 1036`, `Community 1101`, `Community 1454`, `Community 1038`, `Community 1011`, `Community 1045`, `Community 55`, `Community 986`, `Community 1019`, `Community 988`, `Community 1053`, `Community 1022`?**
+  _High betweenness centrality (0.076) - this node is a cross-community bridge._
+- **Why does `package:minglit_kit/minglit_kit.dart` connect `Community 1192` to `Community 0`, `Community 1027`, `Community 1157`, `Community 5`, `Community 1030`, `Community 1033`, `Community 1035`, `Community 12`, `Community 1037`, `Community 1039`, `Community 1042`, `Community 19`, `Community 146`, `Community 1049`, `Community 1181`, `Community 30`, `Community 1183`, `Community 1566`, `Community 1058`, `Community 1188`, `Community 1189`, `Community 1061`, `Community 1194`, `Community 1071`, `Community 1072`, `Community 1456`, `Community 1204`, `Community 1207`, `Community 1208`, `Community 1211`, `Community 1217`, `Community 1090`, `Community 1093`, `Community 1222`, `Community 1097`, `Community 1226`, `Community 1613`, `Community 1358`, `Community 979`, `Community 980`, `Community 981`, `Community 982`, `Community 983`, `Community 984`, `Community 985`, `Community 88`, `Community 987`, `Community 1245`, `Community 1118`, `Community 991`, `Community 989`, `Community 1248`, `Community 98`, `Community 995`, `Community 994`, `Community 1126`, `Community 999`, `Community 1257`, `Community 107`, `Community 1260`, `Community 1006`, `Community 1007`, `Community 1263`, `Community 1009`, `Community 1262`, `Community 1140`, `Community 1013`, `Community 1142`, `Community 1143`, `Community 1016`, `Community 1145`, `Community 123`, `Community 1020`, `Community 1023`?**
+  _High betweenness centrality (0.050) - this node is a cross-community bridge._
+- **Why does `Log` connect `Community 988` to `Community 992`, `Community 3`, `Community 998`, `Community 106`, `Community 272`, `Community 1138`, `Community 1011`, `Community 22`, `Community 986`, `Community 1051`, `Community 1022`?**
+  _High betweenness centrality (0.049) - this node is a cross-community bridge._
+- **Are the 93 inferred relationships involving `handler()` (e.g. with `.single()` and `.select()`) actually correct?**
   _`handler()` has 93 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `dev:user`, `dev:partner`, `dev:web` to the rest of the system?**
+- **What connects `nodeModulesDir`, `dev:user`, `dev:partner` to the rest of the system?**
   _10399 weakly-connected nodes found - possible documentation gaps or missing edges._
