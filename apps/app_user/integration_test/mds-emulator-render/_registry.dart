@@ -18,6 +18,7 @@ import 'deletion_reason_page/deletion_reason_page_test.dart'
     as deletion_reason_page;
 import 'deletion_verify_page/deletion_verify_page_test.dart'
     as deletion_verify_page;
+import 'event_card/event_card_test.dart' as event_card;
 import 'event_bottom_ticket_bar/event_bottom_ticket_bar_test.dart'
     as event_bottom_ticket_bar;
 import 'event_now_bar/event_now_bar_test.dart' as event_now_bar;
@@ -49,6 +50,7 @@ final List<MdsCatalog<MdsScreenBuilder<dynamic>>> allCatalogs = [
   deletion_info_page.catalogWithReason,
   deletion_reason_page.catalog,
   deletion_verify_page.catalog,
+  event_card.catalog,
   event_bottom_ticket_bar.catalog,
   event_now_bar.catalog,
   event_ongoing_banner.catalog,
