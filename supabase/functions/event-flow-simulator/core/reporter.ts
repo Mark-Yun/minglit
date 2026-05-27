@@ -39,6 +39,9 @@ export async function reportFailure(
     return null;
   }
 
+  const statusDescription =
+    `event-flow-simulator failed: ${summary.failed} action fails, ${violations.length} violations`;
+
   const timestamp = new Date().toISOString();
   const title =
     `[CASCADE] ${summary.failed} action fails + ${violations.length} invariant violations — ${timestamp}`;
@@ -97,6 +100,7 @@ ${truncatedTrace}
 
 </details>`;
 
+  let issueUrl: string | null = null;
   try {
     const response = await fetch(
       `https://api.github.com/repos/${GITHUB_REPO}/issues`,
@@ -117,23 +121,23 @@ ${truncatedTrace}
 
     if (!response.ok) {
       console.error("[reporter] GitHub API error:", await response.text());
-      return null;
+      return issueUrl;
     }
 
     const data = await response.json();
-    const issueUrl = (data as { html_url?: string }).html_url ?? null;
+    issueUrl = (data as { html_url?: string }).html_url ?? null;
+    return issueUrl;
+  } catch (err) {
+    console.error("[reporter] reportFailure exception:", err);
+    return issueUrl;
+  } finally {
     await writeFailureStatus({
       token: githubToken,
       targetRef: input.targetRef,
       targetSha: input.targetSha,
       targetUrl: issueUrl,
-      description:
-        `event-flow-simulator failed: ${summary.failed} action fails, ${violations.length} violations`,
+      description: statusDescription,
     });
-    return issueUrl;
-  } catch (err) {
-    console.error("[reporter] reportFailure exception:", err);
-    return null;
   }
 }
 
