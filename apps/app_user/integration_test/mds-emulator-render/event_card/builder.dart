@@ -53,8 +53,9 @@ final _EventCardRenderConfig _endedConfig = _EventCardRenderConfig(
   currentTime: _endedNow,
 );
 
-final _eventCardRenderConfigProvider =
-    Provider<_EventCardRenderConfig>((_) => _normalConfig);
+final _eventCardRenderConfigProvider = Provider<_EventCardRenderConfig>(
+  (_) => _normalConfig,
+);
 
 class _EventCardRenderPage extends ConsumerWidget {
   const _EventCardRenderPage();
