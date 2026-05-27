@@ -107,10 +107,31 @@ jobs:
             VERSION_NAME="${BASE_VERSION}-${CHANNEL}"
           fi
 
+          PR_NUMBER_INT=$((10#${PR_NUM}))
+          BUILD_NUMBER="${PR_NUM}"
+          BUILD_NUMBER_RULE="pr_number"
+          LEGACY_SEED=""
+
+          # Main channel keeps compatibility with legacy YYMM#### Android/iOS build numbers
+          # so first deploy after switching to PR-based naming cannot go backwards.
+          if [ "${CHANNEL}" = "main" ]; then
+            YY="$(date -u +%y)"
+            MM="$(date -u +%m)"
+            LEGACY_SEED=$((10#${YY} * 1000000 + 10#${MM} * 10000))
+            BUILD_NUMBER=$((LEGACY_SEED + PR_NUMBER_INT))
+            BUILD_NUMBER_RULE="legacy_compat_main_YYMM0000_plus_PR"
+
+            # Contract guard: main build number must stay above raw PR number.
+            if [ "${BUILD_NUMBER}" -le "${PR_NUMBER_INT}" ]; then
+              echo "::error::Main build_number must be monotonic and greater than PR number."
+              exit 1
+            fi
+          fi
+
           {
             echo "base_version=${BASE_VERSION}"
             echo "version_name=${VERSION_NAME}"
-            echo "build_number=${PR_NUM}"
+            echo "build_number=${BUILD_NUMBER}"
             echo "release_tag=build-${CHANNEL}-v${VERSION_NAME}"
             echo "release_name=${CHANNEL} v${VERSION_NAME}"
             echo "pr_number=${PR_NUM}"
@@ -129,5 +150,9 @@ jobs:
             echo "| pr_number | ${PR_NUM} |"
             echo "| base_version | ${BASE_VERSION} |"
             echo "| version_name | ${VERSION_NAME} |"
-            echo "| build_number | ${PR_NUM} |"
+            echo "| build_number | ${BUILD_NUMBER} |"
+            echo "| build_number_rule | ${BUILD_NUMBER_RULE} |"
+            if [ "${CHANNEL}" = "main" ]; then
+              echo "| legacy_seed | ${LEGACY_SEED} |"
+            fi
           } >> "$GITHUB_STEP_SUMMARY"

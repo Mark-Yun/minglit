@@ -12,6 +12,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 SHARED_ANDROID_DEPLOY = ROOT / ".github/workflows/shared-android-deploy.yml"
+SHARED_VERSION_METADATA = ROOT / ".github/workflows/shared-version-metadata.yml"
 CALLERS = [
     ROOT / ".github/workflows/deploy-android-user.yml",
     ROOT / ".github/workflows/deploy-android-partner.yml",
@@ -99,9 +100,46 @@ def assert_android_callers_do_not_pass_pat() -> None:
             fail(f"{path} still passes GH_PAT_VERSION_BUMP to shared-android-deploy")
 
 
+def assert_main_build_number_monotonic_contract() -> None:
+    workflow = load_workflow(SHARED_VERSION_METADATA)
+    jobs = workflow.get("jobs", {})
+    metadata = jobs.get("metadata", {}) if isinstance(jobs, dict) else {}
+    steps = metadata.get("steps", []) if isinstance(metadata, dict) else []
+    if not isinstance(steps, list):
+        fail("shared-version-metadata steps did not parse as a list")
+
+    script = ""
+    for step in steps:
+        if not isinstance(step, dict):
+            continue
+        if step.get("name") == "Compute version metadata":
+            run = step.get("run", "")
+            if isinstance(run, str):
+                script = run
+            break
+
+    if not script:
+        fail("shared-version-metadata is missing 'Compute version metadata' run script")
+
+    required_snippets = [
+        "if [ \"${CHANNEL}\" = \"main\" ]; then",
+        "LEGACY_SEED=$((10#${YY} * 1000000 + 10#${MM} * 10000))",
+        "BUILD_NUMBER=$((LEGACY_SEED + PR_NUMBER_INT))",
+        "if [ \"${BUILD_NUMBER}\" -le \"${PR_NUMBER_INT}\" ]; then",
+        "echo \"build_number=${BUILD_NUMBER}\"",
+    ]
+    for snippet in required_snippets:
+        if snippet not in script:
+            fail(
+                "shared-version-metadata must preserve main monotonic build_number contract; "
+                f"missing snippet: {snippet}"
+            )
+
+
 def main() -> None:
     assert_shared_android_deploy_contract()
     assert_android_callers_do_not_pass_pat()
+    assert_main_build_number_monotonic_contract()
     print("Android deploy release archive workflow contract OK")
 
 
