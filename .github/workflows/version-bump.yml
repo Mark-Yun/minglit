@@ -11,6 +11,11 @@ on:
         description: Full version passed to scripts/bump-version.sh.
         required: true
         type: string
+      build_number:
+        description: Optional Flutter/Android/iOS build number.
+        required: false
+        type: string
+        default: ''
       release_version:
         description: Release version without stage suffix, used for GitHub release tags.
         required: false
@@ -68,7 +73,7 @@ jobs:
           fallback-private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
 
       - name: Run bump-version.sh
-        run: bash scripts/bump-version.sh "${{ inputs.version }}"
+        run: bash scripts/bump-version.sh "${{ inputs.version }}" "${{ inputs.build_number }}"
 
       - name: Commit and push version bump
         id: commit

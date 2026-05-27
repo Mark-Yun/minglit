@@ -1,11 +1,11 @@
 # Dev-Staging Pipeline
 
-AI agent 와 feature/fix/chore PR 이 `dev-staging` 브랜치로 들어오는 진입점. 일반 PR + auto-merge 로 처리하고, `dev-staging-pr-gate` 가 가벼운 검증, 머지 후 `dev-staging-dev-cut-gate` 가 release bot 권한으로 version bump.
+AI agent 와 feature/fix/chore PR 이 `dev-staging` 브랜치로 들어오는 진입점. 일반 PR + auto-merge 로 처리하고, `dev-staging-pr-gate` 가 가벼운 검증, 머지 후 `dev-staging-dev-cut-gate` 가 version-bump PR 을 생성한다.
 
 ## 두 가지 workflow
 
 1. **`dev-staging-pr-gate`** — PR 머지 전
-2. **`dev-staging-dev-cut-gate`** — PR 머지 직후 (version bump + tag)
+2. **`dev-staging-dev-cut-gate`** — PR 머지 직후 (version-bump PR 생성, merge 후 tag)
 
 ## PR + Auto-Merge
 
@@ -83,20 +83,22 @@ AI agent 와 feature/fix/chore PR 이 `dev-staging` 브랜치로 들어오는 �
 
 ## `dev-staging-dev-cut-gate`
 
-PR 머지 직후 자동 발동. 운영 복구용으로 `workflow_dispatch` 도 제공하며, 수동 실행 시 version 에 사용할 PR 번호를 입력한다.
+PR 머지 직후 자동 발동. 운영 복구용으로 `workflow_dispatch` 도 제공하며, 수동 실행 시 version 을 찍을 snapshot SHA 를 입력할 수 있다.
 
 ```
-1. `version-bump` reusable 호출: `bump-version.sh YY.MM.{PR번호}-dev-staging`
-2. git commit -m "chore: bump version to v{ver}-dev-staging"
-3. git tag v{ver}-dev-staging
-4. git push (tag + commit)
+1. KST 기준 날짜로 versionName 계산: `YY.MM.DD-dev-staging`
+2. 기존 open `version-bump/dev-staging/*` PR 이 있으면 stale 로 close
+3. 임시 version bump branch 생성 후 PR 생성
+4. 생성된 version-bump PR 번호를 build number 로 사용해 branch commit amend
+5. `dev-staging-pr-gate` 통과 시 auto-merge
+6. merge commit 에 tag `vYY.MM.DD+{version-bump PR#}-dev-staging` 생성
 ```
 
-`git push` 는 human 권한이 아니라 `minglit-release-bot` 전용 token 으로 실행한다. Ruleset bypass 는 이 bot actor 에만 부여하고, workflow permission 은 `contents: write` 및 tag/status 갱신에 필요한 최소 권한으로 제한한다.
+Protected `dev-staging` 에 직접 bump commit 을 push 하지 않는다. release bot 은 version-bump branch push, PR 생성/auto-merge, tag push 에만 사용한다.
 
-Tag `v{ver}-dev-staging` 는 다음 단계의 `dev-staging-dev-cut` workflow 가 query 해서 "가장 최근 dev-staging 의 coherent snapshot" 찾는 데 사용.
+Tag `vYY.MM.DD+{build}-dev-staging` 는 다음 단계의 `dev-staging-dev-cut` workflow 가 query 해서 "가장 최근 dev-staging 의 coherent snapshot" 찾는 데 사용.
 
-> **구현 결정**: bump 커밋은 PR squash commit 과 분리한다. release bot 전용 커밋으로 남겨 branch/tag write 권한과 human PR 변경을 분리한다. `[skip ci]` 는 쓰지 않는다. nightly PR 의 HEAD 가 이 bump 커밋이므로 `[skip ci]` 를 넣으면 required check 가 생성되지 않는다. 루프 방지는 `dev-staging-dev-cut-gate` 의 commit message guard 로 처리한다.
+> **구현 결정**: source PR 번호는 build number 로 쓰지 않는다. GitHub PR 번호는 생성 순서라 merge 순서를 보장하지 않기 때문이다. version-bump PR 번호만 build number 로 사용한다.
 
 ## Error-Backoff
 

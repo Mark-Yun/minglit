@@ -106,7 +106,7 @@ flowchart LR
 - Protected branch 직접 push 는 human 금지. dev-staging version bump, promotion branch/tag, RC cleanup 은 `minglit-release-bot` 전용 token + Ruleset bypass 로만 허용
 - `monitor-event-flow-*` 는 release promotion 과 독립적인 batch signal. target 은 dev 5분 distributed tick 이고, RC 에서는 main 배포 전 검증 signal 로 사용한다
 - main 머지 = backend + mobile 모두 prod deploy. backend prod deploy 는 `main-deploy` 에서 한 번에 수행한다
-- 소스 파일 version bump 는 `dev-staging-dev-cut-gate` 에만 남긴다. `dev`/`rc`/`main` 은 branch state 를 바꾸지 않고 deploy workflow 가 `YYYY.M.PR#[-channel]` metadata 를 build-time 에 주입한다
+- 소스 파일 version bump 는 `dev-staging-dev-cut-gate` 가 만든 version-bump PR 에만 남긴다. 날짜 버전(`YY.MM.DD`) + version-bump PR 번호 build number 를 사용하고, `dev`/`rc`/`main` 은 branch state 를 바꾸지 않고 deploy workflow 가 metadata 를 build-time 에 주입한다
 - `main-deploy` 는 prod deploy execution 을 담당한다. main push 에서 version bump commit 을 만들지 않고, release asset/tag/marker 는 deploy metadata 를 기준으로 생성한다
 - 모바일 배포 산출물(APK/AAB/IPA)은 GitHub Release asset 이 canonical archive 다. Actions artifact 는 테스트 리포트/스크린샷/로그 같은 단기 디버깅 산출물에만 사용한다
 - 일반 PR 은 `dev-staging` 으로만 진입한다. `dev`, `rc/*`, `main` 직접 PR 은 promotion 또는 승인된 hotfix 만 허용한다 ([hotfix-policy.md](./hotfix-policy.md))
@@ -119,7 +119,7 @@ Promotion PR 제목은 workflow 이름과 source artifact 를 앞에 둔다. PR 
 
 | 단계 | 제목 형식 |
 |------|-----------|
-| dev-staging → dev | `ci(dev-staging-dev-cut): promote v26.05.2722-dev-staging to dev` |
+| dev-staging → dev | `ci(dev-staging-dev-cut): promote v26.05.27+2832-dev-staging to dev` |
 | dev → rc | `ci(dev-rc-cut): cut rc/2026-W22 from <source>` |
 | rc → main | `ci(rc-main-cut): promote rc/2026-W22 to main` |
 | rc hotfix apply | `ci(rc-hotfix-apply): apply dev-staging fix #1234 to rc/2026-W22` |

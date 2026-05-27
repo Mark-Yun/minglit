@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # bump-version.sh - Update version across all project files
-# Usage: bash scripts/bump-version.sh <version>
+# Usage: bash scripts/bump-version.sh <version> [build_number]
 # Examples:
 #   bash scripts/bump-version.sh 26.03.1
 #   bash scripts/bump-version.sh 26.03.1-dev
@@ -17,9 +17,9 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Validate input
-if [ $# -ne 1 ]; then
+if [ $# -lt 1 ] || [ $# -gt 2 ]; then
     echo -e "${RED}Error: Missing version argument${NC}"
-    echo "Usage: bash scripts/bump-version.sh <version>"
+    echo "Usage: bash scripts/bump-version.sh <version> [build_number]"
     echo "Examples:"
     echo "  bash scripts/bump-version.sh 26.03.1"
     echo "  bash scripts/bump-version.sh 26.03.1-dev"
@@ -29,28 +29,29 @@ if [ $# -ne 1 ]; then
 fi
 
 VERSION_INPUT="$1"
+BUILD_NUMBER_INPUT="${2:-}"
 
-# Regex validation: YY.MM.PR#[-stage]
-# Format: 26.03.1, 26.03.1-dev, 26.03.1-dev-staging, or 26.03.1-rc-01
+# Regex validation: YY.MM.REVISION[-stage]
+# Format: 26.03.1, 26.03.27-dev, 26.03.27-dev-staging, or 26.03.27-rc-01
 # Month must be 01-12
 if ! [[ "$VERSION_INPUT" =~ ^[0-9]{2}\.(0[1-9]|1[0-2])\.[0-9]+(-(dev|dev-staging|rc-[0-9]{2}))?$ ]]; then
     echo -e "${RED}Error: Invalid version format: $VERSION_INPUT${NC}"
-    echo "Expected format: YY.MM.PR#, YY.MM.PR#-dev, YY.MM.PR#-dev-staging, or YY.MM.PR#-rc-NN"
+    echo "Expected format: YY.MM.REVISION, YY.MM.REVISION-dev, YY.MM.REVISION-dev-staging, or YY.MM.REVISION-rc-NN"
     echo "Examples: 26.03.1, 26.03.1-dev, 26.03.1-dev-staging, 26.03.1-rc-01, 26.12.99"
     exit 1
 fi
 
-# Extract YY, MM, PR# from version
+# Extract YY, MM, revision from version
 YY=$(echo "$VERSION_INPUT" | cut -d. -f1)
 MM=$(echo "$VERSION_INPUT" | cut -d. -f2)
 PR_AND_SUFFIX=$(echo "$VERSION_INPUT" | cut -d. -f3)
 
-# Extract PR# (remove stage suffix if present)
+# Extract revision (remove stage suffix if present)
 PR=$(echo "$PR_AND_SUFFIX" | sed -E 's/-(dev|dev-staging|rc-[0-9]{2})$//')
 
-# Validate PR# (must be >= 1)
+# Validate revision (must be >= 1)
 if [ "$((10#$PR))" -lt 1 ]; then
-    echo -e "${RED}Error: Invalid PR#: $PR (must be >= 1)${NC}"
+    echo -e "${RED}Error: Invalid revision: $PR (must be >= 1)${NC}"
     exit 1
 fi
 
@@ -65,14 +66,23 @@ if [ "$MM_DEC" -lt 1 ] || [ "$MM_DEC" -gt 12 ]; then
     exit 1
 fi
 
-# Calculate versionCode: YYMM * 10000 + PR#
-VERSION_CODE=$(( (YY_DEC * 100 + MM_DEC) * 10000 + PR_DEC ))
+# Calculate versionCode. New release automation passes the version-bump PR
+# number explicitly so mobile build numbers stay monotonic by bump PR order.
+if [ -n "$BUILD_NUMBER_INPUT" ]; then
+    if ! [[ "$BUILD_NUMBER_INPUT" =~ ^[0-9]+$ ]] || [ "$((10#$BUILD_NUMBER_INPUT))" -lt 1 ]; then
+        echo -e "${RED}Error: Invalid build_number: $BUILD_NUMBER_INPUT (must be >= 1)${NC}"
+        exit 1
+    fi
+    VERSION_CODE=$((10#$BUILD_NUMBER_INPUT))
+else
+    VERSION_CODE=$(( (YY_DEC * 100 + MM_DEC) * 10000 + PR_DEC ))
+fi
 
 # Extract base version (without stage suffix)
 BASE_VERSION=$(echo "$VERSION_INPUT" | sed -E 's/-(dev|dev-staging|rc-[0-9]{2})$//')
 
 echo -e "${YELLOW}Bumping version to: $VERSION_INPUT${NC}"
-echo "  YY=$YY, MM=$MM, PR#=$PR"
+echo "  YY=$YY, MM=$MM, revision=$PR"
 echo "  versionCode=$VERSION_CODE"
 echo "  baseVersion=$BASE_VERSION"
 echo ""
