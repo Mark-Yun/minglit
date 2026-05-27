@@ -8,8 +8,8 @@
 //   2-1: 개인정보처리방침 타일 노출 + launchUrl(privacyUrl) 호출 확인
 //
 // Flutter 범위 외 CUJ (landing_partner 웹 기능 또는 미구현):
-//   1-2, 1-3, 2-2, 2-3, 2-4, 3-1, 3-2 — cuj_coverage.dart 에서 미커버 표시됨.
-//   웹 CUJ 는 landing_partner e2e 테스트로 커버해야 함.
+//   1-2, 1-3, 2-2, 2-3, 2-4, 3-1, 3-2 — cuj_coverage.dart 에서 미커버 표시 유지.
+//   웹 CUJ 는 landing_partner e2e 또는 page-content 검증으로 커버해야 함.
 
 import 'package:app_partner/src/features/more/more_coordinator.dart';
 import 'package:app_partner/src/features/more/more_page.dart';
@@ -117,18 +117,4 @@ void main() {
       },
     );
   });
-
-  // ---------------------------------------------------------------------------
-  // 미커버 CUJ (landing_partner 웹 기능 또는 미구현) — Flutter 범위 외
-  //
-  // 1-2: /terms 앵커 스크롤 (landing_partner 웹)
-  // 1-3: 파트너 등록 약관 동의 체크박스 (미구현)
-  // 2-2: /privacy 국외이전 챕터 (landing_partner 웹)
-  // 2-3: /privacy 처리위탁·제3자 (landing_partner 웹)
-  // 2-4: /privacy 자동화된 결정 거부권 (landing_partner 웹)
-  // 3-1: /privacy 필수 기재사항 13개 검수 (landing_partner 웹)
-  // 3-2: footer 시행일자 (landing_partner 웹)
-  //
-  // 웹 CUJ 는 landing_partner e2e 테스트에서 커버해야 합니다.
-  // ---------------------------------------------------------------------------
 }

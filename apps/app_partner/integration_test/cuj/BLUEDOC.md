@@ -58,4 +58,4 @@ integration_test/cuj/
 Flutter 범위 외 CUJ (landing_partner 웹 기능 또는 미구현): 1-2, 1-3, 2-2~2-4, 3-1~3-2.
 
 ---
-_Reviewed: 2026-05-21 03:00_
+_Reviewed: 2026-05-27 22:58_
