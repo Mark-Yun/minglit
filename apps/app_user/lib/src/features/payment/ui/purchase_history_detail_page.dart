@@ -251,16 +251,6 @@ class _PurchaseDetailBody extends ConsumerWidget {
                       label: const Text('영수증 보기'),
                     ),
                   ],
-                  const SizedBox(height: MinglitSpacing.small),
-                  OutlinedButton.icon(
-                    onPressed: () => _openContact(
-                      context: context,
-                      contactOptions: contactOptions,
-                      party: party,
-                    ),
-                    icon: const Icon(Icons.support_agent_outlined, size: 18),
-                    label: const Text('문의하기'),
-                  ),
                 ],
               ),
             ),
@@ -295,6 +285,22 @@ class _PurchaseDetailBody extends ConsumerWidget {
             ),
             const SizedBox(height: MinglitSpacing.medium),
           ],
+
+          _DetailCard(
+            child: SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => _openContact(
+                  context: context,
+                  contactOptions: contactOptions,
+                  party: party,
+                ),
+                icon: const Icon(Icons.support_agent_outlined, size: 18),
+                label: const Text('문의하기'),
+              ),
+            ),
+          ),
+          const SizedBox(height: MinglitSpacing.medium),
 
           // 4. Refund policy card with cancel button
           if (!isRefunded) ...[

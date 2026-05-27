@@ -441,6 +441,63 @@ void main() {
 
       expect(launchedUrls, ['tel:02-1234-5678']);
     });
+
+    testWidgets('환불 완료 상태에서도 상세 "문의하기"로 파트너 연락처를 연다', (tester) async {
+      setKoreanLocale(tester);
+      final user = createMockUserForTest();
+      final now = _fixedNow;
+      final launchedUrls = <String>[];
+      final fakeLauncher = _FakeDetailUrlLauncher(launchedUrls);
+      final originalLauncher = UrlLauncherPlatform.instance;
+      addTearDown(() => UrlLauncherPlatform.instance = originalLauncher);
+
+      final refundedContactApp = _createApplication(
+        status: 'cancelled',
+        createdAt: now,
+        paymentId: 'pay-refunded',
+        paymentAmount: 15000,
+        refundStatus: 'completed',
+        refundedAt: now,
+        event: Event(
+          id: 'evt-refunded-contact',
+          partyId: 'party-refunded-contact',
+          title: 'Refunded Contact Event',
+          startTime: DateTime(2030, 2, 1, 19),
+          endTime: DateTime(2030, 2, 1, 21),
+          createdAt: now,
+          updatedAt: now,
+          contactOptions: const {'phone': '02-0000-0000'},
+        ),
+      );
+
+      await tester.pumpWidget(
+        createTestApp(
+          isLoggedIn: true,
+          currentUser: user,
+          initialLocation: '/purchase-history',
+          additionalOverrides: [
+            purchaseHistoryControllerProvider.overrideWith(
+              () => _MockPurchaseHistoryWithData([refundedContactApp]),
+            ),
+          ],
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      UrlLauncherPlatform.instance = fakeLauncher;
+
+      await tester.tap(find.byType(PurchaseHistoryCard));
+      await tester.pumpAndSettle();
+      expect(find.text('구매 상세'), findsOneWidget);
+
+      final contactButton = find.widgetWithText(OutlinedButton, '문의하기');
+      await tester.ensureVisible(contactButton);
+      await tester.tap(contactButton);
+      await tester.pump();
+
+      expect(launchedUrls, ['tel:02-0000-0000']);
+    });
   });
 
   // ────────────────────────────────────────────────────────────────────────
@@ -606,7 +663,9 @@ EventApplication _createApplication({
   required DateTime createdAt,
   String? paymentId,
   int? paymentAmount,
+  String refundStatus = 'none',
   DateTime? paidAt,
+  DateTime? refundedAt,
   Event? event,
   Ticket? ticket,
 }) {
@@ -621,7 +680,9 @@ EventApplication _createApplication({
     updatedAt: createdAt,
     paymentId: paymentId,
     paymentAmount: paymentAmount,
+    refundStatus: refundStatus,
     paidAt: paidAt,
+    refundedAt: refundedAt,
     event: event,
     ticket: ticket,
   );
