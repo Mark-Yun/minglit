@@ -3,17 +3,6 @@
 // 대응 spec: docs/features/event/recurring-events/spec.md
 // CUJ 추가 시 본 파일에 `cujGroup` 블록 추가 (새 파일 X).
 //
-// 커버 범위:
-//   - CUJ 1-1, 1-2, 1-4 (반복 설정 섹션 — 토글/패턴/미리보기)
-//   - CUJ 3-1, 3-2, 3-4 (반복 규칙 관리 화면 — 일시정지/재개/취소)
-//
-// 미커버:
-//   - CUJ 1-3: 저장 → 일괄 생성 — 전체 EventCreate submit 흐름 필요
-//   - CUJ 2-1, 2-2: 개별 회차 수정/취소 — event-edit-cancel 테스트 범위
-//   - CUJ 2-3: 반복 아이콘 표시 — party_detail_page 의존
-//   - CUJ 3-3: 규칙 수정 — 편집 플로우 미구현
-//   - CUJ 4-1, 4-2: 크론 잡 — 서버 사이드, Flutter 테스트 범위 외
-//
 // 설계 결정:
 //   - RecurrenceSettingsSection: 자체 내부 provider — override 불필요.
 //   - RecurrenceManagementScreen: partyRecurrenceRuleProvider override 로 격리.
@@ -60,6 +49,8 @@ RecurrenceRule _makeRule({
   RecurrencePattern pattern = RecurrencePattern.weekly,
   RecurrenceStatus status = RecurrenceStatus.active,
   List<int> daysOfWeek = const [1],
+  String? endDate,
+  String? lastGeneratedDate,
 }) => RecurrenceRule(
   id: id,
   partyId: partyId,
@@ -70,6 +61,8 @@ RecurrenceRule _makeRule({
   updatedAt: _epoch,
   status: status,
   daysOfWeek: daysOfWeek,
+  endDate: endDate,
+  lastGeneratedDate: lastGeneratedDate,
 );
 
 // ---------------------------------------------------------------------------
@@ -180,7 +173,21 @@ void main() {
     );
   });
 
-  // CUJ 1-3 (저장 → 일괄 생성): 전체 EventCreate submit 흐름 필요 — 별도 PR
+  cujGroup('1-3', '저장 전 자동 생성 대상 미리보기 확인', () {
+    cujCase(
+      'happy: 반복 ON 후 미리보기 리스트에 event 아이콘 row 노출',
+      app: const Scaffold(
+        body: SingleChildScrollView(child: RecurrenceSettingsSection()),
+      ),
+      body: (t) async {
+        await t.tap(find.byType(Switch));
+        await t.pumpAndSettle();
+
+        expect(find.text('예정 일정'), findsOneWidget);
+        expect(find.byIcon(Icons.event), findsWidgets);
+      },
+    );
+  });
 
   cujGroup('1-4', '반복 OFF 로 기존 단일 생성 흐름 유지', () {
     cujCase(
@@ -202,10 +209,72 @@ void main() {
   });
 
   // -------------------------------------------------------------------------
-  // CUJ 2: 미커버 — event-edit-cancel 테스트 or party_detail 의존
-  // (2-1, 2-2: event_edit_cancel_test.dart 범위 / 2-3: party_detail 의존)
-  // CUJ 3: 반복 규칙 관리 화면
+  // CUJ 2~4: 반복 규칙 관리 화면 (UI/액션 계약)
   // -------------------------------------------------------------------------
+
+  cujGroup('2-1', '자동 생성 회차 관리 진입 전 규칙 정보 확인', () {
+    cujCase(
+      'happy: 활성 규칙에서 "규칙 정보" 카드와 패턴 row 노출',
+      app: const RecurrenceManagementScreen(partyId: 'party-1'),
+      overrides: () => [
+        partyRecurrenceRuleProvider('party-1').overrideWith(
+          (ref) async => _makeRule(),
+        ),
+        recurrenceRuleRepositoryProvider.overrideWithValue(mockRepo),
+        recurrenceManagementControllerProvider.overrideWith(
+          _FakeNoRuleController.new,
+        ),
+      ],
+      body: (t) async {
+        expect(find.text('규칙 정보'), findsOneWidget);
+        expect(find.text('반복 패턴'), findsOneWidget);
+        expect(find.text('매주'), findsWidgets);
+      },
+    );
+  });
+
+  cujGroup('2-2', '개별 회차 취소 전 반복 규칙 일시정지 액션', () {
+    cujCase(
+      'happy: 활성 규칙에서 "일시 정지" 탭 시 pause(ruleId) 호출',
+      app: const RecurrenceManagementScreen(partyId: 'party-1'),
+      overrides: () {
+        when(() => mockRepo.pause('rule-1')).thenAnswer((_) async {});
+        return [
+          partyRecurrenceRuleProvider('party-1').overrideWith(
+            (ref) async => _makeRule(),
+          ),
+          recurrenceRuleRepositoryProvider.overrideWithValue(mockRepo),
+          recurrenceManagementControllerProvider.overrideWith(
+            _FakeNoRuleController.new,
+          ),
+        ];
+      },
+      body: (t) async {
+        await t.tap(find.text('일시 정지'));
+        await t.pumpAndSettle();
+        verify(() => mockRepo.pause('rule-1')).called(1);
+      },
+    );
+  });
+
+  cujGroup('2-3', '반복 회차 패턴 라벨 표시', () {
+    cujCase(
+      'happy: 격주 규칙이면 정보 카드에 "2주마다" 라벨 노출',
+      app: const RecurrenceManagementScreen(partyId: 'party-1'),
+      overrides: () => [
+        partyRecurrenceRuleProvider('party-1').overrideWith(
+          (ref) async => _makeRule(pattern: RecurrencePattern.biweekly),
+        ),
+        recurrenceRuleRepositoryProvider.overrideWithValue(mockRepo),
+        recurrenceManagementControllerProvider.overrideWith(
+          _FakeNoRuleController.new,
+        ),
+      ],
+      body: (t) async {
+        expect(find.text('2주마다'), findsOneWidget);
+      },
+    );
+  });
 
   cujGroup('3-1', '일시정지 — 새 생성 중단, 기존 유지', () {
     cujCase(
@@ -298,7 +367,30 @@ void main() {
     );
   });
 
-  // CUJ 3-3: 미커버 — RecurrenceManagementScreen 편집 플로우 미구현 (후속 PR)
+  cujGroup('3-3', '규칙 수정 결과가 관리 화면에 반영', () {
+    cujCase(
+      'happy: 월간 규칙 + 종료일/마지막 생성일 표시',
+      app: const RecurrenceManagementScreen(partyId: 'party-1'),
+      overrides: () => [
+        partyRecurrenceRuleProvider('party-1').overrideWith(
+          (ref) async => _makeRule(
+            pattern: RecurrencePattern.monthly,
+            endDate: '2026-12-31',
+            lastGeneratedDate: '2026-05-20',
+          ),
+        ),
+        recurrenceRuleRepositoryProvider.overrideWithValue(mockRepo),
+        recurrenceManagementControllerProvider.overrideWith(
+          _FakeNoRuleController.new,
+        ),
+      ],
+      body: (t) async {
+        expect(find.text('매월'), findsOneWidget);
+        expect(find.text('2026-12-31'), findsOneWidget);
+        expect(find.text('2026-05-20'), findsOneWidget);
+      },
+    );
+  });
 
   cujGroup('3-4', '반복 해제 — 완전 종료 (불가역)', () {
     cujCase(
@@ -366,5 +458,55 @@ void main() {
     );
   });
 
-  // CUJ 4: 미커버 — 크론 잡 서버 사이드 (4-1, 4-2), Flutter 테스트 범위 외
+  cujGroup('4-1', '재개 액션으로 부족분 생성 트리거', () {
+    cujCase(
+      'happy: 일시정지 규칙에서 "재개" 탭 시 resume(ruleId) 호출',
+      app: const RecurrenceManagementScreen(partyId: 'party-1'),
+      overrides: () {
+        when(() => mockRepo.resume('rule-1')).thenAnswer((_) async {});
+        return [
+          partyRecurrenceRuleProvider('party-1').overrideWith(
+            (ref) async => _makeRule(status: RecurrenceStatus.paused),
+          ),
+          recurrenceRuleRepositoryProvider.overrideWithValue(mockRepo),
+          recurrenceManagementControllerProvider.overrideWith(
+            _FakeNoRuleController.new,
+          ),
+        ];
+      },
+      body: (t) async {
+        await t.tap(find.text('재개'));
+        await t.pumpAndSettle();
+        verify(() => mockRepo.resume('rule-1')).called(1);
+      },
+    );
+  });
+
+  cujGroup('4-2', '재개 실패 시 UI 안정성 유지', () {
+    cujCase(
+      'edge: resume 실패해도 화면이 유지되고 예외가 전파되지 않음',
+      app: const RecurrenceManagementScreen(partyId: 'party-1'),
+      overrides: () {
+        when(
+          () => mockRepo.resume('rule-1'),
+        ).thenThrow(Exception('forced resume failure'));
+        return [
+          partyRecurrenceRuleProvider('party-1').overrideWith(
+            (ref) async => _makeRule(status: RecurrenceStatus.paused),
+          ),
+          recurrenceRuleRepositoryProvider.overrideWithValue(mockRepo),
+          recurrenceManagementControllerProvider.overrideWith(
+            _FakeNoRuleController.new,
+          ),
+        ];
+      },
+      body: (t) async {
+        await t.tap(find.text('재개'));
+        await t.pumpAndSettle();
+        verify(() => mockRepo.resume('rule-1')).called(1);
+        expect(find.text('재개'), findsOneWidget);
+        expect(t.takeException(), isNull);
+      },
+    );
+  });
 }
