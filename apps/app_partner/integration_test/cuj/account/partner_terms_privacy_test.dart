@@ -8,8 +8,10 @@
 //   1-2: 이용약관 빠른 진입 경로 (더보기 > 이용약관)
 //   1-3: 약관/처리방침 링크 동시 노출 확인
 //   2-1: 개인정보처리방침 타일 노출 + launchUrl(privacyUrl) 호출 확인
-//   2-2, 2-3, 2-4: 개인정보처리방침 진입 경로(더보기 > 개인정보처리방침)
-//   3-1, 3-2: 법무 점검을 위한 직접 진입 경로 안정성(약관/처리방침 URL 런치)
+//
+// Flutter 범위 외 CUJ (landing_partner 웹 기능 또는 미구현):
+//   2-2, 2-3, 2-4, 3-1, 3-2 — cuj_coverage.dart 에서 미커버 표시 유지.
+//   웹 CUJ 는 landing_partner e2e 또는 page-content 검증으로 커버해야 함.
 
 import 'package:app_partner/src/features/more/more_coordinator.dart';
 import 'package:app_partner/src/features/more/more_page.dart';
@@ -152,117 +154,6 @@ void main() {
         await t.tap(find.text('개인정보처리방침'));
         await t.pump();
         expect(launchedUrls, ['$_testUserWeb/privacy']);
-      },
-    );
-  });
-
-  // ---------------------------------------------------------------------------
-  // CUJ 2-2: 국외이전 조항 확인 (Flutter 범위: 처리방침 진입 경로)
-  // ---------------------------------------------------------------------------
-
-  cujGroup('2-2', '개인정보처리방침 진입 경로 확인 (국외이전)', () {
-    cujCase(
-      'happy: 더보기에서 개인정보처리방침 탭 시 privacy URL 런치',
-      app: const MorePage(),
-      overrides: _base,
-      body: (t) async {
-        final launchedUrls = <String>[];
-        UrlLauncherPlatform.instance = _FakeUrlLauncher(launchedUrls);
-
-        await t.tap(find.text('개인정보처리방침'));
-        await t.pump();
-
-        expect(launchedUrls, ['$_testUserWeb/privacy']);
-      },
-    );
-  });
-
-  // ---------------------------------------------------------------------------
-  // CUJ 2-3: 위탁/제3자 조항 확인 (Flutter 범위: 처리방침 진입 경로)
-  // ---------------------------------------------------------------------------
-
-  cujGroup('2-3', '개인정보처리방침 진입 경로 확인 (위탁/제3자)', () {
-    cujCase(
-      'happy: 개인정보처리방침 링크가 항상 노출되고 탭 가능',
-      app: const MorePage(),
-      overrides: _base,
-      body: (t) async {
-        final launchedUrls = <String>[];
-        UrlLauncherPlatform.instance = _FakeUrlLauncher(launchedUrls);
-
-        expect(find.text('개인정보처리방침'), findsOneWidget);
-        await t.tap(find.text('개인정보처리방침'));
-        await t.pump();
-
-        expect(launchedUrls.single, '$_testUserWeb/privacy');
-      },
-    );
-  });
-
-  // ---------------------------------------------------------------------------
-  // CUJ 2-4: 자동화된 결정 거부권 확인 (Flutter 범위: 처리방침 진입 경로)
-  // ---------------------------------------------------------------------------
-
-  cujGroup('2-4', '개인정보처리방침 진입 경로 확인 (자동화된 결정)', () {
-    cujCase(
-      'happy: privacy URL 런치 경로 유지',
-      app: const MorePage(),
-      overrides: _base,
-      body: (t) async {
-        final launchedUrls = <String>[];
-        UrlLauncherPlatform.instance = _FakeUrlLauncher(launchedUrls);
-
-        await t.tap(find.text('개인정보처리방침'));
-        await t.pump();
-
-        expect(launchedUrls, ['$_testUserWeb/privacy']);
-      },
-    );
-  });
-
-  // ---------------------------------------------------------------------------
-  // CUJ 3-1: 법무/감사 담당자 직접 URL 진입 (Flutter 범위: URL 런치)
-  // ---------------------------------------------------------------------------
-
-  cujGroup('3-1', '법무 점검용 처리방침 URL 직접 진입 경로', () {
-    cujCase(
-      'happy: 더보기에서 개인정보처리방침 링크 실행 가능',
-      app: const MorePage(),
-      overrides: _base,
-      body: (t) async {
-        final launchedUrls = <String>[];
-        UrlLauncherPlatform.instance = _FakeUrlLauncher(launchedUrls);
-
-        await t.tap(find.text('개인정보처리방침'));
-        await t.pump();
-
-        expect(launchedUrls.single, '$_testUserWeb/privacy');
-      },
-    );
-  });
-
-  // ---------------------------------------------------------------------------
-  // CUJ 3-2: 약관/처리방침 시행일자 명시 검수 (Flutter 범위: 링크 진입 안정성)
-  // ---------------------------------------------------------------------------
-
-  cujGroup('3-2', '약관/처리방침 링크 진입 안정성', () {
-    cujCase(
-      'happy: 이용약관 + 개인정보처리방침 링크 모두 실행 가능',
-      app: const MorePage(),
-      overrides: _base,
-      body: (t) async {
-        final launchedUrls = <String>[];
-        UrlLauncherPlatform.instance = _FakeUrlLauncher(launchedUrls);
-
-        await t.tap(find.text('이용약관'));
-        await t.pump();
-        await t.tap(find.text('개인정보처리방침'));
-        await t.pump();
-
-        expect(
-          launchedUrls,
-          ['$_testUserWeb/terms', '$_testUserWeb/privacy'],
-        );
       },
     );
   });
