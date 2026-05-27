@@ -58,7 +58,7 @@ dev 에 들어간 latest HEAD 만 RC candidate 로 평가한다. 새 dev commit 
 
 | Signal | 실행자 | 실패 status | 성공 status |
 |--------|--------|-------------|-------------|
-| backend simulator | `deploy-dev-event-flow-cron` + pg_cron `dev-event-flow-simulator` | `dev-soak/backend-simulator` failure 즉시 | `dev-rc-cut-gate` 가 cron install run + failure status 확인 |
+| backend simulator | `deploy-dev-event-flow-cron` + pg_cron `dev-event-flow-simulator` | `dev-soak/backend-simulator` failure 즉시 | `dev-rc-cut-gate` 가 cron install + 1회 simulator tick run + failure status 확인 |
 | real device | Test Lab/실디바이스 workflow | `dev-soak/real-device` failure 즉시 | `dev-rc-cut-gate` 가 required signal 확인 후 success |
 | app AI review | AI agent | `dev-soak/app-ai-review` failure 즉시 | `dev-rc-cut-gate` 가 pass signal 확인 후 success |
 

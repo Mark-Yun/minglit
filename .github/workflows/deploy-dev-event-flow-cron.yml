@@ -123,6 +123,44 @@ jobs:
           TARGET_SHA: ${{ github.sha }}
         run: bash .github/scripts/install-dev-event-flow-cron.sh
 
+      - name: Verify event-flow simulator tick
+        env:
+          SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
+          SUPABASE_DEV_SECRET_KEY: ${{ secrets.SUPABASE_DEV_SECRET_KEY }}
+          TARGET_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${SUPABASE_DEV_URL}" ] || [ -z "${SUPABASE_DEV_SECRET_KEY}" ]; then
+            echo "::error::Missing Supabase dev simulator secrets."
+            exit 1
+          fi
+
+          jq -n \
+            --argjson seed "$(date -u +%s)" \
+            '{
+              ticks: 1,
+              usersPerTick: 5,
+              partnersPerTick: 2,
+              delayBetweenCallsMs: 400,
+              seed: $seed,
+              targetRef: "dev",
+              targetSha: env.TARGET_SHA
+            }' > /tmp/sim_payload.json
+
+          http_code="$(curl -s -o /tmp/sim_response.json -w "%{http_code}" -X POST \
+            "${SUPABASE_DEV_URL}/functions/v1/event-flow-simulator" \
+            -H "Authorization: Bearer ${SUPABASE_DEV_SECRET_KEY}" \
+            -H "Content-Type: application/json" \
+            -d @/tmp/sim_payload.json \
+            --max-time 240)"
+          cat /tmp/sim_response.json
+          if [ "${http_code}" -lt 200 ] || [ "${http_code}" -ge 300 ]; then
+            echo "::error::event-flow-simulator returned HTTP ${http_code}"
+            exit 1
+          fi
+          jq -e '.success == true' /tmp/sim_response.json
+
   notify-failure:
     needs: [install]
     if: always()

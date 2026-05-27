@@ -106,6 +106,17 @@ def assert_dev_cron_deploy_contract() -> None:
         if fragment not in wait_script:
             fail(f"deploy-dev-event-flow-cron wait step missing fragment: {fragment}")
 
+    smoke_script = run_block(install, "Verify event-flow simulator tick")
+    required_smoke_fragments = [
+        "event-flow-simulator",
+        "targetRef: \"dev\"",
+        "targetSha: env.TARGET_SHA",
+        "jq -e '.success == true'",
+    ]
+    for fragment in required_smoke_fragments:
+        if fragment not in smoke_script:
+            fail(f"deploy-dev-event-flow-cron smoke step missing fragment: {fragment}")
+
     script_path = ROOT / ".github/scripts/install-dev-event-flow-cron.sh"
     script = script_path.read_text(encoding="utf-8")
     required_fragments = [

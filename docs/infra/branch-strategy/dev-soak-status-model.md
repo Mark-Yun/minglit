@@ -139,7 +139,7 @@ gh run list \
   --json databaseId,status,conclusion,createdAt,headSha
 ```
 
-`deploy-dev-event-flow-cron` 은 `push: dev` 에서만 실행되어 Actions `headBranch` 가 `dev` 로 기록된다. workflow 는 candidate SHA 를 body 의 `targetSha` 로 cron 에 설치하고, `event-flow-simulator` 실패 시 해당 SHA 에 `dev-soak/backend-simulator` failure status 를 남긴다.
+`deploy-dev-event-flow-cron` 은 `push: dev` 에서만 실행되어 Actions `headBranch` 가 `dev` 로 기록된다. workflow 는 candidate SHA 를 body 의 `targetSha` 로 cron 에 설치한 뒤 즉시 1회 simulator tick 을 실행한다. 이후 `event-flow-simulator` 실패 시 해당 SHA 에 `dev-soak/backend-simulator` failure status 를 남긴다.
 
 ## Failure Recording
 
