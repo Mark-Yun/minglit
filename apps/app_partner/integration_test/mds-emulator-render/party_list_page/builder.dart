@@ -6,6 +6,7 @@
 
 import 'dart:async';
 
+import 'package:app_partner/src/features/party/list/party_help_sections.dart';
 import 'package:app_partner/src/features/party/list/party_list_controller.dart';
 import 'package:app_partner/src/features/party/list/party_list_coordinator.dart';
 import 'package:app_partner/src/features/party/list/party_list_page.dart';
@@ -55,20 +56,7 @@ class _AutoOpenHelpSheetState extends State<_AutoOpenHelpSheet> {
         showMinglitHelpSheet(
           context: context,
           title: '파티 관리 가이드',
-          sections: const [
-            HelpSection(
-              title: '파티가 뭔가요?',
-              body: '이벤트를 운영하는 상위 단위예요.',
-            ),
-            HelpSection(
-              title: '이벤트와 차이는?',
-              body: '파티 안에 여러 이벤트를 만들 수 있어요.',
-            ),
-            HelpSection(
-              title: '이벤트를 만들려면?',
-              body: '파티를 게시한 뒤 이벤트를 추가하면 됩니다.',
-            ),
-          ],
+          sections: kPartyHelpSections,
         ),
       );
     });
