@@ -13,6 +13,8 @@ import 'location_guide_page/location_guide_page_test.dart'
 import 'more_page/more_page_test.dart' as more_page;
 import 'party_list_page/party_list_page_test.dart' as party_list_page;
 import 'partner_login_page/partner_login_page_test.dart' as partner_login_page;
+import 'partner_welcome_page/partner_welcome_page_test.dart'
+    as partner_welcome_page;
 import 'recurrence_management_screen/recurrence_management_screen_test.dart'
     as recurrence_management_screen;
 import 'settlement_detail_page/settlement_detail_page_test.dart'
@@ -30,6 +32,7 @@ final List<Object> catalogs = [
   more_page.catalog,
   party_list_page.catalog,
   partner_login_page.catalog,
+  partner_welcome_page.catalog,
   recurrence_management_screen.catalog,
   settlement_detail_page.catalog,
   settlement_page.catalog,
