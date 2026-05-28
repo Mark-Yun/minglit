@@ -13,17 +13,17 @@ final catalog = MdsCatalog<SettlementPageBuilder>(
   mdsSpec: 'apps/mds/docs/public/specs/settlement_page/',
   builder: SettlementPageBuilder.new,
   states: [
-    // Loading — 대시보드/목록 초기 로딩.
+    // Empty — state_3: 데이터 없음.
+    MdsState('state-empty', (b) => b.empty(), mdsIndex: 3),
+    // Loading — state_5: 목록 초기 로딩.
     MdsState(
       'state-loading',
       (b) => b.loading(),
-      mdsIndex: 1,
+      mdsIndex: 5,
       infiniteAnimation: true,
     ),
-    // Empty — 데이터 없음.
-    MdsState('state-empty', (b) => b.empty(), mdsIndex: 2),
-    // Error — 데이터 조회 실패.
-    MdsState('state-error', (b) => b.error(), mdsIndex: 3),
+    // Error — state_6: 데이터 조회 실패.
+    MdsState('state-error', (b) => b.error(), mdsIndex: 6),
   ],
 );
 

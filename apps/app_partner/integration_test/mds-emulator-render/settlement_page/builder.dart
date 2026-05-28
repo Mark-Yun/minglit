@@ -83,7 +83,7 @@ class _FakeSettlementRepository implements SettlementRepository {
 }
 
 class SettlementPageBuilder extends MdsScreenBuilder<SettlementPage> {
-  SettlementPageBuilder() : super(page: const SettlementPage());
+  SettlementPageBuilder() : super(page: const SettlementPage(initialIndex: 1));
 
   _SettlementScenario _scenario = _SettlementScenario.empty;
   Brightness _brightness = Brightness.light;
@@ -140,7 +140,7 @@ class SettlementPageBuilder extends MdsScreenBuilder<SettlementPage> {
         theme: _brightness == Brightness.dark
             ? MinglitTheme.materialThemeDark
             : MinglitTheme.materialTheme,
-        home: const SettlementPage(),
+        home: const SettlementPage(initialIndex: 1),
       ),
     );
   }
