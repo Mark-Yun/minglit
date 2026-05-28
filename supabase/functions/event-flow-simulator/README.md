@@ -1,6 +1,6 @@
 # event-flow-simulator
 
-Stochastic Cascade 모델 기반 백엔드 시뮬레이터. 진입점 / 모드 / 컨벤션은 [BLUEDOC.md](./BLUEDOC.md), 아키텍처 상세는 [architecture.md](./architecture.md).
+Stochastic Cascade 모델 기반 dev event-flow 시뮬레이터. dev Supabase pg_cron 이 5분마다 작은 실제 EF traffic 을 흘리는 distributed soak signal 이다. 진입점 / 모드 / 컨벤션은 [BLUEDOC.md](./BLUEDOC.md), 아키텍처 상세는 [architecture.md](./architecture.md).
 
 ## 빠른 실행
 
@@ -12,8 +12,10 @@ deno test action/ core/ policy/ invariant/ --allow-all
 curl -X POST "https://<project>.supabase.co/functions/v1/event-flow-simulator" \
   -H "Authorization: Bearer <SERVICE_ROLE_KEY>" \
   -H "Content-Type: application/json" \
-  -d '{"ticks": 3, "usersPerTick": 10}'
+  -d '{"ticks": 1, "usersPerTick": 5, "partnersPerTick": 2, "seed": 202605250905}'
 ```
+
+시간은 `deploy-dev-event-flow-cron` 이 설치한 `dev-event-flow-simulator` pg_cron 이 고정 5분으로 관리한다. 랜덤성은 actor/user/partner/event sampling 에만 둔다. party/event/ticket 은 SQL seed 가 아니라 partner EF 로 만들고, user 는 `user-event-feed` 결과에서 신청 대상을 고른다.
 
 ## 폴더
 

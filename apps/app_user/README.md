@@ -38,13 +38,12 @@ adb -s adb-R3CX803P2ND-8btuuD._adb-tls-connect._tcp install -r build/app/outputs
 flutter pub get
 flutter analyze --no-fatal-infos
 flutter test                                    # unit + widget
-flutter test --tags golden                      # golden (Alchemist)
 flutter test test/integration/                  # integration
 dart format .
 ```
 
 ## CI 에서 자동으로 도는 것
 
-- `pr-gate`: analyze + test + golden + gitleaks (required check)
+- `pr-gate`: analyze + test + gitleaks (required check)
 - `pr-setup-format`: PR push 마다 `dart fix --apply` + `dart format` 자동 적용 후 commit
 - 자세한 워크플로우는 [`.github/workflows/BLUEDOC.md`](../../.github/workflows/BLUEDOC.md)

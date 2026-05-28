@@ -7,7 +7,7 @@
 ## Part 1 — 목적 (What this simulator exists for)
 
 ### 1차 목적
-> **PR 머지 전에 backend 비즈니스 규칙 위반을 잡는다.**
+> **dev 환경에서 실제 EF 경로를 작은 트래픽으로 계속 흘려 backend 비즈니스 규칙 위반을 잡는다.**
 
 예: "결제 완료 (`event_applications.status='paid'`) 인데 대응 payment row 가 없는 경우" 같은 **여러 EF 호출이 엮여서 emerge 하는 정합 규칙**. 단일 EF 단위 테스트로는 잡히지 않고, production 에서야 발견되는 부류. (실 invariant set 정의는 Part 2.B 의 별도 RFC)
 
@@ -20,6 +20,31 @@
 - Production 시스템 (dev 전용 — `auth-manifest` envs 가드)
 - Load testing 도구 (latency 측정 ≠ correctness 검증)
 - UI 테스트 (Patrol/Alchemist 가 그 layer)
+- PR-time deterministic integration test (로컬 Supabase + 명시 scenario 는 `_integration_tests/` 책임)
+
+### Dev soak 운영 모델
+
+`event-flow-simulator` 는 독립 테스트 DB 가 아니라 **dev Supabase** 에서 계속 도는 soak signal 이다. RC 후보 판정은 24시간 동안 이 signal 이 안정적으로 흘렀는지를 본다.
+
+| 항목 | 정책 |
+|---|---|
+| 실행 주기 | dev Supabase pg_cron `dev-event-flow-simulator` 가 5분마다 1회 (`*/5 * * * *`) |
+| 호출 크기 | `ticks=1`, 작은 actor set (`usersPerTick` 3-8, `partnersPerTick` 1-2) |
+| 랜덤 위치 | 시간은 고정, actor/user/partner/event 선택만 seed 기반 랜덤 |
+| 환경 | dev 전용. cron 설치는 `deploy-dev-event-flow-cron` 이 `push: dev` 에서만 수행 |
+| 실패 처리 | 실패 즉시 `dev-soak/backend-simulator` status + GH issue |
+
+큰 daily cascade 한 번(`ticks=3`, `usersPerTick=50`)으로 100개 이상의 nested EF 호출을 한 trace 에 몰아넣는 방식은 Supabase per-trace rate limit 에 취약하다. 총 커버리지는 24시간 누적으로 확보하고, 각 invocation 은 작게 유지한다.
+
+### Seed 책임 경계
+
+`seed.dev.sql` 은 **actor 와 최소 기준 데이터**만 만든다.
+
+- user / partner owner / partner applicant 계정
+- partner row, partner_member_permissions, location, verification
+- 로그인 가능한 dev password / auth identity backfill
+
+파티, 이벤트, 티켓, 신청, 결제, 승인, 체크인은 simulator 가 **각 도메인 EF 를 통해 생성/전이**해야 한다. SQL seed 로 party/event 를 직접 만들면 business flow 검증을 우회한다.
 
 ---
 
@@ -43,6 +68,27 @@
 ```
 
 각 화살표 = EF 호출 + 확률 게이트. cascade 가 funnel 자체를 모델링.
+
+### 실제 user flow 원칙
+
+유저 actor 가 신청할 이벤트를 고를 때 DB 에서 특정 prefix 의 party/event 를 직접 필터링하지 않는다. 실제 앱과 동일하게:
+
+```
+user actor JWT
+  → user-event-feed EF
+  → feed 결과에서 event 선택
+  → user-create-order / payment-verify / user-cancel-order / checkin / vote ...
+```
+
+파트너 측 데이터도 SQL seed 가 아니라 partner actor 가 EF 로 만든다.
+
+```
+partner actor JWT
+  → partner-manage-party / partner-manage-event / ticket EF
+  → user feed 에 자연 노출
+```
+
+`[E2E]` 같은 title prefix 는 이 simulator 의 개념명이 아니며, event-flow traffic 을 표현하지 못한다. 격리가 필요하면 `[SIM]` 같은 명확한 simulation marker 또는 metadata/cohort 필드를 사용하되, 유저의 event discovery 자체는 `user-event-feed` 를 통과해야 한다.
 
 ### 왜 이 추상화가 옳은가
 
@@ -122,12 +168,11 @@ event-flow-simulator/
 │   # participant ordering / event lifecycle / PGMQ DLQ
 │
 └── modes/                # 호출 패턴 — params × cascade depth 조합
-    ├── tick.ts           # hourly :30 — short cascade, default params
-    ├── pr-gate.ts        # PR CI — medium cascade, default params, 모든 invariant
+    ├── tick.ts           # 5분 distributed tick — small cascade, default params
+    ├── pr-gate.ts        # 로컬 Supabase deterministic test 를 호출할 때만 사용
     ├── stress.ts         # 야간/주말 — chaos params, invariant 위반 → 자동 issue
     └── seed.ts           # 수동 1회성 — large cascade, seed params로 dev DB 채움
-                          #   ⚠️ 초기 fixture (partners, base users) 는 SQL seed 가 박음.
-                          #   EF 직접 시딩은 과거 timeout 사건으로 금지 (Fix #1413).
+                          #   ⚠️ 계정/파트너 base 만 SQL seed. party/event 는 EF 경유.
 ```
 
 ### 옛 phase 모드 처리
@@ -144,9 +189,9 @@ event-flow-simulator/
 | 2 | 액션 마이그 | 기존 8 SimAction → `action/*.ts` 8 파일. 기존 *_test.ts 유지 | 1주 | 기존 deno test 통과 |
 | 3 | policy + params | `policy/user.ts`, `policy/partner.ts`, `params/default.ts` 작성 | 3-4일 | small cascade run → 액션 발생 검증 |
 | 4 | invariant 초기 set | 실 비즈니스 규칙 정의 RFC (후보: money conservation / settlement coverage / match integrity / participant ordering / event lifecycle / PGMQ DLQ) — 각 규칙은 실 코드/스키마 정합 확인 선행 필요. 가설 invariant 작성 금지 | 2-3주 | stress params 로 의도적 위반 → 잡히는지 검증 |
-| 5 | `modes/tick.ts` | 얇은 wrapper. 기존 hourly :30 cron 동작 보장 | 2일 | 1회 dispatch → 기존과 동등 결과 |
-| 6 | `modes/pr-gate.ts` + CI | PR 머지 전 cascade 실행 + invariant 위반 시 PR 차단 | 2-3일 | 의도된 회귀 PR 1개로 차단 검증 |
-| 7 | `modes/seed.ts` + phase 삭제 | dev DB 시딩 (단, 초기 fixture 는 SQL seed 사용 — EF 타임아웃 우회). 옛 phase 모드 5 파일 삭제 | 3-4일 | seed 1회 실행 후 dev 상태 다양성 측정 |
+| 5 | dev pg_cron tick | 5분 distributed tick. actor random sample + small payload | 2일 | 24h cron history 에서 rate limit 0건 |
+| 6 | user/partner discovery 경로 정렬 | 유저는 `user-event-feed`, 파트너/이벤트 생성은 partner EF 경유 | 1주 | SQL party/event seed 없이 feed→apply 가능 |
+| 7 | `modes/seed.ts` + phase 삭제 | 계정/파트너 base seed 와 EF-driven state generation 분리. 옛 phase 모드 5 파일 삭제 | 3-4일 | seed 1회 실행 후 dev 상태 다양성 측정 |
 | 8 | `modes/stress.ts` | chaos params + invariant 위반 → GH 이슈 자동 생성 | 3일 | 야간 stress run → 알림 도착 검증 |
 | 9 | shallow / deep 분리 | 흥미로운 tier 만 실 EF 호출 + 나머지 in-memory → 운영 트래픽급 규모 시뮬 가능 | 1주 | 시뮬 시간 / 비용 측정 |
 | 10 | 문서 + 마이그 가이드 | architecture.md 보강, 신규 EF 추가 가이드 | 2-3일 | — |

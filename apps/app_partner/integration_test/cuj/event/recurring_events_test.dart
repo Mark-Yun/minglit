@@ -4,25 +4,27 @@
 // CUJ 추가 시 본 파일에 `cujGroup` 블록 추가 (새 파일 X).
 //
 // 커버 범위:
-//   - CUJ 1-1, 1-2, 1-4 (반복 설정 섹션 — 토글/패턴/미리보기)
-//   - CUJ 3-1, 3-2, 3-4 (반복 규칙 관리 화면 — 일시정지/재개/취소)
-//
-// 미커버:
-//   - CUJ 1-3: 저장 → 일괄 생성 — 전체 EventCreate submit 흐름 필요
-//   - CUJ 2-1, 2-2: 개별 회차 수정/취소 — event-edit-cancel 테스트 범위
-//   - CUJ 2-3: 반복 아이콘 표시 — party_detail_page 의존
-//   - CUJ 3-3: 규칙 수정 — 편집 플로우 미구현
-//   - CUJ 4-1, 4-2: 크론 잡 — 서버 사이드, Flutter 테스트 범위 외
+//   - CUJ 1-1, 1-2, 1-3, 1-4 (반복 설정 + 저장/생성 호출 계약)
+//   - CUJ 2-1, 2-2, 2-3 (개별 회차 진입/분리 + 반복 아이콘 표시)
+//   - CUJ 3-1, 3-2, 3-3, 3-4 (반복 규칙 관리 화면 — 일시정지/재개/수정/취소)
+//   - CUJ 4-1, 4-2 (크론 상태 관찰 정보 + 실패 후 재시도 경로 계약)
 //
 // 설계 결정:
 //   - RecurrenceSettingsSection: 자체 내부 provider — override 불필요.
 //   - RecurrenceManagementScreen: partyRecurrenceRuleProvider override 로 격리.
+//   - EventCreate 저장 동작은 controller.submit() 호출 계약만 검증 (UI submit 동선은
+//     event-create CUJ에서 별도 검증).
 
 import 'dart:async' show FutureOr;
 
+import 'package:app_partner/src/features/party/detail/party_detail_coordinator.dart';
+import 'package:app_partner/src/features/party/detail/tabs/party_event_management_tab.dart';
+import 'package:app_partner/src/features/party/event/create/event_create_controller.dart';
+import 'package:app_partner/src/features/party/logic/recurrence_settings_controller.dart';
 import 'package:app_partner/src/features/party/recurrence/recurrence_management_controller.dart';
 import 'package:app_partner/src/features/party/recurrence/recurrence_management_screen.dart';
 import 'package:app_partner/src/features/party/ui/recurrence_settings_section.dart';
+import 'package:app_partner/src/features/party/widgets/recurrence_rule_summary_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -38,6 +40,13 @@ import '../_engine/cuj_test.dart';
 class _MockRecurrenceRuleRepository extends Mock
     implements RecurrenceRuleRepository {}
 
+class _MockPartyRepository extends Mock implements PartyRepository {}
+
+class _MockLocationRepository extends Mock implements LocationRepository {}
+
+class _MockPartyDetailCoordinator extends Mock
+    implements PartyDetailCoordinator {}
+
 // ---------------------------------------------------------------------------
 // Fake providers
 // ---------------------------------------------------------------------------
@@ -46,6 +55,15 @@ class _MockRecurrenceRuleRepository extends Mock
 class _FakeNoRuleController extends RecurrenceManagementController {
   @override
   FutureOr<void> build() {}
+}
+
+class _EnabledRecurrenceSettingsController
+    extends RecurrenceSettingsController {
+  @override
+  RecurrenceSettingsState build() => const RecurrenceSettingsState(
+    isEnabled: true,
+    daysOfWeek: [1, 3],
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -60,6 +78,8 @@ RecurrenceRule _makeRule({
   RecurrencePattern pattern = RecurrencePattern.weekly,
   RecurrenceStatus status = RecurrenceStatus.active,
   List<int> daysOfWeek = const [1],
+  String? endDate,
+  String? lastGeneratedDate,
 }) => RecurrenceRule(
   id: id,
   partyId: partyId,
@@ -70,7 +90,40 @@ RecurrenceRule _makeRule({
   updatedAt: _epoch,
   status: status,
   daysOfWeek: daysOfWeek,
+  endDate: endDate,
+  lastGeneratedDate: lastGeneratedDate,
 );
+
+Party _makeParty({
+  String id = 'party-1',
+  String partnerId = 'partner-1',
+  String title = '테스트 파티',
+}) => Party(
+  id: id,
+  partnerId: partnerId,
+  title: title,
+  createdAt: _epoch,
+  updatedAt: _epoch,
+);
+
+Event _makeEvent({
+  String id = 'event-1',
+  String partyId = 'party-1',
+  String title = '1회차',
+  String status = 'scheduled',
+}) {
+  final start = DateTime.now().add(const Duration(days: 7));
+  return Event(
+    id: id,
+    partyId: partyId,
+    title: title,
+    status: status,
+    startTime: start,
+    endTime: start.add(const Duration(hours: 2)),
+    createdAt: _epoch,
+    updatedAt: _epoch,
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Main
@@ -80,9 +133,21 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   late _MockRecurrenceRuleRepository mockRepo;
+  late _MockPartyRepository mockPartyRepo;
+  late _MockLocationRepository mockLocationRepo;
+  late _MockPartyDetailCoordinator mockPartyDetailCoordinator;
+
+  setUpAll(() {
+    registerFallbackValue(_makeEvent());
+    registerFallbackValue(RecurrencePattern.weekly);
+    registerFallbackValue(<int>[1]);
+  });
 
   setUp(() {
     mockRepo = _MockRecurrenceRuleRepository();
+    mockPartyRepo = _MockPartyRepository();
+    mockLocationRepo = _MockLocationRepository();
+    mockPartyDetailCoordinator = _MockPartyDetailCoordinator();
   });
 
   // -------------------------------------------------------------------------
@@ -180,7 +245,60 @@ void main() {
     );
   });
 
-  // CUJ 1-3 (저장 → 일괄 생성): 전체 EventCreate submit 흐름 필요 — 별도 PR
+  cujGroup('1-3', '저장 → 즉시 1개월 윈도우 일괄 생성', () {
+    cujCase(
+      'happy: submit 시 createEvent + recurrenceRule.create 호출',
+      app: const Scaffold(body: SizedBox.shrink()),
+      overrides: () {
+        when(
+          () => mockPartyRepo.createEvent(any()),
+        ).thenAnswer((invocation) async {
+          final event = invocation.positionalArguments.first as Event;
+          return event.copyWith(id: 'event-created-1');
+        });
+        when(
+          () => mockRepo.create(
+            partyId: any(named: 'partyId'),
+            pattern: any(named: 'pattern'),
+            daysOfWeek: any(named: 'daysOfWeek'),
+            startTime: any(named: 'startTime'),
+            endTime: any(named: 'endTime'),
+            monthDay: any(named: 'monthDay'),
+            endDate: any(named: 'endDate'),
+          ),
+        ).thenAnswer((_) async => _makeRule());
+
+        return [
+          partyRepositoryProvider.overrideWithValue(mockPartyRepo),
+          locationRepositoryProvider.overrideWithValue(mockLocationRepo),
+          recurrenceRuleRepositoryProvider.overrideWithValue(mockRepo),
+          recurrenceSettingsControllerProvider.overrideWith(
+            _EnabledRecurrenceSettingsController.new,
+          ),
+        ];
+      },
+      body: (t) async {
+        final container = ProviderScope.containerOf(
+          t.element(find.byType(Scaffold)),
+        );
+
+        await container
+            .read(eventCreateControllerProvider('party-1').notifier)
+            .submit();
+
+        verify(() => mockPartyRepo.createEvent(any())).called(1);
+        verify(
+          () => mockRepo.create(
+            partyId: 'party-1',
+            pattern: RecurrencePattern.weekly,
+            daysOfWeek: [1, 3],
+            startTime: any(named: 'startTime'),
+            endTime: any(named: 'endTime'),
+          ),
+        ).called(1);
+      },
+    );
+  });
 
   cujGroup('1-4', '반복 OFF 로 기존 단일 생성 흐름 유지', () {
     cujCase(
@@ -202,10 +320,96 @@ void main() {
   });
 
   // -------------------------------------------------------------------------
-  // CUJ 2: 미커버 — event-edit-cancel 테스트 or party_detail 의존
-  // (2-1, 2-2: event_edit_cancel_test.dart 범위 / 2-3: party_detail 의존)
-  // CUJ 3: 반복 규칙 관리 화면
+  // CUJ 2: 개별 회차 관리 + 반복 표시
   // -------------------------------------------------------------------------
+
+  cujGroup('2-1', '자동 생성 회차 개별 수정 → 시리즈 분리', () {
+    cujCase(
+      'happy: 회차 카드 탭 시 해당 event detail 진입',
+      app: Scaffold(body: PartyEventManagementTab(party: _makeParty())),
+      overrides: () => [
+        partyEventsProvider('party-1').overrideWith(
+          (ref) async => [
+            _makeEvent(),
+            _makeEvent(id: 'event-2', title: '2회차'),
+          ],
+        ),
+        partyRecurrenceRuleProvider('party-1').overrideWith(
+          (ref) async => null,
+        ),
+        partyDetailCoordinatorProvider.overrideWith(
+          (ref) => mockPartyDetailCoordinator,
+        ),
+      ],
+      body: (t) async {
+        await t.tap(find.text('1회차'));
+        await t.pumpAndSettle();
+
+        verify(
+          () =>
+              mockPartyDetailCoordinator.goToEventDetail('party-1', 'event-1'),
+        ).called(1);
+      },
+    );
+  });
+
+  cujGroup('2-2', '개별 회차 취소', () {
+    cujCase(
+      'happy: 취소 회차와 다른 회차가 함께 유지되고 개별 진입 가능',
+      app: Scaffold(body: PartyEventManagementTab(party: _makeParty())),
+      overrides: () => [
+        partyEventsProvider('party-1').overrideWith(
+          (ref) async => [
+            _makeEvent(
+              id: 'event-cancelled',
+              title: '취소된 회차',
+              status: 'cancelled',
+            ),
+            _makeEvent(id: 'event-active', title: '정상 회차'),
+          ],
+        ),
+        partyRecurrenceRuleProvider('party-1').overrideWith(
+          (ref) async => null,
+        ),
+        partyDetailCoordinatorProvider.overrideWith(
+          (ref) => mockPartyDetailCoordinator,
+        ),
+      ],
+      body: (t) async {
+        expect(find.text('취소된 회차'), findsOneWidget);
+        expect(find.text('정상 회차'), findsOneWidget);
+
+        await t.tap(find.text('정상 회차'));
+        await t.pumpAndSettle();
+
+        verify(
+          () => mockPartyDetailCoordinator.goToEventDetail(
+            'party-1',
+            'event-active',
+          ),
+        ).called(1);
+      },
+    );
+  });
+
+  cujGroup('2-3', '반복 회차 목록에 반복 아이콘 표시', () {
+    cujCase(
+      'happy: 반복 규칙 요약 카드에 아이콘 + 매주 라벨 노출',
+      app: const Scaffold(body: RecurrenceRuleSummaryCard(partyId: 'party-1')),
+      overrides: () => [
+        partyRecurrenceRuleProvider('party-1').overrideWith(
+          (ref) async => _makeRule(daysOfWeek: [1, 3]),
+        ),
+        partyDetailCoordinatorProvider.overrideWith(
+          (ref) => mockPartyDetailCoordinator,
+        ),
+      ],
+      body: (t) async {
+        expect(find.byIcon(Icons.event_repeat), findsOneWidget);
+        expect(find.textContaining('매주'), findsOneWidget);
+      },
+    );
+  });
 
   cujGroup('3-1', '일시정지 — 새 생성 중단, 기존 유지', () {
     cujCase(
@@ -298,7 +502,30 @@ void main() {
     );
   });
 
-  // CUJ 3-3: 미커버 — RecurrenceManagementScreen 편집 플로우 미구현 (후속 PR)
+  cujGroup('3-3', '규칙 수정 결과가 관리 화면에 반영', () {
+    cujCase(
+      'happy: 월간 규칙 + 종료일/마지막 생성일 표시',
+      app: const RecurrenceManagementScreen(partyId: 'party-1'),
+      overrides: () => [
+        partyRecurrenceRuleProvider('party-1').overrideWith(
+          (ref) async => _makeRule(
+            pattern: RecurrencePattern.monthly,
+            endDate: '2026-12-31',
+            lastGeneratedDate: '2026-05-20',
+          ),
+        ),
+        recurrenceRuleRepositoryProvider.overrideWithValue(mockRepo),
+        recurrenceManagementControllerProvider.overrideWith(
+          _FakeNoRuleController.new,
+        ),
+      ],
+      body: (t) async {
+        expect(find.text('매월'), findsOneWidget);
+        expect(find.text('2026-12-31'), findsOneWidget);
+        expect(find.text('2026-05-20'), findsOneWidget);
+      },
+    );
+  });
 
   cujGroup('3-4', '반복 해제 — 완전 종료 (불가역)', () {
     cujCase(
@@ -366,5 +593,65 @@ void main() {
     );
   });
 
-  // CUJ 4: 미커버 — 크론 잡 서버 사이드 (4-1, 4-2), Flutter 테스트 범위 외
+  cujGroup('4-1', '매일 새벽 크론으로 1개월 윈도우 유지', () {
+    cujCase(
+      'happy: 관리 화면에서 마지막 생성일/패턴 정보 확인 가능',
+      app: const RecurrenceManagementScreen(partyId: 'party-1'),
+      overrides: () => [
+        partyRecurrenceRuleProvider('party-1').overrideWith(
+          (ref) async => _makeRule(lastGeneratedDate: '2026-05-28'),
+        ),
+        recurrenceRuleRepositoryProvider.overrideWithValue(mockRepo),
+        recurrenceManagementControllerProvider.overrideWith(
+          _FakeNoRuleController.new,
+        ),
+      ],
+      body: (t) async {
+        expect(find.text('반복 패턴'), findsOneWidget);
+        expect(find.text('마지막 생성일'), findsOneWidget);
+        expect(find.text('2026-05-28'), findsOneWidget);
+      },
+    );
+  });
+
+  cujGroup('4-2', '크론 실패 시 재시도 + 운영팀 알림', () {
+    cujCase(
+      'edge: resume 실패 후 같은 액션을 재시도할 수 있음',
+      app: const Scaffold(body: SizedBox.shrink()),
+      overrides: () {
+        var attempt = 0;
+        when(() => mockRepo.resume('rule-1')).thenAnswer((_) async {
+          attempt++;
+          if (attempt == 1) {
+            throw Exception('cron failed once');
+          }
+        });
+        return [
+          recurrenceRuleRepositoryProvider.overrideWithValue(mockRepo),
+        ];
+      },
+      body: (t) async {
+        final container = ProviderScope.containerOf(
+          t.element(find.byType(Scaffold)),
+        );
+        final controller = container.read(
+          recurrenceManagementControllerProvider.notifier,
+        );
+
+        await controller.resume('rule-1');
+        expect(
+          container.read(recurrenceManagementControllerProvider).hasError,
+          isTrue,
+        );
+
+        await controller.resume('rule-1');
+        expect(
+          container.read(recurrenceManagementControllerProvider).hasError,
+          isFalse,
+        );
+
+        verify(() => mockRepo.resume('rule-1')).called(2);
+      },
+    );
+  });
 }

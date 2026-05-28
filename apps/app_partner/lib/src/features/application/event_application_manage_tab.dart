@@ -48,7 +48,7 @@ class _ApplicationTab extends ConsumerWidget {
               children: [
                 Icon(
                   Icons.assignment_outlined,
-                  size: MinglitIconSize.xlarge * 2,
+                  size: MinglitIconSize.hero,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 const SizedBox(height: MinglitSpacing.medium),

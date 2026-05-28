@@ -14,12 +14,32 @@ import 'package:minglit_kit/src/features/iamport/data/repository/iamport_reposit
 import 'package:minglit_kit/src/features/verification/ui/identity_verification_consent_sheet.dart';
 import 'package:minglit_kit/src/utils/error_ui_handler.dart';
 
+/// Starts the external identity verification flow and returns the
+/// verification id.
+typedef IdentityVerificationStarter =
+    Future<String?> Function({
+      required BuildContext context,
+      required String userCode,
+      required String merchantUid,
+      String? mRedirectUrl,
+    });
+
 /// **Identity Verification Screen**
 ///
 /// A screen where users verify their real identity via Iamport (V2).
 class IdentityVerificationScreen extends ConsumerStatefulWidget {
   /// Creates an identity verification screen.
-  const IdentityVerificationScreen({super.key});
+  const IdentityVerificationScreen({
+    super.key,
+    this.certificationStarter,
+    this.certificationService,
+  });
+
+  /// Optional test/render hook for the external certification flow.
+  final IdentityVerificationStarter? certificationStarter;
+
+  /// Optional test hook for the certification service implementation.
+  final CertificationService? certificationService;
 
   /// Creates the state for the identity verification screen.
   @override
@@ -71,9 +91,7 @@ class _IdentityVerificationScreenState
 
     final consents = await ref
         .read(consentRepositoryProvider)
-        .getConsents(
-          user.id,
-        );
+        .getConsents(user.id);
     final hasConsent = consents.any(
       (consent) => consent.consentKey == ConsentType.identityVerification,
     );
@@ -97,14 +115,22 @@ class _IdentityVerificationScreenState
   Future<void> _startVerification() async {
     final merchantUid = 'IDV_${DateTime.now().millisecondsSinceEpoch}';
     final config = ref.read(iamportConfigProvider);
+    final starter = widget.certificationStarter;
 
-    final service = getCertificationService();
-    final verificationId = await service.verify(
-      context: context,
-      userCode: config.userCode,
-      merchantUid: merchantUid,
-      mRedirectUrl: config.mobileRedirectUrl,
-    );
+    final verificationId = starter != null
+        ? await starter(
+            context: context,
+            userCode: config.userCode,
+            merchantUid: merchantUid,
+            mRedirectUrl: config.mobileRedirectUrl,
+          )
+        : await (widget.certificationService ?? getCertificationService())
+              .verify(
+                context: context,
+                userCode: config.userCode,
+                merchantUid: merchantUid,
+                mRedirectUrl: config.mobileRedirectUrl,
+              );
 
     if (verificationId == null) {
       // User cancelled or window blocked
@@ -119,9 +145,9 @@ class _IdentityVerificationScreenState
         .verifyCertification(verificationId);
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('✅ 본인인증이 성공적으로 완료되었습니다.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('✅ 본인인증이 성공적으로 완료되었습니다.')));
       Navigator.of(context).pop(true);
     }
   }

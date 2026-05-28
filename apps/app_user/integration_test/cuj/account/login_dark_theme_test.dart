@@ -1,239 +1,436 @@
-// CUJ tests — account / login-dark-theme (app_user)
+// CUJ tests — account / login-dark-theme
 //
 // 대응 spec: docs/features/account/login-dark-theme/spec.md
-// CUJ 추가 시 본 파일에 `cujGroup` 블록 추가 (새 파일 X).
-//
-// 커버 범위 (Flutter integration test): 6/7
-//   1-1, 1-2, 1-3, 1-4, 2-1: 다크/라이트 모드 렌더링 + 버튼 구조 검증
-//   5-1: 실행 중 시스템 테마 토글 시 즉시 반영 (StatefulWrapper 패턴)
-//
-// 미커버 (1/7):
-//   3-1 (보호 경로 redirect 깜빡임 제거): GoRouter 전체 설정 + auth mock 없이
-//        올바른 redirect 시나리오 검증 불가. redirect 로직 자체는
-//        test/src/routing/app_router_redirect_test.dart 에서 검증됨.
-//        시각적 깜빡임 검증은 golden 테스트 범위.
-//
-// 색상 정확도 (NFR-5/NFR-6, Fix #1542):
-//   픽셀 수준 색상 검증은 test/widget/ 에 위치한 golden 테스트가 담당.
-//   본 CUJ 테스트는 어두운/밝은 테마에서 구조 + 콜백 동작을 검증.
+// CUJ 추가 시 본 파일에 `cujGroup` 블록 추가.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 import '../_engine/cuj_test.dart';
 
-const _fakeDomains = MinglitDomains(
-  userWeb: 'https://test.minglit.com',
-  partnerWeb: 'https://test-partner.minglit.com',
-  userApp: 'https://test-app.minglit.com',
-  partnerApp: 'https://test-app-partner.minglit.com',
-);
+const _loginRouteMarkerKey = ValueKey<String>('login-route-marker');
 
-List<dynamic> _base() => [
-  minglitDomainsProvider.overrideWithValue(_fakeDomains),
-];
+class _ThemeHost extends StatelessWidget {
+  const _ThemeHost({
+    required this.mode,
+    required this.child,
+  });
 
-// CUJ 5-1: StatefulWidget for simulating system theme toggle.
-class _ThemeWrapper extends StatefulWidget {
-  const _ThemeWrapper();
+  final ThemeMode mode;
+  final Widget child;
 
   @override
-  State<_ThemeWrapper> createState() => _ThemeWrapperState();
+  Widget build(BuildContext context) {
+    return ProviderScope(
+      child: MaterialApp(
+        theme: MinglitTheme.materialTheme,
+        darkTheme: MinglitTheme.materialThemeDark,
+        themeMode: mode,
+        home: child,
+      ),
+    );
+  }
 }
 
-class _ThemeWrapperState extends State<_ThemeWrapper> {
-  bool _isDark = false;
+class _RuntimeToggleHost extends StatelessWidget {
+  const _RuntimeToggleHost({
+    required this.mode,
+  });
 
-  void setDark({required bool value}) {
-    setState(() => _isDark = value);
+  final ValueNotifier<ThemeMode> mode;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: mode,
+      builder: (context, themeMode, _) {
+        return ProviderScope(
+          child: MaterialApp(
+            theme: MinglitTheme.materialTheme,
+            darkTheme: MinglitTheme.materialThemeDark,
+            themeMode: themeMode,
+            home: _loginScreen(),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _RedirectEntryPage extends StatelessWidget {
+  const _RedirectEntryPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: FilledButton(
+          onPressed: () => context.go('/my'),
+          child: const Text('보호 화면 진입'),
+        ),
+      ),
+    );
+  }
+}
+
+class _AuthRedirectRouterHost extends StatefulWidget {
+  const _AuthRedirectRouterHost({required this.mode});
+
+  final ValueNotifier<ThemeMode> mode;
+
+  @override
+  State<_AuthRedirectRouterHost> createState() =>
+      _AuthRedirectRouterHostState();
+}
+
+class _AuthRedirectRouterHostState extends State<_AuthRedirectRouterHost> {
+  late final GoRouter _router = GoRouter(
+    initialLocation: '/',
+    routes: <RouteBase>[
+      GoRoute(
+        path: '/',
+        builder: (context, state) => const _RedirectEntryPage(),
+      ),
+      GoRoute(
+        path: '/my',
+        builder: (context, state) => const SizedBox.shrink(),
+      ),
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => KeyedSubtree(
+          key: _loginRouteMarkerKey,
+          child: _loginScreen(),
+        ),
+      ),
+    ],
+    redirect: (context, state) {
+      if (state.uri.path == '/my') {
+        return Uri(
+          path: '/login',
+          queryParameters: const <String, String>{'from': '/my'},
+        ).toString();
+      }
+      return null;
+    },
+  );
+
+  @override
+  void dispose() {
+    _router.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: _isDark
-          ? MinglitTheme.materialThemeDark
-          : MinglitTheme.materialTheme,
-      child: const MinglitLoginScreen(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: widget.mode,
+      builder: (context, themeMode, _) {
+        return ProviderScope(
+          child: MaterialApp.router(
+            theme: MinglitTheme.materialTheme,
+            darkTheme: MinglitTheme.materialThemeDark,
+            themeMode: themeMode,
+            routerConfig: _router,
+          ),
+        );
+      },
     );
+  }
+}
+
+Widget _loginScreen({bool showApple = true}) {
+  return MinglitLoginScreen(
+    onGoogleSignIn: _noop,
+    onAppleSignIn: showApple ? _noop : null,
+    onKakaoSignIn: _noop,
+  );
+}
+
+OutlinedButton _button(WidgetTester tester, String label) {
+  return tester.widget<OutlinedButton>(
+    find.widgetWithText(OutlinedButton, label),
+  );
+}
+
+Color _buttonBackground(OutlinedButton button) {
+  return button.style!.backgroundColor!.resolve(<WidgetState>{})!;
+}
+
+Color _buttonForeground(OutlinedButton button) {
+  return button.style!.foregroundColor!.resolve(<WidgetState>{})!;
+}
+
+Color _buttonBorder(OutlinedButton button) {
+  return button.style!.side!.resolve(<WidgetState>{})!.color;
+}
+
+Color _canvasMaterialColor(WidgetTester tester) {
+  final materials = tester.widgetList<Material>(find.byType(Material));
+  final canvas = materials.firstWhere(
+    (material) =>
+        material.type == MaterialType.canvas && material.color != null,
+  );
+  return canvas.color!;
+}
+
+void _noop() {}
+
+Future<void> _pumpUntilFound(
+  WidgetTester tester,
+  Finder finder, {
+  int maxFrames = 12,
+}) async {
+  for (var i = 0; i < maxFrames; i++) {
+    if (finder.evaluate().isNotEmpty) {
+      return;
+    }
+    await tester.pump();
   }
 }
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  // ---------------------------------------------------------------------------
-  // CUJ 1-1: 다크 모드 진입 시 Scaffold 배경 일관
-  // ---------------------------------------------------------------------------
-
   cujGroup('1-1', '다크 모드 진입 시 Scaffold 배경 일관', () {
     cujCase(
-      'happy: 다크 테마에서 Scaffold 렌더 + brightness == Brightness.dark',
-      app: Theme(
-        data: MinglitTheme.materialThemeDark,
-        child: const MinglitLoginScreen(),
-      ),
-      overrides: _base,
+      'happy: 다크 모드에서 로그인 화면 배경이 dark background로 렌더',
+      app: _ThemeHost(mode: ThemeMode.dark, child: _loginScreen()),
       body: (t) async {
-        expect(find.byType(Scaffold), findsOneWidget);
-
-        // Fix #1542: 다크 모드에서 Scaffold 배경이 테마를 따름 확인
-        final scaffold = t.element(find.byType(Scaffold));
-        expect(Theme.of(scaffold).brightness, equals(Brightness.dark));
-
-        // OAuth 버튼 존재 확인
-        expect(find.text('Google로 시작하기'), findsOneWidget);
-        expect(find.text('Kakao로 시작하기'), findsOneWidget);
+        expect(_canvasMaterialColor(t), MinglitColorsDark.background);
       },
     );
-  });
-
-  // ---------------------------------------------------------------------------
-  // CUJ 1-2: 다크 모드에서 Google 버튼 다크 변형
-  // ---------------------------------------------------------------------------
-
-  cujGroup('1-2', '다크 모드에서 Google 버튼 다크 변형', () {
-    var googleCalled = false;
 
     cujCase(
-      'happy: 다크 모드 Google 버튼 존재 + 탭 가능 (다크 변형 렌더 확인)',
-      app: Theme(
-        data: MinglitTheme.materialThemeDark,
-        child: MinglitLoginScreen(
-          onGoogleSignIn: () => googleCalled = true,
-          onKakaoSignIn: () {},
-        ),
-      ),
-      overrides: _base,
+      'edge: 다크 모드에서도 wallpaper/동적 색 영향 없이 동일 배경 유지',
+      app: _ThemeHost(mode: ThemeMode.dark, child: _loginScreen()),
       body: (t) async {
-        googleCalled = false;
-
-        // 다크 모드에서 Google 버튼 렌더 확인 (FR-2)
-        expect(find.text('Google로 시작하기'), findsOneWidget);
-
-        await t.tap(find.text('Google로 시작하기'));
-        await t.pumpAndSettle();
-
-        expect(googleCalled, isTrue);
+        final firstFrameColor = _canvasMaterialColor(t);
+        await t.pump(const Duration(milliseconds: 50));
+        expect(firstFrameColor, MinglitColorsDark.background);
+        expect(_canvasMaterialColor(t), firstFrameColor);
       },
     );
   });
 
-  // ---------------------------------------------------------------------------
-  // CUJ 1-3: 다크 모드에서 Apple 버튼 white-on-dark 변형
-  // ---------------------------------------------------------------------------
+  cujGroup('1-2', '다크 모드에서 Google 버튼 다크 변형', () {
+    cujCase(
+      'happy: Google 버튼이 다크 배경 + 가독성 높은 글자색으로 렌더',
+      app: _ThemeHost(mode: ThemeMode.dark, child: _loginScreen()),
+      body: (t) async {
+        final google = _button(t, 'Google로 시작하기');
+        final darkTheme = MinglitTheme.materialThemeDark;
+
+        expect(_buttonBackground(google), MinglitColorsDark.surface);
+        expect(
+          _buttonForeground(google),
+          darkTheme.colorScheme.onSurface.withValues(
+            alpha: MinglitOpacity.highEmphasis,
+          ),
+        );
+      },
+    );
+
+    cujCase(
+      'edge: Google 버튼 border가 outlineVariant 토큰을 사용',
+      app: _ThemeHost(mode: ThemeMode.dark, child: _loginScreen()),
+      body: (t) async {
+        final google = _button(t, 'Google로 시작하기');
+        expect(
+          _buttonBorder(google),
+          MinglitTheme.materialThemeDark.colorScheme.outlineVariant,
+        );
+      },
+    );
+  });
 
   cujGroup('1-3', '다크 모드에서 Apple 버튼 white-on-dark 변형', () {
     cujCase(
-      'happy: iOS/macOS 다크 모드 — Apple 버튼 렌더 (white-on-dark)',
-      app: Theme(
-        data: MinglitTheme.materialThemeDark,
-        child: MinglitLoginScreen(
-          onGoogleSignIn: () {},
-          onAppleSignIn: () {},
-          onKakaoSignIn: () {},
-        ),
+      'happy: Apple 버튼이 white-on-dark 색상 조합으로 렌더',
+      app: _ThemeHost(
+        mode: ThemeMode.dark,
+        child: _loginScreen(),
       ),
-      overrides: _base,
       body: (t) async {
-        // Fix #1542: 다크 모드에서 Apple 버튼 존재 확인 (FR-3 — white-on-dark 변형)
-        expect(find.text('Apple로 시작하기'), findsOneWidget);
+        final apple = _button(t, 'Apple로 시작하기');
 
-        // 다크 테마 적용 확인
-        final scaffold = t.element(find.byType(Scaffold));
-        expect(Theme.of(scaffold).brightness, equals(Brightness.dark));
+        expect(_buttonBackground(apple), MinglitColors.background);
+        expect(_buttonForeground(apple), MinglitColors.textPrimary);
       },
     );
-  });
-
-  // ---------------------------------------------------------------------------
-  // CUJ 1-4: 다크 모드에서 Kakao 노랑 고정
-  // ---------------------------------------------------------------------------
-
-  cujGroup('1-4', '다크 모드에서 Kakao 노랑 고정', () {
-    var kakaoCalled = false;
 
     cujCase(
-      'happy: 다크 모드에서 Kakao 버튼 렌더 + 탭 가능 (브랜드 고정)',
-      app: Theme(
-        data: MinglitTheme.materialThemeDark,
-        child: MinglitLoginScreen(
-          onGoogleSignIn: () {},
-          onKakaoSignIn: () => kakaoCalled = true,
-        ),
+      'edge: Apple 버튼 콜백 미제공 시 버튼 비노출(비지원 플랫폼 정책)',
+      app: _ThemeHost(
+        mode: ThemeMode.dark,
+        child: _loginScreen(showApple: false),
       ),
-      overrides: _base,
       body: (t) async {
-        kakaoCalled = false;
-
-        // Fix #1542: 다크 모드에서도 Kakao 버튼 존재 확인 (FR-4)
-        expect(find.text('Kakao로 시작하기'), findsOneWidget);
-
-        await t.tap(find.text('Kakao로 시작하기'));
-        await t.pumpAndSettle();
-
-        expect(kakaoCalled, isTrue);
+        expect(
+          find.widgetWithText(OutlinedButton, 'Apple로 시작하기'),
+          findsNothing,
+        );
       },
     );
   });
 
-  // ---------------------------------------------------------------------------
-  // CUJ 2-1: 라이트 모드 baseline (회귀 없음)
-  // ---------------------------------------------------------------------------
+  cujGroup('1-4', '다크 모드에서 Kakao 노랑 고정', () {
+    cujCase(
+      'happy: Kakao 버튼은 다크 모드에서도 브랜드 노랑/검정 글자 유지',
+      app: _ThemeHost(mode: ThemeMode.dark, child: _loginScreen()),
+      body: (t) async {
+        final kakao = _button(t, 'Kakao로 시작하기');
+
+        expect(_buttonBackground(kakao), MinglitColors.warning);
+        expect(
+          _buttonForeground(kakao),
+          MinglitColors.textPrimary.withValues(
+            alpha: MinglitOpacity.highEmphasis,
+          ),
+        );
+      },
+    );
+
+    cujCase(
+      'edge: 라이트↔다크 모드 전환과 무관하게 Kakao 색상 고정',
+      app: _RuntimeToggleHost(mode: ValueNotifier<ThemeMode>(ThemeMode.light)),
+      body: (t) async {
+        final mode = ValueNotifier<ThemeMode>(ThemeMode.light);
+        await t.pumpWidget(_RuntimeToggleHost(mode: mode));
+        await t.pumpAndSettle();
+
+        final lightButton = _button(t, 'Kakao로 시작하기');
+        final lightBg = _buttonBackground(lightButton);
+        final lightFg = _buttonForeground(lightButton);
+
+        mode.value = ThemeMode.dark;
+        await t.pumpAndSettle();
+
+        final darkButton = _button(t, 'Kakao로 시작하기');
+        expect(_buttonBackground(darkButton), lightBg);
+        expect(_buttonForeground(darkButton), lightFg);
+      },
+    );
+  });
 
   cujGroup('2-1', '라이트 모드 baseline (회귀 없음)', () {
     cujCase(
-      'happy: 라이트 모드 — Google + Apple + Kakao 버튼 존재 (FR-1~4 baseline)',
-      app: MinglitLoginScreen(
-        onGoogleSignIn: () {},
-        onAppleSignIn: () {},
-        onKakaoSignIn: () {},
-      ),
-      overrides: _base,
+      'happy: 라이트 모드에서 기존 버튼/배경 baseline 유지',
+      app: _ThemeHost(mode: ThemeMode.light, child: _loginScreen()),
       body: (t) async {
-        expect(find.byType(Scaffold), findsOneWidget);
+        final google = _button(t, 'Google로 시작하기');
+        final apple = _button(t, 'Apple로 시작하기');
+        final kakao = _button(t, 'Kakao로 시작하기');
 
-        // 라이트 테마 확인
-        final scaffold = t.element(find.byType(Scaffold));
-        expect(Theme.of(scaffold).brightness, equals(Brightness.light));
-
-        // 모든 OAuth 버튼 존재 확인 (회귀 없음)
-        expect(find.text('Google로 시작하기'), findsOneWidget);
-        expect(find.text('Apple로 시작하기'), findsOneWidget);
-        expect(find.text('Kakao로 시작하기'), findsOneWidget);
+        expect(_canvasMaterialColor(t), MinglitColors.surface);
+        expect(_buttonBackground(google), MinglitColors.background);
+        expect(_buttonBackground(apple), MinglitColors.textPrimary);
+        expect(_buttonBackground(kakao), MinglitColors.warning);
       },
     );
   });
 
-  // ---------------------------------------------------------------------------
-  // CUJ 5-1: 실행 중 시스템 테마 토글 시 즉시 반영
-  // ---------------------------------------------------------------------------
+  cujGroup('3-1', '보호 경로 redirect 시 깜빡임 제거', () {
+    cujCase(
+      'happy: 다크 보호 화면에서 로그인 redirect 후 배경 톤 유지',
+      app: const SizedBox.shrink(),
+      body: (t) async {
+        final mode = ValueNotifier<ThemeMode>(ThemeMode.dark);
+        addTearDown(mode.dispose);
+        await t.pumpWidget(_AuthRedirectRouterHost(mode: mode));
+        await t.pumpAndSettle();
+
+        expect(_canvasMaterialColor(t), MinglitColorsDark.background);
+
+        await t.tap(find.text('보호 화면 진입'));
+        await t.pump();
+
+        // Redirect 첫 프레임에서 밝은 flash가 없어야 한다.
+        expect(_canvasMaterialColor(t), MinglitColorsDark.background);
+
+        await _pumpUntilFound(t, find.byKey(_loginRouteMarkerKey));
+        expect(find.byKey(_loginRouteMarkerKey), findsOneWidget);
+        expect(find.text('Google로 시작하기'), findsOneWidget);
+        expect(_canvasMaterialColor(t), MinglitColorsDark.background);
+
+        await t.pumpAndSettle();
+        expect(_canvasMaterialColor(t), MinglitColorsDark.background);
+      },
+    );
+
+    cujCase(
+      'edge: redirect 직전에 테마 전환해도 로그인 도착 프레임의 배경 일치',
+      app: const SizedBox.shrink(),
+      body: (t) async {
+        final mode = ValueNotifier<ThemeMode>(ThemeMode.dark);
+        addTearDown(mode.dispose);
+        await t.pumpWidget(_AuthRedirectRouterHost(mode: mode));
+        await t.pumpAndSettle();
+
+        mode.value = ThemeMode.light;
+        await t.pumpAndSettle();
+
+        await t.tap(find.text('보호 화면 진입'));
+        await t.pump();
+        expect(_canvasMaterialColor(t), MinglitColors.surface);
+        await _pumpUntilFound(t, find.byKey(_loginRouteMarkerKey));
+        expect(find.byKey(_loginRouteMarkerKey), findsOneWidget);
+        expect(find.text('Google로 시작하기'), findsOneWidget);
+        expect(_canvasMaterialColor(t), MinglitColors.surface);
+
+        await t.pumpAndSettle();
+
+        expect(_canvasMaterialColor(t), MinglitColors.surface);
+      },
+    );
+  });
 
   cujGroup('5-1', '실행 중 시스템 테마 토글 시 즉시 반영', () {
     cujCase(
-      'happy: 라이트→다크 토글 → 로그인 화면 즉시 다크 변형 교체',
-      app: const _ThemeWrapper(),
-      overrides: _base,
+      'happy: 로그인 화면 노출 중 themeMode 변경 시 즉시 색상 반영',
+      app: _RuntimeToggleHost(mode: ValueNotifier<ThemeMode>(ThemeMode.light)),
       body: (t) async {
-        // Fix #2659: _ThemeWrapper element는 자기 자신이 build()로 반환하는
-        // Theme 자식 위젯의 위쪽에 위치 — Theme.of()는 위로 walk-up하므로
-        // harness MaterialApp의 light theme을 읽음. Scaffold element에서 읽어야
-        // _ThemeWrapper가 주입한 inner Theme을 올바르게 탐색.
-        // 초기 라이트 모드 확인
-        final scaffold = t.element(find.byType(Scaffold));
-        expect(Theme.of(scaffold).brightness, equals(Brightness.light));
+        final mode = ValueNotifier<ThemeMode>(ThemeMode.light);
+        await t.pumpWidget(_RuntimeToggleHost(mode: mode));
+        await t.pumpAndSettle();
 
-        // 시스템 테마 토글 시뮬레이션 (OS 이벤트 → setState)
-        t
-            .state<_ThemeWrapperState>(find.byType(_ThemeWrapper))
-            .setDark(value: true);
-        await t.pump();
+        expect(_canvasMaterialColor(t), MinglitColors.surface);
+        expect(
+          _buttonBackground(_button(t, 'Google로 시작하기')),
+          MinglitColors.background,
+        );
 
-        // 즉시 다크 변형 교체 확인 (재진입 불필요)
-        final updatedScaffold = t.element(find.byType(Scaffold));
-        expect(Theme.of(updatedScaffold).brightness, equals(Brightness.dark));
+        mode.value = ThemeMode.dark;
+        await t.pumpAndSettle();
+
+        expect(_canvasMaterialColor(t), MinglitColorsDark.background);
+        expect(
+          _buttonBackground(_button(t, 'Google로 시작하기')),
+          MinglitColorsDark.surface,
+        );
+      },
+    );
+
+    cujCase(
+      'edge: 토글 직후 재진입 없이 버튼 foreground도 새 테마로 즉시 교체',
+      app: _RuntimeToggleHost(mode: ValueNotifier<ThemeMode>(ThemeMode.light)),
+      body: (t) async {
+        final mode = ValueNotifier<ThemeMode>(ThemeMode.light);
+        await t.pumpWidget(_RuntimeToggleHost(mode: mode));
+        await t.pumpAndSettle();
+
+        mode.value = ThemeMode.dark;
+        await t.pumpAndSettle();
+
+        final google = _button(t, 'Google로 시작하기');
+        expect(
+          _buttonForeground(google),
+          MinglitTheme.materialThemeDark.colorScheme.onSurface.withValues(
+            alpha: MinglitOpacity.highEmphasis,
+          ),
+        );
       },
     );
   });

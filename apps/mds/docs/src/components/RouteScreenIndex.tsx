@@ -6,26 +6,26 @@ import {
   hasDesignFor,
   designUrlFor,
   subComponentsFor,
+  standaloneSpecsFor,
   type SubComponentSpec,
+  type StandaloneSpec,
 } from '@/lib/flow-data';
 
 const APP_LABELS = { user: 'app_user', partner: 'app_partner' } as const;
 
 function SubComponentRow({ sub, parentRoute }: { sub: SubComponentSpec; parentRoute: string }) {
   const sourceUrl = `https://github.com/Mark-Yun/minglit/blob/dev/${sub.filePath}`;
-  const specUrl = `/specs/${sub.specBasename}.html`;
+  const specUrl = `/specs/${sub.specBasename}/index.html`;
   return (
     <tr className="hover:bg-[var(--color-surface)] bg-[var(--color-surface)]/30">
       <td className="px-4 py-2 pl-10">
         <span className="text-[var(--color-text-secondary)] mr-1">↳</span>
         <a
-          href={sourceUrl}
-          target="_blank"
-          rel="noopener noreferrer"
+          href={specUrl}
           className="font-mono text-xs text-[var(--color-primary)] hover:underline"
-          title={sub.filePath}
+          title="Open sub-component spec"
         >
-          {sub.widget} ↗
+          {sub.widget}
         </a>
       </td>
       <td className="px-4 py-2">
@@ -35,14 +35,39 @@ function SubComponentRow({ sub, parentRoute }: { sub: SubComponentSpec; parentRo
       </td>
       <td className="px-4 py-2">
         <a
-          href={specUrl}
+          href={sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="text-xs font-mono text-[var(--color-primary)] hover:underline"
-          title="Open sub-component spec in new tab"
+          title={sub.filePath}
         >
-          spec ↗
+          code ↗
         </a>
+      </td>
+    </tr>
+  );
+}
+
+function StandaloneSpecRow({ spec }: { spec: StandaloneSpec }) {
+  const specUrl = `/specs/${spec.specBasename}/index.html`;
+  return (
+    <tr className="hover:bg-[var(--color-surface)] bg-[var(--color-surface)]/30">
+      <td className="px-4 py-2">
+        <a
+          href={specUrl}
+          className="font-mono text-xs text-[var(--color-primary)] hover:underline"
+          title="Open spec"
+        >
+          {spec.widget}
+        </a>
+      </td>
+      <td className="px-4 py-2">
+        <span className="font-mono text-xs text-[var(--color-text-secondary)] italic">
+          {spec.note}
+        </span>
+      </td>
+      <td className="px-4 py-2">
+        <span className="text-xs text-[var(--color-divider)]">—</span>
       </td>
     </tr>
   );
@@ -74,7 +99,7 @@ export default function RouteScreenIndex() {
                     Route
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-text-primary)]">
-                    Design Spec
+                    Code
                   </th>
                 </tr>
               </thead>
@@ -82,7 +107,9 @@ export default function RouteScreenIndex() {
                 {routesByApp[app].map((route) => {
                   const widget = widgetNameFor(app, route);
                   const screen = screenSourceFor(app, route);
-                  const routesUrl = `https://github.com/Mark-Yun/minglit/blob/dev/apps/app_${app}/lib/src/routing/app_routes.dart`;
+                  const routesPath = `apps/app_${app}/lib/src/routing/app_routes.dart`;
+                  const routesUrl = `https://github.com/Mark-Yun/minglit/blob/dev/${routesPath}`;
+                  const designUrl = designUrlFor(app, route);
                   // Sub-components nested under this route — rendered as
                   // indented rows immediately after the parent row.
                   const subs = subComponentsFor(app).filter((s) => s.parentRoute === route);
@@ -90,15 +117,13 @@ export default function RouteScreenIndex() {
                     <Fragment key={route}>
                       <tr className="hover:bg-[var(--color-surface)]">
                         <td className="px-4 py-2">
-                          {widget && screen.isWidget ? (
+                          {widget && hasDesignFor(app, route) && designUrl ? (
                             <a
-                              href={screen.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                              href={designUrl}
                               className="font-mono text-xs text-[var(--color-primary)] hover:underline"
-                              title={screen.filePath}
+                              title="Open design spec"
                             >
-                              {widget} ↗
+                              {widget}
                             </a>
                           ) : (
                             <span className="font-mono text-xs text-[var(--color-text-secondary)]">
@@ -112,21 +137,21 @@ export default function RouteScreenIndex() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="font-mono text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] hover:underline"
-                            title={`apps/app_${app}/lib/src/routing/app_routes.dart`}
+                            title={routesPath}
                           >
                             {route} ↗
                           </a>
                         </td>
                         <td className="px-4 py-2">
-                          {hasDesignFor(app, route) ? (
+                          {screen.isWidget ? (
                             <a
-                              href={designUrlFor(app, route) ?? '#'}
+                              href={screen.url}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-xs font-mono text-[var(--color-primary)] hover:underline"
-                              title="Open design spec in new tab"
+                              title={screen.filePath}
                             >
-                              spec ↗
+                              code ↗
                             </a>
                           ) : (
                             <span className="text-xs text-[var(--color-divider)]">—</span>
@@ -139,6 +164,9 @@ export default function RouteScreenIndex() {
                     </Fragment>
                   );
                 })}
+                {standaloneSpecsFor(app).map((spec) => (
+                  <StandaloneSpecRow key={spec.specBasename} spec={spec} />
+                ))}
               </tbody>
             </table>
           </div>

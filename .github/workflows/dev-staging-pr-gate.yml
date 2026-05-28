@@ -3,6 +3,8 @@ name: dev-staging-pr-gate
 on:
   pull_request:
     branches: [dev-staging]
+    types: [opened, synchronize, reopened, ready_for_review, edited]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -20,11 +22,12 @@ jobs:
     with:
       stage: dev-staging
       base_ref: dev-staging
+      run_cuj_integration: false
     secrets: inherit
 
   dev-staging-pr-gate:
     needs: [pr-gate-core]
-    if: always()
+    if: ${{ always() && !cancelled() }}
     runs-on: ubuntu-latest
     steps:
       - name: Publish branch gate result

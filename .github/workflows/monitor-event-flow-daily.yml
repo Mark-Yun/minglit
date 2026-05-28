@@ -1,12 +1,9 @@
 name: monitor-event-flow-daily
 
-# KST 07:00 매일 — SQL seed 초기화 후 긴 cascade 실행 (data 다양성 + 회귀 가드)
-# 1차 fixture 는 supabase/seed.dev.sql 로 박음 (Fix #1413 — EF 시딩 timeout 회피).
-# Patrol CUJ 테스트는 monitor-patrol-e2e.yml 이 별도 담당.
+# Legacy manual seed + long cascade. Scheduled execution moved to
+# monitor-event-flow-distributed.
 
 on:
-  schedule:
-    - cron: '0 22 * * *'    # UTC 22:00 = KST 07:00
   workflow_dispatch:
 
 concurrency:
@@ -72,14 +69,13 @@ jobs:
       - name: Run event-flow cascade (long)
         run: |
           # daily 는 데이터 다양성 ↑ 위해 ticks/users 늘림.
-          # Fix #2721: usersPerTick=20 + delayBetweenCallsMs=800 — 한 trace 안에서
-          # auth/EF 호출이 누적되어 Supabase per-trace rate limit 에 걸리지 않게 한다.
-          # hourly(1×20)보다 넓은 3 tick soak 은 유지한다.
+          # Fix #2545: usersPerTick=50 + delayBetweenCallsMs=400 — Supabase per-trace
+          # rate limit 회피하면서 데이터 다양성 ↑. 최대 (3×50 + partners) × 0.4 ≈ 1~2분.
           http_code=$(curl -s -o /tmp/sim_response.json -w "%{http_code}" -X POST \
             "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/event-flow-simulator" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
             -H "Content-Type: application/json" \
-            -d '{"ticks": 3, "usersPerTick": 20, "delayBetweenCallsMs": 800}' \
+            -d '{"ticks": 3, "usersPerTick": 50, "delayBetweenCallsMs": 400}' \
             --max-time 600)
           cat /tmp/sim_response.json
           if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then

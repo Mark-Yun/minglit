@@ -4,16 +4,24 @@
 // 상세: ./architecture.md (Stochastic Cascade 모델)
 
 import { createServiceClient } from "../_shared/supabase_client.ts";
-import { corsResponse, errorResponse, successResponse } from "../_shared/response_utils.ts";
+import {
+  corsResponse,
+  errorResponse,
+  successResponse,
+} from "../_shared/response_utils.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
 import { flush, log } from "../_shared/axiom_logger.ts";
-import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
+import {
+  type EFContext,
+  minglitEdgeFunction,
+} from "../_shared/edge_function.ts";
 
 import { runCascade } from "./core/cascade.ts";
 import { createPRNG } from "./core/types.ts";
 import { EFTransport } from "./core/transport.ts";
 import { buildSnapshot } from "./core/snapshot.ts";
 import { reportFailure, summarizeTrace } from "./core/reporter.ts";
+import { positiveInteger, sampleDeterministic } from "./core/sampling.ts";
 import {
   getPartnerEmail,
   getSimPartnerToken,
@@ -30,20 +38,34 @@ import "./action/index.ts";
 
 const FN = "event-flow-simulator";
 
-export const handler = async (req: Request, _ctx: EFContext): Promise<Response> => {
+export const handler = async (
+  req: Request,
+  _ctx: EFContext,
+): Promise<Response> => {
   if (req.method === "OPTIONS") return corsResponse();
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
   const simPassword = Deno.env.get("SIM_USER_PASSWORD");
   if (!supabaseUrl || !anonKey || !simPassword) {
-    return errorResponse("Missing required env vars (SUPABASE_URL / ANON_KEY / SIM_USER_PASSWORD)", 500);
+    return errorResponse(
+      "Missing required env vars (SUPABASE_URL / ANON_KEY / SIM_USER_PASSWORD)",
+      500,
+    );
   }
 
   const supabase = createServiceClient();
 
   // optional body params
-  let body: { ticks?: number; seed?: number; usersPerTick?: number; delayBetweenCallsMs?: number } = {};
+  let body: {
+    ticks?: number;
+    seed?: number;
+    usersPerTick?: number;
+    partnersPerTick?: number;
+    delayBetweenCallsMs?: number;
+    targetRef?: string;
+    targetSha?: string;
+  } = {};
   try {
     if (req.headers.get("content-type")?.includes("application/json")) {
       const parsed = await parseJsonBody(req);
@@ -54,35 +76,73 @@ export const handler = async (req: Request, _ctx: EFContext): Promise<Response> 
   }
 
   const runId = crypto.randomUUID();
-  const ticks = body.ticks ?? 1;
-  const seed = body.seed ?? Date.now();
-  const usersPerTick = body.usersPerTick ?? 10;
+  const ticks = positiveInteger(body.ticks, 1);
+  const seed = positiveInteger(body.seed, Date.now());
+  const usersPerTick = positiveInteger(body.usersPerTick, 10);
+  const partnersPerTick = positiveInteger(body.partnersPerTick, 2);
+  const targetRef = typeof body.targetRef === "string"
+    ? body.targetRef
+    : undefined;
+  const targetSha = typeof body.targetSha === "string"
+    ? body.targetSha
+    : undefined;
   // Fix #2545: 기본 300ms throttle — Supabase 의 per-trace rate limit 회피.
   // 0 으로 명시하면 disable (unit test / 빠른 dev 용).
-  const delayBetweenCallsMs = body.delayBetweenCallsMs ?? 300;
+  const delayBetweenCallsMs = positiveInteger(body.delayBetweenCallsMs, 300);
 
   log({
     function: FN,
     level: "info",
     message: "invoked",
-    metadata: { runId, ticks, seed, usersPerTick, delayBetweenCallsMs },
+    metadata: {
+      runId,
+      ticks,
+      seed,
+      usersPerTick,
+      partnersPerTick,
+      delayBetweenCallsMs,
+      targetRef,
+      targetSha,
+    },
   });
 
   try {
     // 1. 초기 snapshot 채움
     const initialSnapshot = await buildSnapshot(supabase);
+    const actorRng = createPRNG(seed).split();
 
     // 2. actor 발굴 + 토큰 prefetch
-    //    partner: 모든 [E2E] partner. user: seed user_ prefix 중 N명.
-    const partnerIds = [...new Set(initialSnapshot.parties.map((p) => p.partner_id))];
+    //    5분 distributed run 은 전체 seed cohort 중 일부만 랜덤 샘플링한다.
+    const snapshotPartnerIds = [
+      ...new Set(initialSnapshot.parties.map((p) => p.partner_id)),
+    ];
+    const { data: partnerRows } = await supabase
+      .from("partners")
+      .select("id")
+      .limit(200);
+    const allPartnerIds = [
+      ...new Set([
+        ...snapshotPartnerIds,
+        ...((partnerRows ?? []) as Array<{ id: string }>).map((p) => p.id),
+      ]),
+    ];
+    const partnerIds = sampleDeterministic(
+      allPartnerIds,
+      partnersPerTick,
+      actorRng.split(),
+    );
 
     const { data: userRows } = await supabase
       .from("user_profiles")
       .select("id, username")
       .like("username", "user\\_%")
       .not("username", "like", "partner\\_%")
-      .limit(usersPerTick);
-    const users = (userRows ?? []) as Array<{ id: string; username: string }>;
+      .limit(500);
+    const users = sampleDeterministic(
+      (userRows ?? []) as Array<{ id: string; username: string }>,
+      usersPerTick,
+      actorRng.split(),
+    );
 
     const tokenByActor = new Map<ActorId, string>();
     const actors: Actor[] = [];
@@ -91,12 +151,19 @@ export const handler = async (req: Request, _ctx: EFContext): Promise<Response> 
       try {
         const email = await getPartnerEmail(supabase, partnerId);
         if (!email) continue;
-        const token = await getSimPartnerToken(supabaseUrl, anonKey, email, simPassword);
+        const token = await getSimPartnerToken(
+          supabaseUrl,
+          anonKey,
+          email,
+          simPassword,
+        );
         tokenByActor.set(partnerId, token);
         actors.push({ id: partnerId, role: "partner" });
       } catch (e) {
         log({
-          function: FN, level: "warn", message: "partner_auth_skip",
+          function: FN,
+          level: "warn",
+          message: "partner_auth_skip",
           metadata: { partnerId, error: String(e) },
         });
       }
@@ -104,15 +171,24 @@ export const handler = async (req: Request, _ctx: EFContext): Promise<Response> 
 
     for (const user of users) {
       try {
-        const { data: authData } = await supabase.auth.admin.getUserById(user.id);
+        const { data: authData } = await supabase.auth.admin.getUserById(
+          user.id,
+        );
         const email = authData?.user?.email;
         if (!email) continue;
-        const token = await getSimUserToken(supabaseUrl, anonKey, email, simPassword);
+        const token = await getSimUserToken(
+          supabaseUrl,
+          anonKey,
+          email,
+          simPassword,
+        );
         tokenByActor.set(user.id, token);
         actors.push({ id: user.id, role: "user" });
       } catch (e) {
         log({
-          function: FN, level: "warn", message: "user_auth_skip",
+          function: FN,
+          level: "warn",
+          message: "user_auth_skip",
           metadata: { userId: user.id, error: String(e) },
         });
       }
@@ -138,6 +214,8 @@ export const handler = async (req: Request, _ctx: EFContext): Promise<Response> 
       runId,
       trace: cascade.trace,
       violations,
+      targetRef,
+      targetSha,
     });
 
     log({
@@ -147,6 +225,8 @@ export const handler = async (req: Request, _ctx: EFContext): Promise<Response> 
       metadata: {
         runId,
         actorsCount: actors.length,
+        usersPerTick,
+        partnersPerTick,
         traceTotal: summary.total,
         traceOk: summary.ok,
         traceFailed: summary.failed,

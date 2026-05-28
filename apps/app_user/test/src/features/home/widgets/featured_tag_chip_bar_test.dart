@@ -5,6 +5,7 @@
 // 2. 태그 목록 → #tagName 칩 렌더링
 // 3. 에러 상태 → SizedBox.shrink
 // 4. 칩 탭 → TagCoordinator.goToTagEventList() 호출
+import 'package:app_user/src/features/home/logic/selected_tags_provider.dart';
 import 'package:app_user/src/features/home/widgets/featured_tag_chip_bar.dart';
 import 'package:app_user/src/logic/tag_coordinator.dart';
 import 'package:flutter/material.dart';
@@ -119,6 +120,37 @@ void main() {
         expect(fakeCoordinator.calls, hasLength(1));
         expect(fakeCoordinator.calls.first.$1, 'tag-클럽');
         expect(fakeCoordinator.calls.first.$2, '클럽');
+      },
+    );
+
+    testWidgets(
+      '태그 2회 선택/해제 — selectedTags 상태와 체크 아이콘이 동기화된다',
+      (tester) async {
+        await tester.pumpWidget(
+          buildSubject(
+            stub: () => when(
+              () => mockTagRepo.getFeaturedTags(),
+            ).thenAnswer((_) async => [makeTag('클럽'), makeTag('요가')]),
+          ),
+        );
+        await tester.pump();
+
+        await tester.tap(find.text('#클럽'));
+        await tester.pump();
+        await tester.tap(find.text('#요가'));
+        await tester.pump();
+
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(FeaturedTagChipBar)),
+        );
+        expect(container.read(selectedTagsProvider), {'tag-클럽', 'tag-요가'});
+        expect(find.byIcon(Icons.check), findsNWidgets(2));
+
+        await tester.tap(find.text('#클럽'));
+        await tester.pump();
+
+        expect(container.read(selectedTagsProvider), {'tag-요가'});
+        expect(find.byIcon(Icons.check), findsOneWidget);
       },
     );
 

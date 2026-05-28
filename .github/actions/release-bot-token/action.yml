@@ -55,13 +55,17 @@ runs:
         MINGLIT_ENV_TOKEN: ${{ inputs['minglit-env-pat'] || steps.env-token.outputs.token }}
       run: |
         set -euo pipefail
+        cd "${GITHUB_WORKSPACE}"
+
         if [ -z "${MINGLIT_ENV_TOKEN:-}" ]; then
           echo "::warning::No minglit_env checkout token is available; release bot credentials will use fallback inputs if env-file is unavailable."
           exit 0
         fi
 
-        git -c "url.https://x-access-token:${MINGLIT_ENV_TOKEN}@github.com/.insteadOf=https://github.com/" \
-          submodule update --init --recursive minglit_env
+        if ! git -c "url.https://x-access-token:${MINGLIT_ENV_TOKEN}@github.com/.insteadOf=https://github.com/" \
+          submodule update --init --recursive minglit_env; then
+          echo "::warning::Failed to checkout minglit_env; falling back to action inputs."
+        fi
 
     - name: Load release bot credentials
       id: credentials
@@ -74,6 +78,7 @@ runs:
         DEFAULT_REPOSITORIES: ${{ inputs.repositories }}
       run: |
         set -euo pipefail
+        cd "${GITHUB_WORKSPACE}"
 
         if [ -f "${ENV_FILE}" ]; then
           set -a

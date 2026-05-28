@@ -13,6 +13,18 @@
 
 SHA, PR number, run id, version 은 label 로 만들지 않는다. Label 은 repo-wide category 로만 유지한다.
 
+## True Evidence Policy
+
+Release gate 는 "실패 기록이 없음" 을 pass 로 해석하지 않는다.
+
+| 상태 | 의미 | gate 동작 |
+|------|------|-----------|
+| `success` evidence 있음 | required status/run history 가 명시적으로 통과 | pass 후보 |
+| `failure` evidence 있음 | monitor/AI/workflow 가 blocker 를 발견 | fail/block |
+| evidence 없음 | 아직 검증되지 않았거나 run history 가 부족 | unknown, pass 금지 |
+
+따라서 `dev-rc-cut-pass` 는 `dev-rc-cut-gate` 가 candidate age, required run history, required signal success, failure context 부재를 모두 확인한 뒤에만 쓴다. GitHub Issue 가 열려 있지 않거나 label 이 없다는 사실은 판정에 사용하지 않는다.
+
 ## Status Write API
 
 Workflow 와 AI agent 는 commit status context 를 직접 하드코딩하지 않고 stage별 status write workflow 를 사용한다.
@@ -73,7 +85,7 @@ RC soak 는 dev soak 와 signal set 이 달라질 수 있으므로 별도 entry 
 
 | Context | 작성자 | 실패 시점 | 성공 시점 | 의미 |
 |---------|--------|-----------|-----------|------|
-| `dev-soak/backend-simulator` | `set-dev-soak-status` via `monitor-event-flow-*` / `dev-rc-cut-gate` | event-flow simulator 실패 즉시 `failure` | `dev-rc-cut-gate` 가 24h run history 를 확인한 뒤 `success` | backend/event-flow soak signal |
+| `dev-soak/backend-simulator` | `event-flow-simulator` reporter / `dev-rc-cut-gate` | event-flow simulator 실패 즉시 `failure` | `dev-rc-cut-gate` 가 24h soak + cron install run 을 확인한 뒤 `success` | backend/event-flow soak signal |
 | `dev-soak/real-device` | `set-dev-soak-status` via real-device workflow / `dev-rc-cut-gate` | Firebase Test Lab 또는 실디바이스 smoke 실패 즉시 `failure` | `dev-rc-cut-gate` 가 required run/signal 을 확인한 뒤 `success` | 실제 디바이스 안정성 signal |
 | `dev-soak/app-ai-review` | `set-dev-soak-status` via AI agent / `dev-rc-cut-gate` | AI/human 앱 소킹 중 blocker 발견 즉시 `failure` | `dev-rc-cut-gate` 가 AI review pass signal 을 확인한 뒤 `success` | screenshot/UX/manual-ish app soak signal |
 | `dev-rc-cut-pass` | `dev-rc-cut-gate` | 작성하지 않음 | 모든 dev soak 조건 통과 시 `success` | RC cut source marker |
@@ -108,12 +120,12 @@ Issue label 은 분류용이다. Gate 판정에는 사용하지 않는다.
 
 ## Run History Verification
 
-`dev-rc-cut-gate` 는 GitHub Actions run history 로 "soak 이 실제로 돌았는지" 검증한다.
+`dev-rc-cut-gate` 는 GitHub Actions run history 로 "candidate SHA 에 dev cron 이 설치됐는지" 검증하고, commit status 로 simulator failure 를 확인한다.
 
 | Signal | 최소 조건 |
 |--------|-----------|
-| `monitor-event-flow-hourly` | `candidate_since` 이후 `success` run >= 20 |
-| `monitor-event-flow-daily` | `candidate_since` 이후 `success` run >= 1 |
+| `deploy-dev-event-flow-cron` | candidate SHA 에서 `success` run >= 1 |
+| legacy `monitor-event-flow-hourly/daily` | 수동 smoke 전용. gate run requirement 에서 제외 |
 | real-device smoke | candidate 기준 required run/signal success >= 1 (workflow 이름 TBD) |
 | app AI review | AI agent 가 candidate 기준 pass signal 제공 (workflow/status 입력 방식 TBD) |
 
@@ -121,13 +133,13 @@ Issue label 은 분류용이다. Gate 판정에는 사용하지 않는다.
 
 ```bash
 gh run list \
-  --workflow monitor-event-flow-hourly.yml \
+  --workflow deploy-dev-event-flow-cron.yml \
   --branch dev \
   --created ">=2026-05-24T00:00:00Z" \
   --json databaseId,status,conclusion,createdAt,headSha
 ```
 
-Scheduled workflow 의 `headSha` 는 실행 시점의 `dev` HEAD 다. 따라서 run 의 `headSha` 가 candidate 와 다르면 latest candidate 가 바뀐 것으로 보고 그 run 은 현재 candidate 의 soak 증거로 쓰지 않는다.
+`deploy-dev-event-flow-cron` 은 `push: dev` 에서만 실행되어 Actions `headBranch` 가 `dev` 로 기록된다. workflow 는 candidate SHA 를 body 의 `targetSha` 로 cron 에 설치한 뒤 즉시 1회 simulator tick 을 실행한다. 이후 `event-flow-simulator` 실패 시 해당 SHA 에 `dev-soak/backend-simulator` failure status 를 남긴다.
 
 ## Failure Recording
 
@@ -155,7 +167,7 @@ Issue body 에는 machine-readable metadata 를 남긴다. 단, gate 판정은 �
 <!-- minglit-release-signal
 stage: dev-soak
 signal: backend-simulator
-workflow: monitor-event-flow-hourly
+workflow: deploy-dev-event-flow-cron
 branch: dev
 commit: abc123...
 run_id: 263...
@@ -172,12 +184,13 @@ blocks_rc_cut: true
 
 1. `candidate_sha = origin/dev HEAD`
 2. candidate age 가 24h 이상인지 확인
-3. required monitor run history 가 candidate 기준으로 충분한지 확인
-4. candidate 의 최신 commit status 중 아래 context 가 `failure` 인지 확인:
+3. required workflow run history 로 candidate SHA 에 dev cron 이 설치됐는지 확인
+4. candidate 의 required signal success evidence 가 존재하는지 확인
+5. candidate 의 최신 commit status 중 아래 context 가 `failure` 인지 확인:
    - `dev-soak/backend-simulator`
    - `dev-soak/real-device`
    - `dev-soak/app-ai-review`
-5. 모두 통과하면 각 `dev-soak/*` status 를 `success` 로 찍고 `dev-rc-cut-pass` 를 `success` 로 찍는다
+6. 모두 통과하면 각 `dev-soak/*` status 를 `success` 로 찍고 `dev-rc-cut-pass` 를 `success` 로 찍는다
 
 실패 또는 미충족 시 `dev-rc-cut-pass` 는 쓰지 않는다.
 

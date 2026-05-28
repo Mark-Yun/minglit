@@ -1,0 +1,336 @@
+import { assert, assertEquals } from "@std/assert";
+import { reportFailure } from "./reporter.ts";
+import type { Trace } from "./trace.ts";
+
+const TARGET_SHA = "0123456789abcdef0123456789abcdef01234567";
+
+function failedTrace(): Trace {
+  return [{
+    tick: 1,
+    actorId: "user-1",
+    action: {
+      type: "user_apply",
+      actorId: "user-1",
+      payload: {},
+      ef: "user-create-order",
+    },
+    status: 500,
+    ok: false,
+    error: "boom",
+  }];
+}
+
+function oversizedFailedTrace(): Trace {
+  return [{
+    tick: 1,
+    actorId: "user-1",
+    action: {
+      type: "user_apply",
+      actorId: "user-1",
+      payload: {},
+      ef: "user-create-order",
+    },
+    status: 500,
+    ok: false,
+    error: "한".repeat(70_000),
+  }];
+}
+
+async function withMockedFetch(
+  handler: (input: RequestInfo | URL, init?: RequestInit) => Response,
+  fn: () => Promise<void>,
+) {
+  const originalFetch = globalThis.fetch;
+  const originalToken = Deno.env.get("GITHUB_ACCESS_TOKEN");
+  globalThis.fetch =
+    ((input: RequestInfo | URL, init?: RequestInit) =>
+      Promise.resolve(handler(input, init))) as typeof fetch;
+  Deno.env.set("GITHUB_ACCESS_TOKEN", "test-token");
+  try {
+    await fn();
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (originalToken === undefined) {
+      Deno.env.delete("GITHUB_ACCESS_TOKEN");
+    } else {
+      Deno.env.set("GITHUB_ACCESS_TOKEN", originalToken);
+    }
+  }
+}
+
+Deno.test("reportFailure writes failure status even when issue creation fails", async () => {
+  const calls: Array<{ url: string; body: unknown }> = [];
+  await withMockedFetch((input, init) => {
+    const url = String(input);
+    calls.push({
+      url,
+      body: init?.body ? JSON.parse(String(init.body)) : null,
+    });
+    if (url.endsWith("/issues")) {
+      return new Response("issue api down", { status: 500 });
+    }
+    return new Response("{}", { status: 201 });
+  }, async () => {
+    const issueUrl = await reportFailure({
+      runId: "run-1",
+      trace: failedTrace(),
+      violations: [],
+      targetRef: "dev",
+      targetSha: TARGET_SHA,
+    });
+
+    assertEquals(issueUrl, null);
+    assertEquals(calls.length, 2);
+    assert(calls[1].url.endsWith(`/statuses/${TARGET_SHA}`));
+    assertEquals((calls[1].body as { state: string }).state, "failure");
+    assertEquals(
+      (calls[1].body as { context: string }).context,
+      "dev-soak/backend-simulator",
+    );
+  });
+});
+
+Deno.test("reportFailure truncates oversized trace payload in issue body", async () => {
+  const calls: Array<{ url: string; body: unknown }> = [];
+  await withMockedFetch((input, init) => {
+    const url = String(input);
+    calls.push({
+      url,
+      body: init?.body ? JSON.parse(String(init.body)) : null,
+    });
+    return Response.json(
+      { html_url: "https://github.com/Mark-Yun/minglit/issues/10000" },
+      { status: 201 },
+    );
+  }, async () => {
+    const issueUrl = await reportFailure({
+      runId: "run-oversized",
+      trace: oversizedFailedTrace(),
+      violations: [],
+    });
+
+    assertEquals(issueUrl, "https://github.com/Mark-Yun/minglit/issues/10000");
+    assertEquals(calls.length, 1);
+    const issueBody = (calls[0].body as { body: string }).body;
+    assert(issueBody.includes("...[truncated]"));
+  });
+});
+
+Deno.test("reportFailure returns null when issue request throws and still writes status", async () => {
+  const calls: Array<{ url: string; body: unknown }> = [];
+  await withMockedFetch((input, init) => {
+    const url = String(input);
+    calls.push({
+      url,
+      body: init?.body ? JSON.parse(String(init.body)) : null,
+    });
+    if (url.endsWith("/issues")) {
+      throw new Error("network down");
+    }
+    return new Response("{}", { status: 201 });
+  }, async () => {
+    const issueUrl = await reportFailure({
+      runId: "run-throw",
+      trace: failedTrace(),
+      violations: [],
+      targetRef: "dev",
+      targetSha: TARGET_SHA,
+    });
+
+    assertEquals(issueUrl, null);
+    assertEquals(calls.length, 2);
+    assert(calls[1].url.endsWith(`/statuses/${TARGET_SHA}`));
+  });
+});
+
+Deno.test("reportFailure swallows status API non-ok response and keeps issue URL", async () => {
+  const calls: Array<{ url: string; body: unknown }> = [];
+  const htmlUrl = "https://github.com/Mark-Yun/minglit/issues/10001";
+  await withMockedFetch((input, init) => {
+    const url = String(input);
+    calls.push({
+      url,
+      body: init?.body ? JSON.parse(String(init.body)) : null,
+    });
+    if (url.endsWith("/issues")) {
+      return Response.json({ html_url: htmlUrl }, { status: 201 });
+    }
+    return new Response("status write denied", { status: 403 });
+  }, async () => {
+    const issueUrl = await reportFailure({
+      runId: "run-status-non-ok",
+      trace: failedTrace(),
+      violations: [],
+      targetRef: "dev",
+      targetSha: TARGET_SHA,
+    });
+
+    assertEquals(issueUrl, htmlUrl);
+    assertEquals(calls.length, 2);
+    assert(calls[1].url.endsWith(`/statuses/${TARGET_SHA}`));
+  });
+});
+
+Deno.test("reportFailure swallows status API exception and keeps issue URL", async () => {
+  const calls: Array<{ url: string; body: unknown }> = [];
+  const htmlUrl = "https://github.com/Mark-Yun/minglit/issues/10002";
+  await withMockedFetch((input, init) => {
+    const url = String(input);
+    calls.push({
+      url,
+      body: init?.body ? JSON.parse(String(init.body)) : null,
+    });
+    if (url.endsWith("/issues")) {
+      return Response.json({ html_url: htmlUrl }, { status: 201 });
+    }
+    throw new Error("status write exploded");
+  }, async () => {
+    const issueUrl = await reportFailure({
+      runId: "run-status-throw",
+      trace: failedTrace(),
+      violations: [],
+      targetRef: "rc/2026-05",
+      targetSha: TARGET_SHA,
+    });
+
+    assertEquals(issueUrl, htmlUrl);
+    assertEquals(calls.length, 2);
+    assert(calls[1].url.endsWith(`/statuses/${TARGET_SHA}`));
+  });
+});
+
+Deno.test("reportFailure includes issue URL in failure status when issue creation succeeds", async () => {
+  const calls: Array<{ url: string; body: unknown }> = [];
+  const htmlUrl = "https://github.com/Mark-Yun/minglit/issues/9999";
+  await withMockedFetch((input, init) => {
+    const url = String(input);
+    calls.push({
+      url,
+      body: init?.body ? JSON.parse(String(init.body)) : null,
+    });
+    if (url.endsWith("/issues")) {
+      return Response.json({ html_url: htmlUrl }, { status: 201 });
+    }
+    return new Response("{}", { status: 201 });
+  }, async () => {
+    const issueUrl = await reportFailure({
+      runId: "run-2",
+      trace: failedTrace(),
+      violations: [],
+      targetRef: "dev",
+      targetSha: TARGET_SHA,
+    });
+
+    assertEquals(issueUrl, htmlUrl);
+    assertEquals(calls.length, 2);
+    assertEquals((calls[1].body as { target_url: string }).target_url, htmlUrl);
+  });
+});
+
+Deno.test("reportFailure still writes status when issue request throws", async () => {
+  const calls: Array<{ url: string; body: unknown }> = [];
+  await withMockedFetch((input, init) => {
+    const url = String(input);
+    calls.push({
+      url,
+      body: init?.body ? JSON.parse(String(init.body)) : null,
+    });
+    if (calls.length === 1) {
+      throw new Error("network down");
+    }
+    return new Response("{}", { status: 201 });
+  }, async () => {
+    const issueUrl = await reportFailure({
+      runId: "run-3",
+      trace: failedTrace(),
+      violations: [],
+      targetRef: "dev",
+      targetSha: TARGET_SHA,
+    });
+
+    assertEquals(issueUrl, null);
+    assertEquals(calls.length, 2);
+    assert(calls[1].url.endsWith(`/statuses/${TARGET_SHA}`));
+  });
+});
+
+Deno.test("reportFailure writes rc context and tolerates status API failure", async () => {
+  const calls: Array<{ url: string; body: unknown }> = [];
+  await withMockedFetch((input, init) => {
+    const url = String(input);
+    calls.push({
+      url,
+      body: init?.body ? JSON.parse(String(init.body)) : null,
+    });
+    if (url.endsWith("/issues")) {
+      return Response.json({ html_url: "https://example.test/issue" });
+    }
+    return new Response("status api down", { status: 500 });
+  }, async () => {
+    const issueUrl = await reportFailure({
+      runId: "run-4",
+      trace: failedTrace(),
+      violations: [],
+      targetRef: "rc/2026-W22",
+      targetSha: TARGET_SHA,
+    });
+
+    assertEquals(issueUrl, "https://example.test/issue");
+    assertEquals(
+      (calls[1].body as { context: string }).context,
+      "rc-soak/backend-simulator",
+    );
+  });
+});
+
+Deno.test("reportFailure skips status write without a valid targetSha", async () => {
+  const calls: Array<{ url: string; body: unknown }> = [];
+  await withMockedFetch((input, init) => {
+    const url = String(input);
+    calls.push({
+      url,
+      body: init?.body ? JSON.parse(String(init.body)) : null,
+    });
+    return Response.json({ html_url: "https://example.test/issue" });
+  }, async () => {
+    await reportFailure({
+      runId: "run-5",
+      trace: failedTrace(),
+      violations: [],
+      targetRef: "dev",
+      targetSha: "short-sha",
+    });
+
+    assertEquals(calls.length, 1);
+    assert(calls[0].url.endsWith("/issues"));
+  });
+});
+
+Deno.test("reportFailure truncates oversized trace body", async () => {
+  const calls: Array<{ url: string; body: unknown }> = [];
+  const trace = failedTrace();
+  trace[0].error = "x".repeat(70_000);
+  await withMockedFetch((input, init) => {
+    const url = String(input);
+    calls.push({
+      url,
+      body: init?.body ? JSON.parse(String(init.body)) : null,
+    });
+    if (url.endsWith("/issues")) {
+      return Response.json({ html_url: "https://example.test/issue" });
+    }
+    return new Response("{}", { status: 201 });
+  }, async () => {
+    await reportFailure({
+      runId: "run-6",
+      trace,
+      violations: [],
+      targetRef: "dev",
+      targetSha: TARGET_SHA,
+    });
+
+    assert(
+      (calls[0].body as { body: string }).body.includes("...[truncated]"),
+    );
+  });
+});

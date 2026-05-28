@@ -114,11 +114,15 @@
 |-----|-------------|----------|
 | `GITHUB_ACCESS_TOKEN` | GitHub API (higher rate limit) | No |
 
-### backend-simulator
+### event-flow-simulator
 
 | Key | Description | Required |
 |-----|-------------|----------|
-| `ENVIRONMENT` | Dev guard (must be development) | Yes |
+| `ENVIRONMENT` | Dev guard (must be development/dev/local) | Yes |
+| `GITHUB_ACCESS_TOKEN` | GitHub issue/status reporting for simulator failures | Yes |
+| `SUPABASE_ANON_KEY` | actor sign-in for simulated user/partner JWTs | Yes |
+| `SUPABASE_SERVICE_ROLE_KEY` | simulator service client | Yes |
+| `SIM_USER_PASSWORD` | dev seed actor password | Yes |
 
 ### ai-embed
 
@@ -155,8 +159,11 @@
 | `SUPABASE_ACCESS_TOKEN` | Supabase CLI auth | Yes |
 | `SUPABASE_DEV_DB_PASSWORD` | Dev DB password | Yes |
 | `SUPABASE_DEV_PROJECT_ID` | Dev project ref | Yes |
+| `SUPABASE_DEV_URL` | Dev Supabase URL | Yes |
 | `SUPABASE_DEV_PUBLISHABLE_KEY` | Dev publishable key | Yes |
 | `SUPABASE_DEV_SECRET_KEY` | Dev service role key | Yes |
+| `SUPABASE_RC_URL` | RC Supabase URL for manual simulator runs | No |
+| `SUPABASE_RC_SECRET_KEY` | RC service role key for manual simulator runs | No |
 | `SUPABASE_MAIN_DB_PASSWORD` | Main DB password | Yes |
 | `SUPABASE_MAIN_PROJECT_ID` | Main project ref | Yes |
 | `SUPABASE_MAIN_PUBLISHABLE_KEY` | Main publishable key | Yes |
@@ -166,7 +173,7 @@
 | `STATSIG_SERVER_KEY` | Statsig server | No |
 | `AXIOM_API_TOKEN` | Axiom logging | No |
 | `CODECOV_TOKEN` | Codecov upload | No |
-| `SIM_USER_PASSWORD` | Dev simulator user password (backend-simulator EF 전용) | No |
+| `SIM_USER_PASSWORD` | Dev simulator user password (`event-flow-simulator`) | No |
 
 ## Vault
 

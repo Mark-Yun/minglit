@@ -41,8 +41,7 @@ jobs:
       min_soak_hours: ${{ inputs.min_soak_hours || '24' }}
       required_runs_json: >-
         [
-          {"workflow":"monitor-event-flow-hourly.yml","branch":"dev-staging","min_success":20},
-          {"workflow":"monitor-event-flow-daily.yml","branch":"dev-staging","min_success":1}
+          {"workflow":"deploy-dev-event-flow-cron.yml","branch":"dev","min_success":1,"run_limit":20,"match_head_sha":true}
         ]
       failure_contexts: |
         dev-soak/backend-simulator
