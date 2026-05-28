@@ -39,14 +39,19 @@ class _ListTabState extends ConsumerState<_ListTab> {
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
-      ref.read(settlementListControllerProvider.notifier).loadMore();
+      unawaited(ref.read(settlementListControllerProvider.notifier).loadMore());
     }
   }
 
   List<_ListItem> _buildViewList(List<SettlementItemDetail> items) {
     final result = <_ListItem>[];
+    final seenIds = <String>{};
     String? lastMonth;
     for (final item in items) {
+      // Guard against duplicated rows from transient backend retries.
+      if (!seenIds.add(item.id)) {
+        continue;
+      }
       final dt = item.createdAt;
       final label = '${dt.year}년 ${dt.month}월';
       if (label != lastMonth) {
