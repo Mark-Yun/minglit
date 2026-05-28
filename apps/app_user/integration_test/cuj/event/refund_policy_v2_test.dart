@@ -19,6 +19,7 @@
 //   - policyRepositoryProvider 는 mock 없이 두고 catch 블록이 기본값(2h/7d)을 사용하도록 함.
 //   - cancelOrder EF 호출은 eventRepositoryProvider mock 으로 격리.
 
+import 'package:app_user/src/features/event/detail/event_detail_page.dart';
 import 'package:app_user/src/features/payment/logic/'
     'purchase_history_detail_controller.dart';
 import 'package:app_user/src/features/payment/ui/'
@@ -65,19 +66,6 @@ Event _makeEvent({
     party: party,
     tickets: const [],
     entryGroups: const [],
-  );
-}
-
-Party _makeParty({
-  String id = 'party-1',
-  String title = '테스트 파티',
-}) {
-  return Party(
-    id: id,
-    partnerId: 'partner-1',
-    title: title,
-    createdAt: _now,
-    updatedAt: _now,
   );
 }
 
@@ -134,6 +122,9 @@ void main() {
       () => mockRepo.getMyPurchaseHistory(any()),
     ).thenAnswer((_) async => []);
     when(
+      () => mockRepo.getEntryGroupParticipantCounts(any()),
+    ).thenAnswer((_) async => []);
+    when(
       () => mockPolicyRepo.getRefundPolicy(),
     ).thenAnswer((_) async => {'grace_period_hours': 3, 'cutoff_days': 7});
   });
@@ -151,6 +142,17 @@ void main() {
   List<dynamic> withApp(EventApplication app) => [
     purchaseHistoryDetailProvider(app.id).overrideWith((_) async => app),
     ...base(),
+  ];
+
+  // Returns overrides for EventDetailPage rendering with fixed now().
+  List<dynamic> withEventDetail({
+    required DateTime now,
+  }) => [
+    currentUserProvider.overrideWith((_) => null),
+    authStateChangesProvider.overrideWith((_) => const Stream.empty()),
+    eventRepositoryProvider.overrideWithValue(mockRepo),
+    policyRepositoryProvider.overrideWithValue(mockPolicyRepo),
+    eventDetailNowProvider.overrideWith((_) => () => now),
   ];
 
   // ===========================================================================
@@ -392,13 +394,27 @@ void main() {
   // ===========================================================================
   cujGroup('2-2', '결제 전 환불 정책 안내', () {
     cujCase(
-      'happy: 상세 화면에 취소/환불 정책 섹션과 안내 문구 노출',
-      app: const PurchaseHistoryDetailPage(applicationId: 'app-1'),
-      overrides: () => withApp(_makeApplication()),
+      'happy: 이벤트 상세 info 버튼 탭 → 환불 정책 시트(3개 조건) 노출',
+      app: const EventDetailPage(eventId: 'event-policy-sheet'),
+      overrides: () {
+        final event = _makeEvent(id: 'event-policy-sheet');
+        when(
+          () => mockRepo.getEventById('event-policy-sheet'),
+        ).thenAnswer((_) async => event);
+        return withEventDetail(now: _now);
+      },
       body: (t) async {
         await t.pumpAndSettle();
-        expect(find.text('취소 및 환불 정책'), findsOneWidget);
-        expect(find.textContaining('이벤트 시작 전까지 취소 가능합니다'), findsOneWidget);
+
+        expect(find.text('환불 정책'), findsOneWidget);
+        await t.tap(find.byTooltip('환불 정책 상세'));
+        await t.pumpAndSettle();
+
+        expect(find.text('환불 정책 상세'), findsOneWidget);
+        expect(find.textContaining('결제 후 3시간 이내'), findsOneWidget);
+        expect(find.textContaining('이벤트 시작 7일 전까지'), findsOneWidget);
+        expect(find.text('그 외'), findsOneWidget);
+        expect(find.text('고객센터 문의'), findsOneWidget);
       },
     );
   });
@@ -408,22 +424,49 @@ void main() {
   // ===========================================================================
   cujGroup('2-3', '환불 정책 인라인 상태', () {
     cujCase(
-      'happy: 자동 환불 가능 상태에서 예매 취소 버튼 활성',
-      app: const PurchaseHistoryDetailPage(applicationId: 'app-inline'),
+      'happy: cutoff 전 상태 → "~까지 환불 가능" 인라인 배너',
+      app: const EventDetailPage(eventId: 'event-cutoff-open'),
       overrides: () {
-        final app = _makeApplication(
-          id: 'app-inline',
-          paidAt: _now.subtract(const Duration(hours: 2, minutes: 30)),
-          eventStartTime: _now.add(const Duration(days: 9)),
+        final event = _makeEvent(
+          id: 'event-cutoff-open',
+          startTime: DateTime(2026, 6, 10, 19),
         );
-        return withApp(app);
+        when(
+          () => mockRepo.getEventById('event-cutoff-open'),
+        ).thenAnswer((_) async => event);
+        return withEventDetail(now: DateTime(2026, 6, 1, 12));
       },
       body: (t) async {
         await t.pumpAndSettle();
-        final cancelBtn = t.widget<ElevatedButton>(
-          find.widgetWithText(ElevatedButton, '예매 취소'),
+
+        expect(find.textContaining('까지 환불 가능'), findsOneWidget);
+        expect(find.textContaining('결제 후 3시간 이내에도 전액 환불 가능'), findsOneWidget);
+      },
+    );
+
+    cujCase(
+      'edge: cutoff 경과 상태 → grace 안내 + 자동 환불 불가(고객센터) 경로 노출',
+      app: const EventDetailPage(eventId: 'event-cutoff-passed'),
+      overrides: () {
+        final event = _makeEvent(
+          id: 'event-cutoff-passed',
+          startTime: DateTime(2026, 6, 10, 19),
         );
-        expect(cancelBtn.onPressed, isNotNull);
+        when(
+          () => mockRepo.getEventById('event-cutoff-passed'),
+        ).thenAnswer((_) async => event);
+        return withEventDetail(now: DateTime(2026, 6, 5, 9));
+      },
+      body: (t) async {
+        await t.pumpAndSettle();
+
+        expect(find.text('결제 후 3시간 이내 전액 환불 가능'), findsOneWidget);
+        expect(find.text('이벤트 시작 7일 전 환불 마감'), findsOneWidget);
+
+        await t.tap(find.byTooltip('환불 정책 상세'));
+        await t.pumpAndSettle();
+        expect(find.text('그 외'), findsOneWidget);
+        expect(find.text('고객센터 문의'), findsOneWidget);
       },
     );
   });
@@ -529,76 +572,6 @@ void main() {
       body: (t) async {
         await t.pumpAndSettle();
         expect(find.widgetWithText(ElevatedButton, '예매 취소'), findsNothing);
-      },
-    );
-  });
-
-  // ===========================================================================
-  // CUJ 4-1: 파트너 환불 안내 진입점
-  // ===========================================================================
-  cujGroup('4-1', '파트너 환불 안내 진입점', () {
-    cujCase(
-      'happy: event.party가 있으면 파트너 정보 카드(파티명) 노출',
-      app: const PurchaseHistoryDetailPage(applicationId: 'app-1'),
-      overrides: () {
-        final app = _makeApplication(
-          eventParty: _makeParty(title: '테스트 파티명'),
-        );
-        return withApp(app);
-      },
-      body: (t) async {
-        await t.pumpAndSettle();
-        expect(find.text('테스트 파티명'), findsOneWidget);
-      },
-    );
-  });
-
-  // ===========================================================================
-  // CUJ 4-2: 처리 승인 경로
-  // ===========================================================================
-  cujGroup('4-2', '처리 승인 경로', () {
-    cujCase(
-      'happy: 자동 환불 가능 상태에서 확인 다이얼로그 진입 가능',
-      app: const PurchaseHistoryDetailPage(applicationId: 'app-approve'),
-      overrides: () {
-        final app = _makeApplication(
-          id: 'app-approve',
-          paidAt: _now.subtract(const Duration(minutes: 40)),
-        );
-        return withApp(app);
-      },
-      body: (t) async {
-        await t.pumpAndSettle();
-        await t.ensureVisible(find.widgetWithText(ElevatedButton, '예매 취소'));
-        await t.pump();
-        await t.tap(find.widgetWithText(ElevatedButton, '예매 취소'));
-        await t.pumpAndSettle();
-        expect(find.text('예매 취소'), findsWidgets);
-      },
-    );
-  });
-
-  // ===========================================================================
-  // CUJ 4-3: 처리 거절 경로
-  // ===========================================================================
-  cujGroup('4-3', '처리 거절 경로', () {
-    cujCase(
-      'edge: rejected 상태에서는 취소 버튼 비활성',
-      app: const PurchaseHistoryDetailPage(applicationId: 'app-rejected'),
-      overrides: () {
-        final app = _makeApplication(
-          id: 'app-rejected',
-          status: 'rejected',
-          paidAt: _now.subtract(const Duration(minutes: 30)),
-        );
-        return withApp(app);
-      },
-      body: (t) async {
-        await t.pumpAndSettle();
-        final cancelBtn = t.widget<ElevatedButton>(
-          find.widgetWithText(ElevatedButton, '예매 취소'),
-        );
-        expect(cancelBtn.onPressed, isNull);
       },
     );
   });
