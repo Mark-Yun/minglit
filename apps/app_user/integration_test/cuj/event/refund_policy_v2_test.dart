@@ -152,7 +152,10 @@ void main() {
     authStateChangesProvider.overrideWith((_) => const Stream.empty()),
     eventRepositoryProvider.overrideWithValue(mockRepo),
     policyRepositoryProvider.overrideWithValue(mockPolicyRepo),
-    eventDetailNowProvider.overrideWith((_) => () => now),
+    eventDetailNowProvider.overrideWith(
+      (_) =>
+          () => now,
+    ),
   ];
 
   // ===========================================================================
