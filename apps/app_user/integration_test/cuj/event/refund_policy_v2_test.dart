@@ -51,6 +51,7 @@ Event _makeEvent({
   String id = 'event-1',
   String status = 'scheduled',
   DateTime? startTime,
+  Party? party,
 }) {
   return Event(
     id: id,
@@ -61,8 +62,22 @@ Event _makeEvent({
     createdAt: _now,
     updatedAt: _now,
     status: status,
+    party: party,
     tickets: const [],
     entryGroups: const [],
+  );
+}
+
+Party _makeParty({
+  String id = 'party-1',
+  String title = '테스트 파티',
+}) {
+  return Party(
+    id: id,
+    partnerId: 'partner-1',
+    title: title,
+    createdAt: _now,
+    updatedAt: _now,
   );
 }
 
@@ -74,6 +89,7 @@ EventApplication _makeApplication({
   String refundStatus = 'none',
   DateTime? paidAt,
   DateTime? eventStartTime,
+  Party? eventParty,
 }) {
   return EventApplication(
     id: id,
@@ -87,7 +103,7 @@ EventApplication _makeApplication({
     paidAt: paidAt ?? _now.subtract(const Duration(minutes: 30)),
     createdAt: _now,
     updatedAt: _now,
-    event: _makeEvent(startTime: eventStartTime),
+    event: _makeEvent(startTime: eventStartTime, party: eventParty),
     ticket: Ticket(
       id: 'ticket-1',
       name: '일반 입장권',
@@ -351,6 +367,10 @@ void main() {
 
         expect(find.textContaining('원이 환불됩니다'), findsOneWidget);
 
+        final messenger = ScaffoldMessenger.maybeOf(
+          t.element(find.byType(PurchaseHistoryDetailPage)),
+        );
+
         await t.tap(find.text('취소하기'));
         await t.pumpAndSettle();
 
@@ -360,6 +380,9 @@ void main() {
             reason: any(named: 'reason'),
           ),
         ).called(1);
+
+        messenger?.clearSnackBars();
+        await t.pumpAndSettle();
       },
     );
   });
@@ -515,12 +538,17 @@ void main() {
   // ===========================================================================
   cujGroup('4-1', '파트너 환불 안내 진입점', () {
     cujCase(
-      'happy: 상세 화면에 파트너 정보 카드 노출',
+      'happy: event.party가 있으면 파트너 정보 카드(파티명) 노출',
       app: const PurchaseHistoryDetailPage(applicationId: 'app-1'),
-      overrides: () => withApp(_makeApplication()),
+      overrides: () {
+        final app = _makeApplication(
+          eventParty: _makeParty(title: '테스트 파티명'),
+        );
+        return withApp(app);
+      },
       body: (t) async {
         await t.pumpAndSettle();
-        expect(find.text('파트너 정보'), findsOneWidget);
+        expect(find.text('테스트 파티명'), findsOneWidget);
       },
     );
   });
