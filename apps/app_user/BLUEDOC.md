@@ -48,4 +48,4 @@ Minglit 의 **일반 사용자 Flutter 앱**. 파티 탐색·참여 신청·결�
 - [README.md](./README.md) — 빌드·실행 / [integration_test](./integration_test/BLUEDOC.md) — 통합 테스트
 
 ---
-_Reviewed: 2026-05-27 23:34_
+_Reviewed: 2026-05-29 07:35_
