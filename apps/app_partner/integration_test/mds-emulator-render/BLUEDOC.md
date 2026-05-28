@@ -29,6 +29,7 @@ flutter drive \
 | `party_list_page` | default · empty · loading · error · help |
 | `partner_login_page` | default-ios · default-android · loading · auth-error |
 | `recurrence_management_screen` | active · paused · cancelled · no-rule · action-loading · loading · active-dark |
+| `settlement_page` | loading · empty · error |
 | `verification_manage_page` | loading · active-empty · active-with-items · archived-with-items · dark |
 
 ## 구조
@@ -69,6 +70,9 @@ mds-emulator-render/
 ├── recurrence_management_screen/
 │   ├── builder.dart
 │   └── recurrence_management_screen_test.dart
+├── settlement_page/
+│   ├── builder.dart
+│   └── settlement_page_test.dart
 └── verification_manage_page/
     ├── builder.dart
     └── verification_manage_page_test.dart
@@ -79,4 +83,4 @@ mds-emulator-render/
 - [app_user mds-emulator-render](../../../app_user/integration_test/mds-emulator-render/BLUEDOC.md)
 - [architecture.md](../../../app_user/integration_test/mds-emulator-render/architecture.md)
 
-_Reviewed: 2026-05-28 19:08_
+_Reviewed: 2026-05-28 23:17_

@@ -15,6 +15,7 @@ import 'party_list_page/party_list_page_test.dart' as party_list_page;
 import 'partner_login_page/partner_login_page_test.dart' as partner_login_page;
 import 'recurrence_management_screen/recurrence_management_screen_test.dart'
     as recurrence_management_screen;
+import 'settlement_page/settlement_page_test.dart' as settlement_page;
 import 'verification_manage_page/verification_manage_page_test.dart'
     as verification_manage_page;
 
@@ -28,5 +29,6 @@ final List<Object> catalogs = [
   party_list_page.catalog,
   partner_login_page.catalog,
   recurrence_management_screen.catalog,
+  settlement_page.catalog,
   verification_manage_page.catalog,
 ];
