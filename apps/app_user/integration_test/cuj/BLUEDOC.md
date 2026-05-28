@@ -25,6 +25,7 @@ integration_test/cuj/
 파일명은 spec.md 폴더명 기반 (대시 → 언더스코어):
 - `docs/features/account/signup-consent/spec.md` ↔ `integration_test/cuj/account/signup_consent_test.dart`
 - `docs/features/account/privacy-protection/spec.md` ↔ `integration_test/cuj/account/privacy_protection_test.dart`
+- `docs/features/discovery/trust-badge/spec.md` ↔ `integration_test/cuj/discovery/trust_badge_test.dart`
 
 ## 필수 boilerplate
 
@@ -165,4 +166,4 @@ flutter test integration_test/cuj/ \
 - 시각 회귀: [`mds-emulator-render/BLUEDOC.md`](../mds-emulator-render/BLUEDOC.md)
 
 ---
-_Reviewed: 2026-05-29 03:00_
+_Reviewed: 2026-05-29 12:20_
