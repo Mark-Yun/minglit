@@ -38,6 +38,7 @@ class MinglitEventCard extends StatelessWidget {
     required this.event,
     super.key,
     this.onTap,
+    this.onTagTap,
     this.showPartnerOverlay = true,
     @visibleForTesting this.currentTime,
   }) : _isLoading = false;
@@ -47,6 +48,7 @@ class MinglitEventCard extends StatelessWidget {
     super.key,
     this.event,
     this.onTap,
+    this.onTagTap,
     this.showPartnerOverlay = true,
     this.currentTime,
   }) : _isLoading = true;
@@ -56,6 +58,9 @@ class MinglitEventCard extends StatelessWidget {
 
   /// Optional tap handler for the card.
   final VoidCallback? onTap;
+
+  /// Optional tap handler for tag badges rendered in the card body.
+  final void Function(Tag tag)? onTagTap;
 
   /// Whether to show the partner badge overlay on the image.
   final bool showPartnerOverlay;
@@ -310,7 +315,7 @@ class MinglitEventCard extends StatelessWidget {
                       if (party?.tags ?? event!.tags case final tags?
                           when tags.isNotEmpty) ...[
                         const SizedBox(height: MinglitSpacing.xsmall),
-                        _TagChipRow(tags: tags),
+                        _TagChipRow(tags: tags, onTagTap: onTagTap),
                       ],
                     ],
                   ),

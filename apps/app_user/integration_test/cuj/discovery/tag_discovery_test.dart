@@ -5,6 +5,7 @@
 //
 // Fix #2561: discovery 카테고리 CUJ integration test 전무 해소 (tag-discovery)
 
+import 'package:app_user/src/features/home/logic/selected_tags_provider.dart';
 import 'package:app_user/src/features/home/widgets/featured_tag_chip_bar.dart';
 import 'package:app_user/src/features/home/widgets/trending_tag_section.dart';
 import 'package:app_user/src/features/tag/ui/tag_event_list_page.dart';
@@ -67,10 +68,12 @@ void main() {
 
   late _MockTagRepository mockTagRepo;
   late _FakeTagCoordinator fakeCoordinator;
+  late List<String> tappedCardTags;
 
   setUp(() {
     mockTagRepo = _MockTagRepository();
     fakeCoordinator = _FakeTagCoordinator();
+    tappedCardTags = <String>[];
     // Default stubs — 반드시 pumpWidget 전에 등록되어야 함 (setUp에서 설정)
     when(() => mockTagRepo.getFeaturedTags()).thenAnswer(
       (_) async => [_makeTag('클럽'), _makeTag('요가')],
@@ -132,8 +135,21 @@ void main() {
 
   cujGroup('1-2', '인기 태그 다중 선택 OR 필터', () {
     cujCase(
-      'happy: 인기 태그 2개 연속 탭 → 각 태그 진입 호출',
-      app: const Scaffold(body: FeaturedTagChipBar()),
+      'happy: 인기 태그 2개 연속 탭 → 선택 상태/선택 집합 갱신',
+      app: Scaffold(
+        body: Column(
+          children: [
+            const FeaturedTagChipBar(),
+            Consumer(
+              builder: (context, ref, _) {
+                final selectedIds = ref.watch(selectedTagsProvider).toList()
+                  ..sort();
+                return Text('selected:${selectedIds.join(",")}');
+              },
+            ),
+          ],
+        ),
+      ),
       overrides: () {
         when(() => mockTagRepo.getFeaturedTags()).thenAnswer(
           (_) async => [_makeTag('클럽'), _makeTag('요가'), _makeTag('러닝')],
@@ -149,6 +165,8 @@ void main() {
         expect(fakeCoordinator.calls, hasLength(2));
         expect(fakeCoordinator.calls[0].$2, '클럽');
         expect(fakeCoordinator.calls[1].$2, '요가');
+        expect(find.byIcon(Icons.check), findsNWidgets(2));
+        expect(find.text('selected:tag-요가,tag-클럽'), findsOneWidget);
       },
     );
   });
@@ -206,6 +224,7 @@ void main() {
             _makeTag('강남'),
           ]),
           onTap: () {},
+          onTagTap: (tag) => tappedCardTags.add(tag.name),
         ),
       ),
       body: (t) async {
@@ -213,6 +232,10 @@ void main() {
         expect(find.text('#와인'), findsOneWidget);
         expect(find.text('#루프탑'), findsOneWidget);
         expect(find.text('#+1'), findsOneWidget);
+
+        await t.tap(find.text('#소개팅'));
+        await t.pumpAndSettle();
+        expect(tappedCardTags, ['소개팅']);
       },
     );
 
