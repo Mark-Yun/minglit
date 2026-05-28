@@ -321,30 +321,25 @@ void main() {
   // CUJ 6-1: Loading state
   // ---------------------------------------------------------------------------
   cujGroup('6-1', 'Loading state — 동의 정보 가져오는 중', () {
+    late Completer<List<UserConsent>> loadingCompleter;
+
     cujCase(
       'happy: 초기 fetch 진행 중 중앙 로딩 인디케이터 노출',
       app: const PrivacyPage(),
-      overrides: base,
-      body: (t) async {
-        final completer = Completer<List<UserConsent>>();
+      overrides: () {
+        loadingCompleter = Completer<List<UserConsent>>();
         when(
           () => repo.getConsents('user-1'),
-        ).thenAnswer((_) => completer.future);
-
-        await t.pumpWidget(
-          ProviderScope(
-            overrides: base().cast(),
-            child: MaterialApp(
-              theme: MinglitTheme.materialTheme,
-              home: const PrivacyPage(),
-            ),
-          ),
-        );
+        ).thenAnswer((_) => loadingCompleter.future);
+        return base();
+      },
+      afterPump: (t) async {
         await t.pump();
-
+      },
+      body: (t) async {
         expect(find.byType(MinglitCircularProgressIndicator), findsOneWidget);
 
-        completer.complete(_baseConsents(identityVerified: true));
+        loadingCompleter.complete(_baseConsents(identityVerified: true));
         await t.pumpAndSettle();
       },
     );
@@ -357,23 +352,13 @@ void main() {
     cujCase(
       'happy: 첫 fetch 실패 시 에러 메시지 노출',
       app: const PrivacyPage(),
-      overrides: base,
-      body: (t) async {
+      overrides: () {
         when(
           () => repo.getConsents('user-1'),
         ).thenThrow(Exception('network error'));
-
-        await t.pumpWidget(
-          ProviderScope(
-            overrides: base().cast(),
-            child: MaterialApp(
-              theme: MinglitTheme.materialTheme,
-              home: const PrivacyPage(),
-            ),
-          ),
-        );
-        await t.pumpAndSettle();
-
+        return base();
+      },
+      body: (t) async {
         expect(find.text('동의 정보를 불러올 수 없습니다.'), findsOneWidget);
       },
     );
