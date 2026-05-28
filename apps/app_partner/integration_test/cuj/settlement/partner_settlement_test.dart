@@ -213,13 +213,27 @@ void main() {
         repo: repo,
         coordinator: coordinator,
         listState: SettlementListState(
-          items: [_detail(id: 'same-event', status: 'PENDING')],
+          items: [
+            _detail(
+              id: 'same-event',
+              status: 'PENDING',
+              netAmount: 77777,
+              createdAt: DateTime(2026, 5, 12, 9),
+            ),
+            _detail(
+              id: 'same-event',
+              status: 'PENDING',
+              netAmount: 77777,
+              createdAt: DateTime(2026, 5, 12, 9),
+            ),
+          ],
           hasMore: false,
         ),
       ),
       body: (t) async {
         expect(find.text('정산 항목'), findsOneWidget);
-        expect(find.text('정산 대기'), findsOneWidget);
+        expect(find.text('2026-05-12'), findsOneWidget);
+        expect(find.text('₩77,777'), findsOneWidget);
       },
     );
   });
