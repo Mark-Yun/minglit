@@ -26,6 +26,7 @@ flutter drive \
 | `create_verification_page` | empty · with-fields · dark |
 | `location_guide_page` | default · loading |
 | `more_page` | default · limited-permissions |
+| `party_list_page` | default · empty · loading · error · help |
 | `partner_login_page` | default-ios · default-android · loading · auth-error |
 | `recurrence_management_screen` | active · paused · cancelled · no-rule · action-loading · loading · active-dark |
 | `verification_manage_page` | loading · active-empty · active-with-items · archived-with-items · dark |
@@ -59,6 +60,9 @@ mds-emulator-render/
 ├── more_page/
 │   ├── builder.dart
 │   └── more_page_test.dart
+├── party_list_page/
+│   ├── builder.dart
+│   └── party_list_page_test.dart
 ├── partner_login_page/
 │   ├── builder.dart
 │   └── partner_login_page_test.dart
@@ -75,4 +79,4 @@ mds-emulator-render/
 - [app_user mds-emulator-render](../../../app_user/integration_test/mds-emulator-render/BLUEDOC.md)
 - [architecture.md](../../../app_user/integration_test/mds-emulator-render/architecture.md)
 
-_Reviewed: 2026-05-27 19:36_
+_Reviewed: 2026-05-28 19:08_
