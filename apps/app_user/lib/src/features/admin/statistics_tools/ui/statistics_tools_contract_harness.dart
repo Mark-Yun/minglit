@@ -75,7 +75,8 @@ class _MetabaseHarnessState extends State<MetabaseHarness> {
 
 class ReportHarness extends StatefulWidget {
   const ReportHarness({
-    required this.mode, super.key,
+    required this.mode,
+    super.key,
     this.githubApiHealthy = true,
     this.weeklyComparisonReady = true,
     this.onSignal,
@@ -275,7 +276,9 @@ class _FeatureFlagHarnessState extends State<FeatureFlagHarness> {
 
 class PerformanceAlertHarness extends StatefulWidget {
   const PerformanceAlertHarness({
-    required this.errorRate15m, required this.shortSpikeOnly, super.key,
+    required this.errorRate15m,
+    required this.shortSpikeOnly,
+    super.key,
     this.onSignal,
   });
 
@@ -332,7 +335,9 @@ class _PerformanceAlertHarnessState extends State<PerformanceAlertHarness> {
 
 class BusinessAlertHarness extends StatefulWidget {
   const BusinessAlertHarness({
-    required this.revenueDropPct, required this.conversionDropPct, super.key,
+    required this.revenueDropPct,
+    required this.conversionDropPct,
+    super.key,
     this.onSignal,
   });
 
@@ -384,7 +389,9 @@ class _BusinessAlertHarnessState extends State<BusinessAlertHarness> {
 
 class InfraAlertHarness extends StatefulWidget {
   const InfraAlertHarness({
-    required this.dlqCount, required this.cronMissed, super.key,
+    required this.dlqCount,
+    required this.cronMissed,
+    super.key,
     this.onSignal,
   });
 
@@ -440,7 +447,9 @@ class _InfraAlertHarnessState extends State<InfraAlertHarness> {
 
 class DedupeHarness extends StatefulWidget {
   const DedupeHarness({
-    required this.hasOpenIssue, required this.recentlyClosed, super.key,
+    required this.hasOpenIssue,
+    required this.recentlyClosed,
+    super.key,
     this.onSignal,
   });
 
@@ -505,7 +514,8 @@ class _DedupeHarnessState extends State<DedupeHarness> {
 
 class ClientEventHarness extends StatefulWidget {
   const ClientEventHarness({
-    required this.statsigAvailable, super.key,
+    required this.statsigAvailable,
+    super.key,
     this.onSignal,
   });
 
@@ -633,7 +643,8 @@ class _PaymentEventHarnessState extends State<PaymentEventHarness> {
 
 class TierIsolationHarness extends StatefulWidget {
   const TierIsolationHarness({
-    required this.tier, super.key,
+    required this.tier,
+    super.key,
     this.onSignal,
   });
 
@@ -691,7 +702,8 @@ class _TierIsolationHarnessState extends State<TierIsolationHarness> {
 
 class PiiGuardHarness extends StatefulWidget {
   const PiiGuardHarness({
-    required this.permissionDrift, super.key,
+    required this.permissionDrift,
+    super.key,
     this.onSignal,
   });
 
