@@ -106,6 +106,23 @@ void main() {
         _expectAction(conflictSignals, 'review.conflict_reloaded');
       },
     );
+
+    cujCase(
+      'edge: 서류 로딩 실패 시 에러 + 다운로드 fallback 노출',
+      app: const PartnerReviewQueueHarness(docViewerLoadFailure: true),
+      body: (t) async {
+        await t.tap(find.text('대기'));
+        await t.pumpAndSettle();
+        await t.tap(find.text('심사 상세 진입'));
+        await t.pumpAndSettle();
+
+        expect(find.text('서류를 불러올 수 없습니다'), findsOneWidget);
+        expect(find.text('다운로드 링크'), findsOneWidget);
+        await t.tap(find.text('다운로드 링크'));
+        await t.pumpAndSettle();
+        expect(find.text('원본 서류 다운로드 시작'), findsOneWidget);
+      },
+    );
   });
 
   cujGroup('1-3', '거절 / 보완 요청 처리', () {
@@ -302,6 +319,25 @@ void main() {
 
         expect(find.text('환불 실패: 재시도 가능'), findsOneWidget);
         _expectAction(retrySignals, 'refund.failed_logged');
+      },
+    );
+
+    final sessionExpiredSignals = <AdminDashboardSignal>[];
+    cujCase(
+      'edge: 환불 실행 중 세션 만료 시 재로그인 후 큐 재진입',
+      app: RefundQueueHarness(
+        sessionExpiredDuringRefund: true,
+        onSignal: sessionExpiredSignals.add,
+      ),
+      body: (t) async {
+        await t.tap(find.text('환불 요청 #A-1001'));
+        await t.pumpAndSettle();
+        await t.tap(find.text('환불 실행'));
+        await t.pumpAndSettle();
+
+        expect(find.text('재로그인 후 큐 재진입'), findsOneWidget);
+        expect(find.text('환불 상태는 서버에서 판별'), findsOneWidget);
+        _expectAction(sessionExpiredSignals, 'refund.session_expired');
       },
     );
   });
@@ -580,12 +616,13 @@ void main() {
       'happy: 사유 입력 후 강제 취소 + 환불 트리거',
       app: EventModerationHarness(onSignal: cancelSignals.add),
       body: (t) async {
-        await t.tap(find.text('강제 취소'));
-        await t.pumpAndSettle();
         await t.enterText(
           find.byKey(const Key('force-cancel-reason')),
           '정책 위반',
         );
+        await t.tap(find.text('강제 취소'));
+        await t.pumpAndSettle();
+        expect(find.text('강제 취소 확인 대기'), findsOneWidget);
         await t.tap(find.text('확인'));
         await t.pumpAndSettle();
 
@@ -608,6 +645,9 @@ void main() {
           '정책 위반',
         );
         await t.tap(find.text('강제 취소'));
+        await t.pumpAndSettle();
+        expect(find.text('강제 취소 확인 대기'), findsOneWidget);
+        await t.tap(find.text('확인'));
         await t.pumpAndSettle();
 
         expect(find.text('이벤트 상태: 취소'), findsOneWidget);
@@ -652,11 +692,13 @@ class PartnerReviewQueueHarness extends StatefulWidget {
     super.key,
     this.hasPending = true,
     this.reviewConflict = false,
+    this.docViewerLoadFailure = false,
     this.onSignal,
   });
 
   final bool hasPending;
   final bool reviewConflict;
+  final bool docViewerLoadFailure;
   final AdminDashboardSignalSink? onSignal;
 
   @override
@@ -710,8 +752,18 @@ class _PartnerReviewQueueHarnessState extends State<PartnerReviewQueueHarness> {
             ],
             if (_openedDetail) ...[
               const SizedBox(height: 8),
-              const Text('사업자등록증 미리보기'),
-              const Text('대표자 신분증 미리보기'),
+              if (widget.docViewerLoadFailure) ...[
+                const Text('서류를 불러올 수 없습니다'),
+                TextButton(
+                  onPressed: () => setState(() {
+                    _toast = '원본 서류 다운로드 시작';
+                  }),
+                  child: const Text('다운로드 링크'),
+                ),
+              ] else ...[
+                const Text('사업자등록증 미리보기'),
+                const Text('대표자 신분증 미리보기'),
+              ],
               const TextField(
                 key: Key('review-comment'),
                 decoration: InputDecoration(labelText: '코멘트'),
@@ -884,11 +936,13 @@ class RefundQueueHarness extends StatefulWidget {
     super.key,
     this.hasPendingRefund = true,
     this.portOneHealthy = true,
+    this.sessionExpiredDuringRefund = false,
     this.onSignal,
   });
 
   final bool hasPendingRefund;
   final bool portOneHealthy;
+  final bool sessionExpiredDuringRefund;
   final AdminDashboardSignalSink? onSignal;
 
   @override
@@ -943,6 +997,11 @@ class _RefundQueueHarnessState extends State<RefundQueueHarness> {
                     _emit('refund.failed_logged');
                     return;
                   }
+                  if (widget.sessionExpiredDuringRefund) {
+                    _status = '재로그인 후 큐 재진입';
+                    _emit('refund.session_expired');
+                    return;
+                  }
                   _status = '상태: 환불 완료';
                   _emit('refund.processed', {'amount': _amount});
                 }),
@@ -951,6 +1010,7 @@ class _RefundQueueHarnessState extends State<RefundQueueHarness> {
             ],
             if (_status.isNotEmpty) Text(_status),
             if (_status == '상태: 환불 완료') const Text('유저 푸시 전송'),
+            if (_status == '재로그인 후 큐 재진입') const Text('환불 상태는 서버에서 판별'),
           ],
         ),
       ),
@@ -1233,6 +1293,7 @@ class EventModerationHarness extends StatefulWidget {
 class _EventModerationHarnessState extends State<EventModerationHarness> {
   String _status = '';
   bool _partialRefundQueued = false;
+  bool _forceCancelRequested = false;
   final TextEditingController _reasonController = TextEditingController();
 
   void _emit(String action, [Map<String, Object?> payload = const {}]) {
@@ -1262,14 +1323,12 @@ class _EventModerationHarnessState extends State<EventModerationHarness> {
             ),
             ElevatedButton(
               onPressed: () => setState(() {
-                if (widget.partialRefundFailure &&
-                    _reasonController.text.isNotEmpty) {
-                  _partialRefundQueued = true;
-                  _status = '이벤트 상태: 취소';
-                  _emit('event.force_cancelled', {'partialFailure': true});
+                if (_reasonController.text.isEmpty) {
+                  _status = '사유를 입력해주세요';
                   return;
                 }
-                _partialRefundQueued = false;
+                _forceCancelRequested = true;
+                _partialRefundQueued = widget.partialRefundFailure;
                 _status = '강제 취소 확인 대기';
               }),
               child: const Text('강제 취소'),
@@ -1280,8 +1339,15 @@ class _EventModerationHarnessState extends State<EventModerationHarness> {
                   _status = '사유를 입력해주세요';
                   return;
                 }
+                if (!_forceCancelRequested) {
+                  _status = '강제 취소를 먼저 요청해주세요';
+                  return;
+                }
                 _status = '이벤트 상태: 취소';
-                _emit('event.force_cancelled');
+                _forceCancelRequested = false;
+                _emit('event.force_cancelled', {
+                  'partialFailure': widget.partialRefundFailure,
+                });
               }),
               child: const Text('확인'),
             ),
