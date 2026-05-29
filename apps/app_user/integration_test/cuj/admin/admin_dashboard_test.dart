@@ -597,8 +597,12 @@ void main() {
 
     cujCase(
       'edge: 일부 환불 실패는 재시도 큐로 분리',
-      app: const EventModerationHarness(partialRefundFailure: true),
+      app: EventModerationHarness(
+        partialRefundFailure: true,
+        onSignal: cancelSignals.add,
+      ),
       body: (t) async {
+        cancelSignals.clear();
         await t.enterText(
           find.byKey(const Key('force-cancel-reason')),
           '정책 위반',
@@ -606,7 +610,11 @@ void main() {
         await t.tap(find.text('강제 취소'));
         await t.pumpAndSettle();
 
+        expect(find.text('이벤트 상태: 취소'), findsOneWidget);
+        expect(find.text('신청자 환불 트리거 시작'), findsOneWidget);
         expect(find.text('환불 실패 1건 재시도 큐로 이동'), findsOneWidget);
+        final partial = _expectAction(cancelSignals, 'event.force_cancelled');
+        expect(partial.payload['partialFailure'], isTrue);
       },
     );
   });
@@ -1224,6 +1232,7 @@ class EventModerationHarness extends StatefulWidget {
 
 class _EventModerationHarnessState extends State<EventModerationHarness> {
   String _status = '';
+  bool _partialRefundQueued = false;
   final TextEditingController _reasonController = TextEditingController();
 
   void _emit(String action, [Map<String, Object?> payload = const {}]) {
@@ -1255,10 +1264,12 @@ class _EventModerationHarnessState extends State<EventModerationHarness> {
               onPressed: () => setState(() {
                 if (widget.partialRefundFailure &&
                     _reasonController.text.isNotEmpty) {
-                  _status = '환불 실패 1건 재시도 큐로 이동';
+                  _partialRefundQueued = true;
+                  _status = '이벤트 상태: 취소';
                   _emit('event.force_cancelled', {'partialFailure': true});
                   return;
                 }
+                _partialRefundQueued = false;
                 _status = '강제 취소 확인 대기';
               }),
               child: const Text('강제 취소'),
@@ -1286,6 +1297,7 @@ class _EventModerationHarnessState extends State<EventModerationHarness> {
               child: const Text('숨김 처리'),
             ),
             if (_status == '이벤트 상태: 취소') const Text('신청자 환불 트리거 시작'),
+            if (_partialRefundQueued) const Text('환불 실패 1건 재시도 큐로 이동'),
             if (_status == '검색/추천 노출: 제외') const Text('기존 신청자 노출: 유지'),
             if (_status.isNotEmpty) Text(_status),
           ],
