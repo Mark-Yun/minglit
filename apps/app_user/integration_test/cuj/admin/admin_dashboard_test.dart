@@ -344,6 +344,7 @@ void main() {
 
   cujGroup('3-3', '부분 환불 처리', () {
     final partialSignals = <AdminDashboardSignal>[];
+    final blockedSignals = <AdminDashboardSignal>[];
     cujCase(
       'happy: 결제 금액 이하 입력으로 부분 환불 실행',
       app: RefundQueueHarness(onSignal: partialSignals.add),
@@ -362,14 +363,18 @@ void main() {
 
     cujCase(
       'edge: 환불 금액 초과 입력 시 제출 차단',
-      app: const RefundQueueHarness(),
+      app: RefundQueueHarness(onSignal: blockedSignals.add),
       body: (t) async {
         await t.tap(find.text('환불 요청 #A-1001'));
         await t.pumpAndSettle();
         await t.enterText(find.byKey(const Key('refund-amount')), '999999');
         await t.pumpAndSettle();
+        await t.tap(find.text('환불 실행'));
+        await t.pumpAndSettle();
 
         expect(find.text('환불 금액이 결제 금액을 초과합니다'), findsOneWidget);
+        expect(find.text('상태: 환불 완료'), findsNothing);
+        expect(blockedSignals, isEmpty);
       },
     );
   });
