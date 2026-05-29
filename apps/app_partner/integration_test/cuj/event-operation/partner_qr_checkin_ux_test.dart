@@ -255,6 +255,7 @@ void main() {
         await t.pumpAndSettle();
 
         expect(find.text('수동 체크인'), findsOneWidget);
+        expect(find.text('참가자가 없습니다'), findsOneWidget);
         // 참가자 없음 → 이름 없음
         expect(find.text('홍길동'), findsNothing);
       },
