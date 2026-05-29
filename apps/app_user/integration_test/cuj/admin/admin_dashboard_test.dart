@@ -550,6 +550,8 @@ void main() {
       'happy: 로그 상세 드로어에서 diff/IP/UA 확인',
       app: AuditLogHarness(onSignal: auditSignals.add),
       body: (t) async {
+        await t.tap(find.text('조회'));
+        await t.pumpAndSettle();
         await t.tap(find.text('로그 #A-1'));
         await t.pumpAndSettle();
 
@@ -565,6 +567,8 @@ void main() {
       'edge: 결과 0건이면 빈 상태 표시',
       app: const AuditLogHarness(hasRows: false),
       body: (t) async {
+        await t.tap(find.text('조회'));
+        await t.pumpAndSettle();
         expect(find.text('조건에 맞는 로그가 없습니다'), findsOneWidget);
       },
     );
