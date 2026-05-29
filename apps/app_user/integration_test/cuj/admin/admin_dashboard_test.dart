@@ -599,13 +599,11 @@ void main() {
       'edge: 일부 환불 실패는 재시도 큐로 분리',
       app: const EventModerationHarness(partialRefundFailure: true),
       body: (t) async {
-        await t.tap(find.text('강제 취소'));
-        await t.pumpAndSettle();
         await t.enterText(
           find.byKey(const Key('force-cancel-reason')),
           '정책 위반',
         );
-        await t.tap(find.text('확인'));
+        await t.tap(find.text('강제 취소'));
         await t.pumpAndSettle();
 
         expect(find.text('환불 실패 1건 재시도 큐로 이동'), findsOneWidget);
