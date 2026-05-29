@@ -24,6 +24,7 @@ flutter drive \
 | `bank_account_page` | loading · no-account · with-account · dark |
 | `checkin_placeholder_page` | loading · error · empty · selection · selection-dark |
 | `create_verification_page` | empty · with-fields · dark |
+| `event_application_detail_page` | pending-review · approved · rejected · paid · reject-dialog · loading |
 | `location_guide_page` | default · loading |
 | `more_page` | default · limited-permissions |
 | `party_list_page` | default · empty · loading · error · help |
@@ -62,6 +63,9 @@ mds-emulator-render/
 ├── create_verification_page/
 │   ├── builder.dart
 │   └── create_verification_page_test.dart
+├── event_application_detail_page/
+│   ├── builder.dart
+│   └── event_application_detail_page_test.dart
 ├── location_guide_page/
 │   ├── builder.dart
 │   └── location_guide_page_test.dart
@@ -111,4 +115,4 @@ mds-emulator-render/
 - [app_user mds-emulator-render](../../../app_user/integration_test/mds-emulator-render/BLUEDOC.md)
 - [architecture.md](../../../app_user/integration_test/mds-emulator-render/architecture.md)
 
-_Reviewed: 2026-05-30 09:24_
+_Reviewed: 2026-05-30 09:36_
