@@ -41,7 +41,6 @@ integration_test/cuj/
     refund_policy_v2_test.dart       # CUJ 4-1~4-3 (환불 요청 파트너 처리)
   event-operation/
     partner_qr_checkin_ux_test.dart  # CUJ 1-1, 1-2, 1-3, 3-1, 3-2, 5-4 (6/13)
-    manual_checkin_test.dart         # CUJ 3-1, 3-2 (수동 체크인)
   settlement/
     partner_settlement_test.dart     # CUJ 1-1, 1-2, 2-1, 2-2, 2-3, 3-1~3-5, 4-1, 5-1, 5-2, 6-1
   ...
@@ -60,10 +59,9 @@ integration_test/cuj/
 | `event/partner_dashboard_test.dart` | `docs/features/event/partner-dashboard/spec.md` | 1-1~1-5, 2-1~2-5, 3-1~3-3, 4-2~4-3, 5-1~5-2 |
 | `event/refund_policy_v2_test.dart` | `docs/features/event/refund-policy-v2/spec.md` | 4-1~4-3 (환불 요청 목록/상세 승인/거절) |
 | `event-operation/partner_qr_checkin_ux_test.dart` | `docs/features/event-operation/partner-qr-checkin-ux/spec.md` | 1-1, 1-2, 1-3, 3-1, 3-2, 5-4 (6/13) |
-| `event-operation/manual_checkin_test.dart` | `docs/features/event-operation/partner-qr-checkin-ux/spec.md` | 3-1 (수동 체크인 시트 진입 + 참가자 목록), 3-2 (수동 체크인 처리) |
 | `settlement/partner_settlement_test.dart` | `docs/features/settlement/partner-settlement/spec.md` | 1-1, 1-2, 2-1, 2-2, 2-3, 3-1~3-5, 4-1, 5-1, 5-2, 6-1 |
 
 Flutter 범위 외 CUJ (landing_partner 웹 기능 또는 미구현): 1-2, 1-3, 2-2~2-4, 3-1~3-2.
 
 ---
-_Reviewed: 2026-05-28 22:55_
+_Reviewed: 2026-05-29 19:31_
