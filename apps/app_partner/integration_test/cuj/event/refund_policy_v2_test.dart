@@ -197,6 +197,8 @@ void main() {
         expect(find.text('거절 사유'), findsOneWidget);
 
         await t.enterText(find.byType(TextField), '파트너 검토 후 거절');
+        FocusManager.instance.primaryFocus?.unfocus();
+        await t.pump();
         await t.tap(find.widgetWithText(TextButton, '거절'));
         await t.pumpAndSettle();
 
