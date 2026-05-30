@@ -9,11 +9,13 @@ class EventApplicationListPage extends ConsumerWidget {
   const EventApplicationListPage({
     required this.eventId,
     this.groupId,
+    this.initialTabIndex = 0,
     super.key,
   });
 
   final String eventId;
   final String? groupId;
+  final int initialTabIndex;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -21,6 +23,7 @@ class EventApplicationListPage extends ConsumerWidget {
 
     return DefaultTabController(
       length: 4,
+      initialIndex: initialTabIndex.clamp(0, 3),
       child: Scaffold(
         appBar: AppBar(
           title: const Text('참가 신청'),
