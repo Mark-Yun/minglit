@@ -410,13 +410,13 @@ void main() {
         await t.pumpAndSettle();
         await scrollToRefundPolicy(t);
 
-        expect(find.text('환불 정책'), findsOneWidget);
+        expect(find.byTooltip('환불 정책 상세'), findsOneWidget);
         await t.tap(find.byTooltip('환불 정책 상세'));
         await t.pumpAndSettle();
 
         expect(find.text('환불 정책 상세'), findsOneWidget);
-        expect(find.textContaining('결제 후 3시간 이내'), findsOneWidget);
-        expect(find.textContaining('이벤트 시작 7일 전까지'), findsOneWidget);
+        expect(find.text('결제 후 3시간 이내'), findsOneWidget);
+        expect(find.text('이벤트 시작 7일 전까지'), findsOneWidget);
         expect(find.text('그 외'), findsOneWidget);
         expect(find.text('고객센터 문의'), findsOneWidget);
       },
