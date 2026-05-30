@@ -10,6 +10,8 @@ import 'create_verification_page/create_verification_page_test.dart'
     as create_verification_page;
 import 'event_application_detail_page/event_application_detail_page_test.dart'
     as event_application_detail_page;
+import 'event_application_list_page/event_application_list_page_test.dart'
+    as event_application_list_page;
 import 'location_guide_page/location_guide_page_test.dart'
     as location_guide_page;
 import 'more_page/more_page_test.dart' as more_page;
@@ -40,6 +42,7 @@ final List<Object> catalogs = [
   checkin_placeholder_page.catalog,
   create_verification_page.catalog,
   event_application_detail_page.catalog,
+  event_application_list_page.catalog,
   location_guide_page.catalog,
   more_page.catalog,
   party_list_page.catalog,
