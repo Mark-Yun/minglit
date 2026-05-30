@@ -145,9 +145,7 @@ void main() {
   ];
 
   // Returns overrides for EventDetailPage rendering with fixed now().
-  List<dynamic> withEventDetail({
-    required DateTime now,
-  }) => [
+  List<dynamic> withEventDetail({required DateTime now}) => [
     currentUserProvider.overrideWith((_) => null),
     authStateChangesProvider.overrideWith((_) => const Stream.empty()),
     eventRepositoryProvider.overrideWithValue(mockRepo),
@@ -157,6 +155,15 @@ void main() {
           () => now,
     ),
   ];
+
+  Future<void> scrollToRefundPolicy(WidgetTester t) async {
+    await t.scrollUntilVisible(
+      find.byTooltip('환불 정책 상세'),
+      500,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await t.pumpAndSettle();
+  }
 
   // ===========================================================================
   // CUJ 1-1: grace period(3시간) 내 자동 환불
@@ -195,10 +202,8 @@ void main() {
             reason: any(named: 'reason'),
           ),
         ).thenAnswer(
-          (_) async => const CancelOrderResult(
-            type: 'refunded',
-            refundAmount: 50000,
-          ),
+          (_) async =>
+              const CancelOrderResult(type: 'refunded', refundAmount: 50000),
         );
         return withApp(app);
       },
@@ -326,10 +331,7 @@ void main() {
         await t.pumpAndSettle();
 
         // isRefunded=true → 취소 버튼 섹션 전체 미노출 (FR-1: 재취소 차단)
-        expect(
-          find.widgetWithText(ElevatedButton, '예매 취소'),
-          findsNothing,
-        );
+        expect(find.widgetWithText(ElevatedButton, '예매 취소'), findsNothing);
 
         // 환불 정보 섹션 노출 (isRefunded=true)
         expect(find.text('환불 정보'), findsOneWidget);
@@ -356,10 +358,8 @@ void main() {
             reason: any(named: 'reason'),
           ),
         ).thenAnswer(
-          (_) async => const CancelOrderResult(
-            type: 'refunded',
-            refundAmount: 50000,
-          ),
+          (_) async =>
+              const CancelOrderResult(type: 'refunded', refundAmount: 50000),
         );
         return withApp(app);
       },
@@ -408,6 +408,7 @@ void main() {
       },
       body: (t) async {
         await t.pumpAndSettle();
+        await scrollToRefundPolicy(t);
 
         expect(find.text('환불 정책'), findsOneWidget);
         await t.tap(find.byTooltip('환불 정책 상세'));
@@ -441,8 +442,12 @@ void main() {
       },
       body: (t) async {
         await t.pumpAndSettle();
+        await scrollToRefundPolicy(t);
 
-        expect(find.textContaining('까지 환불 가능'), findsOneWidget);
+        expect(
+          find.textContaining('까지 환불 가능', findRichText: true),
+          findsOneWidget,
+        );
         expect(find.textContaining('결제 후 3시간 이내에도 전액 환불 가능'), findsOneWidget);
       },
     );
@@ -462,6 +467,7 @@ void main() {
       },
       body: (t) async {
         await t.pumpAndSettle();
+        await scrollToRefundPolicy(t);
 
         expect(find.text('결제 후 3시간 이내 전액 환불 가능'), findsOneWidget);
         expect(find.text('이벤트 시작 7일 전 환불 마감'), findsOneWidget);
@@ -525,10 +531,8 @@ void main() {
       },
       body: (t) async {
         await t.pumpAndSettle();
-        final cancelBtn = t.widget<ElevatedButton>(
-          find.widgetWithText(ElevatedButton, '예매 취소'),
-        );
-        expect(cancelBtn.onPressed, isNull);
+        expect(find.text('환불 요청됨'), findsOneWidget);
+        expect(find.widgetWithText(ElevatedButton, '예매 취소'), findsNothing);
       },
     );
   });
@@ -643,9 +647,7 @@ void main() {
             eventId: any(named: 'eventId'),
             reason: any(named: 'reason'),
           ),
-        ).thenAnswer(
-          (_) async => const CancelOrderResult(type: 'cancelled'),
-        );
+        ).thenAnswer((_) async => const CancelOrderResult(type: 'cancelled'));
         return withApp(app);
       },
       body: (t) async {

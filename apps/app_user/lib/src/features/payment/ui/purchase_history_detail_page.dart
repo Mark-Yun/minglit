@@ -17,10 +17,7 @@ class PurchaseHistoryDetailPage extends ConsumerWidget {
     final appAsync = ref.watch(purchaseHistoryDetailProvider(applicationId));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('구매 상세'),
-        centerTitle: false,
-      ),
+      appBar: AppBar(title: const Text('구매 상세'), centerTitle: false),
       body: MinglitAsyncValueWidget(
         value: appAsync,
         data: (application) {
@@ -53,6 +50,8 @@ class _PurchaseDetailBody extends ConsumerWidget {
     final paymentId = application.paymentId;
     final paymentAmount = application.paymentAmount ?? 0;
     final canCancel = controller.canCancel(application);
+    final refundStatusLabel = _refundStatusLabel(application.refundStatus);
+    final hasRefundStatus = refundStatusLabel != null;
     final isRefunded = application.refundStatus == 'completed';
     final theme = Theme.of(context);
     final formatter = NumberFormat('#,###');
@@ -167,17 +166,17 @@ class _PurchaseDetailBody extends ConsumerWidget {
                           Row(
                             children: [
                               StatusBadge(status: application.status),
-                              if (isRefunded) ...[
+                              if (hasRefundStatus) ...[
                                 const SizedBox(width: MinglitSpacing.xsmall),
-                                _RefundBadge(),
+                                _RefundBadge(label: refundStatusLabel),
                               ],
                             ],
                           ),
                           const SizedBox(height: MinglitSpacing.xxsmall),
                           Text(
-                            DateFormat('yyyy.MM.dd HH:mm').format(
-                              application.updatedAt.toLocal(),
-                            ),
+                            DateFormat(
+                              'yyyy.MM.dd HH:mm',
+                            ).format(application.updatedAt.toLocal()),
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -216,10 +215,7 @@ class _PurchaseDetailBody extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: MinglitSpacing.xsmall),
-                  _KeyValueRow(
-                    label: '티켓',
-                    value: ticket?.name ?? '티켓 정보 없음',
-                  ),
+                  _KeyValueRow(label: '티켓', value: ticket?.name ?? '티켓 정보 없음'),
                   const SizedBox(height: MinglitSpacing.xsmall),
                   _KeyValueRow(
                     label: '결제금액',
@@ -239,9 +235,7 @@ class _PurchaseDetailBody extends ConsumerWidget {
                             mode: LaunchMode.externalApplication,
                           );
                           if (!launched && context.mounted) {
-                            context.showMinglitWarning(
-                              '영수증 페이지를 열 수 없습니다.',
-                            );
+                            context.showMinglitWarning('영수증 페이지를 열 수 없습니다.');
                           }
                         } else {
                           context.showMinglitInfo('무료 티켓 — 결제 영수증이 없습니다.');
@@ -378,13 +372,14 @@ class _PurchaseDetailBody extends ConsumerWidget {
       },
       confirmRefund: (calculation) async {
         if (!context.mounted) return false;
+        final refundAmount = NumberFormat(
+          '#,###',
+        ).format(calculation.refundAmount);
         return await showDialog<bool>(
               context: context,
               builder: (_) => AlertDialog(
                 title: const Text('예매 취소'),
-                content: Text(
-                  '${NumberFormat('#,###').format(calculation.refundAmount)}원이 환불됩니다. 취소하시겠습니까?',
-                ),
+                content: Text('$refundAmount원이 환불됩니다. 취소하시겠습니까?'),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context, false),
@@ -454,10 +449,7 @@ class _PurchaseDetailBody extends ConsumerWidget {
       return;
     }
 
-    final launched = await launchUrl(
-      uri,
-      mode: LaunchMode.externalApplication,
-    );
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
 
     if (!launched && context.mounted) {
       context.showMinglitWarning('연락처를 열 수 없습니다.');
@@ -489,9 +481,8 @@ class _PartnerInfoCard extends StatelessWidget {
     final theme = Theme.of(context);
     return _DetailCard(
       child: InkWell(
-        onTap: () => PartnerDetailRoute(partnerId: party.partnerId).push<void>(
-          context,
-        ),
+        onTap: () =>
+            PartnerDetailRoute(partnerId: party.partnerId).push<void>(context),
         borderRadius: BorderRadius.circular(MinglitRadius.card),
         child: Row(
           children: [
@@ -587,7 +578,20 @@ class _KeyValueRow extends StatelessWidget {
   }
 }
 
+String? _refundStatusLabel(String status) {
+  return switch (status) {
+    'requested' => '환불 요청됨',
+    'completed' => '환불완료',
+    'rejected' => '거절됨',
+    _ => null,
+  };
+}
+
 class _RefundBadge extends StatelessWidget {
+  const _RefundBadge({required this.label});
+
+  final String label;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -601,7 +605,7 @@ class _RefundBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(MinglitRadius.chip),
       ),
       child: Text(
-        '환불완료',
+        label,
         style: theme.textTheme.labelSmall?.copyWith(
           color: theme.colorScheme.onErrorContainer,
         ),
