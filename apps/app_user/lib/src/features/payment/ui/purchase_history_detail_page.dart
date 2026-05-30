@@ -52,6 +52,7 @@ class _PurchaseDetailBody extends ConsumerWidget {
     final canCancel = controller.canCancel(application);
     final refundStatusLabel = _refundStatusLabel(application.refundStatus);
     final hasRefundStatus = refundStatusLabel != null;
+    final canShowCancelAction = application.refundStatus == 'none';
     final isRefunded = application.refundStatus == 'completed';
     final theme = Theme.of(context);
     final formatter = NumberFormat('#,###');
@@ -297,7 +298,7 @@ class _PurchaseDetailBody extends ConsumerWidget {
           const SizedBox(height: MinglitSpacing.medium),
 
           // 4. Refund policy card with cancel button
-          if (!isRefunded) ...[
+          if (canShowCancelAction) ...[
             _DetailCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
