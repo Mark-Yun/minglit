@@ -104,43 +104,13 @@ class EventApplicationListPageBuilder
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: MinglitTheme.materialTheme,
-        home: _AutoSelectTab(
-          tabIndex: scenarioData.tabIndex,
-          child: const EventApplicationListPage(eventId: _eventId),
+        home: EventApplicationListPage(
+          eventId: _eventId,
+          initialTabIndex: scenarioData.tabIndex,
         ),
       ),
     );
   }
-}
-
-class _AutoSelectTab extends StatefulWidget {
-  const _AutoSelectTab({required this.tabIndex, required this.child});
-
-  final int tabIndex;
-  final Widget child;
-
-  @override
-  State<_AutoSelectTab> createState() => _AutoSelectTabState();
-}
-
-class _AutoSelectTabState extends State<_AutoSelectTab> {
-  bool _applied = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_applied || widget.tabIndex == 0) return;
-    final controller = DefaultTabController.maybeOf(context);
-    if (controller == null) return;
-    _applied = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      controller.animateTo(widget.tabIndex, duration: Duration.zero);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) => widget.child;
 }
 
 class _ScenarioData {
