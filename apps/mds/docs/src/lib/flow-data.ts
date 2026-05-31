@@ -438,6 +438,12 @@ const SUB_COMPONENT_SPECS: { user: SubComponentSpec[]; partner: SubComponentSpec
       specBasename: 'event_bottom_ticket_bar',
     },
     {
+      widget: 'TicketSelectionSheet',
+      parentRoute: 'EventDetailRoute',
+      filePath: 'apps/app_user/lib/src/features/ticket/ui/ticket_selection_sheet.dart',
+      specBasename: 'ticket_selection_sheet',
+    },
+    {
       widget: 'EventNowBar',
       parentRoute: 'HomeRoute',
       filePath: 'apps/app_user/lib/src/features/home/widgets/event_now_bar.dart',

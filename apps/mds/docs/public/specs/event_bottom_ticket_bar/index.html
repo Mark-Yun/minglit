@@ -207,7 +207,7 @@ body.dark-mode .visual-gallery {
         <th>Hierarchy</th>
         <td>
           <strong>Parent</strong>: <a href="/specs/event_detail_page/index.html"><code>EventDetailPage</code></a> ⑥ 영역으로 부착<br>
-          <strong>Children</strong>: <em>—</em>
+          <strong>Children</strong>: <a href="/specs/ticket_selection_sheet/index.html"><code>TicketSelectionSheet</code></a> (구매 가능 admission action에서 여는 modal sheet)
         </td>
       </tr>
       <tr>
@@ -222,8 +222,8 @@ body.dark-mode .visual-gallery {
         <td>
           <strong>Entry</strong>: <a href="/specs/event_detail_page/index.html">EventDetailPage</a>의 ⑥ 영역으로 자동 부착.<br>
           <strong>Exit</strong>:
-          ① <code>eligible</code> → 티켓 선택 바텀시트 → <code>EventApplicationWizard</code>;
-          ② <code>qualificationRequired</code> → 티켓 선택 바텀시트(상단 심사 안내 banner) → wizard;
+          ① <code>eligible</code> → <a href="/specs/ticket_selection_sheet/index.html">티켓 선택 바텀시트</a> → <code>EventApplicationWizard</code>;
+          ② <code>qualificationRequired</code> → <a href="/specs/ticket_selection_sheet/index.html">티켓 선택 바텀시트</a> → wizard;
           ③ <code>guest</code> → 로그인 화면;
           ④ <code>identityRequired</code> → 본인인증 화면;
           ⑤ <code>pendingPayment</code> → wizard 결제 step;
@@ -1054,7 +1054,7 @@ body.dark-mode .visual-gallery {
         <tr><td><strong>File path</strong></td><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/event/detail/event_bottom_ticket_bar.dart"><code>apps/app_user/lib/src/features/event/detail/event_bottom_ticket_bar.dart</code></a></td></tr>
         <tr><td><strong>Controller / Provider</strong></td><td><code>eventAdmissionControllerProvider(event)</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/event/admission/event_admission_controller.dart"><code>event_admission_controller.dart</code></a></td></tr>
         <tr><td><strong>State mapping</strong></td><td><code>AdmissionButtonConfig.fromState()</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/event/admission/admission_action_handler.dart"><code>admission_action_handler.dart</code></a> — 12개 state → 라벨/style 매핑 (designing 변경: "신청" → "구매" 5개 라벨)</td></tr>
-        <tr><td><strong>Ticket selection sheet</strong></td><td><code>TicketSelectionSheet</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/ticket/ui/ticket_selection_sheet.dart"><code>ticket_selection_sheet.dart</code></a> · 진입 helper: <code>eventCoordinator.showTicketSelection()</code></td></tr>
+        <tr><td><strong>Ticket selection sheet</strong></td><td><a href="/specs/ticket_selection_sheet/index.html"><code>TicketSelectionSheet</code></a> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/ticket/ui/ticket_selection_sheet.dart"><code>ticket_selection_sheet.dart</code></a> · 진입 helper: <code>eventCoordinator.showTicketSelection()</code></td></tr>
         <tr><td><strong>Kit wrapper</strong></td><td><code>MinglitButton</code> · <code>shared/packages/mds/core/lib/src/ui/widgets/common/minglit_button.dart</code></td></tr>
         <tr><td><strong>Route</strong></td><td>(none — bar는 EventDetailPage 일부, 자체 route 없음)</td></tr>
       </tbody>
@@ -1070,6 +1070,7 @@ body.dark-mode .visual-gallery {
       <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
       <tbody>
         <tr><td><a href="/specs/event_detail_page/index.html"><code>EventDetailPage</code></a></td><td>Parent — bar는 ⑥ 영역으로 자동 부착</td></tr>
+        <tr><td><a href="/specs/ticket_selection_sheet/index.html"><code>TicketSelectionSheet</code></a></td><td>구매 가능 admission action 탭 후 여는 child sheet — 추천/잠금/수량/다음 CTA 세부 spec</td></tr>
         <tr><td><code>EventApplicationWizard</code> (TBD spec)</td><td>"다음" 탭 후 결제 wizard로 이동 (verify → payment 2단계)</td></tr>
         <tr><td><a href="/specs/login_page/index.html"><code>LoginPage</code></a></td><td>guest state 탭 시 <code>from='/events/:id'</code> 파라미터로 이동</td></tr>
       </tbody>
