@@ -24,21 +24,34 @@ flutter drive \
 | `bank_account_page` | loading · no-account · with-account · dark |
 | `checkin_placeholder_page` | loading · error · empty · selection · selection-dark |
 | `create_verification_page` | empty · with-fields · dark |
+| `event_application_manage_page` | list · loading · empty · error |
+| `event_application_review_carousel_page` | first-page · middle-page · last-page · loading |
+| `event_application_review_confirm_page` | default · submitting · success |
 | `event_application_detail_page` | pending-review · approved · rejected · paid · reject-dialog · loading |
 | `event_application_list_page` | default · empty · asymmetric · over-capacity · full-capacity · approved-tab · rejected-tab · refund-tab · list-tab-empty |
+| `event_create_page` | empty · with-fields · submitting · success |
+| `event_detail_page` | draft · published · ended · loading |
+| `event_edit_page` | loading · editable · invalid · submitting |
 | `location_guide_page` | default · loading |
 | `more_page` | default · limited-permissions |
 | `party_list_page` | default · empty · loading · error · help |
+| `partner_apply_page` | initial · form-filled · submit-loading · submitted |
 | `partner_application_detail_page` | pending · approved · rejected · needs-correction · loading · not-found |
 | `partner_apply_status_page` | pending · needs-correction · needs-correction-comment |
+| `partner_event_detail_page` | loading · active · closed |
+| `partner_guide` | loading · intro · faq |
 | `partner_home_page` | default |
 | `partner_login_page` | default-ios · default-android · loading · auth-error |
 | `partner_member_list_page` | default · empty · loading · error · invite-snackbar |
 | `partner_member_permission_page` | default · owner-role · not-found · loading · error |
 | `partner_welcome_page` | default |
+| `party_create_wizard_page` | step-1 · step-2 · step-3 · complete |
+| `party_detail_page` | loading · open · closed · full |
 | `recurrence_management_screen` | active · paused · cancelled · no-rule · action-loading · loading · active-dark |
 | `settlement_detail_page` | completed · pending · failed · hold · loading |
 | `settlement_page` | loading · empty · error |
+| `ticket_create_page` | empty · with-fields · validation-error · submitting |
+| `ticket_edit_page` | loading · editable · validation-error · saved |
 | `verification_manage_page` | loading · active-empty · active-with-items · archived-with-items · dark |
 
 ## 구조
@@ -64,12 +77,30 @@ mds-emulator-render/
 ├── create_verification_page/
 │   ├── builder.dart
 │   └── create_verification_page_test.dart
+├── event_application_manage_page/
+│   ├── builder.dart
+│   └── event_application_manage_page_test.dart
+├── event_application_review_carousel_page/
+│   ├── builder.dart
+│   └── event_application_review_carousel_page_test.dart
+├── event_application_review_confirm_page/
+│   ├── builder.dart
+│   └── event_application_review_confirm_page_test.dart
 ├── event_application_detail_page/
 │   ├── builder.dart
 │   └── event_application_detail_page_test.dart
 ├── event_application_list_page/
 │   ├── builder.dart
 │   └── event_application_list_page_test.dart
+├── event_create_page/
+│   ├── builder.dart
+│   └── event_create_page_test.dart
+├── event_detail_page/
+│   ├── builder.dart
+│   └── event_detail_page_test.dart
+├── event_edit_page/
+│   ├── builder.dart
+│   └── event_edit_page_test.dart
 ├── location_guide_page/
 │   ├── builder.dart
 │   └── location_guide_page_test.dart
@@ -79,12 +110,27 @@ mds-emulator-render/
 ├── party_list_page/
 │   ├── builder.dart
 │   └── party_list_page_test.dart
+├── party_create_wizard_page/
+│   ├── builder.dart
+│   └── party_create_wizard_page_test.dart
+├── party_detail_page/
+│   ├── builder.dart
+│   └── party_detail_page_test.dart
+├── partner_apply_page/
+│   ├── builder.dart
+│   └── partner_apply_page_test.dart
 ├── partner_application_detail_page/
 │   ├── builder.dart
 │   └── partner_application_detail_page_test.dart
 ├── partner_apply_status_page/
 │   ├── builder.dart
 │   └── partner_apply_status_page_test.dart
+├── partner_event_detail_page/
+│   ├── builder.dart
+│   └── partner_event_detail_page_test.dart
+├── partner_guide/
+│   ├── builder.dart
+│   └── partner_guide_test.dart
 ├── partner_home_page/
 │   ├── builder.dart
 │   └── partner_home_page_test.dart
@@ -109,6 +155,12 @@ mds-emulator-render/
 ├── settlement_page/
 │   ├── builder.dart
 │   └── settlement_page_test.dart
+├── ticket_create_page/
+│   ├── builder.dart
+│   └── ticket_create_page_test.dart
+├── ticket_edit_page/
+│   ├── builder.dart
+│   └── ticket_edit_page_test.dart
 └── verification_manage_page/
     ├── builder.dart
     └── verification_manage_page_test.dart
