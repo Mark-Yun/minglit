@@ -1,18 +1,63 @@
+import 'dart:io';
+
+import 'package:app_user/src/routing/app_coordinator.dart';
+import 'package:cross_file/cross_file.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 // Shared widget used by both home (EventNowBottomSheet) and
 // event/admission (eventEndedWithResults CTA).
-class MatchResultsContent extends ConsumerWidget {
-  const MatchResultsContent({required this.activeEvent, super.key});
+class MatchResultsContent extends ConsumerStatefulWidget {
+  const MatchResultsContent({
+    required this.activeEvent,
+    super.key,
+    this.onSaveContact,
+    this.onNavigateHome,
+  });
 
   final TodayActiveEvent activeEvent;
+  final Future<void> Function(MatchPair match)? onSaveContact;
+  final VoidCallback? onNavigateHome;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final event = activeEvent.event;
+  ConsumerState<MatchResultsContent> createState() =>
+      _MatchResultsContentState();
+}
+
+class _MatchResultsContentState extends ConsumerState<MatchResultsContent> {
+  late final PageController _pageController;
+  int _currentPage = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(viewportFraction: 0.88);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final event = widget.activeEvent.event;
     final theme = Theme.of(context);
     final matchesAsync = ref.watch(myMatchesProvider(event.id));
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+
+    final hasMatches = matchesAsync.maybeWhen(
+      data: (matches) => matches.isNotEmpty,
+      orElse: () => false,
+    );
+
+    final animationDuration = reduceMotion
+        ? Duration.zero
+        : MinglitAnimation.medium;
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -22,26 +67,19 @@ class MatchResultsContent extends ConsumerWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _DragHandle(),
-          const SizedBox(height: MinglitSpacing.xlarge),
-          Container(
-            width: 64,
-            height: 64,
-            decoration: const BoxDecoration(
-              color: MinglitColors.primary,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.favorite,
-              color: MinglitColors.background,
-              size: 36,
-            ),
+          const _DragHandle(),
+          SizedBox(
+            height: hasMatches ? MinglitSpacing.xlarge : MinglitSpacing.medium,
           ),
-          const SizedBox(height: MinglitSpacing.medium),
+          _MatchedHeroBadge(
+            visible: hasMatches,
+            reduceMotion: reduceMotion,
+          ),
+          SizedBox(height: hasMatches ? MinglitSpacing.medium : 0),
           Text(
             '매칭 결과',
             style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: MinglitSpacing.small),
@@ -53,19 +91,58 @@ class MatchResultsContent extends ConsumerWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: MinglitSpacing.xlarge),
-          matchesAsync.when(
-            data: (matches) {
-              if (matches.isEmpty) return _buildEmptyResult(theme);
-              return _buildMatchList(theme, matches);
-            },
-            loading: () => const SizedBox(
-              height: 120,
-              child: Center(child: MinglitCircularProgressIndicator()),
+          AnimatedSwitcher(
+            duration: animationDuration,
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeOut,
+            child: _buildResultSlot(
+              context: context,
+              theme: theme,
+              matchesAsync: matchesAsync,
+              reduceMotion: reduceMotion,
             ),
-            error: (_, _) => _buildEmptyResult(theme),
           ),
           const SizedBox(height: MinglitSpacing.medium),
         ],
+      ),
+    );
+  }
+
+  Widget _buildResultSlot({
+    required BuildContext context,
+    required ThemeData theme,
+    required AsyncValue<List<MatchPair>> matchesAsync,
+    required bool reduceMotion,
+  }) {
+    return matchesAsync.when(
+      data: (matches) {
+        if (matches.isEmpty) {
+          return KeyedSubtree(
+            key: const ValueKey('empty'),
+            child: _buildEmptyResult(theme),
+          );
+        }
+
+        return KeyedSubtree(
+          key: const ValueKey('matched'),
+          child: _buildMatchedResults(
+            context: context,
+            theme: theme,
+            matches: matches,
+            reduceMotion: reduceMotion,
+          ),
+        );
+      },
+      loading: () => const KeyedSubtree(
+        key: ValueKey('loading'),
+        child: SizedBox(
+          height: 120,
+          child: Center(child: MinglitCircularProgressIndicator()),
+        ),
+      ),
+      error: (_, _) => KeyedSubtree(
+        key: const ValueKey('error'),
+        child: _buildEmptyResult(theme),
       ),
     );
   }
@@ -84,96 +161,263 @@ class MatchResultsContent extends ConsumerWidget {
           ),
           const SizedBox(height: MinglitSpacing.medium),
           Text(
-            '이번엔 아쉽지만, 다음 기회에!',
+            '좋은 인연은 한번에 정해지지 않으니까요.\n다음 자리에서 더 나은 인연을 만나길 기원합니다.',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: MinglitColors.textSecondary,
             ),
             textAlign: TextAlign.center,
           ),
+          const SizedBox(height: MinglitSpacing.large),
+          MinglitButton(
+            label: '다음 이벤트 찾기',
+            size: MinglitButtonSize.medium,
+            expand: false,
+            onPressed: _goToHome,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildMatchList(ThemeData theme, List<MatchPair> matches) {
-    return Column(
-      children: [
-        Text(
-          '${matches.length}명과 매칭되었어요!',
-          style: theme.textTheme.titleSmall?.copyWith(
-            color: MinglitColors.primary,
-            fontWeight: FontWeight.w600,
+  Widget _buildMatchedResults({
+    required BuildContext context,
+    required ThemeData theme,
+    required List<MatchPair> matches,
+    required bool reduceMotion,
+  }) {
+    final duration = reduceMotion ? Duration.zero : MinglitAnimation.medium;
+
+    return TweenAnimationBuilder<double>(
+      duration: duration,
+      curve: Curves.easeOut,
+      tween: Tween(begin: 0, end: 1),
+      builder: (context, t, _) {
+        final copyOpacity = _segment(t, 0.2, 0.6);
+        final cardsOpacity = _segment(t, 0.45, 1);
+
+        return Column(
+          children: [
+            Text(
+              '${matches.length}명과 매칭되었어요!',
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: MinglitColors.primary,
+                fontWeight: FontWeight.w700,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: MinglitSpacing.small),
+            Opacity(
+              opacity: copyOpacity,
+              child: Transform.translate(
+                offset: Offset(0, (1 - copyOpacity) * 6),
+                child: Text(
+                  '매칭된 상대방에게 서로의 연락처가 공유되었습니다.\n오늘의 여운이 이어질 수 있게 편하게 연락해보세요.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: MinglitColors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+            const SizedBox(height: MinglitSpacing.medium),
+            Opacity(
+              opacity: cardsOpacity,
+              child: Transform.translate(
+                offset: Offset(0, (1 - cardsOpacity) * 10),
+                child: _buildCards(matches),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildCards(List<MatchPair> matches) {
+    if (matches.length == 1) {
+      return Align(
+        child: SizedBox(
+          width: 292,
+          child: _MatchResultCard(
+            match: matches.first,
+            onSaveContact: () => _onSaveContactPressed(matches.first),
           ),
         ),
-        const SizedBox(height: MinglitSpacing.medium),
-        for (final match in matches) ...[
-          _MatchResultCard(match: match),
-          const SizedBox(height: MinglitSpacing.small),
-        ],
+      );
+    }
+
+    return Column(
+      children: [
+        SizedBox(
+          height: 198,
+          child: PageView.builder(
+            controller: _pageController,
+            itemCount: matches.length,
+            padEnds: false,
+            onPageChanged: (index) {
+              if (!mounted) return;
+              setState(() {
+                _currentPage = index;
+              });
+            },
+            itemBuilder: (context, index) {
+              return Padding(
+                padding: EdgeInsets.only(
+                  right: index == matches.length - 1
+                      ? 0
+                      : MinglitSpacing.medium,
+                ),
+                child: _MatchResultCard(
+                  match: matches[index],
+                  onSaveContact: () => _onSaveContactPressed(matches[index]),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: MinglitSpacing.small),
+        _CarouselIndicator(
+          itemCount: matches.length,
+          currentIndex: _currentPage,
+        ),
       ],
     );
+  }
+
+  Future<void> _onSaveContactPressed(MatchPair match) async {
+    final saveContact = widget.onSaveContact ?? _saveContactToOs;
+    try {
+      await saveContact(match);
+    } catch (error, stackTrace) {
+      if (!mounted) return;
+      handleMinglitError(context, error, stackTrace);
+    }
+  }
+
+  Future<void> _saveContactToOs(MatchPair match) async {
+    final phone = match.partnerContact?.trim();
+    if (phone == null || phone.isEmpty) return;
+
+    final name = (match.partnerName?.trim().isNotEmpty ?? false)
+        ? match.partnerName!.trim()
+        : '알 수 없음';
+
+    final directory = await getTemporaryDirectory();
+    final safeName = name.replaceAll(RegExp(r'[^a-zA-Z0-9가-힣_-]+'), '_');
+    final file = File(
+      '${directory.path}/minglit_match_${match.partnerId}_$safeName.vcf',
+    );
+
+    await file.writeAsString(
+      _buildVCard(name: name, phone: phone),
+      flush: true,
+    );
+
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [
+          XFile(file.path, mimeType: 'text/vcard'),
+        ],
+        subject: '연락처 저장하기',
+      ),
+    );
+  }
+
+  void _goToHome() {
+    if (widget.onNavigateHome != null) {
+      widget.onNavigateHome!();
+      return;
+    }
+    Navigator.of(context).maybePop();
+    ref.read(appCoordinatorProvider).goToHome();
   }
 }
 
 class _MatchResultCard extends StatelessWidget {
-  const _MatchResultCard({required this.match});
+  const _MatchResultCard({
+    required this.match,
+    required this.onSaveContact,
+  });
 
   final MatchPair match;
+  final Future<void> Function() onSaveContact;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final contact = match.partnerContact?.trim();
+
     return Container(
-      padding: const EdgeInsets.all(MinglitSpacing.medium),
+      constraints: const BoxConstraints(minHeight: 190),
+      padding: const EdgeInsets.all(MinglitSpacing.large),
       decoration: BoxDecoration(
         color: MinglitColors.surface,
         borderRadius: BorderRadius.circular(MinglitRadius.card),
-        border: Border.all(
-          color: MinglitColors.primary.withValues(alpha: MinglitOpacity.muted),
-        ),
       ),
-      child: Row(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Fix #1936: MinglitAvatarImage handles caching + error fallback
-          MinglitAvatarImage(
-            radius: 24,
-            url: match.partnerProfileImage,
-            backgroundColor: MinglitColors.primary.withValues(
-              alpha: MinglitOpacity.highlight,
-            ),
-            fallbackIconColor: MinglitColors.primary.withValues(
-              alpha: MinglitOpacity.separator,
-            ),
-          ),
-          const SizedBox(width: MinglitSpacing.medium),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  match.partnerName ?? '알 수 없음',
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+          Row(
+            children: [
+              MinglitAvatarImage(
+                radius: 24,
+                url: match.partnerProfileImage,
+                backgroundColor: MinglitColors.tertiary.withValues(
+                  alpha: MinglitOpacity.highlight,
                 ),
-                if (match.partnerContact != null) ...[
-                  const SizedBox(height: MinglitSpacing.xxsmall),
-                  Text(
-                    // Fix #1925: mask phone number to prevent PII exposure in UI
-                    // (개인정보보호법 §24 — phone numbers are sensitive PII)
-                    _maskPhone(match.partnerContact!),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: MinglitColors.textSecondary,
+                fallbackIconColor: MinglitColors.tertiary.withValues(
+                  alpha: MinglitOpacity.mediumEmphasis,
+                ),
+              ),
+              const SizedBox(width: MinglitSpacing.medium),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '공유된 연락처',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: MinglitColors.tertiary,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
-                  ),
-                ],
-              ],
-            ),
+                    const SizedBox(height: MinglitSpacing.xxsmall),
+                    Text(
+                      match.partnerName ?? '알 수 없음',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    if (contact != null && contact.isNotEmpty) ...[
+                      const SizedBox(height: MinglitSpacing.xsmall),
+                      Text(
+                        contact,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: MinglitColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ),
-          const Icon(
-            Icons.favorite,
-            color: MinglitColors.primary,
-            size: MinglitIconSize.small,
+          const SizedBox(height: MinglitSpacing.large),
+          Theme(
+            data: theme.copyWith(
+              colorScheme: theme.colorScheme.copyWith(
+                primary: MinglitColors.tertiary,
+                onPrimary: MinglitColors.background,
+              ),
+            ),
+            child: MinglitButton(
+              label: '연락처 저장하기',
+              size: MinglitButtonSize.medium,
+              onPressed: (contact != null && contact.isNotEmpty)
+                  ? () => onSaveContact()
+                  : null,
+            ),
           ),
         ],
       ),
@@ -181,27 +425,81 @@ class _MatchResultCard extends StatelessWidget {
   }
 }
 
-/// Fix #1925: masks middle digits of a Korean phone number to protect PII.
-/// Handles both raw (+821012345678) and local (01012345678) formats.
-/// Result: 010-****-5678
-String _maskPhone(String phone) {
-  final digits = phone.replaceAll(RegExp(r'\D'), '');
-  // Normalize country code: +82XX... → 0XX...
-  final local = digits.startsWith('82') && digits.length > 10
-      ? '0${digits.substring(2)}'
-      : digits;
-  if (local.length == 11) {
-    return '${local.substring(0, 3)}-****-${local.substring(7)}';
+class _CarouselIndicator extends StatelessWidget {
+  const _CarouselIndicator({
+    required this.itemCount,
+    required this.currentIndex,
+  });
+
+  final int itemCount;
+  final int currentIndex;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(itemCount, (index) {
+        final active = index == currentIndex;
+        return AnimatedContainer(
+          duration: MinglitAnimation.fast,
+          margin: const EdgeInsets.symmetric(
+            horizontal: MinglitSpacing.xxsmall,
+          ),
+          width: active ? 18 : 6,
+          height: 6,
+          decoration: BoxDecoration(
+            color: active
+                ? MinglitColors.tertiary
+                : MinglitColors.textSecondary.withValues(alpha: 0.24),
+            borderRadius: BorderRadius.circular(999),
+          ),
+        );
+      }),
+    );
   }
-  if (local.length == 10) {
-    return '${local.substring(0, 3)}-***-${local.substring(6)}';
+}
+
+class _MatchedHeroBadge extends StatelessWidget {
+  const _MatchedHeroBadge({
+    required this.visible,
+    required this.reduceMotion,
+  });
+
+  final bool visible;
+  final bool reduceMotion;
+
+  @override
+  Widget build(BuildContext context) {
+    final duration = reduceMotion ? Duration.zero : MinglitAnimation.medium;
+    return AnimatedOpacity(
+      duration: duration,
+      curve: Curves.easeOut,
+      opacity: visible ? 1 : 0,
+      child: AnimatedScale(
+        duration: duration,
+        curve: Curves.easeOutBack,
+        scale: visible ? 1 : 0.92,
+        child: Container(
+          width: 64,
+          height: 64,
+          decoration: const BoxDecoration(
+            color: MinglitColors.primary,
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.check_rounded,
+            color: MinglitColors.background,
+            size: 34,
+          ),
+        ),
+      ),
+    );
   }
-  // Fallback: never expose full input — short numbers (<=4 digits) are fully masked
-  if (local.length <= 4) return '***-****-****';
-  return '***-****-${local.substring(local.length - 4)}';
 }
 
 class _DragHandle extends StatelessWidget {
+  const _DragHandle();
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -215,4 +513,25 @@ class _DragHandle extends StatelessWidget {
       ),
     );
   }
+}
+
+double _segment(double t, double start, double end) {
+  if (t <= start) return 0;
+  if (t >= end) return 1;
+  return (t - start) / (end - start);
+}
+
+String _buildVCard({required String name, required String phone}) {
+  final escapedName = name
+      .replaceAll('\\', '\\\\')
+      .replaceAll(';', r'\;')
+      .replaceAll(',', r'\,')
+      .replaceAll('\n', r'\n');
+
+  return '''BEGIN:VCARD
+VERSION:3.0
+FN:$escapedName
+TEL;TYPE=CELL:$phone
+END:VCARD
+''';
 }
