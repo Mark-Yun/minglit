@@ -16,4 +16,4 @@
 - [features BLUEDOC](../BLUEDOC.md) — feature 정의 및 분류 기준
 
 ---
-_Reviewed: 2026-05-17 22:32_
+_Reviewed: 2026-05-31 17:45_
