@@ -19,7 +19,7 @@ jobs:
     uses: ./.github/workflows/shared-pr-source-guard.yml
     with:
       target: rc
-      normal_head_regex: ''
+      normal_head_regex: '^(dev|cut/dev-rc/.*)$'
       hotfix_head_regex: '^rc/hotfix/'
       hotfix_label: 'hotfix:rc-approved'
     secrets: inherit
