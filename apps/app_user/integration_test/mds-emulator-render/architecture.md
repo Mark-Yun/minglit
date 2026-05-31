@@ -18,7 +18,7 @@
 | `_registry.dart` | (없음) | 모든 catalog 자동 발견 + shard 실행 |
 | `scripts/mds_render_coverage.dart` | (없음) | MDS ↔ catalog gap report (CLI) |
 | `scripts/scaffold_mds_render.dart` | (없음) | 새 screen 자동 폴더+빌더+test 생성 |
-| `.github/workflows/monitor-mds-render-coverage.yml` | (없음) | daily cron, 100% 미만 시 이슈 |
+| `.github/workflows/monitor-mds-render-coverage.yml` | daily cron + app_user/app_partner shard render + coverage monitor issue 갱신 | artifact → repo promotion/commit 정책 고도화 |
 
 **현재 상태**: Phase 1 만 사용 가능. 신규 화면 추가는 `home_page/` 패턴 그대로 복제하면 됨.
 
@@ -267,12 +267,14 @@ $ dart run scripts/scaffold_mds_render.dart event_detail_page
 ## CI 병렬화
 
 ```yaml
-# .github/workflows/mds-emulator-render.yml
+# .github/workflows/monitor-mds-render-coverage.yml
 strategy:
   matrix:
-    shard: [1, 2, 3, 4]
+    app: [user, partner]
+    shard_index: [0, 1, 2, 3]
 steps:
-  - run: dart run scripts/run_render_shard.dart --shard ${{ matrix.shard }}/4
+  - uses: reactivecircus/android-emulator-runner@v2
+  - run: flutter drive --target=integration_test/mds-emulator-render/<screen>/<screen>_test.dart
 ```
 
 4 shard 분산 → 각 ~19 screen → 전체 ~20분.
@@ -293,4 +295,4 @@ steps:
 
 - [BLUEDOC](./BLUEDOC.md) — 폴더 컨벤션 + 테스트 작성 룰 간략
 - [상위 BLUEDOC](../BLUEDOC.md) — integration_test 폴더 entry
-- 워크플로우 페어: [sync-mds-mockups.yml](../../../../.github/workflows/sync-mds-mockups.yml) (MDS 디자인) ↔ `mds-emulator-render.yml` (실제 렌더링, 예정)
+- 워크플로우 페어: [sync-mds-mockups.yml](../../../../.github/workflows/sync-mds-mockups.yml) (MDS 디자인) ↔ [monitor-mds-render-coverage.yml](../../../../.github/workflows/monitor-mds-render-coverage.yml) (실제 렌더링 + coverage 모니터)
