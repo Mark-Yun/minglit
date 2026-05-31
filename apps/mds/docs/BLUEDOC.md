@@ -9,7 +9,7 @@ Minglit Design System 의 **시각 SSOT + 문서 사이트**. 화면 spec, 컴�
 | [`src/app/`](./src/app/) | Next.js route pages (`/`, `/tokens`, `/components`, `/screens`, `/icons`, `/flows`) |
 | [`src/lib/components.ts`](./src/lib/components.ts) | MDS 컴포넌트 manifest SSOT |
 | [`src/components/specs/`](./src/components/specs/) | 컴포넌트별 inline visual playground |
-| [`public/specs/`](./public/specs/) | 화면 spec source HTML + generated MD/PNG |
+| [`public/specs/BLUEDOC.md`](./public/specs/BLUEDOC.md) | 화면 spec source HTML + generated MD/PNG |
 | [`scripts/render-spec-mockups.js`](./scripts/render-spec-mockups.js) | 화면 spec PNG + index.md 생성 |
 | [`scripts/sync-icons-data.mjs`](./scripts/sync-icons-data.mjs) | icon manifest 를 docs 데이터로 동기화 |
 | [`package.json`](./package.json) | dev/build/lint 및 token/icon sync 명령 |
