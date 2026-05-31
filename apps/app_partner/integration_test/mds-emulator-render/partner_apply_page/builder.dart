@@ -19,7 +19,12 @@ class PartnerApplyPageBuilder
     extends MdsScreenBuilder<_PartnerApplyPageRenderPage> {
   PartnerApplyPageBuilder() : super(page: const _PartnerApplyPageRenderPage());
 
-  void defaultState() {}
+  PartnerApplyPageBuilder defaultState() {
+    return this;
+  }
 
-  void dark() => useDarkTheme();
+  PartnerApplyPageBuilder dark() {
+    useDarkTheme();
+    return this;
+  }
 }

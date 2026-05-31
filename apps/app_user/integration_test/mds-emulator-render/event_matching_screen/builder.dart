@@ -20,7 +20,12 @@ class EventMatchingScreenBuilder
   EventMatchingScreenBuilder()
     : super(page: const _EventMatchingScreenRenderPage());
 
-  void defaultState() {}
+  EventMatchingScreenBuilder defaultState() {
+    return this;
+  }
 
-  void dark() => useDarkTheme();
+  EventMatchingScreenBuilder dark() {
+    useDarkTheme();
+    return this;
+  }
 }

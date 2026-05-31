@@ -20,7 +20,12 @@ class EventApplicationManagePageBuilder
   EventApplicationManagePageBuilder()
     : super(page: const _EventApplicationManagePageRenderPage());
 
-  void defaultState() {}
+  EventApplicationManagePageBuilder defaultState() {
+    return this;
+  }
 
-  void dark() => useDarkTheme();
+  EventApplicationManagePageBuilder dark() {
+    useDarkTheme();
+    return this;
+  }
 }

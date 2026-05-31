@@ -20,7 +20,12 @@ class EventApplicationReviewConfirmPageBuilder
   EventApplicationReviewConfirmPageBuilder()
     : super(page: const _EventApplicationReviewConfirmPageRenderPage());
 
-  void defaultState() {}
+  EventApplicationReviewConfirmPageBuilder defaultState() {
+    return this;
+  }
 
-  void dark() => useDarkTheme();
+  EventApplicationReviewConfirmPageBuilder dark() {
+    useDarkTheme();
+    return this;
+  }
 }

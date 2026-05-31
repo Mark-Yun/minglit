@@ -20,7 +20,12 @@ class EventApplicationReviewPageBuilder
   EventApplicationReviewPageBuilder()
     : super(page: const _EventApplicationReviewPageRenderPage());
 
-  void defaultState() {}
+  EventApplicationReviewPageBuilder defaultState() {
+    return this;
+  }
 
-  void dark() => useDarkTheme();
+  EventApplicationReviewPageBuilder dark() {
+    useDarkTheme();
+    return this;
+  }
 }

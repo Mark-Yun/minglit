@@ -20,7 +20,12 @@ class EventReviewScreenBuilder
   EventReviewScreenBuilder()
     : super(page: const _EventReviewScreenRenderPage());
 
-  void defaultState() {}
+  EventReviewScreenBuilder defaultState() {
+    return this;
+  }
 
-  void dark() => useDarkTheme();
+  EventReviewScreenBuilder dark() {
+    useDarkTheme();
+    return this;
+  }
 }

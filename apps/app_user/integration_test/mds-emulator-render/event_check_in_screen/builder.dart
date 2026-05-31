@@ -20,7 +20,12 @@ class EventCheckInScreenBuilder
   EventCheckInScreenBuilder()
     : super(page: const _EventCheckInScreenRenderPage());
 
-  void defaultState() {}
+  EventCheckInScreenBuilder defaultState() {
+    return this;
+  }
 
-  void dark() => useDarkTheme();
+  EventCheckInScreenBuilder dark() {
+    useDarkTheme();
+    return this;
+  }
 }

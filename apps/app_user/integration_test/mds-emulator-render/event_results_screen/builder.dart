@@ -20,7 +20,12 @@ class EventResultsScreenBuilder
   EventResultsScreenBuilder()
     : super(page: const _EventResultsScreenRenderPage());
 
-  void defaultState() {}
+  EventResultsScreenBuilder defaultState() {
+    return this;
+  }
 
-  void dark() => useDarkTheme();
+  EventResultsScreenBuilder dark() {
+    useDarkTheme();
+    return this;
+  }
 }

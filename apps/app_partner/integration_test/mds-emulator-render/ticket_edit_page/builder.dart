@@ -19,7 +19,12 @@ class TicketEditPageBuilder
     extends MdsScreenBuilder<_TicketEditPageRenderPage> {
   TicketEditPageBuilder() : super(page: const _TicketEditPageRenderPage());
 
-  void defaultState() {}
+  TicketEditPageBuilder defaultState() {
+    return this;
+  }
 
-  void dark() => useDarkTheme();
+  TicketEditPageBuilder dark() {
+    useDarkTheme();
+    return this;
+  }
 }

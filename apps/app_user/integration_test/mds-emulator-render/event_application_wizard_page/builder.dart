@@ -20,7 +20,12 @@ class EventApplicationWizardPageBuilder
   EventApplicationWizardPageBuilder()
     : super(page: const _EventApplicationWizardPageRenderPage());
 
-  void defaultState() {}
+  EventApplicationWizardPageBuilder defaultState() {
+    return this;
+  }
 
-  void dark() => useDarkTheme();
+  EventApplicationWizardPageBuilder dark() {
+    useDarkTheme();
+    return this;
+  }
 }

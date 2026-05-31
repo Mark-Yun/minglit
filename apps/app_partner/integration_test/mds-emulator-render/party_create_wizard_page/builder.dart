@@ -20,7 +20,12 @@ class PartyCreateWizardPageBuilder
   PartyCreateWizardPageBuilder()
     : super(page: const _PartyCreateWizardPageRenderPage());
 
-  void defaultState() {}
+  PartyCreateWizardPageBuilder defaultState() {
+    return this;
+  }
 
-  void dark() => useDarkTheme();
+  PartyCreateWizardPageBuilder dark() {
+    useDarkTheme();
+    return this;
+  }
 }

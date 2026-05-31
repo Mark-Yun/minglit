@@ -18,7 +18,12 @@ class _EventEditPageRenderPage extends StatelessWidget {
 class EventEditPageBuilder extends MdsScreenBuilder<_EventEditPageRenderPage> {
   EventEditPageBuilder() : super(page: const _EventEditPageRenderPage());
 
-  void defaultState() {}
+  EventEditPageBuilder defaultState() {
+    return this;
+  }
 
-  void dark() => useDarkTheme();
+  EventEditPageBuilder dark() {
+    useDarkTheme();
+    return this;
+  }
 }

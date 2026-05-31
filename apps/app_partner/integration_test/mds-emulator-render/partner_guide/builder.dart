@@ -18,7 +18,12 @@ class _PartnerGuideRenderPage extends StatelessWidget {
 class PartnerGuideBuilder extends MdsScreenBuilder<_PartnerGuideRenderPage> {
   PartnerGuideBuilder() : super(page: const _PartnerGuideRenderPage());
 
-  void defaultState() {}
+  PartnerGuideBuilder defaultState() {
+    return this;
+  }
 
-  void dark() => useDarkTheme();
+  PartnerGuideBuilder dark() {
+    useDarkTheme();
+    return this;
+  }
 }

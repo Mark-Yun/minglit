@@ -20,7 +20,12 @@ class PartnerEventDetailPageBuilder
   PartnerEventDetailPageBuilder()
     : super(page: const _PartnerEventDetailPageRenderPage());
 
-  void defaultState() {}
+  PartnerEventDetailPageBuilder defaultState() {
+    return this;
+  }
 
-  void dark() => useDarkTheme();
+  PartnerEventDetailPageBuilder dark() {
+    useDarkTheme();
+    return this;
+  }
 }

@@ -19,7 +19,12 @@ class EventDetailPageBuilder
     extends MdsScreenBuilder<_EventDetailPageRenderPage> {
   EventDetailPageBuilder() : super(page: const _EventDetailPageRenderPage());
 
-  void defaultState() {}
+  EventDetailPageBuilder defaultState() {
+    return this;
+  }
 
-  void dark() => useDarkTheme();
+  EventDetailPageBuilder dark() {
+    useDarkTheme();
+    return this;
+  }
 }

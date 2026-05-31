@@ -20,7 +20,12 @@ class EventApplicationReviewCarouselPageBuilder
   EventApplicationReviewCarouselPageBuilder()
     : super(page: const _EventApplicationReviewCarouselPageRenderPage());
 
-  void defaultState() {}
+  EventApplicationReviewCarouselPageBuilder defaultState() {
+    return this;
+  }
 
-  void dark() => useDarkTheme();
+  EventApplicationReviewCarouselPageBuilder dark() {
+    useDarkTheme();
+    return this;
+  }
 }

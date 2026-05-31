@@ -19,7 +19,12 @@ class EventCreatePageBuilder
     extends MdsScreenBuilder<_EventCreatePageRenderPage> {
   EventCreatePageBuilder() : super(page: const _EventCreatePageRenderPage());
 
-  void defaultState() {}
+  EventCreatePageBuilder defaultState() {
+    return this;
+  }
 
-  void dark() => useDarkTheme();
+  EventCreatePageBuilder dark() {
+    useDarkTheme();
+    return this;
+  }
 }

@@ -19,7 +19,12 @@ class PartyDetailPageBuilder
     extends MdsScreenBuilder<_PartyDetailPageRenderPage> {
   PartyDetailPageBuilder() : super(page: const _PartyDetailPageRenderPage());
 
-  void defaultState() {}
+  PartyDetailPageBuilder defaultState() {
+    return this;
+  }
 
-  void dark() => useDarkTheme();
+  PartyDetailPageBuilder dark() {
+    useDarkTheme();
+    return this;
+  }
 }
