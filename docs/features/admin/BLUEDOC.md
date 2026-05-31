@@ -1,6 +1,6 @@
 # Admin Features
 
-관리자 도메인 — 내부 운영 도구. partner 앱 내부의 별도 권한 영역 또는 향후 별도 admin 앱으로 분리될 수 있는 기능들.
+관리자 도메인 — 내부 운영 도구. Flutter user/partner 앱이 아니라 향후 별도 Next.js admin console 에서 구현한다.
 
 ## 포함된 피쳐
 
