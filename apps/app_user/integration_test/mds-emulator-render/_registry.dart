@@ -18,12 +18,26 @@ import 'deletion_reason_page/deletion_reason_page_test.dart'
     as deletion_reason_page;
 import 'deletion_verify_page/deletion_verify_page_test.dart'
     as deletion_verify_page;
+import 'event_application_review_page/event_application_review_page_test.dart'
+    as event_application_review_page;
+import 'event_application_wizard_page/event_application_wizard_page_test.dart'
+    as event_application_wizard_page;
+import 'event_check_in_screen/event_check_in_screen_test.dart'
+    as event_check_in_screen;
+import 'event_checked_in_screen/event_checked_in_screen_test.dart'
+    as event_checked_in_screen;
 import 'event_card/event_card_test.dart' as event_card;
 import 'event_bottom_ticket_bar/event_bottom_ticket_bar_test.dart'
     as event_bottom_ticket_bar;
+import 'event_matching_screen/event_matching_screen_test.dart'
+    as event_matching_screen;
 import 'event_now_bar/event_now_bar_test.dart' as event_now_bar;
 import 'event_ongoing_banner/event_ongoing_banner_test.dart'
     as event_ongoing_banner;
+import 'event_results_screen/event_results_screen_test.dart'
+    as event_results_screen;
+import 'event_review_screen/event_review_screen_test.dart'
+    as event_review_screen;
 import 'home_page/home_page_test.dart' as home_page;
 import 'identity_verification_screen/identity_verification_screen_test.dart'
     as identity_verification_screen;
@@ -60,10 +74,17 @@ final List<MdsCatalog<MdsScreenBuilder<dynamic>>> allCatalogs = [
   deletion_info_page.catalogWithReason,
   deletion_reason_page.catalog,
   deletion_verify_page.catalog,
+  event_application_review_page.catalog,
+  event_application_wizard_page.catalog,
+  event_check_in_screen.catalog,
+  event_checked_in_screen.catalog,
   event_card.catalog,
   event_bottom_ticket_bar.catalog,
+  event_matching_screen.catalog,
   event_now_bar.catalog,
   event_ongoing_banner.catalog,
+  event_results_screen.catalog,
+  event_review_screen.catalog,
   home_page.catalog,
   identity_verification_screen.catalog,
   login_page.catalog,
