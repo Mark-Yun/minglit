@@ -2,47 +2,259 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>Spec — EventMatchingResultsScreen (app_user · EventMatchingResultsRoute · TBD)</title>
+<title>Spec — EventMatchingResultsScreen (app_user · MatchResultsContent)</title>
 <link rel="stylesheet" href="/specs/_spec.css">
 <style>
 /* ============================================================
-   EventMatchingResultsScreen — TBD placeholder.
+   MatchResultsContent — live shared modal-sheet content.
 
-   Phase 6 results 화면 — 좋아요 commit 이후 매치 reveal
-   (mutual likes만 양쪽에 노출 · 연락처 교환). 본 spec은
-   별도 디자인 라운드에서 채워질 예정이며, 현재는 cross-ref
-   링크 깨짐 방지를 위한 stub.
+   There is no standalone EventMatchingResultsRoute. The same content
+   is rendered inside EventNowBottomSheet phase 6 and the ended-event
+   "매칭 결과 보기" button sheet from event admission.
    ============================================================ */
-.viewport.tbd-viewport {
+.sheet-frame {
+  width: 390px;
+  max-width: 100%;
+  min-height: 520px;
+  margin: 0 auto;
+  padding: 0 0 var(--spacing-medium);
   background: var(--color-background);
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  box-shadow: 0 -8px 32px rgba(15, 23, 42, 0.14);
+  overflow: hidden;
+}
+body.dark-mode .sheet-frame {
+  background: var(--color-dark-background);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.46);
+}
+.results-sheet {
+  padding: var(--spacing-large) var(--spacing-screen-edge) var(--spacing-medium);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: var(--spacing-large);
-  text-align: center;
-  gap: var(--spacing-medium);
+  gap: 0;
 }
-body.dark-mode .viewport.tbd-viewport { background: var(--color-dark-background); }
-.tbd-icon {
-  width: 72px; height: 72px;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-  color: var(--color-primary);
+.drag-handle {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--color-text-secondary) 24%, transparent);
+}
+.hero-badge {
+  width: 64px;
+  height: 64px;
+  margin-top: var(--spacing-xlarge);
   display: grid;
   place-items: center;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--color-background);
+  font-size: 34px;
+  font-weight: 900;
+  line-height: 1;
 }
-.tbd-icon svg { width: 36px; height: 36px; }
-.tbd-title {
-  font-size: 18px;
+.sheet-title {
+  margin-top: var(--spacing-medium);
+  font-size: 22px;
+  line-height: 1.25;
   font-weight: 800;
   color: var(--color-text-primary);
 }
-.tbd-sub {
-  font-size: 13px;
+.sheet-subtitle {
+  margin-top: var(--spacing-small);
   color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 1.55;
+  text-align: center;
+}
+.match-section {
+  width: 100%;
+  margin-top: var(--spacing-xlarge);
+}
+.match-count {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: 15px;
+  line-height: 1.45;
+  font-weight: 700;
+  text-align: center;
+}
+.match-message {
+  margin: var(--spacing-small) auto var(--spacing-medium);
+  max-width: 320px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.55;
+  text-align: center;
+}
+.match-carousel {
+  display: flex;
+  gap: var(--spacing-medium);
+  margin: 0;
+  padding: 0 0 var(--spacing-small);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.match-carousel::-webkit-scrollbar {
+  display: none;
+}
+.single-match-slot {
+  display: flex;
+  justify-content: center;
+}
+.carousel-indicator {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-xsmall);
+  margin-top: var(--spacing-small);
+}
+.carousel-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-text-secondary) 24%, transparent);
+}
+.carousel-dot.is-active {
+  width: 18px;
+  background: var(--color-tertiary);
+}
+.match-card {
+  display: flex;
+  flex: 0 0 292px;
+  min-height: 190px;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: var(--spacing-large);
+  padding: var(--spacing-large);
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: none;
+  scroll-snap-align: start;
+}
+body.dark-mode .match-card {
+  background: var(--color-dark-surface);
+  box-shadow: none;
+}
+.match-card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-medium);
+}
+.avatar {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: color-mix(in srgb, var(--color-tertiary) 72%, var(--color-text-primary));
+  background: color-mix(in srgb, var(--color-tertiary) 22%, var(--color-background));
+  font-weight: 800;
+}
+.match-main {
+  min-width: 0;
+  flex: 1;
+}
+.match-label {
+  color: color-mix(in srgb, var(--color-tertiary) 72%, var(--color-text-primary));
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 800;
+}
+.match-name {
+  margin-top: var(--spacing-xxsmall);
+  color: var(--color-text-primary);
+  font-size: 18px;
+  line-height: 1.4;
+  font-weight: 800;
+}
+.match-phone {
+  margin-top: var(--spacing-xsmall);
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.match-actions {
+  display: block;
+}
+.match-action {
+  height: 48px;
+  width: 100%;
+  padding: 0 var(--spacing-small);
+  border: 0;
+  border-radius: var(--radius-button);
+  font-size: 15px;
+  font-weight: 800;
+}
+.match-action--save {
+  background: var(--color-tertiary);
+  color: var(--color-background);
+}
+.empty-result {
+  width: 100%;
+  min-height: 200px;
+  margin-top: var(--spacing-xlarge);
+  padding: var(--spacing-xlarge) var(--spacing-medium);
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+.empty-icon {
+  font-size: 48px;
+  opacity: 0.72;
+}
+.empty-copy {
+  margin-top: var(--spacing-medium);
+  font-size: 14px;
   line-height: 1.6;
-  max-width: 280px;
+}
+.empty-cta {
+  margin-top: var(--spacing-large);
+  height: 44px;
+  padding: 0 var(--spacing-large);
+  border: 0;
+  border-radius: var(--radius-button);
+  background: var(--color-primary);
+  color: var(--color-background);
+  font-size: 14px;
+  font-weight: 800;
+}
+.loading-slot {
+  width: 100%;
+  height: 120px;
+  margin-top: var(--spacing-xlarge);
+  display: grid;
+  place-items: center;
+}
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+}
+.surface-note {
+  margin-top: 10px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  text-align: center;
+}
+.state-sheet-frame {
+  width: 340px;
+  min-height: 430px;
+}
+.state-results-sheet {
+  padding: var(--spacing-large) var(--spacing-screen-edge) var(--spacing-medium);
+}
+.state-hero-badge {
+  width: 56px;
+  height: 56px;
+  font-size: 30px;
+  margin-top: var(--spacing-large);
 }
 </style>
 </head>
@@ -56,35 +268,40 @@ body.dark-mode .viewport.tbd-viewport { background: var(--color-dark-background)
 <div class="page">
 
 <header>
-  <h1>매칭 결과 화면 <small style="font-weight: 400; color: var(--color-text-secondary);">(TBD)</small></h1>
+  <h1>매칭 결과 콘텐츠 <small style="font-weight: 400; color: var(--color-text-secondary);">(live shared bottom sheet)</small></h1>
 </header>
 
 <section class="doc">
   <h2>Overview</h2>
   <table class="ref">
     <tbody>
-      <tr><th style="width: 140px;">Status</th><td><strong>📝 TBD — 별도 디자인 라운드 예정</strong></td></tr>
+      <tr><th style="width: 160px;">Status</th><td><strong>✅ v1.1 spec aligned</strong> <em style="color: var(--color-text-secondary);">— Issue #2411 · contact reveal 기준</em></td></tr>
       <tr><th>App</th><td><code>app_user</code></td></tr>
-      <tr><th>Category</th><td>matching (Phase 6 — results)</td></tr>
-      <tr><th>Route / Surface</th><td><code>EventMatchingResultsScreen</code> · <code>/event/:id/matching/results</code> <em>(예정 · 확정 전)</em></td></tr>
+      <tr><th>Category</th><td>matching lifecycle · phase 6 results</td></tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td>
+          <strong>단독 route 없음.</strong> <code>MatchResultsContent</code> shared widget 이 modal bottom sheet content 로 렌더링된다.
+        </td>
+      </tr>
+      <tr>
+        <th>Entry surfaces</th>
+        <td>
+          ① <code>EventNowBottomSheet</code> phase 6 results content (home shortcut)<br>
+          ② <code>event_admission_controller</code> 의 <code>eventEndedWithResults</code> 상태에서 <strong>매칭 결과 보기</strong> 버튼 탭 시 열리는 modal sheet
+        </td>
+      </tr>
       <tr>
         <th>Hierarchy</th>
         <td>
-          <strong>Parent</strong>: <a href="/specs/my_tickets_page/index.html"><code>MyTicketsPage</code></a> 또는 <a href="/specs/event_matching_screen/index.html"><code>EventMatchingScreen</code></a> phase 전환 진입.<br>
-          <strong>Children</strong>: <em>—</em>
+          <strong>Parent surfaces</strong>: <a href="/specs/event_now_bar/index.html"><code>EventNowBar</code></a> results phase · <a href="/specs/event_matching_screen/index.html"><code>EventMatchingScreen</code></a> 이후 <strong>매칭 결과 보기</strong> 버튼.<br>
+          <strong>Children</strong>: <em>—</em> list item 은 private <code>_MatchResultCard</code>.
         </td>
       </tr>
       <tr>
         <th>Purpose</th>
         <td>
-          좋아요 commit 이후 매칭 결과(mutual likes)를 reveal하는 화면. 서로 좋아요를 보낸 페어의 연락처를 양쪽에 공개.
-          <strong>본 spec은 stub</strong> — 디자인은 별도 라운드에서 진행되며, 본 페이지는 cross-reference 링크 깨짐 방지용.
-        </td>
-      </tr>
-      <tr>
-        <th>Related spec</th>
-        <td>
-          입력 측: <a href="/specs/event_matching_screen/index.html"><code>EventMatchingScreen</code></a> — 좋아요 선택 + commit.
+          이벤트 종료 후 서로 좋아요를 보낸 상대(mutual match)를 reveal하고, 연락처는 mutual match 성립 후 공개 정보로 전체 표시한다. 매치가 없거나 조회 실패 시 같은 empty 결과 카피를 사용해 실패 세부를 사용자에게 노출하지 않는다.
         </td>
       </tr>
     </tbody>
@@ -99,58 +316,365 @@ body.dark-mode .viewport.tbd-viewport { background: var(--color-dark-background)
     </thead>
     <tbody>
       <tr>
+        <td>2026-05-31</td>
+        <td>1.1</td>
+        <td>mark-yun</td>
+        <td>Issue #2411 정리. TBD placeholder 를 실제 shared sheet 구조 기준으로 갱신. 단독 route 가정 제거, <strong>매칭 결과 보기</strong> 버튼 진입과 contact reveal contract 명시. 현재 구현은 연락처 전체 노출 기준에 맞춰 후속 수정 필요.</td>
+      </tr>
+      <tr>
+        <td>2026-05-31</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>TBD placeholder 를 live 구현 anatomy 기준으로 1차 갱신. <code>MatchResultsContent</code> / provider / states / sheet surfaces 명시.</td>
+      </tr>
+      <tr>
         <td>2026-05-03</td>
         <td>0.1</td>
         <td>mark-yun</td>
-        <td>Stub 생성 — EventMatchingScreen v2.0의 cross-reference 깨짐 방지. 실제 디자인은 후속 라운드.</td>
+        <td>Stub 생성 — EventMatchingScreen v2.0의 cross-reference 깨짐 방지. 실제 디자인은 후속 라운드로 기록.</td>
       </tr>
     </tbody>
   </table>
 </section>
 
 <nav class="perspective-nav">
-  <a href="#placeholder"><span class="glyph">📝</span> Placeholder</a>
-  <a href="#scope"><span class="glyph">🧭</span> 예상 스코프</a>
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#global-behavior"><span class="glyph">🔄</span> Global Behavior</a>
   <a href="#reference"><span class="glyph">📖</span> Reference</a>
 </nav>
 
-<div class="perspective" id="placeholder">
+<div class="perspective" id="layout">
   <div class="perspective__header">
-    <span class="glyph">📝</span>
-    <h2>Placeholder</h2>
-    <span class="lede">디자인 미확정 — 본 화면은 후속 디자인 라운드에서 채워집니다.</span>
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">Modal bottom sheet 구조 — drag handle, hero, event title, async result slot.</span>
   </div>
 
   <section class="doc">
-    <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card);">
-      <div class="viewport tbd-viewport">
-        <div class="tbd-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+    <h2>Default visual</h2>
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 24px 16px 0; border-radius: var(--radius-card);">
+      <div class="sheet-frame">
+        <div class="results-sheet">
+          <div class="drag-handle"></div>
+          <div class="hero-badge">✓</div>
+          <div class="sheet-title">매칭 결과</div>
+          <div class="sheet-subtitle">성수 와인 네트워킹</div>
+          <div class="match-section">
+            <p class="match-count">2명과 매칭되었어요!</p>
+            <p class="match-message">매칭된 상대방에게 서로의 연락처가 공유되었습니다.<br>오늘의 여운이 이어질 수 있게 편하게 연락해보세요.</p>
+            <div class="match-carousel" aria-label="매칭된 상대 카드 목록">
+              <div class="match-card">
+                <div class="match-card-head">
+                  <div class="avatar">민</div>
+                  <div class="match-main">
+                    <div class="match-label">공유된 연락처</div>
+                    <div class="match-name">김민지</div>
+                    <div class="match-phone">010-1234-5678</div>
+                  </div>
+                </div>
+                <div class="match-actions">
+                  <button class="match-action match-action--save" type="button">연락처 저장하기</button>
+                </div>
+              </div>
+              <div class="match-card">
+                <div class="match-card-head">
+                  <div class="avatar">준</div>
+                  <div class="match-main">
+                    <div class="match-label">공유된 연락처</div>
+                    <div class="match-name">이준호</div>
+                    <div class="match-phone">010-9911-1188</div>
+                  </div>
+                </div>
+                <div class="match-actions">
+                  <button class="match-action match-action--save" type="button">연락처 저장하기</button>
+                </div>
+              </div>
+            </div>
+            <div class="carousel-indicator" aria-hidden="true">
+              <span class="carousel-dot is-active"></span>
+              <span class="carousel-dot"></span>
+            </div>
+          </div>
+          <div class="surface-note">SafeArea bottom padding is added by each sheet surface.</div>
         </div>
-        <div class="tbd-title">매칭 결과 화면 — 디자인 예정</div>
-        <div class="tbd-sub">좋아요 commit 이후 mutual matches를 reveal하는 phase 6 결과 화면. 별도 디자인 라운드에서 정의됩니다.</div>
       </div>
     </div>
   </section>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      Bottom sheet content는 호출 surface가 제공하는 sheet chrome 안에 들어간다. Content 자체는 horizontal <code>MinglitSpacing.screenEdge</code> padding과 vertical <code>MinglitSpacing.large</code> padding, 그리고 결과 slot만 책임진다.
+    </p>
+
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 520px;">
+        <div class="blueprint__region blueprint__region--full" style="border-radius:16px 16px 0 0;"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:24px;left:175px;width:40px;height:4px;"><span class="blueprint__region-label">① drag handle 40×4</span></div>
+        <div class="blueprint__region" style="top:60px;left:163px;width:64px;height:64px;border-radius:50%;"><span class="blueprint__region-label">② check success badge</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:140px;left:96px;right:96px;height:32px;"><span class="blueprint__region-label">③ title</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:184px;left:48px;right:48px;height:28px;"><span class="blueprint__region-label">④ event.title</span></div>
+        <div class="blueprint__region" style="top:248px;left:24px;right:24px;height:54px;"><span class="blueprint__region-label">⑤ count + matched copy</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:318px;left:16px;width:292px;height:174px;border-radius:16px;"><span class="blueprint__region-label">⑥ horizontal _MatchResultCard</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:318px;left:324px;width:120px;height:174px;border-radius:16px;"><span class="blueprint__region-label">peek next</span></div>
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">sheet h-pad screenEdge</div>
+        <div class="blueprint__align-marker" style="top:128px;right:8px;">xlarge → medium → small</div>
+      </div>
+
+      <div class="layout-tree"><b>MatchResultsContent</b>
+└─ Padding(horizontal: MinglitSpacing.screenEdge, vertical: MinglitSpacing.large)
+   └─ Column(mainAxisSize: min)
+      ├─ <b>_DragHandle</b>(40×4 · textSecondary muted · radius 2)         ← ①
+      ├─ SizedBox(MinglitSpacing.xlarge)
+      ├─ Result hero slot                                                  ← ②
+      │  ├─ matched → SizedBox(MinglitIconSize.hero) + check icon
+      │  └─ loading / empty → omitted
+      ├─ SizedBox(MinglitSpacing.medium)
+      ├─ Text('매칭 결과') · titleLarge bold                              ← ③
+      ├─ SizedBox(MinglitSpacing.small)
+      ├─ Text(event.title ?? '이벤트') · bodyMedium secondary center       ← ④
+      ├─ SizedBox(MinglitSpacing.xlarge)
+      ├─ <b>matchesAsync.when</b>                                        ← ⑤⑥
+      │  ├─ data empty → _buildEmptyResult() + MinglitButton('다음 이벤트 찾기')
+      │  ├─ data filled → single centered card or horizontal carousel + matched copy
+      │  ├─ loading → 120px centered progress
+      │  └─ error → _buildEmptyResult()
+      └─ SizedBox(MinglitSpacing.medium)</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead><tr><th style="width: 60px;">#</th><th style="width: 180px;">Region</th><th style="width: 220px;">Alignment</th><th>Spacing / tokens</th></tr></thead>
+      <tbody>
+        <tr><td>—</td><td>Content padding</td><td>Column center</td><td>horizontal <code>MinglitSpacing.screenEdge</code> · vertical <code>MinglitSpacing.large</code></td></tr>
+        <tr><td>①</td><td>Drag handle</td><td>center</td><td>40×4 · radius 2 · <code>MinglitColors.textSecondary</code> + <code>MinglitOpacity.muted</code></td></tr>
+        <tr><td>②</td><td>Hero slot</td><td>center</td><td>matched state only · <code>MinglitIconSize.hero</code> circular success badge · check icon · above gap <code>MinglitSpacing.xlarge</code></td></tr>
+        <tr><td>③④</td><td>Title block</td><td>center text</td><td>title gap <code>MinglitSpacing.medium</code> · subtitle gap <code>MinglitSpacing.small</code></td></tr>
+        <tr><td>⑤⑥</td><td>Async result slot</td><td>full width</td><td>top gap <code>MinglitSpacing.xlarge</code> · count 아래 감성 copy · single card center 또는 horizontal carousel gap <code>MinglitSpacing.medium</code> · final bottom gap <code>MinglitSpacing.medium</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ⑥ — Match result card</h2>
+    <p class="intro">
+      Result slot의 contact card. 1명이면 중앙 정렬된 단일 card, 2명 이상이면 2~3개 row 높이의 큰 contact card 를 가로 carousel 로 넘긴다.
+    </p>
+    <table class="ref">
+      <thead><tr><th style="width: 200px;">Region</th><th>Contract</th></tr></thead>
+      <tbody>
+        <tr><td>Card shell</td><td><code>PageView</code> 또는 horizontal <code>ListView</code> item. width 약 292px · min height 190px · <code>MinglitSpacing.large</code> padding · <code>MinglitRadius.card</code> · <code>MinglitColors.surface</code> bg · border 없음.</td></tr>
+        <tr><td>Avatar</td><td><code>MinglitAvatarImage(radius: 24)</code> · <code>MinglitColors.tertiary.withValues(alpha: MinglitOpacity.highlight)</code> bg · tertiary fallback icon.</td></tr>
+        <tr><td>Text column</td><td><code>공유된 연락처</code> label · <code>partnerName ?? '알 수 없음'</code> title bold · full <code>partnerContact</code> body secondary.</td></tr>
+        <tr><td>Action</td><td>Card 하단 full-width CTA. <code>MinglitButton(size: MinglitButtonSize.medium, label: '연락처 저장하기')</code> geometry(height 48, font 15, <code>MinglitRadius.button</code>)를 따른다. Color only: <code>MinglitColors.tertiary</code> 배경의 primary button 톤.</td></tr>
+        <tr><td>Contact</td><td>mutual match 성립 후 <code>partnerContact</code>를 전체 표시한다. 예: <code>010-1234-5678</code>.</td></tr>
+        <tr><td>Single / multiple</td><td><code>matches.length == 1</code> 이면 carousel 없이 card 1장을 중앙 정렬한다. <code>matches.length &gt; 1</code> 이면 horizontal carousel 과 dot indicator 를 노출하고, 현재 card 와 다음 card peek 이 보이게 한다. 각 card action 은 해당 partner 에만 적용된다.</td></tr>
+      </tbody>
+    </table>
+  </section>
 </div>
 
-<div class="perspective" id="scope">
+<div class="perspective" id="states">
   <div class="perspective__header">
-    <span class="glyph">🧭</span>
-    <h2>예상 스코프</h2>
-    <span class="lede">디자인 라운드에서 다룰 항목 — 변경 가능.</span>
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">Provider 상태는 <code>myMatchesProvider(event.id)</code> 기준.</span>
   </div>
 
   <section class="doc">
-    <table class="ref">
-      <thead><tr><th style="width: 200px;">항목</th><th>설명</th></tr></thead>
+    <table class="ref state-mini">
+      <thead>
+        <tr>
+          <th colspan="3"><strong>Default</strong> <small>mutual match 1건 이상</small></th>
+        </tr>
+      </thead>
       <tbody>
-        <tr><td>매치 reveal 시퀀스</td><td>Mutual likes 페어를 어떻게 점진적으로 노출할지 — 단순 리스트 vs 한 명씩 reveal vs 카드 flip 등.</td></tr>
-        <tr><td>연락처 교환 방식</td><td>인앱 채팅 vs 전화번호 노출 vs SNS 핸들 — privacy / safety 고려.</td></tr>
-        <tr><td>매치 0건 케이스</td><td>좋아요는 보냈으나 mutual이 없는 경우의 메시지 톤.</td></tr>
-        <tr><td>비공개 정보 공개 정책</td><td>EventMatchingScreen에서 "비공개"였던 직업 / 나이를 매치 시 공개할지 여부.</td></tr>
-        <tr><td>사후 액션</td><td>리포트 / 차단 / 다시 만남 신청 등 follow-up 액션 노출 위치.</td></tr>
-        <tr><td>이벤트 종료와의 관계</td><td>이벤트 종료 직후 자동 진입 vs 사용자가 직접 진입 vs 푸시 알림 후 진입.</td></tr>
+        <tr>
+          <td rowspan="6" class="state-mini__mock">
+            <div class="sheet-frame state-sheet-frame">
+              <div class="results-sheet state-results-sheet">
+                <div class="drag-handle"></div>
+                <div class="sheet-title">매칭 결과</div>
+                <div class="sheet-subtitle">루프탑 밋업</div>
+                <div class="match-section">
+                  <p class="match-count">1명과 매칭되었어요!</p>
+                  <p class="match-message">매칭된 상대방에게 서로의 연락처가 공유되었습니다.<br>오늘의 여운이 이어질 수 있게 편하게 연락해보세요.</p>
+                  <div class="single-match-slot">
+                    <div class="match-card">
+                      <div class="match-card-head">
+                        <div class="avatar">수</div>
+                        <div class="match-main">
+                          <div class="match-label">공유된 연락처</div>
+                          <div class="match-name">박수빈</div>
+                          <div class="match-phone">010-4567-9012</div>
+                        </div>
+                      </div>
+                      <div class="match-actions">
+                        <button class="match-action match-action--save" type="button">연락처 저장하기</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td><code>myMatchesProvider(event.id)</code> data 가 1개 이상. Header copy 는 <code>${matches.length}명과 매칭되었어요!</code>, 보조 copy 는 지정 문구. 1명이면 단일 card 중앙 정렬, 2명 이상이면 horizontal carousel.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td><strong>연락처 저장하기</strong> tap. Sheet 외부 tap / drag down → modal dismiss.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td><code>partnerName == null</code> → <code>알 수 없음</code>. <code>partnerContact == null</code> → phone row 미노출.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td><code>showModalBottomSheet</code> surface + <code>SafeArea</code> wrapper · <code>MatchResultsContent</code> · <code>_DragHandle</code> · single card slot 또는 horizontal carousel · <code>_MatchResultCard</code> · <code>MinglitAvatarImage</code> · compact card action button · <code>MinglitCircularProgressIndicator</code>(loading only)</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td><code>MinglitColors.primary/tertiary/background/surface/textPrimary/textSecondary</code> · <code>MinglitSpacing.screenEdge/large/xlarge/medium/small/xxsmall</code> · <code>MinglitRadius.card</code> · <code>MinglitOpacity.muted/highlight/separator/strong</code></td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td><strong>연락처 저장하기</strong>는 해당 partner 를 OS 연락처 저장 flow 로 넘긴다. <strong>모두 저장</strong> bulk action은 제공하지 않는다.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table class="ref state-mini">
+      <thead>
+        <tr>
+          <th colspan="3"><strong>Empty / Error</strong> <small>mutual 0건 또는 provider error</small></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td rowspan="6" class="state-mini__mock">
+            <div class="sheet-frame state-sheet-frame">
+              <div class="results-sheet state-results-sheet">
+                <div class="drag-handle"></div>
+                <div class="sheet-title">매칭 결과</div>
+                <div class="sheet-subtitle">와인 네트워킹</div>
+                <div class="empty-result">
+                  <div>
+                    <div class="empty-icon">😐</div>
+                    <div class="empty-copy">좋은 인연은 한번에 정해지지 않으니까요.<br>다음 자리에서 더 나은 인연을 만나길 기원합니다.</div>
+                    <button class="empty-cta" type="button">다음 이벤트 찾기</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>↔ <code>matches.isEmpty</code> 또는 provider error. Error 에도 동일한 empty UI 를 사용해 내부 조회 실패 세부를 숨긴다.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td><strong>다음 이벤트 찾기</strong> tap → sheet dismiss 후 <code>HomeRoute</code> 로 이동. 그 외 Sheet dismiss 가능.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>+ Provider error도 empty copy로 fallback. Retry affordance는 없음. CTA 는 동일하게 다음 이벤트 탐색으로 유도.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>− <code>_MatchResultCard</code> list · + neutral icon + 감성 empty copy + <code>MinglitButton(label: '다음 이벤트 찾기')</code></td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>동일 · empty icon uses <code>MinglitColors.textSecondary.withValues(alpha: MinglitOpacity.strong)</code>.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>Error 세부 메시지는 사용자에게 노출하지 않는다. Empty CTA 는 retry 가 아니라 탐색 유도다.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table class="ref state-mini">
+      <thead>
+        <tr>
+          <th colspan="3"><strong>Loading</strong> <small>provider pending</small></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td rowspan="6" class="state-mini__mock">
+            <div class="sheet-frame state-sheet-frame">
+              <div class="results-sheet state-results-sheet">
+                <div class="drag-handle"></div>
+                <div class="sheet-title">매칭 결과</div>
+                <div class="sheet-subtitle">와인 네트워킹</div>
+                <div class="loading-slot"><div class="spinner"></div></div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>↔ <code>myMatchesProvider(event.id)</code> pending.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>동일 — Sheet dismiss만 가능.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td>− match list / empty copy · + <code>SizedBox(height: 120)</code> centered <code>MinglitCircularProgressIndicator</code>.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td>동일.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>Loading slot height는 결과/empty 전환 시 sheet 높이 급변을 줄이는 완충 영역.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">Sheet dismiss, async fallback, contact reveal, and cross-surface behavior.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 220px;">Behavior</th><th>Contract</th></tr></thead>
+      <tbody>
+        <tr><td>Dismiss</td><td>호출 surface의 modal bottom sheet 기본 동작을 따른다. 외부 tap, system back, drag down 으로 닫힘.</td></tr>
+        <tr><td>Card action</td><td>각 card 하단에 <strong>연락처 저장하기</strong> CTA 하나만 직접 노출한다. 저장은 해당 partner 를 OS contact save flow 로 넘긴다. 여러 명이어도 <strong>모두 저장</strong>은 제공하지 않는다.</td></tr>
+        <tr><td>Empty CTA</td><td><strong>다음 이벤트 찾기</strong> tap 시 현재 sheet 를 닫고 <code>HomeRoute</code> 로 이동한다. Home feed 가 현재 이벤트 탐색 surface 이며, CTA 는 retry 가 아니다.</td></tr>
+        <tr><td>Single / multiple</td><td><code>matches.length == 1</code> 이면 card 1장을 중앙 정렬하고 horizontal scroll/indicator 를 만들지 않는다. <code>matches.length &gt; 1</code> 이면 card 는 가로 carousel 로 넘기며 다음 card 의 일부가 보이게 한다. Dot indicator 는 multi case 에서만 표시하고, active dot 은 현재 card index 를 따른다. 각 card action 은 해당 partner contact 에 scope 된다.</td></tr>
+        <tr><td>Data refresh</td><td><code>myMatchesProvider(event.id)</code> 가 source. 이 content 내부에는 refresh / retry 버튼이 없다.</td></tr>
+        <tr><td>Error fallback</td><td>조회 실패는 empty state와 동일한 메시지로 처리한다. 내부 error detail 노출 금지.</td></tr>
+        <tr><td>Contact reveal</td><td>mutual match 성립 후 연락처 교환이 목적이므로 <code>partnerContact</code>는 전체 표시한다.</td></tr>
+        <tr><td>Surface parity</td><td>Home <code>EventNowBottomSheet</code>와 event-ended <strong>매칭 결과 보기</strong> button sheet는 동일 <code>MatchResultsContent</code>를 사용해야 한다.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 220px;">Transition</th><th>Token / behavior</th></tr></thead>
+      <tbody>
+        <tr><td>Sheet enter/exit</td><td>Flutter <code>showModalBottomSheet</code> 기본 Material route transition.</td></tr>
+        <tr><td>Loading hold</td><td>Provider pending 동안 <code>SizedBox(height: 120)</code> 안에 <code>MinglitCircularProgressIndicator</code>. 최소 노출 시간은 두지 않는다. Loading slot 은 결과 전환 시 sheet height jump 를 줄이는 완충 영역.</td></tr>
+        <tr><td>Loading → matched</td><td><code>AnimatedSwitcher</code> + <code>MinglitAnimation.medium</code>. Sequence: spinner fade out → check badge scale 0.92→1.0 + fade in → matched copy fade/slideY 6→0 → card area fade/slideY 10→0. 여러 card 는 40ms stagger, dot indicator 는 card 후 80ms fade in.</td></tr>
+        <tr><td>Loading → empty</td><td><code>AnimatedSwitcher</code> + <code>MinglitAnimation.medium</code>. Empty icon/copy/CTA 를 하나의 group 으로 fade/slideY 8→0. Retry 성격의 흔들림이나 error motion 은 사용하지 않는다.</td></tr>
+        <tr><td>Interaction polish</td><td>Carousel drag 는 native scroll physics. Active dot 은 page settle 후 <code>MinglitAnimation.fast</code> 로 width/color transition. <strong>연락처 저장하기</strong> tap 은 pressed state 만 사용하고 별도 success toast 는 OS save 결과 이후 구현 영역에서 처리한다.</td></tr>
+        <tr><td>Reduce motion</td><td>OS reduce motion 감지 시 duration 0ms, 최종 상태만 즉시 표시.</td></tr>
       </tbody>
     </table>
   </section>
@@ -160,17 +684,20 @@ body.dark-mode .viewport.tbd-viewport { background: var(--color-dark-background)
   <div class="perspective__header">
     <span class="glyph">📖</span>
     <h2>Reference</h2>
-    <span class="lede">Implementation 미정 + 인접 화면.</span>
+    <span class="lede">Live code, providers, related specs.</span>
   </div>
 
   <section class="doc">
     <h2>Implementation source</h2>
     <table class="ref">
       <tbody>
-        <tr><th style="width: 200px;">Widget class</th><td><em>—</em> (TBD)</td></tr>
-        <tr><th>File path</th><td><em>—</em> (TBD)</td></tr>
-        <tr><th>Provider</th><td><em>—</em> (TBD)</td></tr>
-        <tr><th>Route</th><td><em>—</em> (TBD)</td></tr>
+        <tr><th style="width: 220px;">Widget class</th><td><code>MatchResultsContent</code> + private <code>_MatchResultCard</code> / <code>_DragHandle</code></td></tr>
+        <tr><th>File path</th><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/common/widgets/match_results_content.dart"><code>apps/app_user/lib/src/common/widgets/match_results_content.dart</code></a></td></tr>
+        <tr><th>Provider</th><td><code>myMatchesProvider(event.id)</code></td></tr>
+        <tr><th>Route</th><td><em>—</em> 단독 route 없음. 두 modal sheet surface 에서 shared content 로 사용.</td></tr>
+        <tr><th>Home surface</th><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/home/widgets/event_now_phases/results_content.dart"><code>event_now_phases/results_content.dart</code></a> re-export / typedef <code>ResultsContent</code></td></tr>
+        <tr><th>Event detail button surface</th><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/event/admission/event_admission_controller.dart"><code>event_admission_controller.dart</code></a> · <code>eventEndedWithResults</code> 상태의 <strong>매칭 결과 보기</strong> 버튼 → <code>showModalBottomSheet</code></td></tr>
+        <tr><th>Implementation follow-up</th><td>현재 Dart 구현은 이 spec과 다르다. 후속 구현에서 연락처 전체 표시, single/multi contact card 분기, card 하단 <strong>연락처 저장하기</strong> CTA, tertiary button style override 또는 variant, matched-only hero check badge, matched/empty copy, empty CTA, Loading→results reveal animation을 반영해야 한다.</td></tr>
       </tbody>
     </table>
   </section>
@@ -178,11 +705,13 @@ body.dark-mode .viewport.tbd-viewport { background: var(--color-dark-background)
   <section class="doc">
     <h2>Related screens</h2>
     <table class="ref">
-      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <thead><tr><th style="width: 260px;">Spec</th><th>Relation</th></tr></thead>
       <tbody>
-        <tr><td><a href="/specs/event_matching_screen/index.html"><code>EventMatchingScreen</code></a></td><td>Sibling — 좋아요 선택 + commit (입력 단계). 본 화면은 그 결과 단계.</td></tr>
-        <tr><td><a href="/specs/my_tickets_page/index.html"><code>MyTicketsPage</code></a></td><td>진입 hub — 매칭 종료 이후 결과 진입점이 될 가능성.</td></tr>
-        <tr><td><a href="/specs/event_ongoing_banner/index.html"><code>EventOngoingBanner</code></a></td><td>Lifecycle hub — phase 5 → phase 6 전환 시 이 화면으로 라우팅 후보.</td></tr>
+        <tr><td><a href="/specs/event_matching_screen/index.html"><code>EventMatchingScreen</code></a></td><td>입력 단계. 사용자가 좋아요를 선택/commit하고, 결과는 이벤트 종료 후 본 shared content에서 reveal.</td></tr>
+        <tr><td><a href="/specs/event_now_bar/index.html"><code>EventNowBar</code></a></td><td>Home shortcut. phase 6 results bottom sheet content로 본 widget을 사용.</td></tr>
+        <tr><td><a href="/specs/home_page/index.html"><code>HomePage</code></a></td><td>Empty CTA <strong>다음 이벤트 찾기</strong>의 destination. 현재 앱의 이벤트 탐색 feed 역할.</td></tr>
+        <tr><td><a href="/specs/event_ongoing_banner/index.html"><code>EventOngoingBanner</code></a></td><td>Lifecycle hub. results phase action이 본 content를 여는 후보 surface.</td></tr>
+        <tr><td><a href="/specs/my_tickets_page/index.html"><code>MyTicketsPage</code></a></td><td>Actionable event hub. EventOngoingBanner stack을 통해 results phase와 연결.</td></tr>
       </tbody>
     </table>
   </section>
