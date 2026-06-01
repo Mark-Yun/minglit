@@ -25,7 +25,6 @@ class TicketSelectionSheet extends ConsumerStatefulWidget {
 
 class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
   String? _selectedTicketId;
-  int _quantity = 1;
   var _balanceStatus = <String, bool>{};
   bool _isBalanceStatusLoading = true;
   bool _isUserDataLoading = true;
@@ -44,7 +43,6 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
   void _selectTicket(String ticketId) {
     setState(() {
       _selectedTicketId = ticketId;
-      _quantity = 1;
     });
   }
 
@@ -112,11 +110,9 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
       _recommendation = recommendation;
       if (!_hasAutoSelected) {
         _selectedTicketId = recommendedTicket?.id;
-        _quantity = 1;
         _hasAutoSelected = true;
       } else if (!selectedIsEligible) {
         _selectedTicketId = recommendedTicket?.id;
-        _quantity = 1;
       }
     });
   }
@@ -139,6 +135,7 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
     final recommendedTicket = recommendation?.recommendedTicket;
     final eligibleTickets = recommendation?.eligibleTickets ?? [];
     final ineligibleReasons = recommendation?.ineligibleReasons ?? {};
+    final isLoading = _isBalanceStatusLoading || _isUserDataLoading;
     final otherTickets = tickets
         .where((ticket) => ticket.id != recommendedTicket?.id)
         .toList();
@@ -162,26 +159,27 @@ class _TicketSelectionSheetState extends ConsumerState<TicketSelectionSheet> {
             ),
           ),
           const SizedBox(height: MinglitSpacing.medium),
-          if (_isBalanceStatusLoading || _isUserDataLoading)
+          if (isLoading)
             buildLoadingState(theme)
-          else if (tickets.isEmpty)
-            buildEmptyState(theme)
-          else if (recommendedTicket == null)
-            ...buildNoRecommendationState(theme, tickets, ineligibleReasons)
-          else
-            ...buildRecommendationState(
-              theme,
-              recommendedTicket,
-              otherTickets,
-              eligibleTickets,
-              ineligibleReasons,
+          else ...[
+            if (tickets.isEmpty)
+              buildEmptyState(theme)
+            else if (recommendedTicket == null)
+              ...buildNoRecommendationState(theme, tickets, ineligibleReasons)
+            else
+              ...buildRecommendationState(
+                theme,
+                recommendedTicket,
+                otherTickets,
+                eligibleTickets,
+                ineligibleReasons,
+              ),
+            const SizedBox(height: MinglitSpacing.large),
+            MinglitButton(
+              label: '다음',
+              onPressed: _selectedTicketId == null ? null : _onNext,
             ),
-          const SizedBox(height: MinglitSpacing.large),
-          if (_selectedTicketId != null) ...buildQuantitySection(theme),
-          MinglitButton(
-            label: '다음',
-            onPressed: _selectedTicketId == null ? null : _onNext,
-          ),
+          ],
           SizedBox(height: MediaQuery.of(context).viewPadding.bottom),
         ],
       ),
