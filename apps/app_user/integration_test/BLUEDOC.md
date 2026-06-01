@@ -15,9 +15,9 @@ Flutter integration test 의 entry point. 에뮬레이터(또는 디바이스)�
 ## 워크플로우 페어
 
 - [sync-mds-mockups](../../.github/workflows/sync-mds-mockups.yml) — MDS HTML 디자인 → mockup PNG
-- (예정) `mds-emulator-render.yml` — 본 폴더 테스트 실행 → 실제 PNG
+- [`monitor-mds-render-coverage.yml`](../../.github/workflows/monitor-mds-render-coverage.yml) — mds-emulator-render shard 실행 + coverage 모니터 이슈 갱신
 
 두 워크플로우의 PNG 비교가 GUI drift 감지의 1차 신호.
 
 ---
-_Reviewed: 2026-05-17 22:32_
+_Reviewed: 2026-05-31 19:18_

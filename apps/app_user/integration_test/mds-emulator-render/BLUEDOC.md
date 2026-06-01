@@ -8,7 +8,7 @@ MDS spec 의 각 화면을 실제 Flutter 앱으로 에뮬레이터에서 렌더
 
 ## 트리거
 
-현재는 **수동** (`flutter drive ...`). 후속 PR 에서 `monitor-mds-render-coverage.yml` (daily cron) 이 자동 실행 + 100% 미만 시 GitHub Issue 생성 예정.
+수동 실행(`flutter drive ...`)을 기본 디버깅 루프로 유지하고, 일 단위 자동 실행은 `.github/workflows/monitor-mds-render-coverage.yml`이 담당한다 (app_user/app_partner shard render + coverage issue 갱신).
 
 ## 빠른 실행 (단일 화면)
 
@@ -81,4 +81,4 @@ MDS spec 디렉토리명과 동일 (per-screen, snake_case). 화면당 `builder.
 - [상위 BLUEDOC](../BLUEDOC.md) · 페어 워크플로우: `sync-mds-mockups.yml` (디자인 PNG)
 
 ---
-_Reviewed: 2026-05-31 18:48_
+_Reviewed: 2026-05-31 19:18_
