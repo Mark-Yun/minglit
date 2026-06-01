@@ -169,6 +169,12 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9' # Keep in sync with render-capture job.
+          cache: true
+
       - name: Download render artifacts
         uses: actions/download-artifact@v5
         with:
