@@ -450,8 +450,10 @@ class _CarouselIndicator extends StatelessWidget {
           decoration: BoxDecoration(
             color: active
                 ? MinglitColors.tertiary
-                : MinglitColors.textSecondary.withValues(alpha: 0.24),
-            borderRadius: BorderRadius.circular(999),
+                : MinglitColors.textSecondary.withValues(
+                    alpha: MinglitOpacity.lowEmphasis,
+                  ),
+            borderRadius: BorderRadius.circular(MinglitRadius.chip),
           ),
         );
       }),
