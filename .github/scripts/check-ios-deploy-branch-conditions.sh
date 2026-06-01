@@ -18,14 +18,14 @@ require_file "$WORKFLOW_FILE"
 count_matches() {
   local pattern="$1"
   local file="$2"
-  (rg -n "$pattern" "$file" || true) | wc -l | tr -d ' '
+  (grep -nE "$pattern" "$file" || true) | wc -l | tr -d ' '
 }
 
 # Regression guard: dev-staging (and any non-main branch) must go through
 # development build/signing path, not be silently skipped.
-if rg -n "refs/heads/dev" "$ACTION_FILE" >/dev/null; then
+if grep -nE "refs/heads/dev" "$ACTION_FILE" >/dev/null; then
   echo "ERROR: Found legacy refs/heads/dev checks in $ACTION_FILE"
-  rg -n "refs/heads/dev" "$ACTION_FILE"
+  grep -nE "refs/heads/dev" "$ACTION_FILE"
   exit 1
 fi
 
@@ -35,13 +35,13 @@ required_patterns=(
 )
 
 for pattern in "${required_patterns[@]}"; do
-  if ! rg -F "$pattern" "$ACTION_FILE" >/dev/null; then
+  if ! grep -nF "$pattern" "$ACTION_FILE" >/dev/null; then
     echo "ERROR: Missing required branch condition pattern: $pattern"
     exit 1
   fi
 done
 
-timeout_minutes="$( (rg -n "^[[:space:]]*timeout-minutes:[[:space:]]*[0-9]+" "$WORKFLOW_FILE" || true) \
+timeout_minutes="$( (grep -nE "^[[:space:]]*timeout-minutes:[[:space:]]*[0-9]+" "$WORKFLOW_FILE" || true) \
   | head -n1 \
   | sed -E 's/.*timeout-minutes:[[:space:]]*([0-9]+).*/\1/')"
 
@@ -78,7 +78,7 @@ fi
 
 if (( direct_build_invocation_count > 0 )); then
   echo "ERROR: Direct 'flutter build ipa --release' invocation detected; use run_with_heartbeat wrapper"
-  rg -n "^[[:space:]]*flutter build ipa --release" "$ACTION_FILE"
+  grep -nE "^[[:space:]]*flutter build ipa --release" "$ACTION_FILE"
   exit 1
 fi
 
