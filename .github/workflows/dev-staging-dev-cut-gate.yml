@@ -1,12 +1,10 @@
 name: dev-staging-dev-cut-gate
 
 on:
-  push:
-    branches: [dev-staging]
   workflow_dispatch:
     inputs:
-      snapshot_sha:
-        description: Optional dev-staging snapshot SHA to version. Defaults to the workflow ref.
+      candidate_ref:
+        description: dev-staging ref/SHA to inspect. Defaults to origin/dev-staging.
         required: false
         type: string
 
@@ -15,254 +13,38 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
-  create-version-bump-pr:
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (
-        !startsWith(github.event.head_commit.message || '', 'chore: bump version') &&
-        !startsWith(github.event.head_commit.message || '', 'chore(graphify): auto-update') &&
-        !contains(github.event.head_commit.message || '', '[skip ci]')
-      )
+  inspect:
     runs-on: ubuntu-latest
-    outputs:
-      pr_number: ${{ steps.bump-pr.outputs.pr_number }}
-      version: ${{ steps.bump-pr.outputs.version }}
-      tag_name: ${{ steps.bump-pr.outputs.tag_name }}
-
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.snapshot_sha || github.sha }}
           fetch-depth: 0
-          persist-credentials: false
 
-      - name: Generate release bot token
-        id: release-bot
-        uses: ./.github/actions/release-bot-token
-        with:
-          fallback-app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
-          fallback-private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
-
-      - name: Create version bump PR
-        id: bump-pr
+      - name: Inspect candidate
         env:
-          GH_TOKEN: ${{ steps.release-bot.outputs.token }}
-          RELEASE_BOT_TOKEN: ${{ steps.release-bot.outputs.token }}
-          SNAPSHOT_SHA_INPUT: ${{ inputs.snapshot_sha || '' }}
-          HEAD_MESSAGE: ${{ github.event.head_commit.message || '' }}
+          CANDIDATE_REF: ${{ inputs.candidate_ref || 'origin/dev-staging' }}
         run: |
           set -euo pipefail
+          git fetch origin dev-staging --tags --force
 
-          SNAPSHOT_SHA="$(git rev-parse HEAD)"
-          VERSION_DATE="$(TZ=Asia/Seoul date +%y.%m.%d)"
-          VERSION="${VERSION_DATE}-dev-staging"
-          RUN_DATE="$(TZ=Asia/Seoul date +%Y-%m-%d)"
-          SHORT_SHA="${SNAPSHOT_SHA:0:8}"
-          BRANCH_NAME="version-bump/dev-staging/${RUN_DATE}-${SHORT_SHA}"
-          if git ls-remote --exit-code --heads origin "${BRANCH_NAME}" >/dev/null 2>&1; then
-            BRANCH_NAME="${BRANCH_NAME}-${GITHUB_RUN_ID}"
-          fi
-
-          SOURCE_PR_NUM="$(gh api \
-              "repos/${GITHUB_REPOSITORY}/commits/${SNAPSHOT_SHA}/pulls" \
-              -H "Accept: application/vnd.github+json" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              --jq '.[0].number // empty' || true)"
-
-          if [ -z "${SOURCE_PR_NUM}" ]; then
-            SOURCE_PR_NUM="$(printf '%s\n' "${HEAD_MESSAGE}" | sed -nE 's/.*\(#([0-9]+)\).*/\1/p' | head -n 1)"
-          fi
-
-          PREVIOUS_TAG="$(git for-each-ref \
-            --sort=-creatordate \
-            --format='%(refname:short)' \
-            'refs/tags/v*-dev-staging' | head -n 1)"
-
-          INCLUDED_PRS=""
-          if [ -n "${PREVIOUS_TAG}" ]; then
-            INCLUDED_PRS="$(git log --first-parent --format=%s "${PREVIOUS_TAG}..HEAD" \
-              | sed -nE 's/.*\(#([0-9]+)\).*/#\1/p' \
-              | sort -u \
-              | awk 'BEGIN { first = 1 } { if (!first) printf ", "; printf "%s", $0; first = 0 } END { if (!first) print "" }')"
-          fi
-          if [ -z "${INCLUDED_PRS}" ] && [[ "${SOURCE_PR_NUM}" =~ ^[0-9]+$ ]]; then
-            INCLUDED_PRS="#${SOURCE_PR_NUM}"
-          fi
-          if [ -z "${INCLUDED_PRS}" ]; then
-            INCLUDED_PRS="none detected"
-          fi
-
-          OPEN_PRS="$(gh pr list \
-            --base dev-staging \
-            --state open \
-            --json number,headRefName \
-            --jq '.[] | select(.headRefName | startswith("version-bump/dev-staging/")) | .number')"
-          for pr in ${OPEN_PRS}; do
-            echo "Closing stale version bump PR #${pr}"
-            gh pr close "${pr}" \
-              --comment "Superseded by snapshot ${SNAPSHOT_SHA}; dev-staging moved before this bump merged." \
-              --delete-branch || true
-          done
-
-          git config user.name "minglit-release-bot"
-          git config user.email "minglit-release-bot@users.noreply.github.com"
-          git remote set-url origin "https://x-access-token:${RELEASE_BOT_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-
-          # Create a temporary diff so GitHub can allocate the bump PR number.
-          bash scripts/bump-version.sh "${VERSION}" 1
-          git add -A
-          git commit -m "chore: prepare version bump for v${VERSION}"
-          git push origin "HEAD:refs/heads/${BRANCH_NAME}"
-
-          PR_BODY="$(cat <<EOF
-          Bumps dev-staging source version for the snapshot at \`${SNAPSHOT_SHA}\`.
-
-          - Version name: \`${VERSION}\`
-          - Build number: assigned from this version-bump PR number
-          - Snapshot SHA: \`${SNAPSHOT_SHA}\`
-          - Previous snapshot tag: \`${PREVIOUS_TAG:-none}\`
-          - Included PRs: ${INCLUDED_PRS}
-          - Source PR from triggering commit: ${SOURCE_PR_NUM:+#${SOURCE_PR_NUM}}
-
-          After this PR is created, the workflow amends this branch so Flutter build numbers equal this PR number.
-
-          No linked issue: automated dev-staging version-bump PR generated by dev-staging-dev-cut-gate.
-          EOF
-          )"
-
-          PR_URL="$(gh pr create \
-            --base dev-staging \
-            --head "${BRANCH_NAME}" \
-            --title "chore: bump version to v${VERSION}" \
-            --body "${PR_BODY}")"
-          PR_NUMBER="${PR_URL##*/}"
-          TAG_NAME="v${VERSION_DATE}+${PR_NUMBER}-dev-staging"
-
-          bash scripts/bump-version.sh "${VERSION}" "${PR_NUMBER}"
-          git add -A
-          git commit --amend -m "chore: bump version to ${TAG_NAME}"
-          git push --force-with-lease origin "HEAD:refs/heads/${BRANCH_NAME}"
-
-          UPDATED_BODY="$(cat <<EOF
-          Bumps dev-staging source version for the snapshot at \`${SNAPSHOT_SHA}\`.
-
-          - Version name: \`${VERSION}\`
-          - Build number: \`${PR_NUMBER}\` (this version-bump PR)
-          - Tag after merge: \`${TAG_NAME}\`
-          - Snapshot SHA: \`${SNAPSHOT_SHA}\`
-          - Previous snapshot tag: \`${PREVIOUS_TAG:-none}\`
-          - Included PRs: ${INCLUDED_PRS}
-          - Source PR from triggering commit: ${SOURCE_PR_NUM:+#${SOURCE_PR_NUM}}
-
-          The tag is created after this PR merges to \`dev-staging\`.
-
-          No linked issue: automated dev-staging version-bump PR generated by dev-staging-dev-cut-gate.
-          EOF
-          )"
-
-          gh pr edit "${PR_NUMBER}" \
-            --title "chore: bump version to ${TAG_NAME}" \
-            --body "${UPDATED_BODY}"
-          gh pr merge "${PR_NUMBER}" --auto --squash --delete-branch
+          CANDIDATE_SHA="$(git rev-parse "${CANDIDATE_REF}")"
+          TAG_NAME="$(git tag --points-at "${CANDIDATE_SHA}" \
+            | grep -E '^v[0-9]{2}\.[0-9]{2}\.[0-9]{2}\+[0-9]+-dev-staging$' \
+            | sort -V \
+            | tail -n 1 || true)"
 
           {
-            echo "pr_number=${PR_NUMBER}"
-            echo "version=${VERSION}"
-            echo "tag_name=${TAG_NAME}"
-          } >> "$GITHUB_OUTPUT"
-
-          {
-            echo "## dev-staging version bump PR"
+            echo "## dev-staging-dev-cut-gate"
+            echo ""
+            echo "This workflow no longer creates per-merge version-bump PRs."
             echo ""
             echo "| Field | Value |"
             echo "|---|---|"
-            echo "| snapshot_sha | ${SNAPSHOT_SHA} |"
-            echo "| version | ${VERSION} |"
-            echo "| build_number | ${PR_NUMBER} |"
-            echo "| tag_name | ${TAG_NAME} |"
-            echo "| pr | #${PR_NUMBER} |"
-            echo "| included_prs | ${INCLUDED_PRS} |"
+            echo "| candidate_ref | ${CANDIDATE_REF} |"
+            echo "| candidate_sha | ${CANDIDATE_SHA} |"
+            echo "| snapshot_tag | ${TAG_NAME:-none} |"
+            echo "| active cut workflow | dev-staging-dev-cut |"
           } >> "$GITHUB_STEP_SUMMARY"
-
-  tag-version-bump:
-    if: >-
-      github.event_name == 'push' &&
-      startsWith(github.event.head_commit.message || '', 'chore: bump version to v')
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ github.sha }}
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Generate release bot token
-        id: release-bot
-        uses: ./.github/actions/release-bot-token
-        with:
-          fallback-app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
-          fallback-private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
-
-      - name: Tag merged version bump
-        env:
-          RELEASE_BOT_TOKEN: ${{ steps.release-bot.outputs.token }}
-          HEAD_MESSAGE: ${{ github.event.head_commit.message || '' }}
-        run: |
-          set -euo pipefail
-
-          VERSION="$(python3 - <<'PY'
-          import json
-          with open('package.json') as f:
-              print(json.load(f)['version'])
-          PY
-          )"
-          BUILD_NUMBER="$(printf '%s\n' "${HEAD_MESSAGE}" | sed -nE 's/.*\+#?([0-9]+)-dev-staging.*/\1/p' | head -n 1)"
-          if [ -z "${BUILD_NUMBER}" ]; then
-            BUILD_NUMBER="$(printf '%s\n' "${HEAD_MESSAGE}" | sed -nE 's/.*\(#([0-9]+)\).*/\1/p' | head -n 1)"
-          fi
-          if ! [[ "${BUILD_NUMBER}" =~ ^[0-9]+$ ]]; then
-            echo "::error::Unable to determine version-bump PR number from merge commit."
-            exit 1
-          fi
-          if [[ "${VERSION}" != *-dev-staging ]]; then
-            echo "::error::Expected package.json version to end with -dev-staging, got ${VERSION}."
-            exit 1
-          fi
-
-          BASE_VERSION="${VERSION%-dev-staging}"
-          TAG_NAME="v${BASE_VERSION}+${BUILD_NUMBER}-dev-staging"
-
-          git remote set-url origin "https://x-access-token:${RELEASE_BOT_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          if git ls-remote --exit-code --tags origin "refs/tags/${TAG_NAME}" >/dev/null 2>&1; then
-            echo "Tag ${TAG_NAME} already exists; skipping."
-            exit 0
-          fi
-
-          git tag "${TAG_NAME}" "${GITHUB_SHA}"
-          git push origin "refs/tags/${TAG_NAME}"
-          echo "Tagged ${GITHUB_SHA} as ${TAG_NAME}"
-
-  notify-failure:
-    needs: [create-version-bump-pr, tag-version-bump]
-    if: always()
-    permissions:
-      actions: read
-      contents: read
-      issues: write
-      statuses: write
-    uses: ./.github/workflows/shared-notify.yml
-    with:
-      failed: >-
-        ${{
-          (
-            (needs.create-version-bump-pr.result != 'success' && needs.create-version-bump-pr.result != 'skipped') ||
-            (needs.tag-version-bump.result != 'success' && needs.tag-version-bump.result != 'skipped')
-          )
-        }}
-      workflow_name: 'Dev-Staging Dev Cut Gate'
-      severity: 'P1-high'
-      job_results: '{"create-version-bump-pr":"${{ needs.create-version-bump-pr.result }}","tag-version-bump":"${{ needs.tag-version-bump.result }}"}'

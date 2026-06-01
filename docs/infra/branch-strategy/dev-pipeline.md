@@ -4,7 +4,7 @@
 
 ## 4가지 workflow
 
-1. **`dev-staging-dev-cut`** — daily cron, dev-staging tip 의 snapshot 으로 PR 생성
+1. **`dev-staging-dev-cut`** — daily cron, dev-staging tip 을 직접 bump/tag 한 뒤 그 snapshot 으로 PR 생성
 2. **`dev-pr-gate`** — snapshot PR 머지 전 검증 (defensive)
 3. **`dev-rc-cut-gate`** — cut 직전 evaluator. 24h soak + commit status + cron install run 확인 후 `dev-rc-cut-pass` set
 4. **`dev-deploy` / cron install** — dev 환경 deploy/smoke 가 필요할 때 수행. 이벤트 플로우 시뮬레이터는 dev pg_cron 으로 별도 운영
@@ -16,15 +16,19 @@
 - **cron**: 매일 KST 02:00 (TBD)
 - **manual**: `workflow_dispatch`
 - 동작:
-  1. 가장 최근 `v*-dev-staging` 태그 (dev-staging 의 latest coherent snapshot) 찾기
-  2. PR 생성: `ci(dev-staging-dev-cut): promote v26.05.27+2832-dev-staging to dev` (base=dev, head=`cut/dev-staging-dev/YYYY-MM-DD-{sha8}` at that tag)
-  3. `dev-pr-gate` 자동 발동
-  4. 통과 시 auto-merge (rebase — active `dev` ruleset 의 linear history 와 호환)
+  1. open `cut/dev-staging-dev/*` PR 이 있으면 skip
+  2. `tag_name` 입력이 있으면 해당 `v*-dev-staging` tag 를 promote 대상으로 사용
+  3. 입력이 없으면 현재 `origin/dev-staging` HEAD 에 `YY.MM.DD-dev-staging+YYMMDDNN` version bump commit 을 만들고 release bot 이 protected `dev-staging` 에 fast-forward push
+  4. 같은 commit 에 `vYY.MM.DD+YYMMDDNN-dev-staging` tag 생성
+  5. PR 생성: `ci(dev-staging-dev-cut): promote v26.06.01+26060101-dev-staging to dev` (base=dev, head=`cut/dev-staging-dev/YYYY-MM-DD-{sha8}` at that tag)
+  6. `dev-pr-gate` 자동 발동
+  7. 통과 시 auto-merge (rebase — active `dev` ruleset 의 linear history 와 호환)
 
 ### 슬립 처리
 
 - 이미 dev 가 최신 dev-staging 과 동기화돼 있으면 (= 새 commit 없음) skip
 - 이전 dev-staging-dev-cut 이 still in progress (드물) → 이번 cron skip + Slack 알림
+- partial run 으로 dev-staging HEAD 에 이미 `v*-dev-staging` tag 가 있으면 새 bump 를 만들지 않고 그 tag 를 재사용
 
 ## `dev-pr-gate`
 

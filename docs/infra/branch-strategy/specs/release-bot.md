@@ -84,8 +84,8 @@ git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
 
 | Workflow | 사용 이유 |
 |----------|-----------|
-| `dev-staging-dev-cut-gate` | dev-staging version bump/tag |
-| `dev-staging-dev-cut` | immutable nightly branch 생성, dev PR 생성 |
+| `dev-staging-dev-cut-gate` | manual candidate inspect (read-only) |
+| `dev-staging-dev-cut` | dev-staging version bump/tag, immutable nightly branch 생성, dev PR 생성 |
 | `shared-set-commit-status` | commit status 를 쓰는 low-level reusable |
 | `set-dev-soak-status` | dev soak signal 을 `dev-soak/*` context 로 매핑 |
 | `set-rc-soak-status` | rc soak signal 을 `rc-soak/*` context 로 매핑 |

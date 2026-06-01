@@ -7,11 +7,11 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: Optional v*-dev-staging tag to promote instead of the latest one.
+        description: Optional v*-dev-staging tag to promote. If omitted, the workflow bumps and tags current dev-staging.
         required: false
         type: string
       dry_run:
-        description: Plan only; do not push branch, create PR, or enable auto-merge.
+        description: Plan only; do not push version bump/tag/branch, create PR, or enable auto-merge.
         required: false
         type: boolean
         default: false
@@ -29,10 +29,10 @@ jobs:
   create-dev-cut-pr:
     runs-on: ubuntu-latest
     outputs:
-      skipped: ${{ steps.plan.outputs.skipped }}
+      skipped: ${{ steps.prepare.outputs.skipped }}
       pr_number: ${{ steps.pr.outputs.pr_number }}
-      tag_name: ${{ steps.plan.outputs.tag_name }}
-      branch_name: ${{ steps.plan.outputs.branch_name }}
+      tag_name: ${{ steps.prepare.outputs.tag_name }}
+      branch_name: ${{ steps.prepare.outputs.branch_name }}
 
     steps:
       - uses: actions/checkout@v6
@@ -47,10 +47,10 @@ jobs:
           fallback-app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
           fallback-private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
 
-      - name: Plan dev promotion
-        id: plan
+      - name: Prepare dev-staging snapshot
+        id: prepare
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.release-bot.outputs.token }}
           RELEASE_BOT_TOKEN: ${{ steps.release-bot.outputs.token }}
           REQUESTED_TAG: ${{ inputs.tag_name || '' }}
           DRY_RUN: ${{ inputs.dry_run || false }}
@@ -71,28 +71,85 @@ jobs:
             exit 0
           fi
 
+          ACTION="promote requested tag"
+          VERSION=""
+          BUILD_NUMBER=""
+          BUMPED=false
+
           if [ -n "${REQUESTED_TAG}" ]; then
             TAG_NAME="${REQUESTED_TAG}"
+            if ! git rev-parse -q --verify "refs/tags/${TAG_NAME}" >/dev/null; then
+              echo "::error::Tag ${TAG_NAME} does not exist."
+              exit 1
+            fi
+            TAG_SHA="$(git rev-list -n 1 "${TAG_NAME}")"
+            if ! git merge-base --is-ancestor "${TAG_SHA}" origin/dev-staging; then
+              echo "::error::Tag ${TAG_NAME} (${TAG_SHA}) is not reachable from origin/dev-staging."
+              exit 1
+            fi
           else
-            TAG_NAME="$(git for-each-ref \
-              --sort=-creatordate \
-              --format='%(refname:short)' \
-              'refs/tags/v*-dev-staging' | head -n 1)"
-          fi
+            SNAPSHOT_SHA="$(git rev-parse origin/dev-staging)"
+            if git merge-base --is-ancestor "${SNAPSHOT_SHA}" origin/dev; then
+              echo "origin/dev already contains origin/dev-staging (${SNAPSHOT_SHA}); skipping."
+              echo "skipped=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
 
-          if [ -z "${TAG_NAME}" ]; then
-            echo "::error::No v*-dev-staging tag found to promote."
-            exit 1
-          fi
-          if ! git rev-parse -q --verify "refs/tags/${TAG_NAME}" >/dev/null; then
-            echo "::error::Tag ${TAG_NAME} does not exist."
-            exit 1
-          fi
+            EXISTING_HEAD_TAG="$(git tag --points-at "${SNAPSHOT_SHA}" \
+              | grep -E '^v[0-9]{2}\.[0-9]{2}\.[0-9]{2}\+[0-9]+-dev-staging$' \
+              | sort -V \
+              | tail -n 1 || true)"
+            if [ -n "${EXISTING_HEAD_TAG}" ]; then
+              TAG_NAME="${EXISTING_HEAD_TAG}"
+              TAG_SHA="${SNAPSHOT_SHA}"
+              VERSION="$(printf '%s\n' "${TAG_NAME}" | sed -nE 's/^v([^+]+)\+[0-9]+-dev-staging$/\1-dev-staging/p')"
+              BUILD_NUMBER="$(printf '%s\n' "${TAG_NAME}" | sed -nE 's/^v[0-9]{2}\.[0-9]{2}\.[0-9]{2}\+([0-9]+)-dev-staging$/\1/p')"
+              ACTION="reuse existing dev-staging snapshot tag"
+            else
+              VERSION_DATE="$(TZ=Asia/Seoul date +%y.%m.%d)"
+              BUILD_PREFIX="$(TZ=Asia/Seoul date +%y%m%d)"
+              VERSION="${VERSION_DATE}-dev-staging"
+              LATEST_BUILD="$(git tag -l "v${VERSION_DATE}+${BUILD_PREFIX}*-dev-staging" \
+                | sed -nE "s/^v${VERSION_DATE}\+([0-9]+)-dev-staging$/\1/p" \
+                | sort -n \
+                | tail -n 1)"
+              if [ -n "${LATEST_BUILD}" ]; then
+                BUILD_NUMBER="$((10#${LATEST_BUILD} + 1))"
+              else
+                BUILD_NUMBER="${BUILD_PREFIX}01"
+              fi
+              if [ "${BUILD_NUMBER}" -gt 2100000000 ]; then
+                echo "::error::Build number ${BUILD_NUMBER} exceeds Android versionCode max."
+                exit 1
+              fi
 
-          TAG_SHA="$(git rev-list -n 1 "${TAG_NAME}")"
-          if ! git merge-base --is-ancestor "${TAG_SHA}" origin/dev-staging; then
-            echo "::error::Tag ${TAG_NAME} (${TAG_SHA}) is not reachable from origin/dev-staging."
-            exit 1
+              TAG_NAME="v${VERSION_DATE}+${BUILD_NUMBER}-dev-staging"
+              if git rev-parse -q --verify "refs/tags/${TAG_NAME}" >/dev/null; then
+                echo "::error::Tag ${TAG_NAME} already exists; refusing to overwrite."
+                exit 1
+              fi
+
+              ACTION="direct dev-staging version bump, tag, and promote"
+              if [ "${DRY_RUN}" = "true" ]; then
+                TAG_SHA="${SNAPSHOT_SHA}"
+              else
+                git config user.name "minglit-release-bot"
+                git config user.email "minglit-release-bot@users.noreply.github.com"
+                git checkout -B dev-staging origin/dev-staging
+                bash scripts/bump-version.sh "${VERSION}" "${BUILD_NUMBER}"
+                if git diff --quiet; then
+                  echo "::error::Version bump produced no file changes."
+                  exit 1
+                fi
+                git add -A
+                git commit -m "chore: bump version to ${TAG_NAME}"
+                TAG_SHA="$(git rev-parse HEAD)"
+                git push origin HEAD:refs/heads/dev-staging
+                git tag "${TAG_NAME}" "${TAG_SHA}"
+                git push origin "refs/tags/${TAG_NAME}"
+                BUMPED=true
+              fi
+            fi
           fi
 
           if git merge-base --is-ancestor "${TAG_SHA}" origin/dev; then
@@ -113,6 +170,8 @@ jobs:
           echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
           echo "tag_sha=${TAG_SHA}" >> "$GITHUB_OUTPUT"
           echo "branch_name=${BRANCH_NAME}" >> "$GITHUB_OUTPUT"
+          echo "build_number=${BUILD_NUMBER}" >> "$GITHUB_OUTPUT"
+          echo "bumped=${BUMPED}" >> "$GITHUB_OUTPUT"
 
           {
             echo "## dev-staging-dev-cut plan"
@@ -120,18 +179,21 @@ jobs:
             echo "| Field | Value |"
             echo "|---|---|"
             echo "| dry_run | ${DRY_RUN} |"
+            echo "| action | ${ACTION} |"
+            echo "| version | ${VERSION:-from requested tag} |"
+            echo "| build_number | ${BUILD_NUMBER:-from requested tag} |"
             echo "| tag_name | ${TAG_NAME} |"
             echo "| tag_sha | ${TAG_SHA} |"
             echo "| branch_name | ${BRANCH_NAME} |"
-            echo "| action | create PR ${BRANCH_NAME} -> dev |"
+            echo "| bumped_dev_staging | ${BUMPED} |"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Push dev promotion branch
-        if: steps.plan.outputs.skipped != 'true' && inputs.dry_run != true
+        if: steps.prepare.outputs.skipped != 'true' && inputs.dry_run != true
         env:
           RELEASE_BOT_TOKEN: ${{ steps.release-bot.outputs.token }}
-          TAG_SHA: ${{ steps.plan.outputs.tag_sha }}
-          BRANCH_NAME: ${{ steps.plan.outputs.branch_name }}
+          TAG_SHA: ${{ steps.prepare.outputs.tag_sha }}
+          BRANCH_NAME: ${{ steps.prepare.outputs.branch_name }}
         run: |
           set -euo pipefail
           git remote set-url origin "https://x-access-token:${RELEASE_BOT_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
@@ -140,32 +202,32 @@ jobs:
 
       - name: Track dev promotion issue
         id: cut-issue
-        if: steps.plan.outputs.skipped != 'true'
+        if: steps.prepare.outputs.skipped != 'true'
         uses: ./.github/actions/cut-issue
         with:
           github-token: ${{ github.token }}
           operation: upsert
           gate-key: dev-staging-dev
-          subject-id: ${{ steps.plan.outputs.tag_name }}
-          title: 'cut-gate(dev-staging-dev): ${{ steps.plan.outputs.tag_name }}'
+          subject-id: ${{ steps.prepare.outputs.tag_name }}
+          title: 'cut-gate(dev-staging-dev): ${{ steps.prepare.outputs.tag_name }}'
           status: ${{ inputs.dry_run == true && 'ready' || 'promoting' }}
-          summary: 'dev-staging -> dev promotion is planned for `${{ steps.plan.outputs.tag_name }}`.'
+          summary: 'dev-staging -> dev promotion is planned for `${{ steps.prepare.outputs.tag_name }}`.'
           details: |
-            - Source tag: `${{ steps.plan.outputs.tag_name }}`
-            - Source SHA: `${{ steps.plan.outputs.tag_sha }}`
-            - Promotion branch: `${{ steps.plan.outputs.branch_name }}`
+            - Source tag: `${{ steps.prepare.outputs.tag_name }}`
+            - Source SHA: `${{ steps.prepare.outputs.tag_sha }}`
+            - Promotion branch: `${{ steps.prepare.outputs.branch_name }}`
             - Target branch: `dev`
             - Deploy after merge: `dev-deploy` on `push` to `dev`
             - Dry run: `${{ inputs.dry_run || false }}`
 
       - name: Create dev promotion PR and enable auto-merge
         id: pr
-        if: steps.plan.outputs.skipped != 'true' && inputs.dry_run != true
+        if: steps.prepare.outputs.skipped != 'true' && inputs.dry_run != true
         env:
           GH_TOKEN: ${{ steps.release-bot.outputs.token }}
-          TAG_NAME: ${{ steps.plan.outputs.tag_name }}
-          TAG_SHA: ${{ steps.plan.outputs.tag_sha }}
-          BRANCH_NAME: ${{ steps.plan.outputs.branch_name }}
+          TAG_NAME: ${{ steps.prepare.outputs.tag_name }}
+          TAG_SHA: ${{ steps.prepare.outputs.tag_sha }}
+          BRANCH_NAME: ${{ steps.prepare.outputs.branch_name }}
           CUT_ISSUE_NUMBER: ${{ steps.cut-issue.outputs.issue-number }}
           CUT_ISSUE_URL: ${{ steps.cut-issue.outputs.issue-url }}
         run: |
@@ -206,9 +268,9 @@ jobs:
           echo "pr_number=${PR_NUMBER}" >> "$GITHUB_OUTPUT"
 
       - name: Dry run summary
-        if: steps.plan.outputs.skipped != 'true' && inputs.dry_run == true
+        if: steps.prepare.outputs.skipped != 'true' && inputs.dry_run == true
         run: |
-          echo "Dry-run complete. No branch, PR, or auto-merge was created."
+          echo "Dry-run complete. No version bump, tag, branch, PR, or auto-merge was created."
 
   notify-failure:
     needs: [create-dev-cut-pr]

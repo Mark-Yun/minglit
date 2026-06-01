@@ -1,11 +1,11 @@
 # Dev-Staging Pipeline
 
-AI agent 와 feature/fix/chore PR 이 `dev-staging` 브랜치로 들어오는 진입점. 일반 PR + auto-merge 로 처리하고, `dev-staging-pr-gate` 가 가벼운 검증, 머지 후 `dev-staging-dev-cut-gate` 가 version-bump PR 을 생성한다.
+AI agent 와 feature/fix/chore PR 이 `dev-staging` 브랜치로 들어오는 진입점. 일반 PR + auto-merge 로 처리하고, `dev-staging-pr-gate` 가 가벼운 검증을 담당한다. source version bump 와 `v*-dev-staging` tag 는 PR 머지마다 만들지 않고, 하루 1회 `dev-staging-dev-cut` 이 promote 할 snapshot 에만 만든다.
 
 ## 두 가지 workflow
 
 1. **`dev-staging-pr-gate`** — PR 머지 전
-2. **`dev-staging-dev-cut-gate`** — PR 머지 직후 (version-bump PR 생성, merge 후 tag)
+2. **`dev-staging-dev-cut`** — daily cut 시점 (direct version bump commit + tag + dev promotion PR)
 
 ## PR + Auto-Merge
 
@@ -22,7 +22,7 @@ AI agent 와 feature/fix/chore PR 이 `dev-staging` 브랜치로 들어오는 �
     ↓
 [통과 시 squash merge to dev-staging]
     ↓
-[dev-staging-dev-cut-gate 자동 발동]
+[daily dev-staging-dev-cut 이 최신 dev-staging snapshot 선별]
 ```
 
 ### 왜 merge queue 를 보류하나
@@ -81,24 +81,27 @@ AI agent 와 feature/fix/chore PR 이 `dev-staging` 브랜치로 들어오는 �
 
 **현재 상태**: TODO — AST 검출 로직 + 예외 라벨 운영 룰 + 분기별 우회 통계.
 
-## `dev-staging-dev-cut-gate`
+## `dev-staging-dev-cut`
 
-PR 머지 직후 자동 발동. 운영 복구용으로 `workflow_dispatch` 도 제공하며, 수동 실행 시 version 을 찍을 snapshot SHA 를 입력할 수 있다.
+하루 1회 KST 02:00에 실행된다. `tag_name` 입력이 있으면 기존 `v*-dev-staging` tag 를 promote 하고, 입력이 없으면 현재 `origin/dev-staging` HEAD 에 직접 version bump commit 을 만들고 그 commit 에 tag 를 찍은 뒤 동일 SHA 를 dev 로 promote 한다.
 
 ```
-1. KST 기준 날짜로 versionName 계산: `YY.MM.DD-dev-staging`
-2. 기존 open `version-bump/dev-staging/*` PR 이 있으면 stale 로 close
-3. 임시 version bump branch 생성 후 PR 생성
-4. 생성된 version-bump PR 번호를 build number 로 사용해 branch commit amend
-5. `dev-staging-pr-gate` 통과 시 auto-merge
-6. merge commit 에 tag `vYY.MM.DD+{version-bump PR#}-dev-staging` 생성
+1. open `cut/dev-staging-dev/*` PR 이 있으면 중복 cut 방지를 위해 skip
+2. `origin/dev-staging` HEAD 가 이미 `dev` 에 포함되어 있으면 skip
+3. HEAD 에 기존 `vYY.MM.DD+BUILD-dev-staging` tag 가 있으면 재사용
+4. tag 가 없으면 KST 날짜로 versionName `YY.MM.DD-dev-staging` 계산
+5. build number `YYMMDDNN` 계산 (`NN` = 같은 날짜 snapshot sequence)
+6. release bot 이 protected `dev-staging` 에 version bump commit 을 fast-forward push
+7. 같은 commit 에 tag `vYY.MM.DD+YYMMDDNN-dev-staging` 생성
+8. tag SHA 에서 `cut/dev-staging-dev/YYYY-MM-DD-{sha8}` branch 생성
+9. dev promotion PR 생성 + auto-merge(rebase)
 ```
 
-Protected `dev-staging` 에 직접 bump commit 을 push 하지 않는다. release bot 은 version-bump branch push, PR 생성/auto-merge, tag push 에만 사용한다.
+Protected `dev-staging` 직접 push 는 human 금지다. 예외는 `minglit-release-bot` 이 `dev-staging-dev-cut` 안에서 version bump commit 을 fast-forward push 하는 경우뿐이다. push 가 거부되면 dev-staging 이 cut 중 변경된 것이므로 새 HEAD 기준으로 다음 run 에서 다시 계산한다.
 
-Tag `vYY.MM.DD+{build}-dev-staging` 는 다음 단계의 `dev-staging-dev-cut` workflow 가 query 해서 "가장 최근 dev-staging 의 coherent snapshot" 찾는 데 사용.
+Tag `vYY.MM.DD+{build}-dev-staging` 는 dev promotion PR, deploy metadata, RC/main artifact version 이 같은 coherent snapshot 을 가리키게 하는 anchor 다.
 
-> **구현 결정**: source PR 번호는 build number 로 쓰지 않는다. GitHub PR 번호는 생성 순서라 merge 순서를 보장하지 않기 때문이다. version-bump PR 번호만 build number 로 사용한다.
+> **구현 결정**: source PR 번호와 version-bump PR 번호는 build number 로 쓰지 않는다. PR 번호는 생성 순서라 merge/promote 순서를 보장하지 않는다. build number 는 promote 된 snapshot 의 KST 날짜 + sequence (`YYMMDDNN`) 로 계산한다.
 
 ## Error-Backoff
 

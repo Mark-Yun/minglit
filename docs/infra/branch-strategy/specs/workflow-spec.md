@@ -32,15 +32,15 @@
 
 ### `version-bump`
 
-`bump-version.sh` 실행 + commit. dev-staging 에서는 direct push 하지 않고 version-bump PR 안에서 사용한다.
+`bump-version.sh` 실행 + commit. 현재 active path 에서는 `dev-staging-dev-cut` 이 cut-time direct bump 로 수행하며, reusable 은 legacy/building block 으로 유지한다.
 
 | 항목 | 값 |
 |------|----|
 | Trigger | `workflow_call` |
-| Inputs | `version`: YY.MM.DD[-stage], optional `build_number`: version-bump PR number |
+| Inputs | `version`: YY.MM.DD[-stage], optional `build_number`: snapshot build number |
 | Outputs | `commit_sha`, `tag_name` |
 | 핵심 steps | `bash scripts/bump-version.sh {version} {build_number}` · commit |
-| Called by | `dev-staging-dev-cut-gate` |
+| Called by | legacy/manual bump flows. Active daily cut 은 `dev-staging-dev-cut` 내부에서 `scripts/bump-version.sh` 를 직접 실행 |
 
 `dev`/`rc`/`main` promotion 은 version bump commit 을 만들지 않는다. 앱/스토어/릴리즈 에셋에 노출되는 version 은 deploy workflow 가 `shared-version-metadata` 로 계산해 build command 에 주입한다.
 
@@ -52,11 +52,11 @@ Deploy artifact version metadata 를 계산하는 reusable workflow.
 |------|----|
 | Trigger | `workflow_call` |
 | Inputs | `channel`: dev\|rc\|main, `source-ref`: ref/SHA |
-| Outputs | `base_version`, `version_name`, `build_number`, `release_tag`, `release_name`, `pr_number`, `source_sha` |
-| 규칙 | `version_name = YY.MM.DD[-channel]`, `build_number = version-bump PR number` |
+| Outputs | `base_version`, `version_name`, `build_number`, `release_tag`, `release_name`, `snapshot_build`, `source_sha` (`pr_number` 는 backward-compatible alias) |
+| 규칙 | `version_name = YY.MM.DD[-channel]`, `build_number = dev-staging snapshot build number` |
 | Called by | `shared-android-deploy`, `shared-ios-deploy`, 후속 `rc-deploy` |
 
-source-ref 의 first-parent history 에서 latest version-bump squash commit 을 찾고, commit title/tag 에 포함된 version-bump PR number 를 build number 로 사용한다. source PR 번호는 release note/trace metadata 로만 사용한다.
+source-ref 의 first-parent history 에서 latest `vYY.MM.DD+BUILD-dev-staging` tag 또는 matching bump commit 을 찾고, `BUILD` 를 deploy build number 로 사용한다. source PR 번호는 release note/trace metadata 로만 사용한다.
 
 ### `shared-set-commit-status`
 
@@ -165,12 +165,12 @@ Cross-branch cherry-pick PR 자동 생성.
 
 | 항목 | 값 |
 |------|----|
-| Trigger | `push` to `dev-staging` (PR squash merge 후) |
-| Inputs | (from event) PR number, merged SHA |
-| Outputs | version-bump PR + tag `v{YY.MM.DD}+{BUILD_PR#}-dev-staging` after merge |
-| Steps | (1) skip generated bump/graphify commits (2) close stale open `version-bump/dev-staging/*` PRs (3) create version-bump PR from current snapshot (4) amend bump commit so Flutter build number equals that PR number (5) enable auto-merge (6) on bump PR merge, create dev-staging snapshot tag |
+| Trigger | `workflow_dispatch` |
+| Inputs | optional `candidate_ref` |
+| Outputs | candidate SHA + existing snapshot tag summary |
+| Steps | (1) fetch dev-staging/tags (2) resolve candidate (3) report whether candidate already has `v{YY.MM.DD}+{BUILD}-dev-staging` tag |
 
-`dev-staging-dev-cut-gate` 는 dev-staging merge 마다 실행되므로 cut tracking issue 를 만들지 않는다. 하루 1회 실제 promotion 을 만드는 `dev-staging-dev-cut` 이 tracking issue 를 `status/promoting` 으로 생성/갱신한다.
+`dev-staging-dev-cut-gate` 는 per-merge mutation 을 하지 않는다. 하루 1회 실제 promotion 을 만드는 `dev-staging-dev-cut` 이 version bump/tag, cut tracking issue, promotion PR 을 담당한다.
 
 ### dev-staging → dev
 
@@ -182,7 +182,7 @@ Cross-branch cherry-pick PR 자동 생성.
 | Inputs | optional `tag_name` (`v*-dev-staging`) |
 | Outputs | PR number (dev-staging → dev) or skip |
 | PR title | `ci(dev-staging-dev-cut): promote {tag_name} to dev` |
-| Steps | (1) 이전 `dev-staging-dev-cut` PR open 이면 skip + Slack (2) 가장 최근 `v*-dev-staging` tag SHA 조회, 또는 입력 `tag_name` 사용 (3) dev 가 그 SHA 를 이미 포함하면 skip ("no new commits") (4) `cut/dev-staging-dev/YYYY-MM-DD-{sha8}` promotion branch 를 tag SHA 에서 생성 (5) cut tracking issue 를 `status/promoting` 으로 갱신 (6) `gh pr create` (base=dev, head=`cut/dev-staging-dev/YYYY-MM-DD-{sha8}`) + issue close marker + auto-merge 활성화 (`rebase`, active dev ruleset 의 linear history 와 호환) |
+| Steps | (1) 이전 `dev-staging-dev-cut` PR open 이면 skip (2) 입력 `tag_name` 이 있으면 해당 tag 를 promote 대상으로 사용 (3) 입력이 없으면 `origin/dev-staging` HEAD 가 이미 dev 에 포함됐는지 확인 (4) HEAD 에 기존 snapshot tag 가 있으면 재사용 (5) tag 가 없으면 `YY.MM.DD-dev-staging` + `YYMMDDNN` build number 로 version bump commit 을 만들고 release bot 이 protected `dev-staging` 에 fast-forward push (6) 같은 commit 에 `vYY.MM.DD+YYMMDDNN-dev-staging` tag push (7) `cut/dev-staging-dev/YYYY-MM-DD-{sha8}` promotion branch 를 tag SHA 에서 생성 (8) cut tracking issue 를 `status/promoting` 으로 갱신 (9) `gh pr create` (base=dev, head=`cut/dev-staging-dev/YYYY-MM-DD-{sha8}`) + issue close marker + auto-merge 활성화 (`rebase`, active dev ruleset 의 linear history 와 호환) |
 
 #### `dev-pr-gate`
 
@@ -246,7 +246,7 @@ Cross-branch cherry-pick PR 자동 생성.
 
 #### RC hotfix post-merge behavior
 
-RC branch 에 version bump commit/tag 를 만들던 이전 설계. 최신 정책에서는 RC hotfix merge 후에도 branch state 를 바꾸지 않는다. RC deploy artifact version 은 `shared-version-metadata(channel=rc)` 가 latest version-bump PR number 로 계산한다.
+RC branch 에 version bump commit/tag 를 만들던 이전 설계. 최신 정책에서는 RC hotfix merge 후에도 branch state 를 바꾸지 않는다. RC deploy artifact version 은 `shared-version-metadata(channel=rc)` 가 latest dev-staging snapshot build number 로 계산한다.
 
 #### `rc-deploy`
 
@@ -320,8 +320,8 @@ RC branch 에 version bump commit/tag 를 만들던 이전 설계. 최신 정책
        ↓
 [dev-staging-pr-gate] ──auto-merge──▶ dev-staging push
                                                 ↓
-                                         [dev-staging-dev-cut-gate]
-                                                ↓ tag v{YY.MM.DD}+{BUILD_PR#}-dev-staging
+                                         [daily dev-staging-dev-cut]
+                                                ↓ direct bump + tag v{YY.MM.DD}+{BUILD}-dev-staging
 
 [daily KST 02:00]
     ↓
@@ -371,7 +371,7 @@ Promotion/deploy entry workflows support `workflow_dispatch` dry-run where mutat
 
 | Workflow | Dry-run behavior |
 |----------|------------------|
-| `dev-staging-dev-cut` | selects `v*-dev-staging`, computes cut branch, skips branch push/PR/auto-merge |
+| `dev-staging-dev-cut` | computes/reuses dev-staging snapshot tag, computes cut branch, skips version bump/tag/branch push/PR/auto-merge |
 | `dev-rc-cut-gate` | evaluates soak/run/status inputs, skips `dev-soak/*` and `dev-rc-cut-pass` status writes |
 | `dev-rc-cut` | selects source SHA/RC week, skips RC branch push/promo tag |
 | `rc-main-cut-gate` | selects RC branch and evaluates soak, skips `rc-main-cut-pass` status write |

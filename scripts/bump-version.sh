@@ -66,8 +66,8 @@ if [ "$MM_DEC" -lt 1 ] || [ "$MM_DEC" -gt 12 ]; then
     exit 1
 fi
 
-# Calculate versionCode. New release automation passes the version-bump PR
-# number explicitly so mobile build numbers stay monotonic by bump PR order.
+# Calculate versionCode. Release automation may pass a cut-time snapshot build
+# number explicitly so mobile build numbers stay monotonic by promoted snapshot.
 if [ -n "$BUILD_NUMBER_INPUT" ]; then
     if ! [[ "$BUILD_NUMBER_INPUT" =~ ^[0-9]+$ ]] || [ "$((10#$BUILD_NUMBER_INPUT))" -lt 1 ]; then
         echo -e "${RED}Error: Invalid build_number: $BUILD_NUMBER_INPUT (must be >= 1)${NC}"
