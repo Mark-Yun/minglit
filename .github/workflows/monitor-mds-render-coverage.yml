@@ -175,6 +175,11 @@ jobs:
           flutter-version: '3.41.9' # Keep in sync with render-capture job.
           cache: true
 
+      - name: Clean merged render artifact directory
+        run: |
+          rm -rf docs/infra/mds-emulator-render
+          mkdir -p docs/infra/mds-emulator-render
+
       - name: Download render artifacts
         uses: actions/download-artifact@v5
         with:
