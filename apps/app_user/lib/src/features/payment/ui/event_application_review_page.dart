@@ -14,10 +14,7 @@ class EventApplicationReviewPage extends ConsumerWidget {
     final appAsync = ref.watch(purchaseHistoryDetailProvider(applicationId));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('심사 상태'),
-        centerTitle: false,
-      ),
+      appBar: AppBar(title: const Text('심사 상태'), centerTitle: false),
       body: MinglitAsyncValueWidget(
         value: appAsync,
         data: (application) {
@@ -160,68 +157,58 @@ class _ApplicationTimeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final steps = _buildSteps();
-
-    return Column(
-      children: [
-        for (var i = 0; i < steps.length; i++) ...[
-          _TimelineStep(
-            step: steps[i],
-            isLast: i == steps.length - 1,
-          ),
-        ],
-      ],
-    );
+    return MinglitTimeline(children: _buildSteps(context));
   }
 
-  List<_StepData> _buildSteps() {
-    final steps = <_StepData>[];
+  List<MinglitTimelineStep> _buildSteps(BuildContext context) {
+    final steps = <MinglitTimelineStep>[];
 
     // Step 1: 신청
     steps.add(
-      _StepData(
-        label: '신청',
-        subtitle: DateFormat('yyyy.MM.dd HH:mm').format(
-          application.createdAt.toLocal(),
-        ),
-        icon: Icons.edit_note,
-        state: _StepState.done,
+      _step(
+        context,
+        title: '신청',
+        subtitle: DateFormat(
+          'yyyy.MM.dd HH:mm',
+        ).format(application.createdAt.toLocal()),
+        tone: TimelineTone.success,
       ),
     );
 
     // Step 2: 결제
     if (application.status == 'pending') {
       steps.add(
-        _StepData(
-          label: '결제 대기 중',
+        _step(
+          context,
+          title: '결제 대기 중',
           subtitle: '결제가 완료되면 심사가 시작됩니다.',
-          icon: Icons.payment,
-          state: _StepState.active,
+          tone: TimelineTone.progress,
+          pulsing: true,
         ),
       );
       return steps;
     }
     if (application.status == 'payment_failed') {
       steps.add(
-        _StepData(
-          label: '결제 실패',
+        _step(
+          context,
+          title: '결제 실패',
           subtitle: '결제가 처리되지 않았습니다.',
-          icon: Icons.payment,
-          state: _StepState.failed,
+          tone: TimelineTone.error,
         ),
       );
       return steps;
     }
     steps.add(
-      _StepData(
-        label: '결제 완료',
+      _step(
+        context,
+        title: '결제 완료',
         subtitle: application.paidAt != null
-            ? DateFormat('yyyy.MM.dd HH:mm').format(
-                application.paidAt!.toLocal(),
-              )
+            ? DateFormat(
+                'yyyy.MM.dd HH:mm',
+              ).format(application.paidAt!.toLocal())
             : null,
-        icon: Icons.payment,
-        state: _StepState.done,
+        tone: TimelineTone.success,
       ),
     );
 
@@ -229,149 +216,68 @@ class _ApplicationTimeline extends StatelessWidget {
     switch (application.status) {
       case 'pending_review':
         steps.add(
-          _StepData(
-            label: '심사 진행 중',
+          _step(
+            context,
+            title: '심사 진행 중',
             subtitle: '파트너가 신청을 검토하고 있습니다.',
-            icon: Icons.hourglass_top,
-            state: _StepState.active,
+            tone: TimelineTone.progress,
+            pulsing: true,
           ),
         );
       case 'approved':
         steps.add(
-          _StepData(
-            label: '승인됨',
+          _step(
+            context,
+            title: '승인됨',
             subtitle: application.rejectionReason,
-            icon: Icons.check_circle,
-            state: _StepState.done,
+            tone: TimelineTone.success,
           ),
         );
       case 'paid':
         steps.add(
-          _StepData(
-            label: '예매 완료',
+          _step(
+            context,
+            title: '예매 완료',
             subtitle: '이벤트 당일 체크인하세요.',
-            icon: Icons.check_circle,
-            state: _StepState.done,
+            tone: TimelineTone.success,
           ),
         );
       case 'rejected':
         steps.add(
-          _StepData(
-            label: '반려됨',
+          _step(
+            context,
+            title: '반려됨',
             subtitle: application.rejectionReason,
-            icon: Icons.cancel,
-            state: _StepState.failed,
+            tone: TimelineTone.error,
           ),
         );
       case 'cancelled':
-        steps.add(
-          _StepData(
-            label: '취소됨',
-            subtitle: null,
-            icon: Icons.cancel,
-            state: _StepState.neutral,
-          ),
-        );
+        steps.add(_step(context, title: '취소됨', tone: TimelineTone.neutral));
     }
 
     return steps;
   }
-}
 
-enum _StepState { done, active, failed, neutral }
-
-class _StepData {
-  const _StepData({
-    required this.label,
-    required this.icon,
-    required this.state,
-    this.subtitle,
-  });
-
-  final String label;
-  final String? subtitle;
-  final IconData icon;
-  final _StepState state;
-}
-
-class _TimelineStep extends StatelessWidget {
-  const _TimelineStep({required this.step, required this.isLast});
-
-  final _StepData step;
-  final bool isLast;
-
-  @override
-  Widget build(BuildContext context) {
+  MinglitTimelineStep _step(
+    BuildContext context, {
+    required String title,
+    required TimelineTone tone,
+    String? subtitle,
+    bool pulsing = false,
+  }) {
     final theme = Theme.of(context);
-    Color dotColor;
-    switch (step.state) {
-      case _StepState.done:
-        dotColor = theme.colorScheme.primary;
-      case _StepState.active:
-        dotColor = theme.colorScheme.tertiary;
-      case _StepState.failed:
-        dotColor = theme.colorScheme.error;
-      case _StepState.neutral:
-        dotColor = theme.colorScheme.onSurfaceVariant;
-    }
-
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 28,
-            child: Column(
-              children: [
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: dotColor.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(step.icon, size: 16, color: dotColor),
-                ),
-                if (!isLast)
-                  Expanded(
-                    child: Container(
-                      width: 2,
-                      color: theme.colorScheme.outlineVariant,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(width: MinglitSpacing.small),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                bottom: isLast ? 0 : MinglitSpacing.medium,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    step.label,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  if (step.subtitle != null && step.subtitle!.isNotEmpty) ...[
-                    const SizedBox(height: MinglitSpacing.xxsmall),
-                    Text(
-                      step.subtitle!,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ],
+    return MinglitTimelineStep(
+      tone: tone,
+      title: title,
+      pulsing: pulsing,
+      child: subtitle == null || subtitle.isEmpty
+          ? null
+          : Text(
+              subtitle,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-          ),
-        ],
-      ),
     );
   }
 }
