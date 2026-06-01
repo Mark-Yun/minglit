@@ -36,9 +36,9 @@ void main() {
     return ProviderScope(
       overrides: [
         eventRepositoryProvider.overrideWithValue(mockEventRepository),
-        purchaseHistoryDetailProvider('app1').overrideWith(
-          (ref) async => application,
-        ),
+        purchaseHistoryDetailProvider(
+          'app1',
+        ).overrideWith((ref) async => application),
       ],
       child: const MaterialApp(
         home: EventApplicationReviewPage(applicationId: 'app1'),
@@ -64,6 +64,7 @@ void main() {
       await tester.pump();
 
       expect(find.text('심사 타임라인'), findsOneWidget);
+      expect(find.byType(MinglitTimeline), findsOneWidget);
       expect(find.text('예매 완료'), findsOneWidget);
       expect(find.text('다시 신청하기'), findsNothing);
     });
@@ -104,9 +105,9 @@ void main() {
         ProviderScope(
           overrides: [
             eventRepositoryProvider.overrideWithValue(mockEventRepository),
-            purchaseHistoryDetailProvider('app1').overrideWith(
-              (ref) async => null,
-            ),
+            purchaseHistoryDetailProvider(
+              'app1',
+            ).overrideWith((ref) async => null),
           ],
           child: const MaterialApp(
             home: EventApplicationReviewPage(applicationId: 'app1'),
