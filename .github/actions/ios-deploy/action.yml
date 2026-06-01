@@ -267,7 +267,33 @@ runs:
       shell: bash
       working-directory: ./${{ inputs.app-directory }}
       run: |
-        flutter build ipa --release --export-options-plist=ios/ExportOptions-dev.plist \
+        run_with_heartbeat() {
+          "$@" &
+          build_pid=$!
+          (
+            elapsed=0
+            while kill -0 "$build_pid" 2>/dev/null; do
+              sleep 300
+              elapsed=$((elapsed + 300))
+              if kill -0 "$build_pid" 2>/dev/null; then
+                echo "::notice::flutter build ipa still running after ${elapsed}s"
+              fi
+            done
+          ) &
+          heartbeat_pid=$!
+          trap 'kill "$build_pid" "$heartbeat_pid" 2>/dev/null || true' EXIT
+          if wait "$build_pid"; then
+            status=0
+          else
+            status=$?
+          fi
+          kill "$heartbeat_pid" 2>/dev/null || true
+          wait "$heartbeat_pid" 2>/dev/null || true
+          trap - EXIT
+          return "$status"
+        }
+
+        run_with_heartbeat flutter build ipa --release --export-options-plist=ios/ExportOptions-dev.plist \
           --build-name=${{ inputs['build-name'] }} \
           --build-number=${{ inputs['build-number'] }} \
           --dart-define=APP_VERSION=${{ inputs['display-version'] }} \
@@ -286,7 +312,33 @@ runs:
       shell: bash
       working-directory: ./${{ inputs.app-directory }}
       run: |
-        flutter build ipa --release --export-options-plist=ios/ExportOptions.plist \
+        run_with_heartbeat() {
+          "$@" &
+          build_pid=$!
+          (
+            elapsed=0
+            while kill -0 "$build_pid" 2>/dev/null; do
+              sleep 300
+              elapsed=$((elapsed + 300))
+              if kill -0 "$build_pid" 2>/dev/null; then
+                echo "::notice::flutter build ipa still running after ${elapsed}s"
+              fi
+            done
+          ) &
+          heartbeat_pid=$!
+          trap 'kill "$build_pid" "$heartbeat_pid" 2>/dev/null || true' EXIT
+          if wait "$build_pid"; then
+            status=0
+          else
+            status=$?
+          fi
+          kill "$heartbeat_pid" 2>/dev/null || true
+          wait "$heartbeat_pid" 2>/dev/null || true
+          trap - EXIT
+          return "$status"
+        }
+
+        run_with_heartbeat flutter build ipa --release --export-options-plist=ios/ExportOptions.plist \
           --build-name=${{ inputs['build-name'] }} \
           --build-number=${{ inputs['build-number'] }} \
           --dart-define=APP_VERSION=${{ inputs['display-version'] }} \

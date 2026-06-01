@@ -80,7 +80,7 @@ jobs:
   ios-deploy:
     needs: [version]
     runs-on: macos-15  # Fix #2371: connectivity_plus 7.1.1 requires iOS 18 SDK / Xcode 16+.
-    timeout-minutes: 60
+    timeout-minutes: 120
     environment: ${{ inputs.deploy-stage == 'main' && 'production' || 'preview' }}
     permissions:
       contents: read
