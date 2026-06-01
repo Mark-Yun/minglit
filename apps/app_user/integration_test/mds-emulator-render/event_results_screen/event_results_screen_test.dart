@@ -14,6 +14,9 @@ final catalog = MdsCatalog<EventResultsScreenBuilder>(
   builder: EventResultsScreenBuilder.new,
   states: [
     MdsState('state-default', (b) => b.defaultState(), mdsIndex: 1),
+    MdsState('state-default-2', (b) => b.defaultState(), mdsIndex: 2),
+    MdsState('state-default-3', (b) => b.defaultState(), mdsIndex: 3),
+    MdsState('state-default-4', (b) => b.defaultState(), mdsIndex: 4),
   ],
 );
 
