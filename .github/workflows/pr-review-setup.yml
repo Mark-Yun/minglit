@@ -45,6 +45,7 @@ jobs:
           fallback-private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
 
       - name: Enable squash auto-merge
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ steps.release-bot.outputs.token }}
         run: |
