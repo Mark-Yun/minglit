@@ -99,6 +99,8 @@ def assert_dev_cron_deploy_contract() -> None:
     required_wait_fragments = [
         'wait_for_deploy="false"',
         "changed_files=",
+        "grep -Eq",
+        '<<< "${changed_files}"',
         "supabase/(migrations|functions)",
         "Skipping deploy-supabase wait.",
     ]
