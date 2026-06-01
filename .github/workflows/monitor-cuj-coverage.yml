@@ -48,6 +48,7 @@ jobs:
           SPEC=$(jq -r '.spec_cujs' /tmp/cuj_cov.json)
           UNCOVERED_COUNT=$(jq -r '[.uncovered_features[].uncovered | length] | add // 0' /tmp/cuj_cov.json)
           ORPHAN_COUNT=$(jq -r '[.orphan_features[].orphan | length] | add // 0' /tmp/cuj_cov.json)
+          SKIPPED_COUNT=$(jq -r '.skipped_cujs // 0' /tmp/cuj_cov.json)
 
           ISSUE_TITLE_PREFIX="[cuj-coverage]"
 
@@ -110,7 +111,19 @@ jobs:
           - CUJ 커버리지: **${PCT}%** (${COVERED}/${SPEC})
           - Uncovered CUJs (spec 있음, 테스트 없음): **${UNCOVERED_COUNT}**
           - Orphan tests (테스트 있음, spec 없음): **${ORPHAN_COUNT}**
+          - Skipped CUJs (Flutter CUJ scope 밖): **${SKIPPED_COUNT}**
           - Pending spec.md 마이그레이션 (5섹션 미적용): **${PENDING_MIGRATION_COUNT}**
+
+          ## Coverage scope
+
+          이 monitor 는 현재 Flutter user/partner 앱 CUJ root 만 검증합니다:
+
+          - \`apps/app_user/integration_test/cuj/\`
+          - \`apps/app_partner/integration_test/cuj/\`
+
+          Flutter 앱 범위 밖 feature 는 skipped 로 표시하며, Option A 테스트 추가 대상에서 제외합니다.
+
+          $(jq -r '.skipped_features[]? | "- \(.category)/\(.feature): \(.spec_cujs) CUJs skipped — \(.reason)"' /tmp/cuj_cov.json)
 
           ## Decision rule (default action)
 
