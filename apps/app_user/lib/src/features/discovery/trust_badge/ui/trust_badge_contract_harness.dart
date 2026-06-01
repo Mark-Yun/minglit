@@ -381,6 +381,7 @@ class _TrustLifecycleHarnessState extends State<TrustLifecycleHarness> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('현재 등급: ${trustLevelLabel(level)}'),
+          if (_snapshot.pendingReview) const Text('심사 중'),
           if (_showRenewalGuide) const Text('인증 갱신 안내'),
           ElevatedButton(
             onPressed: () {
