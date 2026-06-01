@@ -1,7 +1,3 @@
-// Fix #2358: TicketSelectionSheet 수량 stepper IconButton tooltip 회귀 가드.
-//
-// buildQuantityStepper()의 − / + IconButton에 tooltip이 없으면
-// uidump에서 NAF="true" content-desc="" 로 캡처되어 스크린리더 접근 불가.
 import 'package:app_user/src/features/ticket/ui/ticket_selection_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -54,10 +50,8 @@ void main() {
       () => mockEventRepo.getTicketBalanceStatus(any()),
     ).thenAnswer((_) async => <String, bool>{});
 
-    // isVerified=true → 티켓 자격 검사 통과 → 티켓 자동 선택 → 수량 stepper 노출
-    when(
-      () => mockUserRepo.getUserProfile(any()),
-    ).thenAnswer(
+    // isVerified=true → 티켓 자격 검사 통과 → 티켓 자동 선택
+    when(() => mockUserRepo.getUserProfile(any())).thenAnswer(
       (_) async => const UserProfile(
         id: 'user-1',
         name: 'Test',
@@ -92,32 +86,17 @@ void main() {
     );
   }
 
-  group('TicketSelectionSheet quantity stepper', () {
+  group('TicketSelectionSheet quantity controls', () {
     testWidgets(
-      'Fix #2358: − 버튼에 tooltip "수량 감소"가 존재한다',
+      'does not show quantity controls before friends-together purchase ships',
       (tester) async {
         await tester.pumpWidget(buildSheet());
         await tester.pumpAndSettle();
 
-        expect(
-          find.byTooltip('수량 감소'),
-          findsOneWidget,
-          reason: '수량 감소 IconButton에 tooltip이 없으면 NAF="true" 회귀',
-        );
-      },
-    );
-
-    testWidgets(
-      'Fix #2358: + 버튼에 tooltip "수량 증가"가 존재한다',
-      (tester) async {
-        await tester.pumpWidget(buildSheet());
-        await tester.pumpAndSettle();
-
-        expect(
-          find.byTooltip('수량 증가'),
-          findsOneWidget,
-          reason: '수량 증가 IconButton에 tooltip이 없으면 NAF="true" 회귀',
-        );
+        expect(find.text('수량'), findsNothing);
+        expect(find.text('총 결제 금액'), findsNothing);
+        expect(find.byTooltip('수량 감소'), findsNothing);
+        expect(find.byTooltip('수량 증가'), findsNothing);
       },
     );
   });
