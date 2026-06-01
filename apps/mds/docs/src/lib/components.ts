@@ -103,12 +103,6 @@ export interface ComponentSpec {
   dartUsage?: string;
   /** Where this component lives on a screen + spacing relations. */
   placement?: PlacementSpec;
-  /**
-   * Path under /public/specs/components/ to a static HTML design spec
-   * (visual mockup with spec-mode annotations). Optional — not all
-   * components need a visual spec yet.
-   */
-  visualSpec?: string;
   /** Routes / specs that reference this component (anchor IDs). */
   usedIn?: string[];
 }
@@ -209,7 +203,6 @@ MinglitButton.text(
   icon: Icons.arrow_forward,
   onPressed: () => viewMore(),
 )`,
-    visualSpec: '/specs/components/minglit_button.html',
     placement: {
       where: [
         'Bottom CTA — `Detail + Bottom CTA` 스캐폴드의 하단, expand=true 풀폭.',
