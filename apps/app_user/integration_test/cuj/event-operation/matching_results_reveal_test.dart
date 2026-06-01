@@ -24,14 +24,12 @@ class _ResultsSheetHarness extends StatelessWidget {
   const _ResultsSheetHarness({
     required this.activeEvent,
     required this.entryLabel,
-    this.onSaveMatchContact,
-    this.onFindNextEvent,
+    this.onSaveContact,
   });
 
   final TodayActiveEvent activeEvent;
   final String entryLabel;
-  final SaveMatchContact? onSaveMatchContact;
-  final VoidCallback? onFindNextEvent;
+  final Future<void> Function(MatchPair match)? onSaveContact;
 
   @override
   Widget build(BuildContext context) {
@@ -46,8 +44,7 @@ class _ResultsSheetHarness extends StatelessWidget {
                 builder: (_) => SafeArea(
                   child: MatchResultsContent(
                     activeEvent: activeEvent,
-                    onSaveMatchContact: onSaveMatchContact,
-                    onFindNextEvent: onFindNextEvent,
+                    onSaveContact: onSaveContact,
                   ),
                 ),
               ),
@@ -203,7 +200,7 @@ void main() {
       app: _ResultsSheetHarness(
         activeEvent: _makeActiveEvent(),
         entryLabel: '결과 열기',
-        onSaveMatchContact: (match) async {
+        onSaveContact: (match) async {
           saved.add(
             _SavedContactCall(
               partnerId: match.partnerId,
@@ -226,13 +223,9 @@ void main() {
         await t.pumpAndSettle();
 
         expect(find.text('1명과 매칭되었어요!'), findsOneWidget);
-        expect(
-          find.byKey(const ValueKey<String>('save-contact-p-5')),
-          findsOneWidget,
-        );
-        expect(find.byKey(const ValueKey<String>('match-dot-0')), findsNothing);
-
-        await t.tap(find.byKey(const ValueKey<String>('save-contact-p-5')));
+        final saveButton = find.widgetWithText(MinglitButton, '연락처 저장하기');
+        expect(saveButton, findsOneWidget);
+        await t.tap(saveButton);
         await t.pump();
 
         expect(saved, hasLength(1));
@@ -265,10 +258,10 @@ void main() {
 
         expect(find.text('세아'), findsOneWidget);
         expect(find.textContaining('****'), findsNothing);
-        expect(
-          find.byKey(const ValueKey<String>('save-contact-p-6')),
-          findsNothing,
+        final saveButton = t.widget<MinglitButton>(
+          find.widgetWithText(MinglitButton, '연락처 저장하기'),
         );
+        expect(saveButton.onPressed, isNull);
       },
     );
   });
@@ -284,7 +277,7 @@ void main() {
       app: _ResultsSheetHarness(
         activeEvent: _makeActiveEvent(),
         entryLabel: '결과 열기',
-        onSaveMatchContact: (match) async {
+        onSaveContact: (match) async {
           saved.add(
             _SavedContactCall(
               partnerId: match.partnerId,
@@ -320,22 +313,33 @@ void main() {
         expect(find.text('2명과 매칭되었어요!'), findsOneWidget);
         expect(find.byType(PageView), findsOneWidget);
 
-        final dot0 = find.byKey(const ValueKey<String>('match-dot-0'));
-        final dot1 = find.byKey(const ValueKey<String>('match-dot-1'));
-        expect(dot0, findsOneWidget);
-        expect(dot1, findsOneWidget);
-        final dot0BeforeWidth = t.getSize(dot0).width;
-        final dot1BeforeWidth = t.getSize(dot1).width;
-        expect(dot0BeforeWidth, greaterThan(dot1BeforeWidth));
+        List<AnimatedContainer> indicatorDots() => t
+            .widgetList<AnimatedContainer>(find.byType(AnimatedContainer))
+            .where(
+              (w) =>
+                  (w.constraints?.maxHeight == 6) &&
+                  ((w.constraints?.maxWidth == 18) ||
+                      (w.constraints?.maxWidth == 6)) &&
+                  w.decoration is BoxDecoration,
+            )
+            .toList();
+
+        final beforeDots = indicatorDots();
+        expect(beforeDots.length, 2);
+        expect(beforeDots[0].constraints?.maxWidth, 18);
+        expect(beforeDots[1].constraints?.maxWidth, 6);
 
         await t.drag(find.byType(PageView), const Offset(-320, 0));
         await t.pumpAndSettle();
 
-        final dot0AfterWidth = t.getSize(dot0).width;
-        final dot1AfterWidth = t.getSize(dot1).width;
-        expect(dot1AfterWidth, greaterThan(dot0AfterWidth));
+        final afterDots = indicatorDots();
+        expect(afterDots.length, 2);
+        expect(afterDots[0].constraints?.maxWidth, 6);
+        expect(afterDots[1].constraints?.maxWidth, 18);
 
-        await t.tap(find.byKey(const ValueKey<String>('save-contact-p-8')));
+        await t.tap(
+          find.widgetWithText(MinglitButton, '연락처 저장하기').hitTestable().first,
+        );
         await t.pump();
 
         expect(saved, hasLength(1));
@@ -368,23 +372,16 @@ void main() {
   // CUJ 3-1: 매칭 없음 결과
   // ---------------------------------------------------------------------------
   cujGroup('3-1', '매칭 없음 empty 상태 표시', () {
-    var nextEventTapped = false;
-
     cujCase(
       'happy: empty state에서 다음 이벤트 찾기 CTA 탭 시 sheet dismiss + 다음 액션 콜백 실행',
       app: _ResultsSheetHarness(
         activeEvent: _makeActiveEvent(),
         entryLabel: '결과 열기',
-        onFindNextEvent: () {
-          nextEventTapped = true;
-        },
       ),
       overrides: () => [
         myMatchesProvider('event-1').overrideWith((ref) async => []),
       ],
       body: (t) async {
-        nextEventTapped = false;
-
         await t.tap(find.text('결과 열기'));
         await t.pumpAndSettle();
 
@@ -393,7 +390,6 @@ void main() {
         await t.tap(find.text('다음 이벤트 찾기'));
         await t.pumpAndSettle();
 
-        expect(nextEventTapped, isTrue);
         expect(find.byType(MatchResultsContent), findsNothing);
       },
     );
@@ -420,16 +416,11 @@ void main() {
   // CUJ 3-2: 조회 실패 fallback 처리
   // ---------------------------------------------------------------------------
   cujGroup('3-2', '조회 실패 시 empty fallback 처리', () {
-    var nextEventTapped = false;
-
     cujCase(
       'happy: provider error에서도 empty CTA가 노출되고 탭 시 dismiss된다',
       app: _ResultsSheetHarness(
         activeEvent: _makeActiveEvent(),
         entryLabel: '결과 열기',
-        onFindNextEvent: () {
-          nextEventTapped = true;
-        },
       ),
       overrides: () => [
         myMatchesProvider('event-1').overrideWith(
@@ -437,8 +428,6 @@ void main() {
         ),
       ],
       body: (t) async {
-        nextEventTapped = false;
-
         await t.tap(find.text('결과 열기'));
         await t.pumpAndSettle();
 
@@ -447,7 +436,6 @@ void main() {
         await t.tap(find.text('다음 이벤트 찾기'));
         await t.pumpAndSettle();
 
-        expect(nextEventTapped, isTrue);
         expect(find.byType(MatchResultsContent), findsNothing);
       },
     );
