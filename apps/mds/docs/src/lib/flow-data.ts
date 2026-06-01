@@ -214,6 +214,7 @@ export function extractRoutes(chart: string): string[] {
  * Kept as a no-op for API stability.
  */
 export function withClicks(chart: string, _app: 'user' | 'partner'): string {
+  void _app;
   return chart;
 }
 
