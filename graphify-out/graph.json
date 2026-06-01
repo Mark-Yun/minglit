@@ -3702,7 +3702,7 @@
       "source_file": "env-manifest.json",
       "source_location": "L208",
       "id": "minglit_env_manifest_functions_event_checkin",
-      "community": 16,
+      "community": 1698,
       "norm_label": "event-checkin"
     },
     {
@@ -3711,7 +3711,7 @@
       "source_file": "env-manifest.json",
       "source_location": "L209",
       "id": "minglit_env_manifest_event_checkin_required",
-      "community": 16,
+      "community": 1698,
       "norm_label": "required"
     },
     {
@@ -3720,7 +3720,7 @@
       "source_file": "env-manifest.json",
       "source_location": "L210",
       "id": "minglit_env_manifest_required_ticket_signing_public_key_jwk",
-      "community": 16,
+      "community": 1698,
       "norm_label": "ticket_signing_public_key_jwk"
     },
     {
@@ -3729,7 +3729,7 @@
       "source_file": "env-manifest.json",
       "source_location": "L211",
       "id": "minglit_env_manifest_ticket_signing_public_key_jwk_desc",
-      "community": 16,
+      "community": 1698,
       "norm_label": "desc"
     },
     {
@@ -6522,7 +6522,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L31",
       "id": "lib_route_pages_user_certificationroute",
-      "community": 1730,
+      "community": 11,
       "norm_label": "certificationroute"
     },
     {
@@ -6531,7 +6531,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L32",
       "id": "lib_route_pages_certificationroute_widget",
-      "community": 1730,
+      "community": 11,
       "norm_label": "widget"
     },
     {
@@ -6540,7 +6540,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L33",
       "id": "lib_route_pages_certificationroute_file",
-      "community": 1730,
+      "community": 11,
       "norm_label": "file"
     },
     {
@@ -6576,7 +6576,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L39",
       "id": "lib_route_pages_user_eventcheckinroute",
-      "community": 1731,
+      "community": 11,
       "norm_label": "eventcheckinroute"
     },
     {
@@ -6585,7 +6585,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L40",
       "id": "lib_route_pages_eventcheckinroute_widget",
-      "community": 1731,
+      "community": 11,
       "norm_label": "widget"
     },
     {
@@ -6594,7 +6594,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L41",
       "id": "lib_route_pages_eventcheckinroute_file",
-      "community": 1731,
+      "community": 11,
       "norm_label": "file"
     },
     {
@@ -6603,7 +6603,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L43",
       "id": "lib_route_pages_user_eventcheckedinroute",
-      "community": 11,
+      "community": 1729,
       "norm_label": "eventcheckedinroute"
     },
     {
@@ -6612,7 +6612,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L44",
       "id": "lib_route_pages_eventcheckedinroute_widget",
-      "community": 11,
+      "community": 1729,
       "norm_label": "widget"
     },
     {
@@ -6621,7 +6621,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L45",
       "id": "lib_route_pages_eventcheckedinroute_file",
-      "community": 11,
+      "community": 1729,
       "norm_label": "file"
     },
     {
@@ -6630,7 +6630,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L47",
       "id": "lib_route_pages_user_myticketsroute",
-      "community": 11,
+      "community": 1730,
       "norm_label": "myticketsroute"
     },
     {
@@ -6639,7 +6639,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L48",
       "id": "lib_route_pages_myticketsroute_widget",
-      "community": 11,
+      "community": 1730,
       "norm_label": "widget"
     },
     {
@@ -6648,7 +6648,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L49",
       "id": "lib_route_pages_myticketsroute_file",
-      "community": 11,
+      "community": 1730,
       "norm_label": "file"
     },
     {
@@ -6657,7 +6657,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L51",
       "id": "lib_route_pages_user_ticketqrroute",
-      "community": 11,
+      "community": 1734,
       "norm_label": "ticketqrroute"
     },
     {
@@ -6666,7 +6666,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L52",
       "id": "lib_route_pages_ticketqrroute_widget",
-      "community": 11,
+      "community": 1734,
       "norm_label": "widget"
     },
     {
@@ -6675,7 +6675,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L53",
       "id": "lib_route_pages_ticketqrroute_file",
-      "community": 11,
+      "community": 1734,
       "norm_label": "file"
     },
     {
@@ -7062,7 +7062,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L111",
       "id": "lib_route_pages_user_eventmatchingroute",
-      "community": 1732,
+      "community": 11,
       "norm_label": "eventmatchingroute"
     },
     {
@@ -7071,7 +7071,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L112",
       "id": "lib_route_pages_eventmatchingroute_widget",
-      "community": 1732,
+      "community": 11,
       "norm_label": "widget"
     },
     {
@@ -7080,7 +7080,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L113",
       "id": "lib_route_pages_eventmatchingroute_file",
-      "community": 1732,
+      "community": 11,
       "norm_label": "file"
     },
     {
@@ -7251,7 +7251,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L145",
       "id": "lib_route_pages_partner_partnerapplyroute",
-      "community": 1034,
+      "community": 1731,
       "norm_label": "partnerapplyroute"
     },
     {
@@ -7260,7 +7260,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L146",
       "id": "lib_route_pages_partnerapplyroute_widget",
-      "community": 1034,
+      "community": 1731,
       "norm_label": "widget"
     },
     {
@@ -7269,7 +7269,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L147",
       "id": "lib_route_pages_partnerapplyroute_file",
-      "community": 1034,
+      "community": 1731,
       "norm_label": "file"
     },
     {
@@ -7305,7 +7305,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L153",
       "id": "lib_route_pages_partner_partnerwelcomeroute",
-      "community": 1733,
+      "community": 1034,
       "norm_label": "partnerwelcomeroute"
     },
     {
@@ -7314,7 +7314,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L154",
       "id": "lib_route_pages_partnerwelcomeroute_widget",
-      "community": 1733,
+      "community": 1034,
       "norm_label": "widget"
     },
     {
@@ -7323,7 +7323,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L155",
       "id": "lib_route_pages_partnerwelcomeroute_file",
-      "community": 1733,
+      "community": 1034,
       "norm_label": "file"
     },
     {
@@ -7485,7 +7485,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L185",
       "id": "lib_route_pages_partner_applicationdetailroute",
-      "community": 1034,
+      "community": 1728,
       "norm_label": "applicationdetailroute"
     },
     {
@@ -7494,7 +7494,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L186",
       "id": "lib_route_pages_applicationdetailroute_widget",
-      "community": 1034,
+      "community": 1728,
       "norm_label": "widget"
     },
     {
@@ -7503,7 +7503,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L187",
       "id": "lib_route_pages_applicationdetailroute_file",
-      "community": 1034,
+      "community": 1728,
       "norm_label": "file"
     },
     {
@@ -7593,7 +7593,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L201",
       "id": "lib_route_pages_partner_partycreateroute",
-      "community": 1734,
+      "community": 1034,
       "norm_label": "partycreateroute"
     },
     {
@@ -7602,7 +7602,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L202",
       "id": "lib_route_pages_partycreateroute_widget",
-      "community": 1734,
+      "community": 1034,
       "norm_label": "widget"
     },
     {
@@ -7611,7 +7611,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L203",
       "id": "lib_route_pages_partycreateroute_file",
-      "community": 1734,
+      "community": 1034,
       "norm_label": "file"
     },
     {
@@ -7620,7 +7620,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L205",
       "id": "lib_route_pages_partner_partydetailroute",
-      "community": 1034,
+      "community": 1732,
       "norm_label": "partydetailroute"
     },
     {
@@ -7629,7 +7629,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L206",
       "id": "lib_route_pages_partydetailroute_widget",
-      "community": 1034,
+      "community": 1732,
       "norm_label": "widget"
     },
     {
@@ -7638,7 +7638,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L207",
       "id": "lib_route_pages_partydetailroute_file",
-      "community": 1034,
+      "community": 1732,
       "norm_label": "file"
     },
     {
@@ -7647,7 +7647,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L209",
       "id": "lib_route_pages_partner_partyeditroute",
-      "community": 1034,
+      "community": 1733,
       "norm_label": "partyeditroute"
     },
     {
@@ -7656,7 +7656,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L210",
       "id": "lib_route_pages_partyeditroute_widget",
-      "community": 1034,
+      "community": 1733,
       "norm_label": "widget"
     },
     {
@@ -7665,7 +7665,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L211",
       "id": "lib_route_pages_partyeditroute_file",
-      "community": 1034,
+      "community": 1733,
       "norm_label": "file"
     },
     {
@@ -7764,7 +7764,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L229",
       "id": "lib_route_pages_partner_ticketcreateroute",
-      "community": 1735,
+      "community": 1034,
       "norm_label": "ticketcreateroute"
     },
     {
@@ -7773,7 +7773,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L230",
       "id": "lib_route_pages_ticketcreateroute_widget",
-      "community": 1735,
+      "community": 1034,
       "norm_label": "widget"
     },
     {
@@ -7782,7 +7782,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L231",
       "id": "lib_route_pages_ticketcreateroute_file",
-      "community": 1735,
+      "community": 1034,
       "norm_label": "file"
     },
     {
@@ -7989,7 +7989,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L273",
       "id": "lib_route_pages_partner_createverificationroute",
-      "community": 1277,
+      "community": 1034,
       "norm_label": "createverificationroute"
     },
     {
@@ -7998,7 +7998,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L274",
       "id": "lib_route_pages_createverificationroute_widget",
-      "community": 1277,
+      "community": 1034,
       "norm_label": "widget"
     },
     {
@@ -8007,7 +8007,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L275",
       "id": "lib_route_pages_createverificationroute_file",
-      "community": 1277,
+      "community": 1034,
       "norm_label": "file"
     },
     {
@@ -18985,7 +18985,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/needs-swe-sonnet-1/.claude/worktrees/feat-2219-partner-home-v2/apps/app_partner/lib/src/features/home/widgets/home_approval_pending_card.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_needs_swe_sonnet_1_claude_worktrees_feat_2219_partner_home_v2_apps_app_partner_lib_src_features_home_widgets_home_approval_pending_card_dart",
-      "community": 1262,
+      "community": 1036,
       "norm_label": "home_approval_pending_card.dart"
     },
     {
@@ -18994,7 +18994,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/needs-swe-sonnet-1/.claude/worktrees/feat-2219-partner-home-v2/apps/app_partner/lib/src/features/home/widgets/home_approval_pending_card.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_needs_swe_sonnet_1_claude_worktrees_feat_2219_partner_home_v2_apps_app_partner_lib_src_features_home_widgets_home_approval_pending_card_dart_homeapprovalpendingcard",
-      "community": 1262,
+      "community": 1036,
       "norm_label": "homeapprovalpendingcard"
     },
     {
@@ -19003,7 +19003,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/needs-swe-sonnet-1/.claude/worktrees/feat-2219-partner-home-v2/apps/app_partner/lib/src/features/home/widgets/home_approval_pending_card.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_needs_swe_sonnet_1_claude_worktrees_feat_2219_partner_home_v2_apps_app_partner_lib_src_features_home_widgets_home_approval_pending_card_dart_build",
-      "community": 1262,
+      "community": 1036,
       "norm_label": "build"
     },
     {
@@ -19012,7 +19012,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/needs-swe-sonnet-1/.claude/worktrees/feat-2219-partner-home-v2/apps/app_partner/lib/src/features/home/widgets/home_approval_pending_card.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_needs_swe_sonnet_1_claude_worktrees_feat_2219_partner_home_v2_apps_app_partner_lib_src_features_home_widgets_home_approval_pending_card_dart_card",
-      "community": 1262,
+      "community": 1036,
       "norm_label": "card"
     },
     {
@@ -19710,7 +19710,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/needs-swe-sonnet-1/.claude/worktrees/feat-2219-partner-home-v2/apps/app_partner/lib/src/features/home/widgets/home_draft_party_card.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_needs_swe_sonnet_1_claude_worktrees_feat_2219_partner_home_v2_apps_app_partner_lib_src_features_home_widgets_home_draft_party_card_dart",
-      "community": 1036,
+      "community": 1262,
       "norm_label": "home_draft_party_card.dart"
     },
     {
@@ -19719,7 +19719,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/needs-swe-sonnet-1/.claude/worktrees/feat-2219-partner-home-v2/apps/app_partner/lib/src/features/home/widgets/home_draft_party_card.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_needs_swe_sonnet_1_claude_worktrees_feat_2219_partner_home_v2_apps_app_partner_lib_src_features_home_widgets_home_draft_party_card_dart_homedraftpartycard",
-      "community": 1036,
+      "community": 1262,
       "norm_label": "homedraftpartycard"
     },
     {
@@ -19728,7 +19728,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/needs-swe-sonnet-1/.claude/worktrees/feat-2219-partner-home-v2/apps/app_partner/lib/src/features/home/widgets/home_draft_party_card.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_needs_swe_sonnet_1_claude_worktrees_feat_2219_partner_home_v2_apps_app_partner_lib_src_features_home_widgets_home_draft_party_card_dart_build",
-      "community": 1036,
+      "community": 1262,
       "norm_label": "build"
     },
     {
@@ -19737,7 +19737,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/needs-swe-sonnet-1/.claude/worktrees/feat-2219-partner-home-v2/apps/app_partner/lib/src/features/home/widgets/home_draft_party_card.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_needs_swe_sonnet_1_claude_worktrees_feat_2219_partner_home_v2_apps_app_partner_lib_src_features_home_widgets_home_draft_party_card_dart_card",
-      "community": 1036,
+      "community": 1262,
       "norm_label": "card"
     },
     {
@@ -20302,7 +20302,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_partner/lib/src/logic/dashboard_refresh_notifier.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_partner_lib_src_logic_dashboard_refresh_notifier_dart",
-      "community": 1728,
+      "community": 1015,
       "norm_label": "dashboard_refresh_notifier.dart"
     },
     {
@@ -20311,7 +20311,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_partner/lib/src/logic/dashboard_refresh_notifier.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_partner_lib_src_logic_dashboard_refresh_notifier_dart_dashboardrefresh",
-      "community": 1728,
+      "community": 1015,
       "norm_label": "dashboardrefresh"
     },
     {
@@ -20320,7 +20320,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_partner/lib/src/logic/dashboard_refresh_notifier.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_partner_lib_src_logic_dashboard_refresh_notifier_dart_build",
-      "community": 1728,
+      "community": 1015,
       "norm_label": "build"
     },
     {
@@ -20329,7 +20329,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_partner/lib/src/logic/dashboard_refresh_notifier.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_partner_lib_src_logic_dashboard_refresh_notifier_dart_bump",
-      "community": 1728,
+      "community": 1015,
       "norm_label": "bump"
     },
     {
@@ -23490,7 +23490,7 @@
       "source_file": "apps/app_partner/integration_test/mds-emulator-render/partner_event_detail_page/builder.dart",
       "source_location": null,
       "id": "apps_app_partner_integration_test_mds_emulator_render_partner_event_detail_page_builder_dart",
-      "community": 1688,
+      "community": 1036,
       "norm_label": "builder.dart"
     },
     {
@@ -23499,7 +23499,7 @@
       "source_file": "apps/app_partner/integration_test/mds-emulator-render/partner_event_detail_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_integration_test_mds_emulator_render_partner_event_detail_page_builder_dart_partnereventdetailpagerenderpage",
-      "community": 1688,
+      "community": 1036,
       "norm_label": "_partnereventdetailpagerenderpage"
     },
     {
@@ -23508,7 +23508,7 @@
       "source_file": "apps/app_partner/integration_test/mds-emulator-render/partner_event_detail_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_integration_test_mds_emulator_render_partner_event_detail_page_builder_dart_partnereventdetailpagebuilder",
-      "community": 1688,
+      "community": 1036,
       "norm_label": "partnereventdetailpagebuilder"
     },
     {
@@ -23517,7 +23517,7 @@
       "source_file": "apps/app_partner/integration_test/mds-emulator-render/partner_event_detail_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_integration_test_mds_emulator_render_partner_event_detail_page_builder_dart_build",
-      "community": 1688,
+      "community": 1036,
       "norm_label": "build"
     },
     {
@@ -23526,7 +23526,7 @@
       "source_file": "apps/app_partner/integration_test/mds-emulator-render/partner_event_detail_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_integration_test_mds_emulator_render_partner_event_detail_page_builder_dart_scaffold",
-      "community": 1688,
+      "community": 1036,
       "norm_label": "scaffold"
     },
     {
@@ -23535,7 +23535,7 @@
       "source_file": "apps/app_partner/integration_test/mds-emulator-render/partner_event_detail_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_integration_test_mds_emulator_render_partner_event_detail_page_builder_dart_defaultstate",
-      "community": 1688,
+      "community": 1036,
       "norm_label": "defaultstate"
     },
     {
@@ -23544,7 +23544,7 @@
       "source_file": "apps/app_partner/integration_test/mds-emulator-render/partner_event_detail_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_integration_test_mds_emulator_render_partner_event_detail_page_builder_dart_dark",
-      "community": 1688,
+      "community": 1036,
       "norm_label": "dark"
     },
     {
@@ -27252,7 +27252,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "package_app_partner_src_features_checkin_stats_checkin_stats_controller_dart",
-      "community": 1175,
+      "community": 1358,
       "norm_label": "package:app_partner/src/features/checkin/stats/checkin_stats_controller.dart"
     },
     {
@@ -27261,7 +27261,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/entry_group_checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "package_app_partner_src_features_checkin_stats_entry_group_checkin_stats_controller_dart",
-      "community": 1389,
+      "community": 1277,
       "norm_label": "package:app_partner/src/features/checkin/stats/entry_group_checkin_stats_controller.dart"
     },
     {
@@ -30339,7 +30339,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/entry_group_checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_entry_group_checkin_stats_controller_test_dart",
-      "community": 1389,
+      "community": 1277,
       "norm_label": "entry_group_checkin_stats_controller_test.dart"
     },
     {
@@ -30348,7 +30348,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/entry_group_checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_entry_group_checkin_stats_controller_test_dart_mocksupabaseclient",
-      "community": 1389,
+      "community": 1277,
       "norm_label": "_mocksupabaseclient"
     },
     {
@@ -30357,7 +30357,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/entry_group_checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_entry_group_checkin_stats_controller_test_dart_mockrealtimechannel",
-      "community": 1389,
+      "community": 1277,
       "norm_label": "_mockrealtimechannel"
     },
     {
@@ -30366,7 +30366,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/entry_group_checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_entry_group_checkin_stats_controller_test_dart_fakerpcbuilder",
-      "community": 1389,
+      "community": 1277,
       "norm_label": "_fakerpcbuilder"
     },
     {
@@ -30375,7 +30375,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/entry_group_checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_entry_group_checkin_stats_controller_test_dart_nosuchmethod",
-      "community": 1389,
+      "community": 1277,
       "norm_label": "nosuchmethod"
     },
     {
@@ -30384,7 +30384,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/entry_group_checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_entry_group_checkin_stats_controller_test_dart_main",
-      "community": 1389,
+      "community": 1277,
       "norm_label": "main"
     },
     {
@@ -30393,7 +30393,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/entry_group_checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_entry_group_checkin_stats_controller_test_dart_stubrpc",
-      "community": 1389,
+      "community": 1277,
       "norm_label": "stubrpc"
     },
     {
@@ -30402,7 +30402,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/entry_group_checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_entry_group_checkin_stats_controller_test_dart_makecontainer",
-      "community": 1389,
+      "community": 1277,
       "norm_label": "makecontainer"
     },
     {
@@ -30411,7 +30411,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/entry_group_checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_entry_group_checkin_stats_controller_test_dart_providercontainer",
-      "community": 1389,
+      "community": 1277,
       "norm_label": "providercontainer"
     },
     {
@@ -30420,7 +30420,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_checkin_stats_controller_test_dart",
-      "community": 1175,
+      "community": 1358,
       "norm_label": "checkin_stats_controller_test.dart"
     },
     {
@@ -30429,7 +30429,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_checkin_stats_controller_test_dart_mocksupabaseclient",
-      "community": 1175,
+      "community": 1358,
       "norm_label": "_mocksupabaseclient"
     },
     {
@@ -30438,7 +30438,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_checkin_stats_controller_test_dart_mockrealtimechannel",
-      "community": 1175,
+      "community": 1358,
       "norm_label": "_mockrealtimechannel"
     },
     {
@@ -30447,7 +30447,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_checkin_stats_controller_test_dart_fakerpcbuilder",
-      "community": 1175,
+      "community": 1358,
       "norm_label": "_fakerpcbuilder"
     },
     {
@@ -30456,7 +30456,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_checkin_stats_controller_test_dart_nosuchmethod",
-      "community": 1175,
+      "community": 1358,
       "norm_label": "nosuchmethod"
     },
     {
@@ -30465,7 +30465,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_checkin_stats_controller_test_dart_main",
-      "community": 1175,
+      "community": 1358,
       "norm_label": "main"
     },
     {
@@ -30474,7 +30474,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_checkin_stats_controller_test_dart_makecontainer",
-      "community": 1175,
+      "community": 1358,
       "norm_label": "makecontainer"
     },
     {
@@ -30483,7 +30483,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_checkin_stats_controller_test_dart_providercontainer",
-      "community": 1175,
+      "community": 1358,
       "norm_label": "providercontainer"
     },
     {
@@ -38107,7 +38107,7 @@
       "source_file": "/private/tmp/wizard-v2-branch/apps/app_user/test/src/features/event/matching/event_matching_screen_test.dart",
       "source_location": null,
       "id": "package_app_user_src_features_event_matching_ui_event_matching_screen_dart",
-      "community": 1175,
+      "community": 1366,
       "norm_label": "package:app_user/src/features/event/matching/ui/event_matching_screen.dart"
     },
     {
@@ -39347,7 +39347,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_application_wizard_page/builder.dart",
       "source_location": null,
       "id": "apps_app_user_integration_test_mds_emulator_render_event_application_wizard_page_builder_dart",
-      "community": 1696,
+      "community": 1036,
       "norm_label": "builder.dart"
     },
     {
@@ -39356,7 +39356,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_application_wizard_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_event_application_wizard_page_builder_dart_eventapplicationwizardpagerenderpage",
-      "community": 1696,
+      "community": 1036,
       "norm_label": "_eventapplicationwizardpagerenderpage"
     },
     {
@@ -39365,7 +39365,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_application_wizard_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_event_application_wizard_page_builder_dart_eventapplicationwizardpagebuilder",
-      "community": 1696,
+      "community": 1036,
       "norm_label": "eventapplicationwizardpagebuilder"
     },
     {
@@ -39374,7 +39374,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_application_wizard_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_event_application_wizard_page_builder_dart_build",
-      "community": 1696,
+      "community": 1036,
       "norm_label": "build"
     },
     {
@@ -39383,7 +39383,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_application_wizard_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_event_application_wizard_page_builder_dart_scaffold",
-      "community": 1696,
+      "community": 1036,
       "norm_label": "scaffold"
     },
     {
@@ -39392,7 +39392,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_application_wizard_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_event_application_wizard_page_builder_dart_defaultstate",
-      "community": 1696,
+      "community": 1036,
       "norm_label": "defaultstate"
     },
     {
@@ -39401,7 +39401,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_application_wizard_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_event_application_wizard_page_builder_dart_dark",
-      "community": 1696,
+      "community": 1036,
       "norm_label": "dark"
     },
     {
@@ -40391,7 +40391,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_check_in_screen/builder.dart",
       "source_location": null,
       "id": "apps_app_user_integration_test_mds_emulator_render_event_check_in_screen_builder_dart",
-      "community": 1698,
+      "community": 1036,
       "norm_label": "builder.dart"
     },
     {
@@ -40400,7 +40400,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_check_in_screen/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_event_check_in_screen_builder_dart_eventcheckinscreenrenderpage",
-      "community": 1698,
+      "community": 1036,
       "norm_label": "_eventcheckinscreenrenderpage"
     },
     {
@@ -40409,7 +40409,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_check_in_screen/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_event_check_in_screen_builder_dart_eventcheckinscreenbuilder",
-      "community": 1698,
+      "community": 1036,
       "norm_label": "eventcheckinscreenbuilder"
     },
     {
@@ -40418,7 +40418,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_check_in_screen/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_event_check_in_screen_builder_dart_build",
-      "community": 1698,
+      "community": 1036,
       "norm_label": "build"
     },
     {
@@ -40427,7 +40427,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_check_in_screen/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_event_check_in_screen_builder_dart_scaffold",
-      "community": 1698,
+      "community": 1036,
       "norm_label": "scaffold"
     },
     {
@@ -40436,7 +40436,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_check_in_screen/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_event_check_in_screen_builder_dart_defaultstate",
-      "community": 1698,
+      "community": 1036,
       "norm_label": "defaultstate"
     },
     {
@@ -40445,7 +40445,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_check_in_screen/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_event_check_in_screen_builder_dart_dark",
-      "community": 1698,
+      "community": 1036,
       "norm_label": "dark"
     },
     {
@@ -41768,7 +41768,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_application_review_page/builder.dart",
       "source_location": null,
       "id": "apps_app_user_integration_test_mds_emulator_render_event_application_review_page_builder_dart",
-      "community": 1036,
+      "community": 1521,
       "norm_label": "builder.dart"
     },
     {
@@ -41777,7 +41777,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_application_review_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_event_application_review_page_builder_dart_eventapplicationreviewpagerenderpage",
-      "community": 1036,
+      "community": 1521,
       "norm_label": "_eventapplicationreviewpagerenderpage"
     },
     {
@@ -41786,7 +41786,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_application_review_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_event_application_review_page_builder_dart_eventapplicationreviewpagebuilder",
-      "community": 1036,
+      "community": 1521,
       "norm_label": "eventapplicationreviewpagebuilder"
     },
     {
@@ -41795,7 +41795,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_application_review_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_event_application_review_page_builder_dart_build",
-      "community": 1036,
+      "community": 1521,
       "norm_label": "build"
     },
     {
@@ -41804,7 +41804,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_application_review_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_event_application_review_page_builder_dart_scaffold",
-      "community": 1036,
+      "community": 1521,
       "norm_label": "scaffold"
     },
     {
@@ -41813,7 +41813,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_application_review_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_event_application_review_page_builder_dart_defaultstate",
-      "community": 1036,
+      "community": 1521,
       "norm_label": "defaultstate"
     },
     {
@@ -41822,7 +41822,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_application_review_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_event_application_review_page_builder_dart_dark",
-      "community": 1036,
+      "community": 1521,
       "norm_label": "dark"
     },
     {
@@ -42443,7 +42443,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_review_screen/builder.dart",
       "source_location": null,
       "id": "apps_app_user_integration_test_mds_emulator_render_event_review_screen_builder_dart",
-      "community": 1036,
+      "community": 1688,
       "norm_label": "builder.dart"
     },
     {
@@ -42452,7 +42452,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_review_screen/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_event_review_screen_builder_dart_eventreviewscreenrenderpage",
-      "community": 1036,
+      "community": 1688,
       "norm_label": "_eventreviewscreenrenderpage"
     },
     {
@@ -42461,7 +42461,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_review_screen/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_event_review_screen_builder_dart_eventreviewscreenbuilder",
-      "community": 1036,
+      "community": 1688,
       "norm_label": "eventreviewscreenbuilder"
     },
     {
@@ -42470,7 +42470,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_review_screen/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_event_review_screen_builder_dart_build",
-      "community": 1036,
+      "community": 1688,
       "norm_label": "build"
     },
     {
@@ -42479,7 +42479,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_review_screen/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_event_review_screen_builder_dart_scaffold",
-      "community": 1036,
+      "community": 1688,
       "norm_label": "scaffold"
     },
     {
@@ -42488,7 +42488,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_review_screen/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_event_review_screen_builder_dart_defaultstate",
-      "community": 1036,
+      "community": 1688,
       "norm_label": "defaultstate"
     },
     {
@@ -42497,7 +42497,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/event_review_screen/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_event_review_screen_builder_dart_dark",
-      "community": 1036,
+      "community": 1688,
       "norm_label": "dark"
     },
     {
@@ -42956,7 +42956,7 @@
       "source_file": "apps/app_user/integration_test/cuj/account/privacy_protection_test.dart",
       "source_location": null,
       "id": "apps_app_user_integration_test_cuj_account_privacy_protection_test_dart",
-      "community": 1366,
+      "community": 1175,
       "norm_label": "privacy_protection_test.dart"
     },
     {
@@ -42965,7 +42965,7 @@
       "source_file": "apps/app_user/integration_test/cuj/account/privacy_protection_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_cuj_account_privacy_protection_test_dart_mockconsentrepository",
-      "community": 1366,
+      "community": 1175,
       "norm_label": "_mockconsentrepository"
     },
     {
@@ -42974,7 +42974,7 @@
       "source_file": "apps/app_user/integration_test/cuj/account/privacy_protection_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_cuj_account_privacy_protection_test_dart_mockuser",
-      "community": 1366,
+      "community": 1175,
       "norm_label": "_mockuser"
     },
     {
@@ -42983,7 +42983,7 @@
       "source_file": "apps/app_user/integration_test/cuj/account/privacy_protection_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_cuj_account_privacy_protection_test_dart_consent",
-      "community": 1366,
+      "community": 1175,
       "norm_label": "_consent"
     },
     {
@@ -42992,7 +42992,7 @@
       "source_file": "apps/app_user/integration_test/cuj/account/privacy_protection_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_cuj_account_privacy_protection_test_dart_userconsent",
-      "community": 1366,
+      "community": 1175,
       "norm_label": "userconsent"
     },
     {
@@ -43001,7 +43001,7 @@
       "source_file": "apps/app_user/integration_test/cuj/account/privacy_protection_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_cuj_account_privacy_protection_test_dart_switchtile",
-      "community": 1366,
+      "community": 1175,
       "norm_label": "_switchtile"
     },
     {
@@ -43010,7 +43010,7 @@
       "source_file": "apps/app_user/integration_test/cuj/account/privacy_protection_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_cuj_account_privacy_protection_test_dart_main",
-      "community": 1366,
+      "community": 1175,
       "norm_label": "main"
     },
     {
@@ -43019,7 +43019,7 @@
       "source_file": "apps/app_user/integration_test/cuj/account/privacy_protection_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_cuj_account_privacy_protection_test_dart_base",
-      "community": 1366,
+      "community": 1175,
       "norm_label": "base"
     },
     {
@@ -43325,7 +43325,7 @@
       "source_file": "apps/app_user/integration_test/cuj/account/account_management_test.dart",
       "source_location": null,
       "id": "apps_app_user_integration_test_cuj_account_account_management_test_dart",
-      "community": 1358,
+      "community": 1070,
       "norm_label": "account_management_test.dart"
     },
     {
@@ -43334,7 +43334,7 @@
       "source_file": "apps/app_user/integration_test/cuj/account/account_management_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_cuj_account_account_management_test_dart_verificationhost",
-      "community": 1358,
+      "community": 1070,
       "norm_label": "_verificationhost"
     },
     {
@@ -43343,7 +43343,7 @@
       "source_file": "apps/app_user/integration_test/cuj/account/account_management_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_cuj_account_account_management_test_dart_logoutredirecthost",
-      "community": 1358,
+      "community": 1070,
       "norm_label": "_logoutredirecthost"
     },
     {
@@ -43352,7 +43352,7 @@
       "source_file": "apps/app_user/integration_test/cuj/account/account_management_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_cuj_account_account_management_test_dart_parentpage",
-      "community": 1358,
+      "community": 1070,
       "norm_label": "_parentpage"
     },
     {
@@ -43361,7 +43361,7 @@
       "source_file": "apps/app_user/integration_test/cuj/account/account_management_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_cuj_account_account_management_test_dart_build",
-      "community": 1358,
+      "community": 1070,
       "norm_label": "build"
     },
     {
@@ -43370,7 +43370,7 @@
       "source_file": "apps/app_user/integration_test/cuj/account/account_management_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_cuj_account_account_management_test_dart_accountmanagementpage",
-      "community": 1358,
+      "community": 1070,
       "norm_label": "accountmanagementpage"
     },
     {
@@ -43379,7 +43379,7 @@
       "source_file": "apps/app_user/integration_test/cuj/account/account_management_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_cuj_account_account_management_test_dart_scaffold",
-      "community": 1358,
+      "community": 1070,
       "norm_label": "scaffold"
     },
     {
@@ -43388,7 +43388,7 @@
       "source_file": "apps/app_user/integration_test/cuj/account/account_management_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_cuj_account_account_management_test_dart_main",
-      "community": 1358,
+      "community": 1070,
       "norm_label": "main"
     },
     {
@@ -43397,7 +43397,7 @@
       "source_file": "apps/app_user/integration_test/cuj/account/account_management_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_cuj_account_account_management_test_dart_snackbar",
-      "community": 1358,
+      "community": 1070,
       "norm_label": "snackbar"
     },
     {
@@ -43406,7 +43406,7 @@
       "source_file": "apps/app_user/integration_test/cuj/account/account_management_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_cuj_account_account_management_test_dart_noop",
-      "community": 1358,
+      "community": 1070,
       "norm_label": "_noop"
     },
     {
@@ -45954,7 +45954,7 @@
       "source_file": "/private/tmp/wizard-v2-branch/apps/app_user/test/src/features/event/matching/event_matching_screen_test.dart",
       "source_location": null,
       "id": "private_tmp_wizard_v2_branch_apps_app_user_test_src_features_event_matching_event_matching_screen_test_dart",
-      "community": 1175,
+      "community": 1366,
       "norm_label": "event_matching_screen_test.dart"
     },
     {
@@ -45963,7 +45963,7 @@
       "source_file": "/private/tmp/wizard-v2-branch/apps/app_user/test/src/features/event/matching/event_matching_screen_test.dart",
       "source_location": null,
       "id": "private_tmp_wizard_v2_branch_apps_app_user_test_src_features_event_matching_event_matching_screen_test_dart_main",
-      "community": 1175,
+      "community": 1366,
       "norm_label": "main"
     },
     {
@@ -45981,7 +45981,7 @@
       "source_file": "/private/tmp/wizard-v2-branch/apps/app_user/test/src/features/event/matching/event_matching_screen_test.dart",
       "source_location": null,
       "id": "private_tmp_wizard_v2_branch_apps_app_user_test_src_features_event_matching_event_matching_screen_test_dart_event",
-      "community": 1175,
+      "community": 1366,
       "norm_label": "event"
     },
     {
@@ -45990,7 +45990,7 @@
       "source_file": "/private/tmp/wizard-v2-branch/apps/app_user/test/src/features/event/matching/event_matching_screen_test.dart",
       "source_location": null,
       "id": "private_tmp_wizard_v2_branch_apps_app_user_test_src_features_event_matching_event_matching_screen_test_dart_buildsubject",
-      "community": 1175,
+      "community": 1366,
       "norm_label": "buildsubject"
     },
     {
@@ -45999,7 +45999,7 @@
       "source_file": "/private/tmp/wizard-v2-branch/apps/app_user/test/src/features/event/matching/event_matching_screen_test.dart",
       "source_location": null,
       "id": "private_tmp_wizard_v2_branch_apps_app_user_test_src_features_event_matching_event_matching_screen_test_dart_providerscope",
-      "community": 1175,
+      "community": 1366,
       "norm_label": "providerscope"
     },
     {
@@ -47997,7 +47997,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/worktrees/feat-2096-timeline/apps/app_user/test/src/common/widgets/minglit_timeline_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_worktrees_feat_2096_timeline_apps_app_user_test_src_common_widgets_minglit_timeline_test_dart",
-      "community": 1036,
+      "community": 1262,
       "norm_label": "minglit_timeline_test.dart"
     },
     {
@@ -48006,7 +48006,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/worktrees/feat-2096-timeline/apps/app_user/test/src/common/widgets/minglit_timeline_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_worktrees_feat_2096_timeline_apps_app_user_test_src_common_widgets_minglit_timeline_test_dart_wrap",
-      "community": 1036,
+      "community": 1262,
       "norm_label": "_wrap"
     },
     {
@@ -48015,7 +48015,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/worktrees/feat-2096-timeline/apps/app_user/test/src/common/widgets/minglit_timeline_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_worktrees_feat_2096_timeline_apps_app_user_test_src_common_widgets_minglit_timeline_test_dart_main",
-      "community": 1036,
+      "community": 1262,
       "norm_label": "main"
     },
     {
@@ -48024,7 +48024,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/worktrees/feat-2096-timeline/apps/app_user/test/src/common/widgets/minglit_timeline_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_worktrees_feat_2096_timeline_apps_app_user_test_src_common_widgets_minglit_timeline_test_dart_minglittimeline",
-      "community": 1036,
+      "community": 1262,
       "norm_label": "minglittimeline"
     },
     {
@@ -51225,7 +51225,7 @@
       "source_file": "supabase/functions/user-create-order/input.ts",
       "source_location": "L9",
       "id": "user_create_order_input_createorderinput",
-      "community": 992,
+      "community": 1188,
       "norm_label": "createorderinput"
     },
     {
@@ -59951,7 +59951,7 @@
       "source_file": "supabase/functions/_shared/domains/order/create_order_policy.ts",
       "source_location": "L56",
       "id": "order_create_order_policy_createorderverificationdata",
-      "community": 992,
+      "community": 1188,
       "norm_label": "createorderverificationdata"
     },
     {
@@ -65067,7 +65067,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/shared/packages/mds/tokens/tokens/color.json",
       "source_location": "L33",
       "id": "tokens_color_partner_primaryborder",
-      "community": 1722,
+      "community": 1141,
       "norm_label": "primaryborder"
     },
     {
@@ -65076,7 +65076,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/shared/packages/mds/tokens/tokens/color.json",
       "source_location": "L33",
       "id": "tokens_color_primaryborder_value",
-      "community": 1722,
+      "community": 1141,
       "norm_label": "$value"
     },
     {
@@ -65085,7 +65085,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/shared/packages/mds/tokens/tokens/color.json",
       "source_location": "L33",
       "id": "tokens_color_primaryborder_type",
-      "community": 1722,
+      "community": 1141,
       "norm_label": "$type"
     },
     {
@@ -65094,7 +65094,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/shared/packages/mds/tokens/tokens/color.json",
       "source_location": "L33",
       "id": "tokens_color_primaryborder_description",
-      "community": 1722,
+      "community": 1141,
       "norm_label": "$description"
     },
     {
@@ -71312,7 +71312,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/features/social/logic/social_interaction_controller.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_features_social_logic_social_interaction_controller_dart",
-      "community": 1015,
+      "community": 997,
       "norm_label": "social_interaction_controller.dart"
     },
     {
@@ -71321,7 +71321,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/features/social/logic/social_interaction_controller.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_features_social_logic_social_interaction_controller_dart_socialinteractioncontroller",
-      "community": 1015,
+      "community": 997,
       "norm_label": "socialinteractioncontroller"
     },
     {
@@ -71330,7 +71330,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/shared/packages/minglit_kit/test/src/data/repositories/social_repository_test.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_data_repositories_social_repository_dart",
-      "community": 1015,
+      "community": 997,
       "norm_label": "package:minglit_kit/src/data/repositories/social_repository.dart"
     },
     {
@@ -76396,7 +76396,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/shared/packages/minglit_kit/test/src/data/repositories/party_repository_test.dart",
       "source_location": null,
       "id": "tmp_minglit_runner_2_work_minglit_minglit_shared_packages_minglit_kit_test_src_data_repositories_party_repository_test_dart",
-      "community": 997,
+      "community": 1015,
       "norm_label": "party_repository_test.dart"
     },
     {
@@ -76405,7 +76405,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/shared/packages/minglit_kit/test/src/data/repositories/party_repository_test.dart",
       "source_location": null,
       "id": "tmp_minglit_runner_2_work_minglit_minglit_shared_packages_minglit_kit_test_src_data_repositories_party_repository_test_dart_main",
-      "community": 997,
+      "community": 1015,
       "norm_label": "main"
     },
     {
@@ -76414,7 +76414,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/shared/packages/minglit_kit/test/src/data/repositories/party_repository_test.dart",
       "source_location": null,
       "id": "tmp_minglit_runner_2_work_minglit_minglit_shared_packages_minglit_kit_test_src_data_repositories_party_repository_test_dart_expectlater",
-      "community": 997,
+      "community": 1015,
       "norm_label": "expectlater"
     },
     {
@@ -76423,7 +76423,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/shared/packages/minglit_kit/test/src/data/repositories/party_repository_test.dart",
       "source_location": null,
       "id": "tmp_minglit_runner_2_work_minglit_minglit_shared_packages_minglit_kit_test_src_data_repositories_party_repository_test_dart_entrygrouptemplate",
-      "community": 997,
+      "community": 1015,
       "norm_label": "entrygrouptemplate"
     },
     {
@@ -76432,7 +76432,7 @@
       "source_file": "shared/packages/minglit_kit/test/logic/providers/supabase_provider_override_test.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_data_repositories_party_repository_dart",
-      "community": 997,
+      "community": 1015,
       "norm_label": "package:minglit_kit/src/data/repositories/party_repository.dart"
     },
     {
@@ -77512,7 +77512,7 @@
       "source_file": "shared/packages/minglit_kit/test/logic/providers/supabase_provider_override_test.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_test_logic_providers_supabase_provider_override_test_dart",
-      "community": 997,
+      "community": 1015,
       "norm_label": "supabase_provider_override_test.dart"
     },
     {
@@ -77521,7 +77521,7 @@
       "source_file": "shared/packages/minglit_kit/test/logic/providers/supabase_provider_override_test.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_test_logic_providers_supabase_provider_override_test_dart_fakesupabaseclient",
-      "community": 997,
+      "community": 1015,
       "norm_label": "_fakesupabaseclient"
     },
     {
@@ -77530,7 +77530,7 @@
       "source_file": "shared/packages/minglit_kit/test/logic/providers/supabase_provider_override_test.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_test_logic_providers_supabase_provider_override_test_dart_main",
-      "community": 997,
+      "community": 1015,
       "norm_label": "main"
     },
     {
@@ -77710,7 +77710,7 @@
       "source_file": "shared/packages/minglit_lints/lib/minglit_lints.dart",
       "source_location": null,
       "id": "package_minglit_lints_src_use_minglit_progress_indicator_rule_dart",
-      "community": 26,
+      "community": 1177,
       "norm_label": "package:minglit_lints/src/use_minglit_progress_indicator_rule.dart"
     },
     {
@@ -94807,16 +94807,16 @@
     {
       "label": "BLUEDOC.md",
       "file_type": "document",
-      "source_file": "/var/lib/minglit-runner/1/work/minglit/minglit/apps/app_user/integration_test/BLUEDOC.md",
+      "source_file": "apps/app_user/integration_test/BLUEDOC.md",
       "source_location": "L1",
-      "id": "var_lib_minglit_runner_1_work_minglit_minglit_apps_app_user_integration_test_bluedoc_md",
+      "id": "apps_app_user_integration_test_bluedoc_md",
       "community": 461,
       "norm_label": "bluedoc.md"
     },
     {
       "label": "integration_test",
       "file_type": "document",
-      "source_file": "/var/lib/minglit-runner/1/work/minglit/minglit/apps/app_user/integration_test/BLUEDOC.md",
+      "source_file": "apps/app_user/integration_test/BLUEDOC.md",
       "source_location": "L1",
       "id": "integration_test_bluedoc_integration_test",
       "community": 461,
@@ -94825,7 +94825,7 @@
     {
       "label": "\ud558\uc704 \ud3f4\ub354",
       "file_type": "document",
-      "source_file": "/var/lib/minglit-runner/1/work/minglit/minglit/apps/app_user/integration_test/BLUEDOC.md",
+      "source_file": "apps/app_user/integration_test/BLUEDOC.md",
       "source_location": "L5",
       "id": "integration_test_bluedoc_\ud558\uc704_\ud3f4\ub354",
       "community": 461,
@@ -94834,7 +94834,7 @@
     {
       "label": "\uad00\ub828",
       "file_type": "document",
-      "source_file": "/var/lib/minglit-runner/1/work/minglit/minglit/apps/app_user/integration_test/BLUEDOC.md",
+      "source_file": "apps/app_user/integration_test/BLUEDOC.md",
       "source_location": "L9",
       "id": "integration_test_bluedoc_\uad00\ub828",
       "community": 461,
@@ -94843,7 +94843,7 @@
     {
       "label": "\uc6cc\ud06c\ud50c\ub85c\uc6b0 \ud398\uc5b4",
       "file_type": "document",
-      "source_file": "/var/lib/minglit-runner/1/work/minglit/minglit/apps/app_user/integration_test/BLUEDOC.md",
+      "source_file": "apps/app_user/integration_test/BLUEDOC.md",
       "source_location": "L15",
       "id": "integration_test_bluedoc_\uc6cc\ud06c\ud50c\ub85c\uc6b0_\ud398\uc5b4",
       "community": 461,
@@ -95048,19 +95048,19 @@
       "norm_label": "ci \u1107\u1167\u11bc\u1105\u1167\u11af\u1112\u116a"
     },
     {
-      "label": "code:yaml (# .github/workflows/mds-emulator-render.yml)",
+      "label": "code:yaml (# .github/workflows/monitor-mds-render-coverage.yml)",
       "file_type": "document",
       "source_file": "apps/app_user/integration_test/mds-emulator-render/architecture.md",
       "source_location": "L269",
       "id": "mds_emulator_render_architecture_codeblock_8",
       "community": 110,
-      "norm_label": "code:yaml (# .github/workflows/mds-emulator-render.yml)"
+      "norm_label": "code:yaml (# .github/workflows/monitor-mds-render-coverage.yml)"
     },
     {
       "label": "\ud655\uc7a5 \ud3ec\uc778\ud2b8",
       "file_type": "document",
       "source_file": "apps/app_user/integration_test/mds-emulator-render/architecture.md",
-      "source_location": "L280",
+      "source_location": "L282",
       "id": "mds_emulator_render_architecture_\ud655\uc7a5_\ud3ec\uc778\ud2b8",
       "community": 110,
       "norm_label": "\u1112\u116a\u11a8\u110c\u1161\u11bc \u1111\u1169\u110b\u1175\u11ab\u1110\u1173"
@@ -95069,7 +95069,7 @@
       "label": "\uad00\ub828",
       "file_type": "document",
       "source_file": "apps/app_user/integration_test/mds-emulator-render/architecture.md",
-      "source_location": "L292",
+      "source_location": "L294",
       "id": "mds_emulator_render_architecture_\uad00\ub828",
       "community": 110,
       "norm_label": "\u1100\u116a\u11ab\u1105\u1167\u11ab"
@@ -102856,7 +102856,7 @@
       "author": null,
       "contributor": null,
       "id": "portone_v2_api",
-      "community": 1104,
+      "community": 1081,
       "norm_label": "portone v2 api"
     },
     {
@@ -110761,7 +110761,7 @@
       "author": null,
       "contributor": null,
       "id": "ef_event_checkin",
-      "community": 1244,
+      "community": 1202,
       "norm_label": "edge function: event-checkin"
     },
     {
@@ -131256,7 +131256,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/qa/user-flow-test-map.md",
       "source_location": "L225",
       "id": "qa_user_flow_test_map_u13_\ucc28\ub2e8_\uc2e0\uace0",
-      "community": 1710,
+      "community": 1272,
       "norm_label": "u13: \u110e\u1161\u1103\u1161\u11ab/\u1109\u1175\u11ab\u1100\u1169"
     },
     {
@@ -131265,7 +131265,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/qa/user-flow-test-map.md",
       "source_location": "L227",
       "id": "qa_user_flow_test_map_tc_u13_001_\ud30c\ud2b8\ub108_\ucc28\ub2e8",
-      "community": 1710,
+      "community": 1272,
       "norm_label": "tc-u13-001: \u1111\u1161\u1110\u1173\u1102\u1165 \u110e\u1161\u1103\u1161\u11ab"
     },
     {
@@ -131274,7 +131274,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/qa/user-flow-test-map.md",
       "source_location": "L232",
       "id": "qa_user_flow_test_map_tc_u13_002_\uc774\ubca4\ud2b8_\uc2e0\uace0",
-      "community": 1710,
+      "community": 1272,
       "norm_label": "tc-u13-002: \u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u1109\u1175\u11ab\u1100\u1169"
     },
     {
@@ -131283,7 +131283,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/qa/user-flow-test-map.md",
       "source_location": "L237",
       "id": "qa_user_flow_test_map_tc_u13_003_\ucc28\ub2e8_\ubaa9\ub85d_\uad00\ub9ac",
-      "community": 1710,
+      "community": 1272,
       "norm_label": "tc-u13-003: \u110e\u1161\u1103\u1161\u11ab \u1106\u1169\u11a8\u1105\u1169\u11a8 \u1100\u116a\u11ab\u1105\u1175"
     },
     {
@@ -131616,7 +131616,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/qa/user-flow-test-map.md",
       "source_location": "L417",
       "id": "qa_user_flow_test_map_p09_\ubc18\ubcf5_\uc774\ubca4\ud2b8_\uc124\uc815",
-      "community": 1272,
+      "community": 1710,
       "norm_label": "p09: \u1107\u1161\u11ab\u1107\u1169\u11a8 \u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u1109\u1165\u11af\u110c\u1165\u11bc"
     },
     {
@@ -131625,7 +131625,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/qa/user-flow-test-map.md",
       "source_location": "L419",
       "id": "qa_user_flow_test_map_tc_p09_001_\ubc18\ubcf5_\uaddc\uce59_\uc0dd\uc131",
-      "community": 1272,
+      "community": 1710,
       "norm_label": "tc-p09-001: \u1107\u1161\u11ab\u1107\u1169\u11a8 \u1100\u1172\u110e\u1175\u11a8 \u1109\u1162\u11bc\u1109\u1165\u11bc"
     },
     {
@@ -131634,7 +131634,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/qa/user-flow-test-map.md",
       "source_location": "L424",
       "id": "qa_user_flow_test_map_tc_p09_002_\ubc18\ubcf5_\uaddc\uce59_\uc218\uc815",
-      "community": 1272,
+      "community": 1710,
       "norm_label": "tc-p09-002: \u1107\u1161\u11ab\u1107\u1169\u11a8 \u1100\u1172\u110e\u1175\u11a8 \u1109\u116e\u110c\u1165\u11bc"
     },
     {
@@ -131643,7 +131643,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/qa/user-flow-test-map.md",
       "source_location": "L429",
       "id": "qa_user_flow_test_map_tc_p09_003_\ubc18\ubcf5_\uaddc\uce59_\uc0ad\uc81c",
-      "community": 1272,
+      "community": 1710,
       "norm_label": "tc-p09-003: \u1107\u1161\u11ab\u1107\u1169\u11a8 \u1100\u1172\u110e\u1175\u11a8 \u1109\u1161\u11a8\u110c\u1166"
     },
     {
@@ -136543,7 +136543,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/ux/design-system/03-patterns.md",
       "source_location": "L9",
       "id": "design_system_03_patterns_1_selectable_card",
-      "community": 1729,
+      "community": 42,
       "norm_label": "1. selectable card"
     },
     {
@@ -136552,7 +136552,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/ux/design-system/03-patterns.md",
       "source_location": "L20",
       "id": "design_system_03_patterns_selectable_card_\ud14d\uc2a4\ud2b8_\uc2a4\ud0c0\uc77c",
-      "community": 1729,
+      "community": 42,
       "norm_label": "selectable card \u1110\u1166\u11a8\u1109\u1173\u1110\u1173 \u1109\u1173\u1110\u1161\u110b\u1175\u11af"
     },
     {
@@ -136561,7 +136561,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/ux/design-system/03-patterns.md",
       "source_location": "L31",
       "id": "design_system_03_patterns_shadow_border_\ud504\ub9ac\uc14b",
-      "community": 1729,
+      "community": 42,
       "norm_label": "shadow / border \u1111\u1173\u1105\u1175\u1109\u1166\u11ba"
     },
     {
@@ -136741,7 +136741,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/ux/design-system/03-patterns.md",
       "source_location": "L177",
       "id": "design_system_03_patterns_5_loading_state",
-      "community": 42,
+      "community": 1722,
       "norm_label": "5. loading state"
     },
     {
@@ -136750,7 +136750,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/ux/design-system/03-patterns.md",
       "source_location": "L181",
       "id": "design_system_03_patterns_\uacf5\uc6a9_\uc704\uc82f",
-      "community": 42,
+      "community": 1722,
       "norm_label": "\u1100\u1169\u11bc\u110b\u116d\u11bc \u110b\u1171\u110c\u1166\u11ba"
     },
     {
@@ -136759,7 +136759,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/ux/design-system/03-patterns.md",
       "source_location": "L190",
       "id": "design_system_03_patterns_\uc0ac\uc6a9_\uc6d0\uce59",
-      "community": 42,
+      "community": 1722,
       "norm_label": "\u1109\u1161\u110b\u116d\u11bc \u110b\u116f\u11ab\u110e\u1175\u11a8"
     },
     {
@@ -137319,7 +137319,7 @@
       "author": null,
       "contributor": null,
       "id": "portone_v1_api",
-      "community": 1104,
+      "community": 1081,
       "norm_label": "portone v1 api (payment)"
     },
     {
@@ -137488,7 +137488,7 @@
       "author": null,
       "contributor": null,
       "id": "payment_domain_doc",
-      "community": 1104,
+      "community": 1081,
       "norm_label": "payment domain"
     },
     {
@@ -137501,7 +137501,7 @@
       "author": null,
       "contributor": null,
       "id": "payment_verify_flow",
-      "community": 1104,
+      "community": 1081,
       "norm_label": "payment-verify ef flow"
     },
     {
@@ -137514,7 +137514,7 @@
       "author": null,
       "contributor": null,
       "id": "payment_cancel_ef",
-      "community": 1104,
+      "community": 1081,
       "norm_label": "payment-cancel edge function"
     },
     {
@@ -137774,7 +137774,7 @@
       "author": null,
       "contributor": null,
       "id": "partner_persona",
-      "community": 1187,
+      "community": 1104,
       "norm_label": "partner persona (p-1, p-2)"
     },
     {
@@ -137826,7 +137826,7 @@
       "author": null,
       "contributor": null,
       "id": "business_plan_internal",
-      "community": 1187,
+      "community": 1104,
       "norm_label": "internal business plan"
     },
     {
@@ -137839,7 +137839,7 @@
       "author": null,
       "contributor": null,
       "id": "mvp_launch_target",
-      "community": 1187,
+      "community": 1104,
       "norm_label": "mvp launch target (2026-07)"
     },
     {
@@ -137904,7 +137904,7 @@
       "author": null,
       "contributor": null,
       "id": "application_domain",
-      "community": 1104,
+      "community": 1103,
       "norm_label": "application (event_applications)"
     },
     {
@@ -139762,6 +139762,15 @@
       "id": "minglit_demo_bluedoc_\uad00\ub828",
       "community": 1370,
       "norm_label": "\u1100\u116a\u11ab\u1105\u1167\u11ab"
+    },
+    {
+      "label": "BLUEDOC.md",
+      "file_type": "document",
+      "source_file": "/var/lib/minglit-runner/1/work/minglit/minglit/apps/app_user/integration_test/BLUEDOC.md",
+      "source_location": "L1",
+      "community": 461,
+      "norm_label": "bluedoc.md",
+      "id": "var_lib_minglit_runner_1_work_minglit_minglit_apps_app_user_integration_test_bluedoc_md"
     },
     {
       "label": "page.tsx",
@@ -149139,15 +149148,6 @@
     {
       "label": "BLUEDOC.md",
       "file_type": "document",
-      "source_file": "apps/app_user/integration_test/BLUEDOC.md",
-      "source_location": "L1",
-      "community": 461,
-      "norm_label": "bluedoc.md",
-      "id": "apps_app_user_integration_test_bluedoc_md"
-    },
-    {
-      "label": "BLUEDOC.md",
-      "file_type": "document",
       "source_file": "/var/lib/minglit-runner/2/work/minglit/minglit/apps/app_user/integration_test/mds-emulator-render/BLUEDOC.md",
       "source_location": "L1",
       "community": 305,
@@ -152255,7 +152255,7 @@
       "file_type": "code",
       "source_file": "shared/packages/minglit_kit/test/src/data/repositories/party_repository_test.dart",
       "source_location": null,
-      "community": 997,
+      "community": 1015,
       "norm_label": "party_repository_test.dart",
       "id": "shared_packages_minglit_kit_test_src_data_repositories_party_repository_test_dart"
     },
@@ -161227,7 +161227,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1244,
+      "community": 1191,
       "norm_label": "partner-manage-party ef",
       "id": "ef_partner_manage_party"
     },
@@ -161328,7 +161328,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1244,
+      "community": 1319,
       "norm_label": "user-cancel-order ef",
       "id": "ef_user_cancel_order"
     },
@@ -161542,7 +161542,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1244,
+      "community": 1319,
       "norm_label": "partner-approve-application ef",
       "id": "ef_partner_approve_application"
     },
@@ -161555,7 +161555,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1244,
+      "community": 1319,
       "norm_label": "partner-reject-application ef",
       "id": "ef_partner_reject_application"
     },
@@ -161722,7 +161722,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1244,
+      "community": 1319,
       "norm_label": "ef: apply-event",
       "id": "ef_apply_event"
     },
@@ -161927,7 +161927,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1319,
+      "community": 1735,
       "norm_label": "actionrunner (tick simulation executor)",
       "id": "tick_action_runner"
     },
@@ -161979,7 +161979,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1319,
+      "community": 1735,
       "norm_label": "simaction abstract base class",
       "id": "tick_sim_action"
     },
@@ -162005,7 +162005,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1319,
+      "community": 1735,
       "norm_label": "tickconfig / actionresult / tick_types",
       "id": "tick_tick_types"
     },
@@ -162057,7 +162057,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1244,
+      "community": 1626,
       "norm_label": "user-cast-vote ef",
       "id": "ef_user_cast_vote"
     },
@@ -166159,7 +166159,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1521,
+      "community": 13,
       "norm_label": "trust badge spec",
       "id": "trust_badge_spec"
     },
@@ -166172,7 +166172,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1521,
+      "community": 13,
       "norm_label": "trust badge ui/ux design",
       "id": "trust_badge_uxdesign"
     },
@@ -168002,7 +168002,7 @@
       "file_type": "code",
       "source_file": "shared/packages/minglit_kit/test/src/data/repositories/party_repository_test.dart",
       "source_location": null,
-      "community": 997,
+      "community": 1015,
       "norm_label": "main",
       "id": "shared_packages_minglit_kit_test_src_data_repositories_party_repository_test_dart_main"
     },
@@ -168011,7 +168011,7 @@
       "file_type": "code",
       "source_file": "shared/packages/minglit_kit/test/src/data/repositories/party_repository_test.dart",
       "source_location": null,
-      "community": 997,
+      "community": 1015,
       "norm_label": "expectlater",
       "id": "shared_packages_minglit_kit_test_src_data_repositories_party_repository_test_dart_expectlater"
     },
@@ -168020,7 +168020,7 @@
       "file_type": "code",
       "source_file": "shared/packages/minglit_kit/test/src/data/repositories/party_repository_test.dart",
       "source_location": null,
-      "community": 997,
+      "community": 1015,
       "norm_label": "entrygrouptemplate",
       "id": "shared_packages_minglit_kit_test_src_data_repositories_party_repository_test_dart_entrygrouptemplate"
     },
@@ -177199,7 +177199,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1521,
+      "community": 13,
       "norm_label": "discovery features bluedoc",
       "id": "discovery_bluedoc"
     },
@@ -177212,7 +177212,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1521,
+      "community": 13,
       "norm_label": "discovery feature audit report (2026-05-18)",
       "id": "discovery_audit_report"
     },
@@ -177238,7 +177238,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 1696,
       "norm_label": "tag stats usage policy",
       "id": "tag_discovery_stats_policy"
     },
@@ -177251,7 +177251,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1521,
+      "community": 13,
       "norm_label": "trust badge prd",
       "id": "trust_badge_prd"
     },
@@ -177264,7 +177264,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1521,
+      "community": 13,
       "norm_label": "trust badge ui/ux design",
       "id": "trust_badge_uiux_design"
     },
@@ -177459,7 +177459,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 1696,
       "norm_label": "tag performance k-anonymity threshold (5)",
       "id": "tag_discovery_concept_k_anonymity_tag_perf"
     },
@@ -177472,7 +177472,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 1696,
       "norm_label": "pg_cron compress_old_tag_usage_daily",
       "id": "tag_discovery_concept_pg_cron_compress"
     },
@@ -177485,7 +177485,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1521,
+      "community": 13,
       "norm_label": "3-layer trust (verified/certified/elite)",
       "id": "trust_badge_concept_3_layer"
     },
@@ -177498,7 +177498,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1521,
+      "community": 13,
       "norm_label": "single ssot grade computation",
       "id": "trust_badge_concept_single_ssot"
     },
@@ -177511,7 +177511,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1521,
+      "community": 13,
       "norm_label": "layered trust principle",
       "id": "trust_badge_concept_layered_trust"
     },
@@ -177524,7 +177524,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1521,
+      "community": 13,
       "norm_label": "elite attendance >=95%",
       "id": "trust_badge_concept_elite_attendance_95"
     },
@@ -177589,7 +177589,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 1696,
       "norm_label": "participation k-anonymity threshold (3)",
       "id": "participation_status_concept_k_anon_3"
     },
@@ -177680,7 +177680,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1521,
+      "community": 13,
       "norm_label": "trust & verification architecture doc",
       "id": "ref_trust_verification_arch"
     },
@@ -177732,7 +177732,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1521,
+      "community": 13,
       "norm_label": "hinge (transparent verification)",
       "id": "ref_hinge"
     },
@@ -177875,7 +177875,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 1696,
       "norm_label": "github issue #1159 tag stats policy initial",
       "id": "issue_1159"
     },
@@ -177888,7 +177888,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1521,
+      "community": 13,
       "norm_label": "github issue #2561 discovery cuj tests missing",
       "id": "issue_2561"
     },
@@ -177940,7 +177940,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 1696,
       "norm_label": "personal information protection act \u00a718",
       "id": "law_pipa_18"
     },
@@ -181333,7 +181333,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1058,
+      "community": 1244,
       "norm_label": "applyaction (user_apply)",
       "id": "efs_action_apply"
     },
@@ -181840,7 +181840,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1191,
+      "community": 1023,
       "norm_label": "partner-manage-event (crud: create/update/update_status/update_tickets)",
       "id": "partner_manage_event_handler"
     },
@@ -181853,7 +181853,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1191,
+      "community": 1023,
       "norm_label": "event_change_logs schedule-change audit",
       "id": "partner_manage_event_change_log"
     },
@@ -181866,7 +181866,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1191,
+      "community": 1023,
       "norm_label": "target_entry_group_ids template\u2192event remap (fix #317)",
       "id": "partner_manage_event_target_remap"
     },
@@ -181879,7 +181879,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1191,
+      "community": 1023,
       "norm_label": "partner-manage-match (set_rules/clear_rules)",
       "id": "partner_manage_match_handler"
     },
@@ -181892,7 +181892,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1191,
+      "community": 1023,
       "norm_label": "replace_match_rules rpc (atomic replace)",
       "id": "partner_replace_match_rules_rpc"
     },
@@ -181996,7 +181996,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1191,
+      "community": 1023,
       "norm_label": "_shared/domains/event/availability (iseventeditablebypartner, iseventstarted)",
       "id": "shared_event_availability"
     },
@@ -182009,7 +182009,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1191,
+      "community": 1023,
       "norm_label": "_shared/edge_function.minglitedgefunction wrapper",
       "id": "shared_minglit_edge_function"
     },
@@ -182048,7 +182048,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1191,
+      "community": 1023,
       "norm_label": "entry_groups + entry_group_templates",
       "id": "table_entry_groups"
     },
@@ -183348,7 +183348,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 18,
+      "community": 1094,
       "norm_label": "spec: home_page.html",
       "id": "spec_home_page_html"
     },
@@ -183790,7 +183790,7 @@
       "captured_at": "2026-05-10T10:02:00",
       "author": null,
       "contributor": null,
-      "community": 18,
+      "community": 1094,
       "norm_label": "homeroute spec_diff (2 drift: bug report, eventnowbar)",
       "id": "home_diff_20260510"
     },
@@ -183803,7 +183803,7 @@
       "captured_at": "2026-05-10",
       "author": null,
       "contributor": null,
-      "community": 18,
+      "community": 1094,
       "norm_label": "homeroute uidump (sort chips + tags)",
       "id": "home_uidump_20260510"
     },
@@ -183816,7 +183816,7 @@
       "captured_at": "2026-05-10T10:40:00",
       "author": null,
       "contributor": null,
-      "community": 1094,
+      "community": 18,
       "norm_label": "loginroute spec_diff (1 drift: apple absent on android)",
       "id": "login_diff_20260510"
     },
@@ -183829,7 +183829,7 @@
       "captured_at": "2026-05-10",
       "author": null,
       "contributor": null,
-      "community": 1094,
+      "community": 18,
       "norm_label": "loginroute uidump (verified vibe slogan)",
       "id": "login_uidump_20260510"
     },
@@ -183985,7 +183985,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1094,
+      "community": 18,
       "norm_label": "platform-specific oauth (apple ios-only on android dump)",
       "id": "concept_platform_specific_login"
     },
@@ -183998,7 +183998,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 18,
+      "community": 1094,
       "norm_label": "bug report button (dev/debug-only artifact)",
       "id": "concept_bug_report_dev_only"
     },
@@ -187339,7 +187339,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1244,
+      "community": 1319,
       "norm_label": "eventrepository",
       "id": "event_repository_event_repository"
     },
@@ -187417,7 +187417,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1244,
+      "community": 1319,
       "norm_label": "_eventrepositorycommands",
       "id": "event_repository_commands_commands_mixin"
     },
@@ -187430,7 +187430,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1244,
+      "community": 1098,
       "norm_label": "ef: payment-cancel",
       "id": "ef_payment_cancel"
     },
@@ -187443,7 +187443,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1244,
+      "community": 1319,
       "norm_label": "ef: user-mark-match-results-viewed",
       "id": "ef_user_mark_match_results_viewed"
     },
@@ -203407,9 +203407,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_lib_components_ts",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_lib_components_ts"
     },
     {
       "relation": "imports",
@@ -203418,9 +203418,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "lib_components_componentcategory",
-      "confidence_score": 1.0
+      "target": "lib_components_componentcategory"
     },
     {
       "relation": "imports",
@@ -203429,9 +203429,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "lib_components_propdef",
-      "confidence_score": 1.0
+      "target": "lib_components_propdef"
     },
     {
       "relation": "imports",
@@ -203440,9 +203440,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "lib_components_guidelineentry",
-      "confidence_score": 1.0
+      "target": "lib_components_guidelineentry"
     },
     {
       "relation": "imports",
@@ -203451,9 +203451,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "lib_components_componentspec",
-      "confidence_score": 1.0
+      "target": "lib_components_componentspec"
     },
     {
       "relation": "imports",
@@ -203462,9 +203462,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "lib_components_ispropdef",
-      "confidence_score": 1.0
+      "target": "lib_components_ispropdef"
     },
     {
       "relation": "imports",
@@ -203473,9 +203473,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "lib_components_isguidelineentry",
-      "confidence_score": 1.0
+      "target": "lib_components_isguidelineentry"
     },
     {
       "relation": "imports",
@@ -203484,9 +203484,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "lib_components_tokenusage",
-      "confidence_score": 1.0
+      "target": "lib_components_tokenusage"
     },
     {
       "relation": "imports",
@@ -203495,9 +203495,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "lib_components_istokenusage",
-      "confidence_score": 1.0
+      "target": "lib_components_istokenusage"
     },
     {
       "relation": "imports",
@@ -203506,9 +203506,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "lib_components_placementspec",
-      "confidence_score": 1.0
+      "target": "lib_components_placementspec"
     },
     {
       "relation": "imports",
@@ -203517,9 +203517,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "lib_components_mds_components",
-      "confidence_score": 1.0
+      "target": "lib_components_mds_components"
     },
     {
       "relation": "imports",
@@ -203528,9 +203528,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "lib_components_getcomponentsbycategory",
-      "confidence_score": 1.0
+      "target": "lib_components_getcomponentsbycategory"
     },
     {
       "relation": "calls",
@@ -203952,9 +203952,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglitbuttonspec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglitbuttonspec_tsx"
     },
     {
       "relation": "imports",
@@ -203963,9 +203963,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglitbuttonspec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglitbuttonspec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -203974,9 +203974,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L20",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglitchipspec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglitchipspec_tsx"
     },
     {
       "relation": "imports",
@@ -203985,9 +203985,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L20",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglitchipspec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglitchipspec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -203996,9 +203996,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L23",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglitfilterchipspec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglitfilterchipspec_tsx"
     },
     {
       "relation": "imports",
@@ -204007,9 +204007,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L23",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglitfilterchipspec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglitfilterchipspec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204018,9 +204018,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L26",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglitchipgroupspec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglitchipgroupspec_tsx"
     },
     {
       "relation": "imports",
@@ -204029,9 +204029,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L26",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglitchipgroupspec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglitchipgroupspec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204040,9 +204040,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L29",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglittextfieldspec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglittextfieldspec_tsx"
     },
     {
       "relation": "imports",
@@ -204051,9 +204051,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L29",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglittextfieldspec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglittextfieldspec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204062,9 +204062,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L32",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_numberstepperinputspec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_numberstepperinputspec_tsx"
     },
     {
       "relation": "imports",
@@ -204073,9 +204073,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L32",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_numberstepperinputspec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_numberstepperinputspec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204084,9 +204084,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L35",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglitemptystatespec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglitemptystatespec_tsx"
     },
     {
       "relation": "imports",
@@ -204095,9 +204095,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L35",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglitemptystatespec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglitemptystatespec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204106,9 +204106,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L38",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_mingliterrorstatespec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_mingliterrorstatespec_tsx"
     },
     {
       "relation": "imports",
@@ -204117,9 +204117,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L38",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_mingliterrorstatespec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_mingliterrorstatespec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204128,9 +204128,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L41",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglitalertspec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglitalertspec_tsx"
     },
     {
       "relation": "imports",
@@ -204139,9 +204139,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L41",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglitalertspec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglitalertspec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204150,9 +204150,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L44",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglitdialogspec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglitdialogspec_tsx"
     },
     {
       "relation": "imports",
@@ -204161,9 +204161,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L44",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglitdialogspec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglitdialogspec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204172,9 +204172,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L47",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglitbottomsheetspec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglitbottomsheetspec_tsx"
     },
     {
       "relation": "imports",
@@ -204183,9 +204183,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L47",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglitbottomsheetspec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglitbottomsheetspec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204194,9 +204194,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L50",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglittagspec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglittagspec_tsx"
     },
     {
       "relation": "imports",
@@ -204205,9 +204205,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L50",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglittagspec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglittagspec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204216,9 +204216,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L53",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglitbadgespec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglitbadgespec_tsx"
     },
     {
       "relation": "imports",
@@ -204227,9 +204227,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L53",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglitbadgespec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglitbadgespec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204238,9 +204238,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L56",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglitparticipantgaugespec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglitparticipantgaugespec_tsx"
     },
     {
       "relation": "imports",
@@ -204249,9 +204249,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L56",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglitparticipantgaugespec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglitparticipantgaugespec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204260,9 +204260,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L59",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_loadingindicatorspec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_loadingindicatorspec_tsx"
     },
     {
       "relation": "imports",
@@ -204271,9 +204271,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L59",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_loadingindicatorspec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_loadingindicatorspec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204282,9 +204282,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L62",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglitskeletonspec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglitskeletonspec_tsx"
     },
     {
       "relation": "imports",
@@ -204293,9 +204293,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L62",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglitskeletonspec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglitskeletonspec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204304,9 +204304,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L65",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglitasyncvaluewidgetspec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglitasyncvaluewidgetspec_tsx"
     },
     {
       "relation": "imports",
@@ -204315,9 +204315,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L65",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglitasyncvaluewidgetspec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglitasyncvaluewidgetspec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204326,9 +204326,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L68",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglitimagespec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglitimagespec_tsx"
     },
     {
       "relation": "imports",
@@ -204337,9 +204337,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L68",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglitimagespec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglitimagespec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204348,9 +204348,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L71",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglitimagecarouselspec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglitimagecarouselspec_tsx"
     },
     {
       "relation": "imports",
@@ -204359,9 +204359,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L71",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglitimagecarouselspec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglitimagecarouselspec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204370,9 +204370,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L74",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglitimagesourcesheetspec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglitimagesourcesheetspec_tsx"
     },
     {
       "relation": "imports",
@@ -204381,9 +204381,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L74",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglitimagesourcesheetspec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglitimagesourcesheetspec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204392,9 +204392,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L77",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglitsectiondividerspec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglitsectiondividerspec_tsx"
     },
     {
       "relation": "imports",
@@ -204403,9 +204403,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L77",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglitsectiondividerspec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglitsectiondividerspec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204414,9 +204414,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L80",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglitsettingstilespec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglitsettingstilespec_tsx"
     },
     {
       "relation": "imports",
@@ -204425,9 +204425,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L80",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglitsettingstilespec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglitsettingstilespec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204436,9 +204436,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L83",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglitsettingsgroupspec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglitsettingsgroupspec_tsx"
     },
     {
       "relation": "imports",
@@ -204447,9 +204447,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L83",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglitsettingsgroupspec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglitsettingsgroupspec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204458,9 +204458,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L86",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglitlisttilespec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglitlisttilespec_tsx"
     },
     {
       "relation": "imports",
@@ -204469,9 +204469,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L86",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglitlisttilespec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglitlisttilespec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204480,9 +204480,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L89",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglitbottomctaspec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglitbottomctaspec_tsx"
     },
     {
       "relation": "imports",
@@ -204491,9 +204491,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L89",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglitbottomctaspec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglitbottomctaspec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204502,9 +204502,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L92",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglitcontentcardspec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglitcontentcardspec_tsx"
     },
     {
       "relation": "imports",
@@ -204513,9 +204513,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L92",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglitcontentcardspec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglitcontentcardspec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204524,9 +204524,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L95",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglitsectionspec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglitsectionspec_tsx"
     },
     {
       "relation": "imports",
@@ -204535,9 +204535,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L95",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglitsectionspec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglitsectionspec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204546,9 +204546,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L98",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglitkeyvaluerowspec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglitkeyvaluerowspec_tsx"
     },
     {
       "relation": "imports",
@@ -204557,9 +204557,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L98",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglitkeyvaluerowspec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglitkeyvaluerowspec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204568,9 +204568,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L101",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglitcontentlayoutspec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglitcontentlayoutspec_tsx"
     },
     {
       "relation": "imports",
@@ -204579,9 +204579,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L101",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglitcontentlayoutspec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglitcontentlayoutspec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204590,9 +204590,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L104",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglithorizontalscrollgroupspec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglithorizontalscrollgroupspec_tsx"
     },
     {
       "relation": "imports",
@@ -204601,9 +204601,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L104",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglithorizontalscrollgroupspec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglithorizontalscrollgroupspec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204612,9 +204612,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L107",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglittimelinespec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglittimelinespec_tsx"
     },
     {
       "relation": "imports",
@@ -204623,9 +204623,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L107",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglittimelinespec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglittimelinespec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204634,9 +204634,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L110",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglitconfirmationpagespec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglitconfirmationpagespec_tsx"
     },
     {
       "relation": "imports",
@@ -204645,9 +204645,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L110",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglitconfirmationpagespec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglitconfirmationpagespec_guideline_recipes"
     },
     {
       "relation": "imports_from",
@@ -204656,9 +204656,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L113",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "apps_mds_docs_src_components_specs_minglithelpsheetspec_tsx",
-      "confidence_score": 1.0
+      "target": "apps_mds_docs_src_components_specs_minglithelpsheetspec_tsx"
     },
     {
       "relation": "imports",
@@ -204667,9 +204667,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L113",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "specs_minglithelpsheetspec_guideline_recipes",
-      "confidence_score": 1.0
+      "target": "specs_minglithelpsheetspec_guideline_recipes"
     },
     {
       "relation": "contains",
@@ -204677,9 +204677,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L134",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "components_page_inlinespecmodule",
-      "confidence_score": 1.0
+      "target": "components_page_inlinespecmodule"
     },
     {
       "relation": "contains",
@@ -204687,9 +204687,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L139",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "components_page_inline_specs",
-      "confidence_score": 1.0
+      "target": "components_page_inline_specs"
     },
     {
       "relation": "contains",
@@ -204697,9 +204697,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L181",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "components_page_section",
-      "confidence_score": 1.0
+      "target": "components_page_section"
     },
     {
       "relation": "contains",
@@ -204707,9 +204707,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L210",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "components_page_componentsection",
-      "confidence_score": 1.0
+      "target": "components_page_componentsection"
     },
     {
       "relation": "contains",
@@ -204717,9 +204717,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L375",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "components_page_chiplist",
-      "confidence_score": 1.0
+      "target": "components_page_chiplist"
     },
     {
       "relation": "contains",
@@ -204727,9 +204727,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L405",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "components_page_placementblock",
-      "confidence_score": 1.0
+      "target": "components_page_placementblock"
     },
     {
       "relation": "contains",
@@ -204737,9 +204737,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L526",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "components_page_tokenstable",
-      "confidence_score": 1.0
+      "target": "components_page_tokenstable"
     },
     {
       "relation": "contains",
@@ -204747,9 +204747,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L551",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "components_page_propstable",
-      "confidence_score": 1.0
+      "target": "components_page_propstable"
     },
     {
       "relation": "contains",
@@ -204757,9 +204757,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L583",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "components_page_guidelinerow",
-      "confidence_score": 1.0
+      "target": "components_page_guidelinerow"
     },
     {
       "relation": "contains",
@@ -204767,9 +204767,9 @@
       "source_file": "apps/mds/docs/src/app/components/page.tsx",
       "source_location": "L611",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "apps_mds_docs_src_app_components_page_tsx",
-      "target": "components_page_componentspage",
-      "confidence_score": 1.0
+      "target": "components_page_componentspage"
     },
     {
       "relation": "contains",
@@ -357304,8 +357304,8 @@
       "source_location": "L1",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "integration_test_bluedoc_integration_test",
-      "target": "var_lib_minglit_runner_1_work_minglit_minglit_apps_app_user_integration_test_bluedoc_md"
+      "source": "apps_app_user_integration_test_bluedoc_md",
+      "target": "integration_test_bluedoc_integration_test"
     },
     {
       "relation": "contains",
@@ -357344,8 +357344,8 @@
       "source_location": "L1",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "apps_app_user_integration_test_bluedoc_md",
-      "target": "integration_test_bluedoc_integration_test"
+      "source": "integration_test_bluedoc_integration_test",
+      "target": "var_lib_minglit_runner_1_work_minglit_minglit_apps_app_user_integration_test_bluedoc_md"
     },
     {
       "relation": "contains",
@@ -457941,5 +457941,5 @@
       "source_file": "docs/legal/retention-map.md"
     }
   ],
-  "built_at_commit": "680a780031df60ea64b5a716d6ae31dfac761c20"
+  "built_at_commit": "048c658b05f786afe8376e869daaf4711412645b"
 }
