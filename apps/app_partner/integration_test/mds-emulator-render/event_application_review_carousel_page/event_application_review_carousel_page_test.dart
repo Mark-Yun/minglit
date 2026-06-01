@@ -14,6 +14,9 @@ final catalog = MdsCatalog<EventApplicationReviewCarouselPageBuilder>(
   builder: EventApplicationReviewCarouselPageBuilder.new,
   states: [
     MdsState('state-default', (b) => b.defaultState(), mdsIndex: 1),
+    MdsState('state-first-page', (b) => b.defaultState(), mdsIndex: 2),
+    MdsState('state-middle-page', (b) => b.defaultState(), mdsIndex: 3),
+    MdsState('state-last-page', (b) => b.dark(), mdsIndex: 4),
   ],
 );
 

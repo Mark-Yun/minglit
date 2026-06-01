@@ -14,6 +14,10 @@ final catalog = MdsCatalog<EventApplicationReviewConfirmPageBuilder>(
   builder: EventApplicationReviewConfirmPageBuilder.new,
   states: [
     MdsState('state-default', (b) => b.defaultState(), mdsIndex: 1),
+    MdsState('state-submitting', (b) => b.defaultState(), mdsIndex: 2),
+    MdsState('state-success', (b) => b.defaultState(), mdsIndex: 3),
+    MdsState('state-error', (b) => b.defaultState(), mdsIndex: 4),
+    MdsState('state-dark', (b) => b.dark(), mdsIndex: 5),
   ],
 );
 
