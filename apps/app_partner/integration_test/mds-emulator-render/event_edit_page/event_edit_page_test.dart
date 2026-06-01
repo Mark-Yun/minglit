@@ -14,6 +14,10 @@ final catalog = MdsCatalog<EventEditPageBuilder>(
   builder: EventEditPageBuilder.new,
   states: [
     MdsState('state-default', (b) => b.defaultState(), mdsIndex: 1),
+    MdsState('state-editable', (b) => b.defaultState(), mdsIndex: 2),
+    MdsState('state-invalid', (b) => b.defaultState(), mdsIndex: 3),
+    MdsState('state-submitting', (b) => b.defaultState(), mdsIndex: 4),
+    MdsState('state-dark', (b) => b.dark(), mdsIndex: 5),
   ],
 );
 
