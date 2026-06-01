@@ -515,6 +515,14 @@
     </thead>
     <tbody>
       <tr>
+        <td>2026-06-01</td>
+        <td>2.1</td>
+        <td>codex</td>
+        <td>
+          <strong>Issue #2399 avatar drift sync</strong> — §1 partner row avatar를 live code의 <code>MinglitAvatarImage(radius: MinglitRadius.input, url, fallbackIcon: Icons.store)</code> 기준으로 갱신. 기존 <code>CircleAvatar</code> 표현은 Fix #1936 이후 stale.
+        </td>
+      </tr>
+      <tr>
         <td>2026-05-01</td>
         <td>2.0</td>
         <td>mark-yun</td>
@@ -635,7 +643,7 @@
    │           │     │     └─ tabs: 기본 정보 / 상세 소개 / 참가 현황 / 필요 인증 / 환불 정책
    │           │     │
    │           │     ├─ <b>SliverToBoxAdapter</b>: §1 기본 정보     ← ③
-   │           │     │  ├─ partner row (CircleAvatar + name + chevron)
+   │           │     │  ├─ partner row (MinglitAvatarImage + name + chevron)
    │           │     │  ├─ title Text(headlineSmall bold)
    │           │     │  ├─ <b>_InfoTile</b> — 날짜·시간·진행 시간
    │           │     │  ├─ <b>_InfoTile</b> — 장소 이름·주소
@@ -725,7 +733,7 @@
       ├─ <em>Partner row</em> (if partner != null)              ← ㉠
       │  └─ <b>GestureDetector</b>(opaque · onTap: pushPartnerDetail)
       │     └─ Row
-      │        ├─ <b>CircleAvatar</b>(radius: <i>radius-input = 12</i>) — 24×24
+      │        ├─ <b>MinglitAvatarImage</b>(radius: <i>MinglitRadius.input = 12</i>, fallbackIcon: Icons.store) — 24×24
       │        ├─ Gap: <i>spacing-small (8)</i>
       │        ├─ Flexible Text(<i>titleSmall · onSurfaceVariant</i>)
       │        ├─ Gap: <i>spacing-xsmall (4)</i>
@@ -2036,6 +2044,7 @@
         <tr><td><strong>Widget class</strong></td><td><code>EventDetailPage</code> + <code>_EventDetailContent</code> + <code>_BottomTicketBar</code> (모두 같은 파일에 part of)</td></tr>
         <tr><td><strong>File path</strong></td><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/event/detail/event_detail_page.dart"><code>apps/app_user/lib/src/features/event/detail/event_detail_page.dart</code></a></td></tr>
         <tr><td><strong>Part files</strong></td><td><code>event_detail_content.dart</code> · <code>event_bottom_ticket_bar.dart</code> · <code>event_entry_conditions_section.dart</code> · <code>event_verification_section.dart</code> · <code>event_refund_policy_section.dart</code> · <code>event_quill_viewer.dart</code> · <code>event_info_tile.dart</code> · <code>event_detail_content_skeleton.dart</code></td></tr>
+        <tr><td><strong>Partner avatar widget</strong></td><td><code>MinglitAvatarImage</code> (kit-shared) in <code>event_detail_content.dart</code> · <code>radius: MinglitRadius.input</code> · <code>url: partnerProfileImageUrl</code> · <code>fallbackIcon: Icons.store</code> · <code>fallbackIconSize: MinglitIconSize.xsmall</code></td></tr>
         <tr><td><strong>Controller / Provider</strong></td><td><code>eventDetailControllerProvider(eventId)</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/event/logic/event_detail_controller.dart"><code>event_detail_controller.dart</code></a></td></tr>
         <tr><td><strong>Coordinator</strong></td><td><code>eventCoordinatorProvider</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/event/logic/event_coordinator.dart"><code>event_coordinator.dart</code></a> — pushPartnerDetail · pushLogin · 등</td></tr>
         <tr><td><strong>Admission state</strong></td><td><code>eventAdmissionControllerProvider(event)</code> — see <a href="/specs/event_bottom_ticket_bar/index.html">EventBottomTicketBar spec</a></td></tr>
