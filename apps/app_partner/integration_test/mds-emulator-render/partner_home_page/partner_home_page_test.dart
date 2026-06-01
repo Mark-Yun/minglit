@@ -14,6 +14,13 @@ final catalog = MdsCatalog<PartnerHomePageBuilder>(
   builder: PartnerHomePageBuilder.new,
   states: [
     MdsState('state-default', (b) => b.defaultState(), mdsIndex: 1),
+    MdsState('state-default-2', (b) => b.defaultState(), mdsIndex: 2),
+    MdsState('state-default-3', (b) => b.defaultState(), mdsIndex: 3),
+    MdsState('state-default-4', (b) => b.defaultState(), mdsIndex: 4),
+    MdsState('state-default-5', (b) => b.defaultState(), mdsIndex: 5),
+    MdsState('state-default-6', (b) => b.defaultState(), mdsIndex: 6),
+    MdsState('state-default-7', (b) => b.defaultState(), mdsIndex: 7),
+    MdsState('state-default-8', (b) => b.defaultState(), mdsIndex: 8),
   ],
 );
 
