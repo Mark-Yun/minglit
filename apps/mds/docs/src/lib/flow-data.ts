@@ -214,6 +214,7 @@ export function extractRoutes(chart: string): string[] {
  * Kept as a no-op for API stability.
  */
 export function withClicks(chart: string, _app: 'user' | 'partner'): string {
+  void _app;
   return chart;
 }
 
@@ -436,6 +437,12 @@ const SUB_COMPONENT_SPECS: { user: SubComponentSpec[]; partner: SubComponentSpec
       parentRoute: 'EventDetailRoute',
       filePath: 'apps/app_user/lib/src/features/event/detail/event_bottom_ticket_bar.dart',
       specBasename: 'event_bottom_ticket_bar',
+    },
+    {
+      widget: 'TicketSelectionSheet',
+      parentRoute: 'EventDetailRoute',
+      filePath: 'apps/app_user/lib/src/features/ticket/ui/ticket_selection_sheet.dart',
+      specBasename: 'ticket_selection_sheet',
     },
     {
       widget: 'EventNowBar',

@@ -5,6 +5,7 @@
 ## 포함된 피쳐
 
 - [event-now-bar](./event-now-bar/) — user 측 이벤트 진행 표시 (홈 하단 바)
+- [matching-results-reveal](./matching-results-reveal/) — user 측 이벤트 종료 후 mutual match 연락처 공개/저장
 - [participation-status-redesign](./participation-status-redesign/) — 참여 상태 화면 리디자인
 - [entry-group-management](./entry-group-management/) — 입장 그룹 관리
 - [party-entry-group-management](./party-entry-group-management/) — 파티의 입장 그룹
