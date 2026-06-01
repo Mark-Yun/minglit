@@ -130,6 +130,13 @@ bash "$BUMP_SCRIPT" 26.08.1 > /dev/null 2>&1
 if grep -q "version: 26.08.1+26080001" apps/app_user/pubspec.yaml; then assert_pass "versionCode 26080001 (month 08)"; else assert_fail "versionCode 26080001 (month 08)"; fi
 echo ""
 
+echo -e "${BLUE}TEST 3c: Explicit snapshot build number (26.06.01-dev-staging + 26060101)${NC}"
+setup_test_dir 3c
+bash "$BUMP_SCRIPT" 26.06.01-dev-staging 26060101 > /dev/null 2>&1
+if grep -q "version: 26.06.01-dev-staging+26060101" apps/app_user/pubspec.yaml; then assert_pass "explicit snapshot build number"; else assert_fail "explicit snapshot build number"; fi
+if grep -q '"version": "26.06.01-dev-staging"' package.json; then assert_pass "root dev-staging snapshot version"; else assert_fail "root dev-staging snapshot version"; fi
+echo ""
+
 echo -e "${BLUE}TEST 4: Invalid input rejection - wrong format (1.0.0)${NC}"
 setup_test_dir 4
 if bash "$BUMP_SCRIPT" 1.0.0 > /dev/null 2>&1; then

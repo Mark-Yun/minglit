@@ -123,10 +123,12 @@ def assert_main_build_number_monotonic_contract() -> None:
 
     required_snippets = [
         "if [ \"${CHANNEL}\" = \"main\" ]; then",
+        "if [ \"${SNAPSHOT_BUILD_INT}\" -lt 100000 ]; then",
         "LEGACY_SEED=$((10#${YY} * 1000000 + 10#${MM} * 10000))",
-        "BUILD_NUMBER=$((LEGACY_SEED + PR_NUMBER_INT))",
-        "if [ \"${BUILD_NUMBER}\" -le \"${PR_NUMBER_INT}\" ]; then",
+        "BUILD_NUMBER=$((LEGACY_SEED + SNAPSHOT_BUILD_INT))",
+        "BUILD_NUMBER_RULE=\"snapshot_build_number\"",
         "echo \"build_number=${BUILD_NUMBER}\"",
+        "echo \"snapshot_build=${SNAPSHOT_BUILD}\"",
     ]
     for snippet in required_snippets:
         if snippet not in script:

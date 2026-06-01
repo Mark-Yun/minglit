@@ -54,7 +54,7 @@ Hotfix PR 머지 직후에는 RC branch 에 version bump commit 을 추가하지
 4. 새 RC HEAD 기준으로 5일 soak clock 이 다시 시작
 ```
 
-RC artifact version 은 `shared-version-metadata(channel=rc)` 가 latest RC HEAD 의 version-bump PR 번호로 계산한다.
+RC artifact version 은 `shared-version-metadata(channel=rc)` 가 latest RC HEAD 의 dev-staging snapshot build number 로 계산한다.
 
 ## `rc-deploy`
 
@@ -98,7 +98,7 @@ Mark 님 직감대로 hotfix loop 으로 RC lifecycle 이 길어지는 게 일�
 | 검증 | 도구 |
 |------|------|
 | 누적 회귀 | rc 의 nightly 재실행 (선택 — RC 별도 nightly schedule TBD) |
-| 내부 dogfooding | 내부 직원 cohort 가 `YY.MM.DD-rc+BUILD_PR#` 빌드 사용 |
+| 내부 dogfooding | 내부 직원 cohort 가 `YY.MM.DD-rc+BUILD` 빌드 사용 |
 | Real-data 이슈 | RC 전용 Supabase branch (`rc-YYYY-Wxx`) |
 | 외부 의존성 동작 (실 결제, 실 메시지) | 내부 사용자가 실제로 사용해보며 검증 |
 

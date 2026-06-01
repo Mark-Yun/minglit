@@ -50,7 +50,7 @@ RC hotfix 는 dev-staging-first 가 기본이다. active RC 에만 먼저 들어
 | 머지 방향 | base ← head | 트리거 | 머지 방식 | 요구 체크 |
 |-----------|-------------|--------|-----------|-----------|
 | feature/agent → dev-staging | `dev-staging` ← `feat/*`, `fix/*`, `chore/*`, `docs/*` | PR + auto-merge | **squash** | `dev-staging-pr-gate` |
-| dev-staging → dev | `dev` ← `cut/dev-staging-dev/YYYY-MM-DD-{sha8}` at latest `v*-dev-staging` tag | daily cron `dev-staging-dev-cut` | rebase (linear snapshot) | `dev-pr-gate` |
+| dev-staging → dev | `dev` ← `cut/dev-staging-dev/YYYY-MM-DD-{sha8}` at daily cut-time `v*-dev-staging` tag | daily cron `dev-staging-dev-cut` | rebase (linear snapshot) | `dev-pr-gate` |
 | hotfix → dev | `dev` ← `dev/hotfix/*` | approved hotfix only | rebase | `dev-pr-gate` |
 | hotfix → rc | `rc/YYYY-Wxx` ← dev-staging fix cherry-pick branch | dev-staging-first approved hotfix only | rebase | `rc-pr-gate` |
 | rc → main | `main` ← `rc/YYYY-Wxx` | `rc-main-cut` 이 5일 무커밋 시 PR 생성 + auto-merge | rebase + ff | `main-pr-gate` |
@@ -71,7 +71,7 @@ Hybrid linear history 금지 — 각 branch 내 일관 (squash or rebase 한 가
 
 | Tag / Status | 시점 | 예시 | 부여자 |
 |--------------|------|------|--------|
-| `v{ver}+{build}-dev-staging` (tag) | dev-staging-dev-cut-gate | `v26.05.27+2832-dev-staging` | workflow |
+| `v{ver}+{build}-dev-staging` (tag) | dev-staging-dev-cut direct bump commit | `v26.06.01+26060101-dev-staging` | workflow |
 | `dev-rc-cut-pass` (commit status) | dev-rc-cut-gate green 시 dev commit 에 | (status only, tag 없음) | workflow |
 | `promo/rc-YYYY-Wxx` (tag) | dev-rc-cut 직후 | `promo/rc-2026-W20` | workflow |
 | `promo/main-YYYY-Wxx` (tag) | main 머지 직후 | `promo/main-2026-W20` | workflow |
@@ -104,7 +104,7 @@ monitor-dev-staging-health:
 # 개념 — backend + mobile 모두 prod
 main-deploy (on push to main):
   steps:
-    - compute deploy-time version metadata: YY.MM.DD + version-bump PR build number
+    - compute deploy-time version metadata: YY.MM.DD + snapshot build number
     - tag promo/main-Wxx + Sentry marker
     - Firebase RC `latest_version` = computed version 자동 update
   parallel:
