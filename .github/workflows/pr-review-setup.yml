@@ -18,6 +18,7 @@ on:
 
 permissions:
   pull-requests: write
+  issues: write
   contents: read
 
 concurrency:
@@ -31,23 +32,34 @@ jobs:
       github.event.pull_request.head.repo.fork == false
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Generate release bot token
+        id: release-bot
+        uses: ./.github/actions/release-bot-token
+        with:
+          fallback-app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
+          fallback-private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
+
       - name: Enable squash auto-merge
+        continue-on-error: true
         env:
-          # Branch protection active 후 GITHUB_TOKEN 으론 enablePullRequestAutoMerge /
-          # 라벨 부여 권한 부족 ("Resource not accessible by integration"). PAT 사용.
-          GH_TOKEN: ${{ secrets.GH_PAT_VERSION_BUMP }}
+          GH_TOKEN: ${{ steps.release-bot.outputs.token }}
         run: |
           # Idempotent: already-enabled is fine.
           gh pr merge "${{ github.event.pull_request.number }}" \
             --auto --squash \
-            --repo "${{ github.repository }}" || true
+            --repo "${{ github.repository }}"
 
       - name: Add needs-review label
         env:
-          GH_TOKEN: ${{ secrets.GH_PAT_VERSION_BUMP }}
+          GH_TOKEN: ${{ steps.release-bot.outputs.token }}
           REPO: ${{ github.repository }}
           PR_NUM: ${{ github.event.pull_request.number }}
         run: |
           # Idempotent: gh treats add-label on an already-present label as a no-op,
           # so re-running on the same SHA (e.g. reopened) doesn't spam reviewers.
-          gh pr edit "$PR_NUM" --repo "$REPO" --add-label needs-review || true
+          gh pr edit "$PR_NUM" --repo "$REPO" --add-label needs-review

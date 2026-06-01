@@ -18,6 +18,7 @@ permissions:
 
 jobs:
   update:
+    if: github.event_name != 'push' || github.ref == 'refs/heads/dev-staging'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -32,6 +33,14 @@ jobs:
         with:
           fallback-app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
           fallback-private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
+
+      - name: Guard target branch
+        run: |
+          branch="$(git branch --show-current)"
+          if [ "${branch}" != "dev-staging" ]; then
+            echo "::error::Graphify sync is allowed to commit only on dev-staging; checked out ${branch}."
+            exit 1
+          fi
 
       - name: Setup Python
         uses: actions/setup-python@v6
