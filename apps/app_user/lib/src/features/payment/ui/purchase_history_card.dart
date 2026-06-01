@@ -58,8 +58,23 @@ class PurchaseHistoryCard extends StatelessWidget {
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-                // Fix #638: StatusBadge를 공용 위젯으로 승격하여 재사용
-                StatusBadge(status: application.status),
+                Row(
+                  children: [
+                    Text(
+                      '상세 보기',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(width: MinglitSpacing.xxsmall),
+                    Icon(
+                      Icons.chevron_right,
+                      size: 14,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ],
+                ),
               ],
             ),
             const SizedBox(height: MinglitSpacing.medium),
@@ -86,6 +101,10 @@ class PurchaseHistoryCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Fix #2952: v1.3 spec - status badge belongs above title
+                      // within the info row, not in the header trailing slot.
+                      StatusBadge(status: application.status),
+                      const SizedBox(height: MinglitSpacing.xxsmall),
                       Text(
                         eventName,
                         style: theme.textTheme.titleMedium?.copyWith(
