@@ -54,7 +54,7 @@ jobs:
               changed_files="$(git show --pretty='' --name-only "${TARGET_SHA}" || true)"
             fi
 
-            if printf '%s\n' "${changed_files}" | grep -Eq '^(supabase/(migrations|functions)/|env-manifest\.json$)'; then
+            if grep -Eq '^(supabase/(migrations|functions)/|env-manifest\.json$)' <<< "${changed_files}"; then
               wait_for_deploy="true"
             fi
           fi
