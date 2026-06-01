@@ -84,8 +84,8 @@ body.dark-mode .viewport {
   color: var(--color-text-secondary);
 }
 .settle-badge--ready {
-  background: rgba(var(--spec-blueprint-rgb), 0.10);
-  color: var(--color-primary);
+  background: rgba(255, 153, 0, 0.12);
+  color: var(--color-secondary);
 }
 .settle-badge--processing {
   background: rgba(255, 153, 0, 0.12);
@@ -251,12 +251,6 @@ body.dark-mode .viewport {
   border-top: 1px solid var(--color-divider);
   padding: var(--spacing-medium);
 }
-.download-sheet__handle {
-  width: 32px; height: 4px;
-  border-radius: 2px;
-  background: var(--color-divider);
-  margin: 0 auto var(--spacing-medium);
-}
 .download-sheet__title {
   font-size: var(--typography-font-size-app-bar-title);
   font-weight: 700;
@@ -311,7 +305,7 @@ body.dark-mode .viewport {
     <tbody>
       <tr>
         <th style="width: 140px;">Status</th>
-        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 6개 state · 정산 lifecycle 전체 커버</em></td>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 6개 state · 상세 핵심 흐름 + status badge matrix</em></td>
       </tr>
       <tr>
         <th>App</th>
@@ -327,12 +321,12 @@ body.dark-mode .viewport {
       </tr>
       <tr>
         <th>Path</th>
-        <td><code>/settlement/:settlementId</code></td>
+        <td><code>/settlement/:id</code></td>
       </tr>
       <tr>
         <th>Hierarchy</th>
         <td>
-          <strong>Parent</strong>: <em>— (top-level partner screen — 정산 목록에서 진입하는 detail 화면)</em><br>
+          <strong>Parent</strong>: <a href="/specs/settlement_page/index.html"><code>SettlementPage</code></a> (월별 정산 tile 탭으로 진입)<br>
           <strong>Children</strong>: <em>— (CSV 다운로드 바텀시트는 state 6으로 이 spec 안에서 다룸)</em>
         </td>
       </tr>
@@ -355,7 +349,7 @@ body.dark-mode .viewport {
         <th>Background</th>
         <td>
           밍글릿은 PG 수수료, 플랫폼 수수료, VAT를 차감한 순 정산금을 파트너에게 지급한다.
-          각 정산 항목은 대기 → 확정 → 지급 중 → 지급 완료 흐름을 따르며 보류 / 지급 실패 / 취소 예외 상태도 존재한다.
+          각 정산 항목은 지급 대기 → 지급 예정 → 지급 중 → 지급 완료 흐름을 따르며 지급 보류 / 지급 실패 / 지급 취소 예외 상태도 존재한다.
           지급 실패 상태이면서 재지급이 가능한 경우에만 "재지급 요청" 버튼이 표시된다.
         </td>
       </tr>
@@ -385,6 +379,14 @@ body.dark-mode .viewport {
       </tr>
     </thead>
     <tbody>
+      <tr>
+        <td>2026-06-01</td>
+        <td>1.2</td>
+        <td>Codex</td>
+        <td>
+          SettlementPage spec과 상태 문구/색을 정렬. READY를 <code>지급 예정</code>으로 변경하고 READY/PROCESSING 색을 동일 계열로 통일. Loading은 spinner 대신 detail skeleton 지향으로 정리하고, route/provider reference drift를 갱신.
+        </td>
+      </tr>
       <tr>
         <td>2026-05-01</td>
         <td>1.1</td>
@@ -427,7 +429,7 @@ body.dark-mode .viewport {
     <h2>Blueprint &amp; tree</h2>
     <p class="intro">
       AppBar("정산 상세") + SingleChildScrollView(MinglitContentLayout) — 섹션 사이 spacing-medium.
-      로딩/오류/데이터 없음은 Center 위젯으로 처리.
+      초기 로딩은 실제 상세 화면 구조를 유지한 skeleton으로 처리하고, 오류/데이터 없음은 full-page state로 처리한다.
     </p>
     <div class="layout-grid">
       <div class="blueprint">
@@ -461,8 +463,8 @@ body.dark-mode .viewport {
       <div class="layout-tree"><b>Scaffold</b>
 ├─ <b>appBar</b>: AppBar(title: Text('정산 상세'))          ← ①
 └─ <b>body</b>
-   ├─ [isLoading]  <b>Center</b> → <b>CircularProgressIndicator</b>
-   ├─ [error]      <b>Center</b> → error icon + title + message + retry button
+   ├─ [isLoading]  <b>SettlementDetailShimmer</b> → status / amount / action card skeleton
+   ├─ [error]      <b>MinglitEmptyState</b> → error icon + "정산 정보를 불러오지 못했습니다" + retry button
    ├─ [detail null] <b>Center</b> → Text('정산 항목을 찾을 수 없습니다.')
    └─ [data]  <b>_DetailContent</b>
       └─ <b>SingleChildScrollView</b>
@@ -584,7 +586,7 @@ body.dark-mode .viewport {
     <p class="intro">
       본문 첫 카드 — 좌측에 상태 배지(pill), 우측에 한 줄 안내 메시지가 가로로 배치된 정보 카드.
       배지는 자기 너비만큼 차지하고 메시지는 남는 가로 공간을 모두 흡수한다.
-      배지 색상이 정산 상태(대기 / 확정 / 지급 중 / 지급 완료 / 보류 / 지급 실패 / 취소)에 따라 달라지며 메시지 텍스트도 함께 바뀐다.
+      배지 색상이 정산 상태(지급 대기 / 지급 예정 / 지급 중 / 지급 완료 / 지급 보류 / 지급 실패 / 지급 취소)에 따라 달라지며 메시지 텍스트도 함께 바뀐다.
     </p>
     <div class="layout-grid">
       <div class="blueprint" style="width: 343px; height: 110px;">
@@ -736,6 +738,7 @@ body.dark-mode .viewport {
     <p class="intro">
       처리 이력 카드 — 정산이 거쳐온 상태 전환을 위에서 아래로 시간순 정렬한다.
       각 항목은 좌측의 작은 점(8px) + 그 점들을 잇는 1px 세로선 + 우측의 상태/시각 텍스트로 구성된다.
+      상태 전환 텍스트는 raw enum이 아니라 사용자 노출 라벨(예: 지급 대기 → 지급 예정)로 표시한다.
       처리 이력이 하나도 없으면 카드 전체가 숨겨진다 (대기 상태에서 흔함).
     </p>
     <div class="layout-grid">
@@ -789,7 +792,7 @@ body.dark-mode .viewport {
                │   · margin-top: 5 (텍스트 첫 줄과 시각적 정렬)
                ├─ <b>SizedBox</b>(width: <i>spacing-sm = 12</i>)
                └─ <b>Column</b>(crossAxis: start)
-                  ├─ <b>Text</b>('PREV → NEXT', w600)
+                  ├─ <b>Text</b>('지급 대기 → 지급 예정', w600)
                   └─ <b>Text</b>('MM/dd HH:mm', caption)
 
       <em>Connector ㉢:</em> 항목 사이에 1px 세로선
@@ -897,7 +900,7 @@ body.dark-mode .viewport {
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별 기준</strong>: 정산 상태(대기 / 확정 / 지급 중 / 지급 완료 / 보류 / 지급 실패 / 취소) + 데이터 도착 여부 + CSV 다운로드 바텀시트 노출 여부.
+      <strong>State 종류 식별 기준</strong>: 정산 상태(지급 대기 / 지급 예정 / 지급 중 / 지급 완료 / 지급 보류 / 지급 실패 / 지급 취소) + 데이터 도착 여부 + CSV 다운로드 바텀시트 노출 여부.
     </p>
 
     <!-- State 1: Default · COMPLETED (baseline) -->
@@ -931,11 +934,11 @@ body.dark-mode .viewport {
                 </div>
                 <div class="settle-card">
                   <div class="settle-card__title">처리 이력</div>
-                  <div class="timeline-item"><div class="timeline-item__dot"></div><div class="timeline-item__body"><div class="timeline-item__status">PENDING → READY</div><div class="timeline-item__time">04/22 10:00</div></div></div>
+                  <div class="timeline-item"><div class="timeline-item__dot"></div><div class="timeline-item__body"><div class="timeline-item__status">지급 대기 → 지급 예정</div><div class="timeline-item__time">04/22 10:00</div></div></div>
                   <div class="timeline-connector"></div>
-                  <div class="timeline-item"><div class="timeline-item__dot"></div><div class="timeline-item__body"><div class="timeline-item__status">READY → PROCESSING</div><div class="timeline-item__time">04/25 14:30</div></div></div>
+                  <div class="timeline-item"><div class="timeline-item__dot"></div><div class="timeline-item__body"><div class="timeline-item__status">지급 예정 → 지급 중</div><div class="timeline-item__time">04/25 14:30</div></div></div>
                   <div class="timeline-connector"></div>
-                  <div class="timeline-item"><div class="timeline-item__dot"></div><div class="timeline-item__body"><div class="timeline-item__status">PROCESSING → COMPLETED</div><div class="timeline-item__time">04/26 09:15</div></div></div>
+                  <div class="timeline-item"><div class="timeline-item__dot"></div><div class="timeline-item__body"><div class="timeline-item__status">지급 중 → 지급 완료</div><div class="timeline-item__time">04/26 09:15</div></div></div>
                 </div>
                 <div>
                   <div class="settle-action-btn settle-action-btn--outlined">
@@ -980,7 +983,7 @@ body.dark-mode .viewport {
         <tr>
           <td class="state-mini__aspect">토큰</td>
           <td>
-            · color: <code>color-background</code>, <code>color-surface</code>, <code>color-primary</code> (timeline dot · READY 배지), <code>color-success</code> (COMPLETED 배지), <code>color-text-primary/secondary</code>, <code>color-divider</code> (AppBar 하단 · 카드 border · OutlinedButton border)<br>
+            · color: <code>color-background</code>, <code>color-surface</code>, <code>color-primary</code> (timeline dot), <code>color-secondary</code> (READY/PROCESSING 배지), <code>color-success</code> (COMPLETED 배지), <code>color-text-primary/secondary</code>, <code>color-divider</code> (AppBar 하단 · 카드 border · OutlinedButton border)<br>
             · radius: <code>radius-card</code> (16 · Card), <code>radius-badge</code> (4 · Badge), <code>radius-button</code> (12 · 버튼)<br>
             · spacing: <code>spacing-medium</code> (16 · 섹션/카드 padding), <code>spacing-sm</code> (12 · badge↔message · title↔rows · timeline dot↔text), <code>spacing-small</code> (8 · 버튼 간격), <code>spacing-xsmall</code> (4 · amount row v-padding), <code>spacing-xsmall2</code> (6 · timeline item v-padding)<br>
             · typography: titleSmall (14/600 — 카드 타이틀), bodyMedium (14/400 — 일반 / 14/700 — 정산금 bold), labelSmall (11/600 — 배지 compact:true), bodySmall (12 — 타임스탬프), appBarTitle (18/600)
@@ -996,7 +999,7 @@ body.dark-mode .viewport {
     <!-- State 2: PENDING -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>정산 대기 (PENDING)</strong> <small>이벤트 종료 후 정산이 확정되기 전 단계</small></th></tr>
+        <tr><th colspan="3"><strong>지급 대기 (PENDING)</strong> <small>이벤트 종료 후 지급 예정 상태가 되기 전 단계</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -1009,8 +1012,8 @@ body.dark-mode .viewport {
               <div class="settle-body">
                 <div class="settle-card">
                   <div class="settle-status-message">
-                    <div class="settle-badge settle-badge--pending">정산 대기</div>
-                    <div class="settle-status-message__text">정산이 확정되기를 기다리고 있습니다.</div>
+                    <div class="settle-badge settle-badge--pending">지급 대기</div>
+                    <div class="settle-status-message__text">지급 예정 상태가 되기를 기다리고 있습니다.</div>
                   </div>
                 </div>
                 <div class="settle-card">
@@ -1032,7 +1035,7 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>정산 대기 상태이며 처리 이력이 아직 비어 있음.</td>
+          <td>지급 대기 상태이며 처리 이력이 아직 비어 있음.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
@@ -1040,11 +1043,11 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 정산이 확정되는 시점에 자동으로 다음 상태로 넘어감. 화면이 자동으로 갱신되지는 않으므로 다시 진입해야 반영됨.</td>
+          <td>· 지급 예정 상태가 되는 시점에 자동으로 다음 상태로 넘어감. 화면이 자동으로 갱신되지는 않으므로 다시 진입해야 반영됨.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ Badge → <strong>"정산 대기"</strong> (PENDING styling — <code>color-surface</code> bg)<br>− 처리 이력 카드 <em>(histories 비어있음)</em></td>
+          <td>↔ Badge → <strong>"지급 대기"</strong> (PENDING styling — <code>color-surface</code> bg)<br>− 처리 이력 카드 <em>(histories 비어있음)</em></td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
@@ -1091,7 +1094,7 @@ body.dark-mode .viewport {
                   <div class="timeline-item">
                     <div class="timeline-item__dot" style="background:var(--color-error);"></div>
                     <div class="timeline-item__body">
-                      <div class="timeline-item__status">PROCESSING → FAILED</div>
+                      <div class="timeline-item__status">지급 중 → 지급 실패</div>
                       <div class="timeline-item__time">04/26 11:00</div>
                     </div>
                   </div>
@@ -1122,7 +1125,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>+ <code>FilledButton.icon</code> (refresh icon · 재지급 요청 · primary bg)<br>↔ Badge → <strong>"지급 실패"</strong> (FAILED styling — <code>color-error</code> bg/text)<br>↔ Timeline dot 1개 → <code>color-error</code> (PROCESSING → FAILED 전환 표시)<br>↔ Status message 텍스트 → "지급에 실패했습니다. 계좌 정보를 확인해 주세요."</td>
+          <td>+ <code>FilledButton.icon</code> (refresh icon · 재지급 요청 · primary bg)<br>↔ Badge → <strong>"지급 실패"</strong> (FAILED styling — <code>color-error</code> bg/text)<br>↔ Timeline dot 1개 → <code>color-error</code> (지급 중 → 지급 실패 전환 표시)<br>↔ Status message 텍스트 → "지급에 실패했습니다. 계좌 정보를 확인해 주세요."</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
@@ -1138,7 +1141,7 @@ body.dark-mode .viewport {
     <!-- State 4: HOLD -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>보류 (HOLD)</strong> <small>지원센터 문의가 필요한 보류 상태</small></th></tr>
+        <tr><th colspan="3"><strong>지급 보류 (HOLD)</strong> <small>지원센터 문의가 필요한 보류 상태</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -1151,8 +1154,8 @@ body.dark-mode .viewport {
               <div class="settle-body">
                 <div class="settle-card">
                   <div class="settle-status-message">
-                    <div class="settle-badge settle-badge--hold">보류</div>
-                    <div class="settle-status-message__text">정산이 보류 중입니다. 지원센터에 문의해 주세요.</div>
+                    <div class="settle-badge settle-badge--hold">지급 보류</div>
+                    <div class="settle-status-message__text">지급이 보류 중입니다. 지원센터에 문의해 주세요.</div>
                   </div>
                 </div>
                 <div class="settle-card">
@@ -1186,7 +1189,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ Badge → <strong>"보류"</strong> (HOLD styling — <code>color-error</code> bg + 약한 opacity)<br>− 처리 이력 카드<br>− FilledButton (재지급)</td>
+          <td>↔ Badge → <strong>"지급 보류"</strong> (HOLD styling — <code>color-error</code> bg + 약한 opacity)<br>− 처리 이력 카드<br>− FilledButton (재지급)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
@@ -1202,7 +1205,7 @@ body.dark-mode .viewport {
     <!-- State 5: Loading -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Loading</strong> <small>진입 직후 데이터 조회 중</small></th></tr>
+        <tr><th colspan="3"><strong>Loading</strong> <small>진입 직후 데이터 조회 중 · detail skeleton</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -1212,10 +1215,29 @@ body.dark-mode .viewport {
                 <div class="settle-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
                 <div class="settle-appbar__title">정산 상세</div>
               </div>
-              <div style="position:absolute;top:56px;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;">
-                <div style="width:36px;height:36px;border:3px solid var(--color-divider);border-top-color:var(--color-primary);border-radius:50%;animation:spin 0.7s linear infinite;"></div>
+              <div class="settle-body">
+                <div class="settle-card">
+                  <div class="settle-status-message">
+                    <div class="skeleton-bar" style="width:84px;height:28px;border-radius:var(--radius-badge);"></div>
+                    <div class="skeleton-bar" style="flex:1;height:16px;"></div>
+                  </div>
+                </div>
+                <div class="settle-card">
+                  <div class="skeleton-bar" style="width:80px;height:18px;margin-bottom:12px;"></div>
+                  <div class="skeleton-bar" style="height:18px;margin-bottom:8px;"></div>
+                  <div class="skeleton-bar" style="height:18px;margin-bottom:8px;width:92%;"></div>
+                  <div class="skeleton-bar" style="height:18px;margin-bottom:8px;width:88%;"></div>
+                  <div class="skeleton-bar" style="height:18px;margin-bottom:12px;width:82%;"></div>
+                  <div class="amount-divider"></div>
+                  <div class="skeleton-bar" style="height:20px;margin-top:12px;"></div>
+                </div>
+                <div class="settle-card">
+                  <div class="skeleton-bar" style="width:80px;height:18px;margin-bottom:12px;"></div>
+                  <div class="skeleton-bar" style="height:28px;margin-bottom:8px;"></div>
+                  <div class="skeleton-bar" style="height:28px;width:86%;"></div>
+                </div>
+                <div class="skeleton-bar" style="height:48px;border-radius:var(--radius-button);"></div>
               </div>
-              <style>@keyframes spin{to{transform:rotate(360deg);}}</style>
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
@@ -1231,15 +1253,15 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ body (StatusCard / Amount / Timeline / Actions 4개 카드) → <code>CircularProgressIndicator</code> 단일 (Material 기본 · MinglitCircularProgressIndicator 미사용)<br>− 모든 spec 컴포넌트</td>
+          <td>↔ body → <code>SettlementDetailShimmer</code><br>+ status card skeleton / amount card skeleton / timeline skeleton / action button skeleton<br>− <code>CircularProgressIndicator</code> initial loading</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
-          <td>− 카드/배지/timeline 토큰 미사용. 스피너만 <code>color-primary</code> + <code>color-divider</code> (track)</td>
+          <td>+ skeleton base: <code>color-surface</code><br>+ shimmer highlight: <code>color-divider</code><br>+ animation: 1.2s linear sweep</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 AppBar는 유지 (back tap 가능). body만 spinner로 대체.</td>
+          <td>📝 AppBar는 유지 (back tap 가능). spinner 대신 상세 화면 골격을 먼저 보여 layout shift를 줄인다.</td>
         </tr>
       </tbody>
     </table>
@@ -1267,18 +1289,13 @@ body.dark-mode .viewport {
               </div>
               <div class="scrim"></div>
               <div class="download-sheet" style="z-index:10;position:absolute;">
-                <div class="download-sheet__handle"></div>
                 <div class="download-sheet__title">CSV 다운로드</div>
-                <div class="download-sheet__options">
-                  <div class="download-sheet__option">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-                    이번 정산 내역 CSV
-                  </div>
-                  <div class="download-sheet__option">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    전체 정산 이력 CSV
-                  </div>
+                <div style="font-size:var(--typography-font-size-caption);color:var(--color-text-secondary);line-height:1.5;margin-bottom:var(--spacing-large);">정산 내역을 CSV 파일로 저장합니다.</div>
+                <div class="settle-action-btn settle-action-btn--filled">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  CSV 저장
                 </div>
+                <div style="height:40px;display:flex;align-items:center;justify-content:center;color:var(--color-primary);font-weight:600;">취소</div>
               </div>
             </div>
           </td>
@@ -1288,18 +1305,18 @@ body.dark-mode .viewport {
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>"이번 정산 내역 CSV" 탭</strong> → OS 파일 공유 시트 / 저장 다이얼로그<br>
-            ② <strong>"전체 정산 이력 CSV" 탭</strong> → 동일하게 OS 공유 시트 (범위만 다름)<br>
+            ① <strong>"CSV 저장" 탭</strong> → CSV 생성 → OS 공유 시트 / 저장 다이얼로그<br>
+            ② <strong>"취소" 탭</strong> → 시트 닫힘, 배경 화면 복귀<br>
             ③ <strong>스크림 탭 / 아래 스와이프</strong> → 시트 닫힘, 배경 화면 복귀
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· CSV 생성 실패 (서버 오류) → 오류 안내 메시지가 노출되고 시트는 닫힘<br>· 매우 큰 데이터셋 (수만 행) → 별도 진행 UI 없이 곧바로 OS 공유 시트로 진입</td>
+          <td>· CSV 생성 실패 → SnackBar 오류가 노출되고 시트는 유지됨<br>· 생성 중에는 버튼 라벨이 "생성 중..."으로 바뀌고 16px progress가 icon 자리에 표시됨</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>+ <code>DownloadBottomSheet</code> (Material <code>showModalBottomSheet</code> 기반)<br>+ Scrim (반투명 검정 overlay · 배경 dim)<br>+ <code>_DownloadOption</code> 행 2개 (icon + label)</td>
+          <td>+ <code>DownloadBottomSheet</code> (Material <code>showModalBottomSheet</code> 기반)<br>+ Scrim (반투명 검정 overlay · 배경 dim)<br>+ title / description / <code>FilledButton.icon</code>('CSV 저장') / <code>TextButton</code>('취소')</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
@@ -1341,17 +1358,18 @@ body.dark-mode .viewport {
     <h2>Status badge / Amount card — visual</h2>
     <p class="intro">
       상태 배지는 정산 lifecycle 7개 상태에 따라 색이 달라지는 pill. 같은 모양·크기·radius를 유지하며 배경/텍스트 색만 바뀐다.
+      READY와 PROCESSING은 사용자가 모두 "지급이 곧/현재 진행됨"으로 인지하므로 같은 주황 계열로 통일한다.
       취소 상태는 가로 취소선이 추가로 그어진다. 그 아래는 금액 내역 카드 — 항목별 행이 양 끝 정렬로 쌓이고 합계만 굵게 강조된다.
     </p>
     <div class="visual-gallery" style="background: var(--color-surface); padding: 24px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 20px; align-items: center;">
       <div class="viewport" style="width: 343px; background: var(--color-background); border: 1px solid var(--color-divider); border-radius: 8px; padding: 16px; display: flex; flex-wrap: wrap; gap: 8px;">
-        <div class="settle-badge settle-badge--pending">정산 대기</div>
-        <div class="settle-badge settle-badge--ready">정산 확정</div>
+        <div class="settle-badge settle-badge--pending">지급 대기</div>
+        <div class="settle-badge settle-badge--ready">지급 예정</div>
         <div class="settle-badge settle-badge--processing">지급 중</div>
         <div class="settle-badge settle-badge--completed">지급 완료</div>
         <div class="settle-badge settle-badge--failed">지급 실패</div>
-        <div class="settle-badge settle-badge--hold">보류</div>
-        <div class="settle-badge settle-badge--canceled">취소</div>
+        <div class="settle-badge settle-badge--hold">지급 보류</div>
+        <div class="settle-badge settle-badge--canceled">지급 취소</div>
       </div>
       <div class="viewport" style="width: 343px; background: var(--color-background); border: 1px solid var(--color-divider); border-radius: 8px; padding: 16px;">
         <div class="settle-card" style="border:none;padding:0;">
@@ -1370,13 +1388,13 @@ body.dark-mode .viewport {
         <tr><th style="width: 140px;">Status</th><th style="width: 220px;">Visual</th><th>의미</th></tr>
       </thead>
       <tbody>
-        <tr><td>정산 대기 (PENDING)</td><td>회색 배경 + 보조 텍스트 색</td><td>이벤트 종료 직후, 정산이 확정되기 전</td></tr>
-        <tr><td>정산 확정 (READY)</td><td>파트너 보라 10% 틴트 + 보라 텍스트</td><td>정산 금액이 확정됨, 지급 대기</td></tr>
+        <tr><td>지급 대기 (PENDING)</td><td>회색 배경 + 보조 텍스트 색</td><td>이벤트 종료 직후, 지급 예정으로 넘어가기 전</td></tr>
+        <tr><td>지급 예정 (READY)</td><td>주황 12% 틴트 + 주황 텍스트</td><td>정산 금액이 확정됨, 지급 시작 전</td></tr>
         <tr><td>지급 중 (PROCESSING)</td><td>주황 12% 틴트 + 주황 텍스트</td><td>송금이 처리되는 중</td></tr>
         <tr><td>지급 완료 (COMPLETED)</td><td>초록 10% 틴트 + 초록 텍스트</td><td>정산금이 계좌에 입금됨</td></tr>
         <tr><td>지급 실패 (FAILED)</td><td>빨강 10% 틴트 + 빨강 텍스트</td><td>송금 실패, 재지급 가능 시 강조 버튼 노출</td></tr>
-        <tr><td>보류 (HOLD)</td><td>빨강 10% 틴트 + 빨강 텍스트</td><td>운영 개입 — 분쟁/검증 등으로 일시 정지</td></tr>
-        <tr><td>취소 (CANCELED)</td><td>회색 배경 + 가로 취소선</td><td>정산 자체가 취소됨</td></tr>
+        <tr><td>지급 보류 (HOLD)</td><td>빨강 10% 틴트 + 빨강 텍스트</td><td>운영 개입 — 분쟁/검증 등으로 일시 정지</td></tr>
+        <tr><td>지급 취소 (CANCELED)</td><td>회색 배경 + 가로 취소선</td><td>정산 자체가 취소됨</td></tr>
       </tbody>
     </table>
   </section>
@@ -1460,7 +1478,7 @@ body.dark-mode .viewport {
   <section class="doc">
     <h2>Global edge cases</h2>
     <ul class="notes">
-      <li><strong>취소 상태</strong> — 보류와 별도. 배지 텍스트에 취소선 스타일이 적용되며 "정산이 취소되었습니다." 메시지가 노출됨. CSV만 가능. (위 6개 state에는 미포함 — 발생 빈도가 낮은 운영 경로)</li>
+      <li><strong>지급 취소 상태</strong> — 지급 보류와 별도. 배지 텍스트에 취소선 스타일이 적용되며 "정산이 취소되었습니다." 메시지가 노출됨. CSV만 가능. (위 6개 state에는 미포함 — 발생 빈도가 낮은 운영 경로)</li>
       <li><strong>데이터 조회 실패</strong> — 오류 상태로 진입하며 일반 오류 메시지 + "다시 시도" 버튼이 노출됨.</li>
       <li><strong>금액 음수/0원</strong> — 그대로 표시. 비정상값도 가시화하는 의도.</li>
     </ul>
@@ -1482,13 +1500,13 @@ body.dark-mode .viewport {
     <table class="ref">
       <tbody>
         <tr><th style="width: 200px;">Widget</th><td><code>SettlementDetailPage</code> + <code>_DetailContent</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/settlement/settlement_detail_page.dart"><code>apps/app_partner/lib/src/features/settlement/settlement_detail_page.dart</code></a></td></tr>
-        <tr><th>Route</th><td><code>SettlementDetailRoute</code> · <code>/settlement/:settlementId</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
-        <tr><th>Provider</th><td><code>partnerSettlementDetailProvider(settlementId)</code> · <code>currentPartnerInfoProvider</code> (재지급 요청 guard)</td></tr>
-        <tr><th>Repository</th><td><code>partner_settlement_repository</code> — settlement status enum 정의 (PENDING / READY / PROCESSING / COMPLETED / HOLD / FAILED / CANCELED)</td></tr>
-        <tr><th>Status component</th><td><code>SettlementStatusBadge</code> — 8 status × bg/text color, CANCELED은 strikethrough</td></tr>
+        <tr><th>Route</th><td><code>SettlementDetailRoute</code> · <code>/settlement/:id</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
+        <tr><th>Data source</th><td><code>settlementRepositoryProvider.getSettlementItemDetail(itemId)</code> · <code>currentPartnerInfoProvider</code> (재지급 요청 guard)</td></tr>
+        <tr><th>Repository</th><td><code>settlementRepositoryProvider</code> — settlement status string: PENDING / READY / PROCESSING / COMPLETED / HOLD / FAILED / CANCELED</td></tr>
+        <tr><th>Status component</th><td><code>SettlementStatusBadge</code> — 8 status × bg/text color, CANCELED은 strikethrough. 본 spec 기준 READY label은 <strong>지급 예정</strong>, READY/PROCESSING은 같은 주황 계열.</td></tr>
         <tr><th>Sub-component</th><td><code>DownloadBottomSheet</code> — Material <code>showModalBottomSheet</code> 기반 (state 6에서 사용)</td></tr>
         <tr><th>Layout helper</th><td><code>MinglitContentLayout</code> (sectionGap: spacing-medium) — 섹션을 Column으로 배치</td></tr>
-        <tr><th>⚠️ 알려진 drift</th><td>FAILED timeline dot 색상 — spec은 <code>color-error</code>이나 현재 Dart 소스는 모든 dot을 <code>color-primary</code>로 표시. 디자인 개선 권고.</td></tr>
+        <tr><th>⚠️ 알려진 drift</th><td>· 현재 Dart 소스는 loading에 <code>CircularProgressIndicator</code>를 사용하므로 <code>SettlementDetailShimmer</code>로 교체 필요<br>· 현재 오류 상태는 inline <code>Center + Column</code>이고 title이 '오류가 발생했습니다' + raw error 문자열 노출이므로 <code>MinglitEmptyState</code>('정산 정보를 불러오지 못했습니다')로 교체 필요<br>· 현재 <code>SettlementStatus.ready.label</code>은 '정산 확정'이고 READY 색은 primaryContainer라 본 spec의 '지급 예정' + 주황 계열로 변경 필요<br>· 현재 <code>StatusMessageCard._messages</code>는 PENDING/READY/HOLD에 '정산 확정/정산 보류' 문구를 사용하므로 지급 대기/지급 예정/지급 보류 copy로 교체 필요<br>· 현재 timeline은 <code>${entry.fromStatus} → ${entry.toStatus}</code> raw enum을 그대로 표시하므로 사용자 노출 라벨로 변환 필요<br>· FAILED timeline dot 색상 — spec은 <code>color-error</code>이나 현재 Dart 소스는 모든 dot을 <code>color-primary</code>로 표시. 디자인 개선 권고.</td></tr>
       </tbody>
     </table>
   </section>
