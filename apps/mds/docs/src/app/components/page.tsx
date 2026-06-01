@@ -128,9 +128,8 @@ import MinglitHelpSheetSpec, {
  *   2. Import its default export + `GUIDELINE_RECIPES` above.
  *   3. Add an entry to `INLINE_SPECS` keyed by component name.
  *
- * If a component has no entry here, the `/components` page renders a
- * fallback link to `c.visualSpec` (when set) and the components.ts
- * tabular data (props / variants / states / tokens / guidelines).
+ * If a component has no entry here, the `/components` page renders the
+ * components.ts tabular data (props / variants / states / tokens / guidelines).
  */
 interface InlineSpecModule {
   Visual: ComponentType;
@@ -251,19 +250,6 @@ function ComponentSection({ c }: { c: ComponentSpec }) {
 
       {/* Visual playground (inline spec — has hero, anatomy, grids) */}
       {inlineSpec && <inlineSpec.Visual />}
-
-      {/* Fallback link to static visual spec */}
-      {!inlineSpec && c.visualSpec && (
-        <a
-          href={c.visualSpec}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mds-text-caption font-mono self-start hover:underline"
-          style={{ color: 'var(--color-primary)' }}
-        >
-          design spec ↗
-        </a>
-      )}
 
       {/* Code (Dart usage) — pre brings its own dark panel. */}
       {c.dartUsage && (
