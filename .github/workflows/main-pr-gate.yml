@@ -31,6 +31,7 @@ jobs:
     with:
       stage: main
       base_ref: main
+      run_cuj_integration: true
     secrets: inherit
 
   validate-rc-promotion:
@@ -105,7 +106,7 @@ jobs:
 
   main-pr-gate:
     needs: [source-guard, pr-gate-core, validate-rc-promotion]
-    if: always()
+    if: ${{ always() && !cancelled() }}
     runs-on: ubuntu-latest
     steps:
       - name: Publish branch gate result

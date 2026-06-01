@@ -28,7 +28,7 @@ class MyTicketsPage extends ConsumerWidget {
                   children: [
                     Icon(
                       Icons.confirmation_number_outlined,
-                      size: MinglitIconSize.display,
+                      size: MinglitIconSize.hero,
                       color: Theme.of(context).colorScheme.outline,
                     ),
                     const SizedBox(height: MinglitSpacing.medium),

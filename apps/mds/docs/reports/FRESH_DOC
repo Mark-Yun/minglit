@@ -1,0 +1,9 @@
+cycle: 7d
+priority: P2-medium
+target_files:
+  - audit-report.md
+refresh_method: |
+  audit-report.md 의 Agent Runbook 을 따라 MDS docs 정합성 audit 를 수행하고 report 를 갱신한다.
+  중점: spec 충돌, spec 없는 구현, 구현 없는 spec, CUJ 미문서화/미구현.
+  각 finding 은 audit 중 GitHub Issue 1건으로 즉시 파일링하고 report 의 Action Items 에 issue 번호를 기록한다.
+  마지막으로 본 FRESH_DOC PR 에 report 갱신 내용을 포함한다.

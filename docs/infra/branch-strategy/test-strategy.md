@@ -1,6 +1,6 @@
 # Test Strategy
 
-4-stage 모델 (`dev-staging → dev → rc → main`) + flag staged rollout 환경에서, *어떤 테스트가 어느 단계에서 도는가* 의 단일 source. 빠른 검사 = branch별 `*-pr-gate`, 지속 소킹 = `monitor-event-flow-*`/real-device/app AI review, RC 후보 판정 = `dev-rc-cut-gate`, 프로덕션 검증 = `deploy-android-*, deploy-ios-*` smoke + flag staged.
+4-stage 모델 (`dev-staging → dev → rc → main`) + flag staged rollout 환경에서, *어떤 테스트가 어느 단계에서 도는가* 의 단일 source. 빠른 검사 = branch별 `*-pr-gate`, 지속 소킹 = dev Supabase pg_cron event-flow/real-device/app AI review, RC 후보 판정 = `dev-rc-cut-gate`, 프로덕션 검증 = `deploy-android-*, deploy-ios-*` smoke + flag staged.
 
 ## 단계별 게이트
 
@@ -11,7 +11,7 @@
 | dev 머지 전 | `dev-pr-gate` (dev-staging-pr-gate 와 동일 — defensive) | < 10분 | dev-staging-dev-cut PR drop |
 | dev 머지 후 24h soak | `monitor-event-flow-*` + real-device/app AI review status writer | 24h | 실패 즉시 `dev-soak/*` failure status + release-blocker issue |
 | RC cut 직전 | `dev-rc-cut-gate` evaluator (24h run history + `dev-soak/*` status 확인) | 분 | `dev-rc-cut-pass` 미부여 |
-| rc 머지 전 (hotfix) | `rc-pr-gate` (pr-gate + mobile smoke) | < 15분 | hotfix PR drop |
+| rc 머지 전 (hotfix) | dev-staging-first fix cherry-pick PR + `rc-pr-gate` (pr-gate + mobile smoke) | < 15분 | hotfix PR drop |
 | main 머지 전 (rc → main) | `main-pr-gate` (pr-gate + `expand-migrate-contract` 재검증 + RC HEAD 의 `dev-rc-cut-pass` 확인 + `rc-main-cut-pass` marker 확인) | 분 | promotion PR 보류 |
 | rc → main PR | workflow auto-merge (모든 check 통과 시) | 분 | check 실패 시 PR hold + alert |
 | main deploy 후 | backend/web/mobile smoke + Sentry/Crashlytics 알람 임계 | 분 | rollback ([main-promotion.md](./main-promotion.md)) |
@@ -58,7 +58,7 @@ dev 에 들어간 latest HEAD 만 RC candidate 로 평가한다. 새 dev commit 
 
 | Signal | 실행자 | 실패 status | 성공 status |
 |--------|--------|-------------|-------------|
-| backend simulator | `monitor-event-flow-hourly`, `monitor-event-flow-daily` | `dev-soak/backend-simulator` failure 즉시 | `dev-rc-cut-gate` 가 run history 확인 후 success |
+| backend simulator | `deploy-dev-event-flow-cron` + pg_cron `dev-event-flow-simulator` | `dev-soak/backend-simulator` failure 즉시 | `dev-rc-cut-gate` 가 cron install + 1회 simulator tick run + failure status 확인 |
 | real device | Test Lab/실디바이스 workflow | `dev-soak/real-device` failure 즉시 | `dev-rc-cut-gate` 가 required signal 확인 후 success |
 | app AI review | AI agent | `dev-soak/app-ai-review` failure 즉시 | `dev-rc-cut-gate` 가 pass signal 확인 후 success |
 
@@ -67,16 +67,20 @@ dev 에 들어간 latest HEAD 만 RC candidate 로 평가한다. 새 dev commit 
 cut 직전 schedule/manual 로 실행한다. 통과 시 commit 에 GitHub status `dev-rc-cut-pass` 를 set 한다.
 
 - candidate age >= 24h
-- `monitor-event-flow-hourly` success run >= 20 since candidate
-- `monitor-event-flow-daily` success run >= 1 since candidate
+- candidate SHA 에서 `deploy-dev-event-flow-cron` success >= 1
+- `dev-soak/backend-simulator` failure status 없음
+- legacy hourly/daily 는 수동 smoke 로만 실행
 - candidate 의 최신 `dev-soak/*` status 가 failure 가 아님
 - real-device/app AI review required signal 충족
+- required success evidence 가 없으면 `unknown` 으로 보고 pass 금지. issue/failure 가 없다는 사실만으로 pass 하지 않음
 
 상세: [dev-pipeline.md](./dev-pipeline.md)
 
 ### rc-pr-gate
 
-RC 의 hotfix 만 받음. `pr-gate` + 추가 mobile smoke. 머지 시 `rc-post-merge-sync` 가 `_rc-NN` bump.
+RC 의 hotfix 만 받음. 기본은 dev-staging 에 먼저 머지된 fix commit/snapshot 의 cherry-pick PR 이다. `pr-gate` + 추가 mobile smoke. 머지 시 version bump commit 은 만들지 않고 `rc-deploy` 가 RC 환경을 재적용한다.
+
+`rc-main-cut-gate` 도 true evidence 기반이다. 마지막 RC commit 이후 5일 soak, required `rc-soak/*` success signal, pre-main validation, dev-staging-first hotfix lineage 가 모두 확인되어야 `rc-main-cut-pass` 를 쓴다.
 
 ### main-pr-gate
 

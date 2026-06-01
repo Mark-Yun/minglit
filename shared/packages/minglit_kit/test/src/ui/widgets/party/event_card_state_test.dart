@@ -23,6 +23,16 @@ void main() {
     partner: partner,
   );
 
+  Party partyWithTags(List<Tag> tags) => Party(
+    id: 'party-tagged',
+    partnerId: 'partner-1',
+    title: '태그 포함 파티',
+    createdAt: baseTime,
+    updatedAt: baseTime,
+    partner: partner,
+    tags: tags,
+  );
+
   Widget buildCard(
     Event event, {
     required DateTime currentTime,
@@ -238,6 +248,51 @@ void main() {
 
       expect(find.text(partner.name), findsOneWidget);
     });
+
+    testWidgets('tag badge tap calls onTagTap and keeps 3+overflow rendering', (
+      tester,
+    ) async {
+      final tappedTagNames = <String>[];
+      final event = Event(
+        id: 'e-tag-tap',
+        partyId: 'party-tagged',
+        startTime: baseTime,
+        endTime: baseTime.add(const Duration(hours: 3)),
+        createdAt: baseTime,
+        updatedAt: baseTime,
+        currentParticipants: 8,
+        party: partyWithTags([
+          const Tag(id: 'tag-1', name: '소개팅'),
+          const Tag(id: 'tag-2', name: '와인'),
+          const Tag(id: 'tag-3', name: '루프탑'),
+          const Tag(id: 'tag-4', name: '강남'),
+        ]),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: MinglitTheme.materialTheme,
+          home: Scaffold(
+            body: MinglitEventCard(
+              event: event,
+              currentTime: fiveDaysBefore,
+              onTagTap: (tag) => tappedTagNames.add(tag.name),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('#소개팅'), findsOneWidget);
+      expect(find.text('#와인'), findsOneWidget);
+      expect(find.text('#루프탑'), findsOneWidget);
+      expect(find.text('#+1'), findsOneWidget);
+
+      await tester.tap(find.text('#소개팅'));
+      await tester.pump();
+
+      expect(tappedTagNames, ['소개팅']);
+    });
   });
 
   // Fix #996: 카드 전체를 하나의 시맨틱 노드로 병합하여 스크린 리더가
@@ -288,7 +343,7 @@ void main() {
           matches,
           isNotEmpty,
           reason:
-              'tappable card must wrap with Semantics('
+              'tappable card must wrap with Semantics( '
               'label: "이벤트: ...", button: true, excludeSemantics: true)',
         );
         final wrapper = matches.first.widget as Semantics;

@@ -419,8 +419,9 @@ void main() {
         expect(find.text('매칭 결과'), findsOneWidget);
         expect(find.text('1명과 매칭되었어요!'), findsOneWidget);
         expect(find.text('김민지'), findsOneWidget);
-        expect(find.text('010-****-5678'), findsOneWidget);
-        expect(find.byIcon(Icons.favorite), findsWidgets);
+        expect(find.text('010-1234-5678'), findsOneWidget);
+        expect(find.byIcon(Icons.check_rounded), findsOneWidget);
+        expect(find.widgetWithText(ElevatedButton, '연락처 저장하기'), findsOneWidget);
       },
     );
 
@@ -440,12 +441,13 @@ void main() {
         }
 
         expect(find.text('매칭 결과'), findsOneWidget);
+        expect(find.textContaining('좋은 인연은 한번에 정해지지 않으니까요.'), findsOneWidget);
         expect(
-          find.text('이번엔 아쉽지만, 다음 기회에!'),
+          find.byIcon(Icons.sentiment_neutral),
           findsOneWidget,
         );
         expect(
-          find.byIcon(Icons.sentiment_neutral),
+          find.widgetWithText(ElevatedButton, '다음 이벤트 찾기'),
           findsOneWidget,
         );
       },

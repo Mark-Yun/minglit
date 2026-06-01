@@ -71,6 +71,7 @@ const APP_USER_MAIN_FLOW = `flowchart TB
   %% From MyTicketsPage (v2 — OngoingBanner stack hub).
   %% Empty state CTAs to PurchaseHistory / HomePage; banner footer actions go to 5 sheets (shared with EventNowBar).
   MyTicketsRoute -->|"tap banner body"| EventDetailRoute
+  MyTicketsRoute -->|"tap ticket QR"| TicketQRRoute
   MyTicketsRoute -->|"empty: 구매내역 보기"| PurchaseHistoryRoute
   MyTicketsRoute -->|"empty: 이벤트 둘러보기"| HomeRoute
   MyTicketsRoute -.->|"banner: checkIn / preview"| EventCheckInRoute
@@ -93,6 +94,10 @@ const APP_USER_MAIN_FLOW = `flowchart TB
   EventNowBar -.->|"matching"| EventMatchingRoute
   EventNowBar -.->|"results"| EventResultsRoute
   EventNowBar -.->|"ended"| EventReviewRoute
+
+  %% Purchase history detail / review flow.
+  PurchaseHistoryRoute -->|"tap purchase card"| PurchaseHistoryDetailRoute
+  PurchaseHistoryDetailRoute -->|"write event review"| EventApplicationReviewRoute
 `;
 
 // ---------------------------------------------------------------------------
@@ -110,6 +115,7 @@ const APP_PARTNER_ONBOARDING_FLOW = `flowchart LR
 const APP_PARTNER_MAIN_FLOW = `flowchart TB
   Start([Start]) --> HomeRoute
   HomeRoute -->|"view location guide"| LocationGuideRoute
+  HomeRoute -->|"tap notifications"| NotificationCenterRoute
   HomeRoute -->|"bottom nav"| ApplicationListRoute
   ApplicationListRoute -->|"tap event application"| EventApplicationDetailRoute
   ApplicationListRoute -->|"tap partner application"| ApplicationDetailRoute
@@ -122,16 +128,24 @@ const APP_PARTNER_MAIN_FLOW = `flowchart TB
   PartyListRoute -->|"create party"| PartyCreateRoute
   PartyListRoute -->|"tap party"| PartyDetailRoute
   PartyDetailRoute -->|"edit party"| PartyEditRoute
+  PartyDetailRoute -->|"edit party ticket"| PartyTicketEditRoute
   PartyDetailRoute -->|"create event"| EventCreateRoute
   PartyDetailRoute -->|"tap event"| EventDetailRoute
   EventDetailRoute -->|"tap hero (일정)"| EventEditRoute
   EventDetailRoute -->|"tap 참가 현황"| EventApplicationListRoute
   EventApplicationListRoute -->|"tap application card"| EventApplicationDetailRoute
+  EventApplicationListRoute -->|"tap pending review card"| EventApplicationReviewCarouselRoute
+  EventApplicationReviewCarouselRoute -->|"complete review queue"| EventApplicationReviewConfirmRoute
   EventDetailRoute -->|"create ticket"| TicketCreateRoute
   EventDetailRoute -->|"edit ticket"| TicketEditRoute
   PartyDetailRoute -->|"manage recurrence"| RecurrenceManagementRoute
   MoreRoute -->|"verifications"| VerificationManageRoute
   VerificationManageRoute -->|"create verification"| CreateVerificationRoute
+  MoreRoute -->|"notification settings"| NotificationSettingsRoute
+  MoreRoute -->|"start account deletion"| DeletionReasonRoute
+  DeletionReasonRoute -->|"select reason"| DeletionInfoRoute
+  DeletionInfoRoute -->|"confirm"| DeletionVerifyRoute
+  DeletionVerifyRoute -->|"verified"| DeletionCompleteRoute
   MoreRoute -->|"member management"| MemberListRoute
   MemberListRoute -->|"set permission"| MemberPermissionRoute
   MoreRoute -->|"account (/more/account)"| PartnerAccountManagementRoute
@@ -200,6 +214,7 @@ export function extractRoutes(chart: string): string[] {
  * Kept as a no-op for API stability.
  */
 export function withClicks(chart: string, _app: 'user' | 'partner'): string {
+  void _app;
   return chart;
 }
 
@@ -241,9 +256,9 @@ export function widgetNameFor(app: 'user' | 'partner', route: string): string | 
  * the partner index from claiming user-only specs.
  *
  * Default mapping rule: RouteName → snake_case basename + `_page` suffix.
- *   `EventDetailRoute` → `event_detail_page.html`
- *   `MyPageRoute`      → `my_page.html` (already ends with `_page`)
- *   `LoginRoute`       → `login_page.html`
+ *   `EventDetailRoute` → `event_detail_page/index.html`
+ *   `MyPageRoute`      → `my_page/index.html` (already ends with `_page`)
+ *   `LoginRoute`       → `login_page/index.html`
  *
  * Special cases (shared specs across apps, non-default basenames) →
  * ROUTE_DESIGN_OVERRIDES.
@@ -258,6 +273,7 @@ const KNOWN_SPEC_FILES: { user: ReadonlySet<string>; partner: ReadonlySet<string
     'deletion_reason_page',
     'deletion_verify_page',
     'event_application_wizard_page',
+    'event_application_review_page',
     'event_check_in_screen',
     'event_checked_in_screen',
     'event_detail_page',
@@ -275,6 +291,7 @@ const KNOWN_SPEC_FILES: { user: ReadonlySet<string>; partner: ReadonlySet<string
     'partner_events_page',
     'privacy_page',
     'purchase_history_page',
+    'purchase_history_detail_page',
     'search_page',
     'signup_consent_page',
     'tag_event_list_page',
@@ -288,8 +305,14 @@ const KNOWN_SPEC_FILES: { user: ReadonlySet<string>; partner: ReadonlySet<string
     'event_application_detail_page',
     'event_application_list_page',
     'event_application_manage_page',
+    'event_application_review_carousel_page',
+    'event_application_review_confirm_page',
     'event_create_page',
     'event_edit_page',
+    'deletion_complete_page',
+    'deletion_info_page',
+    'deletion_reason_page',
+    'deletion_verify_page',
     'location_guide_page',
     'more_page',
     'notification_list_screen',
@@ -398,7 +421,13 @@ export interface SubComponentSpec {
   widget: string;          // e.g. 'EventBottomTicketBar'
   parentRoute: string;     // e.g. 'EventDetailRoute' — must exist in route diagrams
   filePath: string;        // dart source (relative to repo root)
-  specBasename: string;    // public/specs/ filename without .html
+  specBasename: string;    // public/specs/<basename>/index.html folder basename
+}
+
+export interface StandaloneSpec {
+  widget: string;          // Spec title / surface name.
+  note: string;            // Why it is not a normal routed screen row.
+  specBasename: string;    // public/specs/<basename>/index.html folder basename
 }
 
 const SUB_COMPONENT_SPECS: { user: SubComponentSpec[]; partner: SubComponentSpec[] } = {
@@ -410,10 +439,22 @@ const SUB_COMPONENT_SPECS: { user: SubComponentSpec[]; partner: SubComponentSpec
       specBasename: 'event_bottom_ticket_bar',
     },
     {
+      widget: 'TicketSelectionSheet',
+      parentRoute: 'EventDetailRoute',
+      filePath: 'apps/app_user/lib/src/features/ticket/ui/ticket_selection_sheet.dart',
+      specBasename: 'ticket_selection_sheet',
+    },
+    {
       widget: 'EventNowBar',
       parentRoute: 'HomeRoute',
       filePath: 'apps/app_user/lib/src/features/home/widgets/event_now_bar.dart',
       specBasename: 'event_now_bar',
+    },
+    {
+      widget: 'EventOngoingBanner',
+      parentRoute: 'MyTicketsRoute',
+      filePath: 'apps/app_user/lib/src/features/tickets/widgets/event_ongoing_banner.dart',
+      specBasename: 'event_ongoing_banner',
     },
     {
       widget: 'MinglitEventCard',
@@ -425,9 +466,31 @@ const SUB_COMPONENT_SPECS: { user: SubComponentSpec[]; partner: SubComponentSpec
   partner: [],
 };
 
+const STANDALONE_SPECS: { user: StandaloneSpec[]; partner: StandaloneSpec[] } = {
+  user: [
+    {
+      widget: 'EventMatchingResultsScreen',
+      note: 'spec-only · route TBD',
+      specBasename: 'event_matching_results_screen',
+    },
+  ],
+  partner: [
+    {
+      widget: 'PartnerGuide',
+      note: 'spec-only · route TBD',
+      specBasename: 'partner_guide',
+    },
+  ],
+};
+
 /** Sub-component specs for an app. Used by /screens to render nested rows. */
 export function subComponentsFor(app: 'user' | 'partner'): SubComponentSpec[] {
   return SUB_COMPONENT_SPECS[app];
+}
+
+/** Spec-only surfaces that have no concrete GoRoute row yet. */
+export function standaloneSpecsFor(app: 'user' | 'partner'): StandaloneSpec[] {
+  return STANDALONE_SPECS[app];
 }
 
 /** RouteName → snake_case spec basename (without .html). Default rule only. */
@@ -450,7 +513,7 @@ export function designUrlFor(app: 'user' | 'partner', route: string): string | n
   const override = ROUTE_DESIGN_OVERRIDES[`${app}-${route}`];
   if (override) return override;
   const basename = deriveSpecBasename(route);
-  return KNOWN_SPEC_FILES[app].has(basename) ? `/specs/${basename}.html` : null;
+  return KNOWN_SPEC_FILES[app].has(basename) ? `/specs/${basename}/index.html` : null;
 }
 
 /**

@@ -2,7 +2,7 @@ name: sync-graphify
 
 on:
   push:
-    branches: [dev]
+    branches: [dev-staging]
     paths-ignore:
       - 'graphify-out/**'
   schedule:
@@ -18,11 +18,12 @@ permissions:
 
 jobs:
   update:
+    if: github.event_name != 'push' || github.ref == 'refs/heads/dev-staging'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: dev
+          ref: dev-staging
           fetch-depth: 0
           persist-credentials: false
 
@@ -32,6 +33,14 @@ jobs:
         with:
           fallback-app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
           fallback-private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
+
+      - name: Guard target branch
+        run: |
+          branch="$(git branch --show-current)"
+          if [ "${branch}" != "dev-staging" ]; then
+            echo "::error::Graphify sync is allowed to commit only on dev-staging; checked out ${branch}."
+            exit 1
+          fi
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -60,7 +69,7 @@ jobs:
             git remote set-url origin "https://x-access-token:${RELEASE_BOT_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
             git add graphify-out/
             git commit -m "chore(graphify): auto-update [skip ci]"
-            git push origin HEAD:dev
+            git push origin HEAD:dev-staging
           else
             echo "No graph changes"
           fi

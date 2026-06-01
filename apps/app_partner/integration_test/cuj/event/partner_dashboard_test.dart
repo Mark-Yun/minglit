@@ -7,12 +7,8 @@
 //   - CUJ 1-1 ~ 1-5 (홈 탭 — 인사/칩/성과)
 //   - CUJ 2-1 ~ 2-5 (EventActionCard 4개 phase + 빈 상태)
 //   - CUJ 3-1 ~ 3-3 (신청관리 탭)
-//   - CUJ 4-2, 4-3 (체크인 탭 — 카메라 불필요 시나리오)
-//   - CUJ 5-1, 5-2 (온보딩 스텝 가이드)
-//
-// 미커버 (하드웨어/네비게이션 의존):
-//   - CUJ 4-1, 4-4: QR 스캐너 화면 — 카메라 접근 필요
-//   - CUJ 5-3: 첫 이벤트 생성 → 대시보드 전환 — 전체 라우팅 스택 필요
+//   - CUJ 4-1 ~ 4-4 (체크인 탭 분기 + 스캐너 다크 테마)
+//   - CUJ 5-1 ~ 5-3 (온보딩 스텝 가이드)
 //
 // 설계 결정:
 //   - PartnerHomePage: partnerDashboardControllerProvider 를
@@ -27,6 +23,7 @@
 
 import 'package:app_partner/src/features/application/event_application_manage_page.dart';
 import 'package:app_partner/src/features/checkin/checkin_placeholder_page.dart';
+import 'package:app_partner/src/features/checkin/qr_scanner_screen.dart';
 import 'package:app_partner/src/features/home/partner_dashboard_controller.dart';
 import 'package:app_partner/src/features/home/partner_home_coordinator.dart';
 import 'package:app_partner/src/features/home/partner_home_page.dart';
@@ -37,6 +34,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../_engine/cuj_test.dart';
@@ -49,6 +47,62 @@ class _MockEventRepository extends Mock implements EventRepository {}
 
 class _MockPartnerHomeCoordinator extends Mock
     implements PartnerHomeCoordinator {}
+
+class _FakeMobileScannerPlatform extends MobileScannerPlatform {
+  @override
+  Stream<BarcodeCapture?> get barcodesStream => const Stream.empty();
+
+  @override
+  Stream<TorchState> get torchStateStream => const Stream.empty();
+
+  @override
+  Stream<double> get zoomScaleStateStream => const Stream.empty();
+
+  @override
+  Widget buildCameraView() => const SizedBox.shrink();
+
+  @override
+  Future<MobileScannerViewAttributes> start(StartOptions startOptions) async {
+    return const MobileScannerViewAttributes(
+      cameraDirection: CameraFacing.back,
+      currentTorchMode: TorchState.unavailable,
+      size: Size.zero,
+    );
+  }
+
+  @override
+  Future<void> stop() async {}
+
+  @override
+  Future<void> pause() async {}
+
+  @override
+  Future<void> dispose() async {}
+
+  @override
+  Future<void> toggleTorch() async {}
+
+  @override
+  Future<Set<CameraLensType>> getSupportedLenses() async => {};
+
+  @override
+  Future<void> updateScanWindow(Rect? window) async {}
+
+  @override
+  Future<void> resetZoomScale() async {}
+
+  @override
+  Future<void> setZoomScale(double zoomScale) async {}
+
+  @override
+  Future<void> setFocusPoint(Offset position) async {}
+
+  @override
+  Future<BarcodeCapture?> analyzeImage(
+    String path, {
+    List<BarcodeFormat> formats = const <BarcodeFormat>[],
+  }) async => null;
+}
 
 // ---------------------------------------------------------------------------
 // Fake providers
@@ -157,6 +211,19 @@ List<dynamic> _homeBase({
   partnerHomeCoordinatorProvider.overrideWith((ref) => coordinator),
 ];
 
+Future<void> _pumpUntilFound(
+  WidgetTester tester,
+  Finder finder, {
+  Duration timeout = const Duration(seconds: 8),
+  Duration step = const Duration(milliseconds: 200),
+}) async {
+  final maxPumps = timeout.inMilliseconds ~/ step.inMilliseconds;
+  for (var i = 0; i < maxPumps; i++) {
+    if (finder.evaluate().isNotEmpty) return;
+    await tester.pump(step);
+  }
+}
+
 /// 이벤트가 있는 홈 기본 상태.
 PartnerDashboardState _homeStateWithEvents({
   int pendingReviewCount = 0,
@@ -186,6 +253,16 @@ void main() {
 
   late _MockPartnerHomeCoordinator coordinator;
   late _MockEventRepository mockEventRepo;
+  late MobileScannerPlatform originalScannerPlatform;
+
+  setUpAll(() {
+    originalScannerPlatform = MobileScannerPlatform.instance;
+    MobileScannerPlatform.instance = _FakeMobileScannerPlatform();
+  });
+
+  tearDownAll(() {
+    MobileScannerPlatform.instance = originalScannerPlatform;
+  });
 
   setUp(() {
     coordinator = _MockPartnerHomeCoordinator();
@@ -702,8 +779,33 @@ void main() {
   // CUJ 4: 체크인 탭 (카메라 불필요 시나리오만)
   // -------------------------------------------------------------------------
 
-  // CUJ 4-1 (1 event → 즉시 스캐너): 카메라 접근 필요 — 별도 디바이스 테스트 필요
-  // CUJ 4-4 (체크인 화면 다크 배경): 카메라 스캐너 의존 — 별도 테스트 필요
+  cujGroup('4-1', '체크인 탭 진입 — 오늘 이벤트 1개면 즉시 스캐너', () {
+    final oneEvent = _makeEvent(
+      title: '오늘의 이벤트',
+      startTime: _now.subtract(const Duration(minutes: 30)),
+      endTime: _now.add(const Duration(hours: 2)),
+    );
+
+    cujCase(
+      'happy: 오늘 이벤트 1건 — 선택 화면 없이 스캐너 타이틀 노출',
+      app: const CheckinPlaceholderPage(),
+      overrides: () => [
+        currentPartnerInfoProvider.overrideWith(
+          (ref) async => _makePartner(),
+        ),
+        todayEventsProvider.overrideWith(
+          (ref, partnerId) async => [oneEvent],
+        ),
+      ],
+      afterPump: const Duration(seconds: 2),
+      body: (t) async {
+        await _pumpUntilFound(t, find.byType(QRScannerScreen));
+        expect(find.byType(QRScannerScreen), findsOneWidget);
+        expect(find.text('티켓 스캔'), findsOneWidget);
+        expect(find.textContaining('이벤트를 선택하세요'), findsNothing);
+      },
+    );
+  });
 
   cujGroup('4-2', '오늘 이벤트 2개 이상 — 선택 리스트', () {
     final events = [
@@ -794,6 +896,84 @@ void main() {
     );
   });
 
+  cujGroup('4-4', '체크인 화면 다크 배경 (앱 전체는 라이트 유지)', () {
+    final oneEvent = _makeEvent(
+      title: '다크 스캐너 테스트',
+      startTime: _now.subtract(const Duration(minutes: 10)),
+      endTime: _now.add(const Duration(hours: 1)),
+    );
+    final anotherEvent = _makeEvent(
+      id: 'event-2',
+      title: '복귀 검증 이벤트',
+      startTime: _now.subtract(const Duration(minutes: 5)),
+      endTime: _now.add(const Duration(hours: 2)),
+    );
+
+    cujCase(
+      'happy: 스캐너 라우트에 다크 Theme 적용',
+      app: const CheckinPlaceholderPage(),
+      overrides: () => [
+        currentPartnerInfoProvider.overrideWith(
+          (ref) async => _makePartner(),
+        ),
+        todayEventsProvider.overrideWith(
+          (ref, partnerId) async => [oneEvent],
+        ),
+      ],
+      afterPump: const Duration(seconds: 2),
+      body: (t) async {
+        await _pumpUntilFound(t, find.byType(QRScannerScreen));
+        final hasDarkTheme = t
+            .widgetList<Theme>(find.byType(Theme))
+            .any((w) => w.data.brightness == Brightness.dark);
+        expect(hasDarkTheme, isTrue);
+      },
+    );
+
+    cujCase(
+      'edge: 스캐너 진입 후 복귀해도 체크인 외 화면은 라이트 테마 유지',
+      app: const CheckinPlaceholderPage(),
+      overrides: () => [
+        currentPartnerInfoProvider.overrideWith(
+          (ref) async => _makePartner(),
+        ),
+        todayEventsProvider.overrideWith(
+          (ref, partnerId) async => [oneEvent, anotherEvent],
+        ),
+      ],
+      body: (t) async {
+        expect(find.text('이벤트를 선택하세요'), findsOneWidget);
+
+        final rootBefore = t.widget<MaterialApp>(
+          find.byType(MaterialApp).first,
+        );
+        expect(rootBefore.theme?.brightness, Brightness.light);
+
+        await t.tap(find.byType(Card).first);
+        await t.pump(const Duration(seconds: 2));
+        await _pumpUntilFound(t, find.byType(QRScannerScreen));
+
+        final hasDarkThemeOnScanner = t
+            .widgetList<Theme>(find.byType(Theme))
+            .any((w) => w.data.brightness == Brightness.dark);
+        expect(hasDarkThemeOnScanner, isTrue);
+
+        expect(find.byType(CloseButton), findsOneWidget);
+        await t.tap(find.byType(CloseButton));
+        await t.pump(const Duration(milliseconds: 600));
+        await _pumpUntilFound(t, find.text('이벤트를 선택하세요'));
+
+        expect(find.text('이벤트를 선택하세요'), findsOneWidget);
+        final rootAfter = t.widget<MaterialApp>(find.byType(MaterialApp).first);
+        expect(rootAfter.theme?.brightness, Brightness.light);
+        final hasDarkThemeAfterBack = t
+            .widgetList<Theme>(find.byType(Theme))
+            .any((w) => w.data.brightness == Brightness.dark);
+        expect(hasDarkThemeAfterBack, isFalse);
+      },
+    );
+  });
+
   // -------------------------------------------------------------------------
   // CUJ 5: 온보딩 스텝 가이드
   // -------------------------------------------------------------------------
@@ -863,5 +1043,21 @@ void main() {
     );
   });
 
-  // CUJ 5-3 (첫 이벤트 생성 → 일반 대시보드 전환): 전체 앱 라우팅 필요 — 별도 e2e 테스트 필요
+  cujGroup('5-3', '첫 이벤트 생성 → 일반 대시보드 전환', () {
+    cujCase(
+      'happy: hasAnyEvents=true 이면 온보딩 가이드 숨김 + 일반 대시보드 노출',
+      app: const PartnerHomePage(),
+      overrides: () => _homeBase(
+        dashboardState: _homeStateWithEvents(
+          recruitingEvents: [_makeEvent(title: '방금 만든 이벤트')],
+          totalPartyCount: 1,
+        ),
+        coordinator: coordinator,
+      ),
+      body: (t) async {
+        expect(find.text('모집 중인 이벤트'), findsWidgets);
+        expect(find.text('첫 이벤트 만들기'), findsNothing);
+      },
+    );
+  });
 }

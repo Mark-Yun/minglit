@@ -23,7 +23,7 @@
 ├── 디자인 토큰 / 시각 회귀 감지?             → Layer 2b (Alchemist golden)
 ├── repository / controller / util / model?   → Layer 1 (unit)
 ├── 매시간 실 DB 데이터 이상 감시?            → Layer 6 (DB monitor RPC)
-└── 파이프라인 연쇄 동작 (tick) 감시?         → Layer 7 (event-flow-simulator)
+└── dev 환경에서 실제 EF flow 장시간 감시?    → Layer 7 (event-flow-simulator)
 ```
 
 **복수 Layer 필요 사례**:
@@ -210,7 +210,7 @@ void main() {
 ### MAY
 
 - [ ] **Layer 6 invariant** — 새 테이블이 "절대 N 초과하면 안 된다" 같은 런타임 제약을 가질 때
-- [ ] **Layer 7 tick** — 새 파이프라인 단계가 시간 기반 trigger 에 의존할 때
+- [ ] **Layer 7 event-flow** — 새 flow 가 여러 EF 를 거쳐 dev soak 에서 emerge 할 때
 
 ---
 
@@ -227,7 +227,7 @@ void main() {
 | 4 (pgTAP) | `supabase/tests/database/*.sql` | 80 |
 | 5 (Deno EF) | `supabase/functions/**/*_test.ts` | 75 |
 | 6 (DB monitor) | `check_db_invariants()` RPC | 1 RPC (매시간) |
-| 7 (tick simulator) | `event-flow-simulator` EF + 2 workflows | 매시간 + 매일 |
+| 7 (event-flow simulator) | `event-flow-simulator` EF + dev pg_cron `dev-event-flow-simulator` | 5분마다 + 24h soak |
 
 **핵심 갭**:
 - 🔴 **Layer 3 CUJ 이관 0%** — 37 widget flow 를 Patrol 로 전환 필요 (#1586 Phase D-2)
@@ -273,8 +273,11 @@ deno test --allow-all supabase/functions/payment-verify/
 # Layer 6 — 수동 실행
 psql -c "SELECT * FROM check_db_invariants();"
 
-# Layer 7 — workflow_dispatch 로 수동 trigger
-gh workflow run monitor-daily-lifecycle.yml --ref dev
+# Layer 7 — target workflow (구현 후) 수동 trigger
+gh workflow run monitor-event-flow-distributed.yml --ref dev
+
+# Legacy manual smoke
+gh workflow run monitor-event-flow-hourly.yml --ref dev
 ```
 
 ---
@@ -314,7 +317,7 @@ gh workflow run monitor-daily-lifecycle.yml --ref dev
 추가 워크플로우:
 - `monitor-patrol-e2e.yml` — Layer 3 (주 1회 예정, 현재 런 0건)
 - `monitor-db-invariants.yml` — Layer 6 (매시간)
-- `monitor-daily-lifecycle.yml` / `hourly-user-activity.yml` — Layer 7
+- `monitor-event-flow-*` — Layer 7
 
 ---
 

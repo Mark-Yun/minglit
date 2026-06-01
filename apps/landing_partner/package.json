@@ -1,6 +1,6 @@
 {
   "name": "landing_partner",
-  "version": "26.05.2757-dev-staging",
+  "version": "26.06.01-dev-staging",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3003",
@@ -9,7 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@statsig/react-bindings": "^3.33.0",
+    "@statsig/react-bindings": "^3.33.1",
     "next": "16.2.6",
     "react": "19.2.6",
     "react-dom": "19.2.6"

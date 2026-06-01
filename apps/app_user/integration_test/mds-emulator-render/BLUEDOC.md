@@ -4,7 +4,7 @@ MDS spec 의 각 화면을 실제 Flutter 앱으로 에뮬레이터에서 렌더
 
 ## 왜 있나
 
-이전 alchemist 골든 테스트가 실제 UI defect 를 못 잡았다 (블록 폰트, 실 viewport 부재, 실제 navigation 누락). 에뮬레이터 위 mock 주입 렌더링이 동일 결정성을 유지하면서 실 폰트·viewport·전환을 모두 잡는다.
+이전 위젯 단위 스냅샷 테스트가 실제 UI defect 를 못 잡았다 (블록 폰트, 실 viewport 부재, 실제 navigation 누락). 에뮬레이터 위 mock 주입 렌더링이 동일 결정성을 유지하면서 실 폰트·viewport·전환을 모두 잡는다.
 
 ## 트리거
 
@@ -41,15 +41,30 @@ Phase 2 (TODO, follow-up PR) — `_manifest.yaml`, coverage report, scaffold 결
 | `deletion_info_page` | no-reason · with-reason |
 | `deletion_reason_page` | initial · dark |
 | `deletion_verify_page` | email-user · social-user · dark |
+| `event_card` | normal · today · sold-out · ended |
+| `event_application_review_page` | loading · step-1 · step-2 · submit-ready |
+| `event_application_wizard_page` | intro · form · confirmation · submitting |
+| `event_check_in_screen` | loading · ready · processing · success |
+| `event_checked_in_screen` | default · loading · error |
+| `event_matching_screen` | loading · waiting · matched · timeout |
+| `event_results_screen` | loading · results · empty |
+| `event_review_screen` | loading · writable · submitted |
 | `home_page` | default · guest · loading · feed-empty · error |
+| `identity_verification_screen` | loading · consent-sheet · error-retry · dark |
 | `login_page` | 기본 |
+| `my_tickets_page` | active-banners · empty · logged-out |
 | `notification_list_screen` | loaded · empty |
 | `notification_settings_screen` | default |
+| `partner_detail_page` | default · loading · error · not-found · empty-events |
+| `partner_events_page` | default · empty-events · loading · error |
 | `privacy_page` | loading · loaded · dark |
+| `purchase_history_page` | default · empty · loading · error |
+| `purchase_history_detail_page` | default · cancel-disabled · refunded · payment-failed · loading · error |
 | `search_page` | idle · results · empty |
 | `event_now_bar` | waiting · check-in-ready · checked-in · matching · results · ended · offline |
 | `event_ongoing_banner` | 8 phases + dark |
 | `signup_consent_page` | loading · default · required-only · all · dark |
+| `tag_event_list_page` | default · empty · loading · error |
 | `ticket_qr_screen` | with-token · not-found · dark |
 
 ## 폴더 컨벤션
@@ -66,4 +81,4 @@ MDS spec 디렉토리명과 동일 (per-screen, snake_case). 화면당 `builder.
 - [상위 BLUEDOC](../BLUEDOC.md) · 페어 워크플로우: `sync-mds-mockups.yml` (디자인 PNG)
 
 ---
-_Reviewed: 2026-05-21 07:00_
+_Reviewed: 2026-05-31 18:48_

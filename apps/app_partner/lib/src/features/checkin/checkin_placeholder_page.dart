@@ -124,7 +124,7 @@ class _CheckinSelectionPage extends StatelessWidget {
               children: [
                 Icon(
                   Icons.qr_code_scanner,
-                  size: MinglitIconSize.xlarge * 2,
+                  size: MinglitIconSize.hero,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
                 const SizedBox(height: MinglitSpacing.medium),

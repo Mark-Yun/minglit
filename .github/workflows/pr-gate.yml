@@ -13,6 +13,11 @@ on:
         required: false
         type: string
         default: 'dev'
+      run_cuj_integration:
+        description: 'Run emulator CUJ integration jobs when app/kit paths changed'
+        required: false
+        type: boolean
+        default: true
 
 concurrency:
   # Branch-specific wrappers own the user-facing required check name.
@@ -21,11 +26,12 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # Consolidated fast read-only static checks: 6 verifications that previously each
-  # ran in its own ubuntu-latest job (migration version uniqueness + same-day gap
-  # warning, env-manifest ↔ EnvKeyStore drift, workflow YAML parse validity,
-  # androidx.test runner/orchestrator version alignment, cross-feature import
-  # baseline, BLUEDOC freshness).
+  # Consolidated fast read-only static checks that previously each ran in its own
+  # ubuntu-latest job: migration version uniqueness + same-day gap warning,
+  # env-manifest ↔ EnvKeyStore drift, workflow YAML parse validity, workflow
+  # contract checks, androidx.test runner/orchestrator version alignment,
+  # cross-feature import baseline, BLUEDOC freshness, and dev-staging PR issue
+  # lifecycle intent.
   #
   # Why merge: each separate job paid runner startup + actions/checkout overhead
   # (~10-15s × 6 = ~70s of Actions minutes per PR). Combined into one job with a
@@ -43,6 +49,12 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0  # BLUEDOC freshness needs history for base-ref diff
+
+      - name: Check PR issue reference
+        if: ${{ !cancelled() }}
+        env:
+          PR_GATE_STAGE: ${{ inputs.stage }}
+        run: bash .github/scripts/check-pr-issue-reference.sh
 
       - name: Check duplicate migration versions
         if: ${{ !cancelled() }}
@@ -99,6 +111,18 @@ jobs:
           fi
           echo "✅ All workflow YAML files are valid"
 
+      - name: Check Android deploy release archive contract
+        if: ${{ !cancelled() }}
+        run: python3 .github/scripts/check-android-deploy-workflow-contract.py
+
+      - name: Check dev soak workflow contract
+        if: ${{ !cancelled() }}
+        run: python3 .github/scripts/check-dev-soak-workflow-contract.py
+
+      - name: Check dev cut workflow contract
+        if: ${{ !cancelled() }}
+        run: python3 .github/scripts/check-dev-cut-workflow-contract.py
+
       - name: Verify androidx.test runner/orchestrator version alignment
         if: ${{ !cancelled() }}
         # Fix #1780: runner와 orchestrator는 동일 major.minor 계열이어야 함 — Gradle
@@ -151,6 +175,7 @@ jobs:
       app_user: ${{ steps.filter.outputs.app_user }}
       app_partner: ${{ steps.filter.outputs.app_partner }}
       minglit_kit: ${{ steps.filter.outputs.minglit_kit }}
+      ios_connectivity_plus_cap: ${{ steps.filter.outputs.ios_connectivity_plus_cap }}
       demo_android: ${{ steps.filter.outputs.demo_android }}
       mds_core: ${{ steps.filter.outputs.mds_core }}
       app_user_or_kit: ${{ steps.filter.outputs.app_user == 'true' || steps.filter.outputs.minglit_kit == 'true' || steps.filter.outputs.mds_core == 'true' }}
@@ -189,6 +214,14 @@ jobs:
           minglit_kit:
             - 'shared/packages/minglit_kit/**'
             - 'shared/packages/**'
+          ios_connectivity_plus_cap:
+            - 'pubspec.yaml'
+            - 'pubspec.lock'
+            - 'apps/app_user/pubspec.yaml'
+            - 'apps/app_partner/pubspec.yaml'
+            - 'shared/packages/minglit_kit/pubspec.yaml'
+            - '.github/scripts/check-ios-connectivity-plus-cap.sh'
+            - '.github/workflows/pr-gate.yml'
           demo_android:
             - '.github/workflows/pr-gate.yml'
             - 'pubspec.yaml'
@@ -245,14 +278,41 @@ jobs:
             - 'supabase/functions/**/.npmrc'
             - 'supabase/deno.json'
 
+  guard-ios-connectivity-plus-cap:
+    name: guard-ios-connectivity-plus-cap
+    needs: changes
+    if: ${{ needs.changes.outputs.ios_connectivity_plus_cap == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref || github.ref }}
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9'  # Fix #2640: flutter_quill 11.5.0 incompatible with Flutter 3.44.0
+          cache: true
+      - name: Cache pub packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-ios-connectivity-plus-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Guard iOS connectivity_plus cap
+        run: bash .github/scripts/check-ios-connectivity-plus-cap.sh
+
   # App CI (User + Partner)
   test-flutter-apps:
-    name: test-app-unit-widget-golden
+    name: test-app-unit-widget-integration
     needs: changes
     if: ${{ needs.changes.outputs.app_user == 'true' || needs.changes.outputs.app_partner == 'true' || needs.changes.outputs.minglit_kit == 'true' || needs.changes.outputs.mds_core == 'true' }}
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       checks: write
     strategy:
       fail-fast: false
@@ -335,68 +395,6 @@ jobs:
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' && (matrix.app == 'app_user' || matrix.app == 'app_partner') }}
         run: flutter test test/integration/
         working-directory: ${{ matrix.directory }}
-      - name: Golden Test (comparison)
-        id: golden_compare
-        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
-        continue-on-error: true
-        run: |
-          # Alchemist CI mode: compare against committed CI goldens (Ahem font).
-          # Exit 79 = no tests matched the tag.
-          set +e
-          flutter test --dart-define=CI=true --tags golden
-          rc=$?
-          set -e
-          if [ "$rc" -eq 79 ]; then exit 0; fi
-          exit "$rc"
-        working-directory: ${{ matrix.directory }}
-      - name: Upload golden failures
-        if: ${{ steps.golden_compare.outcome == 'failure' }}
-        uses: actions/upload-artifact@v7
-        continue-on-error: true
-        with:
-          name: golden-failures-${{ matrix.app }}
-          path: ${{ matrix.directory }}/test/**/failures/
-          retention-days: 14
-      - name: Regenerate goldens
-        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
-        run: |
-          set +e
-          flutter test --dart-define=CI=true --tags golden --update-goldens
-          rc=$?
-          set -e
-          if [ "$rc" -eq 79 ]; then exit 0; fi
-          exit "$rc"
-        working-directory: ${{ matrix.directory }}
-      - name: Auto-commit updated goldens
-        if: ${{ needs.changes.outputs[matrix.change_key] == 'true' && github.event_name == 'pull_request' }}
-        env:
-          PR_BRANCH: ${{ github.head_ref }}
-          # PAT injected only here, not during pub get/analyze/test above.
-          GH_PAT: ${{ secrets.GH_PAT_VERSION_BUMP }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          # || true: exit 128 when no goldens/ci/** files exist is not an error
-          git add '**/goldens/ci/**' 2>/dev/null || true
-          if git diff --cached --quiet; then
-            echo "No golden changes to commit"
-          else
-            git commit -m "chore(golden): update CI goldens on Linux runner [skip ci]"
-            git remote set-url origin "https://x-access-token:${GH_PAT}@github.com/${GITHUB_REPOSITORY}.git"
-            for i in 1 2 3; do
-              git pull --rebase origin "${PR_BRANCH}" 2>/dev/null || true
-              git push origin "HEAD:${PR_BRANCH}" && break
-              echo "Push attempt $i failed, retrying in 5s..."
-              sleep 5
-            done
-            git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
-          fi
-      - name: Fail if golden comparison detected mismatch
-        if: ${{ steps.golden_compare.outcome == 'failure' }}
-        run: |
-          echo "Golden comparison step detected mismatches."
-          echo "Updated goldens have been auto-committed for review."
-          exit 1
       - name: Test Report
         uses: dorny/test-reporter@v3
         if: ${{ (success() || failure()) && needs.changes.outputs[matrix.change_key] == 'true' }}
@@ -671,6 +669,9 @@ jobs:
         continue-on-error: true
       - run: npm run lint
       - run: npm run build
+      - name: Build from repo root
+        working-directory: .
+        run: ./apps/mds/docs/node_modules/.bin/next build apps/mds/docs
 
   # MDS Icons CI — flutter analyze + npm build (codegen)
   lint-mds-icons:
@@ -1047,7 +1048,7 @@ jobs:
   test-integration-app-user-cuj:
     name: cuj-integration-user
     needs: changes
-    if: needs.changes.outputs.app_user_or_kit == 'true'
+    if: inputs.run_cuj_integration && needs.changes.outputs.app_user_or_kit == 'true'
     uses: ./.github/workflows/shared-cuj-integration.yml
     with:
       app-name: user
@@ -1056,7 +1057,7 @@ jobs:
   test-integration-app-partner-cuj:
     name: cuj-integration-partner
     needs: changes
-    if: needs.changes.outputs.app_partner_or_kit == 'true'
+    if: inputs.run_cuj_integration && needs.changes.outputs.app_partner_or_kit == 'true'
     uses: ./.github/workflows/shared-cuj-integration.yml
     with:
       app-name: partner

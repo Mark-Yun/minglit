@@ -1,6 +1,6 @@
 name: minglit_kit
 description: "A new Flutter package project."
-version: 26.05.2757-dev-staging
+version: 26.06.01-dev-staging
 resolution: workspace
 publish_to: 'none'
 environment:
@@ -11,7 +11,8 @@ dependencies:
   app_settings: ^7.0.0
   async: ^2.13.0
   battery_plus: ^7.0.0
-  connectivity_plus: ^7.1.1
+  # Fix #2777/#2778: connectivity_plus 7.1.x requires Xcode 26.1.1 for NWPath.isUltraConstrained.
+  connectivity_plus: ">=7.0.0 <7.1.0"
   crypto: ^3.0.5
   cryptography: ^2.9.0
   # Fix #1111: device_info_plus 12.4.0 uses isiOSAppOnVision (iOS 16+ SDK) without availability guard — cap below 12.4.0

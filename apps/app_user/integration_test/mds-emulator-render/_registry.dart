@@ -8,8 +8,6 @@ import '_engine/builder.dart';
 import '_engine/catalog.dart';
 import 'account_management_page/account_management_page_test.dart'
     as account_management_page;
-import 'event_bottom_ticket_bar/event_bottom_ticket_bar_test.dart'
-    as event_bottom_ticket_bar;
 import 'auth_callback_page/auth_callback_page_test.dart' as auth_callback_page;
 import 'blocked_partners_page/blocked_partners_page_test.dart'
     as blocked_partners_page;
@@ -20,20 +18,50 @@ import 'deletion_reason_page/deletion_reason_page_test.dart'
     as deletion_reason_page;
 import 'deletion_verify_page/deletion_verify_page_test.dart'
     as deletion_verify_page;
+import 'event_application_review_page/event_application_review_page_test.dart'
+    as event_application_review_page;
+import 'event_application_wizard_page/event_application_wizard_page_test.dart'
+    as event_application_wizard_page;
+import 'event_check_in_screen/event_check_in_screen_test.dart'
+    as event_check_in_screen;
+import 'event_checked_in_screen/event_checked_in_screen_test.dart'
+    as event_checked_in_screen;
+import 'event_card/event_card_test.dart' as event_card;
+import 'event_bottom_ticket_bar/event_bottom_ticket_bar_test.dart'
+    as event_bottom_ticket_bar;
+import 'event_matching_screen/event_matching_screen_test.dart'
+    as event_matching_screen;
 import 'event_now_bar/event_now_bar_test.dart' as event_now_bar;
 import 'event_ongoing_banner/event_ongoing_banner_test.dart'
     as event_ongoing_banner;
+import 'event_results_screen/event_results_screen_test.dart'
+    as event_results_screen;
+import 'event_review_screen/event_review_screen_test.dart'
+    as event_review_screen;
 import 'home_page/home_page_test.dart' as home_page;
+import 'identity_verification_screen/identity_verification_screen_test.dart'
+    as identity_verification_screen;
 import 'login_page/login_page_test.dart' as login_page;
 import 'my_page/my_page_test.dart' as my_page;
+import 'my_tickets_page/my_tickets_page_test.dart' as my_tickets_page;
 import 'notification_list_screen/notification_list_screen_test.dart'
     as notification_list_screen;
 import 'notification_settings_screen/notification_settings_screen_test.dart'
     as notification_settings_screen;
+import 'partner_detail_page/partner_detail_page_test.dart'
+    as partner_detail_page;
+import 'partner_events_page/partner_events_page_test.dart'
+    as partner_events_page;
 import 'privacy_page/privacy_page_test.dart' as privacy_page;
+import 'purchase_history_page/purchase_history_page_test.dart'
+    as purchase_history_page;
+import 'purchase_history_detail_page/purchase_history_detail_page_test.dart'
+    as purchase_history_detail_page;
 import 'search_page/search_page_test.dart' as search_page;
 import 'signup_consent_page/signup_consent_page_test.dart'
     as signup_consent_page;
+import 'tag_event_list_page/tag_event_list_page_test.dart'
+    as tag_event_list_page;
 import 'ticket_qr_screen/ticket_qr_screen_test.dart' as ticket_qr_screen;
 
 /// 모든 cataloged 화면의 명시적 list. 새 화면 추가 시 본 list 에 추가.
@@ -46,16 +74,31 @@ final List<MdsCatalog<MdsScreenBuilder<dynamic>>> allCatalogs = [
   deletion_info_page.catalogWithReason,
   deletion_reason_page.catalog,
   deletion_verify_page.catalog,
+  event_application_review_page.catalog,
+  event_application_wizard_page.catalog,
+  event_check_in_screen.catalog,
+  event_checked_in_screen.catalog,
+  event_card.catalog,
   event_bottom_ticket_bar.catalog,
+  event_matching_screen.catalog,
   event_now_bar.catalog,
   event_ongoing_banner.catalog,
+  event_results_screen.catalog,
+  event_review_screen.catalog,
   home_page.catalog,
+  identity_verification_screen.catalog,
   login_page.catalog,
+  my_tickets_page.catalog,
   my_page.catalog,
   notification_list_screen.catalog,
   notification_settings_screen.catalog,
+  partner_detail_page.catalog,
+  partner_events_page.catalog,
   privacy_page.catalog,
+  purchase_history_page.catalog,
+  purchase_history_detail_page.catalog,
   search_page.catalog,
   signup_consent_page.catalog,
+  tag_event_list_page.catalog,
   ticket_qr_screen.catalog,
 ];

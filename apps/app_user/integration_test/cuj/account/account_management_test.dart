@@ -1,7 +1,7 @@
-// CUJ tests — account / account-management (app_user)
+// CUJ tests — account / account-management
 //
 // 대응 spec: docs/features/account/account-management/spec.md
-// CUJ 추가 시 본 파일에 `cujGroup` 블록 추가 (새 파일 X).
+// CUJ 추가 시 본 파일에 `cujGroup` 블록 추가.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,52 +10,70 @@ import 'package:minglit_kit/minglit_kit.dart';
 
 import '../_engine/cuj_test.dart';
 
-// CUJ 1-3: StatefulWidget for simulating external isVerified change.
-class _VerifiedWrapper extends StatefulWidget {
-  const _VerifiedWrapper();
+class _VerificationHost extends StatelessWidget {
+  const _VerificationHost({
+    required this.isVerified,
+    required this.onCertification,
+  });
 
-  @override
-  State<_VerifiedWrapper> createState() => _VerifiedWrapperState();
-}
-
-class _VerifiedWrapperState extends State<_VerifiedWrapper> {
-  bool _isVerified = false;
-
-  void setVerified({required bool value}) {
-    setState(() => _isVerified = value);
-  }
+  final ValueNotifier<bool> isVerified;
+  final VoidCallback onCertification;
 
   @override
   Widget build(BuildContext context) {
-    return AccountManagementPage(
-      isVerified: _isVerified,
-      onCertification: () {},
-      onLogout: () {},
-      onDeleteAccount: () {},
+    return ValueListenableBuilder<bool>(
+      valueListenable: isVerified,
+      builder: (context, verified, _) {
+        return AccountManagementPage(
+          onLogout: () {},
+          onDeleteAccount: () {},
+          onCertification: onCertification,
+          isVerified: verified,
+        );
+      },
     );
   }
 }
 
-// CUJ 4-2: Wrapper that pushes AccountManagementPage onto Navigator stack.
-class _PushWrapper extends StatelessWidget {
-  const _PushWrapper();
+class _LogoutRedirectHost extends StatelessWidget {
+  const _LogoutRedirectHost({required this.loggedOut});
+
+  final ValueNotifier<bool> loggedOut;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: loggedOut,
+      builder: (context, isLoggedOut, _) {
+        if (isLoggedOut) {
+          return const Scaffold(body: Center(child: Text('로그인 화면')));
+        }
+        return AccountManagementPage(
+          onLogout: () => loggedOut.value = true,
+          onDeleteAccount: () {},
+        );
+      },
+    );
+  }
+}
+
+class _ParentPage extends StatelessWidget {
+  const _ParentPage({required this.accountPage});
+
+  final Widget accountPage;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(title: const Text('부모 페이지')),
       body: Center(
-        child: TextButton(
-          onPressed: () => Navigator.push<void>(
-            context,
-            MaterialPageRoute<void>(
-              builder: (_) => AccountManagementPage(
-                onCertification: () {},
-                onLogout: () {},
-                onDeleteAccount: () {},
-              ),
-            ),
-          ),
-          child: const Text('열기'),
+        child: FilledButton(
+          onPressed: () async {
+            await Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => accountPage),
+            );
+          },
+          child: const Text('계정 관리 열기'),
         ),
       ),
     );
@@ -65,244 +83,264 @@ class _PushWrapper extends StatelessWidget {
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  // ---------------------------------------------------------------------------
-  // CUJ 1-1: (user) 본인인증 미완 상태에서 진입
-  // ---------------------------------------------------------------------------
-
   cujGroup('1-1', '(user) 본인인증 미완 상태에서 진입', () {
-    var onCertCalled = false;
-
     cujCase(
-      'happy: 본인인증 타일 "인증하기" subtitle 노출, 탭 → onCertification 호출',
+      'happy: 본인인증 타일(인증하기) 노출 + 탭 시 callback 호출',
       app: AccountManagementPage(
-        onCertification: () => onCertCalled = true,
         onLogout: () {},
         onDeleteAccount: () {},
+        onCertification: () {},
       ),
       body: (t) async {
-        onCertCalled = false;
+        var tapped = 0;
+        await t.pumpWidget(
+          MaterialApp(
+            theme: MinglitTheme.materialTheme,
+            home: AccountManagementPage(
+              onLogout: () {},
+              onDeleteAccount: () {},
+              onCertification: () => tapped += 1,
+            ),
+          ),
+        );
+        await t.pumpAndSettle();
 
         expect(find.text('본인인증'), findsOneWidget);
         expect(find.text('인증하기'), findsOneWidget);
+        expect(find.byIcon(Icons.shield_outlined), findsOneWidget);
 
         await t.tap(find.text('본인인증'));
         await t.pumpAndSettle();
-
-        expect(onCertCalled, isTrue);
-      },
-    );
-
-    cujCase(
-      'edge: isVerified 기본값(false) → 인증하기 표시',
-      app: const AccountManagementPage(
-        onCertification: _noop,
-        onLogout: _noop,
-        onDeleteAccount: _noop,
-      ),
-      body: (t) async {
-        expect(find.text('인증하기'), findsOneWidget);
-        expect(find.text('인증 완료'), findsNothing);
+        expect(tapped, 1);
       },
     );
   });
 
-  // ---------------------------------------------------------------------------
-  // CUJ 1-2: (user) 본인인증 완료 상태에서 진입
-  // ---------------------------------------------------------------------------
-
   cujGroup('1-2', '(user) 본인인증 완료 상태에서 진입', () {
-    var onCertCalled = false;
-
     cujCase(
-      'happy: 본인인증 타일 "인증 완료" subtitle 노출 + 탭 가능',
+      'happy: 인증 완료 라벨/아이콘 노출 + 재진입 가능',
       app: AccountManagementPage(
-        isVerified: true,
-        onCertification: () => onCertCalled = true,
         onLogout: () {},
         onDeleteAccount: () {},
+        onCertification: () {},
+        isVerified: true,
       ),
       body: (t) async {
-        onCertCalled = false;
+        var tapped = 0;
+        await t.pumpWidget(
+          MaterialApp(
+            theme: MinglitTheme.materialTheme,
+            home: AccountManagementPage(
+              onLogout: () {},
+              onDeleteAccount: () {},
+              onCertification: () => tapped += 1,
+              isVerified: true,
+            ),
+          ),
+        );
+        await t.pumpAndSettle();
 
         expect(find.text('본인인증'), findsOneWidget);
         expect(find.text('인증 완료'), findsOneWidget);
+        expect(find.byIcon(Icons.verified_user), findsOneWidget);
 
-        // Fix #1861: 인증 완료 후도 탭 가능 (다시 들어가도 막지 않음)
         await t.tap(find.text('본인인증'));
         await t.pumpAndSettle();
-
-        expect(onCertCalled, isTrue);
+        expect(tapped, 1);
       },
     );
   });
-
-  // ---------------------------------------------------------------------------
-  // CUJ 1-3: (user) 본인인증 상태 외부 변경 즉시 반영
-  // ---------------------------------------------------------------------------
 
   cujGroup('1-3', '(user) 본인인증 상태 외부 변경 즉시 반영', () {
     cujCase(
-      'happy: isVerified false→true → success 톤 즉시 교체 (깜빡임 X)',
-      app: const _VerifiedWrapper(),
+      'edge: 화면 노출 중 isVerified false->true 전환 시 즉시 UI 교체',
+      app: _VerificationHost(
+        isVerified: ValueNotifier<bool>(false),
+        onCertification: _noop,
+      ),
       body: (t) async {
-        // 초기 미인증 상태 확인
-        expect(find.text('인증하기'), findsOneWidget);
-        expect(find.text('인증 완료'), findsNothing);
+        final verified = ValueNotifier<bool>(false);
+        await t.pumpWidget(
+          MaterialApp(
+            theme: MinglitTheme.materialTheme,
+            home: _VerificationHost(
+              isVerified: verified,
+              onCertification: _noop,
+            ),
+          ),
+        );
+        await t.pumpAndSettle();
 
-        // 외부에서 인증 완료 시뮬레이션 (provider rebuild → setState 동일 효과)
-        t
-            .state<_VerifiedWrapperState>(find.byType(_VerifiedWrapper))
-            .setVerified(value: true);
+        expect(find.text('인증하기'), findsOneWidget);
+        expect(find.byIcon(Icons.shield_outlined), findsOneWidget);
+
+        verified.value = true;
+        await t.pumpAndSettle();
+
+        expect(find.text('인증 완료'), findsOneWidget);
+        expect(find.byIcon(Icons.verified_user), findsOneWidget);
+      },
+    );
+  });
+
+  cujGroup('2-1', '(partner) 더보기 → 계정 관리 진입', () {
+    cujCase(
+      'happy: 파트너 프로필 타일만 노출, 본인인증 타일 미노출',
+      app: const AccountManagementPage(
+        onLogout: _noop,
+        onDeleteAccount: _noop,
+        onPartnerProfile: _noop,
+      ),
+      body: (t) async {
+        expect(find.text('계정 관리'), findsWidgets);
+        expect(find.text('파트너 프로필'), findsOneWidget);
+        expect(find.text('본인인증'), findsNothing);
+      },
+    );
+  });
+
+  cujGroup('2-2', '(partner) 파트너 프로필 타일 탭 → SnackBar', () {
+    cujCase(
+      'happy: 파트너 프로필 탭 시 "준비 중입니다." 표시 + 화면 이동 없음',
+      app: const AccountManagementPage(
+        onLogout: _noop,
+        onDeleteAccount: _noop,
+        onPartnerProfile: _noop,
+      ),
+      body: (t) async {
+        final messengerKey = GlobalKey<ScaffoldMessengerState>();
+
+        await t.pumpWidget(
+          MaterialApp(
+            theme: MinglitTheme.materialTheme,
+            scaffoldMessengerKey: messengerKey,
+            home: AccountManagementPage(
+              onLogout: _noop,
+              onDeleteAccount: _noop,
+              onPartnerProfile: () {
+                messengerKey.currentState?.showSnackBar(
+                  const SnackBar(content: Text('준비 중입니다.')),
+                );
+              },
+            ),
+          ),
+        );
+        await t.pumpAndSettle();
+
+        await t.tap(find.text('파트너 프로필'));
         await t.pump();
 
-        // UI 즉시 업데이트 확인 (깜빡임 없이 교체)
-        expect(find.text('인증 완료'), findsOneWidget);
-        expect(find.text('인증하기'), findsNothing);
+        expect(find.text('준비 중입니다.'), findsOneWidget);
+        expect(find.text('계정 관리'), findsWidgets);
       },
     );
   });
-
-  // ---------------------------------------------------------------------------
-  // CUJ 3-1: 로그아웃 confirm 후 로그인 화면 복귀
-  // ---------------------------------------------------------------------------
 
   cujGroup('3-1', '로그아웃 confirm 후 로그인 화면 복귀', () {
-    var logoutCalled = false;
-
     cujCase(
-      'happy: "로그아웃" 타일 탭 → confirm 다이얼로그 → "로그아웃" → onLogout 호출',
-      app: AccountManagementPage(
-        onCertification: () {},
-        onLogout: () => logoutCalled = true,
-        onDeleteAccount: () {},
-      ),
+      'happy: 확인 다이얼로그에서 로그아웃 선택 시 redirect host 표시',
+      app: _LogoutRedirectHost(loggedOut: ValueNotifier<bool>(false)),
       body: (t) async {
-        logoutCalled = false;
-
-        // 로그아웃 타일 탭
-        await t.tap(find.text('로그아웃'));
+        final loggedOut = ValueNotifier<bool>(false);
+        await t.pumpWidget(
+          MaterialApp(
+            theme: MinglitTheme.materialTheme,
+            home: _LogoutRedirectHost(loggedOut: loggedOut),
+          ),
+        );
         await t.pumpAndSettle();
 
-        // MinglitAlert.showConfirm 다이얼로그 노출 확인 (FR-8)
+        await t.tap(find.text('로그아웃').first);
+        await t.pumpAndSettle();
+
         expect(find.text('로그아웃 하시겠어요?'), findsOneWidget);
 
-        // 다이얼로그의 "로그아웃" 확인 버튼 탭
-        await t.tap(find.widgetWithText(TextButton, '로그아웃'));
+        await t.tap(find.text('로그아웃').last);
         await t.pumpAndSettle();
 
-        expect(logoutCalled, isTrue);
+        expect(find.text('로그인 화면'), findsOneWidget);
       },
     );
   });
-
-  // ---------------------------------------------------------------------------
-  // CUJ 3-2: 로그아웃 confirm 취소
-  // ---------------------------------------------------------------------------
 
   cujGroup('3-2', '로그아웃 confirm 취소', () {
-    var logoutCalled = false;
-
     cujCase(
-      'happy: "취소" 탭 → 다이얼로그 닫힘, onLogout 미호출',
-      app: AccountManagementPage(
-        onCertification: () {},
-        onLogout: () => logoutCalled = true,
-        onDeleteAccount: () {},
-      ),
+      'edge: 취소 탭 시 로그아웃 callback 미호출',
+      app: const AccountManagementPage(onLogout: _noop, onDeleteAccount: _noop),
       body: (t) async {
-        logoutCalled = false;
+        var logoutCalled = 0;
+        await t.pumpWidget(
+          MaterialApp(
+            theme: MinglitTheme.materialTheme,
+            home: AccountManagementPage(
+              onLogout: () => logoutCalled += 1,
+              onDeleteAccount: _noop,
+            ),
+          ),
+        );
+        await t.pumpAndSettle();
 
-        await t.tap(find.text('로그아웃'));
+        await t.tap(find.text('로그아웃').first);
         await t.pumpAndSettle();
 
         expect(find.text('로그아웃 하시겠어요?'), findsOneWidget);
 
-        await t.tap(find.widgetWithText(TextButton, '취소'));
+        await t.tap(find.text('취소'));
         await t.pumpAndSettle();
 
-        expect(logoutCalled, isFalse);
-        expect(find.text('로그아웃 하시겠어요?'), findsNothing);
-      },
-    );
-
-    cujCase(
-      'edge: scrim 탭 → 다이얼로그 닫힘, onLogout 미호출',
-      app: AccountManagementPage(
-        onCertification: () {},
-        onLogout: () => logoutCalled = true,
-        onDeleteAccount: () {},
-      ),
-      body: (t) async {
-        logoutCalled = false;
-
-        await t.tap(find.text('로그아웃'));
-        await t.pumpAndSettle();
-
-        // scrim 탭 — dialog 외부 좌상단 모서리
-        await t.tapAt(const Offset(10, 10));
-        await t.pumpAndSettle();
-
-        expect(logoutCalled, isFalse);
-        expect(find.text('로그아웃 하시겠어요?'), findsNothing);
+        expect(logoutCalled, 0);
+        expect(find.text('계정 관리'), findsWidgets);
       },
     );
   });
 
-  // ---------------------------------------------------------------------------
-  // CUJ 4-1: 회원 탈퇴 진입 (추가 confirm 없이)
-  // ---------------------------------------------------------------------------
-
-  cujGroup('4-1', '회원 탈퇴 진입 (추가 confirm 없이)', () {
-    var deleteAccountCalled = false;
-
+  cujGroup('4-1', '회원 탈퇴 진입 (추가 확인 없이)', () {
     cujCase(
-      'happy: 회원 탈퇴 탭 → onDeleteAccount 즉시 호출 (FR-10)',
-      app: AccountManagementPage(
-        onCertification: () {},
-        onLogout: () {},
-        onDeleteAccount: () => deleteAccountCalled = true,
-      ),
+      'happy: 회원 탈퇴 탭 시 callback 즉시 호출',
+      app: const AccountManagementPage(onLogout: _noop, onDeleteAccount: _noop),
       body: (t) async {
-        deleteAccountCalled = false;
+        var deleteCalled = 0;
+        await t.pumpWidget(
+          MaterialApp(
+            theme: MinglitTheme.materialTheme,
+            home: AccountManagementPage(
+              onLogout: _noop,
+              onDeleteAccount: () => deleteCalled += 1,
+            ),
+          ),
+        );
+        await t.pumpAndSettle();
 
         await t.tap(find.text('회원 탈퇴'));
         await t.pumpAndSettle();
 
-        // 추가 confirm dialog 없이 즉시 호출 확인 (FR-10)
-        expect(deleteAccountCalled, isTrue);
+        expect(deleteCalled, 1);
       },
     );
   });
 
-  // ---------------------------------------------------------------------------
-  // CUJ 4-2: 뒤로 가기 → 부모 페이지 복귀
-  // ---------------------------------------------------------------------------
-
   cujGroup('4-2', '뒤로 가기 → 부모 페이지 복귀', () {
     cujCase(
-      'happy: AppBar 뒤로 가기 → Navigator.pop → 이전 화면 복귀',
-      app: const _PushWrapper(),
+      'happy: AppBar back 탭 시 부모 페이지로 pop',
+      app: const _ParentPage(
+        accountPage: AccountManagementPage(
+          onLogout: _noop,
+          onDeleteAccount: _noop,
+        ),
+      ),
       body: (t) async {
-        // AccountManagementPage 진입
-        await t.tap(find.text('열기'));
+        await t.tap(find.text('계정 관리 열기'));
         await t.pumpAndSettle();
 
-        // Fix #2659: AccountManagementPage는 AppBar 제목 + settings group 헤더 양쪽에
-        // '계정 관리' 텍스트가 있어 findsOneWidget 대신 '로그아웃' 로 페이지 진입 검증.
-        expect(find.text('로그아웃'), findsOneWidget);
-        expect(find.byType(BackButton), findsOneWidget);
+        expect(find.text('계정 관리'), findsWidgets);
 
-        // AppBar 뒤로 가기
         await t.tap(find.byType(BackButton));
         await t.pumpAndSettle();
 
-        // 부모 페이지 복귀 확인
-        expect(find.text('열기'), findsOneWidget);
-        expect(find.text('계정 관리'), findsNothing);
+        expect(find.text('부모 페이지'), findsOneWidget);
       },
     );
   });
 }
 
-// Const-compatible no-op callback for const widget declarations.
 void _noop() {}

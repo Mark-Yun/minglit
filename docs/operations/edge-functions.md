@@ -104,13 +104,13 @@ curl -s ... | python3 -m json.tool
 curl -s -X POST "https://<project-ref>.supabase.co/functions/v1/<function-name>" \
   -H "Authorization: Bearer <SERVICE_ROLE_KEY>" \
   -H "Content-Type: application/json" \
-  -d '{"phase": "verify"}'
+  -d '{"key": "value"}'
 
 # sb_secret_ 형식은 Bearer가 아니라 apikey 헤더로 호출
 curl -s -X POST "https://<project-ref>.supabase.co/functions/v1/<function-name>" \
   -H "apikey: <SERVICE_ROLE_SECRET>" \
   -H "Content-Type: application/json" \
-  -d '{"phase": "verify"}'
+  -d '{"key": "value"}'
 ```
 
 환경 변수는 `minglit_env/dev/supabase.env`에서 확인.
@@ -208,18 +208,14 @@ deno test --allow-all --config supabase/deno.json supabase/functions/payment-ver
 ### 시나리오 테스트 (event-flow-simulator)
 
 ```bash
-# Dev 서버에서 전체 6-phase 시뮬레이션
+# Dev 서버에서 small distributed tick 1회
 curl -X POST ".../functions/v1/event-flow-simulator" \
   -H "Authorization: Bearer <SERVICE_ROLE_KEY>" \
-  -H "Content-Type: application/json"
-
-# 특정 phase만 실행
-curl -X POST "..." -d '{"phase": "verify"}'
-curl -X POST "..." -d '{"phase": "create"}'
-curl -X POST "..." -d '{"phase": "settle"}'
+  -H "Content-Type: application/json" \
+  -d '{"ticks":1,"usersPerTick":5,"partnersPerTick":2,"seed":202605250905}'
 ```
 
-Assertion 실패 시 GitHub 이슈가 자동 생성되며, 이슈에 Axiom 쿼리가 포함된다.
+시간은 dev Supabase pg_cron `dev-event-flow-simulator` 가 담당하고, 랜덤성은 actor/user/partner/event sampling 에만 둔다. 유저 신청 대상은 DB prefix 가 아니라 `user-event-feed` 결과에서 고른다. Assertion 실패 시 GitHub 이슈와 `dev-soak/backend-simulator` failure status 가 자동 생성된다.
 
 ## 환경변수 참조
 

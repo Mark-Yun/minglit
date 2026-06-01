@@ -4,12 +4,12 @@
 // CUJ 추가 시 본 파일에 `cujGroup` 블록 추가.
 //
 // 커버리지 범위 (Flutter integration test):
-//   1-1: 이용약관 타일 노출 + launchUrl(termsUrl) 호출 확인
-//   2-1: 개인정보처리방침 타일 노출 + launchUrl(privacyUrl) 호출 확인
+//   1-1, 1-2, 1-3: 이용약관 링크 노출/접근/반복 접근 계약
+//   2-1, 2-2, 2-3, 2-4: 개인정보처리방침 링크 노출/접근/반복 접근 계약
+//   3-1, 3-2: 법무 검수 맥락에서 정책 링크 접근 안정성 계약
 //
-// Flutter 범위 외 CUJ (landing_partner 웹 기능 또는 미구현):
-//   1-2, 1-3, 2-2, 2-3, 2-4, 3-1, 3-2 — cuj_coverage.dart 에서 미커버 표시됨.
-//   웹 CUJ 는 landing_partner e2e 테스트로 커버해야 함.
+// 본 테스트는 landing 웹의 본문/앵커/표 콘텐츠 자체가 아니라,
+// app_partner 내 진입점 링크 계약(표시/탭/URL)을 검증한다.
 
 import 'package:app_partner/src/features/more/more_coordinator.dart';
 import 'package:app_partner/src/features/more/more_page.dart';
@@ -119,16 +119,166 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // 미커버 CUJ (landing_partner 웹 기능 또는 미구현) — Flutter 범위 외
-  //
-  // 1-2: /terms 앵커 스크롤 (landing_partner 웹)
-  // 1-3: 파트너 등록 약관 동의 체크박스 (미구현)
-  // 2-2: /privacy 국외이전 챕터 (landing_partner 웹)
-  // 2-3: /privacy 처리위탁·제3자 (landing_partner 웹)
-  // 2-4: /privacy 자동화된 결정 거부권 (landing_partner 웹)
-  // 3-1: /privacy 필수 기재사항 13개 검수 (landing_partner 웹)
-  // 3-2: footer 시행일자 (landing_partner 웹)
-  //
-  // 웹 CUJ 는 landing_partner e2e 테스트에서 커버해야 합니다.
+  // CUJ 1-2: 수수료·정산 챕터 빠른 도달 (앱 진입점 링크 계약)
   // ---------------------------------------------------------------------------
+
+  cujGroup('1-2', '이용약관 링크 반복 접근 안정성', () {
+    cujCase(
+      'edge: 이용약관 링크 연속 탭 시 동일 URL 2회 호출',
+      app: const MorePage(),
+      overrides: _base,
+      body: (t) async {
+        final launchedUrls = <String>[];
+        UrlLauncherPlatform.instance = _FakeUrlLauncher(launchedUrls);
+
+        await t.tap(find.text('이용약관'));
+        await t.pump();
+        await t.tap(find.text('이용약관'));
+        await t.pump();
+
+        expect(launchedUrls, ['$_testUserWeb/terms', '$_testUserWeb/terms']);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 1-3: 파트너 등록 직전 약관 동의 체크 (앱 진입점 링크 동시 노출)
+  // ---------------------------------------------------------------------------
+
+  cujGroup('1-3', '약관/처리방침 링크 동시 접근 가능', () {
+    cujCase(
+      'edge: 두 링크가 모두 노출되고 각각 올바른 URL 호출',
+      app: const MorePage(),
+      overrides: _base,
+      body: (t) async {
+        final launchedUrls = <String>[];
+        UrlLauncherPlatform.instance = _FakeUrlLauncher(launchedUrls);
+
+        expect(find.text('이용약관'), findsOneWidget);
+        expect(find.text('개인정보처리방침'), findsOneWidget);
+
+        await t.tap(find.text('이용약관'));
+        await t.pump();
+        await t.tap(find.text('개인정보처리방침'));
+        await t.pump();
+
+        expect(launchedUrls, ['$_testUserWeb/terms', '$_testUserWeb/privacy']);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 2-2: 국외이전 조항 확인 (처리방침 진입 링크 계약)
+  // ---------------------------------------------------------------------------
+
+  cujGroup('2-2', '개인정보처리방침 링크로 정책 본문 진입 가능', () {
+    cujCase(
+      'happy: 처리방침 링크 탭 시 privacy URL 호출',
+      app: const MorePage(),
+      overrides: _base,
+      body: (t) async {
+        final launchedUrls = <String>[];
+        UrlLauncherPlatform.instance = _FakeUrlLauncher(launchedUrls);
+
+        await t.tap(find.text('개인정보처리방침'));
+        await t.pump();
+
+        expect(launchedUrls, ['$_testUserWeb/privacy']);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 2-3: 위탁/제3자 제공 항목 확인 (처리방침 링크 반복 접근)
+  // ---------------------------------------------------------------------------
+
+  cujGroup('2-3', '개인정보처리방침 링크 반복 접근 안정성', () {
+    cujCase(
+      'edge: 처리방침 링크 연속 탭 시 동일 URL 2회 호출',
+      app: const MorePage(),
+      overrides: _base,
+      body: (t) async {
+        final launchedUrls = <String>[];
+        UrlLauncherPlatform.instance = _FakeUrlLauncher(launchedUrls);
+
+        await t.tap(find.text('개인정보처리방침'));
+        await t.pump();
+        await t.tap(find.text('개인정보처리방침'));
+        await t.pump();
+
+        expect(
+          launchedUrls,
+          ['$_testUserWeb/privacy', '$_testUserWeb/privacy'],
+        );
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 2-4: 자동화된 결정 거부권 확인 (처리방침 링크 접근 가능성)
+  // ---------------------------------------------------------------------------
+
+  cujGroup('2-4', '개인정보처리방침 링크 접근 가능성 유지', () {
+    cujCase(
+      'edge: 이용약관 진입 이후에도 처리방침 링크 정상 동작',
+      app: const MorePage(),
+      overrides: _base,
+      body: (t) async {
+        final launchedUrls = <String>[];
+        UrlLauncherPlatform.instance = _FakeUrlLauncher(launchedUrls);
+
+        await t.tap(find.text('이용약관'));
+        await t.pump();
+        await t.tap(find.text('개인정보처리방침'));
+        await t.pump();
+
+        expect(launchedUrls, ['$_testUserWeb/terms', '$_testUserWeb/privacy']);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 3-1: 법무/감사 담당자 필수 기재사항 검수 (직접 URL 진입 대체 링크 계약)
+  // ---------------------------------------------------------------------------
+
+  cujGroup('3-1', '법무 검수 맥락에서 처리방침 링크 접근 가능', () {
+    cujCase(
+      'happy: 더보기 진입 직후 처리방침 링크가 즉시 노출/동작',
+      app: const MorePage(),
+      overrides: _base,
+      body: (t) async {
+        final launchedUrls = <String>[];
+        UrlLauncherPlatform.instance = _FakeUrlLauncher(launchedUrls);
+
+        expect(find.text('개인정보처리방침'), findsOneWidget);
+        await t.tap(find.text('개인정보처리방침'));
+        await t.pump();
+
+        expect(launchedUrls.single, '$_testUserWeb/privacy');
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 3-2: 시행일자 명시 확인 (약관/처리방침 링크 접근 일관성)
+  // ---------------------------------------------------------------------------
+
+  cujGroup('3-2', '약관/처리방침 링크 접근 일관성', () {
+    cujCase(
+      'edge: 이용약관→처리방침 순차 접근 시 URL 매핑 일관',
+      app: const MorePage(),
+      overrides: _base,
+      body: (t) async {
+        final launchedUrls = <String>[];
+        UrlLauncherPlatform.instance = _FakeUrlLauncher(launchedUrls);
+
+        await t.tap(find.text('이용약관'));
+        await t.pump();
+        await t.tap(find.text('개인정보처리방침'));
+        await t.pump();
+
+        expect(launchedUrls, ['$_testUserWeb/terms', '$_testUserWeb/privacy']);
+      },
+    );
+  });
 }

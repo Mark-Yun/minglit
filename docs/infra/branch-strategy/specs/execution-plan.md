@@ -10,7 +10,7 @@
 |----------|------|------------------|
 | **Deploy** | `dev-deploy`, `rc-deploy`, `main-deploy`, `deploy-android-{user,partner}`, `deploy-ios-{user,partner}`, `deploy-dev-seed`, `shared-android-deploy` | branch-level deploy entrypoint + reusable/domain deploy jobs |
 | **PR / Review** | `pr-gate`, `pr-review-setup`, `doc-freshness` | spec 의 pr-gate-core 의 base — 추출·일반화 대상 |
-| **Post-merge** | `post-merge` (dev push orchestrator), `sync-version`, `sync-pr-branches`, `sync-test-coverage`, `sync-mds-mockups`, `sync-graphify` | spec 의 `*-post-merge-sync` 의 base — 부분 흡수 |
+| **Post-merge** | `post-merge` (dev push orchestrator), `sync-pr-branches`, `sync-test-coverage`, `sync-mds-mockups`, `sync-graphify` | dev push follow-up 자동화. branch-mutating generated report sync 는 dev/rc/main 에 붙이지 않는다 |
 | **Reusable** | `shared-android-deploy`, `shared-cuj-integration`, `shared-notify` | spec 의 reusable 패턴 — 추가 reusable extract 시 참고 |
 | **Monitor** | `monitor-allure`, `monitor-cuj-coverage`, `monitor-db-invariants`, `monitor-deno-coverage`, `monitor-event-flow-*`, `monitor-mds-render-coverage`, `monitor-patrol-e2e` | 본 release pipeline 과 orthogonal — 유지 |
 | **Triage** | `triage-mds-issue`, `triage-slash` | 동상 — 유지 |
@@ -22,20 +22,20 @@
 | Spec workflow | 기존 매핑 | 작업 분류 |
 |---------------|----------|----------|
 | `pr-gate-core` (reusable) | `pr-gate` 의 step 들을 reusable workflow_call 로 추출 + stage parameter 추가 | **refactor** |
-| `version-bump` (reusable) | `sync-version` 의 핵심 로직 → reusable 분리 | **refactor** |
+| `version-bump` (reusable) | source-controlled dev-staging snapshot version bump | **refactor** |
 | `shared-set-commit-status` | commit status write 공통 reusable | **신규** |
 | `set-dev-soak-status`, `set-rc-soak-status` | stage별 soak status write API (`workflow_call` + `workflow_dispatch`) | **신규** |
 | dev soak monitor/status model | 기존 `monitor-event-flow-*`, real-device workflow, AI agent signal 을 `dev-soak/*` commit status 로 통합 | **신규 (조합)** |
 | `auto-issue` (reusable) | (없음) | **신규** |
-| `backport-pr` (reusable) | (없음) | **신규** |
+| `cherry-pick-pr` (reusable) | (없음) | **신규** |
 | `dev-staging-pr-gate` | `pr-gate` 를 dev-staging base 로 재사용 (stage=dev-staging) | **신규 (얇은 wrapper)** |
-| `dev-staging-dev-cut-gate` | `post-merge` + `sync-version` orchestration | **신규 (조합)** |
+| `dev-staging-dev-cut-gate` | dev-staging post-merge version bump/tag orchestration | **신규 (조합)** |
 | `dev-staging-dev-cut` | (없음) | **신규** |
 | `dev-pr-gate` | `dev-staging-pr-gate` 와 동일 (stage=dev) | **신규 (얇은 wrapper)** |
 | `dev-rc-cut-gate` | 기존 `rc-gate` rename + `dev-rc-cut-pass` status set. full suite 는 후속 gate 확장 | **rename/refactor** |
 | `dev-deploy` | dev deploy/smoke entrypoint (범위 TBD), event-flow 는 monitor 로 유지 | **신규/선택** |
-| `dev-rc-cut`, `rc-pr-gate`, `rc-post-merge-sync`, `rc-deploy`, `rc-main-cut-gate`, `rc-main-cut`, `rc-hotfix-backport` | 기존 `rc-cut` rename + 신규 wrapper/cut flow | **신규/rename** |
-| `main-pr-gate`, `main-deploy` | (없음, 부분적으로 `sync-version` / `deploy-*`) | **신규 + refactor** |
+| `dev-rc-cut`, `rc-pr-gate`, `rc-deploy`, `rc-main-cut-gate`, `rc-main-cut`, `rc-hotfix-apply` | 기존 `rc-cut` rename + 신규 wrapper/cut flow | **신규/rename** |
+| `main-pr-gate`, `main-deploy` | (없음, 부분적으로 `deploy-*`) | **신규 + refactor** |
 | backend prod deploy | `deploy-supabase` 로직을 `main-deploy` 하위 job/reusable 로 흡수 | **refactor** |
 | web deploy | Vercel native build 로 전환 | **external config** |
 | `deploy-android-{user,partner}`, `deploy-ios-{user,partner}` | 그대로 (이미 push:main trigger) | **변경 없음** |
@@ -72,7 +72,7 @@
 |------|------|------|
 | 2a | `pr-gate.yml` 단일 파일 유지하면서 내부 jobs 를 `workflow_call` 받게 변경 + stage parameter 추가. `pr-gate-core` 별도 파일 아님 | PR 흐름 동일, 내부 jobs reusable 化 |
 | 2b | stage 별 `extra_steps` 지원 (dev-staging / rc / main) | 기존 동작 동일 |
-| 2c | `version-bump` reusable extract (sync-version 의 핵심 로직) | sync-version 의 caller 가 reusable 호출하게 변경 |
+| 2c | `version-bump` reusable extract | dev-staging snapshot bump caller 가 reusable 호출하게 변경 |
 | 2d | `minglit-release-bot` 생성 + App ID/private key 등록 + workflow permission 최소화 | protected branch/tag push 를 human 대신 bot 으로 수행 |
 | 2e | `auto-issue` reusable 추가 | 신규 — 기존 영향 없음 |
 | 2f | **`ci-result` 폐기** — branch protection 의 required check 를 각 branch 의 `*-pr-gate` 로 변경 | `dev-staging` 부터 적용, dev/rc/main 은 해당 workflow 가 각 branch 에 도달한 뒤 적용 |
@@ -85,7 +85,7 @@
 ### 결정
 
 - 기존 `pr-gate.yml` 파일을 그대로 두고 reusable 내부 사용 vs `pr-gate-core.yml` 신규 파일 (기존 파일은 trigger 만 정의)
-- 2c 의 sync-version 도 그대로 두고 reusable 호출 vs 완전 흡수
+- 2c 의 legacy `sync-version` 제거 범위
 
 ## Phase 3: Branch CD flow
 
@@ -97,7 +97,7 @@
 |------|------|------|
 | 3a | `dev-deploy` entrypoint: dev 환경 backend deploy/smoke. event-flow simulator 는 `monitor-event-flow-*` batch 로 유지 | Phase 2 |
 | 3b | `rc-deploy` entrypoint: Supabase branching 기반 RC branch 생성/적용/검증 | Phase 2 + Supabase branching 설정 |
-| 3c | `main-deploy` entrypoint: final version/tag + backend prod deploy. mobile deploy workflows 는 기존 `deploy-android-*`, `deploy-ios-*` 재사용 | Phase 2 |
+| 3c | `main-deploy` entrypoint: deploy-time version metadata + backend prod deploy. mobile deploy workflows 는 기존 `deploy-android-*`, `deploy-ios-*` 재사용 | Phase 2 |
 | 3d | backend deploy 로직을 `main-deploy` 하위 job/reusable 로 정리. dev 에서는 prod backend deploy 하지 않음 | 3c |
 | 3e | **`deploy-vercel` 폐기** — 자체 빌드 워크플로우 제거. **Vercel native build 로 전환** (Vercel-GitHub 연결, Vercel-side: main=production) | Vercel-side 설정 필요 |
 
@@ -113,7 +113,7 @@
 | 4b | `shared-notify` 가 실패 시 `set-dev-soak-status` 호출 + issue title/body/log tail 개선 | 4a |
 | 4c | `dev-rc-cut-gate` 를 24h soak evaluator 로 변경 (run history + `dev-soak/*` status 확인) | 4a, 4b |
 | 4d | `main-pr-gate` 에 RC lineage / `rc-main-cut-pass` / contract 재검증 추가 | Phase 2 |
-| 4e | `backport-pr` reusable, `rc-hotfix-backport` | Phase 2 |
+| 4e | `cherry-pick-pr` reusable, `rc-hotfix-apply` | Phase 2 |
 
 ### Verification 단계
 
@@ -220,7 +220,7 @@ Phase 1 (skeletal) → Phase 2 (CI/PR flow) → Phase 3 (branch CD)
 2. **trigger 변경**: cron → push 변경 시 *겹치는 기간* 발생할 수 있음 — 한쪽 비활성화 후 다른쪽 활성화. 부분 적용 금지
 3. **status check naming**: `dev-rc-cut-pass` 같은 commit status 의 이름이 spec 과 workflow 에서 일치해야 함. branch protection 에는 직접 required 로 걸지 않고 `main-pr-gate` 내부에서 검증
 4. **AI agent 의 PR 동시성**: merge queue 없으니 race condition 발생 시 수동 conflict resolve 필요 (또는 merge queue 도입 검토)
-5. **Release bot token 실패**: GitHub App ID/private key 누락 또는 App 권한 부족이면 version bump/tag/promotion workflow 가 막힘. 최초 도입 시 dry-run branch 로 push/tag/delete까지 검증
+5. **Release bot token 실패**: GitHub App ID/private key 누락 또는 App 권한 부족이면 dev-staging version bump, tag, promotion workflow 가 막힘. 최초 도입 시 dry-run branch 로 push/tag/delete까지 검증
 6. **Secret 마이그레이션 중 workflow 실패**: file 기반과 GH secret 참조가 섞이는 transition 기간 — env 변수 누락 시 즉시 발견 (CI 통과 못함)
 
 ## Self-review: Phase 4 ordering
@@ -229,7 +229,7 @@ Phase 1 (skeletal) → Phase 2 (CI/PR flow) → Phase 3 (branch CD)
 
 - **4a / 4b 는 같은 PR 가능**: `shared-set-commit-status` 와 `shared-notify` 연동은 API contract 가 작아서 같이 검증 가능하다. 단 `set-dev-soak-status` 수동 dispatch dry-run 은 먼저 통과해야 한다
 - **status write API → evaluator 사이 verification 필요**: `set-dev-soak-status` 는 AI agent/monitor 가 직접 쓰는 public API 이므로 context mapping, 권한, target SHA 를 먼저 검증한다
-- **4e 는 4d 와 독립 가능**: rc-hotfix-backport 는 rc promotion 흐름의 일부지만 main protection 적용과 직접 의존하지 않는다
+- **4e 는 4d 와 독립 가능**: rc-hotfix-apply 는 rc promotion 흐름의 일부지만 main protection 적용과 직접 의존하지 않는다
 - **가장 critical**: `dev-rc-cut-gate` evaluator — 첫 verification 기간 1주 이상 추천 (24h soak/run history/status context 판정이 release cut 을 직접 막음)
 
 권장 변경 없음. 위 순서 그대로 진행.

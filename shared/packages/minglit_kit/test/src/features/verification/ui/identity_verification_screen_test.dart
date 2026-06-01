@@ -1,6 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:minglit_iamport_v1/minglit_iamport_v1.dart';
 import 'package:minglit_kit/minglit_kit.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+class _MockSupabaseClient extends Mock implements SupabaseClient {}
+
+class _MockUser extends Mock implements User {}
+
+class _MockIamportRepository extends Mock implements IamportRepository {}
+
+class _MockCertificationService extends Mock implements CertificationService {}
+
+class _FakeBuildContext extends Fake implements BuildContext {}
+
+class _IdentityConsentRepository extends ConsentRepository {
+  _IdentityConsentRepository() : super(_MockSupabaseClient());
+
+  @override
+  Future<List<UserConsent>> getConsents(String userId) async {
+    final now = DateTime(2026);
+    return [
+      UserConsent(
+        id: 'consent-identity-verification',
+        userId: userId,
+        consentKey: ConsentType.identityVerification,
+        consented: true,
+        consentedAt: now,
+        createdAt: now,
+      ),
+    ];
+  }
+}
+
+User _makeUser() {
+  final user = _MockUser();
+  when(() => user.id).thenReturn('mock-user-1');
+  return user;
+}
 
 /// ProviderObserver that records the names of providers that have been
 /// initialized in the container.
@@ -14,7 +52,21 @@ base class _ProviderInitObserver extends ProviderObserver {
   }
 }
 
+base class _TestNavigatorObserver extends NavigatorObserver {
+  bool popped = false;
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    popped = true;
+    super.didPop(route, previousRoute);
+  }
+}
+
 void main() {
+  setUpAll(() {
+    registerFallbackValue(_FakeBuildContext());
+  });
+
   group('IdentityVerificationScreen', () {
     // Fix #1271: consentControllerProvider (isAutoDispose=true)이 build()에서
     // watch되지 않으면 비동기 toggleConsent 호출 시 "Ref disposed" 에러 발생 (regression 방지).
@@ -70,6 +122,180 @@ void main() {
 
         // 첫 프레임: loading state
         expect(find.byType(CircularProgressIndicator), findsAny);
+      },
+    );
+
+    testWidgets(
+      'uses certificationService fallback when certificationStarter is null',
+      (tester) async {
+        final certificationService = _MockCertificationService();
+        when(
+          () => certificationService.verify(
+            context: any(named: 'context'),
+            userCode: any(named: 'userCode'),
+            merchantUid: any(named: 'merchantUid'),
+            mRedirectUrl: any(named: 'mRedirectUrl'),
+          ),
+        ).thenAnswer((_) async => null);
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              currentUserProvider.overrideWithValue(_makeUser()),
+              consentRepositoryProvider.overrideWithValue(
+                _IdentityConsentRepository(),
+              ),
+            ],
+            child: MaterialApp(
+              home: IdentityVerificationScreen(
+                certificationService: certificationService,
+              ),
+            ),
+          ),
+        );
+
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        verify(
+          () => certificationService.verify(
+            context: any(named: 'context'),
+            userCode: any(named: 'userCode'),
+            merchantUid: any(named: 'merchantUid'),
+            mRedirectUrl: any(named: 'mRedirectUrl'),
+          ),
+        ).called(1);
+        expect(find.text('인증이 취소되었거나 창이 열리지 않았습니다.'), findsOne);
+      },
+    );
+
+    testWidgets(
+      'renders retry state when certification returns null',
+      (tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              currentUserProvider.overrideWithValue(_makeUser()),
+              consentRepositoryProvider.overrideWithValue(
+                _IdentityConsentRepository(),
+              ),
+            ],
+            child: MaterialApp(
+              home: IdentityVerificationScreen(
+                certificationStarter:
+                    ({
+                      required context,
+                      required userCode,
+                      required merchantUid,
+                      mRedirectUrl,
+                    }) async => null,
+              ),
+            ),
+          ),
+        );
+
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        expect(find.text('인증이 취소되었거나 창이 열리지 않았습니다.'), findsOne);
+        expect(find.text('본인인증 다시 시도하기'), findsOne);
+      },
+    );
+
+    testWidgets(
+      'verifies certification and pops screen when certification succeeds',
+      (tester) async {
+        final iamportRepository = _MockIamportRepository();
+        final observer = _TestNavigatorObserver();
+
+        when(
+          () => iamportRepository.verifyCertification(any()),
+        ).thenAnswer((_) async => <String, dynamic>{'ok': true});
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              currentUserProvider.overrideWithValue(_makeUser()),
+              consentRepositoryProvider.overrideWithValue(
+                _IdentityConsentRepository(),
+              ),
+              iamportRepositoryProvider.overrideWithValue(iamportRepository),
+            ],
+            child: MaterialApp(
+              navigatorObservers: [observer],
+              home: Builder(
+                builder: (context) {
+                  return Scaffold(
+                    body: Center(
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => IdentityVerificationScreen(
+                                certificationStarter:
+                                    ({
+                                      required context,
+                                      required userCode,
+                                      required merchantUid,
+                                      mRedirectUrl,
+                                    }) async => 'imp_123',
+                              ),
+                            ),
+                          );
+                        },
+                        child: const Text('open'),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('open'));
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        verify(
+          () => iamportRepository.verifyCertification('imp_123'),
+        ).called(1);
+        expect(observer.popped, isTrue);
+      },
+    );
+
+    testWidgets(
+      'renders generic error when certification starter throws',
+      (tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              currentUserProvider.overrideWithValue(_makeUser()),
+              consentRepositoryProvider.overrideWithValue(
+                _IdentityConsentRepository(),
+              ),
+            ],
+            child: MaterialApp(
+              home: IdentityVerificationScreen(
+                certificationStarter:
+                    ({
+                      required context,
+                      required userCode,
+                      required merchantUid,
+                      mRedirectUrl,
+                    }) async {
+                      throw Exception('boom');
+                    },
+              ),
+            ),
+          ),
+        );
+
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        expect(find.text('인증 중 오류가 발생했습니다.'), findsOne);
+        expect(find.text('본인인증 다시 시도하기'), findsOne);
       },
     );
   });

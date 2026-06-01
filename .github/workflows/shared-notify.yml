@@ -35,7 +35,7 @@ on:
         type: boolean
         required: false
         default: false
-        description: 'If true, write a dev-soak failure status for the target commit.'
+        description: 'If true, write a soak failure status for the target commit.'
       commit_sha:
         type: string
         required: false
@@ -67,8 +67,22 @@ jobs:
       target_url: ${{ inputs.target_url || format('{0}/{1}/actions/runs/{2}', github.server_url, github.repository, github.run_id) }}
       description: ${{ inputs.status_description || format('{0} failed', inputs.workflow_name) }}
 
+  set-rc-soak-failure:
+    if: ${{ inputs.failed && inputs.blocks_rc_cut && inputs.stage == 'rc-soak' }}
+    uses: ./.github/workflows/set-rc-soak-status.yml
+    permissions:
+      contents: read
+      statuses: write
+    secrets: inherit
+    with:
+      signal: ${{ inputs.signal }}
+      state: failure
+      sha: ${{ inputs.commit_sha || github.sha }}
+      target_url: ${{ inputs.target_url || format('{0}/{1}/actions/runs/{2}', github.server_url, github.repository, github.run_id) }}
+      description: ${{ inputs.status_description || format('{0} failed', inputs.workflow_name) }}
+
   notify:
-    needs: [set-dev-soak-failure]
+    needs: [set-dev-soak-failure, set-rc-soak-failure]
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -119,7 +133,7 @@ jobs:
           fi
 
           LOG_TAIL_FILE="$(mktemp)"
-          if gh run view "${GITHUB_RUN_ID}" --log-failed > "${LOG_TAIL_FILE}" 2>/tmp/shared-notify-log-error; then
+          if gh run view "${GITHUB_RUN_ID}" --repo "${GITHUB_REPOSITORY}" --log-failed > "${LOG_TAIL_FILE}" 2>/tmp/shared-notify-log-error; then
             FAILED_LOG_TAIL="$(tail -n 200 "${LOG_TAIL_FILE}")"
           else
             FAILED_LOG_TAIL="Failed log tail unavailable. $(cat /tmp/shared-notify-log-error 2>/dev/null || true)"

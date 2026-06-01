@@ -169,18 +169,20 @@ jobs:
               branch = str(item.get("branch", "")).strip()
               min_success = int(item.get("min_success", 0))
               match_head_sha = bool(item.get("match_head_sha", False))
-              if not workflow or not branch or min_success < 0:
-                  print("::error::run requirement needs workflow, branch, min_success.", file=sys.stderr)
+              run_limit = int(item.get("run_limit", item.get("limit", max(100, min_success * 2))))
+              if not workflow or not branch or min_success < 0 or run_limit < min_success:
+                  print("::error::run requirement needs workflow, branch, min_success, and run_limit >= min_success.", file=sys.stderr)
                   sys.exit(1)
-              print(f"{workflow}\t{branch}\t{min_success}\t{str(match_head_sha).lower()}")
+              print(f"{workflow}\t{branch}\t{min_success}\t{str(match_head_sha).lower()}\t{run_limit}")
           PY
 
-          while IFS=$'\t' read -r workflow branch min_success match_head_sha; do
+          while IFS=$'\t' read -r workflow branch min_success match_head_sha run_limit; do
             [ -z "${workflow}" ] && continue
             runs_json="$(gh run list \
               --workflow "${workflow}" \
               --branch "${branch}" \
-              --limit 100 \
+              --created ">=${COMMIT_ISO}" \
+              --limit "${run_limit}" \
               --json conclusion,createdAt,headSha)"
             if [ "${match_head_sha}" = "true" ]; then
               run_count="$(jq \

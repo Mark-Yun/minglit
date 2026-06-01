@@ -57,11 +57,15 @@ class _FakeAccountRepository extends AccountRepository {
 
 // Fix #2555: AuthController stub — signOut no-op to avoid real Supabase call.
 class _FakeAuthController extends AuthController {
+  static int signOutCallCount = 0;
+
   @override
   FutureOr<void> build() async {}
 
   @override
-  Future<void> signOut() async {}
+  Future<void> signOut() async {
+    signOutCallCount++;
+  }
 }
 
 _MockUser _socialUser() {
@@ -89,6 +93,7 @@ void main() {
 
   setUp(() {
     coordinator = _MockCoordinator();
+    _FakeAuthController.signOutCallCount = 0;
   });
 
   // ---------------------------------------------------------------------------
@@ -146,9 +151,7 @@ void main() {
         );
         expect(nextBtn.onPressed, isNull);
 
-        verifyNever(
-          () => coordinator.pushInfo(reason: any(named: 'reason')),
-        );
+        verifyNever(() => coordinator.pushInfo(reason: any(named: 'reason')));
       },
     );
   });
@@ -221,10 +224,7 @@ void main() {
       body: (t) async {
         // 소셜 유저: 비밀번호 필드 없음, 안내 카드만
         expect(find.text('비밀번호'), findsNothing);
-        expect(
-          find.textContaining('소셜 로그인 계정은'),
-          findsOneWidget,
-        );
+        expect(find.textContaining('소셜 로그인 계정은'), findsOneWidget);
         expect(find.text('탈퇴 요청'), findsOneWidget);
       },
     );
@@ -249,9 +249,7 @@ void main() {
         await t.pumpAndSettle();
 
         expect(find.text('비밀번호를 입력해주세요.'), findsOneWidget);
-        verifyNever(
-          () => coordinator.goComplete(),
-        );
+        verifyNever(() => coordinator.goComplete());
       },
     );
   });
@@ -340,6 +338,65 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
+  // CUJ 1-6: 탈퇴 사유 익명 저장 payload
+  // ---------------------------------------------------------------------------
+
+  cujGroup('1-6', '탈퇴 사유 익명 저장 payload 전달', () {
+    List<dynamic> base() => [
+      accountDeletionCoordinatorProvider.overrideWithValue(coordinator),
+    ];
+
+    cujCase(
+      'happy: 기타 사유 입력 후 다음 → reason_code/reason_text만 전달 (FR-2, FR-7)',
+      app: const DeletionReasonPage(),
+      overrides: base,
+      body: (t) async {
+        final scrollable = find.byType(Scrollable).first;
+        final otherReasonText = find.text(
+          '직접 입력할게요',
+          skipOffstage: false,
+        );
+        await t.scrollUntilVisible(
+          otherReasonText,
+          120,
+          scrollable: scrollable,
+        );
+
+        Future<void> tapOtherReasonRadio() async {
+          final rect = t.getRect(otherReasonText);
+          await t.tapAt(rect.centerLeft + const Offset(-24, 0));
+          await t.pumpAndSettle();
+        }
+
+        await tapOtherReasonRadio();
+        if (!t.any(find.byType(EditableText))) {
+          await t.drag(scrollable, const Offset(0, -120));
+          await t.pumpAndSettle();
+          await tapOtherReasonRadio();
+        }
+        await t.pumpAndSettle();
+
+        expect(find.byType(EditableText), findsOneWidget);
+        await t.enterText(find.byType(EditableText), '탈퇴 사유 상세 입력');
+        await t.pumpAndSettle();
+
+        await t.tap(find.text('다음'));
+        await t.pumpAndSettle();
+
+        final captured = verify(
+          () => coordinator.pushInfo(reason: captureAny(named: 'reason')),
+        ).captured;
+        final reason = captured.single as WithdrawalReason;
+        final payload = reason.toJson();
+
+        expect(payload['reason_code'], 'other');
+        expect(payload['reason_text'], '탈퇴 사유 상세 입력');
+        expect(payload.containsKey('user_id'), isFalse);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
   // CUJ 3-1: 유예 기간 중 재로그인하면 복구 다이얼로그
   // ---------------------------------------------------------------------------
 
@@ -417,6 +474,125 @@ void main() {
         await t.pumpAndSettle();
 
         expect(find.text('탈퇴 대기 중인 계정입니다'), findsNothing);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 3-2: 유예 기간 경과 시 영구 삭제
+  // ---------------------------------------------------------------------------
+
+  cujGroup('3-2', 'deleted_at + 7d 유예 종료 시점 계산', () {
+    cujCase(
+      'happy: deleted_at 기준으로 gracePeriodEnds가 7일 뒤로 계산 (FR-16)',
+      app: const SizedBox.shrink(),
+      body: (t) async {
+        final deletedAt = DateTime.utc(2026, 5);
+        final status = DeletionStatus.fromDeletedAt(deletedAt);
+
+        expect(status.isPending, isTrue);
+        expect(status.deletedAt, deletedAt);
+        expect(
+          status.gracePeriodEnds,
+          deletedAt.add(const Duration(days: 7)),
+        );
+      },
+    );
+
+    cujCase(
+      'edge: deleted_at null이면 유예 상태 아님 + gracePeriodEnds null',
+      app: const SizedBox.shrink(),
+      body: (t) async {
+        final status = DeletionStatus.fromDeletedAt(null);
+        expect(status.isPending, isFalse);
+        expect(status.gracePeriodEnds, isNull);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 3-3: 30일 내 동일 DI 재가입 시도 차단
+  // ---------------------------------------------------------------------------
+
+  cujGroup('3-3', '재가입 제한 안내 노출', () {
+    List<dynamic> base() => [
+      accountDeletionCoordinatorProvider.overrideWithValue(coordinator),
+    ];
+
+    cujCase(
+      'happy: 탈퇴 안내 화면에 30일 재가입 제한 문구 노출 (FR-17)',
+      app: const DeletionInfoPage(),
+      overrides: base,
+      body: (t) async {
+        expect(find.textContaining('30일 동안 재가입이 제한'), findsOneWidget);
+      },
+    );
+
+    cujCase(
+      'edge: 재가입 제한 근거인 식별 해시 보존 안내도 함께 노출',
+      app: const DeletionInfoPage(),
+      overrides: base,
+      body: (t) async {
+        expect(find.text('재가입 제한을 위한 식별 해시 정보'), findsOneWidget);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 3-4: 유예 기간 중 알림 / 매칭 / 검색 노출 차단
+  // ---------------------------------------------------------------------------
+
+  cujGroup('3-4', '유예 유지 선택 시 즉시 sign-out 처리', () {
+    late StreamController<AuthState> authController;
+    late _FakeAccountRepository repo;
+
+    setUp(() {
+      authController = StreamController<AuthState>.broadcast();
+      repo = _FakeAccountRepository()
+        ..statusToReturn = DeletionStatus.fromDeletedAt(
+          DateTime.now().subtract(const Duration(days: 1)),
+        );
+    });
+
+    tearDown(() async {
+      await authController.close();
+    });
+
+    List<dynamic> base() => [
+      authStateChangesProvider.overrideWith((_) => authController.stream),
+      accountRepositoryProvider.overrideWithValue(repo),
+      currentUserProvider.overrideWith((_) => _socialUser()),
+      authControllerProvider.overrideWith(_FakeAuthController.new),
+    ];
+
+    cujCase(
+      'happy: 탈퇴 유지 선택 시 로그아웃 호출로 앱 노출 대상에서 즉시 이탈 (FR-18)',
+      app: const PendingDeletionRecoveryListener(child: SizedBox.shrink()),
+      overrides: base,
+      body: (t) async {
+        authController.add(const AuthState(AuthChangeEvent.signedIn, null));
+        await t.pump();
+        await t.pump(const Duration(milliseconds: 200));
+        await t.pumpAndSettle();
+
+        await t.tap(find.text('탈퇴 유지'));
+        await t.pumpAndSettle();
+
+        expect(_FakeAuthController.signOutCallCount, 1);
+      },
+    );
+
+    cujCase(
+      'edge: signedIn 이벤트가 없으면 sign-out 미호출',
+      app: const PendingDeletionRecoveryListener(child: SizedBox.shrink()),
+      overrides: base,
+      body: (t) async {
+        authController.add(
+          const AuthState(AuthChangeEvent.passwordRecovery, null),
+        );
+        await t.pumpAndSettle();
+
+        expect(_FakeAuthController.signOutCallCount, 0);
       },
     );
   });

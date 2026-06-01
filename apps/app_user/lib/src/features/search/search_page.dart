@@ -97,7 +97,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   children: [
                     Icon(
                       Icons.search,
-                      size: 64,
+                      size: MinglitIconSize.hero,
                       color: Theme.of(context).colorScheme.outlineVariant,
                     ),
                     const SizedBox(height: MinglitSpacing.medium),
@@ -157,7 +157,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                       children: [
                         Icon(
                           Icons.search_off_outlined,
-                          size: 64,
+                          size: MinglitIconSize.hero,
                           color: Theme.of(context).colorScheme.outlineVariant,
                         ),
                         const SizedBox(height: MinglitSpacing.medium),
