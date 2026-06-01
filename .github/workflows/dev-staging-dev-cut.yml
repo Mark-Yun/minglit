@@ -37,7 +37,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          fetch-depth: 1
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Generate release bot token
@@ -154,6 +154,8 @@ jobs:
             - Source tag: `${{ steps.plan.outputs.tag_name }}`
             - Source SHA: `${{ steps.plan.outputs.tag_sha }}`
             - Promotion branch: `${{ steps.plan.outputs.branch_name }}`
+            - Target branch: `dev`
+            - Deploy after merge: `dev-deploy` on `push` to `dev`
             - Dry run: `${{ inputs.dry_run || false }}`
 
       - name: Create dev promotion PR and enable auto-merge
@@ -165,13 +167,16 @@ jobs:
           TAG_SHA: ${{ steps.plan.outputs.tag_sha }}
           BRANCH_NAME: ${{ steps.plan.outputs.branch_name }}
           CUT_ISSUE_NUMBER: ${{ steps.cut-issue.outputs.issue-number }}
+          CUT_ISSUE_URL: ${{ steps.cut-issue.outputs.issue-url }}
         run: |
           set -euo pipefail
           CUT_ISSUE_CLOSER=""
           CUT_ISSUE_MARKER=""
+          CUT_ISSUE_LINE="- Tracking issue: none"
           if [ -n "${CUT_ISSUE_NUMBER}" ]; then
             CUT_ISSUE_CLOSER="Closes #${CUT_ISSUE_NUMBER}"
             CUT_ISSUE_MARKER="<!-- minglit:cut-issue-number:${CUT_ISSUE_NUMBER} -->"
+            CUT_ISSUE_LINE="- Tracking issue: #${CUT_ISSUE_NUMBER} (${CUT_ISSUE_URL})"
           fi
 
           BODY="$(cat <<EOF
@@ -179,6 +184,9 @@ jobs:
 
           - Source tag: ${TAG_NAME}
           - Source SHA: ${TAG_SHA}
+          - Target branch: dev
+          - Deploy after merge: dev-deploy on push to dev
+          ${CUT_ISSUE_LINE}
           - Merge mode: rebase, because the active dev ruleset requires linear history.
 
           ${CUT_ISSUE_CLOSER}

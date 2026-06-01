@@ -29,11 +29,12 @@ jobs:
     with:
       stage: dev
       base_ref: dev
+      run_cuj_integration: true
     secrets: inherit
 
   dev-pr-gate:
     needs: [source-guard, pr-gate-core]
-    if: always()
+    if: ${{ always() && !cancelled() }}
     runs-on: ubuntu-latest
     steps:
       - name: Publish branch gate result

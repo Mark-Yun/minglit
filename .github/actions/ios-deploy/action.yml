@@ -27,6 +27,15 @@ inputs:
   run-number:
     description: 'GitHub Actions run number (github.run_number)'
     required: true
+  build-name:
+    description: 'Flutter build name / CFBundleShortVersionString'
+    required: true
+  build-number:
+    description: 'Flutter build number / CFBundleVersion'
+    required: true
+  display-version:
+    description: 'Human-facing app/release version'
+    required: true
   APPLE_CERTIFICATE_BASE64:
     description: 'Apple signing certificate (base64)'
     required: true
@@ -259,7 +268,12 @@ runs:
       working-directory: ./${{ inputs.app-directory }}
       run: |
         flutter build ipa --release --export-options-plist=ios/ExportOptions-dev.plist \
-          --build-number=${{ inputs.run-number }} \
+          --build-name=${{ inputs['build-name'] }} \
+          --build-number=${{ inputs['build-number'] }} \
+          --dart-define=APP_VERSION=${{ inputs['display-version'] }} \
+          --dart-define=APP_CHANNEL=dev \
+          --dart-define=SOURCE_BRANCH=dev \
+          --dart-define=GIT_SHA=${{ github.sha }} \
           --dart-define=SUPABASE_URL=${{ inputs.SUPABASE_DEV_URL }} \
           --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ inputs.SUPABASE_DEV_PUBLISHABLE_KEY }} \
           --dart-define=KAKAO_LOCAL_REST_API_KEY=${{ inputs.KAKAO_LOCAL_REST_API_KEY }} \
@@ -273,7 +287,12 @@ runs:
       working-directory: ./${{ inputs.app-directory }}
       run: |
         flutter build ipa --release --export-options-plist=ios/ExportOptions.plist \
-          --build-number=${{ inputs.run-number }} \
+          --build-name=${{ inputs['build-name'] }} \
+          --build-number=${{ inputs['build-number'] }} \
+          --dart-define=APP_VERSION=${{ inputs['display-version'] }} \
+          --dart-define=APP_CHANNEL=main \
+          --dart-define=SOURCE_BRANCH=main \
+          --dart-define=GIT_SHA=${{ github.sha }} \
           --dart-define=SUPABASE_URL=${{ inputs.SUPABASE_MAIN_URL }} \
           --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ inputs.SUPABASE_MAIN_PUBLISHABLE_KEY }} \
           --dart-define=KAKAO_LOCAL_REST_API_KEY=${{ inputs.KAKAO_LOCAL_REST_API_KEY }} \
@@ -295,7 +314,7 @@ runs:
       run: |
         set -e
         FLAVOR=$([ "$GIT_REF" = "refs/heads/main" ] && echo "main" || echo "dev")
-        VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //;s/+.*//')
+        VERSION="${{ inputs['display-version'] }}"
         SRC=$(ls build/ios/ipa/*.ipa | head -1)
         ASSET="app_${APP}-ios-${FLAVOR}-v${VERSION}.ipa"
         cp "$SRC" "/tmp/${ASSET}"

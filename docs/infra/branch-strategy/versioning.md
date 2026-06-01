@@ -1,50 +1,52 @@
 # Versioning & Tags
 
-4-stage 모델 (`dev-staging → dev → rc → main`) 위에서의 CalVer (`YY.MM.PR#`) 적용 + tag 컨벤션. 기존 CLAUDE.md 의 "Versioning Conventions" 를 4-stage + flag 모델에 맞게 보강.
+4-stage 모델 (`dev-staging → dev → rc → main`) 위에서의 버전/태그 컨벤션. 소스 파일 version bump 는 `dev-staging` coherent snapshot 에만 남기고, `dev`/`rc`/`main` 배포 산출물은 deploy-time metadata 로 버전을 주입한다.
 
-## 기본 형식 (기존 유지)
+## 기본 형식
 
 | 구성요소 | 설명 | 예시 |
 |----------|------|------|
 | `YY` | 연도 2자리 | `26` |
 | `MM` | 월 2자리 | `05` |
-| `PR#` | 머지된 PR 번호 (cumulative across repo) | `2572` |
+| `DD` | KST 기준 snapshot 날짜 | `27` |
+| `BUILD_PR#` | version-bump PR 번호 | `2832` |
 
-- mobile versionCode: `YYMM * 10000 + PR#` — 예: `26052572`
+- deploy artifact versionName: `YY.MM.DD[-channel]` — 예: `26.05.27-dev`, `26.05.27-rc`, `26.05.27`
+- mobile build number / Android versionCode: `BUILD_PR#` — 예: `2832`
+- full identity/tag: `vYY.MM.DD+BUILD_PR#[-channel]` — 예: `v26.05.27+2832-dev-staging`
 
-> CLAUDE.md 의 "새 월이면 .1 시작" 은 `scripts/bump-version.sh` 와 불일치 — 실제론 PR# 가 cumulative. CLAUDE.md 정정 PR 별도 권장.
+`BUILD_PR#` 는 source PR 번호가 아니라 **version-bump PR 번호**다. GitHub source PR 번호는 생성 순서라 merge 순서를 보장하지 않으므로 build number 로 쓰지 않는다.
 
-## 단계별 Suffix
+## 단계별 채널 suffix
 
 | Stage | Suffix | 예시 |
 |-------|--------|------|
-| dev-staging | `-dev-staging` | `26.05.2572-dev-staging` |
-| dev (dev-staging-dev-cut snapshot) | (동일 suffix 유지, 새 bump 없음) | `26.05.2572-dev-staging` |
-| rc (cut) | `-rc-NN` (N = 1) | `26.05.2572-rc-01` |
-| rc (hotfix) | `-rc-NN` (N 증가) | `26.05.2585-rc-02` |
-| main (final) | (없음) | `26.05.2585` |
+| dev-staging source snapshot | `-dev-staging` | `26.05.27-dev-staging+2832` (Flutter), `26.05.27-dev-staging` (packages) |
+| dev artifact | `-dev` | `26.05.27-dev+2832` |
+| rc artifact | `-rc` | `26.05.27-rc+2832` |
+| main artifact | 없음 | `26.05.27+2832` |
 
-**원칙**: PR# 은 dev-staging 머지 시점에 부여, 모든 stage 에서 동일 PR# 유지. RC hotfix 시 새 PR# (hotfix PR 의 번호) + `_rc-NN` 증가.
+**원칙**: 날짜는 snapshot 을 설명하고, build number 는 version-bump PR 을 설명한다. 포함된 source PR 목록과 snapshot SHA 는 version-bump PR body/tag 로 추적한다.
 
 ## Version Bump 위치
 
 | Workflow | When | What |
 |----------|------|------|
-| `dev-staging-dev-cut-gate` | dev-staging PR 머지 직후 | `bump-version.sh {PR#}-dev-staging` |
-| `dev-staging-dev-cut` | daily snapshot 생성 시 | version 변경 없음 (dev-staging 의 그대로 가져감, legacy `sync-version` dev trigger 비활성화) |
-| `dev-rc-cut` | RC 브랜치 생성 시 | `bump-version.sh {ver}-rc-01` |
-| `rc-post-merge-sync` | RC hotfix 머지 직후 | `bump-version.sh {PR#}-rc-NN` (N 증가) |
-| `main-deploy` | rc → main 머지 직후 | `bump-version.sh {ver}` (suffix 제거) |
+| `dev-staging-dev-cut-gate` | dev-staging PR 머지 직후 | version-bump PR 생성. PR 번호를 build number 로 사용하고 merge 후 `v{YY.MM.DD}+{BUILD_PR#}-dev-staging` tag |
+| `dev-staging-dev-cut` | daily snapshot 생성 시 | version 변경 없음 |
+| `dev-rc-cut` | RC 브랜치 생성 시 | version 변경 없음. `rc/YYYY-Wxx` branch + `promo/rc-YYYY-Wxx` tag 만 생성 |
+| RC hotfix merge | RC hotfix 머지 직후 | version 변경 없음. RC deploy metadata 가 latest version-bump PR number 를 사용 |
+| `main-deploy` | main push 직후 | version 변경 없음. deploy-time metadata + release asset/tag/marker 생성 |
+
+`dev-staging-dev-cut-gate` 는 protected branch 에 직접 bump commit 을 push 하지 않는다. version-bump PR 을 만들고 `dev-staging-pr-gate` + auto-merge 를 통과시킨다. `dev`/`rc`/`main` 에 자동 version commit 을 만들지 않는다.
 
 ## Tag 컨벤션
 
 | Tag / Status | 시점 | 예시 | 부여자 |
 |--------------|------|------|--------|
-| `v{ver}-dev-staging` (tag) | dev-staging post-merge | `v26.05.2572-dev-staging` | workflow |
+| `v{ver}+{build}-dev-staging` (tag) | version-bump PR merge 후 | `v26.05.27+2832-dev-staging` | workflow |
 | `dev-rc-cut-pass` (commit status) | dev 머지 후 dev-rc-cut-gate green | (status only, tag 없음) | workflow |
-| `v{ver}-rc-NN` (tag) | dev-rc-cut + hotfix | `v26.05.2572-rc-01`, `v26.05.2585-rc-02` | workflow |
 | `promo/rc-YYYY-Wxx` (tag) | dev-rc-cut 직후 | `promo/rc-2026-W20` | workflow |
-| `v{ver}` (tag) | main 머지 직후 | `v26.05.2585` | workflow |
 | `promo/main-YYYY-Wxx` (tag) | main 머지 직후 (동시) | `promo/main-2026-W20` | workflow |
 
 `Wxx` = ISO week number (예: 2026-W20 = 2026년 20주차).
@@ -52,21 +54,21 @@
 > **Tag naming regex 는 [`RELEASE.md`](../../../RELEASE.md) lock** (TODO). Sentry, Statsig, Vercel, App Store 가 모두 pin. rename = 모든 dashboard 깨짐.
 
 조회:
-- `git tag -l 'v*'` (모든 release version)
+- `git tag -l 'v*-dev-staging'` (dev-staging coherent snapshot)
 - `git tag -l 'promo/main-*'` (weekly main promotion event)
 - `git log --first-parent main` (main 의 promotion 이벤트, rebase 라 사실상 linear)
 - `gh api repos/.../commits/{sha}/status` (dev-rc-cut-pass 확인)
 
-## 동일 PR# 가 여러 단계 등장하는 의미
+## 동일 build number 가 여러 단계 등장하는 의미
 
 | 상태 | 의미 |
 |------|------|
-| `26.05.2572-dev-staging` | dev-staging 에 PR# 2572 머지된 시점 |
-| `26.05.2572-rc-01` | 그 commit 이 rc 로 cut 된 시점 (dev-rc-cut-gate 통과 후) |
-| `26.05.2585-rc-02` | RC 에 hotfix PR# 2585 가 머지된 시점 |
-| `26.05.2585` | rc → main 머지 시 final version (RC 의 최종 hotfix version) |
+| `26.05.27-dev-staging+2832` | dev-staging source snapshot version/tag |
+| `26.05.27-dev+2832` | dev branch deploy artifact version |
+| `26.05.27-rc+2832` | rc branch deploy artifact version |
+| `26.05.27+2832` | main branch deploy artifact version |
 
-PR# 가 dev-staging 에서 부여되고 같은 PR# 가 후속 단계에서 suffix 만 바뀌어 등장. 헷갈리지 않게 *suffix 가 stage 표시* 라는 룰 명확.
+source-controlled `26.05.DD-dev-staging` 과 deploy artifact `26.05.DD[-channel]` 는 같은 snapshot date 를 공유한다. build number 는 version-bump PR number 로 고정된다.
 
 ## 버전 관리 제외 대상 (기존 유지)
 
@@ -76,10 +78,8 @@ PR# 가 dev-staging 에서 부여되고 같은 PR# 가 후속 단계에서 suffi
 
 ## 결정해야 할 것
 
-- mobile release branch hotfix 의 PR# 출처 (cherry-pick PR# 인가 새 PR# 인가)
-- main 비-promotion 변경의 version bump 룰 (긴급 hotfix 직접 push 시)
 - `RELEASE.md` 작성 (tag regex single source)
-- `bump-version.sh` 결과를 squash commit 에 inline 시킬지 release bot 별도 commit 으로 둘지
+- Android Play Console 기존 versionCode 가 version-bump PR number 보다 큰 경우 migration rule
 
 ## 관련
 

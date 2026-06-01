@@ -5,6 +5,7 @@
 
 import 'package:app_partner/src/features/account_deletion/account_deletion_coordinator.dart';
 import 'package:app_partner/src/features/account_deletion/partner_account_deletion_guard.dart';
+import 'package:app_partner/src/features/account_deletion/ui/deletion_info_page.dart';
 import 'package:app_partner/src/features/account_deletion/ui/deletion_reason_page.dart';
 import 'package:app_partner/src/features/account_deletion/ui/deletion_verify_page.dart';
 import 'package:flutter/material.dart';
@@ -224,6 +225,37 @@ void main() {
           find.widgetWithText(FilledButton, '탈퇴 요청'),
         );
         expect(submitBtn.onPressed, isNotNull);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 2-3: 파트너 탈퇴 시 사업자 의무 안내
+  // ---------------------------------------------------------------------------
+
+  cujGroup('2-3', '파트너 탈퇴 시 사업자 의무 안내', () {
+    cujCase(
+      'happy: 안내 화면에 정산/세무 기록 보존 문구 노출 (FR-13)',
+      app: const DeletionInfoPage(),
+      overrides: base,
+      body: (t) async {
+        expect(find.text('계속 보존되는 정보'), findsOneWidget);
+        expect(find.textContaining('정산 기록'), findsOneWidget);
+        expect(find.textContaining('법적 의무 대응'), findsOneWidget);
+      },
+    );
+
+    cujCase(
+      'happy: 계속 진행 탭 → pushVerify(reason) 호출',
+      app: const DeletionInfoPage(reasonCode: 'privacy_concern'),
+      overrides: base,
+      body: (t) async {
+        await t.tap(find.text('계속 진행'));
+        await t.pumpAndSettle();
+
+        verify(
+          () => coordinator.pushVerify(reason: any(named: 'reason')),
+        ).called(1);
       },
     );
   });

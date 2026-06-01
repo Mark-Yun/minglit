@@ -3,11 +3,11 @@
  *
  * Authored from:
  *   - shared/packages/mds/core/lib/src/ui/widgets/**  (file inventory)
- *   - apps/mds/storybook/lib/main.dart                (which have stories)
- *   - apps/app_user, app_partner                       (where used)
+ *   - src/components/specs/**                         (visual playgrounds)
+ *   - apps/app_user, app_partner                      (where used)
  *
- * Categories follow the storybook structure (Buttons / Inputs / Cards /
- * Feedback / Layout / Loading / Overlay).
+ * Categories follow the docs structure (Action / Inputs / Cards /
+ * Feedback / Layouts / Loading / Overlay / Media).
  *
  * Adding a new component:
  *   1. Drop the Dart widget into shared/packages/mds/core/lib/src/ui/widgets/
@@ -19,7 +19,6 @@
  *      etc. locally).
  *   4. Register the new <Component>Spec in `src/app/components/page.tsx`
  *      INLINE_SPECS map.
- *   5. Optionally add a Widgetbook story (kept until 2026-06)
  *
  * Tone rule (same as the screen specs):
  *   The `description` text on each entry — purpose / guideline body /
@@ -991,7 +990,7 @@ MinglitParticipantGauge(
   max: event.maxParticipants,
 )
 
-// 카드 내 태그 + 게이지 패턴 (storybook 예시)
+// 카드 내 태그 + 게이지 패턴
 Row(
   children: [
     MinglitTag(label: event.categoryLabel, color: MinglitColors.primary, size: MinglitTagSize.small),
@@ -2521,4 +2520,3 @@ export function getComponentsByCategory(): Array<{
 export function getComponentByName(name: string): ComponentSpec | undefined {
   return MDS_COMPONENTS.find((c) => c.name === name);
 }
-

@@ -27,7 +27,7 @@ class MyPage extends ConsumerWidget {
             children: [
               Icon(
                 Icons.person_outline,
-                size: 64,
+                size: MinglitIconSize.hero,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
               const SizedBox(height: MinglitSpacing.medium),

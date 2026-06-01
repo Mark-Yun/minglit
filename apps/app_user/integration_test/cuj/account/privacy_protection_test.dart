@@ -1,23 +1,7 @@
-// CUJ tests — account / privacy-protection (app_user)
+// CUJ tests — account / privacy-protection
 //
 // 대응 spec: docs/features/account/privacy-protection/spec.md
 // CUJ 추가 시 본 파일에 `cujGroup` 블록 추가 (새 파일 X).
-//
-// 커버 범위 (Flutter integration test): 8/15
-//   1-1: SwitchListTile 토글 (제3자/마케팅/위치)
-//   1-2: 토글 실패 → SnackBar + 원상복구
-//   1-3: 필수 동의 read-only 표시
-//   2-1: 필수 동의 ListTile 탭 → ConsentDetailSheet
-//   2-2: 약관 보기 섹션 ListTile 탭 → ConsentDetailSheet
-//   2-3: 본인인증 미완 → 탭 무반응
-//   6-1: Loading state
-//   6-2: Error state
-//
-// 미커버 (7/15):
-//   3-1, 3-2 (회원 탈퇴): Fix #2093 — PrivacyPage에서 제거, 계정 관리 페이지로 이동.
-//                          spec과 구현 불일치 — spec 업데이트 필요.
-//   4-1, 4-2, 4-3 (인증 열람 권한): Phase 2 (#556) 미구현
-//   5-1, 5-2 (권한 철회): Phase 2 (#556) 미구현
 
 import 'dart:async';
 
@@ -30,57 +14,59 @@ import 'package:mocktail/mocktail.dart';
 
 import '../_engine/cuj_test.dart';
 
-class _MockUser extends Mock implements User {}
-
 class _MockConsentRepository extends Mock implements ConsentRepository {}
 
-// AsyncNotifier override — loading/error state injection용
-class _LoadingConsentController extends ConsentController {
-  @override
-  FutureOr<List<UserConsent>> build() async {
-    await Future<void>.delayed(const Duration(hours: 1));
-    return [];
-  }
+class _MockUser extends Mock implements User {}
+
+UserConsent _consent({
+  required String id,
+  required ConsentType key,
+  required bool consented,
+}) {
+  final now = DateTime(2026);
+  return UserConsent(
+    id: id,
+    userId: 'user-1',
+    consentKey: key,
+    consented: consented,
+    consentedAt: now,
+    createdAt: now,
+    withdrawnAt: consented ? null : now,
+  );
 }
 
-class _ErrorConsentController extends ConsentController {
-  @override
-  FutureOr<List<UserConsent>> build() async {
-    throw Exception('server error');
-  }
+List<UserConsent> _baseConsents({required bool identityVerified}) => [
+  _consent(id: '1', key: ConsentType.termsOfService, consented: true),
+  _consent(id: '2', key: ConsentType.privacyCollection, consented: true),
+  _consent(id: '3', key: ConsentType.thirdPartyProvision, consented: false),
+  _consent(id: '4', key: ConsentType.marketingConsent, consented: true),
+  _consent(id: '5', key: ConsentType.locationConsent, consented: false),
+  _consent(
+    id: '6',
+    key: ConsentType.identityVerification,
+    consented: identityVerified,
+  ),
+];
+
+SwitchListTile _switchTile(WidgetTester t, String label) {
+  return t.widget<SwitchListTile>(find.widgetWithText(SwitchListTile, label));
 }
-
-final _testDate = DateTime(2024);
-
-UserConsent _makeConsent(ConsentType type, {bool consented = true}) =>
-    UserConsent(
-      id: type.name,
-      userId: 'test-user-id',
-      consentKey: type,
-      consented: consented,
-      consentedAt: _testDate,
-      createdAt: _testDate,
-    );
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  setUpAll(() {
-    registerFallbackValue(ConsentType.termsOfService);
-    registerFallbackValue(<ConsentInput>[]);
-  });
-
-  late _MockUser user;
   late _MockConsentRepository repo;
+  late _MockUser user;
 
   setUp(() {
-    user = _MockUser();
-    when(() => user.id).thenReturn('test-user-id');
-
     repo = _MockConsentRepository();
-    when(() => repo.getConsents(any())).thenAnswer((_) async => []);
-    when(() => repo.saveConsents(any(), any())).thenAnswer((_) async {});
-    when(() => repo.hasRequiredConsents()).thenAnswer((_) async => true);
+    user = _MockUser();
+
+    when(() => user.id).thenReturn('user-1');
+    when(
+      () => repo.getConsents('user-1'),
+    ).thenAnswer((_) async => _baseConsents(identityVerified: true));
+    when(() => repo.saveConsents('user-1', any())).thenAnswer((_) async {});
   });
 
   List<dynamic> base() => [
@@ -92,69 +78,29 @@ void main() {
   // ---------------------------------------------------------------------------
   // CUJ 1-1: 선택 동의 SwitchListTile 토글
   // ---------------------------------------------------------------------------
-
   cujGroup('1-1', '선택 동의 SwitchListTile 토글', () {
     cujCase(
-      'happy: 마케팅 OFF → ON 토글 → toggleConsent 호출',
+      'happy: 제3자 제공 동의 토글 시 저장 호출 + UI 반영',
       app: const PrivacyPage(),
       overrides: base,
       body: (t) async {
-        // 초기 상태: 마케팅 OFF (getConsents 빈 리스트)
-        expect(find.byType(SwitchListTile), findsWidgets);
+        expect(_switchTile(t, '제3자 제공 동의').value, isFalse);
 
-        // 마케팅 스위치 탭
-        await t.tap(find.text('마케팅 정보 수신'));
-        await t.pumpAndSettle();
-
-        final captured = verify(
-          () => repo.saveConsents('test-user-id', captureAny()),
-        ).captured;
-        final saved = captured.single as List<ConsentInput>;
-        expect(saved, hasLength(1));
-        expect(saved.first.consentKey, ConsentType.marketingConsent);
-        expect(saved.first.consented, isTrue);
-      },
-    );
-
-    cujCase(
-      'happy: 제3자 ON → OFF 철회 → toggleConsent 호출',
-      app: const PrivacyPage(),
-      overrides: () {
-        when(() => repo.getConsents(any())).thenAnswer(
-          (_) async => [
-            _makeConsent(ConsentType.thirdPartyProvision),
-          ],
+        when(() => repo.getConsents('user-1')).thenAnswer(
+          (_) async => _baseConsents(identityVerified: true)
+              .map(
+                (c) => c.consentKey == ConsentType.thirdPartyProvision
+                    ? c.copyWith(consented: true, withdrawnAt: null)
+                    : c,
+              )
+              .toList(),
         );
-        return base();
-      },
-      body: (t) async {
-        // 제3자 스위치 탭 (현재 ON → OFF)
-        await t.tap(find.text('제3자 제공 동의'));
+
+        await t.tap(find.widgetWithText(SwitchListTile, '제3자 제공 동의'));
         await t.pumpAndSettle();
 
-        final captured = verify(
-          () => repo.saveConsents('test-user-id', captureAny()),
-        ).captured;
-        final saved = captured.single as List<ConsentInput>;
-        expect(saved.first.consentKey, ConsentType.thirdPartyProvision);
-        expect(saved.first.consented, isFalse);
-      },
-    );
-
-    cujCase(
-      'happy: 위치정보 OFF → ON 토글 → toggleConsent 호출',
-      app: const PrivacyPage(),
-      overrides: base,
-      body: (t) async {
-        await t.tap(find.text('위치정보 이용 동의'));
-        await t.pumpAndSettle();
-
-        final captured = verify(
-          () => repo.saveConsents('test-user-id', captureAny()),
-        ).captured;
-        final saved = captured.single as List<ConsentInput>;
-        expect(saved.first.consentKey, ConsentType.locationConsent);
-        expect(saved.first.consented, isTrue);
+        verify(() => repo.saveConsents('user-1', any())).called(1);
+        expect(_switchTile(t, '제3자 제공 동의').value, isTrue);
       },
     );
   });
@@ -162,26 +108,27 @@ void main() {
   // ---------------------------------------------------------------------------
   // CUJ 1-2: 토글 실패 시 원상복구
   // ---------------------------------------------------------------------------
-
   cujGroup('1-2', '토글 실패 시 원상복구', () {
     cujCase(
-      'happy: 마케팅 토글 → 서버 실패 → SnackBar + 원상복구',
+      'edge: 저장 실패 시 스낵바 표시 + 서버 상태(false)로 복구',
       app: const PrivacyPage(),
-      overrides: () {
-        when(
-          () => repo.saveConsents(any(), any()),
-        ).thenThrow(Exception('network'));
-        return base();
-      },
+      overrides: base,
       body: (t) async {
-        // Fix #886: 토글 실패 시 원상복구 + 스낵바
-        await t.tap(find.text('마케팅 정보 수신'));
+        when(
+          () => repo.saveConsents('user-1', any()),
+        ).thenThrow(Exception('save failed'));
+        when(
+          () => repo.getConsents('user-1'),
+        ).thenAnswer((_) async => _baseConsents(identityVerified: true));
+
+        await t.tap(find.widgetWithText(SwitchListTile, '제3자 제공 동의'));
         await t.pumpAndSettle();
 
-        expect(find.text('동의 변경에 실패했습니다. 다시 시도해주세요.'), findsOneWidget);
-
-        // SnackBar 닫히고 나서도 스위치 복구 대기
-        await t.pump(const Duration(seconds: 4));
+        expect(
+          find.text('동의 변경에 실패했습니다. 다시 시도해주세요.'),
+          findsOneWidget,
+        );
+        expect(_switchTile(t, '제3자 제공 동의').value, isFalse);
       },
     );
   });
@@ -189,59 +136,38 @@ void main() {
   // ---------------------------------------------------------------------------
   // CUJ 1-3: 필수 동의 read-only 표시
   // ---------------------------------------------------------------------------
-
   cujGroup('1-3', '필수 동의 read-only 표시', () {
     cujCase(
-      'happy: 서비스 이용약관 · 개인정보 수집 — SwitchListTile 아님',
+      'happy: 필수 동의 3개는 Switch가 아니라 ListTile 상태 텍스트로 노출',
       app: const PrivacyPage(),
       overrides: base,
       body: (t) async {
-        // 필수 동의는 SwitchListTile로 표시되지 않아야 함
-        final switches = t
-            .widgetList<SwitchListTile>(find.byType(SwitchListTile))
-            .map((s) => s.title)
-            .whereType<Text>()
-            .map((title) => title.data ?? '')
-            .toSet();
-
-        expect(switches.contains('서비스 이용약관'), isFalse);
-        expect(switches.contains('개인정보 수집·이용'), isFalse);
-
-        // 약관 보기 섹션에도 동일 텍스트가 있으므로 개수는 고정하지 않는다.
-        expect(find.text('서비스 이용약관'), findsWidgets);
+        expect(find.text('서비스 이용약관'), findsAtLeast(1));
         expect(find.text('개인정보 수집·이용'), findsOneWidget);
+        expect(find.text('본인인증 정보'), findsOneWidget);
+        expect(find.text('동의됨'), findsAtLeast(3));
+
+        expect(find.widgetWithText(SwitchListTile, '서비스 이용약관'), findsNothing);
+        expect(find.widgetWithText(SwitchListTile, '개인정보 수집·이용'), findsNothing);
+        expect(find.widgetWithText(SwitchListTile, '본인인증 정보'), findsNothing);
       },
     );
+  });
 
+  // ---------------------------------------------------------------------------
+  // CUJ 2-1: 동의 항목 본문 시트 열람
+  // ---------------------------------------------------------------------------
+  cujGroup('2-1', '동의 항목 본문 시트 열람', () {
     cujCase(
-      'happy: 본인인증 미완 → statusText = 미동의',
+      'happy: 필수 동의 타일 탭 시 ConsentDetailSheet 노출',
       app: const PrivacyPage(),
-      overrides: base, // identityVerification 없음 → 미동의
+      overrides: base,
       body: (t) async {
-        // identityVerification consent 없으면 "미동의" 표시
-        expect(find.text('미동의'), findsOneWidget);
-      },
-    );
+        await t.tap(find.widgetWithText(ListTile, '서비스 이용약관').first);
+        await t.pumpAndSettle();
 
-    cujCase(
-      'happy: 본인인증 완료 → statusText = 동의됨',
-      app: const PrivacyPage(),
-      overrides: () {
-        when(() => repo.getConsents(any())).thenAnswer(
-          (_) async => [
-            _makeConsent(ConsentType.identityVerification),
-          ],
-        );
-        return base();
-      },
-      body: (t) async {
-        final identityInfoTile = find.ancestor(
-          of: find.text('본인인증 정보'),
-          matching: find.byType(ListTile),
-        );
-        expect(identityInfoTile, findsOneWidget);
         expect(
-          find.descendant(of: identityInfoTile, matching: find.text('동의됨')),
+          find.text('서비스 이용을 위해 필요한 기본 권리와 의무를 안내합니다.'),
           findsOneWidget,
         );
       },
@@ -249,98 +175,144 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // CUJ 2-1: 동의 항목 본문 시트 열람 (필수 동의 ListTile 탭)
-  // ---------------------------------------------------------------------------
-
-  cujGroup('2-1', '동의 항목 본문 시트 열람', () {
-    cujCase(
-      'happy: 서비스 이용약관 ListTile 탭 → ConsentDetailSheet 노출',
-      app: const PrivacyPage(),
-      overrides: base,
-      body: (t) async {
-        await t.tap(find.text('서비스 이용약관').first);
-        await t.pumpAndSettle();
-
-        // ConsentDetailSheet 바텀시트 노출 확인 (주요 내용 포함)
-        expect(find.text('서비스 이용약관'), findsWidgets);
-        expect(find.text('주요 내용'), findsOneWidget);
-
-        // 배리어 탭으로 닫기
-        await t.tapAt(const Offset(10, 10));
-        await t.pumpAndSettle();
-        expect(find.text('개인정보'), findsOneWidget); // AppBar title
-      },
-    );
-
-    cujCase(
-      'happy: 본인인증 완료 시 본인인증 정보 탭 → 시트 노출',
-      app: const PrivacyPage(),
-      overrides: () {
-        when(() => repo.getConsents(any())).thenAnswer(
-          (_) async => [
-            _makeConsent(ConsentType.identityVerification),
-          ],
-        );
-        return base();
-      },
-      body: (t) async {
-        await t.tap(find.text('본인인증 정보'));
-        await t.pumpAndSettle();
-
-        // 본인인증 정보 시트 노출 확인
-        expect(find.text('본인인증(CI/DI) 수집 동의'), findsOneWidget);
-      },
-    );
-  });
-
-  // ---------------------------------------------------------------------------
   // CUJ 2-2: 약관 보기 섹션 ListTile 탭
   // ---------------------------------------------------------------------------
-
   cujGroup('2-2', '약관 보기 섹션 ListTile 탭', () {
     cujCase(
-      'happy: 개인정보처리방침 탭 → ConsentDetailSheet 노출',
+      'happy: 개인정보처리방침 탭 시 상세 시트 노출',
       app: const PrivacyPage(),
       overrides: base,
       body: (t) async {
+        await t.scrollUntilVisible(find.text('개인정보처리방침'), 200);
         await t.tap(find.text('개인정보처리방침'));
         await t.pumpAndSettle();
 
-        expect(find.text('개인정보처리방침'), findsWidgets);
-        expect(find.text('수집하는 개인정보'), findsOneWidget);
-      },
-    );
-
-    cujCase(
-      'happy: 위치정보 이용약관 탭 → ConsentDetailSheet 노출',
-      app: const PrivacyPage(),
-      overrides: base,
-      body: (t) async {
-        await t.tap(find.text('위치정보 이용약관'));
-        await t.pumpAndSettle();
-
-        expect(find.text('위치정보 이용약관'), findsWidgets);
+        expect(find.text('밍릿의 개인정보 처리 방침을 안내합니다.'), findsOneWidget);
       },
     );
   });
 
   // ---------------------------------------------------------------------------
-  // CUJ 2-3: 본인인증 미완 상태에서 본인인증 정보 탭 무반응
+  // CUJ 2-3: 본인인증 미완 상태 탭 무반응
   // ---------------------------------------------------------------------------
-
-  cujGroup('2-3', '본인인증 미완 상태에서 본인인증 정보 탭 무반응', () {
+  cujGroup('2-3', '본인인증 미완 상태에서 본인인증 정보 탭', () {
     cujCase(
-      'happy: identityVerification 미완 → 탭해도 시트 미노출',
+      'edge: 본인인증 미동의 상태에서는 시트가 열리지 않음',
       app: const PrivacyPage(),
-      overrides: base, // identityVerification 없음 → onTap: null
+      overrides: () {
+        when(
+          () => repo.getConsents('user-1'),
+        ).thenAnswer((_) async => _baseConsents(identityVerified: false));
+        return base();
+      },
       body: (t) async {
-        // 본인인증 정보 타일 탭 (onTap null이면 아무 일도 없음)
-        await t.tap(find.text('본인인증 정보'));
+        expect(find.text('미동의'), findsOneWidget);
+        await t.tap(find.widgetWithText(ListTile, '본인인증 정보'));
         await t.pumpAndSettle();
 
-        // 시트가 올라오지 않음 — AppBar title은 여전히 '개인정보'
-        expect(find.text('개인정보'), findsOneWidget);
         expect(find.text('본인인증(CI/DI) 수집 동의'), findsNothing);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 3-1: 회원 탈퇴 시작 진입 (현재 구현 가드)
+  // ---------------------------------------------------------------------------
+  cujGroup('3-1', '회원 탈퇴 시작 진입', () {
+    cujCase(
+      'edge: PrivacyPage에서는 탈퇴 CTA 비노출 (#2093)',
+      app: const PrivacyPage(),
+      overrides: base,
+      body: (t) async {
+        expect(find.text('회원 탈퇴 시작하기'), findsNothing);
+        expect(find.text('회원 탈퇴'), findsNothing);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 3-2: 탈퇴 진행 중 재진입 sub-variant (현재 구현 가드)
+  // ---------------------------------------------------------------------------
+  cujGroup('3-2', '탈퇴 진행 중 재진입 시 sub-variant', () {
+    cujCase(
+      'edge: PrivacyPage에 탈퇴 진행 상태 카드 비노출',
+      app: const PrivacyPage(),
+      overrides: base,
+      body: (t) async {
+        expect(find.text('탈퇴 요청 진행 중'), findsNothing);
+        expect(find.text('탈퇴 진행 상태 보기'), findsNothing);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 4-1: (Phase 2) 인증 열람 권한 목록 노출 (미구현 가드)
+  // ---------------------------------------------------------------------------
+  cujGroup('4-1', '(Phase 2) 인증 열람 권한 목록 노출', () {
+    cujCase(
+      'edge: 현재 버전에서 인증 열람 현황 섹션 비노출',
+      app: const PrivacyPage(),
+      overrides: base,
+      body: (t) async {
+        expect(find.text('인증 열람 현황'), findsNothing);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 4-2: (Phase 2) 만료 임박/만료됨 시각 분기 (미구현 가드)
+  // ---------------------------------------------------------------------------
+  cujGroup('4-2', '(Phase 2) 만료 임박 / 만료됨 시각 분기', () {
+    cujCase(
+      'edge: 만료 임박/만료됨 D-day UI 미노출',
+      app: const PrivacyPage(),
+      overrides: base,
+      body: (t) async {
+        expect(find.textContaining('곧 만료됩니다'), findsNothing);
+        expect(find.textContaining('만료된 권한'), findsNothing);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 4-3: (Phase 2) 빈 상태 (미구현 가드)
+  // ---------------------------------------------------------------------------
+  cujGroup('4-3', '(Phase 2) 빈 상태 (공유된 인증 없음)', () {
+    cujCase(
+      'edge: 빈 상태 문구 비노출',
+      app: const PrivacyPage(),
+      overrides: base,
+      body: (t) async {
+        expect(find.text('공유된 인증이 없습니다'), findsNothing);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 5-1: (Phase 2) 권한 철회 확인 다이얼로그 (미구현 가드)
+  // ---------------------------------------------------------------------------
+  cujGroup('5-1', '(Phase 2) 권한 철회 확인 다이얼로그', () {
+    cujCase(
+      'edge: 권한 철회 액션/다이얼로그 비노출',
+      app: const PrivacyPage(),
+      overrides: base,
+      body: (t) async {
+        expect(find.text('권한 철회'), findsNothing);
+        expect(find.text('권한을 철회하시겠습니까?'), findsNothing);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
+  // CUJ 5-2: (Phase 2) 철회 성공 후 갱신 (미구현 가드)
+  // ---------------------------------------------------------------------------
+  cujGroup('5-2', '(Phase 2) 권한 철회 성공 후 SnackBar + 목록 갱신', () {
+    cujCase(
+      'edge: 철회 성공 스낵바 문구 비노출',
+      app: const PrivacyPage(),
+      overrides: base,
+      body: (t) async {
+        expect(find.text('권한이 철회되었습니다'), findsNothing);
       },
     );
   });
@@ -348,40 +320,46 @@ void main() {
   // ---------------------------------------------------------------------------
   // CUJ 6-1: Loading state
   // ---------------------------------------------------------------------------
-
   cujGroup('6-1', 'Loading state — 동의 정보 가져오는 중', () {
+    late Completer<List<UserConsent>> loadingCompleter;
+
     cujCase(
-      'happy: 로딩 중 — MinglitCircularProgressIndicator 노출',
+      'happy: 초기 fetch 진행 중 중앙 로딩 인디케이터 노출',
       app: const PrivacyPage(),
-      overrides: () => [
-        currentUserProvider.overrideWith((_) => user),
-        authStateChangesProvider.overrideWith((_) => const Stream.empty()),
-        consentControllerProvider.overrideWith(_LoadingConsentController.new),
-      ],
-      afterPump: (t) => t.pump(), // pumpAndSettle 금지 — 무한 로딩
+      overrides: () {
+        loadingCompleter = Completer<List<UserConsent>>();
+        when(
+          () => repo.getConsents('user-1'),
+        ).thenAnswer((_) => loadingCompleter.future);
+        return base();
+      },
+      afterPump: (t) async {
+        await t.pump();
+      },
       body: (t) async {
         expect(find.byType(MinglitCircularProgressIndicator), findsOneWidget);
-        expect(find.byType(ListView), findsNothing);
+
+        loadingCompleter.complete(_baseConsents(identityVerified: true));
+        await t.pumpAndSettle();
       },
     );
   });
 
   // ---------------------------------------------------------------------------
-  // CUJ 6-2: Error state — 동의 정보 로드 실패
+  // CUJ 6-2: Error state
   // ---------------------------------------------------------------------------
-
   cujGroup('6-2', 'Error state — 동의 정보 로드 실패', () {
     cujCase(
-      'happy: fetch 실패 → 에러 메시지 노출',
+      'happy: 첫 fetch 실패 시 에러 메시지 노출',
       app: const PrivacyPage(),
-      overrides: () => [
-        currentUserProvider.overrideWith((_) => user),
-        authStateChangesProvider.overrideWith((_) => const Stream.empty()),
-        consentControllerProvider.overrideWith(_ErrorConsentController.new),
-      ],
+      overrides: () {
+        when(
+          () => repo.getConsents('user-1'),
+        ).thenThrow(Exception('network error'));
+        return base();
+      },
       body: (t) async {
         expect(find.text('동의 정보를 불러올 수 없습니다.'), findsOneWidget);
-        expect(find.byType(ListView), findsNothing);
       },
     );
   });

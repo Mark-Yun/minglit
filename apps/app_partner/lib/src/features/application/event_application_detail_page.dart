@@ -17,10 +17,7 @@ Future<EventApplication?> eventApplicationDetail(
 }
 
 class EventApplicationDetailPage extends ConsumerStatefulWidget {
-  const EventApplicationDetailPage({
-    required this.applicationId,
-    super.key,
-  });
+  const EventApplicationDetailPage({required this.applicationId, super.key});
 
   final String applicationId;
 
@@ -37,9 +34,9 @@ class _EventApplicationDetailPageState
     ref.listenManual(eventApplicationReviewControllerProvider, (_, next) {
       if (next is AsyncData) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('처리가 완료되었습니다.')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('처리가 완료되었습니다.')));
           Navigator.of(context).pop();
         }
       }
@@ -114,6 +111,7 @@ class _ApplicationDetailBody extends StatelessWidget {
     final age = user?.birthYear != null
         ? DateTime.now().year - user!.birthYear!
         : null;
+    final birthDateLabel = birthDate == null ? null : _formatDate(birthDate);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(MinglitSpacing.medium),
@@ -152,17 +150,14 @@ class _ApplicationDetailBody extends StatelessWidget {
                         ),
                         if (age != null || gender != null)
                           Text(
-                            [
-                              if (age != null) '$age세',
-                              ?gender,
-                            ].join(' · '),
+                            [if (age != null) '$age세', ?gender].join(' · '),
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                         if (birthDate != null)
                           Text(
-                            '${birthDate.year}.${birthDate.month.toString().padLeft(2, '0')}.${birthDate.day.toString().padLeft(2, '0')}',
+                            birthDateLabel!,
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -203,7 +198,7 @@ class _ApplicationDetailBody extends StatelessWidget {
                     dense: true,
                     title: const Text('결제금액'),
                     trailing: Text(
-                      '${application.paymentAmount!.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}원',
+                      '${_formatAmount(application.paymentAmount!)}원',
                       style: theme.textTheme.bodyMedium,
                     ),
                   ),
@@ -259,37 +254,68 @@ class _ApplicationDetailBody extends StatelessWidget {
   }
 
   Future<void> _showRejectDialog(BuildContext context) async {
-    final controller = TextEditingController();
     final reason = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('거절 사유'),
-        content: TextField(
-          controller: controller,
-          maxLines: 3,
-          decoration: const InputDecoration(
-            hintText: '거절 사유를 입력해주세요 (선택)',
-            border: OutlineInputBorder(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(controller.text),
-            child: const Text('거절'),
-          ),
-        ],
-      ),
+      builder: (context) => const _RejectReasonDialog(),
     );
-    controller.dispose();
     if (reason != null) onReject(reason.isEmpty ? null : reason);
   }
 
   static String _formatDate(DateTime dt) {
-    return '${dt.year}.${dt.month.toString().padLeft(2, '0')}.${dt.day.toString().padLeft(2, '0')}';
+    final month = dt.month.toString().padLeft(2, '0');
+    final day = dt.day.toString().padLeft(2, '0');
+    return '${dt.year}.$month.$day';
+  }
+
+  static String _formatAmount(num amount) {
+    return amount
+        .toStringAsFixed(0)
+        .replaceAllMapped(
+          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+          (m) => '${m[1]},',
+        );
+  }
+}
+
+class _RejectReasonDialog extends StatefulWidget {
+  const _RejectReasonDialog();
+
+  @override
+  State<_RejectReasonDialog> createState() => _RejectReasonDialogState();
+}
+
+class _RejectReasonDialogState extends State<_RejectReasonDialog> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('거절 사유'),
+      content: TextField(
+        controller: _controller,
+        maxLines: 3,
+        decoration: const InputDecoration(
+          hintText: '거절 사유를 입력해주세요 (선택)',
+          border: OutlineInputBorder(),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('취소'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(_controller.text),
+          child: const Text('거절'),
+        ),
+      ],
+    );
   }
 }
 

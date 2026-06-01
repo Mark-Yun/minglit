@@ -1,0 +1,178 @@
+name: deploy-dev-event-flow-cron
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+    inputs:
+      wait_for_deploy_supabase:
+        description: Wait for deploy-supabase success on the same dev SHA before installing cron.
+        required: false
+        type: boolean
+        default: true
+
+concurrency:
+  group: deploy-dev-event-flow-cron
+  cancel-in-progress: false
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+  statuses: write
+
+jobs:
+  install:
+    name: Install dev event-flow cron
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/dev'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Wait for deploy-supabase on dev SHA
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          WAIT_FOR_DEPLOY_SUPABASE_INPUT: ${{ inputs.wait_for_deploy_supabase == true }}
+          BEFORE_SHA: ${{ github.event.before }}
+          TARGET_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          wait_for_deploy="false"
+          if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
+            if [ "${WAIT_FOR_DEPLOY_SUPABASE_INPUT}" = "true" ]; then
+              wait_for_deploy="true"
+            fi
+          elif [ "${EVENT_NAME}" = "push" ]; then
+            base_sha="${BEFORE_SHA:-}"
+            if [ -n "${base_sha}" ] && [ "${base_sha}" != "0000000000000000000000000000000000000000" ]; then
+              changed_files="$(git diff --name-only "${base_sha}" "${TARGET_SHA}" || true)"
+            else
+              changed_files="$(git show --pretty='' --name-only "${TARGET_SHA}" || true)"
+            fi
+
+            if printf '%s\n' "${changed_files}" | grep -Eq '^(supabase/(migrations|functions)/|env-manifest\.json$)'; then
+              wait_for_deploy="true"
+            fi
+          fi
+
+          echo "wait_for_deploy_supabase=${wait_for_deploy}"
+          if [ "${wait_for_deploy}" != "true" ]; then
+            echo "Skipping deploy-supabase wait."
+            exit 0
+          fi
+
+          for attempt in $(seq 1 60); do
+            run_json="$(gh run list \
+              --workflow deploy-supabase.yml \
+              --branch dev \
+              --limit 20 \
+              --json databaseId,headSha,status,conclusion,url \
+              --jq "[.[] | select(.headSha == \"${TARGET_SHA}\")][0] // {}")"
+            status="$(jq -r '.status // ""' <<< "${run_json}")"
+            conclusion="$(jq -r '.conclusion // ""' <<< "${run_json}")"
+            url="$(jq -r '.url // ""' <<< "${run_json}")"
+
+            if [ -z "${status}" ]; then
+              echo "deploy-supabase run for ${TARGET_SHA} not found yet (${attempt}/60)."
+              sleep 30
+              continue
+            fi
+
+            echo "deploy-supabase status=${status} conclusion=${conclusion} url=${url}"
+            if [ "${status}" = "completed" ] && [ "${conclusion}" = "success" ]; then
+              exit 0
+            fi
+            if [ "${status}" = "completed" ]; then
+              echo "::error::deploy-supabase completed with conclusion=${conclusion}"
+              exit 1
+            fi
+            sleep 30
+          done
+
+          echo "::error::Timed out waiting for deploy-supabase on ${TARGET_SHA}"
+          exit 1
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Safety guard
+        env:
+          TARGET_PROJECT_ID: ${{ secrets.SUPABASE_DEV_PROJECT_ID }}
+          MAIN_PROJECT_ID: ${{ secrets.SUPABASE_MAIN_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TARGET_PROJECT_ID}" ]; then
+            echo "::error::SUPABASE_DEV_PROJECT_ID secret is missing."
+            exit 1
+          fi
+          if [ "${TARGET_PROJECT_ID}" = "${MAIN_PROJECT_ID}" ]; then
+            echo "::error::Refusing to install dev event-flow cron on the main Supabase project."
+            exit 1
+          fi
+
+      - name: Install dev event-flow simulator cron
+        env:
+          SUPABASE_DEV_PROJECT_ID: ${{ secrets.SUPABASE_DEV_PROJECT_ID }}
+          SUPABASE_DEV_DB_PASSWORD: ${{ secrets.SUPABASE_DEV_DB_PASSWORD }}
+          GITHUB_ACCESS_TOKEN: ${{ secrets.GH_PAT_FOR_BUG_REPORT }}
+          TARGET_REF: dev
+          TARGET_SHA: ${{ github.sha }}
+        run: bash .github/scripts/install-dev-event-flow-cron.sh
+
+      - name: Verify event-flow simulator tick
+        env:
+          SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
+          SUPABASE_DEV_SECRET_KEY: ${{ secrets.SUPABASE_DEV_SECRET_KEY }}
+          TARGET_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${SUPABASE_DEV_URL}" ] || [ -z "${SUPABASE_DEV_SECRET_KEY}" ]; then
+            echo "::error::Missing Supabase dev simulator secrets."
+            exit 1
+          fi
+
+          jq -n \
+            --argjson seed "$(date -u +%s)" \
+            '{
+              ticks: 1,
+              usersPerTick: 5,
+              partnersPerTick: 2,
+              delayBetweenCallsMs: 400,
+              seed: $seed,
+              targetRef: "dev",
+              targetSha: env.TARGET_SHA
+            }' > /tmp/sim_payload.json
+
+          http_code="$(curl -s -o /tmp/sim_response.json -w "%{http_code}" -X POST \
+            "${SUPABASE_DEV_URL}/functions/v1/event-flow-simulator" \
+            -H "Authorization: Bearer ${SUPABASE_DEV_SECRET_KEY}" \
+            -H "Content-Type: application/json" \
+            -d @/tmp/sim_payload.json \
+            --max-time 240)"
+          cat /tmp/sim_response.json
+          if [ "${http_code}" -lt 200 ] || [ "${http_code}" -ge 300 ]; then
+            echo "::error::event-flow-simulator returned HTTP ${http_code}"
+            exit 1
+          fi
+          jq -e '.success == true' /tmp/sim_response.json
+
+  notify-failure:
+    needs: [install]
+    if: always()
+    uses: ./.github/workflows/shared-notify.yml
+    with:
+      failed: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+      workflow_name: 'deploy-dev-event-flow-cron'
+      severity: 'P1-high'
+      job_results: '{"install":"${{ needs.install.result }}","target_ref":"dev","target_sha":"${{ github.sha }}"}'
+      stage: 'dev-soak'
+      signal: 'backend-simulator'
+      blocks_rc_cut: true
+      commit_sha: ${{ github.sha }}
+      status_description: 'deploy-dev-event-flow-cron failed'
+    secrets: inherit

@@ -29,4 +29,4 @@ design 문서는 운영자 관점 (cadence, role, policy). spec 문서는 구현
 - [BLUEDOC convention](../../bluedoc/BLUEDOC.md)
 
 ---
-_Reviewed: 2026-05-19 09:47_
+_Reviewed: 2026-05-25 16:20_

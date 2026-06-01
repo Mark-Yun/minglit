@@ -244,6 +244,10 @@ class MinglitIconSize {
   /// 48px display icon size — empty state full-page variant.
   // TODO(mds-tokens): add iconSizeDisplay to tokens.json and migrate
   static const double display = 48;
+
+  /// 64px hero icon size for full-page empty states.
+  // TODO(mds-tokens): add iconSizeHero to tokens.json and migrate
+  static const double hero = 64;
 }
 
 /// Partner app brand colors — same purple family, toned down for business feel.

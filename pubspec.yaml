@@ -15,6 +15,9 @@ workspace:
 
 dependency_overrides:
   iamport_webview_flutter: 3.1.0
+  # connectivity_plus 7.1.x requires Xcode 26.1.1 for NWPath.isUltraConstrained.
+  # GitHub macos-15 runners currently compile with an older SDK.
+  connectivity_plus: 6.1.5
 
 dev_dependencies:
   custom_lint: 0.8.1

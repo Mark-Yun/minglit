@@ -11,7 +11,7 @@
 | `rc/YYYY-Wxx` | 임시 (weekly cut, RC → main 머지 후 삭제, 이력은 tag 보존) | yes (pattern protection) |
 | `main` | 영구 | yes (가장 강함) |
 | `feat/*`, `fix/*`, `chore/*`, `docs/*`, `dev/hotfix/*`, `rc/hotfix/*`, `main/hotfix/*` | 임시 (PR 머지 후 자동 삭제) | no |
-| `backport/*` | 자동 생성 (rc-hotfix-backport) | no |
+| `cherry-pick/*` | 자동 생성 (`rc-hotfix-apply`, main hotfix follow-up) | no |
 | `revert/*` | 자동 생성 (제거 — snapshot 모델이라 사용 안 함) | n/a |
 
 ## 영구 Branch 설정
@@ -68,7 +68,7 @@
 | Require linear history | **yes** |
 | Allowed merge methods | **rebase only** (rebase + fast-forward) |
 | Auto-delete head branch on merge | yes (`rc/*` branch 는 main merge 후 삭제, 이력은 protected tag 로 보존) |
-| Bypass roles | `minglit-release-bot` for final version/tag push, release manager only for catastrophic incident response |
+| Bypass roles | `minglit-release-bot` for promotion tag / cleanup, release manager only for catastrophic incident response |
 
 > main 은 rc → main PR 만 받는다. 예외적으로 [hotfix-policy.md](../hotfix-policy.md) 의 `main/hotfix/*` + `hotfix:main-approved` + `release-manager-approved` 조건을 만족한 PR 만 허용한다. GitHub Ruleset 은 `main-pr-gate` 하나만 required 로 두고, `main-pr-gate` 내부에서 RC lineage status, soak marker, contract 재검증 또는 main hotfix 승인을 검증한다.
 
@@ -87,9 +87,9 @@
 | Require linear history | yes |
 | Allowed merge methods | rebase only |
 | Auto-delete head branch on merge | yes (hotfix branch 자동 삭제) |
-| Bypass roles | `minglit-release-bot` only for RC version bump/tag push and RC branch cleanup |
+| Bypass roles | `minglit-release-bot` only for RC branch creation/deletion and promotion tag push |
 
-> `dev-rc-cut` workflow 가 branch 생성 후 이 protection ruleset 을 REST API 로 활성화. RC 는 approved `rc/hotfix/*` PR 만 직접 받는다. RC 종료 후 `minglit-release-bot` 이 branch 를 삭제하고, 릴리즈 이력은 `promo/rc-*`, `v*-rc-*`, `promo/main-*` protected tag 로 보존한다.
+> `dev-rc-cut` workflow 가 branch 생성 후 이 protection ruleset 을 REST API 로 활성화. RC 는 기본적으로 dev-staging 에 먼저 머지된 fix commit/snapshot 의 approved `rc/hotfix/*` cherry-pick PR 만 받는다. RC-only 선머지는 release-manager override 가 필요한 예외다. RC 종료 후 `minglit-release-bot` 이 branch 를 삭제하고, 릴리즈 이력은 `promo/rc-*`, `promo/main-*`, GitHub Release asset 으로 보존한다.
 
 ### `feat/*`, `fix/*`, `chore/*`, `docs/*`, `dev/hotfix/*`, `rc/hotfix/*`, `main/hotfix/*`
 
@@ -99,12 +99,12 @@
 | Auto-delete on PR merge | yes (모든 단기 branch) |
 | 컨벤션 (일부 gate 강제) | 일반 작업은 `dev-staging` base. Hotfix 는 대상 base prefix 를 먼저 둔다 (`dev/hotfix/*`, `rc/hotfix/*`, `main/hotfix/*`) |
 
-### `backport/*`
+### `cherry-pick/*`
 
 | 항목 | 값 |
 |------|----|
 | Protection | none |
-| 생성 방식 | `rc-hotfix-backport` workflow 가 자동 생성 |
+| 생성 방식 | `rc-hotfix-apply` 또는 main hotfix follow-up workflow 가 자동 생성 |
 | Auto-delete on PR merge | yes |
 
 ## GitHub Rulesets (채택)
@@ -117,7 +117,7 @@ GitHub 의 **Rulesets** 채택 (legacy Branch Protection 아님). 패턴 기반�
 | `dev-rules` | `dev` | 위 + `minglit-release-bot` bypass |
 | `main-rules` | `main` | 위 + `minglit-release-bot` bypass |
 | `rc-pattern-rules` | `rc/**` | 위 pattern 표 + `minglit-release-bot` bypass |
-| `auto-delete-temp` | `feat/**`, `fix/**`, `chore/**`, `docs/**`, `dev/hotfix/**`, `rc/hotfix/**`, `main/hotfix/**`, `backport/**` | auto-delete only |
+| `auto-delete-temp` | `feat/**`, `fix/**`, `chore/**`, `docs/**`, `dev/hotfix/**`, `rc/hotfix/**`, `main/hotfix/**`, `cherry-pick/**` | auto-delete only |
 | `tag-protection` | `v*`, `promo/**`, `mobile-released/**` | 아래 Tag Protection 표 |
 | `branch-creation` | `rc/**`, `release/**` | 아래 Branch Creation 표 |
 
@@ -134,7 +134,7 @@ Rulesets 의 장점 (legacy 대비):
 
 | Tag pattern | 보호 |
 |-------------|------|
-| `v*` (예: `v26.05.2572`, `v26.05.2572-rc-01`) | 삭제 금지, force-push 금지 |
+| `v*` (예: `v26.05.27+2832-dev-staging`) | 삭제 금지, force-push 금지 |
 | `promo/**` (예: `promo/main-2026-W20`) | 삭제 금지, force-push 금지 |
 | `mobile-released/**` (있다면) | 삭제 금지 |
 
@@ -148,7 +148,7 @@ Bypass: 없음 (catastrophic 한 경우만 admin 명시 승인).
 |---------|----------|
 | `rc/YYYY-Wxx` | `dev-rc-cut` workflow (GitHub Actions bot) only — human 직접 생성 금지 |
 | `release/**` | (현재 사용 안 함, 향후 추가 시 정의) |
-| `backport/**` | `rc-hotfix-backport` workflow only |
+| `cherry-pick/**` | `rc-hotfix-apply` / main hotfix follow-up workflow only |
 
 Bypass: release manager (긴급 RC 새 cut 시).
 
@@ -160,7 +160,7 @@ Protected branch 에 대한 direct push 는 human 에게 허용하지 않는다.
 |------|----|
 | Actor | `minglit-release-bot` (GitHub App 권장, 대안: fine-grained PAT 전용 bot account) |
 | Token source | GitHub App installation token minted from `minglit_env/{stage}/github.env` (`MINGLIT_RELEASE_BOT_APP_ID` + `MINGLIT_RELEASE_BOT_PRIVATE_KEY_BASE64`) |
-| 사용 workflow | `dev-staging-dev-cut-gate`, `dev-staging-dev-cut`, `dev-rc-cut`, `rc-post-merge-sync`, `rc-main-cut`, `rc-hotfix-backport`, `main-deploy` |
+| 사용 workflow | `dev-staging-dev-cut-gate`, `dev-staging-dev-cut`, `dev-rc-cut`, `rc-hotfix-apply`, `rc-main-cut`, `main-deploy` |
 | Ruleset bypass | `dev-staging`, `dev`, `rc/**`, `main`, protected tag push (`v*`, `promo/**`) |
 | Human 사용 | 금지. 로컬/수동 CLI 에서 token 사용 금지 |
 | Audit | 모든 bot push 는 workflow run URL, actor, target ref, tag 목록을 PR/issue 또는 job summary 에 남김 |
@@ -172,7 +172,7 @@ GitHub App 기준 권장 permission:
 | Permission | Level | 이유 |
 |------------|-------|------|
 | Contents | Read/write | version bump commit, branch 생성/삭제, tag push |
-| Pull requests | Read/write | promotion/backport PR 생성, auto-merge enable |
+| Pull requests | Read/write | promotion/cherry-pick PR 생성, auto-merge enable |
 | Commit statuses | Read/write | `dev-rc-cut-pass` status set |
 | Checks | Read | gate 상태 조회 |
 | Issues | Read/write | auto-issue 생성/댓글 |

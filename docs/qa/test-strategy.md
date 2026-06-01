@@ -2,7 +2,7 @@
 
 > 이 문서는 Minglit 모노레포의 테스트 계층 정의 **Single Source of Truth**.
 > 관련 이슈: #1586 (Phase A — 본 문서 재작성)
-> 최근 업데이트: 2026-04-18 (taxonomy 확정, 용어 통일)
+> 최근 업데이트: 2026-05-25 (Layer 7 를 dev distributed event-flow simulator 로 정렬)
 
 ---
 
@@ -38,7 +38,7 @@
 | 4 | **pgTAP** | DB 스키마 / 트리거 / RPC / RLS 계약 | `supabase/tests/database/` | pgTAP | PR 마다 |
 | 5 | **Deno EF test** | Edge Function TypeScript 로직 단위 | `supabase/functions/**/*_test.ts` | `deno test` | PR 마다 |
 | 6 | **DB monitor** | Runtime invariant 감시 | `check_db_invariants()` RPC + `.github/workflows/monitor-db-invariants.yml` | SQL | 매시간 cron |
-| 7 | **Tick simulator** | 서버 pipeline 관통 시뮬 (시간 전진 + 파이프라인 부하) | `event-flow-simulator` EF + `.github/workflows/monitor-daily-lifecycle.yml` + `hourly-user-activity.yml` | EF + HTTP | 매시간 + 매일 |
+| 7 | **Event-flow simulator** | dev 에 작은 실제 EF traffic 을 지속 주입해 backend flow 관통 검증 | `event-flow-simulator` EF + `monitor-event-flow-*` | EF + HTTP | 5분마다 + 24h soak |
 
 ### 보조 (taxonomy 밖, 유지)
 
@@ -129,13 +129,14 @@
 | 실 dev DB 데이터에 대한 실시간 검증 | 기능 테스트 (→ 1-5) |
 | alert 발송 | |
 
-### Layer 7 — Tick simulator
+### Layer 7 — Event-flow simulator
 
 | ✅ 책임 | ❌ 비책임 |
 |--------|----------|
-| 시간 전진 (시뮬레이션 tick) → 이벤트 생명주기 관통 | 단일 EF 단위 테스트 (→ 5) |
-| 매칭 / 결제 / 정산 파이프라인 연쇄 검증 | 앱 UI (→ 1-3) |
-| 매시간 user activity 시뮬 | 스키마 검증 (→ 4) |
+| dev Supabase 에 5분 단위 small tick 주입 | 단일 EF 단위 테스트 (→ 5) |
+| user-event-feed → 신청 → 결제/환불/승인/체크인 같은 실제 EF 경로 관통 | 앱 UI (→ 1-3) |
+| actor/user/partner/event seed 기반 랜덤 샘플링으로 24h 누적 커버리지 확보 | 스키마 검증 (→ 4) |
+| partner EF 로 party/event/ticket 생성 후 user feed 에 자연 노출 | 독립 deterministic test DB 검증 (→ `_integration_tests/`) |
 
 ---
 
@@ -190,13 +191,13 @@
 - 워크플로우: `.github/workflows/monitor-db-invariants.yml` — 매시간 cron
 - 상태: **구현 존재. 2026-04-15 이슈 #1549 로 재등록 확인.**
 
-### Layer 7 — Tick simulator
+### Layer 7 — Event-flow simulator
 
 - EF: `supabase/functions/event-flow-simulator/`
 - 워크플로우:
-  - `monitor-daily-lifecycle.yml` — 매일 (PR #1584 로 pg_cron 에서 GH Actions 로 이관)
-  - `hourly-user-activity.yml` — 매시간
-- 상태: **정상 동작.**
+  - target: `monitor-event-flow-distributed` — dev 에서 5분마다 small tick
+  - legacy: `monitor-event-flow-hourly` / `monitor-event-flow-daily` — 수동 smoke 전용
+- 상태: **설계 정렬 중.** large daily cascade 는 per-trace rate limit 에 취약하므로 제거/축소 대상.
 
 ---
 

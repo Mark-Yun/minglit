@@ -2,7 +2,7 @@ name: sync-graphify
 
 on:
   push:
-    branches: [dev]
+    branches: [dev-staging]
     paths-ignore:
       - 'graphify-out/**'
   schedule:
@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: dev
+          ref: dev-staging
           fetch-depth: 0
           persist-credentials: false
 
@@ -60,7 +60,7 @@ jobs:
             git remote set-url origin "https://x-access-token:${RELEASE_BOT_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
             git add graphify-out/
             git commit -m "chore(graphify): auto-update [skip ci]"
-            git push origin HEAD:dev
+            git push origin HEAD:dev-staging
           else
             echo "No graph changes"
           fi

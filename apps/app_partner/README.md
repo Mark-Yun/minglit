@@ -32,7 +32,6 @@ flutter build apk --flavor dev --release --dart-define-from-file=../../minglit_e
 flutter pub get
 flutter analyze --no-fatal-infos
 flutter test                       # unit + widget
-flutter test --tags golden         # golden
 flutter test test/integration/     # integration
 dart format .
 ```
