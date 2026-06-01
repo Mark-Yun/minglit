@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — TicketSelectionSheet (app_user · event purchase sheet)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+.ticket-sheet {
+  width: 343px;
+  background: var(--color-surface);
+  border-top-left-radius: var(--radius-card);
+  border-top-right-radius: var(--radius-card);
+  padding: var(--spacing-large);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-medium);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.10);
+}
+.ticket-sheet__title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.ticket-sheet__section-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.ticket-option {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-medium);
+  padding: var(--spacing-medium);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-input);
+  background: var(--color-surface);
+}
+.ticket-option--selected {
+  border: 2px solid var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
+}
+.ticket-option--locked {
+  opacity: 0.5;
+}
+.ticket-option__main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.ticket-option__name {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.ticket-option--selected .ticket-option__name {
+  color: var(--color-primary);
+}
+.ticket-option__desc,
+.ticket-option__reason {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+}
+.ticket-option__price {
+  align-self: center;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.ticket-option__badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  color: white;
+  background: var(--color-primary);
+}
+.ticket-option__badge--muted {
+  background: var(--color-text-secondary);
+}
+.quantity-row,
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-medium);
+}
+.quantity-row__label,
+.total-row__label {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.stepper {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-small);
+  overflow: hidden;
+}
+.stepper__btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+}
+.stepper__btn--disabled {
+  opacity: 0.45;
+}
+.stepper__value {
+  min-width: 28px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.total-row__amount {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--color-primary);
+}
+.sheet-divider {
+  height: 1px;
+  background: var(--color-divider);
+}
+.sheet-cta {
+  height: 48px;
+  border-radius: var(--radius-card);
+  background: var(--color-primary);
+  color: var(--color-background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 800;
+}
+.sheet-cta--disabled {
+  background: var(--color-divider);
+  color: var(--color-text-secondary);
+}
+.sheet-empty {
+  min-height: 96px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  background: color-mix(in srgb, var(--color-divider) 16%, var(--color-surface));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--spacing-large);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+}
+.sheet-toast-note {
+  border-radius: var(--radius-input);
+  padding: var(--spacing-small) var(--spacing-medium);
+  background: color-mix(in srgb, var(--color-secondary) 10%, var(--color-surface));
+  color: var(--color-text-primary);
+  font-size: 12px;
+  line-height: 1.45;
+}
+body.dark-mode .visual-gallery {
+  --color-background: #0f0f0f;
+  --color-surface: #212121;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #aaaaaa;
+  --color-divider: #3d3d3d;
+  --color-primary: #aa33ff;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode</label>
+</div>
+
+<div class="page">
+
+<header>
+  <h1>TicketSelectionSheet</h1>
+</header>
+
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td>
+          <strong>✅ 디자인완료</strong>
+          <em style="color: var(--color-text-secondary);">— live Flutter 구현 기준으로 신규 spec 작성 (#2412).</em>
+        </td>
+      </tr>
+      <tr><th>App</th><td><code>app_user</code></td></tr>
+      <tr><th>Category</th><td>ticket · event purchase (sub-component of EventDetailPage purchase flow)</td></tr>
+      <tr><th>Route / Surface</th><td><code>TicketSelectionSheet</code> · modal bottom sheet · 자체 route 없음</td></tr>
+      <tr><th>Path</th><td><code>/events/:eventId</code> parent route에서 <code>showModalBottomSheet</code>로 표시</td></tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="/specs/event_bottom_ticket_bar/index.html"><code>EventBottomTicketBar</code></a> action tap에서 진입<br>
+          <strong>Exit</strong>: <a href="/specs/event_application_wizard_page/index.html"><code>EventApplicationWizardPage</code></a>로 선택 ticketId 전달
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          유료 이벤트 구매 전에 사용 가능한 티켓을 추천하고, 사용자가 결제 wizard로 넘길 ticketId를 확정하는 결제 진입 게이트.
+          balance / 프로필 / 인증 조건을 한 번에 평가해 추천 티켓을 자동 선택한다.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry</strong>: <code>EventBottomTicketBar</code>의 구매 가능 admission action → <code>eventCoordinator.showTicketSelection()</code>.<br>
+          <strong>Exit</strong>: "다음" 탭 → sheet dismiss → <code>goToApplicationWizard(eventId, ticketId)</code>. Scrim/drag dismiss는 구매 취소로 간주하고 EventDetailPage 유지.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          결제 flow의 실제 첫 관문이지만 별도 MDS spec이 없어서 #2364의 수량 stepper tooltip 회귀 맥락이 존재하지 않는 spec을 인용했다.
+          본 spec은 live code를 기준으로 ticket option, 추천, 잠금 사유, 수량 stepper tooltip을 SSOT로 고정한다.
+        </td>
+      </tr>
+      <tr><th>Frequency</th><td>유료 이벤트 상세에서 구매 action을 누를 때마다 표시. 구매 의도가 높은 핵심 CUJ surface.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="doc">
+  <h2>History</h2>
+  <table class="ref">
+    <thead>
+      <tr><th style="width: 110px;">Date</th><th style="width: 80px;">Version</th><th style="width: 120px;">Author</th><th>Changes</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-05-31</td>
+        <td>1.0</td>
+        <td>codex</td>
+        <td>
+          신규 spec 작성. <code>TicketSelectionSheet</code>, <code>ticket_selection_widgets.dart</code>, <code>TicketRecommendationUtil</code>,
+          <code>eventCoordinator.showTicketSelection()</code> live 구현을 기준으로 Layout / States / Global Behavior / Reference를 추가 (#2412).
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">▦</span> Layout</a>
+  <a href="#states"><span class="glyph">◒</span> States</a>
+  <a href="#global-behavior"><span class="glyph">↻</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">§</span> Reference</a>
+</nav>
+
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">▦</span>
+    <h2>Layout</h2>
+    <span class="lede">Bottom sheet 구조와 ticket option / quantity / CTA의 고정 순서.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      Sheet는 상단 rounded container 안에 제목, async state branch, 선택 시 수량/총액, full-width CTA를 세로로 쌓는다.
+      키보드가 아니라 손가락 조작 중심 surface라 각 option row는 <code>MinglitSpacing.medium</code> 이상의 터치 여백을 유지한다.
+    </p>
+
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 430px;">
+        <div class="blueprint__region" style="top:0;left:0;right:0;bottom:0;border-top-left-radius:16px;border-top-right-radius:16px;"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:24px;left:24px;right:24px;height:32px;">
+          <span class="blueprint__region-label">① Title</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:80px;left:24px;right:24px;height:26px;">
+          <span class="blueprint__region-label">② Section label</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:118px;left:24px;right:24px;height:82px;">
+          <span class="blueprint__region-label">③ Recommended / selected ticket</span>
+        </div>
+        <div class="blueprint__region" style="top:212px;left:24px;right:24px;height:74px;">
+          <span class="blueprint__region-label">④ Other / locked ticket list</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:310px;left:24px;right:24px;height:36px;">
+          <span class="blueprint__region-label">⑤ Quantity stepper</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:366px;left:24px;right:24px;height:48px;">
+          <span class="blueprint__region-label">⑥ MinglitButton "다음"</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>showModalBottomSheet</b>(isScrollControlled: true)
+└─ <b>TicketSelectionSheet</b>
+   └─ Container(surface · top radius MinglitRadius.card · padding large)
+      └─ Column(mainAxisMin · crossAxisStart)
+         ├─ Text("티켓 선택", headlineSmall bold)                         ← ①
+         ├─ Gap MinglitSpacing.medium
+         ├─ <em>State branch</em>
+         │  ├─ loading → MinglitEmptyState.card("추천 티켓을 확인 중입니다.")
+         │  ├─ tickets empty → MinglitEmptyState.card("현재 구매 가능한 티켓이 없습니다.")
+         │  ├─ no recommendation → empty card + locked ticket list
+         │  └─ recommendation → section labels + ticket option cards       ← ②③④
+         ├─ <em>Quantity section</em> if selectedTicketId != null           ← ⑤
+         │  ├─ Row("수량", IconButton remove / value / IconButton add)
+         │  ├─ Divider
+         │  └─ Row("총 결제 금액", calculated total)
+         ├─ MinglitButton(label: "다음", disabled if selectedTicketId null) ← ⑥
+         └─ Bottom inset: MediaQuery.viewPadding.bottom</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 190px;">Region</th><th>Spec</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Ticket option card</td>
+          <td>
+            <code>GestureDetector</code> + <code>Container</code>. 기본은 1px <code>colorScheme.outlineVariant</code> border,
+            <code>MinglitRadius.input</code>, <code>MinglitSpacing.medium</code> padding. 선택 시 2px primary border와
+            <code>MinglitOpacity.tintFill</code> primary fill. locked는 전체 opacity 0.5, tap 비활성, 사유 텍스트 인라인 표시.
+          </td>
+        </tr>
+        <tr>
+          <td>Recommendation badge</td>
+          <td><code>MinglitBadge(label: "추천", compact: true)</code>. 추천 티켓이 잠기지 않았을 때 우상단에 표시.</td>
+        </tr>
+        <tr>
+          <td>Balance badge</td>
+          <td><code>MinglitBadge(label: "성비 조절 중", compact: true)</code>. balanceStatus가 false인 locked ticket 우상단에 표시.</td>
+        </tr>
+        <tr>
+          <td>Quantity stepper</td>
+          <td>
+            32x32 <code>IconButton</code> 2개와 중앙 숫자. remove는 현재 비활성 고정, tooltip은 <code>수량 감소</code>.
+            add는 <code>수량 증가</code> tooltip과 함께 준비 중 안내 toast를 표시한다.
+          </td>
+        </tr>
+        <tr>
+          <td>CTA</td>
+          <td><code>MinglitButton(label: "다음")</code>. ticket 선택 전 disabled, 선택 후 sheet를 닫고 application wizard로 ticketId를 전달.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">◒</span>
+    <h2>States</h2>
+    <span class="lede">Async fetch, 추천 성공, 전체 잠금, empty, 수량 add tap edge를 기준으로 시각 상태를 고정한다.</span>
+  </div>
+
+  <section class="doc">
+    <h2>State summary</h2>
+    <table class="ref">
+      <thead><tr><th>State</th><th>Condition</th><th>CTA</th><th>Primary evidence</th></tr></thead>
+      <tbody>
+        <tr><td><code>loading</code></td><td>balance 또는 user data fetch 중</td><td>disabled</td><td><code>buildLoadingState()</code></td></tr>
+        <tr><td><code>recommended-selected</code></td><td>eligible ticket 존재, auto-select 완료</td><td>enabled</td><td><code>buildRecommendationState()</code></td></tr>
+        <tr><td><code>all-locked</code></td><td>추천 ticket 없음, 모든 ticket ineligible</td><td>disabled</td><td><code>buildNoRecommendationState()</code></td></tr>
+        <tr><td><code>empty</code></td><td><code>event.tickets</code> null/empty</td><td>disabled</td><td><code>buildEmptyState()</code></td></tr>
+        <tr><td><code>quantity-add-tapped</code></td><td>선택 후 + 탭</td><td>enabled 유지</td><td><code>context.showMinglitInfo()</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>State details</h2>
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
+
+      <table class="ref state-mini is-baseline-tint">
+        <thead><tr><th colspan="3"><strong>recommended-selected</strong> · <small style="color:var(--color-primary);">baseline</small></th></tr></thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="ticket-sheet">
+                <div class="ticket-sheet__title">티켓 선택</div>
+                <div class="ticket-sheet__section-title">추천 티켓</div>
+                <div class="ticket-option ticket-option--selected">
+                  <span class="ticket-option__badge">추천</span>
+                  <div class="ticket-option__main">
+                    <div class="ticket-option__name">일반 입장권</div>
+                    <div class="ticket-option__desc">기본 참여 티켓</div>
+                  </div>
+                  <div class="ticket-option__price">20,000원</div>
+                </div>
+                <div class="ticket-sheet__section-title">다른 티켓</div>
+                <div class="ticket-option">
+                  <div class="ticket-option__main"><div class="ticket-option__name">VIP 입장권</div></div>
+                  <div class="ticket-option__price">50,000원</div>
+                </div>
+                <div class="quantity-row"><div class="quantity-row__label">수량</div><div class="stepper"><div class="stepper__btn stepper__btn--disabled">−</div><div class="stepper__value">1</div><div class="stepper__btn">+</div></div></div>
+                <div class="sheet-divider"></div>
+                <div class="total-row"><div class="total-row__label">총 결제 금액</div><div class="total-row__amount">20,000원</div></div>
+                <div class="sheet-cta">다음</div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>balance + user profile + approved verification IDs fetch 완료. <code>TicketRecommendationUtil</code>이 가장 낮은 가격의 eligible ticket을 추천.</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>다른 eligible ticket 탭 → 선택 border 이동, quantity 1로 reset. "다음" 탭 → sheet dismiss 후 wizard 이동.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>이미 선택한 ticket이 여전히 eligible이면 유지. selected ticket이 더 이상 eligible하지 않으면 recommended ticket으로 교체.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td><code>TicketSelectionSheet</code> · <code>MinglitBadge</code> · <code>IconButton</code> · <code>MinglitButton</code></td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td><code>MinglitSpacing.large</code> sheet padding · <code>MinglitRadius.card</code> sheet top radius · <code>MinglitRadius.input</code> card radius · <code>MinglitOpacity.tintFill</code> selected fill · <code>MinglitIconSize.xsmall</code> stepper icons</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td><code>_hasAutoSelected</code>가 최초 자동 선택을 1회로 제한해 사용자 수동 선택을 덮어쓰지 않는다.</td></tr>
+        </tbody>
+      </table>
+
+      <table class="ref state-mini">
+        <thead><tr><th colspan="3"><strong>loading</strong></th></tr></thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="ticket-sheet">
+                <div class="ticket-sheet__title">티켓 선택</div>
+                <div class="sheet-empty">추천 티켓을 확인 중입니다.</div>
+                <div class="sheet-cta sheet-cta--disabled">다음</div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td><code>_isBalanceStatusLoading || _isUserDataLoading</code></td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>sheet dismiss 가능. CTA disabled.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>balance fetch 실패 시 <code>Log.e</code> 후 loading 해제. user null이면 user data loading 해제 후 추천 재계산.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td><code>MinglitEmptyState.card(title: "추천 티켓을 확인 중입니다.", icon: Icons.search)</code></td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>Baseline sheet tokens 동일. Empty card는 MDS empty state token 사용.</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>추천 계산은 두 fetch가 모두 완료된 뒤 실행한다.</td></tr>
+        </tbody>
+      </table>
+
+      <table class="ref state-mini">
+        <thead><tr><th colspan="3"><strong>all-locked</strong></th></tr></thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="ticket-sheet">
+                <div class="ticket-sheet__title">티켓 선택</div>
+                <div class="sheet-empty">현재 구매 가능한 티켓이 없습니다.</div>
+                <div class="ticket-option ticket-option--locked">
+                  <span class="ticket-option__badge ticket-option__badge--muted">성비 조절 중</span>
+                  <div class="ticket-option__main">
+                    <div class="ticket-option__name">남성 입장권</div>
+                    <div class="ticket-option__reason">성비 조절 중</div>
+                  </div>
+                  <div class="ticket-option__price">20,000원</div>
+                </div>
+                <div class="ticket-option ticket-option--locked">
+                  <div class="ticket-option__main">
+                    <div class="ticket-option__name">인증 티켓</div>
+                    <div class="ticket-option__reason">필수 인증이 필요합니다.</div>
+                  </div>
+                  <div class="ticket-option__price">30,000원</div>
+                </div>
+                <div class="sheet-cta sheet-cta--disabled">다음</div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td><code>recommendedTicket == null</code>이고 tickets는 존재. 모든 ticket이 balance / profile / verification / entry group 조건을 통과하지 못함.</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>locked ticket tap 무동작. 사유 텍스트를 읽고 sheet dismiss.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>사유 우선순위: balance false → user/profile/verification → entry group 조건. gender mismatch보다 age 등 호환 그룹 사유를 우선 표시.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td><code>MinglitEmptyState.card</code> + locked <code>buildTicketOption()</code> list + disabled <code>MinglitButton</code></td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>locked opacity 0.5 · reason color <code>colorScheme.onSurfaceVariant</code> · balance badge color onSurfaceVariant</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>구매 불가 상태에서도 ticket list를 보여 원인을 설명한다.</td></tr>
+        </tbody>
+      </table>
+
+      <table class="ref state-mini">
+        <thead><tr><th colspan="3"><strong>empty</strong></th></tr></thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="ticket-sheet">
+                <div class="ticket-sheet__title">티켓 선택</div>
+                <div class="sheet-empty">현재 구매 가능한 티켓이 없습니다.</div>
+                <div class="sheet-cta sheet-cta--disabled">다음</div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td><code>event.tickets == null || event.tickets.isEmpty</code></td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>CTA disabled. sheet dismiss만 가능.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td><code>calculateTotal()</code>은 선택 ticket이 없거나 tickets null이면 <code>0원</code> fallback.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td><code>MinglitEmptyState.card(title: "현재 구매 가능한 티켓이 없습니다.", icon: Icons.confirmation_number_outlined)</code></td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>Baseline sheet tokens 동일.</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>이 상태는 이벤트 data 품질 문제를 사용자 차단 없이 설명한다.</td></tr>
+        </tbody>
+      </table>
+
+      <table class="ref state-mini">
+        <thead><tr><th colspan="3"><strong>quantity-add-tapped</strong></th></tr></thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="ticket-sheet">
+                <div class="ticket-sheet__title">티켓 선택</div>
+                <div class="ticket-option ticket-option--selected">
+                  <span class="ticket-option__badge">추천</span>
+                  <div class="ticket-option__main"><div class="ticket-option__name">일반 입장권</div></div>
+                  <div class="ticket-option__price">20,000원</div>
+                </div>
+                <div class="quantity-row"><div class="quantity-row__label">수량</div><div class="stepper"><div class="stepper__btn stepper__btn--disabled">−</div><div class="stepper__value">1</div><div class="stepper__btn">+</div></div></div>
+                <div class="sheet-toast-note">친구와 함께 참가하기 기능은 준비 중입니다.</div>
+                <div class="sheet-divider"></div>
+                <div class="total-row"><div class="total-row__label">총 결제 금액</div><div class="total-row__amount">20,000원</div></div>
+                <div class="sheet-cta">다음</div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>선택 상태에서 + IconButton 탭. 현재 live code는 quantity 증가 대신 준비 중 안내를 표시한다.</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>+ 탭 → <code>context.showMinglitInfo("친구와 함께 참가하기 기능은 준비 중입니다.")</code>. −는 disabled.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>quantity는 1 유지. 총액도 선택 ticket price 그대로 유지.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td><code>IconButton(remove)</code> tooltip "수량 감소" · <code>IconButton(add)</code> tooltip "수량 증가"</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>Stepper border outlineVariant · radius small · icon size <code>MinglitIconSize.xsmall</code> · 32x32 constraints</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>#2364 / Fix #2358 회귀 기준: 두 IconButton tooltip은 필수다.</td></tr>
+        </tbody>
+      </table>
+
+    </div>
+  </section>
+</div>
+
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">↻</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">추천, 선택, CTA, dismiss, accessibility 규칙.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Interaction rules</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 220px;">Rule</th><th>Behavior</th></tr></thead>
+      <tbody>
+        <tr><td>Auto recommendation</td><td>balanceStatus, userProfile, approvedVerificationIds가 모두 준비되면 <code>TicketRecommendationUtil.recommend()</code> 실행. eligible ticket은 가격 오름차순, 이름 오름차순으로 정렬하고 첫 항목을 추천한다.</td></tr>
+        <tr><td>Auto-select guard</td><td><code>_hasAutoSelected</code>가 false일 때만 최초 추천 ticket을 자동 선택한다. 이후 사용자가 선택한 ticket이 eligible이면 유지한다.</td></tr>
+        <tr><td>Selection reset</td><td>사용자가 ticket을 선택하면 <code>_selectedTicketId</code>를 갱신하고 quantity를 1로 reset한다.</td></tr>
+        <tr><td>Locked option</td><td><code>isLocked</code>이면 tap handler 없음, opacity 0.5, ineligibleReason을 ticket description 아래에 노출한다.</td></tr>
+        <tr><td>Next CTA</td><td>선택 ticket이 없으면 disabled. enabled 상태에서 탭하면 <code>Navigator.pop(context)</code> 후 <code>onTicketSelected(event.id, ticketId)</code> 호출.</td></tr>
+        <tr><td>Dismiss</td><td>기본 modal bottom sheet dismiss 동작 유지. 별도 confirm 없음.</td></tr>
+        <tr><td>A11y</td><td>수량 IconButton은 tooltip <code>수량 감소</code>, <code>수량 증가</code>를 반드시 유지한다. Ticket card locked reason은 시각 텍스트로도 노출한다.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion &amp; async</h2>
+    <table class="ref">
+      <tbody>
+        <tr><th style="width: 180px;">Sheet motion</th><td>Flutter <code>showModalBottomSheet</code> 기본 진입/퇴장 motion. MDS 별도 override 없음.</td></tr>
+        <tr><th>Async degradation</th><td>balance fetch 실패는 logger에 기록하고 추천 계산은 계속 진행한다. 사용자에게 blocking error surface를 띄우지 않는다.</td></tr>
+        <tr><th>State refresh</th><td>현재 quantity 변경이 실제 증가하지 않으므로 잔액 재검증은 ticket 선택/초기 fetch 기준이다. 다인 수량 기능 구현 시 quantity change마다 balance/stock 재검증을 추가해야 한다.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">§</span>
+    <h2>Reference</h2>
+    <span class="lede">Implementation source + 인접 spec. Components / Tokens는 States section에 분산.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 220px;">Item</th><th>Path / Reference</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Widget class</strong></td><td><code>TicketSelectionSheet</code></td></tr>
+        <tr><td><strong>Sheet state</strong></td><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/ticket/ui/ticket_selection_sheet.dart"><code>apps/app_user/lib/src/features/ticket/ui/ticket_selection_sheet.dart</code></a></td></tr>
+        <tr><td><strong>Widget parts</strong></td><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/ticket/ui/ticket_selection_widgets.dart"><code>apps/app_user/lib/src/features/ticket/ui/ticket_selection_widgets.dart</code></a></td></tr>
+        <tr><td><strong>Recommendation</strong></td><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/ticket/logic/ticket_recommendation_util.dart"><code>TicketRecommendationUtil</code></a></td></tr>
+        <tr><td><strong>Entry coordinator</strong></td><td><code>eventCoordinator.showTicketSelection()</code> · <code>ticketCoordinator.showTicketSelection()</code></td></tr>
+        <tr><td><strong>Next route</strong></td><td><code>goToApplicationWizard(eventId, ticketId)</code> → <code>EventApplicationWizardPage</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr><td><a href="/specs/event_detail_page/index.html"><code>EventDetailPage</code></a></td><td>Parent route. 사용자가 이벤트 상세에서 구매 action을 시작한다.</td></tr>
+        <tr><td><a href="/specs/event_bottom_ticket_bar/index.html"><code>EventBottomTicketBar</code></a></td><td>Immediate trigger. admission action이 이 sheet를 연다.</td></tr>
+        <tr><td><a href="/specs/event_application_wizard_page/index.html"><code>EventApplicationWizardPage</code></a></td><td>Next step. 선택 ticketId를 받아 신청/결제 wizard로 진입한다.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<section class="doc" style="border: 2px solid var(--color-primary); border-radius: var(--radius-card); padding: 16px 24px; margin-top: 32px;">
+  <h2 style="color: var(--color-primary);">Authoring checklist</h2>
+  <ul class="notes" style="line-height: 1.9;">
+    <li>✅ Header / Overview / History 작성</li>
+    <li>✅ Layout / States / Global Behavior / Reference template 구조 유지</li>
+    <li>✅ <code>index.html</code> source만 신규 작성, generated <code>index.md</code> / PNG 미생성</li>
+    <li>✅ MDS token names: <code>MinglitSpacing</code>, <code>MinglitRadius</code>, <code>MinglitOpacity</code>, <code>MinglitIconSize</code></li>
+    <li>✅ Fix #2358 tooltip 기준 명시: <code>수량 감소</code> / <code>수량 증가</code></li>
+  </ul>
+</section>
+
+</div>
+
+<script>
+const specToggle = document.getElementById('spec-toggle');
+const darkToggle = document.getElementById('dark-toggle');
+specToggle.addEventListener('change', (e) => {
+  document.body.classList.toggle('spec-mode', e.target.checked);
+});
+darkToggle.addEventListener('change', (e) => {
+  document.body.classList.toggle('dark-mode', e.target.checked);
+});
+</script>
+
+</body>
+</html>
