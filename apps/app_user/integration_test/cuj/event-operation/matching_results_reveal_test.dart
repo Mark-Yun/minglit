@@ -13,14 +13,25 @@ import 'package:minglit_kit/minglit_kit.dart';
 
 import '../_engine/cuj_test.dart';
 
+class _SavedContactCall {
+  const _SavedContactCall({required this.partnerId, required this.phone});
+
+  final String partnerId;
+  final String phone;
+}
+
 class _ResultsSheetHarness extends StatelessWidget {
   const _ResultsSheetHarness({
     required this.activeEvent,
     required this.entryLabel,
+    this.onSaveMatchContact,
+    this.onFindNextEvent,
   });
 
   final TodayActiveEvent activeEvent;
   final String entryLabel;
+  final SaveMatchContact? onSaveMatchContact;
+  final VoidCallback? onFindNextEvent;
 
   @override
   Widget build(BuildContext context) {
@@ -32,8 +43,12 @@ class _ResultsSheetHarness extends StatelessWidget {
               showModalBottomSheet<void>(
                 context: context,
                 isScrollControlled: true,
-                builder: (sheetContext) => SafeArea(
-                  child: MatchResultsContent(activeEvent: activeEvent),
+                builder: (_) => SafeArea(
+                  child: MatchResultsContent(
+                    activeEvent: activeEvent,
+                    onSaveMatchContact: onSaveMatchContact,
+                    onFindNextEvent: onFindNextEvent,
+                  ),
                 ),
               ),
             );
@@ -181,9 +196,22 @@ void main() {
   // CUJ 1-3: 단일 매칭 연락처 표시/저장 대상 검증
   // ---------------------------------------------------------------------------
   cujGroup('1-3', '단일 매칭 결과 표시', () {
+    final saved = <_SavedContactCall>[];
+
     cujCase(
-      'happy: 단일 매칭이면 1명 카운트 + 파트너 정보가 표시된다',
-      app: const Scaffold(body: SizedBox.shrink()),
+      'happy: 단일 매칭 저장 CTA 탭 시 현재 카드 1명만 저장 대상으로 전달된다',
+      app: _ResultsSheetHarness(
+        activeEvent: _makeActiveEvent(),
+        entryLabel: '결과 열기',
+        onSaveMatchContact: (match) async {
+          saved.add(
+            _SavedContactCall(
+              partnerId: match.partnerId,
+              phone: match.partnerContact ?? '',
+            ),
+          );
+        },
+      ),
       overrides: () => [
         myMatchesProvider('event-1').overrideWith(
           (ref) async => [
@@ -192,32 +220,33 @@ void main() {
         ),
       ],
       body: (t) async {
-        await t.pumpWidget(
-          ProviderScope(
-            overrides: [
-              myMatchesProvider('event-1').overrideWith(
-                (ref) async => [
-                  _makeMatch(id: 'm-5', partnerId: 'p-5', partnerName: '도윤'),
-                ],
-              ),
-            ],
-            child: MaterialApp(
-              home: Scaffold(
-                body: MatchResultsContent(activeEvent: _makeActiveEvent()),
-              ),
-            ),
-          ),
-        );
+        saved.clear();
+
+        await t.tap(find.text('결과 열기'));
         await t.pumpAndSettle();
 
         expect(find.text('1명과 매칭되었어요!'), findsOneWidget);
-        expect(find.text('도윤'), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey<String>('save-contact-p-5')),
+          findsOneWidget,
+        );
+        expect(find.byKey(const ValueKey<String>('match-dot-0')), findsNothing);
+
+        await t.tap(find.byKey(const ValueKey<String>('save-contact-p-5')));
+        await t.pump();
+
+        expect(saved, hasLength(1));
+        expect(saved.first.partnerId, 'p-5');
+        expect(saved.first.phone, '01012345678');
       },
     );
 
     cujCase(
-      'edge: partnerContact가 없으면 연락처 텍스트는 표시되지 않는다',
-      app: const Scaffold(body: SizedBox.shrink()),
+      'edge: partnerContact가 없으면 연락처 텍스트와 저장 CTA는 표시되지 않는다',
+      app: _ResultsSheetHarness(
+        activeEvent: _makeActiveEvent(),
+        entryLabel: '결과 열기',
+      ),
       overrides: () => [
         myMatchesProvider('event-1').overrideWith(
           (ref) async => [
@@ -231,31 +260,15 @@ void main() {
         ),
       ],
       body: (t) async {
-        await t.pumpWidget(
-          ProviderScope(
-            overrides: [
-              myMatchesProvider('event-1').overrideWith(
-                (ref) async => [
-                  _makeMatch(
-                    id: 'm-6',
-                    partnerId: 'p-6',
-                    partnerName: '세아',
-                    partnerContact: null,
-                  ),
-                ],
-              ),
-            ],
-            child: MaterialApp(
-              home: Scaffold(
-                body: MatchResultsContent(activeEvent: _makeActiveEvent()),
-              ),
-            ),
-          ),
-        );
+        await t.tap(find.text('결과 열기'));
         await t.pumpAndSettle();
 
         expect(find.text('세아'), findsOneWidget);
         expect(find.textContaining('****'), findsNothing);
+        expect(
+          find.byKey(const ValueKey<String>('save-contact-p-6')),
+          findsNothing,
+        );
       },
     );
   });
@@ -264,55 +277,86 @@ void main() {
   // CUJ 2-1: 여러 매칭 카드 탐색
   // ---------------------------------------------------------------------------
   cujGroup('2-1', '여러 매칭 카드 표시', () {
+    final saved = <_SavedContactCall>[];
+
     cujCase(
-      'happy: 매칭 2건이면 2명 카운트와 각 파트너 카드가 표시된다',
-      app: const Scaffold(body: SizedBox.shrink()),
-      body: (t) async {
-        await t.pumpWidget(
-          ProviderScope(
-            overrides: [
-              myMatchesProvider('event-1').overrideWith(
-                (ref) async => [
-                  _makeMatch(id: 'm-7', partnerId: 'p-7', partnerName: '은우'),
-                  _makeMatch(id: 'm-8', partnerId: 'p-8', partnerName: '유나'),
-                ],
-              ),
-            ],
-            child: MaterialApp(
-              home: Scaffold(
-                body: MatchResultsContent(activeEvent: _makeActiveEvent()),
-              ),
+      'happy: 스와이프 시 active dot이 바뀌고 저장 CTA는 active 카드 partner만 전달한다',
+      app: _ResultsSheetHarness(
+        activeEvent: _makeActiveEvent(),
+        entryLabel: '결과 열기',
+        onSaveMatchContact: (match) async {
+          saved.add(
+            _SavedContactCall(
+              partnerId: match.partnerId,
+              phone: match.partnerContact ?? '',
             ),
-          ),
-        );
+          );
+        },
+      ),
+      overrides: () => [
+        myMatchesProvider('event-1').overrideWith(
+          (ref) async => [
+            _makeMatch(
+              id: 'm-7',
+              partnerId: 'p-7',
+              partnerName: '은우',
+              partnerContact: '01077778888',
+            ),
+            _makeMatch(
+              id: 'm-8',
+              partnerId: 'p-8',
+              partnerName: '유나',
+              partnerContact: '01099990000',
+            ),
+          ],
+        ),
+      ],
+      body: (t) async {
+        saved.clear();
+
+        await t.tap(find.text('결과 열기'));
         await t.pumpAndSettle();
 
         expect(find.text('2명과 매칭되었어요!'), findsOneWidget);
-        expect(find.text('은우'), findsOneWidget);
-        expect(find.text('유나'), findsOneWidget);
+        expect(find.byType(PageView), findsOneWidget);
+
+        final dot0 = find.byKey(const ValueKey<String>('match-dot-0'));
+        final dot1 = find.byKey(const ValueKey<String>('match-dot-1'));
+        expect(dot0, findsOneWidget);
+        expect(dot1, findsOneWidget);
+        final dot0BeforeWidth = t.getSize(dot0).width;
+        final dot1BeforeWidth = t.getSize(dot1).width;
+        expect(dot0BeforeWidth, greaterThan(dot1BeforeWidth));
+
+        await t.drag(find.byType(PageView), const Offset(-320, 0));
+        await t.pumpAndSettle();
+
+        final dot0AfterWidth = t.getSize(dot0).width;
+        final dot1AfterWidth = t.getSize(dot1).width;
+        expect(dot1AfterWidth, greaterThan(dot0AfterWidth));
+
+        await t.tap(find.byKey(const ValueKey<String>('save-contact-p-8')));
+        await t.pump();
+
+        expect(saved, hasLength(1));
+        expect(saved.first.partnerId, 'p-8');
+        expect(saved.first.phone, '01099990000');
       },
     );
 
     cujCase(
       'edge: partnerName이 null이면 "알 수 없음" fallback이 표시된다',
-      app: const Scaffold(body: SizedBox.shrink()),
+      app: _ResultsSheetHarness(
+        activeEvent: _makeActiveEvent(),
+        entryLabel: '결과 열기',
+      ),
+      overrides: () => [
+        myMatchesProvider('event-1').overrideWith(
+          (ref) async => [_makeMatch(id: 'm-9', partnerId: 'p-9')],
+        ),
+      ],
       body: (t) async {
-        await t.pumpWidget(
-          ProviderScope(
-            overrides: [
-              myMatchesProvider('event-1').overrideWith(
-                (ref) async => [
-                  _makeMatch(id: 'm-9', partnerId: 'p-9'),
-                ],
-              ),
-            ],
-            child: MaterialApp(
-              home: Scaffold(
-                body: MatchResultsContent(activeEvent: _makeActiveEvent()),
-              ),
-            ),
-          ),
-        );
+        await t.tap(find.text('결과 열기'));
         await t.pumpAndSettle();
 
         expect(find.text('알 수 없음'), findsOneWidget);
@@ -324,47 +368,50 @@ void main() {
   // CUJ 3-1: 매칭 없음 결과
   // ---------------------------------------------------------------------------
   cujGroup('3-1', '매칭 없음 empty 상태 표시', () {
+    var nextEventTapped = false;
+
     cujCase(
-      'happy: 매칭 0건이면 empty 안내 문구를 표시한다',
-      app: const Scaffold(body: SizedBox.shrink()),
+      'happy: empty state에서 다음 이벤트 찾기 CTA 탭 시 sheet dismiss + 다음 액션 콜백 실행',
+      app: _ResultsSheetHarness(
+        activeEvent: _makeActiveEvent(),
+        entryLabel: '결과 열기',
+        onFindNextEvent: () {
+          nextEventTapped = true;
+        },
+      ),
+      overrides: () => [
+        myMatchesProvider('event-1').overrideWith((ref) async => []),
+      ],
       body: (t) async {
-        await t.pumpWidget(
-          ProviderScope(
-            overrides: [
-              myMatchesProvider('event-1').overrideWith((ref) async => []),
-            ],
-            child: MaterialApp(
-              home: Scaffold(
-                body: MatchResultsContent(activeEvent: _makeActiveEvent()),
-              ),
-            ),
-          ),
-        );
+        nextEventTapped = false;
+
+        await t.tap(find.text('결과 열기'));
         await t.pumpAndSettle();
 
-        expect(find.text('이번엔 아쉽지만, 다음 기회에!'), findsOneWidget);
+        expect(find.text('다음 이벤트 찾기'), findsOneWidget);
+
+        await t.tap(find.text('다음 이벤트 찾기'));
+        await t.pumpAndSettle();
+
+        expect(nextEventTapped, isTrue);
+        expect(find.byType(MatchResultsContent), findsNothing);
       },
     );
 
     cujCase(
-      'edge: 빈 목록이어도 시트 타이틀은 유지된다',
-      app: const Scaffold(body: SizedBox.shrink()),
+      'edge: empty state에서도 내부 오류 상세 텍스트는 노출되지 않는다',
+      app: _ResultsSheetHarness(
+        activeEvent: _makeActiveEvent(),
+        entryLabel: '결과 열기',
+      ),
+      overrides: () => [
+        myMatchesProvider('event-1').overrideWith((ref) async => []),
+      ],
       body: (t) async {
-        await t.pumpWidget(
-          ProviderScope(
-            overrides: [
-              myMatchesProvider('event-1').overrideWith((ref) async => []),
-            ],
-            child: MaterialApp(
-              home: Scaffold(
-                body: MatchResultsContent(activeEvent: _makeActiveEvent()),
-              ),
-            ),
-          ),
-        );
+        await t.tap(find.text('결과 열기'));
         await t.pumpAndSettle();
 
-        expect(find.text('매칭 결과'), findsOneWidget);
+        expect(find.textContaining('Exception'), findsNothing);
       },
     );
   });
@@ -373,50 +420,51 @@ void main() {
   // CUJ 3-2: 조회 실패 fallback 처리
   // ---------------------------------------------------------------------------
   cujGroup('3-2', '조회 실패 시 empty fallback 처리', () {
+    var nextEventTapped = false;
+
     cujCase(
-      'happy: provider error 시 empty 상태와 동일한 문구를 표시한다',
-      app: const Scaffold(body: SizedBox.shrink()),
+      'happy: provider error에서도 empty CTA가 노출되고 탭 시 dismiss된다',
+      app: _ResultsSheetHarness(
+        activeEvent: _makeActiveEvent(),
+        entryLabel: '결과 열기',
+        onFindNextEvent: () {
+          nextEventTapped = true;
+        },
+      ),
+      overrides: () => [
+        myMatchesProvider('event-1').overrideWith(
+          (ref) => Future<List<MatchPair>>.error(Exception('load failed')),
+        ),
+      ],
       body: (t) async {
-        await t.pumpWidget(
-          ProviderScope(
-            overrides: [
-              myMatchesProvider('event-1').overrideWith(
-                (ref) =>
-                    Future<List<MatchPair>>.error(Exception('load failed')),
-              ),
-            ],
-            child: MaterialApp(
-              home: Scaffold(
-                body: MatchResultsContent(activeEvent: _makeActiveEvent()),
-              ),
-            ),
-          ),
-        );
+        nextEventTapped = false;
+
+        await t.tap(find.text('결과 열기'));
         await t.pumpAndSettle();
 
-        expect(find.text('이번엔 아쉽지만, 다음 기회에!'), findsOneWidget);
+        expect(find.text('다음 이벤트 찾기'), findsOneWidget);
+
+        await t.tap(find.text('다음 이벤트 찾기'));
+        await t.pumpAndSettle();
+
+        expect(nextEventTapped, isTrue);
+        expect(find.byType(MatchResultsContent), findsNothing);
       },
     );
 
     cujCase(
       'edge: 내부 에러 메시지는 사용자에게 직접 노출되지 않는다',
-      app: const Scaffold(body: SizedBox.shrink()),
+      app: _ResultsSheetHarness(
+        activeEvent: _makeActiveEvent(),
+        entryLabel: '결과 열기',
+      ),
+      overrides: () => [
+        myMatchesProvider('event-1').overrideWith(
+          (ref) => Future<List<MatchPair>>.error(Exception('secret details')),
+        ),
+      ],
       body: (t) async {
-        await t.pumpWidget(
-          ProviderScope(
-            overrides: [
-              myMatchesProvider('event-1').overrideWith(
-                (ref) =>
-                    Future<List<MatchPair>>.error(Exception('secret details')),
-              ),
-            ],
-            child: MaterialApp(
-              home: Scaffold(
-                body: MatchResultsContent(activeEvent: _makeActiveEvent()),
-              ),
-            ),
-          ),
-        );
+        await t.tap(find.text('결과 열기'));
         await t.pumpAndSettle();
 
         expect(find.textContaining('secret details'), findsNothing);
