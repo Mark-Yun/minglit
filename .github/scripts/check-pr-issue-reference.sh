@@ -30,18 +30,12 @@ if [ "$draft" = "true" ]; then
 fi
 
 author=$(jq -r '.pull_request.user.login // ""' "$GITHUB_EVENT_PATH")
-author_type=$(jq -r '.pull_request.user.type // ""' "$GITHUB_EVENT_PATH")
 title=$(jq -r '.pull_request.title // ""' "$GITHUB_EVENT_PATH")
 body=$(jq -r '.pull_request.body // ""' "$GITHUB_EVENT_PATH")
 
-if [ "$author_type" = "Bot" ]; then
-  echo "Bot-authored PR by $author (type=$author_type); skipping PR issue reference check."
-  exit 0
-fi
-
 case "$author" in
-  dependabot[bot]|app/dependabot|minglit-release-bot[bot])
-    echo "Bot-authored PR by $author; skipping PR issue reference check."
+  dependabot\[bot\]|app/dependabot|minglit-release-bot\[bot\])
+    echo "Allowlisted bot-authored PR by $author; skipping PR issue reference check."
     exit 0
     ;;
 esac
