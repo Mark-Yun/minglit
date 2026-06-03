@@ -1,5 +1,8 @@
-import 'package:app_partner/src/features/checkin/qr_scanner_screen.dart';
+import 'dart:async';
+
 import 'package:app_partner/src/logic/current_partner_provider.dart';
+import 'package:app_partner/src/logic/event_operation_phase.dart';
+import 'package:app_partner/src/ui/screens/ongoing_event_list_page.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -9,8 +12,8 @@ import 'package:riverpod/misc.dart';
 ///
 /// Auto-selects event based on today's schedule:
 /// - 0 events today → empty state with next event info
-/// - 1 event today → direct to QR scanner
-/// - 2+ events today → event selection bottom sheet → scanner
+/// - 1 event in operation window → direct to OngoingEventListPage
+/// - 2+ operation-window events → selection list → OngoingEventListPage
 class CheckinPlaceholderPage extends ConsumerWidget {
   const CheckinPlaceholderPage({super.key});
 
@@ -54,9 +57,9 @@ class _CheckinEntryPage extends ConsumerWidget {
         body: const Center(child: Text('이벤트를 불러올 수 없습니다')),
       ),
       data: (events) {
-        // 1 event → direct to scanner
+        // 1 event → direct to the canonical ongoing operation surface.
         if (events.length == 1) {
-          return _ScannerWrapper(event: events.first);
+          return OngoingEventListPage(event: events.first);
         }
 
         // 0 or 2+ → show selection/empty page
@@ -66,8 +69,8 @@ class _CheckinEntryPage extends ConsumerWidget {
   }
 }
 
-/// Provider that fetches today's events for check-in.
-/// "Today" = events starting within 3 hours before ~ 1 hour after end.
+/// Provider that fetches events for the ongoing operation surface.
+/// Window = T-7 through end + 24h.
 final FutureProviderFamily<List<Event>, String> todayEventsProvider =
     FutureProvider.family.autoDispose<List<Event>, String>((
       ref,
@@ -75,34 +78,9 @@ final FutureProviderFamily<List<Event>, String> todayEventsProvider =
     ) async {
       final repo = ref.read(eventRepositoryProvider);
       final upcoming = await repo.getUpcomingEvents(partnerId);
-      final now = DateTime.now();
 
-      return upcoming.where((e) {
-        final earlyWindow = e.startTime.subtract(const Duration(hours: 3));
-        final lateWindow = e.endTime.add(const Duration(hours: 1));
-        return now.isAfter(earlyWindow) && now.isBefore(lateWindow);
-      }).toList();
+      return upcoming.where(isOngoingListWindow).toList();
     });
-
-/// Wraps QR scanner with event context (name, count) in dark theme.
-class _ScannerWrapper extends StatelessWidget {
-  const _ScannerWrapper({required this.event});
-  final Event event;
-
-  @override
-  Widget build(BuildContext context) {
-    return Theme(
-      data: ThemeData.dark().copyWith(
-        colorScheme: ColorScheme.fromSeed(
-          // Fix #652: 하드코딩 Color(0xFF6C3CE1) → MinglitPartnerColors.primary 토큰 사용
-          seedColor: MinglitPartnerColors.primary,
-          brightness: Brightness.dark,
-        ),
-      ),
-      child: QRScannerScreen(event: event),
-    );
-  }
-}
 
 /// Page shown when 0 or 2+ events today.
 class _CheckinSelectionPage extends StatelessWidget {
@@ -123,7 +101,7 @@ class _CheckinSelectionPage extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  Icons.qr_code_scanner,
+                  Icons.list_alt_outlined,
                   size: MinglitIconSize.hero,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -131,7 +109,7 @@ class _CheckinSelectionPage extends StatelessWidget {
                 Text('오늘 예정된 이벤트가 없습니다', style: theme.textTheme.titleMedium),
                 const SizedBox(height: MinglitSpacing.small),
                 Text(
-                  '이벤트 당일에 체크인을 시작할 수 있어요',
+                  '진행 7일 전부터 참가자 리스트를 확인할 수 있어요',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -153,13 +131,13 @@ class _CheckinSelectionPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '이벤트를 선택하세요',
+              '운영할 이벤트를 선택하세요',
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w800,
               ),
             ),
             Text(
-              '오늘 ${events.length}개 이벤트가 진행됩니다',
+              '진행 임박/진행 중 이벤트 ${events.length}개',
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: MinglitSpacing.medium),
@@ -180,10 +158,13 @@ class _CheckinSelectionPage extends StatelessWidget {
                     child: InkWell(
                       borderRadius: BorderRadius.circular(MinglitRadius.card),
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute<void>(
-                            builder: (_) => _ScannerWrapper(event: event),
+                        unawaited(
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) =>
+                                  OngoingEventListPage(event: event),
+                            ),
                           ),
                         );
                       },
@@ -208,7 +189,7 @@ class _CheckinSelectionPage extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    // Fix #1742: event.title은 nullable — party.title로 폴백
+                                    // Fix #1742: title is nullable.
                                     event.party?.title ?? event.title ?? '',
                                     style: theme.textTheme.titleSmall,
                                   ),

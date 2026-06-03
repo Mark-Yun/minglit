@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:app_partner/src/features/home/home_event_phase.dart';
+import 'package:app_partner/src/logic/event_operation_phase.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:app_partner/src/logic/dashboard_refresh_notifier.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -96,11 +96,12 @@ class PartnerDashboardController extends _$PartnerDashboardController {
       final recruitingEvents = upcomingEvents
           .where((event) => getEventPhase(event) == EventPhase.recruiting)
           .toList();
-      // Fix #2219: preparing events derived from upcomingEvents (start <3h),
-      // not from closingSoonEvents (next 3 days) — keeps derived state in controller.
-      final preparingEvents = upcomingEvents
-          .where((event) => getEventPhase(event) == EventPhase.preparing)
-          .toList();
+      // MDS #3014: preparingEvents keeps the existing state field name, but now
+      // means T-7~start operation-window events shown as participant list/checkin.
+      final preparingEvents = upcomingEvents.where((event) {
+        final phase = getEventPhase(event);
+        return phase == EventPhase.preStart || phase == EventPhase.checkinReady;
+      }).toList();
       final draftParties = activeParties
           .where(
             (party) =>

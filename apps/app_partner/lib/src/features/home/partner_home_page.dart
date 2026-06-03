@@ -13,6 +13,7 @@ import 'package:app_partner/src/features/home/widgets/location_guide_banner.dart
 import 'package:app_partner/src/features/home/widgets/onboarding_step_guide.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
+import 'package:app_partner/src/ui/screens/ongoing_event_list_page.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -176,7 +177,16 @@ class PartnerHomePage extends ConsumerWidget {
                           ),
                           child: HomeLiveEventCard(
                             event: event,
-                            onCheckin: coordinator.goToCheckin,
+                            onCheckin: () {
+                              unawaited(
+                                Navigator.of(context).push<void>(
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        OngoingEventListPage(event: event),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ),
@@ -212,7 +222,7 @@ class PartnerHomePage extends ConsumerWidget {
                     ],
                     if (state.preparingEvents.isNotEmpty) ...[
                       const SizedBox(height: MinglitSpacing.large),
-                      const HomeSectionHeader(title: '준비 중인 이벤트'),
+                      const HomeSectionHeader(title: '진행 임박'),
                       const SizedBox(height: MinglitSpacing.small),
                       ...state.preparingEvents.map(
                         (event) => Padding(
@@ -221,10 +231,16 @@ class PartnerHomePage extends ConsumerWidget {
                           ),
                           child: HomeUpcomingEventCard(
                             event: event,
-                            onTap: () => coordinator.pushEventDetail(
-                              partyId: event.partyId,
-                              eventId: event.id,
-                            ),
+                            onTap: () {
+                              unawaited(
+                                Navigator.of(context).push<void>(
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        OngoingEventListPage(event: event),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ),

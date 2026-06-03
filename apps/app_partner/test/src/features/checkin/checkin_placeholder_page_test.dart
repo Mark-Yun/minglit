@@ -5,6 +5,7 @@ import 'package:app_partner/src/features/checkin/qr_scanner_screen.dart';
 import 'package:app_partner/src/features/checkin/stats/checkin_stats_controller.dart'
     show CheckinStats, CheckinStatsController, checkinStatsControllerProvider;
 import 'package:app_partner/src/logic/current_partner_provider.dart';
+import 'package:app_partner/src/ui/screens/ongoing_event_list_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -77,8 +78,7 @@ class _FakeMobileScannerPlatform extends MobileScannerPlatform {
 // 실제 Supabase 연결을 시도하지 않도록 한다.
 class _FakeCheckinStatsController extends CheckinStatsController {
   @override
-  Future<CheckinStats> build(String eventId) async =>
-      const CheckinStats(total: 0, checkedIn: 0);
+  Future<CheckinStats> build(String eventId) async => CheckinStats.empty;
 }
 
 void main() {
@@ -183,10 +183,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('오늘 예정된 이벤트가 없습니다'), findsOneWidget);
-      expect(find.byIcon(Icons.qr_code_scanner), findsOneWidget);
+      expect(find.byIcon(Icons.list_alt_outlined), findsOneWidget);
     });
 
-    testWidgets('auto-routes to QRScannerScreen when exactly 1 event today', (
+    testWidgets('auto-routes to OngoingEventListPage when exactly 1 event', (
       tester,
     ) async {
       // Fix #1097: Previously disabled due to mobile_scanner async dispose
@@ -216,6 +216,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
+      expect(find.byType(OngoingEventListPage), findsOneWidget);
       expect(find.byType(QRScannerScreen), findsOneWidget);
     });
 
@@ -246,8 +247,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('이벤트를 선택하세요'), findsOneWidget);
-      expect(find.text('오늘 2개 이벤트가 진행됩니다'), findsOneWidget);
+      expect(find.text('운영할 이벤트를 선택하세요'), findsOneWidget);
+      expect(find.text('진행 임박/진행 중 이벤트 2개'), findsOneWidget);
       expect(find.text('Test Event'), findsOneWidget);
       expect(find.text('Second Event'), findsOneWidget);
     });

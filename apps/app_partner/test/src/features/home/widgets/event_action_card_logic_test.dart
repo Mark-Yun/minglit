@@ -1,4 +1,4 @@
-import 'package:app_partner/src/features/home/home_event_phase.dart';
+import 'package:app_partner/src/logic/event_operation_phase.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -24,26 +24,34 @@ void main() {
   // sub-second boundary flicker.
 
   group('getEventPhase', () {
-    test('returns recruiting when start is more than 3 hours away', () {
-      // Use 5 hours to avoid sub-second drift between test setup and
-      // DateTime.now() inside getEventPhase causing inHours to truncate to 3.
+    test('returns recruiting when start is more than 7 days away', () {
       final now = DateTime.now();
       final event = _makeEvent(
         id: 'e1',
-        startTime: now.add(const Duration(hours: 5)),
-        endTime: now.add(const Duration(hours: 7)),
+        startTime: now.add(const Duration(days: 8)),
+        endTime: now.add(const Duration(days: 8, hours: 2)),
       );
       expect(getEventPhase(event), EventPhase.recruiting);
     });
 
-    test('returns preparing when start is 2 hours away', () {
+    test('returns checkinReady when start is 90 minutes away', () {
       final now = DateTime.now();
       final event = _makeEvent(
         id: 'e2',
-        startTime: now.add(const Duration(hours: 2)),
+        startTime: now.add(const Duration(minutes: 90)),
         endTime: now.add(const Duration(hours: 4)),
       );
-      expect(getEventPhase(event), EventPhase.preparing);
+      expect(getEventPhase(event), EventPhase.checkinReady);
+    });
+
+    test('returns preStart when start is inside T-7 but before T-2', () {
+      final now = DateTime.now();
+      final event = _makeEvent(
+        id: 'e2b',
+        startTime: now.add(const Duration(days: 3)),
+        endTime: now.add(const Duration(days: 3, hours: 2)),
+      );
+      expect(getEventPhase(event), EventPhase.preStart);
     });
 
     test(
@@ -70,16 +78,15 @@ void main() {
     });
 
     test(
-      'returns preparing when start is exactly 3 hours away (boundary: inHours == 3)',
+      'returns checkinReady when start is exactly 2 hours away',
       () {
         final now = DateTime.now();
-        // inHours truncates: 3h0m → inHours == 3 → <= 3 → preparing
         final event = _makeEvent(
           id: 'e5',
-          startTime: now.add(const Duration(hours: 3)),
+          startTime: now.add(const Duration(hours: 2)),
           endTime: now.add(const Duration(hours: 5)),
         );
-        expect(getEventPhase(event), EventPhase.preparing);
+        expect(getEventPhase(event), EventPhase.checkinReady);
       },
     );
   });
@@ -101,20 +108,20 @@ void main() {
       expect(result?.id, 'live');
     });
 
-    test('returns preparing event when no live event exists', () {
+    test('returns checkin-ready event when no live event exists', () {
       final now = DateTime.now();
-      final preparing = _makeEvent(
-        id: 'preparing',
-        startTime: now.add(const Duration(hours: 2)),
+      final checkinReady = _makeEvent(
+        id: 'checkin-ready',
+        startTime: now.add(const Duration(minutes: 90)),
         endTime: now.add(const Duration(hours: 4)),
       );
       final recruiting = _makeEvent(
         id: 'recruiting',
-        startTime: now.add(const Duration(hours: 8)),
-        endTime: now.add(const Duration(hours: 10)),
+        startTime: now.add(const Duration(days: 8)),
+        endTime: now.add(const Duration(days: 8, hours: 2)),
       );
-      final result = selectPrimaryEvent([preparing, recruiting]);
-      expect(result?.id, 'preparing');
+      final result = selectPrimaryEvent([checkinReady, recruiting]);
+      expect(result?.id, 'checkin-ready');
     });
 
     test('returns ended event within 24 hours when no live or preparing', () {
@@ -126,8 +133,8 @@ void main() {
       );
       final recruiting = _makeEvent(
         id: 'recruiting',
-        startTime: now.add(const Duration(hours: 8)),
-        endTime: now.add(const Duration(hours: 10)),
+        startTime: now.add(const Duration(days: 8)),
+        endTime: now.add(const Duration(days: 8, hours: 2)),
       );
       final result = selectPrimaryEvent([ended, recruiting]);
       expect(result?.id, 'ended');
@@ -137,13 +144,13 @@ void main() {
       final now = DateTime.now();
       final far = _makeEvent(
         id: 'far',
-        startTime: now.add(const Duration(hours: 10)),
-        endTime: now.add(const Duration(hours: 12)),
+        startTime: now.add(const Duration(days: 10)),
+        endTime: now.add(const Duration(days: 10, hours: 2)),
       );
       final near = _makeEvent(
         id: 'near',
-        startTime: now.add(const Duration(hours: 5)),
-        endTime: now.add(const Duration(hours: 7)),
+        startTime: now.add(const Duration(days: 8)),
+        endTime: now.add(const Duration(days: 8, hours: 2)),
       );
       final result = selectPrimaryEvent([far, near]);
       expect(result?.id, 'near');
