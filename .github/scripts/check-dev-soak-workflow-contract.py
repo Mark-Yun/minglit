@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate dev soak monitor and RC cut gate workflow contracts."""
+"""Validate dev health monitor and RC cut gate workflow contracts."""
 
 from __future__ import annotations
 
@@ -13,9 +13,18 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 MONITOR_DISTRIBUTED = ROOT / ".github/workflows/monitor-event-flow-distributed.yml"
+MONITOR_DEV_STAGING_HEALTH = ROOT / ".github/workflows/monitor-dev-staging-health.yml"
+MONITOR_DEV_CUJ = ROOT / ".github/workflows/monitor-dev-cuj.yml"
 DEPLOY_DEV_EVENT_FLOW_CRON = ROOT / ".github/workflows/deploy-dev-event-flow-cron.yml"
+SET_DEV_SOAK_STATUS = ROOT / ".github/workflows/set-dev-soak-status.yml"
 DEV_RC_CUT_GATE = ROOT / ".github/workflows/dev-rc-cut-gate.yml"
 SHARED_SOAK_GATE = ROOT / ".github/workflows/shared-soak-gate.yml"
+PR_GATE = ROOT / ".github/workflows/pr-gate.yml"
+DEV_PR_GATE = ROOT / ".github/workflows/dev-pr-gate.yml"
+RC_PR_GATE = ROOT / ".github/workflows/rc-pr-gate.yml"
+MAIN_PR_GATE = ROOT / ".github/workflows/main-pr-gate.yml"
+RUN_USER_CUJ = ROOT / ".github/scripts/run-user-cuj.sh"
+RUN_PARTNER_CUJ = ROOT / ".github/scripts/run-partner-cuj.sh"
 
 
 def fail(message: str) -> None:
@@ -134,6 +143,131 @@ def assert_dev_cron_deploy_contract() -> None:
             fail(f"install-dev-event-flow-cron.sh missing contract fragment: {fragment}")
 
 
+def assert_set_dev_soak_status_contract() -> None:
+    workflow = load_workflow(SET_DEV_SOAK_STATUS)
+    config = on_config(workflow)
+    dispatch = config.get("workflow_dispatch", {})
+    inputs = dispatch.get("inputs", {}) if isinstance(dispatch, dict) else {}
+    signal = inputs.get("signal", {}) if isinstance(inputs, dict) else {}
+    options = signal.get("options", []) if isinstance(signal, dict) else []
+    required_signals = [
+        "backend-simulator",
+        "cuj-user",
+        "cuj-partner",
+        "real-device",
+        "app-ai-review",
+    ]
+    for item in required_signals:
+        if item not in options:
+            fail(f"set-dev-soak-status workflow_dispatch signal options missing {item}")
+
+    jobs = jobs_config(workflow, SET_DEV_SOAK_STATUS)
+    mapper = jobs.get("map-dev-soak-status", {})
+    if not isinstance(mapper, dict):
+        fail("set-dev-soak-status must define map-dev-soak-status job")
+    script = run_block(mapper, "Map dev soak signal to status context")
+    required_fragments = [
+        "backend-simulator) CONTEXT=\"dev-soak/backend-simulator\"",
+        "cuj-user) CONTEXT=\"dev-soak/cuj-user\"",
+        "cuj-partner) CONTEXT=\"dev-soak/cuj-partner\"",
+        "real-device) CONTEXT=\"dev-soak/real-device\"",
+        "app-ai-review) CONTEXT=\"dev-soak/app-ai-review\"",
+    ]
+    for fragment in required_fragments:
+        if fragment not in script:
+            fail(f"set-dev-soak-status mapping missing fragment: {fragment}")
+
+
+def assert_dev_staging_health_contract() -> None:
+    workflow = load_workflow(MONITOR_DEV_STAGING_HEALTH)
+    jobs = jobs_config(workflow, MONITOR_DEV_STAGING_HEALTH)
+    forbidden_jobs = {
+        "cuj-user",
+        "cuj-partner",
+        "status-cuj-user",
+        "status-cuj-partner",
+    }
+    for job in forbidden_jobs:
+        if job in jobs:
+            fail(f"monitor-dev-staging-health must not define {job}; CUJ belongs to monitor-dev-cuj")
+    text = MONITOR_DEV_STAGING_HEALTH.read_text(encoding="utf-8")
+    if "dev-staging-health/cuj-" in text or "shared-cuj-integration.yml" in text:
+        fail("monitor-dev-staging-health must not run or write CUJ health statuses")
+
+
+def assert_monitor_dev_cuj_contract() -> None:
+    workflow = load_workflow(MONITOR_DEV_CUJ)
+    config = on_config(workflow)
+    push = config.get("push", {})
+    branches = push.get("branches", []) if isinstance(push, dict) else []
+    if branches != ["dev"]:
+        fail("monitor-dev-cuj must run only on push to dev")
+
+    jobs = jobs_config(workflow, MONITOR_DEV_CUJ)
+    plan = jobs.get("plan", {})
+    if not isinstance(plan, dict):
+        fail("monitor-dev-cuj must define plan job")
+    plan_script = run_block(plan, "Resolve dev CUJ candidate")
+    required_plan_fragments = [
+        "git fetch origin dev",
+        "EVENT_NAME",
+        "PUSH_SHA",
+        "INPUT_CANDIDATE_SHA",
+        "candidate_sha must be a full 40-character commit SHA",
+        "git merge-base --is-ancestor",
+        "candidate_sha must be reachable from origin/dev",
+    ]
+    for fragment in required_plan_fragments:
+        if fragment not in plan_script:
+            fail(f"monitor-dev-cuj plan step missing fragment: {fragment}")
+
+    expected_cuj_jobs = {
+        "cuj-user": ("user", "cuj-user", "status-cuj-user", "notify-cuj-user-failure"),
+        "cuj-partner": ("partner", "cuj-partner", "status-cuj-partner", "notify-cuj-partner-failure"),
+    }
+    for job_name, (app_name, signal, status_job, notify_job) in expected_cuj_jobs.items():
+        job = jobs.get(job_name, {})
+        if not isinstance(job, dict) or job.get("uses") != "./.github/workflows/shared-cuj-integration.yml":
+            fail(f"monitor-dev-cuj {job_name} must call shared-cuj-integration")
+        with_config = job.get("with", {})
+        if not isinstance(with_config, dict) or with_config.get("app-name") != app_name:
+            fail(f"monitor-dev-cuj {job_name} must use app-name={app_name}")
+
+        status = jobs.get(status_job, {})
+        if not isinstance(status, dict) or status.get("uses") != "./.github/workflows/set-dev-soak-status.yml":
+            fail(f"monitor-dev-cuj {status_job} must call set-dev-soak-status")
+        status_with = status.get("with", {})
+        if not isinstance(status_with, dict) or status_with.get("signal") != signal:
+            fail(f"monitor-dev-cuj {status_job} must write signal={signal}")
+
+        notify = jobs.get(notify_job, {})
+        if not isinstance(notify, dict) or notify.get("uses") != "./.github/workflows/shared-notify.yml":
+            fail(f"monitor-dev-cuj {notify_job} must call shared-notify")
+        notify_with = notify.get("with", {})
+        if not isinstance(notify_with, dict):
+            fail(f"monitor-dev-cuj {notify_job} with block did not parse as a mapping")
+        if notify_with.get("stage") != "dev-soak" or notify_with.get("signal") != signal:
+            fail(f"monitor-dev-cuj {notify_job} must notify stage=dev-soak signal={signal}")
+        if "blocks_rc_cut" not in notify_with:
+            fail(f"monitor-dev-cuj {notify_job} must set blocks_rc_cut")
+
+
+def assert_cuj_runner_contract() -> None:
+    for path in [RUN_USER_CUJ, RUN_PARTNER_CUJ]:
+        script = path.read_text(encoding="utf-8")
+        required_fragments = [
+            "DART_DEFINE_FILE=\"${MINGLIT_CUJ_DART_DEFINE_FILE:-",
+            "failed=0",
+            "failures=()",
+            "if ! flutter test",
+            "failures+=(\"$f\")",
+            "printf ' - %s\\n' \"${failures[@]}\"",
+        ]
+        for fragment in required_fragments:
+            if fragment not in script:
+                fail(f"{path.name} must aggregate CUJ failures; missing fragment: {fragment}")
+
+
 def assert_dev_rc_cut_gate_contract() -> None:
     workflow = load_workflow(DEV_RC_CUT_GATE)
     jobs = jobs_config(workflow, DEV_RC_CUT_GATE)
@@ -149,31 +283,79 @@ def assert_dev_rc_cut_gate_contract() -> None:
     if with_config.get("candidate_ref") != "dev":
         fail("dev-rc-cut-gate must evaluate origin/dev")
     min_soak_hours = str(with_config.get("min_soak_hours", ""))
-    if "24" not in min_soak_hours:
-        fail("dev-rc-cut-gate minimum soak must default to 24 hours")
+    if "0" not in min_soak_hours or "24" in min_soak_hours:
+        fail("dev-rc-cut-gate minimum dev soak must default to 0 hours")
 
     raw_required_runs = str(with_config.get("required_runs_json", "")).strip()
     try:
         required_runs = json.loads(raw_required_runs)
     except Exception as exc:  # noqa: BLE001 - contract failure should show parse detail.
         fail(f"dev-rc-cut-gate required_runs_json is invalid JSON: {exc}")
-    if not isinstance(required_runs, list) or len(required_runs) != 1:
-        fail("dev-rc-cut-gate must define exactly one required run contract")
-    run = required_runs[0]
-    if not isinstance(run, dict):
-        fail("dev-rc-cut-gate required run contract must be an object")
-
-    expected = {
-        "workflow": "deploy-dev-event-flow-cron.yml",
-        "branch": "dev",
-        "min_success": 1,
-        "match_head_sha": True,
+    if not isinstance(required_runs, list) or len(required_runs) != 2:
+        fail("dev-rc-cut-gate must define deploy-dev-event-flow-cron and monitor-dev-cuj required run contracts")
+    runs_by_workflow = {
+        item.get("workflow"): item
+        for item in required_runs
+        if isinstance(item, dict)
     }
-    for key, value in expected.items():
-        if run.get(key) != value:
-            fail(f"dev-rc-cut-gate required run {key} must be {value!r}")
-    if int(run.get("run_limit", 0)) < int(run["min_success"]):
-        fail("dev-rc-cut-gate run_limit must be >= min_success")
+
+    expected_runs = {
+        "deploy-dev-event-flow-cron.yml": {
+            "branch": "dev",
+            "min_success": 1,
+            "match_head_sha": True,
+        },
+        "monitor-dev-cuj.yml": {
+            "branch": "dev",
+            "min_success": 1,
+            "match_head_sha": True,
+        },
+    }
+    for workflow_name, expected in expected_runs.items():
+        run = runs_by_workflow.get(workflow_name)
+        if not isinstance(run, dict):
+            fail(f"dev-rc-cut-gate missing required run contract for {workflow_name}")
+        for key, value in expected.items():
+            if run.get(key) != value:
+                fail(f"dev-rc-cut-gate {workflow_name} required run {key} must be {value!r}")
+        if int(run.get("run_limit", 0)) < int(run["min_success"]):
+            fail(f"dev-rc-cut-gate {workflow_name} run_limit must be >= min_success")
+
+    failure_contexts = str(with_config.get("failure_contexts", ""))
+    success_contexts = str(with_config.get("success_contexts", ""))
+    required_contexts = [
+        "dev-soak/backend-simulator",
+        "dev-soak/cuj-user",
+        "dev-soak/cuj-partner",
+    ]
+    for context in required_contexts:
+        if context not in failure_contexts:
+            fail(f"dev-rc-cut-gate failure_contexts missing {context}")
+        if context not in success_contexts:
+            fail(f"dev-rc-cut-gate success_contexts missing {context}")
+
+    if with_config.get("pass_context") != "dev-rc-cut-pass":
+        fail("dev-rc-cut-gate pass_context must be dev-rc-cut-pass")
+
+
+def assert_pr_gate_cuj_contract() -> None:
+    pr_gate = load_workflow(PR_GATE)
+    config = on_config(pr_gate)
+    workflow_call = config.get("workflow_call", {})
+    inputs = workflow_call.get("inputs", {}) if isinstance(workflow_call, dict) else {}
+    run_cuj = inputs.get("run_cuj_integration", {}) if isinstance(inputs, dict) else {}
+    if not isinstance(run_cuj, dict) or run_cuj.get("default") is not False:
+        fail("pr-gate run_cuj_integration must default to false")
+
+    for path in [DEV_PR_GATE, RC_PR_GATE, MAIN_PR_GATE]:
+        workflow = load_workflow(path)
+        jobs = jobs_config(workflow, path)
+        core = jobs.get("pr-gate-core", {})
+        if not isinstance(core, dict):
+            fail(f"{path.name} must define pr-gate-core")
+        with_config = core.get("with", {})
+        if not isinstance(with_config, dict) or with_config.get("run_cuj_integration") is not False:
+            fail(f"{path.name} must pass run_cuj_integration=false")
 
 
 def assert_shared_soak_gate_contract() -> None:
@@ -192,9 +374,14 @@ def assert_shared_soak_gate_contract() -> None:
 def main() -> None:
     assert_distributed_monitor_contract()
     assert_dev_cron_deploy_contract()
+    assert_set_dev_soak_status_contract()
+    assert_dev_staging_health_contract()
+    assert_monitor_dev_cuj_contract()
+    assert_cuj_runner_contract()
     assert_dev_rc_cut_gate_contract()
+    assert_pr_gate_cuj_contract()
     assert_shared_soak_gate_contract()
-    print("Dev soak workflow contract OK")
+    print("Dev health workflow contract OK")
 
 
 if __name__ == "__main__":

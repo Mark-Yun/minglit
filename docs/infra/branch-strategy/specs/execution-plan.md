@@ -24,8 +24,8 @@
 | `pr-gate-core` (reusable) | `pr-gate` 의 step 들을 reusable workflow_call 로 추출 + stage parameter 추가 | **refactor** |
 | `version-bump` (reusable) | legacy/building block for source-controlled version file changes. Active daily cut uses direct `scripts/bump-version.sh` inside `dev-staging-dev-cut` | **refactor** |
 | `shared-set-commit-status` | commit status write 공통 reusable | **신규** |
-| `set-dev-soak-status`, `set-rc-soak-status` | stage별 soak status write API (`workflow_call` + `workflow_dispatch`) | **신규** |
-| dev soak monitor/status model | 기존 `monitor-event-flow-*`, real-device workflow, AI agent signal 을 `dev-soak/*` commit status 로 통합 | **신규 (조합)** |
+| `set-dev-soak-status`, `set-rc-soak-status` | stage별 status write API (`workflow_call` + `workflow_dispatch`). `dev-soak/*` 는 dev health legacy prefix | **신규** |
+| dev health monitor/status model | 기존 `monitor-event-flow-*`, `monitor-dev-cuj`, real-device workflow, AI agent signal 을 `dev-soak/*` commit status 로 통합 | **신규 (조합)** |
 | `auto-issue` (reusable) | (없음) | **신규** |
 | `cherry-pick-pr` (reusable) | (없음) | **신규** |
 | `dev-staging-pr-gate` | `pr-gate` 를 dev-staging base 로 재사용 (stage=dev-staging) | **신규 (얇은 wrapper)** |
@@ -111,7 +111,7 @@
 |------|------|------|
 | 4a | `shared-set-commit-status`, `set-dev-soak-status`, `set-rc-soak-status` 구현 | Phase 2 |
 | 4b | `shared-notify` 가 실패 시 `set-dev-soak-status` 호출 + issue title/body/log tail 개선 | 4a |
-| 4c | `dev-rc-cut-gate` 를 24h soak evaluator 로 변경 (run history + `dev-soak/*` status 확인) | 4a, 4b |
+| 4c | `dev-rc-cut-gate` 를 dev health evaluator 로 변경 (run history + `dev-soak/*` status 확인) | 4a, 4b |
 | 4d | `main-pr-gate` 에 RC lineage / `rc-main-cut-pass` / contract 재검증 추가 | Phase 2 |
 | 4e | `cherry-pick-pr` reusable, `rc-hotfix-apply` | Phase 2 |
 
@@ -230,7 +230,7 @@ Phase 1 (skeletal) → Phase 2 (CI/PR flow) → Phase 3 (branch CD)
 - **4a / 4b 는 같은 PR 가능**: `shared-set-commit-status` 와 `shared-notify` 연동은 API contract 가 작아서 같이 검증 가능하다. 단 `set-dev-soak-status` 수동 dispatch dry-run 은 먼저 통과해야 한다
 - **status write API → evaluator 사이 verification 필요**: `set-dev-soak-status` 는 AI agent/monitor 가 직접 쓰는 public API 이므로 context mapping, 권한, target SHA 를 먼저 검증한다
 - **4e 는 4d 와 독립 가능**: rc-hotfix-apply 는 rc promotion 흐름의 일부지만 main protection 적용과 직접 의존하지 않는다
-- **가장 critical**: `dev-rc-cut-gate` evaluator — 첫 verification 기간 1주 이상 추천 (24h soak/run history/status context 판정이 release cut 을 직접 막음)
+- **가장 critical**: `dev-rc-cut-gate` evaluator — 첫 verification 기간 1주 이상 추천 (run history/status context 판정이 release cut 을 직접 막음)
 
 권장 변경 없음. 위 순서 그대로 진행.
 

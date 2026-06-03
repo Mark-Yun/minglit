@@ -215,3 +215,6 @@ jobs:
           if [ -n "${INPUT_SIGNAL}" ]; then
             gh issue edit "${ISSUE_NUMBER}" --repo "${REPO}" --add-label "${INPUT_SIGNAL}" || true
           fi
+          if [ "${INPUT_BLOCKS_RC_CUT}" = "true" ]; then
+            gh issue edit "${ISSUE_NUMBER}" --repo "${REPO}" --add-label release-blocker || true
+          fi

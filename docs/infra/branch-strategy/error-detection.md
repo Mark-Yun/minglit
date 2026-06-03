@@ -9,8 +9,8 @@
 | 개발자 로컬 | LSP, analyze, unit | 컴파일/타입/단위 | 초~분 |
 | dev-staging PR gate | `dev-staging-pr-gate` (unit, lint, pgTAP, EF, migration, `expand-migrate-contract`, `flag-registration`, gitleaks) | PR 회귀, 보안, migration 충돌, flag 미등록, contract 위반 | < 10분 |
 | dev-staging-dev-cut PR | `dev-pr-gate` (defensive) | 환경 차이 회귀 | < 10분 |
-| dev soak | `monitor-event-flow-*`, real-device workflow, AI app soak status writer via `set-dev-soak-status` | backend simulator, 외부 의존, 디바이스, UX/blocker | 즉시~24h |
-| RC cut 직전 | `dev-rc-cut-gate` evaluator | 24h soak 미충족, `dev-soak/*` failure status, monitor 미실행 | 분 |
+| dev health | `deploy-dev-event-flow-cron`, `monitor-dev-cuj`, real-device workflow, AI app review status writer via `set-dev-soak-status` | backend simulator, CUJ, 외부 의존, 디바이스, UX/blocker | 즉시~분 |
+| RC cut 직전 | `dev-rc-cut-gate` evaluator | required dev health evidence 미충족, `dev-soak/*` failure status, monitor 미실행 | 분 |
 | Backend/Web deploy validation | post-deploy smoke, Sentry release marker | deploy infra 회귀 | 분 |
 | rc soak (5일) | rc 의 nightly 재실행 + 내부 dogfooding | 누적 회귀, real-data 이슈 | 일 단위 |
 | main 머지 후 (auto-deploy) | smoke + Sentry/Crashlytics 알람 임계 | prod 회귀 | 분 |
@@ -48,7 +48,7 @@
 ### GitHub Actions
 - pr-gate / monitor / promotion workflow 의 자동 이슈 생성
 - `shared-notify` 는 release blocker incident 를 issue 로 남기고, gate 판정용 commit status 를 기록
-- **workflow infra 실패 → P0**, test/soak 실패 → P1-high
+- **workflow infra 실패 → P0**, test/health/soak 실패 → P1-high
 
 ## Detection → Action 책임
 
@@ -59,7 +59,7 @@
 | `dev-rc-cut-gate` evaluator 미충족 | release manager / AI agent | GitHub Actions run summary | RC cut 보류. failure status 또는 monitor run history 부족 원인 확인 |
 | Backend/web deploy validation 실패 | on-call | Slack `#release` | retry → P0 이슈, 해당 promotion/deploy 진행 차단 |
 | Backend/web/mobile prod deploy 실패 (main 머지) | on-call | Slack `#release` | retry → rollback ([main-promotion.md](./main-promotion.md) error-backoff) |
-| rc soak 중 회귀 | RC owner | Slack `#release` | hotfix PR → rc | 
+| rc soak 중 회귀 | RC owner | Slack `#release` | hotfix PR → rc |
 | deploy-android-*, deploy-ios-* 실패 | mobile 팀 | GitHub issue + Slack | retry + auto-issue ([main-promotion.md](./main-promotion.md) error-backoff) |
 | Sentry alert (error spike) | 영역 owner | Sentry → Slack | 영역 별 on-call 판단 |
 | Crashlytics velocity alert | mobile 팀 | Firebase → Slack | flag flip OFF 우선 |

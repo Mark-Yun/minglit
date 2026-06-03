@@ -73,15 +73,15 @@ GitHub commit status 를 쓰는 low-level reusable workflow. Stage/signal mappin
 
 ### `set-dev-soak-status`
 
-Dev soak status write API. `workflow_call` 과 `workflow_dispatch` 를 모두 지원한다.
+Dev health status write API. `workflow_call` 과 `workflow_dispatch` 를 모두 지원한다. `dev-soak/*` prefix 는 legacy compatibility context 다.
 
 | 항목 | 값 |
 |------|----|
 | Trigger | `workflow_call` + `workflow_dispatch` |
-| Inputs | `signal`: backend-simulator\|real-device\|app-ai-review, `state`, `sha`, `target_url`, `description` |
-| Mapping | `backend-simulator` → `dev-soak/backend-simulator`; `real-device` → `dev-soak/real-device`; `app-ai-review` → `dev-soak/app-ai-review` |
+| Inputs | `signal`: backend-simulator\|cuj-user\|cuj-partner\|real-device\|app-ai-review, `state`, `sha`, `target_url`, `description` |
+| Mapping | `backend-simulator` → `dev-soak/backend-simulator`; `cuj-user` → `dev-soak/cuj-user`; `cuj-partner` → `dev-soak/cuj-partner`; `real-device` → `dev-soak/real-device`; `app-ai-review` → `dev-soak/app-ai-review` |
 | Steps | validate signal/state → context mapping → calls `shared-set-commit-status` |
-| Called by | `monitor-event-flow-*`, real-device workflow, AI agent, `dev-rc-cut-gate` |
+| Called by | `monitor-event-flow-*`, `monitor-dev-cuj`, real-device workflow, AI agent, `dev-rc-cut-gate` |
 
 ### `set-rc-soak-status`
 
@@ -199,12 +199,12 @@ Cross-branch cherry-pick PR 자동 생성.
 | Trigger | `schedule` (cut 직전, TBD) + `workflow_dispatch` |
 | Inputs | optional `candidate_sha` (default: latest `origin/dev` HEAD) |
 | Outputs | commit status `dev-rc-cut-pass` (success only) + `dev-soak/*` success confirmations + cut issue `gate/dev-rc` |
-| Steps | calls `shared-soak-gate` with candidate=`origin/dev`, min_soak_hours=24, required runs=`deploy-dev-event-flow-cron>=1` on matching SHA, failure context=`dev-soak/backend-simulator`, success context=`dev-soak/backend-simulator`, pass context=`dev-rc-cut-pass`; then upserts cut issue as `status/waiting` or `status/ready` |
+| Steps | calls `shared-soak-gate` with candidate=`origin/dev`, min_soak_hours=0, required runs=`deploy-dev-event-flow-cron>=1` and `monitor-dev-cuj>=1` on matching SHA, failure contexts=`dev-soak/backend-simulator` + `dev-soak/cuj-*`, success contexts=required `dev-soak/*`, pass context=`dev-rc-cut-pass`; then upserts cut issue as `status/waiting` or `status/ready` |
 | Failure path | 조건 미충족 또는 required success evidence 누락이면 `dev-rc-cut-pass` 를 쓰지 않는다. 실패를 발견한 monitor/AI agent 가 이미 `dev-soak/*` failure 를 쓴다 |
 
 > **No auto-revert** — snapshot 모델: 실패 = no `dev-rc-cut-pass`, dev keeps moving, 새 fix 가 자연스럽게 다음 dev-staging-dev-cut 후 새 candidate 로 검증됨.
 > **Naming** — `dev-rc-cut-pass` 가 canonical RC eligibility marker 이다. `rc-eligible` 은 현재 workflow/status 명칭이 아니다.
-> **SSOT** — dev soak 판정은 [../dev-soak-status-model.md](../dev-soak-status-model.md) 의 commit status + run history 를 따른다. GitHub Issue 는 사람이 보는 incident/audit surface 다.
+> **SSOT** — dev health / RC eligibility 판정은 [../promotion-contract.md](../promotion-contract.md) 와 [../dev-soak-status-model.md](../dev-soak-status-model.md) 의 commit status + run history 를 따른다. GitHub Issue 는 사람이 보는 incident/audit surface 다.
 > **True evidence** — failure status/issue 가 없다는 것은 `unknown` 이다. pass marker 는 required success status 와 run history 가 모두 존재할 때만 쓴다.
 
 #### `dev-deploy`
@@ -224,6 +224,15 @@ Cross-branch cherry-pick PR 자동 생성.
 | Branch/env | dev 를 계속 관찰. RC cut 후에는 RC env/Supabase branch 도 pre-main 검증 signal 로 사용 |
 | Outputs | event-flow simulation signal, `set-dev-soak-status(signal=backend-simulator,state=failure)`, issue/alert |
 | Note | fixed-time small tick. actor/user/partner/event sampling 만 랜덤화하고, party/event 는 partner EF, 신청 대상은 `user-event-feed` 로 만든다 |
+
+#### `monitor-dev-cuj`
+
+| 항목 | 값 |
+|------|----|
+| Trigger | `push` to `dev` + `workflow_dispatch` |
+| Branch/env | latest dev commit. User/partner app CUJ 를 각각 실행 |
+| Outputs | `set-dev-soak-status(signal=cuj-user|cuj-partner,state=success|failure)`, issue/alert with failed CUJ files |
+| Note | CUJ runner 는 첫 실패에서 중단하지 않고 모든 CUJ file 을 실행한 뒤 실패 목록을 aggregate 한다 |
 
 ### rc
 
@@ -372,7 +381,7 @@ Promotion/deploy entry workflows support `workflow_dispatch` dry-run where mutat
 | Workflow | Dry-run behavior |
 |----------|------------------|
 | `dev-staging-dev-cut` | computes/reuses dev-staging snapshot tag, computes cut branch, skips version bump/tag/branch push/PR/auto-merge |
-| `dev-rc-cut-gate` | evaluates soak/run/status inputs, skips `dev-soak/*` and `dev-rc-cut-pass` status writes |
+| `dev-rc-cut-gate` | evaluates dev health run/status inputs, skips `dev-soak/*` and `dev-rc-cut-pass` status writes |
 | `dev-rc-cut` | selects source SHA/RC week, skips RC branch push/promo tag |
 | `rc-main-cut-gate` | selects RC branch and evaluates soak, skips `rc-main-cut-pass` status write |
 | `rc-main-cut` | selects RC branch, skips main PR/auto-merge |
@@ -397,8 +406,8 @@ Use dry-run before connecting new deploy backends or changing branch rulesets. D
 ## 관련
 
 - [../branch-flow.md](../branch-flow.md) — workflow 가 흘러가는 branch 그림
-- [../test-strategy.md](../test-strategy.md) — pr-gate-core 와 dev soak signal 배치
-- [../dev-soak-status-model.md](../dev-soak-status-model.md) — dev soak commit status / run history SSOT
+- [../test-strategy.md](../test-strategy.md) — pr-gate-core 와 dev health signal 배치
+- [../dev-soak-status-model.md](../dev-soak-status-model.md) — legacy `dev-soak/*` commit status / run history SSOT
 - [../error-detection.md](../error-detection.md) — auto-issue 의 priority 와 채널
 - [../life-of-flag.md](../life-of-flag.md) — flag lifecycle
 - [../versioning.md](../versioning.md) — source snapshot version + deploy metadata

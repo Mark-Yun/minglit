@@ -7,13 +7,13 @@
 | Script | 역할 | 호출자 |
 |---|---|---|
 | [`create-dev-flutter-env.sh`](./create-dev-flutter-env.sh) | Actions secrets → `minglit_env/dev/flutter.env` 재생성 (CI 가 private submodule `minglit_env/` 를 받지 못해서 필요, Fix #1169) | `shared-cuj-integration`, `monitor-patrol-e2e` |
-| [`run-user-cuj.sh`](./run-user-cuj.sh) | `apps/app_user/integration_test/cuj/` 의 CUJ 테스트 실행 (emulator) | `shared-cuj-integration` (app-name=user 일 때) |
-| [`run-partner-cuj.sh`](./run-partner-cuj.sh) | `apps/app_partner/integration_test/cuj/` CUJ 실행 | `shared-cuj-integration` (app-name=partner 일 때) |
+| [`run-user-cuj.sh`](./run-user-cuj.sh) | `apps/app_user/integration_test/cuj/` 의 CUJ 테스트 실행. 모든 CUJ 파일을 실행한 뒤 실패 목록 aggregate | `shared-cuj-integration` (app-name=user 일 때), `monitor-dev-cuj` |
+| [`run-partner-cuj.sh`](./run-partner-cuj.sh) | `apps/app_partner/integration_test/cuj/` CUJ 실행. 모든 CUJ 파일을 실행한 뒤 실패 목록 aggregate | `shared-cuj-integration` (app-name=partner 일 때), `monitor-dev-cuj` |
 | [`check-bluedoc-freshness.sh`](./check-bluedoc-freshness.sh) | PR 에서 새/삭제 파일에 대해 가장 가까운 ancestor BLUEDOC.md 갱신 강제. 통과: 이정표 표 갱신 또는 BLUEDOC 의 `_Reviewed_` 날짜 bump. + 모든 BLUEDOC.md 의 Reviewed 형식 검증 | `pr-gate.check-bluedoc-freshness` (required check) |
 | [`check-pr-issue-reference.sh`](./check-pr-issue-reference.sh) | dev-staging PR 본문에 이슈 종료 의도(`Closes/Fixes/Resolves`) 또는 명시적 비종료 사유(`Refs` + 이유 / `No linked issue`)가 있는지 검사 | `pr-gate.static-checks` |
 | [`check-ios-deploy-branch-conditions.sh`](./check-ios-deploy-branch-conditions.sh) | `ios-deploy` action 의 브랜치 분기(`main` vs `non-main`) 회귀 검증 | 수동 실행 (`bash .github/scripts/check-ios-deploy-branch-conditions.sh`) |
 | [`check-android-deploy-workflow-contract.py`](./check-android-deploy-workflow-contract.py) | Android deploy release archive token 계약 + merge promotion 뒤 snapshot metadata 탐색 회귀 검증 | `pr-gate.static-checks` |
-| [`check-dev-soak-workflow-contract.py`](./check-dev-soak-workflow-contract.py) | dev event-flow cron install + `dev-rc-cut-gate` + `shared-soak-gate` 판정 계약 검증 | `pr-gate.static-checks` |
+| [`check-dev-soak-workflow-contract.py`](./check-dev-soak-workflow-contract.py) | dev event-flow cron install + `monitor-dev-cuj` + `dev-rc-cut-gate` + `shared-soak-gate` 판정 계약 검증 | `pr-gate.static-checks` |
 | [`check-dev-cut-workflow-contract.py`](./check-dev-cut-workflow-contract.py) | promotion cut workflow 의 full-history checkout, merge auto-merge mode, `shared-notify` repo 컨텍스트 계약 검증 | `pr-gate.static-checks` |
 | [`check-ios-connectivity-plus-cap.sh`](./check-ios-connectivity-plus-cap.sh) | iOS deploy runner 가 지원할 때까지 `connectivity_plus <7.1.0` resolution 강제 | `pr-gate.guard-ios-connectivity-plus-cap` |
 | [`scan-build-artifact-secrets.py`](./scan-build-artifact-secrets.py) | APK/AAB/`.next` 등 빌드 산출물에서 Supabase service-role secret 패턴을 redacted summary 로 검사 | `pr-gate.scan-build-artifact-secrets` |
@@ -25,6 +25,7 @@
 - **필수 env 는 시작부에 `: "${VAR:?msg}"` 로 검증** — secret 누락 시 즉시 명확히 fail.
 - **secrets 는 환경변수로 받기만** — script 안에 secret 값·경로 하드코드 금지.
 - **`cd apps/<app>` 같은 작업 디렉토리 전제는 명시** — 호출 워크플로우의 `working-directory:` 와 일치.
+- **CUJ env 파일은 기본 `minglit_env/dev/flutter.env`** — 로컬/CI override 는 `MINGLIT_CUJ_DART_DEFINE_FILE` 로만 한다.
 - **무거워지면 composite action 으로 승격** — script 가 외부 액션 chain 을 만들기 시작하면 [`actions/`](../actions/BLUEDOC.md) 로.
 
 ## 관련
@@ -34,4 +35,4 @@
 - [.github/BLUEDOC.md](../BLUEDOC.md) — 상위 진입점
 
 ---
-_Reviewed: 2026-06-03 12:18_
+_Reviewed: 2026-06-03 15:15_

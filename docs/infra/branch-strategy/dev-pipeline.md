@@ -1,13 +1,14 @@
 # Dev Pipeline
 
-`dev` 브랜치가 trunk 역할: dev-staging 의 daily snapshot 을 받고, 24h soak 후 `dev-rc-cut-gate` 가 commit status 와 dev cron install signal 을 평가한다. RC 는 `dev-rc-cut-pass` status 를 보고 cut 한다. 이벤트 플로우 시뮬레이터는 dev Supabase pg_cron 으로 계속 돌며, backend prod deploy 는 main 머지 후 `main-deploy` 에서 수행한다.
+`dev` 브랜치가 integration-health trunk 역할: dev-staging 의 daily snapshot 을 받고, 새 dev commit 마다 health/CUJ signal 을 기록한다. `dev-rc-cut-gate` 는 commit status 와 dev cron install signal 을 평가해 `dev-rc-cut-pass` 를 쓰고, RC 는 그 status 를 보고 cut 한다. 이벤트 플로우 시뮬레이터는 dev Supabase pg_cron 으로 계속 돌며, backend prod deploy 는 main 머지 후 `main-deploy` 에서 수행한다.
 
-## 4가지 workflow
+## 주요 workflow
 
 1. **`dev-staging-dev-cut`** — daily cron, dev-staging tip 을 직접 bump/tag 한 뒤 그 snapshot 으로 PR 생성
 2. **`dev-pr-gate`** — snapshot PR 머지 전 검증 (defensive)
-3. **`dev-rc-cut-gate`** — cut 직전 evaluator. 24h soak + commit status + cron install run 확인 후 `dev-rc-cut-pass` set
-4. **`dev-deploy` / cron install** — dev 환경 deploy/smoke 가 필요할 때 수행. 이벤트 플로우 시뮬레이터는 dev pg_cron 으로 별도 운영
+3. **`monitor-dev-cuj`** — dev push 마다 user/partner CUJ 를 끝까지 실행하고 `dev-soak/cuj-*` status 기록
+4. **`dev-rc-cut-gate`** — cut 직전 evaluator. dev health status + cron install run 확인 후 `dev-rc-cut-pass` set
+5. **`dev-deploy` / cron install** — dev 환경 deploy/smoke 가 필요할 때 수행. 이벤트 플로우 시뮬레이터는 dev pg_cron 으로 별도 운영
 
 ## `dev-staging-dev-cut`
 
@@ -36,11 +37,11 @@
 
 (상세는 [dev-staging-pipeline.md](./dev-staging-pipeline.md))
 
-## `dev-rc-cut-gate` — Soak Evaluator
+## `dev-rc-cut-gate` — Health Evaluator
 
 cut 직전 schedule/manual 로 실행된다. 통과 = "이 dev HEAD commit 은 RC cut source 로 사용할 수 있음".
 
-> **정책 변경**: `dev-rc-cut-gate` 는 heavy test runner 가 아니라 evaluator 다. 테스트/모니터는 별도 workflow 또는 AI agent 가 돌고, 실패 즉시 commit status 를 남긴다. `dev-rc-cut-gate` 는 24h soak 가 실제로 돌았는지 확인한 뒤 성공 status 를 확정한다.
+> **정책 변경**: `dev-rc-cut-gate` 는 heavy test runner 가 아니라 evaluator 다. 테스트/모니터는 별도 workflow 또는 AI agent 가 돌고, 실패 즉시 commit status 를 남긴다. Dev 단계의 24h soak 는 폐기하고, RC 단계에서만 5일 soak 를 운영한다.
 
 ### Source of truth
 
@@ -51,20 +52,22 @@ GitHub Issue 는 source-of-truth 가 아니다. Gate 판정은 commit status con
 | Context | failure 작성자 | success 작성자 |
 |---------|---------------|----------------|
 | `dev-soak/backend-simulator` | `event-flow-simulator` reporter 또는 `deploy-dev-event-flow-cron` 실패 path | `dev-rc-cut-gate` |
+| `dev-soak/cuj-user` | `monitor-dev-cuj` | `monitor-dev-cuj` 또는 `dev-rc-cut-gate` |
+| `dev-soak/cuj-partner` | `monitor-dev-cuj` | `monitor-dev-cuj` 또는 `dev-rc-cut-gate` |
 | `dev-soak/real-device` | real-device/Test Lab workflow 또는 AI agent | `dev-rc-cut-gate` |
 | `dev-soak/app-ai-review` | AI agent | `dev-rc-cut-gate` |
 | `dev-rc-cut-pass` | 없음 | `dev-rc-cut-gate` |
 
-상세 status model 은 [dev-soak-status-model.md](./dev-soak-status-model.md) 를 따른다.
+`dev-soak/*` 는 legacy context prefix 다. 정책상 dev soak 는 없지만 existing consumer 호환을 위해 status prefix 를 유지한다. 상세 승격 계약은 [promotion-contract.md](./promotion-contract.md), status model 은 [dev-soak-status-model.md](./dev-soak-status-model.md) 를 따른다.
 
 ### 무엇을 확인하는가
 
-`dev-rc-cut-gate` 는 latest `origin/dev` HEAD 만 평가한다. dev 에 새 commit 이 들어오면 candidate 와 24h soak clock 은 reset 된다.
+`dev-rc-cut-gate` 는 latest `origin/dev` HEAD 만 평가한다. dev 에 새 commit 이 들어오면 candidate 는 새 HEAD 로 교체된다.
 
 | 검증 | 조건 |
 |------|------|
-| Soak duration | candidate age >= 24h |
 | Event-flow distributed simulator | candidate SHA 에서 `deploy-dev-event-flow-cron` success >= 1 + `dev-soak/backend-simulator` failure 없음 |
+| CUJ | candidate SHA 에서 `monitor-dev-cuj` success >= 1 + `dev-soak/cuj-user` / `dev-soak/cuj-partner` failure 없음 |
 | Legacy hourly/daily simulator | 수동 smoke 전용. RC cut gate 조건에서 제외 |
 | Real device | candidate 기준 required real-device signal success >= 1 (workflow TBD) |
 | App AI review | AI agent 가 candidate 기준 app-soak pass signal 제공 (입력 방식 TBD) |
@@ -75,7 +78,7 @@ GitHub Issue 는 source-of-truth 가 아니다. Gate 판정은 commit status con
 
 ```
 1. dev HEAD commit 에 GitHub commit status `dev-rc-cut-pass` set
-2. `dev-soak/backend-simulator`, `dev-soak/real-device`, `dev-soak/app-ai-review` 도 evaluator 가 success 로 확정
+2. required `dev-soak/*` status 도 evaluator 또는 writer 가 success 로 확정
 3. `dev-rc-cut` 이 `dev-rc-cut-pass` 를 source-of-truth 로 사용
 4. Mobile + backend prod 은 main 머지 후 `main-deploy` 에서 처리
 ```
@@ -117,7 +120,7 @@ Snapshot 모델 — **auto-revert 없음**. dev 가 broken 상태로 잠시 머�
 
 ### `monitor-event-flow-*`
 
-- 이벤트 플로우 시뮬레이터 batch. target 은 dev Supabase pg_cron `dev-event-flow-simulator` 5분 주기 small tick
+- 이벤트 플로우 시뮬레이터 batch. 대상은 dev Supabase pg_cron `dev-event-flow-simulator` 5분 주기 small tick
 - 시간은 고정 5분, 랜덤은 actor/user/partner/event sampling 에 적용한다
 - `seed.dev.sql` 은 계정/파트너 base 만 담당하고 party/event/ticket 은 EF 경유로 만든다
 - 유저 신청 대상은 DB prefix 필터가 아니라 `user-event-feed` 결과에서 선택한다

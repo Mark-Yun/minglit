@@ -88,7 +88,7 @@ Feature flag (Statsig + Firebase Remote Config) 의 생성·soak·rollout·**자
 | 5. 전체 soak | prod 전체 | 1주 | 무이슈 |
 | 6. cleanup | - | 30일 후 자동 | codemod PR 자동 생성 |
 
-**왜 dev soak 가 짧고 prod allowlist 가 긴가**: Slack May 2020 outage 처럼 *prod load 와 실 데이터* 에서만 잡히는 버그 다수. dev soak 길이는 효과 약함 (literature).
+**왜 dev health 검증보다 prod allowlist 가 긴가**: Slack May 2020 outage 처럼 *prod load 와 실 데이터* 에서만 잡히는 버그 다수. dev health window 를 길게 잡는 것보다 prod allowlist/canary 가 더 효과적이다.
 
 ## 메트릭 게이트
 
