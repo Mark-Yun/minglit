@@ -77,15 +77,15 @@ supabase functions serve --inspect
 ### 3. 로컬에서 함수 호출
 
 ```bash
-# Service role key로 호출 (인증 우회)
+# Legacy service_role JWT로 호출
 curl -s -X POST "http://localhost:54321/functions/v1/<function-name>" \
   -H "Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>" \
   -H "Content-Type: application/json" \
   -d '{"key": "value"}'
 
-# sb_secret_ 형식 secret key로 system caller 호출
+# sb_secret_ 형식 secret key로 system caller 호출 (SUPABASE_SECRET_KEYS['default'])
 curl -s -X POST "http://localhost:54321/functions/v1/<function-name>" \
-  -H "apikey: <SUPABASE_SERVICE_ROLE_SECRET>" \
+  -H "apikey: <SUPABASE_SECRET_KEY>" \
   -H "Content-Type: application/json" \
   -d '{"key": "value"}'
 
@@ -100,7 +100,7 @@ curl -s ... | python3 -m json.tool
 ### 1. 함수 호출
 
 ```bash
-# Dev 서버 직접 호출
+# Dev 서버 직접 호출 — legacy service_role JWT
 curl -s -X POST "https://<project-ref>.supabase.co/functions/v1/<function-name>" \
   -H "Authorization: Bearer <SERVICE_ROLE_KEY>" \
   -H "Content-Type: application/json" \
@@ -108,12 +108,12 @@ curl -s -X POST "https://<project-ref>.supabase.co/functions/v1/<function-name>"
 
 # sb_secret_ 형식은 Bearer가 아니라 apikey 헤더로 호출
 curl -s -X POST "https://<project-ref>.supabase.co/functions/v1/<function-name>" \
-  -H "apikey: <SERVICE_ROLE_SECRET>" \
+  -H "apikey: <SECRET_API_KEY>" \
   -H "Content-Type: application/json" \
   -d '{"key": "value"}'
 ```
 
-환경 변수는 `minglit_env/dev/supabase.env`에서 확인.
+CI/배포 기준 key 는 GitHub/Supabase secrets 를 기준으로 한다. `minglit_env/dev/supabase.env`는 로컬 실행 보조 파일이며 라이브 secret 과 drift 될 수 있다.
 
 ### 2. 배포된 함수 목록 확인
 
@@ -226,8 +226,8 @@ curl -X POST ".../functions/v1/event-flow-simulator" \
 | `AXIOM_DATASET` | Axiom 데이터셋 | - | `edge-functions` | `edge-functions` |
 | `SENTRY_DSN` | Sentry 에러 트래킹 | 미설정 (비활성) | 설정됨 | 설정됨 |
 | `SUPABASE_URL` | Supabase API URL | `http://localhost:54321` | `https://<ref>.supabase.co` | `https://<ref>.supabase.co` |
-| `SUPABASE_SERVICE_ROLE_KEY` | 관리자 키 | 로컬 키 | 시크릿 | 시크릿 |
-| `SUPABASE_SERVICE_ROLE_SECRET` | `sb_secret_...` system caller 키 | 선택 | 시크릿 | 시크릿 |
+| `SUPABASE_SECRET_KEYS` | `sb_secret_...` JSON dictionary | 선택 | 자동 주입 | 자동 주입 |
+| `SUPABASE_SERVICE_ROLE_KEY` | legacy service_role JWT | 로컬 키 | 자동 주입 | 자동 주입 |
 
 ## 트러블슈팅
 

@@ -41,6 +41,7 @@ jobs:
           # rate limit 회피. hourly 는 smoke 라 daily 보다 작은 payload.
           http_code=$(curl -s -o /tmp/sim_response.json -w "%{http_code}" -X POST \
             "${{ secrets.SUPABASE_DEV_URL }}/functions/v1/event-flow-simulator" \
+            -H "apikey: ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_DEV_SECRET_KEY }}" \
             -H "Content-Type: application/json" \
             -d '{"ticks": 1, "usersPerTick": 20, "delayBetweenCallsMs": 300}' \

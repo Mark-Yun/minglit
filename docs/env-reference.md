@@ -9,7 +9,8 @@
 |-----|-------------|----------|
 | `SUPABASE_URL` | Supabase project URL | Yes |
 | `SUPABASE_PUBLISHABLE_KEY` | Supabase publishable key | Yes |
-| `ENVIRONMENT` | local / development / production | Yes |
+| `ENVIRONMENT` | local / development / dev / production | Yes |
+| `IS_DEMO` | Demo flavor flag — short-circuits all network SDK init when true | No |
 | `SENTRY_DSN` | Sentry error tracking | No |
 | `STATSIG_CLIENT_KEY` | Statsig feature flags | No |
 | `GOOGLE_WEB_CLIENT_ID` | Google OAuth client ID | No |
@@ -24,8 +25,8 @@
 | Key | Description | Required |
 |-----|-------------|----------|
 | `SUPABASE_URL` | Supabase project URL (auto-injected) | Yes |
-| `SUPABASE_SECRET_KEYS` | Supabase `sb_secret_...` JSON dictionary for admin clients and system callers using the `apikey` header | No |
 | `SUPABASE_SERVICE_ROLE_KEY` | Legacy service_role JWT (auto-injected) | Yes |
+| `SUPABASE_SECRET_KEYS` | Supabase sb_secret API key JSON dictionary (auto-injected in hosted Edge Functions) | No |
 | `SENTRY_DSN` | Sentry error tracking | No |
 | `AXIOM_API_TOKEN` | Axiom structured logging | No |
 | `AXIOM_DATASET` | Axiom dataset name | No |
@@ -118,11 +119,8 @@
 
 | Key | Description | Required |
 |-----|-------------|----------|
-| `ENVIRONMENT` | Dev guard (must be development/dev/local) | Yes |
+| `ENVIRONMENT` | Dev guard (dev) | Yes |
 | `GITHUB_ACCESS_TOKEN` | GitHub issue/status reporting for simulator failures | Yes |
-| `SUPABASE_ANON_KEY` | actor sign-in for simulated user/partner JWTs | Yes |
-| `SUPABASE_SERVICE_ROLE_KEY` | simulator service client | Yes |
-| `SIM_USER_PASSWORD` | dev seed actor password | Yes |
 
 ### ai-embed
 
@@ -135,6 +133,18 @@
 | Key | Description | Required |
 |-----|-------------|----------|
 | `OPENAI_API_KEY` | OpenAI API key for tag extraction | Yes |
+
+### user-get-ticket-token
+
+| Key | Description | Required |
+|-----|-------------|----------|
+| `TICKET_SIGNING_PRIVATE_KEY_JWK` | Ed25519 private key (OKP JWK) for signing ticket QR tokens | Yes |
+
+### event-checkin
+
+| Key | Description | Required |
+|-----|-------------|----------|
+| `TICKET_SIGNING_PUBLIC_KEY_JWK` | Ed25519 public key (OKP JWK) for verifying QR token signatures | Yes |
 
 ## Next.js (landing_user)
 
@@ -159,11 +169,8 @@
 | `SUPABASE_ACCESS_TOKEN` | Supabase CLI auth | Yes |
 | `SUPABASE_DEV_DB_PASSWORD` | Dev DB password | Yes |
 | `SUPABASE_DEV_PROJECT_ID` | Dev project ref | Yes |
-| `SUPABASE_DEV_URL` | Dev Supabase URL | Yes |
 | `SUPABASE_DEV_PUBLISHABLE_KEY` | Dev publishable key | Yes |
 | `SUPABASE_DEV_SECRET_KEY` | Dev elevated Supabase API key (legacy service_role JWT or sb_secret_ secret key) | Yes |
-| `SUPABASE_RC_URL` | RC Supabase URL for manual simulator runs | No |
-| `SUPABASE_RC_SECRET_KEY` | RC service role key for manual simulator runs | No |
 | `SUPABASE_MAIN_DB_PASSWORD` | Main DB password | Yes |
 | `SUPABASE_MAIN_PROJECT_ID` | Main project ref | Yes |
 | `SUPABASE_MAIN_PUBLISHABLE_KEY` | Main publishable key | Yes |
@@ -174,7 +181,7 @@
 | `STATSIG_SERVER_KEY` | Statsig server | No |
 | `AXIOM_API_TOKEN` | Axiom logging | No |
 | `CODECOV_TOKEN` | Codecov upload | No |
-| `SIM_USER_PASSWORD` | Dev simulator user password (`event-flow-simulator`) | No |
+| `SIM_USER_PASSWORD` | Dev simulator user password (event-flow-simulator EF 전용) | No |
 
 ## Vault
 

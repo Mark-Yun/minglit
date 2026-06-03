@@ -93,7 +93,7 @@ lines.append('|-----|-------------|----------|')
 lines.extend(table(m['vault']['required'], 'Yes'))
 lines.append('')
 
-print('\n'.join(lines))
+print('\n'.join(lines).rstrip())
 " > "$OUTPUT"
 
 echo "Generated $OUTPUT"

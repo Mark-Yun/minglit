@@ -31,7 +31,7 @@ Minglit의 모든 Edge Function (EF) 인증/인가 모델을 기술한다.
 | 영역 | Supabase 제공 | 우리가 커버해야 |
 |---|---|---|
 | Gateway JWT 검증 (`verify_jwt = true`) | ✅ 프레임워크 레벨, 기본값 | 옵트아웃 시 보호 책임 이동 |
-| EF env 자동 주입 (`SUPABASE_SERVICE_ROLE_KEY` 등) | ✅ 단 형식 (legacy JWT vs 신규 sb_secret_) 은 프로젝트 설정 의존 | Vault 와의 형식 일치 보장 (CI sync) |
+| EF env 자동 주입 (`SUPABASE_SECRET_KEYS`, `SUPABASE_SERVICE_ROLE_KEY` 등) | ✅ 신규 secret key JSON + legacy JWT 모두 제공 | Vault/caller 와의 형식 일치 보장 (CI sync) |
 | `verify_jwt = false` 시 내부 보호 강제 | ❌ | ✅ 본 설계 (manifest + wrapper) |
 | EF 별 환경 가드 (dev-only / prod-only) | ❌ | ✅ 본 설계 |
 | Unprotected EF 자동 검출 | ❌ | ✅ CI lint |
@@ -40,14 +40,14 @@ Minglit의 모든 Edge Function (EF) 인증/인가 모델을 기술한다.
 
 `system` caller 검증은 두 경로를 허용한다.
 
-1. legacy: `Authorization: Bearer <token>` 과 EF 내부 `Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")` 의 **exact string match**
-2. 신규 secret key: `apikey: <token>` 과 EF 내부 `Deno.env.get("SUPABASE_SERVICE_ROLE_SECRET")` 의 **exact string match**
+1. legacy JWT: `Authorization: Bearer <token>` 과 EF 내부 `Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")` 의 **exact string match**
+2. 신규 secret key: `apikey: <token>` 과 EF 내부 `JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS")).default` 또는 같은 JSON dictionary 의 값의 **exact string match**
 
 두 값의 출처:
 
 ```
-GH Secret / Supabase Secret
-  ├─→ EF env (SUPABASE_SERVICE_ROLE_KEY / SUPABASE_SERVICE_ROLE_SECRET)
+GH Secret / Supabase Dashboard API Keys
+  ├─→ EF env (SUPABASE_SERVICE_ROLE_KEY / SUPABASE_SECRET_KEYS)
   └─→ Vault 또는 caller secret
         └─→ cron/service caller 가 Authorization 또는 apikey 헤더에 사용
 ```
@@ -55,9 +55,9 @@ GH Secret / Supabase Secret
 형식별 gateway 호환성:
 
 - legacy JWT (`eyJ...`): verify_jwt=true / false 모두 호환
-- 신규 `sb_secret_...`: verify_jwt=false 전용. JWT가 아니므로 `Authorization: Bearer sb_secret_...` 로 보내면 gateway JWT 검증을 통과하지 못한다.
+- 신규 `sb_secret_...`: verify_jwt=false 전용. JWT가 아니므로 `Authorization: Bearer sb_secret_...` 로 보내면 gateway JWT 검증을 통과하지 못한다. `verify_jwt=false` 함수에서 handler 내부가 `apikey`를 직접 검증해야 한다.
 
-**현재 정책**: legacy JWT bearer 경로는 유지하고, `sb_secret_...` 전환 준비를 위해 `apikey` 경로를 추가한다. `system` caller EF 중 신규 secret key를 받을 수 있어야 하는 함수는 `verify_jwt=false` 로 전환하고 wrapper 내부 인증에 의존한다.
+**현재 정책**: legacy JWT bearer 경로는 유지하되, 신규 Supabase secret key 경로는 `SUPABASE_SECRET_KEYS` + `apikey` 로만 허용한다. `SUPABASE_SERVICE_ROLE_KEY` 에 `sb_secret_...` 값을 넣더라도 bearer credential 로는 인정하지 않는다.
 
 ---
 
@@ -67,7 +67,7 @@ EF 가 받을 수 있는 호출자 분류. manifest 의 `callers` 배열에 명�
 
 | 타입 | 의미 | 검증 방법 |
 |---|---|---|
-| **`system`** | cron, 시스템 우회 | legacy `Authorization: Bearer ${EF_ENV.SUPABASE_SERVICE_ROLE_KEY}` 또는 신규 `apikey: ${EF_ENV.SUPABASE_SERVICE_ROLE_SECRET}` exact match (§1.4) |
+| **`system`** | cron, 시스템 우회 | legacy `Authorization: Bearer ${EF_ENV.SUPABASE_SERVICE_ROLE_KEY}` 또는 신규 `apikey: ${EF_ENV.SUPABASE_SECRET_KEYS[...]}` exact match (§1.4) |
 | **`user`** | 인증된 사용자/파트너 | `supabase.auth.getUser(token)` 으로 decode + claims 추출 → `auth.userId` |
 | **`external`** | 외부 시스템 (webhook 등) | manifest 의 `external_auth` 정책에 따라 IP / HMAC / signature 검증. **Authorization 헤더 무관** |
 | **`public`** | 익명 OK | check 없음. 보통 `envs: ["dev"]` 와 결합하여 prod 노출 차단 |
@@ -90,8 +90,8 @@ EF 가 받을 수 있는 호출자 분류. manifest 의 `callers` 배열에 명�
 0. (선결) Env 가드: ENVIRONMENT ∉ policy.envs → 403 (auth 검증 자체 skip)
 
 1. "system" ∈ callers
-   ├─ Authorization Bearer == EF_ENV.SUPABASE_SERVICE_ROLE_KEY → ✅ pass (keyFormat=legacy)
-   ├─ apikey == EF_ENV.SUPABASE_SERVICE_ROLE_SECRET → ✅ pass (keyFormat=secret)
+   ├─ Authorization Bearer == EF_ENV.SUPABASE_SERVICE_ROLE_KEY(legacy JWT only) → ✅ pass (keyFormat=legacy)
+   ├─ apikey == any EF_ENV.SUPABASE_SECRET_KEYS value → ✅ pass (keyFormat=secret)
    └─ Else → 다음 caller 검증으로 진행
 
 2. Authorization 헤더 있음 + Bearer 형식
@@ -435,7 +435,7 @@ sequenceDiagram
     participant Handler as EF Handler
     participant DB as Postgres
 
-    Caller->>Gateway: POST /functions/v1/<fn-name><br/>Authorization: Bearer <JWT/legacy key><br/>or apikey: sb_secret_...
+    Caller->>Gateway: POST /functions/v1/<fn-name><br/>Authorization: Bearer <user JWT/legacy service_role JWT><br/>or apikey: sb_secret_...
 
     alt verify_jwt = true (config.toml)
         Gateway->>Gateway: JWT 시그니처 검증
@@ -466,7 +466,7 @@ flowchart TD
     Req[Request 도착] --> EnvCheck{ENVIRONMENT<br/>∈ policy.envs?}
     EnvCheck -- No --> E403_env[403 Function disabled]
     EnvCheck -- Yes --> SysAllow{'system'<br/>∈ callers?}
-    SysAllow -- Yes --> SysMatch{Legacy bearer<br/>or secret apikey<br/>matches EF env?}
+    SysAllow -- Yes --> SysMatch{Legacy JWT bearer<br/>or secret apikey<br/>matches EF env?}
     SysMatch -- Yes --> Pass_sys[type=system]
     SysMatch -- No --> AuthHeader{Authorization<br/>Bearer 있음?}
     SysAllow -- No --> AuthHeader
@@ -632,7 +632,7 @@ Phase 1~4 동안 **옛 헬퍼와 새 wrapper 가 공존**. 마이그레이션되
 | TBD-3 | 옛 auth 헬퍼 deprecation timeline + 제거 (Phase 5) | P3 |
 | ~~TBD-4~~ | ~~`external_auth` HMAC / custom 패턴 실제 적용 (PortOne 등)~~ (완료: `checkExternalAuth` — hmac/custom 모두 구현, issue #2186) | ~~P3~~ |
 | TBD-5 | rate limit / deprecation / audit 등 manifest 확장 (`deprecated` 완료 #2188; rate_limit / audit / cors / required_role 후속) | P3 |
-| TBD-6 | 신규 sb_secret_ 형식으로 service_role 마이그레이션 (verify_jwt=true cron-호출 EF 의 verify_jwt=false 전환 검토 포함) | P3 |
+| TBD-6 | 신규 `sb_secret_...` secret key 기반 system caller 마이그레이션 (`SUPABASE_SECRET_KEYS` + `apikey`, legacy `service_role` JWT 제거 시점 포함) | P3 |
 
 ---
 

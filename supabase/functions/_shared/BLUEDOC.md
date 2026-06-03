@@ -11,7 +11,7 @@
 | `edge_function_*_test.ts`                                        | wrapper auth/external/deprecation 회귀 테스트                                      |
 | `env_keystore.ts`                                                | env-manifest 기반 환경변수 typed 접근                                             |
 | `request_utils.ts` / `input_validation.ts` / `response_utils.ts` | request parsing, typed input field validation, CORS/success/error response        |
-| `supabase_client.ts`                                             | service/user Supabase client 생성                                                 |
+| `supabase_client.ts`                                             | service/user Supabase client 생성, secret key `apikey`/legacy bearer 헤더 호환    |
 | `logger.ts` / `axiom_logger.ts` / `statsig_utils.ts`             | local/Axiom/Statsig observability                                                 |
 | `iamport_client.ts` / `portone_client.ts`                        | 결제 외부 client                                                                  |
 | `partner_permissions.ts` / `refund_utils.ts` / `worker_utils.ts` | IO 포함 공용 helper                                                               |
@@ -36,4 +36,4 @@
 
 ---
 
-_Reviewed: 2026-05-24 16:45_
+_Reviewed: 2026-06-03 12:58_

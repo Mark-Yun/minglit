@@ -9,7 +9,10 @@ const SYSTEM_POLICY: EFPolicy = {
 
 const AUTH_ENV = {
   SUPABASE_SERVICE_ROLE_KEY: "legacy-service-role-jwt",
-  SUPABASE_SERVICE_ROLE_SECRET: "sb_secret_test_secret_key",
+  SUPABASE_SECRET_KEYS: JSON.stringify({
+    default: "sb_secret_test_secret_key",
+    backgroundWorker: "sb_secret_background_worker_key",
+  }),
 };
 
 function request(headers: Record<string, string> = {}): Request {
@@ -35,6 +38,15 @@ Deno.test("checkSystemAuth: sb_secret apikey passes as secret", async () => {
   await withEnv(AUTH_ENV, () => {
     const result = checkSystemAuth(request({
       apikey: "sb_secret_test_secret_key",
+    }));
+    assertEquals(result, { ok: true, keyFormat: "secret" });
+  });
+});
+
+Deno.test("checkSystemAuth: non-default sb_secret apikey passes as secret", async () => {
+  await withEnv(AUTH_ENV, () => {
+    const result = checkSystemAuth(request({
+      apikey: "sb_secret_background_worker_key",
     }));
     assertEquals(result, { ok: true, keyFormat: "secret" });
   });
@@ -78,6 +90,39 @@ Deno.test("verifyAuth: Authorization bearer sb_secret is not accepted", async ()
   });
 });
 
+Deno.test("verifyAuth: sb_secret stored in SUPABASE_SERVICE_ROLE_KEY is not accepted as bearer", async () => {
+  await withEnv(
+    {
+      SUPABASE_SERVICE_ROLE_KEY: "sb_secret_test_secret_key",
+      SUPABASE_SECRET_KEYS: JSON.stringify({
+        default: "sb_secret_test_secret_key",
+      }),
+    },
+    async () => {
+      await expectUnauthorized(request({
+        Authorization: "Bearer sb_secret_test_secret_key",
+      }));
+    },
+  );
+});
+
+Deno.test("verifyAuth: sb_secret stored in SUPABASE_SERVICE_ROLE_KEY can pass as apikey", async () => {
+  await withEnv(
+    {
+      SUPABASE_SERVICE_ROLE_KEY: "sb_secret_test_secret_key",
+      SUPABASE_SECRET_KEYS: undefined,
+    },
+    async () => {
+      const result = await verifyAuth(
+        request({ apikey: "sb_secret_test_secret_key" }),
+        SYSTEM_POLICY,
+        "test-system-fn",
+      );
+      assertEquals(result, { type: "system", keyFormat: "secret" });
+    },
+  );
+});
+
 Deno.test("verifyAuth: secret apikey system caller passes without Authorization", async () => {
   await withEnv(AUTH_ENV, async () => {
     const result = await verifyAuth(
@@ -100,9 +145,20 @@ Deno.test("verifyAuth: legacy bearer system caller still passes", async () => {
   });
 });
 
-Deno.test("verifyAuth: missing SUPABASE_SERVICE_ROLE_SECRET fails closed for apikey", async () => {
+Deno.test("verifyAuth: missing SUPABASE_SECRET_KEYS fails closed for apikey", async () => {
   await withEnv(
-    { ...AUTH_ENV, SUPABASE_SERVICE_ROLE_SECRET: undefined },
+    { ...AUTH_ENV, SUPABASE_SECRET_KEYS: undefined },
+    async () => {
+      await expectUnauthorized(request({
+        apikey: "sb_secret_test_secret_key",
+      }));
+    },
+  );
+});
+
+Deno.test("verifyAuth: malformed SUPABASE_SECRET_KEYS fails closed for apikey", async () => {
+  await withEnv(
+    { ...AUTH_ENV, SUPABASE_SECRET_KEYS: "not-json" },
     async () => {
       await expectUnauthorized(request({
         apikey: "sb_secret_test_secret_key",
