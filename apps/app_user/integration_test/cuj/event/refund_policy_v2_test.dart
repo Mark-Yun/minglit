@@ -7,6 +7,7 @@
 //   - CUJ 1-1: grace period(3시간) 내 자동 환불 (P0)
 //   - CUJ 1-2: grace period 내 다이얼로그에서 돌아가기 (P0)
 //   - CUJ 1-3: 환불 완료 후 라벨 표시 (P1)
+//   - CUJ 1-4: 구매 내역 리스트 카드에서 상세 진입 (P0)
 //   - CUJ 5-2: 무료 이벤트 취소 (P0)
 //
 // 설계 결정:
@@ -24,8 +25,10 @@ import 'package:app_user/src/features/payment/logic/'
     'purchase_history_detail_controller.dart';
 import 'package:app_user/src/features/payment/ui/'
     'purchase_history_detail_page.dart';
+import 'package:app_user/src/features/payment/ui/purchase_history_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -42,9 +45,28 @@ class _MockUser extends Mock implements User {}
 
 class _MockPolicyRepository extends Mock implements PolicyRepository {}
 
+class _MockGoRouter extends Mock implements GoRouter {}
+
 // ---------------------------------------------------------------------------
 // Fixtures
 // ---------------------------------------------------------------------------
+
+late _MockGoRouter _mockRouter;
+
+Widget _withFakeRouter(Widget child) {
+  return _FakeRouterScope(child: child);
+}
+
+class _FakeRouterScope extends StatelessWidget {
+  const _FakeRouterScope({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return InheritedGoRouter(goRouter: _mockRouter, child: child);
+  }
+}
 
 final _now = DateTime.now();
 
@@ -117,7 +139,14 @@ void main() {
     mockRepo = _MockEventRepository();
     mockUser = _MockUser();
     mockPolicyRepo = _MockPolicyRepository();
+    _mockRouter = _MockGoRouter();
     when(() => mockUser.id).thenReturn('user-1');
+    when(
+      () => _mockRouter.push<void>(
+        any(),
+        extra: any(named: 'extra'),
+      ),
+    ).thenAnswer((_) async {});
     when(
       () => mockRepo.getMyPurchaseHistory(any()),
     ).thenAnswer((_) async => []);
@@ -170,7 +199,7 @@ void main() {
   // ===========================================================================
   cujGroup('1-1', 'grace period(3시간) 내 자동 환불', () {
     cujCase(
-      'happy: 결제 30분 후 취소 → 예매 취소 버튼 활성',
+      'happy: 결제 30분 후 상세 진입 → 예매 취소 버튼 활성',
       app: const PurchaseHistoryDetailPage(applicationId: 'app-1'),
       overrides: () {
         final app = _makeApplication(
@@ -335,6 +364,40 @@ void main() {
 
         // 환불 정보 섹션 노출 (isRefunded=true)
         expect(find.text('환불 정보'), findsOneWidget);
+      },
+    );
+  });
+
+  // ===========================================================================
+  // CUJ 1-4: 구매 내역 리스트 카드에서 상세 진입
+  // ===========================================================================
+  cujGroup('1-4', '구매 내역 리스트 카드에서 상세 진입', () {
+    cujCase(
+      'happy: 리스트 카드에는 취소 액션이 없고 카드 탭은 상세 route를 push',
+      app: _withFakeRouter(const PurchaseHistoryPage()),
+      overrides: () {
+        final app = _makeApplication(id: 'app-list');
+        when(
+          () => mockRepo.getMyPurchaseHistory('user-1'),
+        ).thenAnswer((_) async => [app]);
+        return base();
+      },
+      body: (t) async {
+        expect(find.text('상세 보기'), findsOneWidget);
+        expect(find.text('결제완료'), findsOneWidget);
+        expect(find.text('영수증'), findsNothing);
+        expect(find.text('문의하기'), findsNothing);
+        expect(find.text('예매 취소'), findsNothing);
+
+        await t.tap(find.byType(PurchaseHistoryCard));
+        await t.pump();
+
+        verify(
+          () => _mockRouter.push<void>(
+            '/purchase-history/app-list',
+            extra: any(named: 'extra'),
+          ),
+        ).called(1);
       },
     );
   });
