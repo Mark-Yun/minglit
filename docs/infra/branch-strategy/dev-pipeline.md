@@ -22,7 +22,7 @@
   4. 같은 commit 에 `vYY.MM.DD+YYMMDDNN-dev-staging` tag 생성
   5. PR 생성: `ci(dev-staging-dev-cut): promote v26.06.01+26060101-dev-staging to dev` (base=dev, head=`cut/dev-staging-dev/YYYY-MM-DD-{sha8}` at that tag)
   6. `dev-pr-gate` 자동 발동
-  7. 통과 시 auto-merge (rebase — active `dev` ruleset 의 linear history 와 호환)
+  7. 통과 시 auto-merge (merge commit — dev-staging snapshot ancestry 보존)
 
 ### 슬립 처리
 

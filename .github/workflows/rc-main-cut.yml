@@ -177,7 +177,7 @@ jobs:
           - Source branch: ${RC_BRANCH}
           - Source SHA: ${RC_SHA}
           - Required marker: rc-main-cut-pass
-          - Merge mode: rebase, because main requires linear history.
+          - Merge mode: merge commit, preserving the RC ancestry in main.
 
           ${CUT_ISSUE_CLOSER}
 
@@ -193,7 +193,7 @@ jobs:
             --label rc-main-cut-pass)"
           PR_NUMBER="${PR_URL##*/}"
 
-          gh pr merge "${PR_NUMBER}" --auto --rebase --delete-branch
+          gh pr merge "${PR_NUMBER}" --auto --merge --delete-branch
           echo "pr_number=${PR_NUMBER}" >> "$GITHUB_OUTPUT"
 
       - name: Dry run summary

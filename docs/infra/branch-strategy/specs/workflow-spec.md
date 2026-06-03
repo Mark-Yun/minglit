@@ -182,7 +182,7 @@ Cross-branch cherry-pick PR 자동 생성.
 | Inputs | optional `tag_name` (`v*-dev-staging`) |
 | Outputs | PR number (dev-staging → dev) or skip |
 | PR title | `ci(dev-staging-dev-cut): promote {tag_name} to dev` |
-| Steps | (1) 이전 `dev-staging-dev-cut` PR open 이면 skip (2) 입력 `tag_name` 이 있으면 해당 tag 를 promote 대상으로 사용 (3) 입력이 없으면 `origin/dev-staging` HEAD 가 이미 dev 에 포함됐는지 확인 (4) HEAD 에 기존 snapshot tag 가 있으면 재사용 (5) tag 가 없으면 `YY.MM.DD-dev-staging` + `YYMMDDNN` build number 로 version bump commit 을 만들고 release bot 이 protected `dev-staging` 에 fast-forward push (6) 같은 commit 에 `vYY.MM.DD+YYMMDDNN-dev-staging` tag push (7) `cut/dev-staging-dev/YYYY-MM-DD-{sha8}` promotion branch 를 tag SHA 에서 생성 (8) cut tracking issue 를 `status/promoting` 으로 갱신 (9) `gh pr create` (base=dev, head=`cut/dev-staging-dev/YYYY-MM-DD-{sha8}`) + issue close marker + auto-merge 활성화 (`rebase`, active dev ruleset 의 linear history 와 호환) |
+| Steps | (1) 이전 `dev-staging-dev-cut` PR open 이면 skip (2) 입력 `tag_name` 이 있으면 해당 tag 를 promote 대상으로 사용 (3) 입력이 없으면 `origin/dev-staging` HEAD 가 이미 dev 에 포함됐는지 확인 (4) HEAD 에 기존 snapshot tag 가 있으면 재사용 (5) tag 가 없으면 `YY.MM.DD-dev-staging` + `YYMMDDNN` build number 로 version bump commit 을 만들고 release bot 이 protected `dev-staging` 에 fast-forward push (6) 같은 commit 에 `vYY.MM.DD+YYMMDDNN-dev-staging` tag push (7) `cut/dev-staging-dev/YYYY-MM-DD-{sha8}` promotion branch 를 tag SHA 에서 생성 (8) cut tracking issue 를 `status/promoting` 으로 갱신 (9) `gh pr create` (base=dev, head=`cut/dev-staging-dev/YYYY-MM-DD-{sha8}`) + issue close marker + auto-merge 활성화 (`merge commit`, dev-staging snapshot ancestry 보존) |
 
 #### `dev-pr-gate`
 

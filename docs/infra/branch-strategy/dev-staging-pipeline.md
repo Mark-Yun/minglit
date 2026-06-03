@@ -94,7 +94,7 @@ AI agent 와 feature/fix/chore PR 이 `dev-staging` 브랜치로 들어오는 �
 6. release bot 이 protected `dev-staging` 에 version bump commit 을 fast-forward push
 7. 같은 commit 에 tag `vYY.MM.DD+YYMMDDNN-dev-staging` 생성
 8. tag SHA 에서 `cut/dev-staging-dev/YYYY-MM-DD-{sha8}` branch 생성
-9. dev promotion PR 생성 + auto-merge(rebase)
+9. dev promotion PR 생성 + auto-merge(merge commit, snapshot ancestry 보존)
 ```
 
 Protected `dev-staging` 직접 push 는 human 금지다. 예외는 `minglit-release-bot` 이 `dev-staging-dev-cut` 안에서 version bump commit 을 fast-forward push 하는 경우뿐이다. push 가 거부되면 dev-staging 이 cut 중 변경된 것이므로 새 HEAD 기준으로 다음 run 에서 다시 계산한다.

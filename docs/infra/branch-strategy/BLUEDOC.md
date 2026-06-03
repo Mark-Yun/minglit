@@ -101,7 +101,7 @@ flowchart LR
 - dev/rc release 판정은 **true evidence 기반**이다. failure issue/status 가 없다는 것은 `unknown` 이며 pass 가 아니다. cut-gate 는 명시적인 success status, required workflow run history, git lineage 같은 positive evidence 만 소비한다
 - dev soak 판정의 source-of-truth 는 GitHub Issue/label 이 아니라 commit status context + workflow run history 다 ([dev-soak-status-model.md](./dev-soak-status-model.md))
 - cut-gate Issue 는 사람이 진행 상태를 추적하기 위한 projection 이다. 생성/갱신/닫기는 `.github/actions/cut-issue` 와 `close-cut-issue-on-pr-merge` 가 담당하며, promotion 판정 SSOT 로 사용하지 않는다
-- 모든 branch linear ON — dev-staging: squash, dev/rc/main: rebase
+- 일반 작업 PR 은 dev-staging 에서 squash 로 정리한다. Branch promotion PR 은 source branch ancestry 보존을 위해 merge commit 을 사용하며, dev/rc/main 에 linear history 를 강제하지 않는다
 - Protected branch 직접 push 는 human 금지. dev-staging daily cut version bump, promotion branch/tag, RC cleanup 은 `minglit-release-bot` 전용 token + Ruleset bypass 로만 허용
 - `deploy-dev-event-flow-cron` 은 `dev` push 에서만 `dev-event-flow-simulator` pg_cron 을 설치한다. `monitor-event-flow-*` 는 수동 smoke 이며, RC cron 은 RC project 준비 후 별도 설치한다
 - main 머지 = backend + mobile 모두 prod deploy. backend prod deploy 는 `main-deploy` 에서 한 번에 수행한다
