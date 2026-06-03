@@ -870,7 +870,7 @@ body.dark-mode .viewport {
   <section class="doc">
     <h2>AppBar sub-anatomy</h2>
     <p class="intro">
-      파트너 앱 simpleAppBar — back leading + centered title + 우측 actions(info + add). 글로벌 일관 패턴이라 모든 파트너 화면이 동일 구조를 따른다 (info icon은 화면별 컨텍스트 도움말 sheet 트리거).
+      현재 적용 화면(홈·파티 관리·신청관리·정산)의 simpleAppBar 도움말 패턴 — back leading + centered title + 우측 actions(info + add). 이 화면들은 같은 AppBar info 도움말 구조를 사용한다.
     </p>
     <table class="ref">
       <thead>
@@ -879,7 +879,7 @@ body.dark-mode .viewport {
       <tbody>
         <tr><td>① Back (leading)</td><td>좌측 · 40×40 hit-region · auto pop</td><td>back arrow 22×22 · color <code>--color-text-primary</code> · push 진입 시 자동 노출. 진입 경로(MorePage / Onboarding 등)로 복귀.</td></tr>
         <tr><td>② Title (centered)</td><td>중앙 정렬 · 1줄</td><td>"파티 관리" · <code>--typography-font-size-app-bar-title</code> 18 · w600 · <code>color-text-primary</code>. 절대 변경되지 않는 페이지 식별자.</td></tr>
-        <tr><td>③ Info action (1st trailing)</td><td>우측 · 40×40 hit-region</td><td>info_outline 22×22 · 탭 시 <strong>도움말 bottom sheet</strong> 진입 (State 5). 파트너 앱 모든 화면에 동일 패턴 적용 — 각 화면별 컨텍스트 도움말 콘텐츠는 호출 측에서 정의.</td></tr>
+        <tr><td>③ Info action (1st trailing)</td><td>우측 · 40×40 hit-region</td><td>info_outline 22×22 · 탭 시 <strong>도움말 bottom sheet</strong> 진입 (State 5). 현재 적용 화면은 홈·파티 관리·신청관리·정산이며, 각 화면별 컨텍스트 도움말 콘텐츠는 호출 측에서 정의한다.</td></tr>
         <tr><td>④ Add action (2nd trailing)</td><td>우측 · 40×40 hit-region · 가장 우측</td><td>add 아이콘 22×22 · 탭 시 <a href="/specs/party_create_wizard_page/index.html"><code>PartyCreateRoute</code></a> push (새 파티 만들기). info 다음 위치라 "도움말 → 액션" 순서가 자연스러움.</td></tr>
         <tr><td>—</td><td>AppBar bg</td><td>scaffold gray와 동일</td><td><code>--color-surface</code> · surfaceTint transparent · border-bottom 없음. 본문 카드와 시각적 분리는 색 대비로만.</td></tr>
       </tbody>
@@ -1537,7 +1537,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 모든 파트너 앱 화면이 동일 info 아이콘 → bottom sheet 패턴을 따른다 — 학습 비용 최소화. 화면별 sections 콘텐츠만 다름. <strong>MinglitHelpSheet 컴포넌트 신설 issue 별도 파일링 필요.</strong></td>
+          <td>📝 현재 적용 화면은 홈·파티 관리·신청관리·정산이다. 신규·리뉴얼 파트너 화면은 동일 info 아이콘 → bottom sheet 패턴을 채택하고, 화면별 sections 콘텐츠만 다르게 정의한다.</td>
         </tr>
       </tbody>
     </table>

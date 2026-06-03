@@ -59,7 +59,7 @@ Scaffold + AppBar(title:"정산", actions: 지갑 IconButton, bottom: 2-tab TabB
 | Region | Alignment | Notes |
 |---|---|---|
 | ① Title (leading) | 좌측 정렬 · 1줄 | "정산" · --typography-font-size-app-bar-title 18 · w600 · color-text-primary. padding-left medium. |
-| ② Info action (1st trailing) | 우측 · 40×40 hit-region | info_outline 22×22 · 탭 시 도움말 bottom sheet 진입 (State 7). 파트너 앱 모든 화면에 동일 패턴 적용. |
+| ② Info action (1st trailing) | 우측 · 40×40 hit-region | info_outline 22×22 · 탭 시 도움말 bottom sheet 진입 (State 7). 현재 적용 화면은 홈·파티 관리·신청관리·정산이며, 신규·리뉴얼 파트너 화면은 같은 패턴을 채택한다. |
 | ③ Wallet action (2nd trailing) | 우측 · 40×40 hit-region · SETTLEMENT_EDIT 권한 보유 시만 | account_balance_wallet_outlined 22×22 · 탭 시 정산 계좌 화면 push. |
 | — | AppBar bg | --color-surface · surfaceTint transparent · border-bottom 없음. |
 

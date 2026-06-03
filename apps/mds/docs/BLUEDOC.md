@@ -27,11 +27,15 @@ Minglit Design System 의 **시각 SSOT + 문서 사이트**. 화면 spec, 컴�
 ## 자주 쓰는 명령
 
 ```bash
+# repo root 에서
+npm install --package-lock=false --cache .npm-cache
+npm run dev --workspace=apps/mds/docs      # http://localhost:3003
+npm run lint --workspace=apps/mds/docs
+npm run build --workspace=apps/mds/docs
+
+# apps/mds/docs 에서
 npm run dev      # http://localhost:3003
-npm run lint
-npm run build
-npm run tokens:sync
-npm run icons:sync && npm run icons:sync-data
+npm run tokens:sync && npm run icons:sync && npm run icons:sync-data
 ```
 
 ## 관련
@@ -43,4 +47,4 @@ npm run icons:sync && npm run icons:sync-data
 - [`../../../scripts/mds_render_coverage.dart`](../../../scripts/mds_render_coverage.dart) — MDS spec ↔ emulator render coverage
 
 ---
-_Reviewed: 2026-05-31 18:24_
+_Reviewed: 2026-06-03 12:18_

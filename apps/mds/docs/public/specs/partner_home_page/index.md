@@ -55,12 +55,12 @@ AppBar(로고 좌측) + 스크롤 body + 하단 NavigationBar. body는 **오버�
 
 ## AppBar sub-anatomy
 
-파트너 홈 AppBar — 좌측 워드마크 + 우측 actions(info + bug report(dev only) + 알림). info icon은 화면별 컨텍스트 도움말 sheet 트리거 (파트너 앱 일관 패턴).
+파트너 홈 AppBar — 좌측 워드마크 + 우측 actions(info + bug report(dev only) + 알림). info icon은 현재 적용 화면(홈·파티 관리·신청관리·정산)의 컨텍스트 도움말 sheet 트리거.
 
 | Region | Alignment | Notes |
 |---|---|---|
 | ① Brand (leading) | 좌측 정렬 | minglit 로고 + "PARTNER" suffix · 탭 동작 없음 · 홈 식별자 역할. |
-| ② Info action (1st trailing) | 우측 · 40×40 hit-region | info_outline 22×22 · 탭 시 도움말 bottom sheet 진입 (State 8). 파트너 앱 모든 화면에 동일 패턴 적용. |
+| ② Info action (1st trailing) | 우측 · 40×40 hit-region | info_outline 22×22 · 탭 시 도움말 bottom sheet 진입 (State 8). 현재 적용 화면은 홈·파티 관리·신청관리·정산이며, 신규·리뉴얼 파트너 화면은 같은 패턴을 채택한다. |
 | ③ Bug report (2nd trailing · dev only) | 우측 · 40×40 hit-region | 개발 빌드 한정 — BugReportAction 컴포넌트. |
 | ④ Notification (3rd trailing) | 우측 · 40×40 hit-region | notifications_outlined 22×22 · 미읽음 배지(뱃지) 오버레이 가능. |
 | — | AppBar bg | --color-surface · surfaceTint transparent · border-bottom 없음. |
@@ -183,11 +183,11 @@ info 아이콘 탭 시 노출되는 컨텍스트 도움말 sheet. 파트너 앱 
 
 | 항목 | 내용 |
 |---|---|
-| 조건 | AppBar의 info 아이콘 탭 → 화면 위 bottom sheet 슬라이드 업. 파트너 앱 전체 일관 패턴. |
+| 조건 | AppBar의 info 아이콘 탭 → 화면 위 bottom sheet 슬라이드 업. 현재 적용 화면(홈·파티 관리·신청관리·정산)의 일관 도움말 패턴. |
 | 사용자 액션 | ① "확인" 버튼 탭 — sheet dismiss (primary).② handle 드래그 / scrim 탭 — dismiss (보조).③ sheet 내부 스크롤 — max-height 초과 시. |
 | 컴포넌트 | · MinglitHelpSheet — props: title: String · sections: List<HelpSection>.· 화면별 도움말 내용은 호출 측에서 정의 — sheet chrome만 책임.· 진입: showModalBottomSheet(isScrollControlled · barrierColor · shape rounded top). |
 | 토큰 | · scrim: rgba(0,0,0,0.45) · sheet bg --color-background · 상단 모서리 radius-card· handle 36×4 · --color-divider · header 16/700 primary· CTA "확인" — height 48 · partner-primary filled · 15/700 white · margin medium· max-height 75vh |
-| 노트 | 📝 화면별 sections 콘텐츠(도움말 Q&A)는 추후 별도 이슈로 디자인 결정 예정. 파트너 앱 모든 화면이 동일 info 아이콘 → bottom sheet 패턴을 따른다. |
+| 노트 | 📝 화면별 sections 콘텐츠(도움말 Q&A)는 호출 측에서 정의한다. 현재 적용 화면은 홈·파티 관리·신청관리·정산이며, 신규·리뉴얼 파트너 화면은 동일 info 아이콘 → bottom sheet 패턴을 채택한다. |
 
 ## 카드 노출 순서 (Order priority)
 
