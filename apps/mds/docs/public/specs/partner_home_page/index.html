@@ -1119,7 +1119,7 @@ body.dark-mode .viewport {
       </thead>
       <tbody>
         <tr><td>① Brand (leading)</td><td>좌측 정렬</td><td>minglit 로고 + "PARTNER" suffix · 탭 동작 없음 · 홈 식별자 역할.</td></tr>
-        <tr><td>② Info action (1st trailing)</td><td>우측 · 40×40 hit-region</td><td>info_outline 22×22 · 탭 시 <strong>도움말 bottom sheet</strong> 진입 (State 8). 파트너 앱 모든 화면에 동일 패턴 적용.</td></tr>
+        <tr><td>② Info action (1st trailing)</td><td>우측 · 40×40 hit-region</td><td>info_outline 22×22 · 탭 시 <strong>도움말 bottom sheet</strong> 진입 (State 8). 현재 적용 화면은 홈·파티 관리·신청관리·정산이며, 신규·리뉴얼 파트너 화면은 같은 패턴을 채택한다.</td></tr>
         <tr><td>③ Bug report (2nd trailing · dev only)</td><td>우측 · 40×40 hit-region</td><td>개발 빌드 한정 — BugReportAction 컴포넌트.</td></tr>
         <tr><td>④ Notification (3rd trailing)</td><td>우측 · 40×40 hit-region</td><td>notifications_outlined 22×22 · 미읽음 배지(뱃지) 오버레이 가능.</td></tr>
         <tr><td>—</td><td>AppBar bg</td><td><code>--color-surface</code> · surfaceTint transparent · border-bottom 없음.</td></tr>
@@ -1130,7 +1130,7 @@ body.dark-mode .viewport {
   <section class="doc">
     <h2>Help bottom sheet sub-anatomy <em style="color: var(--color-text-secondary); font-size: 13px;">(MinglitHelpSheet 컴포넌트 후보)</em></h2>
     <p class="intro">
-      info 아이콘 탭 시 노출되는 컨텍스트 도움말 sheet. 파트너 앱 모든 주요 화면에서 같은 chrome 재사용 — 화면별 sections 콘텐츠만 다름.
+      info 아이콘 탭 시 노출되는 컨텍스트 도움말 sheet. 현재 적용 화면(홈·파티 관리·신청관리·정산)은 같은 chrome을 재사용하며, 화면별 sections 콘텐츠만 다름.
     </p>
     <table class="ref">
       <thead>
@@ -2286,7 +2286,7 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>AppBar의 info 아이콘 탭 → 화면 위 bottom sheet 슬라이드 업. 파트너 앱 전체 일관 패턴.</td>
+          <td>AppBar의 info 아이콘 탭 → 화면 위 bottom sheet 슬라이드 업. 현재 적용 화면(홈·파티 관리·신청관리·정산)의 일관 도움말 패턴.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
@@ -2315,7 +2315,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 화면별 sections 콘텐츠(도움말 Q&amp;A)는 추후 별도 이슈로 디자인 결정 예정. 파트너 앱 모든 화면이 동일 info 아이콘 → bottom sheet 패턴을 따른다.</td>
+          <td>📝 화면별 sections 콘텐츠(도움말 Q&amp;A)는 호출 측에서 정의한다. 현재 적용 화면은 홈·파티 관리·신청관리·정산이며, 신규·리뉴얼 파트너 화면은 동일 info 아이콘 → bottom sheet 패턴을 채택한다.</td>
         </tr>
       </tbody>
     </table>
