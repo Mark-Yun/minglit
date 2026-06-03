@@ -200,27 +200,7 @@ jobs:
           git push origin "${TAG_SHA}:refs/heads/${BRANCH_NAME}"
           git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
 
-      - name: Track dev promotion issue
-        id: cut-issue
-        if: steps.prepare.outputs.skipped != 'true'
-        uses: ./.github/actions/cut-issue
-        with:
-          github-token: ${{ github.token }}
-          operation: upsert
-          gate-key: dev-staging-dev
-          subject-id: ${{ steps.prepare.outputs.tag_name }}
-          title: 'cut-gate(dev-staging-dev): ${{ steps.prepare.outputs.tag_name }}'
-          status: ${{ inputs.dry_run == true && 'ready' || 'promoting' }}
-          summary: 'dev-staging -> dev promotion is planned for `${{ steps.prepare.outputs.tag_name }}`.'
-          details: |
-            - Source tag: `${{ steps.prepare.outputs.tag_name }}`
-            - Source SHA: `${{ steps.prepare.outputs.tag_sha }}`
-            - Promotion branch: `${{ steps.prepare.outputs.branch_name }}`
-            - Target branch: `dev`
-            - Deploy after merge: `dev-deploy` on `push` to `dev`
-            - Dry run: `${{ inputs.dry_run || false }}`
-
-      - name: Create dev promotion PR and enable auto-merge
+      - name: Create dev promotion PR
         id: pr
         if: steps.prepare.outputs.skipped != 'true' && inputs.dry_run != true
         env:
@@ -228,18 +208,8 @@ jobs:
           TAG_NAME: ${{ steps.prepare.outputs.tag_name }}
           TAG_SHA: ${{ steps.prepare.outputs.tag_sha }}
           BRANCH_NAME: ${{ steps.prepare.outputs.branch_name }}
-          CUT_ISSUE_NUMBER: ${{ steps.cut-issue.outputs.issue-number }}
-          CUT_ISSUE_URL: ${{ steps.cut-issue.outputs.issue-url }}
         run: |
           set -euo pipefail
-          CUT_ISSUE_CLOSER=""
-          CUT_ISSUE_MARKER=""
-          CUT_ISSUE_LINE="- Tracking issue: none"
-          if [ -n "${CUT_ISSUE_NUMBER}" ]; then
-            CUT_ISSUE_CLOSER="Closes #${CUT_ISSUE_NUMBER}"
-            CUT_ISSUE_MARKER="<!-- minglit:cut-issue-number:${CUT_ISSUE_NUMBER} -->"
-            CUT_ISSUE_LINE="- Tracking issue: #${CUT_ISSUE_NUMBER} (${CUT_ISSUE_URL})"
-          fi
 
           BODY="$(cat <<EOF
           Promotes \`${TAG_NAME}\` from \`dev-staging\` to \`dev\`.
@@ -248,12 +218,8 @@ jobs:
           - Source SHA: ${TAG_SHA}
           - Target branch: dev
           - Deploy after merge: dev-deploy on push to dev
-          ${CUT_ISSUE_LINE}
+          - Tracking issue: pending; workflow will attach after PR creation.
           - Merge mode: merge commit, preserving the dev-staging snapshot ancestry in dev.
-
-          ${CUT_ISSUE_CLOSER}
-
-          ${CUT_ISSUE_MARKER}
           EOF
           )"
 
@@ -264,8 +230,119 @@ jobs:
             --body "${BODY}")"
           PR_NUMBER="${PR_URL##*/}"
 
-          gh pr merge "${PR_NUMBER}" --auto --merge --delete-branch
           echo "pr_number=${PR_NUMBER}" >> "$GITHUB_OUTPUT"
+          echo "pr_url=${PR_URL}" >> "$GITHUB_OUTPUT"
+
+      - name: Track dev promotion issue
+        id: cut-issue
+        if: steps.prepare.outputs.skipped != 'true' && inputs.dry_run != true
+        uses: ./.github/actions/cut-issue
+        with:
+          github-token: ${{ github.token }}
+          operation: upsert
+          gate-key: dev-staging-dev
+          subject-id: ${{ steps.prepare.outputs.tag_name }}
+          title: 'cut-gate(dev-staging-dev): ${{ steps.prepare.outputs.tag_name }}'
+          status: promoting
+          extra-labels: needs-swe
+          summary: 'dev-staging -> dev promotion is planned for `${{ steps.prepare.outputs.tag_name }}`.'
+          details: |
+            ## Promotion Evidence
+
+            | Field | Value |
+            |---|---|
+            | Source tag | `${{ steps.prepare.outputs.tag_name }}` |
+            | Source SHA | `${{ steps.prepare.outputs.tag_sha }}` |
+            | Promotion branch | `${{ steps.prepare.outputs.branch_name }}` |
+            | Promotion PR | ${{ steps.pr.outputs.pr_url }} |
+            | Target branch | `dev` |
+            | Deploy after merge | `dev-deploy` on `push` to `dev` |
+
+            ## Agent Contract
+
+            목표: 최신 `dev-staging` snapshot이 최종적으로 `dev`에 승격되도록 케어한다.
+
+            ### 에이전트의 판단 기준
+
+            - 목표 달성을 위해 코드/테스트/문서 수정이 필요하면 fix PR을 `dev-staging`에 생성한다.
+            - fix PR이 머지되면 새 `dev-staging-dev-cut` 승격을 다시 시도한다.
+            - 단순히 현재 promotion PR이 실패했다는 이유만으로 종료하지 않는다.
+            - 종료 여부는 "에이전트가 안전하게 다음 조치를 수행할 수 있는가"를 기준으로 판단한다.
+
+            ### 종료 조건
+
+            - 최신 `dev-staging` snapshot이 `dev`에 머지되면 종료한다.
+            - 또는 에이전트가 안전하게 더 진행할 수 없는 blocker가 있으면 `exec-report` 라벨을 붙이고 종료한다.
+            - 종료 전 이슈 댓글에 root cause, 실패한 check/log URL, 이미 시도한 조치, 필요한 사람 조치사항을 남긴다.
+
+            ### Fix handling
+
+            - fix PR은 `dev-staging`에 머지한다.
+            - fix PR만 `dev`로 cherry-pick하지 않는다.
+            - fix가 머지된 뒤 새 `dev-staging-dev-cut`을 실행해 최신 `dev-staging` snapshot 전체를 다시 `dev`로 승격한다.
+            - 따라서 재시도 승격에는 fix PR뿐 아니라 그 시점까지 `dev-staging`에 포함된 변경 전체가 포함된다.
+
+            ### `exec-report` 조건 예시
+
+            - GitHub Actions runner 장애, Actions outage, job이 장시간 queued/stuck 상태로 반복됨.
+            - release bot token, GitHub App permission, ruleset 권한 문제로 branch/tag/PR 생성 또는 merge가 불가능함.
+            - branch protection/ruleset required check 이름이 workflow와 불일치해서 통과한 PR도 머지할 수 없음.
+            - repository secret/env 누락으로 CI가 재현 가능하게 실패하지만 에이전트가 값을 만들 수 없음.
+            - Supabase/Firebase/GitHub API 같은 외부 서비스 장애 또는 rate limit로 승격 workflow가 반복 실패함.
+            - promotion branch가 정책적으로 판단이 필요한 충돌/lineage 문제에 걸림.
+            - 동일 원인으로 fix/retry 후에도 3회 이상 승격이 실패하고 추가 진행이 추측에 의존함.
+            - active RC, hotfix override, ruleset/admin bypass 같은 release manager 결정이 필요한 상태임.
+
+            주의: 위 목록은 예시다. 에이전트는 목표 달성 가능성과 안전성을 기준으로 계속 진행할지, `exec-report`로 넘길지 판단한다.
+            `exec-report`는 코드/테스트 수정이 가능한 실패에는 사용하지 않는다.
+
+            ### 금지 사항
+
+            - protected branch에 직접 push하지 않는다.
+            - ruleset bypass 또는 admin merge를 사용하지 않는다.
+            - `dev`를 직접 수정하지 않는다.
+            - 실패한 기존 승격 PR만 닫고 이슈를 완료 처리하지 않는다.
+            - 원인 분석 없이 테스트 기대값만 바꾸지 않는다.
+
+            <!-- minglit:swe-task
+            type: promotion-care
+            lane: dev-staging-dev
+            source_tag: ${{ steps.prepare.outputs.tag_name }}
+            source_sha: ${{ steps.prepare.outputs.tag_sha }}
+            promotion_pr: ${{ steps.pr.outputs.pr_url }}
+            target_branch: dev
+            -->
+
+      - name: Update dev promotion PR and enable auto-merge
+        if: steps.prepare.outputs.skipped != 'true' && inputs.dry_run != true
+        env:
+          GH_TOKEN: ${{ steps.release-bot.outputs.token }}
+          PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
+          TAG_NAME: ${{ steps.prepare.outputs.tag_name }}
+          TAG_SHA: ${{ steps.prepare.outputs.tag_sha }}
+          CUT_ISSUE_NUMBER: ${{ steps.cut-issue.outputs.issue-number }}
+          CUT_ISSUE_URL: ${{ steps.cut-issue.outputs.issue-url }}
+        run: |
+          set -euo pipefail
+
+          BODY="$(cat <<EOF
+          Promotes \`${TAG_NAME}\` from \`dev-staging\` to \`dev\`.
+
+          - Source tag: ${TAG_NAME}
+          - Source SHA: ${TAG_SHA}
+          - Target branch: dev
+          - Deploy after merge: dev-deploy on push to dev
+          - Tracking issue: #${CUT_ISSUE_NUMBER} (${CUT_ISSUE_URL})
+          - Merge mode: merge commit, preserving the dev-staging snapshot ancestry in dev.
+
+          Closes #${CUT_ISSUE_NUMBER}
+
+          <!-- minglit:cut-issue-number:${CUT_ISSUE_NUMBER} -->
+          EOF
+          )"
+
+          gh pr edit "${PR_NUMBER}" --body "${BODY}"
+          gh pr merge "${PR_NUMBER}" --auto --merge --delete-branch
 
       - name: Dry run summary
         if: steps.prepare.outputs.skipped != 'true' && inputs.dry_run == true
