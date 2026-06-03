@@ -48,12 +48,16 @@ class _FakeUrlLauncher extends Fake
   }
 }
 
-Partner _fakePartner() => const Partner(
-  id: 'p-1',
-  name: '테스트 파트너',
-);
+Partner _fakePartner() => const Partner(id: 'p-1', name: '테스트 파트너');
 
 const _testUserWeb = 'https://test.minglit.com';
+
+Future<void> _tapPolicyLink(WidgetTester tester, String label) async {
+  final link = find.text(label);
+  await tester.ensureVisible(link);
+  await tester.pumpAndSettle();
+  await tester.tap(link);
+}
 
 List<dynamic> _base() {
   final coordinator = _MockMoreCoordinator();
@@ -91,7 +95,7 @@ void main() {
         // must not override our fake.
         UrlLauncherPlatform.instance = _FakeUrlLauncher(launchedUrls);
         expect(find.text('이용약관'), findsOneWidget);
-        await t.tap(find.text('이용약관'));
+        await _tapPolicyLink(t, '이용약관');
         await t.pump();
         expect(launchedUrls, ['$_testUserWeb/terms']);
       },
@@ -111,7 +115,7 @@ void main() {
         final launchedUrls = <String>[];
         UrlLauncherPlatform.instance = _FakeUrlLauncher(launchedUrls);
         expect(find.text('개인정보처리방침'), findsOneWidget);
-        await t.tap(find.text('개인정보처리방침'));
+        await _tapPolicyLink(t, '개인정보처리방침');
         await t.pump();
         expect(launchedUrls, ['$_testUserWeb/privacy']);
       },
@@ -131,9 +135,9 @@ void main() {
         final launchedUrls = <String>[];
         UrlLauncherPlatform.instance = _FakeUrlLauncher(launchedUrls);
 
-        await t.tap(find.text('이용약관'));
+        await _tapPolicyLink(t, '이용약관');
         await t.pump();
-        await t.tap(find.text('이용약관'));
+        await _tapPolicyLink(t, '이용약관');
         await t.pump();
 
         expect(launchedUrls, ['$_testUserWeb/terms', '$_testUserWeb/terms']);
@@ -157,9 +161,9 @@ void main() {
         expect(find.text('이용약관'), findsOneWidget);
         expect(find.text('개인정보처리방침'), findsOneWidget);
 
-        await t.tap(find.text('이용약관'));
+        await _tapPolicyLink(t, '이용약관');
         await t.pump();
-        await t.tap(find.text('개인정보처리방침'));
+        await _tapPolicyLink(t, '개인정보처리방침');
         await t.pump();
 
         expect(launchedUrls, ['$_testUserWeb/terms', '$_testUserWeb/privacy']);
@@ -180,7 +184,7 @@ void main() {
         final launchedUrls = <String>[];
         UrlLauncherPlatform.instance = _FakeUrlLauncher(launchedUrls);
 
-        await t.tap(find.text('개인정보처리방침'));
+        await _tapPolicyLink(t, '개인정보처리방침');
         await t.pump();
 
         expect(launchedUrls, ['$_testUserWeb/privacy']);
@@ -201,15 +205,15 @@ void main() {
         final launchedUrls = <String>[];
         UrlLauncherPlatform.instance = _FakeUrlLauncher(launchedUrls);
 
-        await t.tap(find.text('개인정보처리방침'));
+        await _tapPolicyLink(t, '개인정보처리방침');
         await t.pump();
-        await t.tap(find.text('개인정보처리방침'));
+        await _tapPolicyLink(t, '개인정보처리방침');
         await t.pump();
 
-        expect(
-          launchedUrls,
-          ['$_testUserWeb/privacy', '$_testUserWeb/privacy'],
-        );
+        expect(launchedUrls, [
+          '$_testUserWeb/privacy',
+          '$_testUserWeb/privacy',
+        ]);
       },
     );
   });
@@ -227,9 +231,9 @@ void main() {
         final launchedUrls = <String>[];
         UrlLauncherPlatform.instance = _FakeUrlLauncher(launchedUrls);
 
-        await t.tap(find.text('이용약관'));
+        await _tapPolicyLink(t, '이용약관');
         await t.pump();
-        await t.tap(find.text('개인정보처리방침'));
+        await _tapPolicyLink(t, '개인정보처리방침');
         await t.pump();
 
         expect(launchedUrls, ['$_testUserWeb/terms', '$_testUserWeb/privacy']);
@@ -251,7 +255,7 @@ void main() {
         UrlLauncherPlatform.instance = _FakeUrlLauncher(launchedUrls);
 
         expect(find.text('개인정보처리방침'), findsOneWidget);
-        await t.tap(find.text('개인정보처리방침'));
+        await _tapPolicyLink(t, '개인정보처리방침');
         await t.pump();
 
         expect(launchedUrls.single, '$_testUserWeb/privacy');
@@ -272,9 +276,9 @@ void main() {
         final launchedUrls = <String>[];
         UrlLauncherPlatform.instance = _FakeUrlLauncher(launchedUrls);
 
-        await t.tap(find.text('이용약관'));
+        await _tapPolicyLink(t, '이용약관');
         await t.pump();
-        await t.tap(find.text('개인정보처리방침'));
+        await _tapPolicyLink(t, '개인정보처리방침');
         await t.pump();
 
         expect(launchedUrls, ['$_testUserWeb/terms', '$_testUserWeb/privacy']);
