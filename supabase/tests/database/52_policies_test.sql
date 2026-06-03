@@ -52,13 +52,17 @@ SELECT throws_ok(
 );
 ROLLBACK TO SAVEPOINT before_blocked_insert;
 
-SELECT is_empty(
+SELECT throws_ok(
   $$UPDATE public.policies SET description = 'hacked' WHERE key = 'refund' RETURNING id$$,
+  '42501',
+  NULL,
   'authenticated user cannot UPDATE policies'
 );
 
-SELECT is_empty(
+SELECT throws_ok(
   $$DELETE FROM public.policies WHERE key = 'refund' RETURNING id$$,
+  '42501',
+  NULL,
   'authenticated user cannot DELETE policies'
 );
 

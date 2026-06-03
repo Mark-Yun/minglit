@@ -132,7 +132,7 @@ ROLLBACK TO SAVEPOINT before_cross_save;
 -- 9. RLS — authenticated user cannot UPDATE directly
 -- ============================================================
 SAVEPOINT before_direct_update;
-SELECT is_empty(
+SELECT throws_ok(
   format(
     $$UPDATE public.user_consents
       SET consented = false, withdrawn_at = now()
@@ -140,6 +140,8 @@ SELECT is_empty(
       RETURNING id$$,
     tests.get_supabase_uid('consent_user_a')
   ),
+  '42501',
+  NULL,
   'authenticated user cannot UPDATE consents directly'
 );
 ROLLBACK TO SAVEPOINT before_direct_update;
@@ -148,13 +150,15 @@ ROLLBACK TO SAVEPOINT before_direct_update;
 -- 10. RLS — authenticated user cannot DELETE directly
 -- ============================================================
 SAVEPOINT before_direct_delete;
-SELECT is_empty(
+SELECT throws_ok(
   format(
     $$DELETE FROM public.user_consents
       WHERE user_id = '%s' AND consent_key = 'terms_of_service'
       RETURNING id$$,
     tests.get_supabase_uid('consent_user_a')
   ),
+  '42501',
+  NULL,
   'authenticated user cannot DELETE consents directly'
 );
 ROLLBACK TO SAVEPOINT before_direct_delete;

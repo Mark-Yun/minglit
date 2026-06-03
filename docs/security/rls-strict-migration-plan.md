@@ -2,7 +2,7 @@
 
 > **Issue**: #2393  
 > **Date**: 2026-05-17  
-> **Status**: Phase 2 완료 (#2990) — Phase 3~5 pending (#2991)
+> **Status**: Phase 2 완료 (#2990) — Phase 3~4 구현 완료 (#2991), Phase 5 rollout pending
 
 ## 목표
 
@@ -116,14 +116,18 @@ rg -n "\.(insert|update|upsert|delete)\s*\(" \
 
 ---
 
-## Phase 3: GRANT 회수 Migration (미착수, #2991)
+## Phase 3: GRANT 회수 Migration (구현 완료, #2991)
 
-> **전제조건**: Phase 2 완료. 진행 전 dev DB에서 GRANT 현황과 EF smoke test를 확인한다.
+> **전제조건**: Phase 2 완료. 2026-06-03 기준 repository layer 직접 DB write 0건 확인.
 
 ```sql
--- Migration: supabase/migrations/YYYYMMDD000001_revoke_write_grants_from_publishable_key.sql
+-- Migration:
+-- supabase/migrations/20260603215321_rls_strict_revoke_publishable_writes.sql
 
--- 기존 테이블 GRANT 회수
+-- service_role 전용 write policy는 TO service_role로 한정.
+-- 남는 public/anon/authenticated write policy는 catalog loop로 제거.
+
+-- 기존 앱 테이블 GRANT 회수
 REVOKE INSERT, UPDATE, DELETE, TRUNCATE
   ON ALL TABLES IN SCHEMA public
   FROM anon, authenticated;
@@ -131,10 +135,13 @@ REVOKE INSERT, UPDATE, DELETE, TRUNCATE
 -- 신규 테이블 자동 적용
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
   REVOKE INSERT, UPDATE, DELETE, TRUNCATE
+  ON TABLES
   FROM anon, authenticated;
 ```
 
-**롤백 SQL** (긴급 시 즉시 실행):
+PostGIS extension 객체(`spatial_ref_sys`, `geometry_columns`, `geography_columns`)는 `supabase_admin` 소유라 앱 write surface gate에서 제외한다.
+
+**롤백 원칙**: 이 migration은 GRANT만이 아니라 클라이언트 write policy도 제거한다. 긴급하게 publishable DB write를 다시 열어야 하면 새 forward migration에서 아래 GRANT와 함께 제거된 policy 정의를 `20260525000001_rls_auth_initplan.sql`, `20260525000002_consolidate_select_rls_policies.sql` 기준으로 복원한다.
 ```sql
 GRANT INSERT, UPDATE, DELETE, TRUNCATE
   ON ALL TABLES IN SCHEMA public
@@ -142,19 +149,25 @@ GRANT INSERT, UPDATE, DELETE, TRUNCATE
 
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
   GRANT INSERT, UPDATE, DELETE, TRUNCATE
+  ON TABLES
   TO anon, authenticated;
 ```
 
 ---
 
-## Phase 4: 회귀 테스트 (미착수)
+## Phase 4: 회귀 테스트 (구현 완료, #2991)
 
-- pgTAP: `SET ROLE authenticated; INSERT INTO public.<table> ...` → 모든 public 테이블 fail 검증
-- Flutter integration: publishable key write → 403 확인
+- pgTAP: `107_rls_strict_publishable_write_lockdown_test.sql`
+  - 앱 public relation에서 `anon/authenticated` write GRANT 0건
+  - `pg_policies`에서 public/anon/authenticated write policy 0건
+  - `SET ROLE authenticated/anon; INSERT INTO public.tags ...` → `42501`
+  - `SET ROLE service_role; INSERT INTO public.tags ...` → success
+- 기존 RLS pgTAP: self/partner direct write 성공 기대값을 permission denied 기대값으로 전환.
+- Flutter integration: publishable key HTTP write smoke는 dev rollout 후 운영 모니터링에서 확인.
 
 ---
 
-## Phase 5: Rollout (미착수)
+## Phase 5: Rollout (pending)
 
 1. dev 적용 → 1주일 모니터링
 2. 에러 발생 시 롤백 SQL 즉시 실행

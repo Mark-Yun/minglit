@@ -149,7 +149,7 @@ BEGIN
   VALUES (v_partner_id, 'career', 'auto_approval_verification', 'Auto Approval Verification')
   RETURNING id INTO v_verification_id;
 
-  PERFORM tests.authenticate_as('auto_approval_user');
+  PERFORM tests.authenticate_as_service_role();
 
   INSERT INTO public.event_applications (event_id, ticket_id, user_id, status)
   VALUES (v_event_id, v_ticket_id, v_user_id, 'pending_review')

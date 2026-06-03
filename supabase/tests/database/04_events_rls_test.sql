@@ -79,7 +79,7 @@ SELECT throws_ok(
       'pending'
     )$$,
   '42501',
-  'new row violates row-level security policy for table "event_applications"',
+  NULL,
   'anon cannot create event applications'
 );
 
