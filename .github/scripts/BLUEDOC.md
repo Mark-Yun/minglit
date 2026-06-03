@@ -11,7 +11,7 @@
 | [`run-partner-cuj.sh`](./run-partner-cuj.sh) | `apps/app_partner/integration_test/cuj/` CUJ 실행. 모든 CUJ 파일을 실행한 뒤 실패 목록 aggregate | `shared-cuj-integration` (app-name=partner 일 때), `monitor-dev-cuj` |
 | [`check-bluedoc-freshness.sh`](./check-bluedoc-freshness.sh) | PR 에서 새/삭제 파일에 대해 가장 가까운 ancestor BLUEDOC.md 갱신 강제. 통과: 이정표 표 갱신 또는 BLUEDOC 의 `_Reviewed_` 날짜 bump. + 모든 BLUEDOC.md 의 Reviewed 형식 검증 | `pr-gate.check-bluedoc-freshness` (required check) |
 | [`check-pr-issue-reference.sh`](./check-pr-issue-reference.sh) | dev-staging PR 본문에 이슈 종료 의도(`Closes/Fixes/Resolves`) 또는 명시적 비종료 사유(`Refs` + 이유 / `No linked issue`)가 있는지 검사 | `pr-gate.static-checks` |
-| [`check-ios-deploy-branch-conditions.sh`](./check-ios-deploy-branch-conditions.sh) | iOS deploy 브랜치·timeout·heartbeat·Flutter SPM off 계약 검증 | 수동 실행 (`bash .github/scripts/check-ios-deploy-branch-conditions.sh`) |
+| [`check-ios-deploy-branch-conditions.sh`](./check-ios-deploy-branch-conditions.sh) | iOS deploy 브랜치·runner SDK·timeout·heartbeat·Flutter SPM off 계약 검증 | 수동 실행 (`bash .github/scripts/check-ios-deploy-branch-conditions.sh`) |
 | [`check-android-deploy-workflow-contract.py`](./check-android-deploy-workflow-contract.py) | Android deploy release archive token 계약 + merge promotion 뒤 snapshot metadata 탐색 회귀 검증 | `pr-gate.static-checks` |
 | [`check-dev-soak-workflow-contract.py`](./check-dev-soak-workflow-contract.py) | dev event-flow cron install + `monitor-dev-cuj` + `dev-rc-cut-gate` + `shared-soak-gate` 판정 계약 검증 | `pr-gate.static-checks` |
 | [`check-dev-cut-workflow-contract.py`](./check-dev-cut-workflow-contract.py) | promotion cut workflow 의 full-history checkout, merge auto-merge mode, `shared-notify` repo 컨텍스트 계약 검증 | `pr-gate.static-checks` |
@@ -35,4 +35,4 @@
 - [.github/BLUEDOC.md](../BLUEDOC.md) — 상위 진입점
 
 ---
-_Reviewed: 2026-06-03 15:15_
+_Reviewed: 2026-06-04 07:16_
