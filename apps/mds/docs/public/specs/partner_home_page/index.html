@@ -1334,7 +1334,7 @@ body.dark-mode .viewport {
                         </div>
                         <button class="ph-card__cta">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                          참가자 명단
+	                          참가자 체크인
                         </button>
                       </div>
                     </div>
@@ -1583,7 +1583,7 @@ body.dark-mode .viewport {
                         </div>
                         <button class="ph-card__cta">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                          참가자 명단
+                          참가자 체크인
                         </button>
                       </div>
                     </div>
@@ -2365,7 +2365,7 @@ body.dark-mode .viewport {
         <tr>
           <td>4</td>
           <td><strong>진행 임박</strong></td>
-          <td>이벤트 detail 카드 (D-day chip + capacity bar 3-layer + 명단 CTA)</td>
+          <td>이벤트 detail 카드 (D-day chip + capacity bar 3-layer + 참가자 체크인 CTA)</td>
           <td>🟠 secondary</td>
           <td>T-7 이내 이벤트 (승인 대기는 별도 섹션, 여기엔 처리 완료된 이벤트만)</td>
         </tr>
@@ -2505,7 +2505,7 @@ body.dark-mode .viewport {
     <h2>카드별 명세 — ② 진행 중 카드 · 단계별 변형</h2>
     <p class="intro">
       "진행 중" 섹션의 카드는 이벤트 당일(D-0) 새벽부터 종료까지 같은 슬롯에서 단계별로 모습이 바뀐다.
-      <strong>체크인은 이벤트 시작 2시간 전부터 활성</strong> — 그 전엔 QR CTA 비활성, 명단만 접근 가능.
+      <strong>체크인은 이벤트 시작 2시간 전부터 활성</strong> — 홈 CTA는 항상 <code>참가자 체크인</code> 하나이며, 그 전엔 OngoingEventListPage 내부 QR mode만 비활성이고 명단/공지 준비는 가능.
       LIVE 진입 후엔 chip이 빨간색 펄스로 변경되고 진행 바가 체크인/참가/정원 3-layer로 시각화됨.
     </p>
     <table class="ref">
@@ -2544,8 +2544,8 @@ body.dark-mode .viewport {
           <td>
             오늘 진행 예정이지만 아직 체크인 시작 전.<br>
             · D-day chip: warning yellow "오늘 19:30"<br>
-            · QR CTA <strong>비활성</strong> (회색 + not-allowed cursor)<br>
-            · 명단 CTA outlined로 활성<br>
+            · CTA는 <strong>"참가자 체크인"</strong> single primary — OngoingEventListPage pre_start로 진입<br>
+            · 내부 QR mode는 disabled, 명단 조회 / 공지 준비만 가능<br>
             · 체크인 시작 시간 inline note (warning 톤)<br>
             · 시간이 가까워지면 "체크인 N분 후" 카운트다운으로 변경 가능
           </td>
@@ -2588,7 +2588,8 @@ body.dark-mode .viewport {
             체크인 윈도우 열림.<br>
             · D-day chip: primary "체크인 가능" (보라)<br>
             · 진행 바 노출 시작 — 페이드(참가) 영역만 visible<br>
-            · QR CTA <strong>활성</strong> (primary 보라)<br>
+            · CTA는 <strong>"참가자 체크인"</strong> single primary<br>
+            · OngoingEventListPage 내부 QR mode 활성 — 기본은 명단+요약, 운영자가 QR mode를 켤 수 있음<br>
             · 첫 참가자가 도착하기 시작하는 단계
           </td>
         </tr>
@@ -2630,7 +2631,8 @@ body.dark-mode .viewport {
             이벤트 시작 후 체크인 진행 중.<br>
             · D-day chip: <strong>error red "LIVE · N분"</strong> + 펄스 도트<br>
             · 진행 바 3-layer (체크인 solid + 참가 fade + 정원 트랙) 모두 visible<br>
-            · 듀얼 CTA: QR primary + 명단 outlined<br>
+            · CTA는 <strong>"참가자 체크인"</strong> single primary — OngoingEventListPage live 상태로 진입<br>
+            · QR / 수동 체크인 / 노쇼 처리는 OngoingEventListPage 내부 action으로 분기<br>
             · 시간 경과는 chip의 분(min)으로 실시간 표시
           </td>
         </tr>
@@ -2673,8 +2675,8 @@ body.dark-mode .viewport {
             모든 참가자 체크인 완료 (체크인 = 참가). 정원이 미달인 채로 출석 100%인 케이스.<br>
             · 진행 바: solid가 페이드 영역을 완전히 덮음 → 페이드 사라짐<br>
             · <strong>"체크인 완료!" success note</strong> 추가 (success 톤 — 초록)<br>
-            · QR CTA는 <strong>disabled 상태로 유지</strong> (회색) — 노출은 하되 더 받을 사람 없음을 시각화<br>
-            · 명단 CTA는 outlined로 활성 (워크인 / 노트 / 사진 업로드 등)
+            · CTA는 <strong>"참가자 체크인"</strong> single primary 유지 — 운영 기록 / 워크인 / 노트 확인 가능<br>
+            · OngoingEventListPage 내부 QR mode는 collapsed 또는 disabled로 표시
           </td>
         </tr>
         <tr>
@@ -2716,8 +2718,8 @@ body.dark-mode .viewport {
             정원 = 참가 = 체크인 동일. 트랙(미판매석) 사라짐.<br>
             · 진행 바 100% 채워짐<br>
             · <strong>"정원 만석! 체크인 완료 ✨" success note</strong> (가장 축하 톤)<br>
-            · QR CTA disabled (회색)<br>
-            · 명단 CTA outlined<br>
+            · CTA는 <strong>"참가자 체크인"</strong> single primary 유지<br>
+            · OngoingEventListPage 내부 QR mode는 collapsed 또는 disabled, 운영 마무리 action 중심<br>
             · 운영 마무리 / 후기 정리 단계로 자연 진입
           </td>
         </tr>
@@ -2820,7 +2822,7 @@ body.dark-mode .viewport {
        ============================================================ -->
   <section class="doc">
     <h2>카드별 명세 — ④ 진행 임박 카드 (Detail + capacity bar)</h2>
-    <p class="intro">T-7 이내 이벤트. capacity bar (확정/심사대기/정원 3-layer) + 명단 CTA 강조.</p>
+    <p class="intro">T-7 이내 이벤트. capacity bar (확정/심사대기/정원 3-layer) + 참가자 체크인 CTA 강조. QR mode는 OngoingEventListPage 내부에서 시간 조건에 따라 활성화한다.</p>
     <table class="ref">
       <thead><tr><th style="width: 360px;">Mockup</th><th>명세</th></tr></thead>
       <tbody>
@@ -2857,7 +2859,7 @@ body.dark-mode .viewport {
                     <div class="ph-card__detail-tag">브런치</div>
                     <div class="ph-card__detail-tag">강남</div>
                   </div>
-                  <button class="ph-card__cta">참가자 명단</button>
+                  <button class="ph-card__cta">참가자 체크인</button>
                 </div>
               </div>
             </div>
@@ -2869,14 +2871,14 @@ body.dark-mode .viewport {
             · capacity bar (3-layer): 확정 solid primary + 심사대기 0.35 fade + 정원 트랙<br>
             · legend (3 dots + 라벨): 확정 / 심사 대기 / 정원<br>
             · tags (회색 칩): 카테고리 / 지역<br>
-            · primary CTA "참가자 명단"<br><br>
+            · primary CTA "참가자 체크인"<br><br>
             <strong>D-day chip 색</strong>: D-1~7 = primary purple (soon)<br><br>
             <strong>Variants</strong>:<br>
             · D-3 일반 케이스 (mockup)<br>
             · 정원 만석: capacity bar 100% + chip 라벨 "마감"<br>
             · D-1: chip "D-1" 같은 색 + meta 강조<br>
             · 심사 대기 0: 페이드 영역 0% (해당 이벤트는 다 처리됨)<br><br>
-            <strong>Tap 액션</strong>: 카드 영역 → 이벤트 상세 / "참가자 명단" CTA → 명단 화면
+            <strong>Tap 액션</strong>: 카드 영역 → 이벤트 상세 / "참가자 체크인" CTA → OngoingEventListPage (D-3/D-1은 pre_start/readiness, T-2부터 QR mode 가능)
           </td>
         </tr>
       </tbody>
