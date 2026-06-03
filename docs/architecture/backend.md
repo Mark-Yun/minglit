@@ -382,15 +382,24 @@ protect_user_profile_fields() → trigger
 | event_applications | 4 | Self (read, create, update) + Partner staff read |
 | verification_submissions | 4 | Self + Partner staff (read, update) |
 | settlements | 1 | Admin + SETTLEMENT_VIEW |
-| storage.objects | 9 | Bucket-specific (verification-proofs, party-assets, partner-proofs) |
+| storage.objects | 6+ | Covered bucket read policies + public known-object serving; writes via signed upload EF |
 
 ### 5.3 Storage Buckets
 
-| Bucket | Public | Upload Policy | View Policy |
-|--------|--------|---------------|-------------|
-| `verification-proofs` | No | 본인 폴더만 | 본인 + 파일 접근 권한 + 파트너/관리자 |
-| `party-assets` | Yes | Authenticated | 전체 공개 |
-| `partner-proofs` | No | 본인 폴더만 | 본인 + 관리자 |
+| Bucket | Public | Upload Policy | View Policy | Hard Limit |
+|--------|--------|---------------|-------------|------------|
+| `verification-proofs` | No | `storage-upload` EF signed upload; user-id path prefix | 본인 + 파일 접근 권한 + 파트너/관리자 | 10MiB, image/PDF allowlist |
+| `party-assets` | Yes | `storage-upload` EF signed upload; partner-id path prefix + `PARTY_MANAGE` | 알려진 public object URL | 50MiB, image allowlist |
+| `partner-proofs` | No | `storage-upload` EF signed upload; user-id path prefix | 본인 + 관리자 | 10MiB, image/PDF allowlist |
+
+Covered product uploads use the `storage-upload` Edge Function:
+
+1. Client sends `{bucket, path_prefix, declared_size, mime, extension}` to `action=presign`.
+2. EF calls `reserve_storage_upload()` to enforce bucket policy, path scope, byte-rate, total quota, and active upload concurrency.
+3. EF returns Supabase `createSignedUploadUrl()` token; client uploads via `uploadBinaryToSignedUrl()`.
+4. Client calls `action=complete`; `complete_storage_upload()` reconciles declared vs actual metadata and closes `active_storage_uploads`.
+
+Direct authenticated `storage.objects INSERT` policies are removed for the three covered buckets. `bug-report-attachments` is intentionally separate QA/reporting infrastructure with its own 5MiB policy and retention lifecycle. TUS/resumable upload support is deferred; current covered flows are small image/document uploads under bucket hard limits.
 
 ### 5.4 Flutter Write Enforcement
 
@@ -436,7 +445,7 @@ Flutter 앱(publishable key = anon/authenticated role)은 **READ 전용**이다.
 | `on_application_approval` | event_applications | UPDATE/INSERT | approved/paid → event_participants 자동 발권 |
 | `on_application_rejected` | event_applications | UPDATE | 거절 시 pg_net으로 payment-cancel Edge Function 호출 |
 | `on_event_completed` | events | UPDATE | completed 시 settlement 자동 생성 |
-| `on_storage_object_created` | storage.objects | INSERT | minglit_files 메타데이터 동기화 |
+| `on_storage_object_created` | storage.objects | INSERT | minglit_files 메타데이터 동기화; signed upload 예약에서 owner_id 보정 |
 | `on_application_created` | event_applications | INSERT | 파트너 오너에게 file_access_grants 생성 |
 | `on_event_reschedule` | events | UPDATE (end_time) | file_access_grants 만료일 갱신 |
 
@@ -513,7 +522,7 @@ User B ──vote──> User A
 1. **Storage Layer**: Supabase Storage → `storage.objects` (RLS로 업로드/조회 제어)
 2. **Application Layer**: `minglit_files` + `file_access_grants` (세밀한 접근 권한)
 
-파일 업로드 시 `on_storage_object_created` 트리거가 `minglit_files`에 메타데이터를 동기화한다.
+파일 업로드 시 `on_storage_object_created` 트리거가 `minglit_files`에 메타데이터를 동기화한다. `storage-upload` signed upload 경로는 `active_storage_uploads` 예약을 사용해 Storage token 업로드의 소유자를 보정하고, complete 단계에서 실제 size를 reconcile한다.
 이벤트 신청 시 `on_application_created` 트리거가 파트너 오너에게 자동으로 `file_access_grants`를 생성하며, 이벤트 종료 후 30일에 만료된다.
 
 ---

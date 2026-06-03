@@ -25,9 +25,18 @@ class StorageRepository {
   StorageRepository({SupabaseClient? supabase})
     : _supabase = supabase ?? Supabase.instance.client;
 
+  static const Set<String> _signedUploadBuckets = {
+    'verification-proofs',
+    'partner-proofs',
+    'party-assets',
+  };
+
   final SupabaseClient _supabase;
 
-  /// Uploads a file to Supabase Storage and returns the public URL.
+  /// Uploads a file to Supabase Storage.
+  ///
+  /// Covered private buckets return the stored path. Public buckets return the
+  /// public URL.
   ///
   /// [file]: The file to upload (XFile from image_picker/file_picker).
   /// [bucket]: Target bucket name
@@ -41,16 +50,25 @@ class StorageRepository {
   }) async {
     try {
       final rawBytes = await file.readAsBytes();
-      final extension = p.extension(file.path).isEmpty
-          ? '.jpg'
-          : p.extension(file.path);
+      final extension = _extensionForFile(file);
       // Fix #1230: GPS/EXIF 메타데이터 유출 방지 — 업로드 전 재인코딩으로 완전 제거
       final bytes = stripExifAndReencode(rawBytes, filename: file.name);
       // Generate a unique filename
       final filename = '${const Uuid().v4()}$extension';
       final fullPath = pathPrefix != null ? '$pathPrefix/$filename' : filename;
+      final contentType = file.mimeType ?? _contentTypeForExtension(extension);
 
       Log.d('Uploading file to $bucket/$fullPath...');
+
+      if (_signedUploadBuckets.contains(bucket)) {
+        return await _uploadSignedBytes(
+          bytes: bytes,
+          bucket: bucket,
+          pathPrefix: pathPrefix,
+          contentType: contentType,
+          extension: extension,
+        );
+      }
 
       await _supabase.storage
           .from(bucket)
@@ -58,7 +76,7 @@ class StorageRepository {
             fullPath,
             bytes,
             fileOptions: FileOptions(
-              contentType: file.mimeType,
+              contentType: contentType,
             ),
           );
 
@@ -90,6 +108,16 @@ class StorageRepository {
 
       Log.d('Uploading bytes to $bucket/$fullPath...');
 
+      if (_signedUploadBuckets.contains(bucket)) {
+        return await _uploadSignedBytes(
+          bytes: bytes,
+          bucket: bucket,
+          pathPrefix: pathPrefix,
+          contentType: contentType,
+          extension: extension,
+        );
+      }
+
       await _supabase.storage
           .from(bucket)
           .uploadBinary(
@@ -119,5 +147,120 @@ class StorageRepository {
       Log.e('❌ [StorageRepo] Delete failed', e, st);
       rethrow;
     }
+  }
+
+  Future<String> _uploadSignedBytes({
+    required Uint8List bytes,
+    required String bucket,
+    required String contentType,
+    required String extension,
+    String? pathPrefix,
+  }) async {
+    final presign = await _supabase.functions.invoke(
+      'storage-upload',
+      body: {
+        'action': 'presign',
+        'bucket': bucket,
+        'path_prefix': pathPrefix,
+        'declared_size': bytes.length,
+        'mime': contentType,
+        'extension': extension,
+      },
+    );
+    if (presign.status != 200 || presign.data is! Map) {
+      throw Exception(_functionError(presign, 'Storage presign failed'));
+    }
+
+    final presignData = (presign.data as Map).cast<String, dynamic>();
+    final uploadId = presignData['upload_id'] as String;
+    final path = presignData['path'] as String;
+    final token = presignData['token'] as String;
+
+    try {
+      await _supabase.storage
+          .from(bucket)
+          .uploadBinaryToSignedUrl(
+            path,
+            token,
+            bytes,
+            FileOptions(contentType: contentType),
+          );
+    } catch (_) {
+      await _abortSignedUpload(uploadId);
+      rethrow;
+    }
+
+    final complete = await _supabase.functions.invoke(
+      'storage-upload',
+      body: {
+        'action': 'complete',
+        'upload_id': uploadId,
+      },
+    );
+    if (complete.status != 200 || complete.data is! Map) {
+      throw Exception(_functionError(complete, 'Storage complete failed'));
+    }
+
+    final completeData = (complete.data as Map).cast<String, dynamic>();
+    if (completeData['status'] == 'rejected') {
+      throw Exception(
+        completeData['rejection_reason'] ?? 'Storage upload rejected',
+      );
+    }
+
+    final publicUrl = completeData['public_url'] as String?;
+    return publicUrl ?? (completeData['path'] as String? ?? path);
+  }
+
+  Future<void> _abortSignedUpload(String uploadId) async {
+    try {
+      await _supabase.functions.invoke(
+        'storage-upload',
+        body: {
+          'action': 'abort',
+          'upload_id': uploadId,
+        },
+      );
+    } on Object {
+      // Best effort: the active upload expires server-side if abort fails.
+    }
+  }
+
+  static String _functionError(FunctionResponse response, String fallback) {
+    final data = response.data;
+    if (data is Map) {
+      return (data['error'] as String?) ?? fallback;
+    }
+    return fallback;
+  }
+
+  static String _contentTypeForExtension(String extension) {
+    switch (extension.toLowerCase()) {
+      case '.jpg':
+      case '.jpeg':
+        return 'image/jpeg';
+      case '.png':
+        return 'image/png';
+      case '.webp':
+        return 'image/webp';
+      case '.pdf':
+        return 'application/pdf';
+      default:
+        return 'application/octet-stream';
+    }
+  }
+
+  static String _extensionForFile(XFile file) {
+    final pathExtension = p.extension(file.path);
+    if (pathExtension.isNotEmpty) {
+      return pathExtension;
+    }
+
+    final nameExtension = p.extension(file.name);
+    if (nameExtension.isNotEmpty) {
+      return nameExtension;
+    }
+
+    return '.jpg';
   }
 }

@@ -266,6 +266,11 @@
       "envs": ["dev", "production"],
       "description": "PGMQ q_tags LLM 태그 추출 워커 (Fix #1489: system caller 전용)"
     },
+    "storage-upload": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "Storage signed upload presign/complete/abort — quota, byte-rate, concurrency, reconcile"
+    },
     "event-flow-simulator": {
       "callers": ["system", "public"],
       "envs": ["local", "development", "dev"],
