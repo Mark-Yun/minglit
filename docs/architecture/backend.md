@@ -472,24 +472,31 @@ Flutter 앱(publishable key = anon/authenticated role)은 **READ 전용**이다.
 
 | Function | Purpose | Auth |
 |----------|---------|------|
-| `apply_event()` | 이벤트 신청 (성비 체크 → 신청 → 인증 제출) | SECURITY DEFINER |
-| `check_party_balance()` | 성비 균형 체크 | SECURITY DEFINER |
-| `get_event_ticket_balance_status()` | 티켓별 성비 상태 조회 | SECURITY DEFINER |
-| `get_personalized_recommendations()` | pgvector 기반 추천 | SECURITY DEFINER |
-| `get_events_within_radius()` | PostGIS 반경 검색 | SECURITY DEFINER |
-| `get_bulk_eligibility_data()` | 유저 자격 일괄 조회 | SECURITY DEFINER |
-| `get_matched_user_info()` | 매칭 상대 연락처 조회 | SECURITY DEFINER |
-| `get_event_applications_with_user()` | 이벤트 신청 목록 + 유저 정보 | SECURITY DEFINER |
-| `get_partner_members_with_user()` | 파트너 멤버 목록 + 유저 정보 | SECURITY DEFINER |
-| `get_pending_verification_requests_with_user()` | 대기 인증 요청 목록 | SECURITY DEFINER |
-| `get_entry_group_participant_counts()` | 입장 그룹별 참가자 수 조회 | SECURITY DEFINER |
+| `apply_event()` | 이벤트 신청 (성비 체크 → 신청 → 인증 제출) | SECURITY DEFINER, service_role EF only |
+| `check_party_balance()` | 성비 균형 체크 | SECURITY DEFINER, service_role EF/internal only |
+| `get_event_ticket_balance_status()` | 티켓별 성비 상태 조회 | SECURITY DEFINER, public read RPC |
+| `get_personalized_recommendations()` | pgvector 기반 추천 | SECURITY DEFINER, authenticated RPC |
+| `get_events_within_radius()` | PostGIS 반경 검색 | SECURITY DEFINER, public read RPC |
+| `get_bulk_eligibility_data()` | 유저 자격 일괄 조회 | SECURITY DEFINER, authenticated RPC |
+| `get_matched_user_info()` | 매칭 상대 연락처 조회 | SECURITY DEFINER, authenticated RPC |
+| `get_event_applications_with_user()` | 이벤트 신청 목록 + 유저 정보 | SECURITY DEFINER, authenticated RPC |
+| `get_partner_members_with_user()` | 파트너 멤버 목록 + 유저 정보 | SECURITY DEFINER, authenticated RPC |
+| `get_pending_verification_requests_with_user()` | 대기 인증 요청 목록 | SECURITY DEFINER, authenticated RPC |
+| `get_entry_group_participant_counts()` | 입장 그룹별 참가자 수 조회 | SECURITY DEFINER, public read RPC |
 | `search_events_pgroonga()` | 이벤트 전문 검색 | SECURITY INVOKER |
 | `search_parties_pgroonga()` | 파티 전문 검색 | SECURITY INVOKER |
 | `cast_match_vote()` | 매칭 투표 (advisory lock 기반 원자적 투표 + 상호 매칭 감지) | SECURITY DEFINER |
-| `replace_match_rules()` | 매칭 규칙 원자적 교체 (delete + insert) | SECURITY DEFINER |
-| `get_ticket_public_key()` | 티켓 QR 서명 검증용 Ed25519 공개키 조회 | SECURITY DEFINER |
-| `notify_match_results()` | 매칭 결과 알림 발송 (크론 호출) | SECURITY DEFINER |
-| `cleanup_expired_match_votes()` | 만료된 매칭 투표 정리 (크론 호출) | SECURITY DEFINER |
+| `replace_match_rules()` | 매칭 규칙 원자적 교체 (delete + insert) | SECURITY DEFINER, service_role EF only |
+| `get_ticket_public_key()` | 티켓 QR 서명 검증용 Ed25519 공개키 조회 | SECURITY DEFINER, authenticated RPC |
+| `notify_match_results()` | 매칭 결과 알림 발송 (크론 호출) | SECURITY DEFINER, service_role cron only |
+| `cleanup_expired_match_votes()` | 만료된 매칭 투표 정리 (크론 호출) | SECURITY DEFINER, service_role cron only |
+
+### 6.3 DB Security Posture
+
+- SECURITY DEFINER functions must pin `search_path`; pgTAP blocks Minglit-owned functions without function-level `SET search_path`.
+- PUBLIC/anon EXECUTE is not the default for SECURITY DEFINER. Each function is classified as public read RPC, authenticated RPC, service_role Edge Function helper, or trigger/cron internal helper.
+- `fcm_tokens` and `user_settings` are read-only to authenticated clients. Registration, deletion, and settings writes go through `user-manage-settings` with service_role.
+- No Minglit-owned regular `public` table may remain RLS-off; `spatial_ref_sys` is the only public table exception because it is extension-owned metadata.
 
 ---
 
