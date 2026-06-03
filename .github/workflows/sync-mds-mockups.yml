@@ -1,6 +1,6 @@
 name: sync-mds-mockups
 
-# Invoked by post-merge.yml on push to dev (paths filter applied at caller level).
+# Legacy workflow_call/manual reusable; not invoked by current post-merge.
 on:
   workflow_call:
   workflow_dispatch:

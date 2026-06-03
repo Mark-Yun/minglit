@@ -10,12 +10,12 @@
 |----------|------|------------------|
 | **Deploy** | `dev-deploy`, `rc-deploy`, `main-deploy`, `deploy-android-{user,partner}`, `deploy-ios-{user,partner}`, `deploy-dev-seed`, `shared-android-deploy` | branch-level deploy entrypoint + reusable/domain deploy jobs |
 | **PR / Review** | `pr-gate`, `pr-review-setup`, `doc-freshness` | spec 의 pr-gate-core 의 base — 추출·일반화 대상 |
-| **Post-merge** | `post-merge` (dev push orchestrator), `sync-pr-branches`, `sync-test-coverage`, `sync-mds-mockups`, `sync-graphify` | dev push follow-up 자동화. branch-mutating generated report sync 는 dev/rc/main 에 붙이지 않는다 |
+| **Post-merge** | `post-merge` (dev-staging push orchestrator), `sync-pr-branches`, `triage-mds-issue` | 일반 PR flow follow-up 자동화. dev 는 promotion-only 이므로 deploy/health workflow 만 push 에 직접 붙인다 |
 | **Reusable** | `shared-android-deploy`, `shared-cuj-integration`, `shared-notify` | spec 의 reusable 패턴 — 추가 reusable extract 시 참고 |
 | **Monitor** | `monitor-allure`, `monitor-cuj-coverage`, `monitor-db-invariants`, `monitor-deno-coverage`, `monitor-event-flow-*`, `monitor-mds-render-coverage`, `monitor-patrol-e2e` | 본 release pipeline 과 orthogonal — 유지 |
 | **Triage** | `triage-mds-issue`, `triage-slash` | 동상 — 유지 |
 
-> `post-merge.yml` 주석에 *"single push:dev entry point for follow-up automation that previously lived in 5 separate workflows"* — 이미 orchestrator 패턴이 도입돼있음. 우리 spec 도 비슷한 방향 (`*-post-merge-sync` entry workflow 가 reusable 호출).
+> `post-merge.yml` 은 `dev-staging` push 직후 일반 PR flow follow-up 을 묶는 orchestrator 다. dev push 는 promotion 결과의 deploy/health signal 에만 사용한다.
 
 ## Existing → Spec mapping
 

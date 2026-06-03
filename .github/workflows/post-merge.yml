@@ -1,7 +1,6 @@
-# Post-merge orchestrator — single push:dev entry point for follow-up automation that
-# previously lived in separate workflows (sync-pr-branches, triage-mds-issue,
-# sync-mds-mockups, sync-test-coverage). Only non-branch-mutating jobs stay attached
-# to push:dev; generated artifacts/reports must not auto-commit to dev/rc/main.
+# Post-merge orchestrator — single push:dev-staging entry point for follow-up
+# automation attached to normal PR flow. dev is promotion-only; deploy and health
+# workflows stay attached directly to push:dev.
 #
 # sync-graphify (independent schedule) and sync-version (pull_request: closed) are
 # deliberately NOT consolidated — different trigger semantics.
@@ -10,7 +9,7 @@ name: post-merge
 
 on:
   push:
-    branches: [dev]
+    branches: [dev-staging]
   workflow_dispatch:
 
 # Union of permissions needed across all called reusables; each reusable still declares
@@ -40,9 +39,11 @@ jobs:
               - 'apps/mds/docs/src/lib/components.ts'
               - 'apps/mds/docs/src/components/specs/**'
 
-  # No paths gate: previously fired on every push:dev regardless of files.
+  # No paths gate: keep dev-staging auto-merge PRs current after dev-staging moves.
   sync-pr-branches:
     uses: ./.github/workflows/sync-pr-branches.yml
+    with:
+      base_ref: dev-staging
     secrets: inherit
 
   # Push-event-only: reusable consumes github.event.before for diff computation, which
