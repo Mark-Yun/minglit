@@ -115,7 +115,7 @@ Mark 님 직감대로 hotfix loop 으로 RC lifecycle 이 길어지는 게 일�
             │
             ├─▶ [rc-pr-gate]
             │
-            ├─▶ [merge to rc (rebase)]
+            ├─▶ [merge to rc (approved hotfix merge)]
             │
             ├─▶ [rc-deploy: RC env 재적용]
             │

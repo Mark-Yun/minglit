@@ -7,7 +7,7 @@
 ```
   agents ──PR + auto-merge──▶ dev-staging
                               │
-                              └─daily dev-staging-dev-cut linear snapshot PR──▶ dev
+                              └─daily dev-staging-dev-cut merge-commit snapshot PR──▶ dev
                                                               │
                                                               ├─▶ dev-rc-cut-gate (post-merge 자동)
                                                               │      │
@@ -50,22 +50,22 @@ RC hotfix 는 dev-staging-first 가 기본이다. active RC 에만 먼저 들어
 | 머지 방향 | base ← head | 트리거 | 머지 방식 | 요구 체크 |
 |-----------|-------------|--------|-----------|-----------|
 | feature/agent → dev-staging | `dev-staging` ← `feat/*`, `fix/*`, `chore/*`, `docs/*` | PR + auto-merge | **squash** | `dev-staging-pr-gate` |
-| dev-staging → dev | `dev` ← `cut/dev-staging-dev/YYYY-MM-DD-{sha8}` at daily cut-time `v*-dev-staging` tag | daily cron `dev-staging-dev-cut` | rebase (linear snapshot) | `dev-pr-gate` |
-| hotfix → dev | `dev` ← `dev/hotfix/*` | approved hotfix only | rebase | `dev-pr-gate` |
-| hotfix → rc | `rc/YYYY-Wxx` ← dev-staging fix cherry-pick branch | dev-staging-first approved hotfix only | rebase | `rc-pr-gate` |
-| rc → main | `main` ← `rc/YYYY-Wxx` | `rc-main-cut` 이 5일 무커밋 시 PR 생성 + auto-merge | rebase + ff | `main-pr-gate` |
-| hotfix → main | `main` ← `main/hotfix/*` | approved + release-manager hotfix only | rebase + ff | `main-pr-gate` |
+| dev-staging → dev | `dev` ← `cut/dev-staging-dev/YYYY-MM-DD-{sha8}` at daily cut-time `v*-dev-staging` tag | daily cron `dev-staging-dev-cut` | merge commit (snapshot ancestry 보존) | `dev-pr-gate` |
+| hotfix → dev | `dev` ← `dev/hotfix/*` | approved hotfix only | approved hotfix merge | `dev-pr-gate` |
+| hotfix → rc | `rc/YYYY-Wxx` ← dev-staging fix cherry-pick branch | dev-staging-first approved hotfix only | approved hotfix merge | `rc-pr-gate` |
+| rc → main | `main` ← `rc/YYYY-Wxx` | `rc-main-cut` 이 5일 무커밋 시 PR 생성 + auto-merge | merge commit (RC ancestry 보존) | `main-pr-gate` |
+| hotfix → main | `main` ← `main/hotfix/*` | approved + release-manager hotfix only | approved hotfix merge | `main-pr-gate` |
 
 ## Branch Protection 설정
 
 | 브랜치 | direct push | linear | required check | merge 종류 |
 |--------|-------------|--------|----------------|------------|
 | `dev-staging` | 금지 (release bot 예외) | **ON** | `dev-staging-pr-gate` | squash |
-| `dev` | 금지 | **ON** | `dev-pr-gate` | rebase (linear snapshot) |
-| `rc/YYYY-Wxx` | 금지 | **ON** | `rc-pr-gate` | rebase |
-| `main` | 금지 (release bot 예외) | **ON** | `main-pr-gate` | rebase |
+| `dev` | 금지 | **OFF** | `dev-pr-gate` | merge commit for promotion |
+| `rc/YYYY-Wxx` | 금지 | **OFF** | `rc-pr-gate` | approved hotfix merge |
+| `main` | 금지 (release bot 예외) | **OFF** | `main-pr-gate` | merge commit for promotion |
 
-Hybrid linear history 금지 — 각 branch 내 일관 (squash or rebase 한 가지). `dev` 는 active ruleset 의 linear history 와 맞추기 위해 `dev-staging-dev-cut` promotion 도 rebase 를 사용한다. Protected branch 직접 push 는 `minglit-release-bot` 의 dev-staging version bump, promotion branch/tag, RC cleanup 에만 Ruleset bypass 로 허용한다.
+Global linear history 정책은 폐기한다. 일반 작업 PR 은 `dev-staging` 에서 squash 로 정리하고, branch promotion PR 은 source branch ancestry 를 보존하기 위해 merge commit 을 사용한다. Protected branch 직접 push 는 `minglit-release-bot` 의 dev-staging version bump, promotion branch/tag, RC cleanup 에만 Ruleset bypass 로 허용한다.
 
 ## Promotion Tag 컨벤션
 

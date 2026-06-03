@@ -249,7 +249,7 @@ jobs:
           - Target branch: dev
           - Deploy after merge: dev-deploy on push to dev
           ${CUT_ISSUE_LINE}
-          - Merge mode: rebase, because the active dev ruleset requires linear history.
+          - Merge mode: merge commit, preserving the dev-staging snapshot ancestry in dev.
 
           ${CUT_ISSUE_CLOSER}
 
@@ -264,7 +264,7 @@ jobs:
             --body "${BODY}")"
           PR_NUMBER="${PR_URL##*/}"
 
-          gh pr merge "${PR_NUMBER}" --auto --rebase --delete-branch
+          gh pr merge "${PR_NUMBER}" --auto --merge --delete-branch
           echo "pr_number=${PR_NUMBER}" >> "$GITHUB_OUTPUT"
 
       - name: Dry run summary

@@ -47,7 +47,7 @@
 | Required status checks | `dev-pr-gate` (dev-staging snapshot PR 또는 approved `dev/hotfix/*`) |
 | Required reviewers | 0 |
 | Require conversation resolution | yes |
-| Require linear history | **yes** (nightly snapshot PR 만 들어옴, snapshot 자체가 linear) |
+| Require linear history | **no** (promotion merge commit 이 dev-staging snapshot ancestry 를 보존) |
 | Allowed merge methods | merge commit (snapshot 보존용) |
 | Bypass roles | `minglit-release-bot` only for promotion/version metadata push |
 
@@ -65,8 +65,8 @@
 | Required PR labels | GitHub Ruleset 직접 요구 없음. `main-pr-gate` 가 `rc-main-cut-pass` marker 또는 main hotfix labels 를 검증 |
 | Required reviewers | 0 (workflow auto-merge) |
 | Require conversation resolution | yes |
-| Require linear history | **yes** |
-| Allowed merge methods | **rebase only** (rebase + fast-forward) |
+| Require linear history | **no** |
+| Allowed merge methods | merge commit (RC promotion ancestry 보존용) |
 | Auto-delete head branch on merge | yes (`rc/*` branch 는 main merge 후 삭제, 이력은 protected tag 로 보존) |
 | Bypass roles | `minglit-release-bot` for promotion tag / cleanup, release manager only for catastrophic incident response |
 
@@ -84,8 +84,8 @@
 | Required status checks | `rc-pr-gate` (approved `rc/hotfix/*` PR 에 대해) |
 | Required reviewers | 0 |
 | Require conversation resolution | yes |
-| Require linear history | yes |
-| Allowed merge methods | rebase only |
+| Require linear history | no |
+| Allowed merge methods | approved hotfix merge |
 | Auto-delete head branch on merge | yes (hotfix branch 자동 삭제) |
 | Bypass roles | `minglit-release-bot` only for RC branch creation/deletion and promotion tag push |
 

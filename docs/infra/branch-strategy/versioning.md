@@ -56,7 +56,7 @@
 조회:
 - `git tag -l 'v*-dev-staging'` (dev-staging coherent snapshot)
 - `git tag -l 'promo/main-*'` (weekly main promotion event)
-- `git log --first-parent main` (main 의 promotion 이벤트, rebase 라 사실상 linear)
+- `git log --first-parent main` (main 의 promotion merge 이벤트)
 - `gh api repos/.../commits/{sha}/status` (dev-rc-cut-pass 확인)
 
 ## 동일 build number 가 여러 단계 등장하는 의미

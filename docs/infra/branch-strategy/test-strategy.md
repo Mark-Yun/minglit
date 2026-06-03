@@ -89,7 +89,7 @@ RC 의 hotfix 만 받음. 기본은 dev-staging 에 먼저 머지된 fix commit/
 - `expand-migrate-contract` 다시 검증 (RC 5일 동안 dev 가 더 나갔을 수 있음)
 - RC first-parent lineage 안의 `dev-rc-cut-pass` source commit 확인
 
-모든 check 통과 시 workflow auto-merge (rebase + ff).
+모든 check 통과 시 workflow auto-merge (merge commit, RC ancestry 보존).
 
 ### Flag staged rollout 메트릭 게이트
 
