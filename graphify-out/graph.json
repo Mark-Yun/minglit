@@ -2901,7 +2901,7 @@
       "source_file": "env-manifest.json",
       "source_location": "L4",
       "id": "minglit_env_manifest_flutter_required",
-      "community": 1687,
+      "community": 1218,
       "norm_label": "required"
     },
     {
@@ -2928,7 +2928,7 @@
       "source_file": "env-manifest.json",
       "source_location": "L8",
       "id": "minglit_env_manifest_required_supabase_publishable_key",
-      "community": 1687,
+      "community": 1218,
       "norm_label": "supabase_publishable_key"
     },
     {
@@ -2937,7 +2937,7 @@
       "source_file": "env-manifest.json",
       "source_location": "L9",
       "id": "minglit_env_manifest_supabase_publishable_key_desc",
-      "community": 1687,
+      "community": 1218,
       "norm_label": "desc"
     },
     {
@@ -2946,7 +2946,7 @@
       "source_file": "env-manifest.json",
       "source_location": "L11",
       "id": "minglit_env_manifest_required_environment",
-      "community": 1687,
+      "community": 1153,
       "norm_label": "environment"
     },
     {
@@ -2955,7 +2955,7 @@
       "source_file": "env-manifest.json",
       "source_location": "L12",
       "id": "minglit_env_manifest_environment_desc",
-      "community": 1687,
+      "community": 1153,
       "norm_label": "desc"
     },
     {
@@ -3243,7 +3243,7 @@
       "source_file": "env-manifest.json",
       "source_location": "L68",
       "id": "minglit_env_manifest_optional_environment",
-      "community": 1687,
+      "community": 1153,
       "norm_label": "environment"
     },
     {
@@ -3531,7 +3531,7 @@
       "source_file": "env-manifest.json",
       "source_location": "L159",
       "id": "minglit_env_manifest_functions_bug_report",
-      "community": 1671,
+      "community": 16,
       "norm_label": "bug-report"
     },
     {
@@ -3540,7 +3540,7 @@
       "source_file": "env-manifest.json",
       "source_location": "L160",
       "id": "minglit_env_manifest_bug_report_required",
-      "community": 1671,
+      "community": 16,
       "norm_label": "required"
     },
     {
@@ -3549,7 +3549,7 @@
       "source_file": "env-manifest.json",
       "source_location": "L161",
       "id": "minglit_env_manifest_required_github_access_token",
-      "community": 1671,
+      "community": 16,
       "norm_label": "github_access_token"
     },
     {
@@ -3558,7 +3558,7 @@
       "source_file": "env-manifest.json",
       "source_location": "L162",
       "id": "minglit_env_manifest_github_access_token_desc",
-      "community": 1671,
+      "community": 16,
       "norm_label": "desc"
     },
     {
@@ -3567,7 +3567,7 @@
       "source_file": "env-manifest.json",
       "source_location": "L166",
       "id": "minglit_env_manifest_functions_metrics_alert",
-      "community": 1671,
+      "community": 16,
       "norm_label": "metrics-alert"
     },
     {
@@ -3576,7 +3576,7 @@
       "source_file": "env-manifest.json",
       "source_location": "L167",
       "id": "minglit_env_manifest_metrics_alert_required",
-      "community": 1671,
+      "community": 16,
       "norm_label": "required"
     },
     {
@@ -3585,7 +3585,7 @@
       "source_file": "env-manifest.json",
       "source_location": "L173",
       "id": "minglit_env_manifest_functions_github_stats_sync",
-      "community": 1671,
+      "community": 16,
       "norm_label": "github-stats-sync"
     },
     {
@@ -3594,7 +3594,7 @@
       "source_file": "env-manifest.json",
       "source_location": "L174",
       "id": "minglit_env_manifest_github_stats_sync_optional",
-      "community": 1671,
+      "community": 16,
       "norm_label": "optional"
     },
     {
@@ -3603,7 +3603,7 @@
       "source_file": "env-manifest.json",
       "source_location": "L175",
       "id": "minglit_env_manifest_optional_github_access_token",
-      "community": 1671,
+      "community": 16,
       "norm_label": "github_access_token"
     },
     {
@@ -3612,7 +3612,7 @@
       "source_file": "env-manifest.json",
       "source_location": "L180",
       "id": "minglit_env_manifest_functions_event_flow_simulator",
-      "community": 1687,
+      "community": 16,
       "norm_label": "event-flow-simulator"
     },
     {
@@ -3621,7 +3621,7 @@
       "source_file": "env-manifest.json",
       "source_location": "L181",
       "id": "minglit_env_manifest_event_flow_simulator_required",
-      "community": 1687,
+      "community": 16,
       "norm_label": "required"
     },
     {
@@ -3630,7 +3630,7 @@
       "source_file": "env-manifest.json",
       "source_location": "L190",
       "id": "minglit_env_manifest_functions_ai_embed",
-      "community": 16,
+      "community": 1726,
       "norm_label": "ai-embed"
     },
     {
@@ -3639,7 +3639,7 @@
       "source_file": "env-manifest.json",
       "source_location": "L191",
       "id": "minglit_env_manifest_ai_embed_required",
-      "community": 16,
+      "community": 1726,
       "norm_label": "required"
     },
     {
@@ -3648,7 +3648,7 @@
       "source_file": "env-manifest.json",
       "source_location": "L192",
       "id": "minglit_env_manifest_required_openai_api_key",
-      "community": 16,
+      "community": 1726,
       "norm_label": "openai_api_key"
     },
     {
@@ -3657,7 +3657,7 @@
       "source_file": "env-manifest.json",
       "source_location": "L193",
       "id": "minglit_env_manifest_openai_api_key_desc",
-      "community": 16,
+      "community": 1726,
       "norm_label": "desc"
     },
     {
@@ -3666,7 +3666,7 @@
       "source_file": "env-manifest.json",
       "source_location": "L197",
       "id": "minglit_env_manifest_functions_ai_extract_tags",
-      "community": 16,
+      "community": 1726,
       "norm_label": "ai-extract-tags"
     },
     {
@@ -3675,7 +3675,7 @@
       "source_file": "env-manifest.json",
       "source_location": "L198",
       "id": "minglit_env_manifest_ai_extract_tags_required",
-      "community": 16,
+      "community": 1726,
       "norm_label": "required"
     },
     {
@@ -7521,7 +7521,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L185",
       "id": "lib_route_pages_partner_applicationdetailroute",
-      "community": 1034,
+      "community": 1732,
       "norm_label": "applicationdetailroute"
     },
     {
@@ -7530,7 +7530,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L186",
       "id": "lib_route_pages_applicationdetailroute_widget",
-      "community": 1034,
+      "community": 1732,
       "norm_label": "widget"
     },
     {
@@ -7539,7 +7539,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L187",
       "id": "lib_route_pages_applicationdetailroute_file",
-      "community": 1034,
+      "community": 1732,
       "norm_label": "file"
     },
     {
@@ -7629,7 +7629,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L201",
       "id": "lib_route_pages_partner_partylistroute",
-      "community": 1715,
+      "community": 1034,
       "norm_label": "partylistroute"
     },
     {
@@ -7638,7 +7638,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L202",
       "id": "lib_route_pages_partylistroute_widget",
-      "community": 1715,
+      "community": 1034,
       "norm_label": "widget"
     },
     {
@@ -7647,7 +7647,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L203",
       "id": "lib_route_pages_partylistroute_file",
-      "community": 1715,
+      "community": 1034,
       "norm_label": "file"
     },
     {
@@ -12651,7 +12651,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-extraction/shared/packages/minglit_iamport_v1/lib/src/implementation/payment_web.dart",
       "source_location": null,
       "id": "dart_async",
-      "community": 1423,
+      "community": 1217,
       "norm_label": "dart:async"
     },
     {
@@ -14433,7 +14433,7 @@
       "source_file": "apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
       "id": "apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart",
-      "community": 1018,
+      "community": 1719,
       "norm_label": "event_create_controller.dart"
     },
     {
@@ -14442,7 +14442,7 @@
       "source_file": "apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_eventcreatestate",
-      "community": 1018,
+      "community": 1719,
       "norm_label": "eventcreatestate"
     },
     {
@@ -14451,7 +14451,7 @@
       "source_file": "apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_eventcreatecontroller",
-      "community": 1018,
+      "community": 1719,
       "norm_label": "eventcreatecontroller"
     },
     {
@@ -14460,7 +14460,7 @@
       "source_file": "apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_build",
-      "community": 1018,
+      "community": 1719,
       "norm_label": "build"
     },
     {
@@ -14469,7 +14469,7 @@
       "source_file": "apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_initwithparty",
-      "community": 1018,
+      "community": 1719,
       "norm_label": "initwithparty"
     },
     {
@@ -14478,7 +14478,7 @@
       "source_file": "apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_updatestarttime",
-      "community": 1018,
+      "community": 1719,
       "norm_label": "updatestarttime"
     },
     {
@@ -14487,7 +14487,7 @@
       "source_file": "apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_updateendtime",
-      "community": 1018,
+      "community": 1719,
       "norm_label": "updateendtime"
     },
     {
@@ -14496,7 +14496,7 @@
       "source_file": "apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_updatemaxparticipants",
-      "community": 1018,
+      "community": 1719,
       "norm_label": "updatemaxparticipants"
     },
     {
@@ -14505,7 +14505,7 @@
       "source_file": "apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_updatetitle",
-      "community": 1018,
+      "community": 1719,
       "norm_label": "updatetitle"
     },
     {
@@ -14514,7 +14514,7 @@
       "source_file": "apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_updatedescription",
-      "community": 1018,
+      "community": 1719,
       "norm_label": "updatedescription"
     },
     {
@@ -14523,7 +14523,7 @@
       "source_file": "apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_updateimageurl",
-      "community": 1018,
+      "community": 1719,
       "norm_label": "updateimageurl"
     },
     {
@@ -14532,7 +14532,7 @@
       "source_file": "apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_updatecontactoptions",
-      "community": 1018,
+      "community": 1719,
       "norm_label": "updatecontactoptions"
     },
     {
@@ -14541,7 +14541,7 @@
       "source_file": "apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_updatelocation",
-      "community": 1018,
+      "community": 1719,
       "norm_label": "updatelocation"
     },
     {
@@ -14550,7 +14550,7 @@
       "source_file": "apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_updateaddressdetail",
-      "community": 1018,
+      "community": 1719,
       "norm_label": "updateaddressdetail"
     },
     {
@@ -14559,7 +14559,7 @@
       "source_file": "apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_updatedirections",
-      "community": 1018,
+      "community": 1719,
       "norm_label": "updatedirections"
     },
     {
@@ -14568,7 +14568,7 @@
       "source_file": "apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_setvisibility",
-      "community": 1018,
+      "community": 1719,
       "norm_label": "setvisibility"
     },
     {
@@ -14577,7 +14577,7 @@
       "source_file": "apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_pad2",
-      "community": 1018,
+      "community": 1719,
       "norm_label": "pad2"
     },
     {
@@ -14595,7 +14595,7 @@
       "source_file": "/private/tmp/refactor-2145-ticket-event-meta/apps/app_partner/lib/src/features/home/partner_dashboard_controller.dart",
       "source_location": null,
       "id": "package_app_partner_src_logic_dashboard_refresh_notifier_dart",
-      "community": 1018,
+      "community": 1719,
       "norm_label": "package:app_partner/src/logic/dashboard_refresh_notifier.dart"
     },
     {
@@ -14604,7 +14604,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/models/event.dart",
       "source_location": null,
       "id": "package_freezed_annotation_freezed_annotation_dart",
-      "community": 1,
+      "community": 1719,
       "norm_label": "package:freezed_annotation/freezed_annotation.dart"
     },
     {
@@ -14890,7 +14890,7 @@
       "source_file": "/Users/mark/workspace/minglit/shared/packages/minglit_kit/test/src/data/services/qa_bug_report_channel_test.dart",
       "source_location": null,
       "id": "package_flutter_services_dart",
-      "community": 1423,
+      "community": 1429,
       "norm_label": "package:flutter/services.dart"
     },
     {
@@ -18133,7 +18133,7 @@
       "source_file": "apps/app_partner/lib/src/features/checkin/stats/checkin_stats_controller.dart",
       "source_location": null,
       "id": "apps_app_partner_lib_src_features_checkin_stats_checkin_stats_controller_dart",
-      "community": 1423,
+      "community": 1036,
       "norm_label": "checkin_stats_controller.dart"
     },
     {
@@ -18142,7 +18142,7 @@
       "source_file": "apps/app_partner/lib/src/features/checkin/stats/checkin_stats_controller.dart",
       "source_location": null,
       "id": "apps_app_partner_lib_src_features_checkin_stats_checkin_stats_controller_dart_checkinstats",
-      "community": 1423,
+      "community": 1036,
       "norm_label": "checkinstats"
     },
     {
@@ -18151,7 +18151,7 @@
       "source_file": "apps/app_partner/lib/src/features/checkin/stats/checkin_stats_controller.dart",
       "source_location": null,
       "id": "apps_app_partner_lib_src_features_checkin_stats_checkin_stats_controller_dart_checkinstatscontroller",
-      "community": 1423,
+      "community": 1036,
       "norm_label": "checkinstatscontroller"
     },
     {
@@ -18160,7 +18160,7 @@
       "source_file": "apps/app_partner/lib/src/features/checkin/stats/checkin_stats_controller.dart",
       "source_location": null,
       "id": "apps_app_partner_lib_src_features_checkin_stats_checkin_stats_controller_dart_subscribetorealtime",
-      "community": 1423,
+      "community": 1036,
       "norm_label": "_subscribetorealtime"
     },
     {
@@ -18169,7 +18169,7 @@
       "source_file": "apps/app_partner/lib/src/features/checkin/stats/checkin_stats_controller.dart",
       "source_location": null,
       "id": "apps_app_partner_lib_src_features_checkin_stats_checkin_stats_controller_dart_startpollingfallback",
-      "community": 1423,
+      "community": 1036,
       "norm_label": "_startpollingfallback"
     },
     {
@@ -18178,7 +18178,7 @@
       "source_file": "apps/app_partner/lib/src/features/checkin/stats/checkin_stats_controller.dart",
       "source_location": null,
       "id": "apps_app_partner_lib_src_features_checkin_stats_checkin_stats_controller_dart_duration",
-      "community": 1423,
+      "community": 1036,
       "norm_label": "duration"
     },
     {
@@ -18864,7 +18864,7 @@
       "source_file": "/private/tmp/refactor-2145-ticket-event-meta/apps/app_partner/lib/src/features/home/partner_dashboard_controller.dart",
       "source_location": null,
       "id": "private_tmp_refactor_2145_ticket_event_meta_apps_app_partner_lib_src_features_home_partner_dashboard_controller_dart",
-      "community": 1018,
+      "community": 1719,
       "norm_label": "partner_dashboard_controller.dart"
     },
     {
@@ -18873,7 +18873,7 @@
       "source_file": "/private/tmp/refactor-2145-ticket-event-meta/apps/app_partner/lib/src/features/home/partner_dashboard_controller.dart",
       "source_location": null,
       "id": "private_tmp_refactor_2145_ticket_event_meta_apps_app_partner_lib_src_features_home_partner_dashboard_controller_dart_partnerdashboardstate",
-      "community": 1018,
+      "community": 1719,
       "norm_label": "partnerdashboardstate"
     },
     {
@@ -18882,7 +18882,7 @@
       "source_file": "/private/tmp/refactor-2145-ticket-event-meta/apps/app_partner/lib/src/features/home/partner_dashboard_controller.dart",
       "source_location": null,
       "id": "private_tmp_refactor_2145_ticket_event_meta_apps_app_partner_lib_src_features_home_partner_dashboard_controller_dart_partnerdashboardcontroller",
-      "community": 1018,
+      "community": 1719,
       "norm_label": "partnerdashboardcontroller"
     },
     {
@@ -18891,7 +18891,7 @@
       "source_file": "/private/tmp/refactor-2145-ticket-event-meta/apps/app_partner/lib/src/features/home/partner_dashboard_controller.dart",
       "source_location": null,
       "id": "private_tmp_refactor_2145_ticket_event_meta_apps_app_partner_lib_src_features_home_partner_dashboard_controller_dart_build",
-      "community": 1018,
+      "community": 1719,
       "norm_label": "build"
     },
     {
@@ -18900,7 +18900,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/needs-swe-sonnet-1/.claude/worktrees/feat-2219-partner-home-v2/apps/app_partner/test/src/features/home/widgets/event_action_card_logic_test.dart",
       "source_location": null,
       "id": "package_app_partner_src_features_home_home_event_phase_dart",
-      "community": 1018,
+      "community": 1719,
       "norm_label": "package:app_partner/src/features/home/home_event_phase.dart"
     },
     {
@@ -20106,7 +20106,7 @@
       "source_file": "apps/app_partner/lib/src/features/more/more_coordinator.dart",
       "source_location": null,
       "id": "apps_app_partner_lib_src_features_more_more_coordinator_dart",
-      "community": 1117,
+      "community": 1687,
       "norm_label": "more_coordinator.dart"
     },
     {
@@ -20115,7 +20115,7 @@
       "source_file": "apps/app_partner/lib/src/features/more/more_coordinator.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_lib_src_features_more_more_coordinator_dart_morecoordinator",
-      "community": 1117,
+      "community": 1687,
       "norm_label": "morecoordinator"
     },
     {
@@ -20124,7 +20124,7 @@
       "source_file": "apps/app_partner/lib/src/features/more/more_coordinator.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_lib_src_features_more_more_coordinator_dart_pushnotificationsettings",
-      "community": 1117,
+      "community": 1687,
       "norm_label": "pushnotificationsettings"
     },
     {
@@ -20133,7 +20133,7 @@
       "source_file": "apps/app_partner/lib/src/features/more/more_coordinator.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_lib_src_features_more_more_coordinator_dart_pushpartnerguide",
-      "community": 1117,
+      "community": 1687,
       "norm_label": "pushpartnerguide"
     },
     {
@@ -20142,7 +20142,7 @@
       "source_file": "apps/app_partner/lib/src/features/more/more_coordinator.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_lib_src_features_more_more_coordinator_dart_pushmemberlist",
-      "community": 1117,
+      "community": 1687,
       "norm_label": "pushmemberlist"
     },
     {
@@ -20151,7 +20151,7 @@
       "source_file": "apps/app_partner/lib/src/features/more/more_coordinator.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_lib_src_features_more_more_coordinator_dart_pushverificationmanage",
-      "community": 1117,
+      "community": 1687,
       "norm_label": "pushverificationmanage"
     },
     {
@@ -20160,7 +20160,7 @@
       "source_file": "apps/app_partner/lib/src/features/more/more_coordinator.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_lib_src_features_more_more_coordinator_dart_pushpartylist",
-      "community": 1117,
+      "community": 1687,
       "norm_label": "pushpartylist"
     },
     {
@@ -20169,7 +20169,7 @@
       "source_file": "apps/app_partner/lib/src/features/more/more_coordinator.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_lib_src_features_more_more_coordinator_dart_pushbankaccountmanagement",
-      "community": 1117,
+      "community": 1687,
       "norm_label": "pushbankaccountmanagement"
     },
     {
@@ -20178,7 +20178,7 @@
       "source_file": "apps/app_partner/lib/src/features/more/more_coordinator.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_lib_src_features_more_more_coordinator_dart_pushaccountdeletion",
-      "community": 1117,
+      "community": 1687,
       "norm_label": "pushaccountdeletion"
     },
     {
@@ -20187,7 +20187,7 @@
       "source_file": "apps/app_partner/lib/src/features/more/more_coordinator.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_lib_src_features_more_more_coordinator_dart_pushaccountmanagement",
-      "community": 1117,
+      "community": 1687,
       "norm_label": "pushaccountmanagement"
     },
     {
@@ -20196,7 +20196,7 @@
       "source_file": "apps/app_partner/lib/src/features/more/more_coordinator.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_lib_src_features_more_more_coordinator_dart_gotohome",
-      "community": 1117,
+      "community": 1687,
       "norm_label": "gotohome"
     },
     {
@@ -20673,7 +20673,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_partner/lib/src/logic/dashboard_refresh_notifier.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_partner_lib_src_logic_dashboard_refresh_notifier_dart",
-      "community": 1731,
+      "community": 1,
       "norm_label": "dashboard_refresh_notifier.dart"
     },
     {
@@ -20682,7 +20682,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_partner/lib/src/logic/dashboard_refresh_notifier.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_partner_lib_src_logic_dashboard_refresh_notifier_dart_dashboardrefresh",
-      "community": 1731,
+      "community": 1,
       "norm_label": "dashboardrefresh"
     },
     {
@@ -20691,7 +20691,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_partner/lib/src/logic/dashboard_refresh_notifier.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_partner_lib_src_logic_dashboard_refresh_notifier_dart_build",
-      "community": 1731,
+      "community": 1,
       "norm_label": "build"
     },
     {
@@ -20700,7 +20700,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_partner/lib/src/logic/dashboard_refresh_notifier.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_partner_lib_src_logic_dashboard_refresh_notifier_dart_bump",
-      "community": 1731,
+      "community": 1,
       "norm_label": "bump"
     },
     {
@@ -21519,7 +21519,7 @@
       "source_file": "apps/app_partner/test/src/features/home/guide/partner_guide_page_test.dart",
       "source_location": null,
       "id": "package_app_partner_src_features_home_guide_partner_guide_page_dart",
-      "community": 1036,
+      "community": 1429,
       "norm_label": "package:app_partner/src/features/home/guide/partner_guide_page.dart"
     },
     {
@@ -27677,7 +27677,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "package_app_partner_src_features_checkin_stats_checkin_stats_controller_dart",
-      "community": 1423,
+      "community": 1429,
       "norm_label": "package:app_partner/src/features/checkin/stats/checkin_stats_controller.dart"
     },
     {
@@ -27686,7 +27686,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/entry_group_checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "package_app_partner_src_features_checkin_stats_entry_group_checkin_stats_controller_dart",
-      "community": 1423,
+      "community": 1707,
       "norm_label": "package:app_partner/src/features/checkin/stats/entry_group_checkin_stats_controller.dart"
     },
     {
@@ -27820,7 +27820,7 @@
       "source_file": "/_work/minglit-runner-1-oZoKLU33PXPst/minglit/minglit/apps/app_partner/test/flutter_test_config.dart",
       "source_location": null,
       "id": "work_minglit_runner_1_ozoklu33pxpst_minglit_minglit_apps_app_partner_test_flutter_test_config_dart",
-      "community": 1423,
+      "community": 1429,
       "norm_label": "flutter_test_config.dart"
     },
     {
@@ -27829,7 +27829,7 @@
       "source_file": "/_work/minglit-runner-1-oZoKLU33PXPst/minglit/minglit/apps/app_partner/test/flutter_test_config.dart",
       "source_location": null,
       "id": "work_minglit_runner_1_ozoklu33pxpst_minglit_minglit_apps_app_partner_test_flutter_test_config_dart_loadnotosanskr",
-      "community": 1423,
+      "community": 1429,
       "norm_label": "_loadnotosanskr"
     },
     {
@@ -27838,7 +27838,7 @@
       "source_file": "/_work/minglit-runner-1-oZoKLU33PXPst/minglit/minglit/apps/app_partner/test/flutter_test_config.dart",
       "source_location": null,
       "id": "work_minglit_runner_1_ozoklu33pxpst_minglit_minglit_apps_app_partner_test_flutter_test_config_dart_testmain",
-      "community": 1423,
+      "community": 1429,
       "norm_label": "testmain"
     },
     {
@@ -30764,7 +30764,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/entry_group_checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_entry_group_checkin_stats_controller_test_dart",
-      "community": 1423,
+      "community": 1707,
       "norm_label": "entry_group_checkin_stats_controller_test.dart"
     },
     {
@@ -30773,7 +30773,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/entry_group_checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_entry_group_checkin_stats_controller_test_dart_mocksupabaseclient",
-      "community": 1423,
+      "community": 1707,
       "norm_label": "_mocksupabaseclient"
     },
     {
@@ -30782,7 +30782,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/entry_group_checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_entry_group_checkin_stats_controller_test_dart_mockrealtimechannel",
-      "community": 1423,
+      "community": 1707,
       "norm_label": "_mockrealtimechannel"
     },
     {
@@ -30791,7 +30791,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/entry_group_checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_entry_group_checkin_stats_controller_test_dart_fakerpcbuilder",
-      "community": 1423,
+      "community": 1707,
       "norm_label": "_fakerpcbuilder"
     },
     {
@@ -30800,7 +30800,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/entry_group_checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_entry_group_checkin_stats_controller_test_dart_nosuchmethod",
-      "community": 1423,
+      "community": 1707,
       "norm_label": "nosuchmethod"
     },
     {
@@ -30809,7 +30809,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/entry_group_checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_entry_group_checkin_stats_controller_test_dart_main",
-      "community": 1423,
+      "community": 1707,
       "norm_label": "main"
     },
     {
@@ -30818,7 +30818,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/entry_group_checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_entry_group_checkin_stats_controller_test_dart_stubrpc",
-      "community": 1423,
+      "community": 1707,
       "norm_label": "stubrpc"
     },
     {
@@ -30827,7 +30827,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/entry_group_checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_entry_group_checkin_stats_controller_test_dart_makecontainer",
-      "community": 1423,
+      "community": 1707,
       "norm_label": "makecontainer"
     },
     {
@@ -30836,7 +30836,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/entry_group_checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_entry_group_checkin_stats_controller_test_dart_providercontainer",
-      "community": 1423,
+      "community": 1707,
       "norm_label": "providercontainer"
     },
     {
@@ -30845,7 +30845,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_checkin_stats_controller_test_dart",
-      "community": 1423,
+      "community": 1429,
       "norm_label": "checkin_stats_controller_test.dart"
     },
     {
@@ -30854,7 +30854,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_checkin_stats_controller_test_dart_mocksupabaseclient",
-      "community": 1423,
+      "community": 1429,
       "norm_label": "_mocksupabaseclient"
     },
     {
@@ -30863,7 +30863,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_checkin_stats_controller_test_dart_mockrealtimechannel",
-      "community": 1423,
+      "community": 1429,
       "norm_label": "_mockrealtimechannel"
     },
     {
@@ -30872,7 +30872,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_checkin_stats_controller_test_dart_fakerpcbuilder",
-      "community": 1423,
+      "community": 1429,
       "norm_label": "_fakerpcbuilder"
     },
     {
@@ -30881,7 +30881,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_checkin_stats_controller_test_dart_nosuchmethod",
-      "community": 1423,
+      "community": 1429,
       "norm_label": "nosuchmethod"
     },
     {
@@ -30890,7 +30890,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_checkin_stats_controller_test_dart_main",
-      "community": 1423,
+      "community": 1429,
       "norm_label": "main"
     },
     {
@@ -30899,7 +30899,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_checkin_stats_controller_test_dart_makecontainer",
-      "community": 1423,
+      "community": 1429,
       "norm_label": "makecontainer"
     },
     {
@@ -30908,7 +30908,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_partner/test/src/features/checkin/stats/checkin_stats_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_partner_test_src_features_checkin_stats_checkin_stats_controller_test_dart_providercontainer",
-      "community": 1423,
+      "community": 1429,
       "norm_label": "providercontainer"
     },
     {
@@ -31192,7 +31192,7 @@
       "source_file": "apps/app_partner/test/src/features/home/guide/partner_guide_page_test.dart",
       "source_location": null,
       "id": "apps_app_partner_test_src_features_home_guide_partner_guide_page_test_dart",
-      "community": 1036,
+      "community": 1429,
       "norm_label": "partner_guide_page_test.dart"
     },
     {
@@ -31201,7 +31201,7 @@
       "source_file": "apps/app_partner/test/src/features/home/guide/partner_guide_page_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_partner_test_src_features_home_guide_partner_guide_page_test_dart_main",
-      "community": 1036,
+      "community": 1429,
       "norm_label": "main"
     },
     {
@@ -31236,7 +31236,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/needs-swe-sonnet-1/.claude/worktrees/feat-2219-partner-home-v2/apps/app_partner/test/src/features/home/widgets/event_action_card_logic_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_needs_swe_sonnet_1_claude_worktrees_feat_2219_partner_home_v2_apps_app_partner_test_src_features_home_widgets_event_action_card_logic_test_dart",
-      "community": 1018,
+      "community": 1719,
       "norm_label": "event_action_card_logic_test.dart"
     },
     {
@@ -31245,7 +31245,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/needs-swe-sonnet-1/.claude/worktrees/feat-2219-partner-home-v2/apps/app_partner/test/src/features/home/widgets/event_action_card_logic_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_needs_swe_sonnet_1_claude_worktrees_feat_2219_partner_home_v2_apps_app_partner_test_src_features_home_widgets_event_action_card_logic_test_dart_makeevent",
-      "community": 1018,
+      "community": 1719,
       "norm_label": "_makeevent"
     },
     {
@@ -31254,7 +31254,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/needs-swe-sonnet-1/.claude/worktrees/feat-2219-partner-home-v2/apps/app_partner/test/src/features/home/widgets/event_action_card_logic_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_needs_swe_sonnet_1_claude_worktrees_feat_2219_partner_home_v2_apps_app_partner_test_src_features_home_widgets_event_action_card_logic_test_dart_event",
-      "community": 1018,
+      "community": 1719,
       "norm_label": "event"
     },
     {
@@ -31263,7 +31263,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/needs-swe-sonnet-1/.claude/worktrees/feat-2219-partner-home-v2/apps/app_partner/test/src/features/home/widgets/event_action_card_logic_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_needs_swe_sonnet_1_claude_worktrees_feat_2219_partner_home_v2_apps_app_partner_test_src_features_home_widgets_event_action_card_logic_test_dart_main",
-      "community": 1018,
+      "community": 1719,
       "norm_label": "main"
     },
     {
@@ -32024,7 +32024,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_user/test/src/features/payment/logic/purchase_history_controller_test.dart",
       "source_location": null,
       "id": "package_app_user_src_features_payment_logic_purchase_history_controller_dart",
-      "community": 987,
+      "community": 1036,
       "norm_label": "package:app_user/src/features/payment/logic/purchase_history_controller.dart"
     },
     {
@@ -32465,7 +32465,7 @@
       "source_file": "/private/tmp/feat-2110-event-edit-page/apps/app_user/lib/src/features/payment/logic/purchase_history_detail_controller.dart",
       "source_location": null,
       "id": "private_tmp_feat_2110_event_edit_page_apps_app_user_lib_src_features_payment_logic_purchase_history_detail_controller_dart",
-      "community": 987,
+      "community": 1036,
       "norm_label": "purchase_history_detail_controller.dart"
     },
     {
@@ -35442,7 +35442,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_user/lib/src/features/home/widgets/event_now_bar_controller.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_user_lib_src_features_home_widgets_event_now_bar_controller_dart",
-      "community": 1423,
+      "community": 1715,
       "norm_label": "event_now_bar_controller.dart"
     },
     {
@@ -35451,7 +35451,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_user/lib/src/features/home/widgets/event_now_bar_controller.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_user_lib_src_features_home_widgets_event_now_bar_controller_dart_eventnowbarstatenotifier",
-      "community": 1423,
+      "community": 1715,
       "norm_label": "eventnowbarstatenotifier"
     },
     {
@@ -35460,7 +35460,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_user/lib/src/features/home/widgets/event_now_bar_controller.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_user_lib_src_features_home_widgets_event_now_bar_controller_dart_eventrealtime",
-      "community": 1423,
+      "community": 1715,
       "norm_label": "eventrealtime"
     },
     {
@@ -35469,7 +35469,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_user/lib/src/features/home/widgets/event_now_bar_controller.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_user_lib_src_features_home_widgets_event_now_bar_controller_dart_function",
-      "community": 1423,
+      "community": 1715,
       "norm_label": "function"
     },
     {
@@ -35478,7 +35478,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_user/lib/src/features/home/widgets/event_now_bar_controller.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_user_lib_src_features_home_widgets_event_now_bar_controller_dart_resethighwatermarkfortesting",
-      "community": 1423,
+      "community": 1715,
       "norm_label": "resethighwatermarkfortesting"
     },
     {
@@ -35487,7 +35487,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_user/lib/src/features/home/widgets/event_now_bar_controller.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_user_lib_src_features_home_widgets_event_now_bar_controller_dart_build",
-      "community": 1423,
+      "community": 1715,
       "norm_label": "build"
     },
     {
@@ -35496,7 +35496,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_user/lib/src/features/home/widgets/event_now_bar_controller.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_user_lib_src_features_home_widgets_event_now_bar_controller_dart_startpollingfallback",
-      "community": 1423,
+      "community": 1715,
       "norm_label": "_startpollingfallback"
     },
     {
@@ -35505,7 +35505,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_user/lib/src/features/home/widgets/event_now_bar_controller.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_user_lib_src_features_home_widgets_event_now_bar_controller_dart_duration",
-      "community": 1423,
+      "community": 1715,
       "norm_label": "duration"
     },
     {
@@ -35842,7 +35842,7 @@
       "source_file": "apps/app_user/test/src/features/home/widgets/event_now_bottom_sheet_test.dart",
       "source_location": null,
       "id": "package_app_user_src_features_home_widgets_event_now_bottom_sheet_dart",
-      "community": 1015,
+      "community": 1210,
       "norm_label": "package:app_user/src/features/home/widgets/event_now_bottom_sheet.dart"
     },
     {
@@ -36415,7 +36415,7 @@
       "source_file": "/private/tmp/wizard-v2-branch/shared/packages/minglit_kit/test/src/data/repositories/matching_repository_test.dart",
       "source_location": null,
       "id": "dart_convert",
-      "community": 1217,
+      "community": 1,
       "norm_label": "dart:convert"
     },
     {
@@ -36792,7 +36792,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/app_user/lib/src/features/ticket/data/ticket_token_service.dart",
       "source_location": null,
       "id": "tmp_minglit_runner_2_work_minglit_minglit_apps_app_user_lib_src_features_ticket_data_ticket_token_service_dart",
-      "community": 1,
+      "community": 1210,
       "norm_label": "ticket_token_service.dart"
     },
     {
@@ -36801,7 +36801,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/app_user/lib/src/features/ticket/data/ticket_token_service.dart",
       "source_location": null,
       "id": "tmp_minglit_runner_2_work_minglit_minglit_apps_app_user_lib_src_features_ticket_data_ticket_token_service_dart_tickettokenservice",
-      "community": 1,
+      "community": 1210,
       "norm_label": "tickettokenservice"
     },
     {
@@ -36810,7 +36810,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/app_user/test/src/features/ticket/data/ticket_token_service_test.dart",
       "source_location": null,
       "id": "package_app_user_src_features_ticket_data_ticket_wallet_repository_dart",
-      "community": 1,
+      "community": 1210,
       "norm_label": "package:app_user/src/features/ticket/data/ticket_wallet_repository.dart"
     },
     {
@@ -37280,7 +37280,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/needs-swe-sonnet-1/.claude/worktrees/feat-2123-ongoing-banner/apps/app_user/lib/src/features/tickets/active_event_banners_provider.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_needs_swe_sonnet_1_claude_worktrees_feat_2123_ongoing_banner_apps_app_user_lib_src_features_tickets_active_event_banners_provider_dart",
-      "community": 1423,
+      "community": 1036,
       "norm_label": "active_event_banners_provider.dart"
     },
     {
@@ -37289,7 +37289,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/needs-swe-sonnet-1/.claude/worktrees/feat-2123-ongoing-banner/apps/app_user/lib/src/features/tickets/active_event_banners_provider.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_needs_swe_sonnet_1_claude_worktrees_feat_2123_ongoing_banner_apps_app_user_lib_src_features_tickets_active_event_banners_provider_dart_duration",
-      "community": 1423,
+      "community": 1036,
       "norm_label": "duration"
     },
     {
@@ -37298,7 +37298,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/needs-swe-sonnet-1/.claude/worktrees/feat-2123-ongoing-banner/apps/app_user/lib/src/features/tickets/active_event_banners_provider.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_needs_swe_sonnet_1_claude_worktrees_feat_2123_ongoing_banner_apps_app_user_lib_src_features_tickets_active_event_banners_provider_dart_resolveeventlifecyclephase",
-      "community": 1423,
+      "community": 1036,
       "norm_label": "resolveeventlifecyclephase"
     },
     {
@@ -38560,7 +38560,7 @@
       "source_file": "/private/tmp/wizard-v2-branch/apps/app_user/test/src/features/event/matching/event_matching_screen_test.dart",
       "source_location": null,
       "id": "package_app_user_src_features_event_matching_ui_event_matching_screen_dart",
-      "community": 1423,
+      "community": 1056,
       "norm_label": "package:app_user/src/features/event/matching/ui/event_matching_screen.dart"
     },
     {
@@ -42095,7 +42095,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/purchase_history_page/builder.dart",
       "source_location": null,
       "id": "apps_app_user_integration_test_mds_emulator_render_purchase_history_page_builder_dart",
-      "community": 987,
+      "community": 1036,
       "norm_label": "builder.dart"
     },
     {
@@ -42104,7 +42104,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/purchase_history_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_purchase_history_page_builder_dart_fixedpurchasehistorycontroller",
-      "community": 987,
+      "community": 1036,
       "norm_label": "_fixedpurchasehistorycontroller"
     },
     {
@@ -42113,7 +42113,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/purchase_history_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_purchase_history_page_builder_dart_loadingpurchasehistorycontroller",
-      "community": 987,
+      "community": 1036,
       "norm_label": "_loadingpurchasehistorycontroller"
     },
     {
@@ -42122,7 +42122,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/purchase_history_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_purchase_history_page_builder_dart_errorpurchasehistorycontroller",
-      "community": 987,
+      "community": 1036,
       "norm_label": "_errorpurchasehistorycontroller"
     },
     {
@@ -42131,7 +42131,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/purchase_history_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_purchase_history_page_builder_dart_purchasehistorypagebuilder",
-      "community": 987,
+      "community": 1036,
       "norm_label": "purchasehistorypagebuilder"
     },
     {
@@ -42140,7 +42140,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/purchase_history_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_purchase_history_page_builder_dart_exception",
-      "community": 987,
+      "community": 1036,
       "norm_label": "exception"
     },
     {
@@ -42149,7 +42149,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/purchase_history_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_purchase_history_page_builder_dart_application",
-      "community": 987,
+      "community": 1036,
       "norm_label": "_application"
     },
     {
@@ -42158,7 +42158,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/purchase_history_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_purchase_history_page_builder_dart_eventapplication",
-      "community": 987,
+      "community": 1036,
       "norm_label": "eventapplication"
     },
     {
@@ -42167,7 +42167,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/purchase_history_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_purchase_history_page_builder_dart_withdefault",
-      "community": 987,
+      "community": 1036,
       "norm_label": "withdefault"
     },
     {
@@ -42176,7 +42176,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/purchase_history_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_purchase_history_page_builder_dart_withempty",
-      "community": 987,
+      "community": 1036,
       "norm_label": "withempty"
     },
     {
@@ -42185,7 +42185,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/purchase_history_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_purchase_history_page_builder_dart_withloading",
-      "community": 987,
+      "community": 1036,
       "norm_label": "withloading"
     },
     {
@@ -42194,7 +42194,7 @@
       "source_file": "apps/app_user/integration_test/mds-emulator-render/purchase_history_page/builder.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_integration_test_mds_emulator_render_purchase_history_page_builder_dart_witherror",
-      "community": 987,
+      "community": 1036,
       "norm_label": "witherror"
     },
     {
@@ -44781,7 +44781,7 @@
       "source_file": "/_work/minglit-runner-1-oZoKLU33PXPst/minglit/minglit/apps/app_user/test/flutter_test_config.dart",
       "source_location": null,
       "id": "work_minglit_runner_1_ozoklu33pxpst_minglit_minglit_apps_app_user_test_flutter_test_config_dart",
-      "community": 1423,
+      "community": 1429,
       "norm_label": "flutter_test_config.dart"
     },
     {
@@ -44790,7 +44790,7 @@
       "source_file": "/_work/minglit-runner-1-oZoKLU33PXPst/minglit/minglit/apps/app_user/test/flutter_test_config.dart",
       "source_location": null,
       "id": "work_minglit_runner_1_ozoklu33pxpst_minglit_minglit_apps_app_user_test_flutter_test_config_dart_loadnotosanskr",
-      "community": 1423,
+      "community": 1429,
       "norm_label": "_loadnotosanskr"
     },
     {
@@ -44799,7 +44799,7 @@
       "source_file": "/_work/minglit-runner-1-oZoKLU33PXPst/minglit/minglit/apps/app_user/test/flutter_test_config.dart",
       "source_location": null,
       "id": "work_minglit_runner_1_ozoklu33pxpst_minglit_minglit_apps_app_user_test_flutter_test_config_dart_testmain",
-      "community": 1423,
+      "community": 1429,
       "norm_label": "testmain"
     },
     {
@@ -45818,7 +45818,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_user/test/src/features/payment/logic/purchase_history_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_user_test_src_features_payment_logic_purchase_history_controller_test_dart",
-      "community": 1070,
+      "community": 1056,
       "norm_label": "purchase_history_controller_test.dart"
     },
     {
@@ -45827,7 +45827,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_user/test/src/features/payment/logic/purchase_history_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_user_test_src_features_payment_logic_purchase_history_controller_test_dart_throwingpolicyrepository",
-      "community": 1070,
+      "community": 1056,
       "norm_label": "_throwingpolicyrepository"
     },
     {
@@ -45836,7 +45836,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_user/test/src/features/payment/logic/purchase_history_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_user_test_src_features_payment_logic_purchase_history_controller_test_dart_staticpolicyrepository",
-      "community": 1070,
+      "community": 1056,
       "norm_label": "_staticpolicyrepository"
     },
     {
@@ -45845,7 +45845,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_user/test/src/features/payment/logic/purchase_history_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_user_test_src_features_payment_logic_purchase_history_controller_test_dart_makeevent",
-      "community": 1070,
+      "community": 1056,
       "norm_label": "_makeevent"
     },
     {
@@ -45854,7 +45854,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_user/test/src/features/payment/logic/purchase_history_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_user_test_src_features_payment_logic_purchase_history_controller_test_dart_event",
-      "community": 1070,
+      "community": 1056,
       "norm_label": "event"
     },
     {
@@ -45863,7 +45863,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_user/test/src/features/payment/logic/purchase_history_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_user_test_src_features_payment_logic_purchase_history_controller_test_dart_makeapplication",
-      "community": 1070,
+      "community": 1056,
       "norm_label": "_makeapplication"
     },
     {
@@ -45872,7 +45872,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_user/test/src/features/payment/logic/purchase_history_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_user_test_src_features_payment_logic_purchase_history_controller_test_dart_eventapplication",
-      "community": 1070,
+      "community": 1056,
       "norm_label": "eventapplication"
     },
     {
@@ -45881,7 +45881,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_user/test/src/features/payment/logic/purchase_history_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_user_test_src_features_payment_logic_purchase_history_controller_test_dart_main",
-      "community": 1070,
+      "community": 1056,
       "norm_label": "main"
     },
     {
@@ -45890,7 +45890,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_user/test/src/features/payment/logic/purchase_history_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_user_test_src_features_payment_logic_purchase_history_controller_test_dart_getcontroller",
-      "community": 1070,
+      "community": 1056,
       "norm_label": "getcontroller"
     },
     {
@@ -45899,7 +45899,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_user/test/src/features/payment/logic/purchase_history_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_user_test_src_features_payment_logic_purchase_history_controller_test_dart_pumpeventqueue",
-      "community": 1070,
+      "community": 1056,
       "norm_label": "pumpeventqueue"
     },
     {
@@ -45908,7 +45908,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_user/test/src/features/payment/logic/purchase_history_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_user_test_src_features_payment_logic_purchase_history_controller_test_dart_makecontainer",
-      "community": 1070,
+      "community": 1056,
       "norm_label": "makecontainer"
     },
     {
@@ -45917,7 +45917,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_user/test/src/features/payment/logic/purchase_history_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_user_test_src_features_payment_logic_purchase_history_controller_test_dart_getctrl",
-      "community": 1070,
+      "community": 1056,
       "norm_label": "getctrl"
     },
     {
@@ -45926,7 +45926,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_user/test/src/features/payment/logic/purchase_history_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_user_test_src_features_payment_logic_purchase_history_controller_test_dart_cancelorderresult",
-      "community": 1070,
+      "community": 1056,
       "norm_label": "cancelorderresult"
     },
     {
@@ -45935,7 +45935,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_user/test/src/features/payment/logic/purchase_history_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_user_test_src_features_payment_logic_purchase_history_controller_test_dart_ctrl",
-      "community": 1070,
+      "community": 1056,
       "norm_label": "ctrl"
     },
     {
@@ -45944,7 +45944,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/apps/app_user/test/src/features/payment/logic/purchase_history_controller_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_apps_app_user_test_src_features_payment_logic_purchase_history_controller_test_dart_exception",
-      "community": 1070,
+      "community": 1056,
       "norm_label": "exception"
     },
     {
@@ -46551,7 +46551,7 @@
       "source_file": "/private/tmp/wizard-v2-branch/apps/app_user/test/src/features/event/matching/event_matching_screen_test.dart",
       "source_location": null,
       "id": "private_tmp_wizard_v2_branch_apps_app_user_test_src_features_event_matching_event_matching_screen_test_dart",
-      "community": 1423,
+      "community": 1056,
       "norm_label": "event_matching_screen_test.dart"
     },
     {
@@ -46560,7 +46560,7 @@
       "source_file": "/private/tmp/wizard-v2-branch/apps/app_user/test/src/features/event/matching/event_matching_screen_test.dart",
       "source_location": null,
       "id": "private_tmp_wizard_v2_branch_apps_app_user_test_src_features_event_matching_event_matching_screen_test_dart_main",
-      "community": 1423,
+      "community": 1056,
       "norm_label": "main"
     },
     {
@@ -46578,7 +46578,7 @@
       "source_file": "/private/tmp/wizard-v2-branch/apps/app_user/test/src/features/event/matching/event_matching_screen_test.dart",
       "source_location": null,
       "id": "private_tmp_wizard_v2_branch_apps_app_user_test_src_features_event_matching_event_matching_screen_test_dart_event",
-      "community": 1423,
+      "community": 1056,
       "norm_label": "event"
     },
     {
@@ -46587,7 +46587,7 @@
       "source_file": "/private/tmp/wizard-v2-branch/apps/app_user/test/src/features/event/matching/event_matching_screen_test.dart",
       "source_location": null,
       "id": "private_tmp_wizard_v2_branch_apps_app_user_test_src_features_event_matching_event_matching_screen_test_dart_buildsubject",
-      "community": 1423,
+      "community": 1056,
       "norm_label": "buildsubject"
     },
     {
@@ -46596,7 +46596,7 @@
       "source_file": "/private/tmp/wizard-v2-branch/apps/app_user/test/src/features/event/matching/event_matching_screen_test.dart",
       "source_location": null,
       "id": "private_tmp_wizard_v2_branch_apps_app_user_test_src_features_event_matching_event_matching_screen_test_dart_providerscope",
-      "community": 1423,
+      "community": 1056,
       "norm_label": "providerscope"
     },
     {
@@ -47156,7 +47156,7 @@
       "source_file": "apps/app_user/test/src/features/home/widgets/event_now_bottom_sheet_test.dart",
       "source_location": null,
       "id": "apps_app_user_test_src_features_home_widgets_event_now_bottom_sheet_test_dart",
-      "community": 1015,
+      "community": 1210,
       "norm_label": "event_now_bottom_sheet_test.dart"
     },
     {
@@ -47165,7 +47165,7 @@
       "source_file": "apps/app_user/test/src/features/home/widgets/event_now_bottom_sheet_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_test_src_features_home_widgets_event_now_bottom_sheet_test_dart_mockticketwalletrepository",
-      "community": 1015,
+      "community": 1210,
       "norm_label": "mockticketwalletrepository"
     },
     {
@@ -47174,7 +47174,7 @@
       "source_file": "apps/app_user/test/src/features/home/widgets/event_now_bottom_sheet_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_test_src_features_home_widgets_event_now_bottom_sheet_test_dart_fixedstatenotifier",
-      "community": 1015,
+      "community": 1210,
       "norm_label": "_fixedstatenotifier"
     },
     {
@@ -47183,7 +47183,7 @@
       "source_file": "apps/app_user/test/src/features/home/widgets/event_now_bottom_sheet_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_test_src_features_home_widgets_event_now_bottom_sheet_test_dart_main",
-      "community": 1015,
+      "community": 1210,
       "norm_label": "main"
     },
     {
@@ -47192,7 +47192,7 @@
       "source_file": "apps/app_user/test/src/features/home/widgets/event_now_bottom_sheet_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_test_src_features_home_widgets_event_now_bottom_sheet_test_dart_makeactiveevent",
-      "community": 1015,
+      "community": 1210,
       "norm_label": "makeactiveevent"
     },
     {
@@ -47201,7 +47201,7 @@
       "source_file": "apps/app_user/test/src/features/home/widgets/event_now_bottom_sheet_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_test_src_features_home_widgets_event_now_bottom_sheet_test_dart_todayactiveevent",
-      "community": 1015,
+      "community": 1210,
       "norm_label": "todayactiveevent"
     },
     {
@@ -47210,7 +47210,7 @@
       "source_file": "apps/app_user/test/src/features/home/widgets/event_now_bottom_sheet_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_test_src_features_home_widgets_event_now_bottom_sheet_test_dart_createtestwidget",
-      "community": 1015,
+      "community": 1210,
       "norm_label": "createtestwidget"
     },
     {
@@ -47219,7 +47219,7 @@
       "source_file": "apps/app_user/test/src/features/home/widgets/event_now_bottom_sheet_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_apps_app_user_test_src_features_home_widgets_event_now_bottom_sheet_test_dart_providerscope",
-      "community": 1015,
+      "community": 1210,
       "norm_label": "providerscope"
     },
     {
@@ -47228,7 +47228,7 @@
       "source_file": "apps/app_user/test/src/features/home/widgets/event_now_bottom_sheet_test.dart",
       "source_location": null,
       "id": "package_app_user_src_common_widgets_matching_vote_content_dart",
-      "community": 1015,
+      "community": 1210,
       "norm_label": "package:app_user/src/common/widgets/matching_vote_content.dart"
     },
     {
@@ -47237,7 +47237,7 @@
       "source_file": "apps/app_user/test/src/features/home/widgets/event_now_bottom_sheet_test.dart",
       "source_location": null,
       "id": "package_app_user_src_common_widgets_ticket_qr_viewer_dart",
-      "community": 1015,
+      "community": 1210,
       "norm_label": "package:app_user/src/common/widgets/ticket_qr_viewer.dart"
     },
     {
@@ -48545,7 +48545,7 @@
       "source_file": "/private/tmp/fix-1863-landing-user/apps/app_user/test/src/common/widgets/minglit_avatar_image_test.dart",
       "source_location": null,
       "id": "private_tmp_fix_1863_landing_user_apps_app_user_test_src_common_widgets_minglit_avatar_image_test_dart",
-      "community": 1036,
+      "community": 1429,
       "norm_label": "minglit_avatar_image_test.dart"
     },
     {
@@ -48554,7 +48554,7 @@
       "source_file": "/private/tmp/fix-1863-landing-user/apps/app_user/test/src/common/widgets/minglit_avatar_image_test.dart",
       "source_location": null,
       "id": "private_tmp_fix_1863_landing_user_apps_app_user_test_src_common_widgets_minglit_avatar_image_test_dart_wrap",
-      "community": 1036,
+      "community": 1429,
       "norm_label": "_wrap"
     },
     {
@@ -48563,7 +48563,7 @@
       "source_file": "/private/tmp/fix-1863-landing-user/apps/app_user/test/src/common/widgets/minglit_avatar_image_test.dart",
       "source_location": null,
       "id": "private_tmp_fix_1863_landing_user_apps_app_user_test_src_common_widgets_minglit_avatar_image_test_dart_main",
-      "community": 1036,
+      "community": 1429,
       "norm_label": "main"
     },
     {
@@ -48572,7 +48572,7 @@
       "source_file": "/private/tmp/fix-1863-landing-user/apps/app_user/test/src/common/widgets/minglit_avatar_image_test.dart",
       "source_location": null,
       "id": "private_tmp_fix_1863_landing_user_apps_app_user_test_src_common_widgets_minglit_avatar_image_test_dart_minglitavatarimage",
-      "community": 1036,
+      "community": 1429,
       "norm_label": "minglitavatarimage"
     },
     {
@@ -66228,7 +66228,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/shared/packages/mds/tokens/tokens/color.json",
       "source_location": "L8",
       "id": "tokens_color_color_error",
-      "community": 1728,
+      "community": 23,
       "norm_label": "error"
     },
     {
@@ -66237,7 +66237,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/shared/packages/mds/tokens/tokens/color.json",
       "source_location": "L8",
       "id": "tokens_color_error_value",
-      "community": 1728,
+      "community": 23,
       "norm_label": "$value"
     },
     {
@@ -66246,7 +66246,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/shared/packages/mds/tokens/tokens/color.json",
       "source_location": "L8",
       "id": "tokens_color_error_type",
-      "community": 1728,
+      "community": 23,
       "norm_label": "$type"
     },
     {
@@ -66255,7 +66255,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/shared/packages/mds/tokens/tokens/color.json",
       "source_location": "L8",
       "id": "tokens_color_error_description",
-      "community": 1728,
+      "community": 23,
       "norm_label": "$description"
     },
     {
@@ -66552,7 +66552,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/shared/packages/mds/tokens/tokens/color.json",
       "source_location": "L17",
       "id": "tokens_color_color_primarydark",
-      "community": 23,
+      "community": 1731,
       "norm_label": "primarydark"
     },
     {
@@ -66561,7 +66561,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/shared/packages/mds/tokens/tokens/color.json",
       "source_location": "L17",
       "id": "tokens_color_primarydark_value",
-      "community": 23,
+      "community": 1731,
       "norm_label": "$value"
     },
     {
@@ -66570,7 +66570,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/shared/packages/mds/tokens/tokens/color.json",
       "source_location": "L17",
       "id": "tokens_color_primarydark_type",
-      "community": 23,
+      "community": 1731,
       "norm_label": "$type"
     },
     {
@@ -66579,7 +66579,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/shared/packages/mds/tokens/tokens/color.json",
       "source_location": "L17",
       "id": "tokens_color_primarydark_description",
-      "community": 23,
+      "community": 1731,
       "norm_label": "$description"
     },
     {
@@ -66588,7 +66588,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/shared/packages/mds/tokens/tokens/color.json",
       "source_location": "L18",
       "id": "tokens_color_color_dark",
-      "community": 1391,
+      "community": 1439,
       "norm_label": "dark"
     },
     {
@@ -68847,7 +68847,7 @@
       "source_file": "shared/packages/minglit_demo/lib/overrides/ticket_overrides.dart",
       "source_location": null,
       "id": "package_image_picker_image_picker_dart",
-      "community": 1,
+      "community": 1062,
       "norm_label": "package:image_picker/image_picker.dart"
     },
     {
@@ -71561,7 +71561,7 @@
       "source_file": "shared/packages/minglit_kit/test/src/data/models/event_test.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_data_models_event_dart",
-      "community": 1,
+      "community": 1062,
       "norm_label": "package:minglit_kit/src/data/models/event.dart"
     },
     {
@@ -71579,7 +71579,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/shared/packages/minglit_kit/test/src/data/repositories/tag_repository_test.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_data_models_tag_dart",
-      "community": 1,
+      "community": 1062,
       "norm_label": "package:minglit_kit/src/data/models/tag.dart"
     },
     {
@@ -72323,7 +72323,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/config/env_keystore.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_config_env_keystore_dart",
-      "community": 1726,
+      "community": 1,
       "norm_label": "env_keystore.dart"
     },
     {
@@ -72332,7 +72332,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/config/env_keystore.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_config_env_keystore_dart_envkeystore",
-      "community": 1726,
+      "community": 1,
       "norm_label": "envkeystore"
     },
     {
@@ -72341,7 +72341,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/config/env_keystore.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_config_env_keystore_dart_validate",
-      "community": 1726,
+      "community": 1,
       "norm_label": "validate"
     },
     {
@@ -72350,7 +72350,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/config/env_keystore.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_config_env_keystore_dart_stateerror",
-      "community": 1726,
+      "community": 1,
       "norm_label": "stateerror"
     },
     {
@@ -72515,7 +72515,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/features/account_deletion/logic/account_deletion_controller.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_features_account_deletion_logic_account_deletion_controller_dart",
-      "community": 1,
+      "community": 1671,
       "norm_label": "account_deletion_controller.dart"
     },
     {
@@ -72524,7 +72524,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/features/account_deletion/logic/account_deletion_controller.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_features_account_deletion_logic_account_deletion_controller_dart_accountdeletioncontroller",
-      "community": 1,
+      "community": 1671,
       "norm_label": "accountdeletioncontroller"
     },
     {
@@ -72533,7 +72533,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/account_repository.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_data_models_deletion_status_dart",
-      "community": 1,
+      "community": 1671,
       "norm_label": "package:minglit_kit/src/data/models/deletion_status.dart"
     },
     {
@@ -72542,7 +72542,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/shared/packages/minglit_kit/test/src/data/repositories/account_repository_test.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_data_models_withdrawal_reason_dart",
-      "community": 1,
+      "community": 1671,
       "norm_label": "package:minglit_kit/src/data/models/withdrawal_reason.dart"
     },
     {
@@ -72551,7 +72551,7 @@
       "source_file": "shared/packages/minglit_kit/test/logic/providers/supabase_provider_override_test.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_data_repositories_account_repository_dart",
-      "community": 1,
+      "community": 1671,
       "norm_label": "package:minglit_kit/src/data/repositories/account_repository.dart"
     },
     {
@@ -72569,7 +72569,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/shared/packages/minglit_kit/test/src/data/repositories/account_repository_test.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_utils_exceptions_dart",
-      "community": 1,
+      "community": 1217,
       "norm_label": "package:minglit_kit/src/utils/exceptions.dart"
     },
     {
@@ -73331,7 +73331,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/features/verification/ui/identity_verification_screen.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_features_verification_ui_identity_verification_screen_dart",
-      "community": 1062,
+      "community": 1117,
       "norm_label": "identity_verification_screen.dart"
     },
     {
@@ -73340,7 +73340,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/features/verification/ui/identity_verification_screen.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_shared_packages_minglit_kit_lib_src_features_verification_ui_identity_verification_screen_dart_identityverificationscreen",
-      "community": 1062,
+      "community": 1117,
       "norm_label": "identityverificationscreen"
     },
     {
@@ -73349,7 +73349,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/features/verification/ui/identity_verification_screen.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_shared_packages_minglit_kit_lib_src_features_verification_ui_identity_verification_screen_dart_identityverificationscreenstate",
-      "community": 1062,
+      "community": 1117,
       "norm_label": "_identityverificationscreenstate"
     },
     {
@@ -73358,7 +73358,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/features/verification/ui/identity_verification_screen.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_shared_packages_minglit_kit_lib_src_features_verification_ui_identity_verification_screen_dart_initstate",
-      "community": 1062,
+      "community": 1117,
       "norm_label": "initstate"
     },
     {
@@ -73367,7 +73367,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/features/verification/ui/identity_verification_screen.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_shared_packages_minglit_kit_lib_src_features_verification_ui_identity_verification_screen_dart_startverification",
-      "community": 1062,
+      "community": 1117,
       "norm_label": "_startverification"
     },
     {
@@ -73376,7 +73376,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/features/verification/ui/identity_verification_screen.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_shared_packages_minglit_kit_lib_src_features_verification_ui_identity_verification_screen_dart_build",
-      "community": 1062,
+      "community": 1117,
       "norm_label": "build"
     },
     {
@@ -73385,7 +73385,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/features/verification/ui/identity_verification_screen.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_shared_packages_minglit_kit_lib_src_features_verification_ui_identity_verification_screen_dart_scaffold",
-      "community": 1062,
+      "community": 1117,
       "norm_label": "scaffold"
     },
     {
@@ -73394,7 +73394,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/features/verification/ui/identity_verification_screen.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_shared_packages_minglit_kit_lib_src_features_verification_ui_identity_verification_screen_dart_minglitcircularprogressindicator",
-      "community": 1062,
+      "community": 1117,
       "norm_label": "minglitcircularprogressindicator"
     },
     {
@@ -73403,7 +73403,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/features/verification/ui/identity_verification_screen.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_shared_packages_minglit_kit_lib_src_features_verification_ui_identity_verification_screen_dart_sizedbox",
-      "community": 1062,
+      "community": 1117,
       "norm_label": "sizedbox"
     },
     {
@@ -73412,7 +73412,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/features/verification/ui/identity_verification_screen.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_shared_packages_minglit_kit_lib_src_features_verification_ui_identity_verification_screen_dart_icon",
-      "community": 1062,
+      "community": 1117,
       "norm_label": "icon"
     },
     {
@@ -73430,7 +73430,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/features/verification/ui/identity_verification_screen.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_config_iamport_config_dart",
-      "community": 1062,
+      "community": 1117,
       "norm_label": "package:minglit_kit/src/config/iamport_config.dart"
     },
     {
@@ -73439,7 +73439,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/consent_repository.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_data_models_user_consent_dart",
-      "community": 1062,
+      "community": 1117,
       "norm_label": "package:minglit_kit/src/data/models/user_consent.dart"
     },
     {
@@ -73448,7 +73448,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/features/verification/ui/identity_verification_screen.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_data_repositories_consent_repository_dart",
-      "community": 1062,
+      "community": 1117,
       "norm_label": "package:minglit_kit/src/data/repositories/consent_repository.dart"
     },
     {
@@ -73457,7 +73457,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/features/verification/ui/identity_verification_screen.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_features_consent_logic_consent_controller_dart",
-      "community": 1062,
+      "community": 1117,
       "norm_label": "package:minglit_kit/src/features/consent/logic/consent_controller.dart"
     },
     {
@@ -73466,7 +73466,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/features/verification/ui/identity_verification_screen.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_features_iamport_data_repository_iamport_repository_dart",
-      "community": 1062,
+      "community": 1117,
       "norm_label": "package:minglit_kit/src/features/iamport/data/repository/iamport_repository.dart"
     },
     {
@@ -73475,7 +73475,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/features/verification/ui/identity_verification_screen.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_features_verification_ui_identity_verification_consent_sheet_dart",
-      "community": 1062,
+      "community": 1117,
       "norm_label": "package:minglit_kit/src/features/verification/ui/identity_verification_consent_sheet.dart"
     },
     {
@@ -73484,7 +73484,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/features/verification/ui/identity_verification_screen.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_utils_error_ui_handler_dart",
-      "community": 1062,
+      "community": 1117,
       "norm_label": "package:minglit_kit/src/utils/error_ui_handler.dart"
     },
     {
@@ -73825,7 +73825,7 @@
       "source_file": "shared/packages/minglit_kit/test/ui/widgets/bug_reporter_wrapper_test.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_ui_widgets_bug_reporter_wrapper_dart",
-      "community": 1429,
+      "community": 1,
       "norm_label": "package:minglit_kit/src/ui/widgets/bug_reporter_wrapper.dart"
     },
     {
@@ -73978,7 +73978,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/account_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_account_repository_dart",
-      "community": 1,
+      "community": 1671,
       "norm_label": "account_repository.dart"
     },
     {
@@ -73987,7 +73987,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/account_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_account_repository_dart_accountrepository",
-      "community": 1,
+      "community": 1671,
       "norm_label": "accountrepository"
     },
     {
@@ -73996,7 +73996,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/account_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_account_repository_dart_eferror",
-      "community": 1,
+      "community": 1671,
       "norm_label": "_eferror"
     },
     {
@@ -74005,7 +74005,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/account_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_account_repository_dart_deletionstatus",
-      "community": 1,
+      "community": 1671,
       "norm_label": "deletionstatus"
     },
     {
@@ -74014,7 +74014,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/account_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_account_repository_dart_minglitauthexception",
-      "community": 1,
+      "community": 1671,
       "norm_label": "minglitauthexception"
     },
     {
@@ -74023,7 +74023,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/account_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_account_repository_dart_minglituserexception",
-      "community": 1,
+      "community": 1671,
       "norm_label": "minglituserexception"
     },
     {
@@ -74032,7 +74032,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/account_repository.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_utils_auth_provider_utils_dart",
-      "community": 1,
+      "community": 1671,
       "norm_label": "package:minglit_kit/src/utils/auth_provider_utils.dart"
     },
     {
@@ -74041,7 +74041,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/storage_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_storage_repository_dart",
-      "community": 1,
+      "community": 1062,
       "norm_label": "storage_repository.dart"
     },
     {
@@ -74050,7 +74050,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/storage_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_storage_repository_dart_storagerepository",
-      "community": 1,
+      "community": 1062,
       "norm_label": "storagerepository"
     },
     {
@@ -74068,7 +74068,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/party_repository.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_utils_image_utils_dart",
-      "community": 1,
+      "community": 1062,
       "norm_label": "package:minglit_kit/src/utils/image_utils.dart"
     },
     {
@@ -74077,7 +74077,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/party_repository.dart",
       "source_location": null,
       "id": "package_path_path_dart",
-      "community": 1,
+      "community": 1062,
       "norm_label": "package:path/path.dart"
     },
     {
@@ -74086,7 +74086,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/storage_repository.dart",
       "source_location": null,
       "id": "package_uuid_uuid_dart",
-      "community": 1,
+      "community": 1062,
       "norm_label": "package:uuid/uuid.dart"
     },
     {
@@ -74335,7 +74335,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/tag_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_tag_repository_dart",
-      "community": 1,
+      "community": 1062,
       "norm_label": "tag_repository.dart"
     },
     {
@@ -74344,7 +74344,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/tag_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_tag_repository_dart_tagrepository",
-      "community": 1,
+      "community": 1062,
       "norm_label": "tagrepository"
     },
     {
@@ -74353,7 +74353,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/tag_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_tag_repository_dart_supabasetagcontext",
-      "community": 1,
+      "community": 1062,
       "norm_label": "_supabasetagcontext"
     },
     {
@@ -74362,7 +74362,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/tag_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_tag_repository_dart_supabasetagcontextbase",
-      "community": 1,
+      "community": 1062,
       "norm_label": "_supabasetagcontextbase"
     },
     {
@@ -74465,7 +74465,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/partner_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_partner_repository_dart",
-      "community": 1,
+      "community": 1062,
       "norm_label": "partner_repository.dart"
     },
     {
@@ -74474,7 +74474,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/partner_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_partner_repository_dart_partnerrepository",
-      "community": 1,
+      "community": 1062,
       "norm_label": "partnerrepository"
     },
     {
@@ -74483,7 +74483,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/partner_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_partner_repository_dart_supabasepartnercontext",
-      "community": 1,
+      "community": 1062,
       "norm_label": "_supabasepartnercontext"
     },
     {
@@ -74492,7 +74492,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/partner_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_partner_repository_dart_supabasepartnercontextbase",
-      "community": 1,
+      "community": 1062,
       "norm_label": "_supabasepartnercontextbase"
     },
     {
@@ -74510,7 +74510,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/party_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_party_repository_dart",
-      "community": 1,
+      "community": 1062,
       "norm_label": "party_repository.dart"
     },
     {
@@ -74519,7 +74519,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/party_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_party_repository_dart_partyrepository",
-      "community": 1,
+      "community": 1062,
       "norm_label": "partyrepository"
     },
     {
@@ -74528,7 +74528,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/party_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_party_repository_dart_supabasepartycontext",
-      "community": 1,
+      "community": 1062,
       "norm_label": "_supabasepartycontext"
     },
     {
@@ -74537,7 +74537,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/party_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_party_repository_dart_supabasepartycontextbase",
-      "community": 1,
+      "community": 1062,
       "norm_label": "_supabasepartycontextbase"
     },
     {
@@ -74546,7 +74546,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/party_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_party_repository_dart_exception",
-      "community": 1,
+      "community": 1062,
       "norm_label": "exception"
     },
     {
@@ -74555,7 +74555,7 @@
       "source_file": "shared/packages/minglit_kit/test/src/data/models/event_test.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_data_models_party_dart",
-      "community": 1,
+      "community": 1062,
       "norm_label": "package:minglit_kit/src/data/models/party.dart"
     },
     {
@@ -74564,7 +74564,7 @@
       "source_file": "shared/packages/minglit_kit/test/src/data/models/party_entry_group_test.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_data_models_party_entry_group_dart",
-      "community": 1,
+      "community": 1062,
       "norm_label": "package:minglit_kit/src/data/models/party_entry_group.dart"
     },
     {
@@ -74573,7 +74573,7 @@
       "source_file": "shared/packages/minglit_kit/test/src/data/repositories/ticket_repository_test.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_data_models_ticket_dart",
-      "community": 1,
+      "community": 1062,
       "norm_label": "package:minglit_kit/src/data/models/ticket.dart"
     },
     {
@@ -74582,7 +74582,7 @@
       "source_file": "shared/packages/minglit_kit/test/src/data/repositories/ticket_repository_test.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_data_models_ticket_template_dart",
-      "community": 1,
+      "community": 1217,
       "norm_label": "package:minglit_kit/src/data/models/ticket_template.dart"
     },
     {
@@ -74636,7 +74636,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/shared/packages/minglit_kit/test/src/data/repositories/verification_query_repository_test.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_data_models_verification_dart",
-      "community": 1,
+      "community": 1719,
       "norm_label": "package:minglit_kit/src/data/models/verification.dart"
     },
     {
@@ -74699,7 +74699,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/checkin_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_checkin_repository_dart",
-      "community": 1429,
+      "community": 1,
       "norm_label": "checkin_repository.dart"
     },
     {
@@ -74708,7 +74708,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/checkin_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_checkin_repository_dart_checkinrepository",
-      "community": 1429,
+      "community": 1,
       "norm_label": "checkinrepository"
     },
     {
@@ -74717,7 +74717,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/checkin_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_checkin_repository_dart_stateerror",
-      "community": 1429,
+      "community": 1,
       "norm_label": "stateerror"
     },
     {
@@ -74726,7 +74726,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/checkin_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_checkin_repository_dart_tickettoken",
-      "community": 1429,
+      "community": 1,
       "norm_label": "tickettoken"
     },
     {
@@ -74735,7 +74735,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/shared/packages/minglit_kit/test/src/data/repositories/checkin_repository_test.dart",
       "source_location": null,
       "id": "package_cryptography_cryptography_dart",
-      "community": 1429,
+      "community": 1217,
       "norm_label": "package:cryptography/cryptography.dart"
     },
     {
@@ -74753,7 +74753,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/shared/packages/minglit_kit/test/src/data/repositories/checkin_repository_test.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_utils_ticket_crypto_dart",
-      "community": 1429,
+      "community": 1,
       "norm_label": "package:minglit_kit/src/utils/ticket_crypto.dart"
     },
     {
@@ -75031,7 +75031,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/shared/packages/minglit_kit/lib/src/data/repositories/notification_repository.dart",
       "source_location": null,
       "id": "tmp_minglit_runner_2_work_minglit_minglit_shared_packages_minglit_kit_lib_src_data_repositories_notification_repository_dart",
-      "community": 1217,
+      "community": 1,
       "norm_label": "notification_repository.dart"
     },
     {
@@ -75040,7 +75040,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/shared/packages/minglit_kit/lib/src/data/repositories/notification_repository.dart",
       "source_location": null,
       "id": "tmp_minglit_runner_2_work_minglit_minglit_shared_packages_minglit_kit_lib_src_data_repositories_notification_repository_dart_notificationrepository",
-      "community": 1217,
+      "community": 1,
       "norm_label": "notificationrepository"
     },
     {
@@ -75049,7 +75049,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/shared/packages/minglit_kit/lib/src/data/repositories/notification_repository.dart",
       "source_location": null,
       "id": "tmp_minglit_runner_2_work_minglit_minglit_shared_packages_minglit_kit_lib_src_data_repositories_notification_repository_dart_ensuresuccess",
-      "community": 1217,
+      "community": 1,
       "norm_label": "_ensuresuccess"
     },
     {
@@ -75058,7 +75058,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/shared/packages/minglit_kit/lib/src/data/repositories/notification_repository.dart",
       "source_location": null,
       "id": "tmp_minglit_runner_2_work_minglit_minglit_shared_packages_minglit_kit_lib_src_data_repositories_notification_repository_dart_functionexception",
-      "community": 1217,
+      "community": 1,
       "norm_label": "functionexception"
     },
     {
@@ -75067,7 +75067,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/shared/packages/minglit_kit/lib/src/data/repositories/notification_repository.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_data_models_user_settings_dart",
-      "community": 1217,
+      "community": 1,
       "norm_label": "package:minglit_kit/src/data/models/user_settings.dart"
     },
     {
@@ -75076,7 +75076,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/auth_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_auth_repository_dart",
-      "community": 1217,
+      "community": 1,
       "norm_label": "auth_repository.dart"
     },
     {
@@ -75085,7 +75085,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/auth_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_auth_repository_dart_authconfig",
-      "community": 1217,
+      "community": 1,
       "norm_label": "authconfig"
     },
     {
@@ -75094,7 +75094,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/auth_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_auth_repository_dart_authrepository",
-      "community": 1217,
+      "community": 1,
       "norm_label": "authrepository"
     },
     {
@@ -75103,7 +75103,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/auth_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_auth_repository_dart_unimplementederror",
-      "community": 1217,
+      "community": 1,
       "norm_label": "unimplementederror"
     },
     {
@@ -75112,7 +75112,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/auth_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_auth_repository_dart_authexception",
-      "community": 1217,
+      "community": 1,
       "norm_label": "authexception"
     },
     {
@@ -75121,7 +75121,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/auth_repository.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_auth_repository_dart_ensuregooglesignininitialized",
-      "community": 1217,
+      "community": 1,
       "norm_label": "_ensuregooglesignininitialized"
     },
     {
@@ -75130,7 +75130,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/auth_repository.dart",
       "source_location": null,
       "id": "package_crypto_crypto_dart",
-      "community": 1217,
+      "community": 1,
       "norm_label": "package:crypto/crypto.dart"
     },
     {
@@ -75139,7 +75139,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/auth_repository.dart",
       "source_location": null,
       "id": "package_google_sign_in_google_sign_in_dart",
-      "community": 1217,
+      "community": 1,
       "norm_label": "package:google_sign_in/google_sign_in.dart"
     },
     {
@@ -75148,7 +75148,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/auth_repository.dart",
       "source_location": null,
       "id": "package_sign_in_with_apple_sign_in_with_apple_dart",
-      "community": 1217,
+      "community": 1,
       "norm_label": "package:sign_in_with_apple/sign_in_with_apple.dart"
     },
     {
@@ -75215,7 +75215,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/needs-swe-sonnet-1/.claude/worktrees/fix-2099-ea-schema/shared/packages/minglit_kit/lib/src/data/models/verification_submission.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_needs_swe_sonnet_1_claude_worktrees_fix_2099_ea_schema_shared_packages_minglit_kit_lib_src_data_models_verification_submission_dart",
-      "community": 1,
+      "community": 1719,
       "norm_label": "verification_submission.dart"
     },
     {
@@ -75224,7 +75224,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/needs-swe-sonnet-1/.claude/worktrees/fix-2099-ea-schema/shared/packages/minglit_kit/lib/src/data/models/verification_submission.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_needs_swe_sonnet_1_claude_worktrees_fix_2099_ea_schema_shared_packages_minglit_kit_lib_src_data_models_verification_submission_dart_verificationsubmission",
-      "community": 1,
+      "community": 1719,
       "norm_label": "verificationsubmission"
     },
     {
@@ -75285,7 +75285,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/needs-swe-sonnet-1/shared/packages/minglit_kit/lib/src/data/models/event_application.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_needs_swe_sonnet_1_shared_packages_minglit_kit_lib_src_data_models_event_application_dart",
-      "community": 1,
+      "community": 1062,
       "norm_label": "event_application.dart"
     },
     {
@@ -75294,7 +75294,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/needs-swe-sonnet-1/shared/packages/minglit_kit/lib/src/data/models/event_application.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_needs_swe_sonnet_1_shared_packages_minglit_kit_lib_src_data_models_event_application_dart_eventapplication",
-      "community": 1,
+      "community": 1062,
       "norm_label": "eventapplication"
     },
     {
@@ -75649,7 +75649,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/models/event.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_lib_src_data_models_event_dart",
-      "community": 1,
+      "community": 1062,
       "norm_label": "event.dart"
     },
     {
@@ -75658,7 +75658,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/models/event.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_shared_packages_minglit_kit_lib_src_data_models_event_dart_event",
-      "community": 1,
+      "community": 1062,
       "norm_label": "event"
     },
     {
@@ -75667,7 +75667,7 @@
       "source_file": "shared/packages/minglit_kit/lib/src/data/models/event.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_shared_packages_minglit_kit_lib_src_data_models_event_dart_tojson",
-      "community": 1,
+      "community": 1062,
       "norm_label": "tojson"
     },
     {
@@ -76070,7 +76070,7 @@
       "source_file": "/_work/minglit-runner-1-oZoKLU33PXPst/minglit/minglit/shared/packages/minglit_kit/test/flutter_test_config.dart",
       "source_location": null,
       "id": "work_minglit_runner_1_ozoklu33pxpst_minglit_minglit_shared_packages_minglit_kit_test_flutter_test_config_dart",
-      "community": 1423,
+      "community": 1429,
       "norm_label": "flutter_test_config.dart"
     },
     {
@@ -76079,7 +76079,7 @@
       "source_file": "/_work/minglit-runner-1-oZoKLU33PXPst/minglit/minglit/shared/packages/minglit_kit/test/flutter_test_config.dart",
       "source_location": null,
       "id": "work_minglit_runner_1_ozoklu33pxpst_minglit_minglit_shared_packages_minglit_kit_test_flutter_test_config_dart_loadnotosanskr",
-      "community": 1423,
+      "community": 1429,
       "norm_label": "_loadnotosanskr"
     },
     {
@@ -76088,7 +76088,7 @@
       "source_file": "/_work/minglit-runner-1-oZoKLU33PXPst/minglit/minglit/shared/packages/minglit_kit/test/flutter_test_config.dart",
       "source_location": null,
       "id": "work_minglit_runner_1_ozoklu33pxpst_minglit_minglit_shared_packages_minglit_kit_test_flutter_test_config_dart_testmain",
-      "community": 1423,
+      "community": 1429,
       "norm_label": "testmain"
     },
     {
@@ -76221,7 +76221,7 @@
       "source_file": "shared/packages/minglit_kit/test/ui/widgets/bug_reporter_wrapper_test.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_test_ui_widgets_bug_reporter_wrapper_test_dart",
-      "community": 1429,
+      "community": 1,
       "norm_label": "bug_reporter_wrapper_test.dart"
     },
     {
@@ -76230,7 +76230,7 @@
       "source_file": "shared/packages/minglit_kit/test/ui/widgets/bug_reporter_wrapper_test.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_test_ui_widgets_bug_reporter_wrapper_test_dart_fakesupabaseclient",
-      "community": 1429,
+      "community": 1,
       "norm_label": "_fakesupabaseclient"
     },
     {
@@ -76239,7 +76239,7 @@
       "source_file": "shared/packages/minglit_kit/test/ui/widgets/bug_reporter_wrapper_test.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_test_ui_widgets_bug_reporter_wrapper_test_dart_testcontainer",
-      "community": 1429,
+      "community": 1,
       "norm_label": "_testcontainer"
     },
     {
@@ -76248,7 +76248,7 @@
       "source_file": "shared/packages/minglit_kit/test/ui/widgets/bug_reporter_wrapper_test.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_test_ui_widgets_bug_reporter_wrapper_test_dart_main",
-      "community": 1429,
+      "community": 1,
       "norm_label": "main"
     },
     {
@@ -76512,7 +76512,7 @@
       "source_file": "/Users/mark/workspace/minglit/shared/packages/minglit_kit/test/src/utils/exceptions_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_shared_packages_minglit_kit_test_src_utils_exceptions_test_dart",
-      "community": 1,
+      "community": 1217,
       "norm_label": "exceptions_test.dart"
     },
     {
@@ -76521,7 +76521,7 @@
       "source_file": "/Users/mark/workspace/minglit/shared/packages/minglit_kit/test/src/utils/exceptions_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_shared_packages_minglit_kit_test_src_utils_exceptions_test_dart_main",
-      "community": 1,
+      "community": 1217,
       "norm_label": "main"
     },
     {
@@ -77478,7 +77478,7 @@
       "source_file": "/private/tmp/wizard-v2-branch/shared/packages/minglit_kit/test/src/data/repositories/matching_repository_test.dart",
       "source_location": null,
       "id": "helpers_test_utils_dart",
-      "community": 1210,
+      "community": 1,
       "norm_label": "../../../helpers/test_utils.dart"
     },
     {
@@ -78148,7 +78148,7 @@
       "source_file": "shared/packages/minglit_kit/test/src/data/repositories/party_repository_test.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_test_src_data_repositories_party_repository_test_dart",
-      "community": 1,
+      "community": 1062,
       "norm_label": "party_repository_test.dart"
     },
     {
@@ -78157,7 +78157,7 @@
       "source_file": "shared/packages/minglit_kit/test/src/data/repositories/party_repository_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_shared_packages_minglit_kit_test_src_data_repositories_party_repository_test_dart_main",
-      "community": 1,
+      "community": 1062,
       "norm_label": "main"
     },
     {
@@ -78166,7 +78166,7 @@
       "source_file": "shared/packages/minglit_kit/test/src/data/repositories/party_repository_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_shared_packages_minglit_kit_test_src_data_repositories_party_repository_test_dart_expectlater",
-      "community": 1,
+      "community": 1062,
       "norm_label": "expectlater"
     },
     {
@@ -78175,7 +78175,7 @@
       "source_file": "shared/packages/minglit_kit/test/src/data/repositories/party_repository_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_shared_packages_minglit_kit_test_src_data_repositories_party_repository_test_dart_entrygrouptemplate",
-      "community": 1,
+      "community": 1062,
       "norm_label": "entrygrouptemplate"
     },
     {
@@ -78184,7 +78184,7 @@
       "source_file": "shared/packages/minglit_kit/test/logic/providers/supabase_provider_override_test.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_data_repositories_party_repository_dart",
-      "community": 1,
+      "community": 1062,
       "norm_label": "package:minglit_kit/src/data/repositories/party_repository.dart"
     },
     {
@@ -78453,7 +78453,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/shared/packages/minglit_kit/test/src/data/repositories/checkin_repository_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_shared_packages_minglit_kit_test_src_data_repositories_checkin_repository_test_dart",
-      "community": 1429,
+      "community": 1217,
       "norm_label": "checkin_repository_test.dart"
     },
     {
@@ -78462,7 +78462,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/shared/packages/minglit_kit/test/src/data/repositories/checkin_repository_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_shared_packages_minglit_kit_test_src_data_repositories_checkin_repository_test_dart_main",
-      "community": 1429,
+      "community": 1217,
       "norm_label": "main"
     },
     {
@@ -78471,7 +78471,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/shared/packages/minglit_kit/test/src/data/repositories/checkin_repository_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_shared_packages_minglit_kit_test_src_data_repositories_checkin_repository_test_dart_expectlater",
-      "community": 1429,
+      "community": 1217,
       "norm_label": "expectlater"
     },
     {
@@ -78480,7 +78480,7 @@
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/shared/packages/minglit_kit/test/src/data/repositories/checkin_repository_test.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_data_repositories_checkin_repository_dart",
-      "community": 1429,
+      "community": 1217,
       "norm_label": "package:minglit_kit/src/data/repositories/checkin_repository.dart"
     },
     {
@@ -78891,7 +78891,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/shared/packages/minglit_kit/test/src/data/repositories/account_repository_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_shared_packages_minglit_kit_test_src_data_repositories_account_repository_test_dart",
-      "community": 1,
+      "community": 1217,
       "norm_label": "account_repository_test.dart"
     },
     {
@@ -78900,7 +78900,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/shared/packages/minglit_kit/test/src/data/repositories/account_repository_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_shared_packages_minglit_kit_test_src_data_repositories_account_repository_test_dart_main",
-      "community": 1,
+      "community": 1217,
       "norm_label": "main"
     },
     {
@@ -78909,7 +78909,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/shared/packages/minglit_kit/test/src/data/repositories/account_repository_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_shared_packages_minglit_kit_test_src_data_repositories_account_repository_test_dart_withdrawalreason",
-      "community": 1,
+      "community": 1217,
       "norm_label": "withdrawalreason"
     },
     {
@@ -78918,7 +78918,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/shared/packages/minglit_kit/test/src/data/repositories/account_repository_test.dart",
       "source_location": null,
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_shared_packages_minglit_kit_test_src_data_repositories_account_repository_test_dart_expectlater",
-      "community": 1,
+      "community": 1217,
       "norm_label": "expectlater"
     },
     {
@@ -78966,7 +78966,7 @@
       "source_file": "shared/packages/minglit_kit/test/src/data/models/event_test.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_test_src_data_models_event_test_dart",
-      "community": 1,
+      "community": 1062,
       "norm_label": "event_test.dart"
     },
     {
@@ -78975,7 +78975,7 @@
       "source_file": "shared/packages/minglit_kit/test/src/data/models/event_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_shared_packages_minglit_kit_test_src_data_models_event_test_dart_main",
-      "community": 1,
+      "community": 1062,
       "norm_label": "main"
     },
     {
@@ -78984,7 +78984,7 @@
       "source_file": "shared/packages/minglit_kit/test/src/data/models/event_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_shared_packages_minglit_kit_test_src_data_models_event_test_dart_eventwithgroups",
-      "community": 1,
+      "community": 1062,
       "norm_label": "eventwithgroups"
     },
     {
@@ -79159,7 +79159,7 @@
       "source_file": "shared/packages/minglit_kit/test/src/data/models/party_entry_group_test.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_test_src_data_models_party_entry_group_test_dart",
-      "community": 1429,
+      "community": 1062,
       "norm_label": "party_entry_group_test.dart"
     },
     {
@@ -79168,7 +79168,7 @@
       "source_file": "shared/packages/minglit_kit/test/src/data/models/party_entry_group_test.dart",
       "source_location": null,
       "id": "home_runner_work_minglit_minglit_shared_packages_minglit_kit_test_src_data_models_party_entry_group_test_dart_main",
-      "community": 1429,
+      "community": 1062,
       "norm_label": "main"
     },
     {
@@ -79291,7 +79291,7 @@
       "source_file": "shared/packages/minglit_kit/test/logic/providers/supabase_provider_override_test.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_test_logic_providers_supabase_provider_override_test_dart",
-      "community": 1,
+      "community": 1062,
       "norm_label": "supabase_provider_override_test.dart"
     },
     {
@@ -79300,7 +79300,7 @@
       "source_file": "shared/packages/minglit_kit/test/logic/providers/supabase_provider_override_test.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_test_logic_providers_supabase_provider_override_test_dart_fakesupabaseclient",
-      "community": 1,
+      "community": 1062,
       "norm_label": "_fakesupabaseclient"
     },
     {
@@ -79309,7 +79309,7 @@
       "source_file": "shared/packages/minglit_kit/test/logic/providers/supabase_provider_override_test.dart",
       "source_location": null,
       "id": "shared_packages_minglit_kit_test_logic_providers_supabase_provider_override_test_dart_main",
-      "community": 1,
+      "community": 1062,
       "norm_label": "main"
     },
     {
@@ -97226,7 +97226,7 @@
       "label": "\ucee8\ubca4\uc158",
       "file_type": "document",
       "source_file": ".github/workflows/BLUEDOC.md",
-      "source_location": "L61",
+      "source_location": "L62",
       "id": "workflows_bluedoc_\ucee8\ubca4\uc158",
       "community": 411,
       "norm_label": "\u110f\u1165\u11ab\u1107\u1166\u11ab\u1109\u1167\u11ab"
@@ -97235,7 +97235,7 @@
       "label": "\uad00\ub828",
       "file_type": "document",
       "source_file": ".github/workflows/BLUEDOC.md",
-      "source_location": "L74",
+      "source_location": "L75",
       "id": "workflows_bluedoc_\uad00\ub828",
       "community": 411,
       "norm_label": "\u1100\u116a\u11ab\u1105\u1167\u11ab"
@@ -139942,7 +139942,7 @@
       "author": null,
       "contributor": null,
       "id": "qr_checkin",
-      "community": 1087,
+      "community": 36,
       "norm_label": "qr \u110e\u1166\u110f\u1173\u110b\u1175\u11ab \u2014 ed25519 \u1109\u1165\u1106\u1167\u11bc \u1100\u1165\u11b7\u110c\u1173\u11bc"
     },
     {
@@ -139968,7 +139968,7 @@
       "author": null,
       "contributor": null,
       "id": "portone_payment",
-      "community": 36,
+      "community": 1087,
       "norm_label": "portone v1/v2 \u1100\u1167\u11af\u110c\u1166 \u1106\u1175\u11be \u1107\u1169\u11ab\u110b\u1175\u11ab\u110b\u1175\u11ab\u110c\u1173\u11bc \u1110\u1169\u11bc\u1112\u1161\u11b8"
     },
     {
@@ -142006,7 +142006,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
-      "community": 1018,
+      "community": 1719,
       "norm_label": "event_create_controller.dart",
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart"
     },
@@ -142015,7 +142015,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
-      "community": 1018,
+      "community": 1719,
       "norm_label": "eventcreatestate",
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_eventcreatestate"
     },
@@ -142024,7 +142024,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
-      "community": 1018,
+      "community": 1719,
       "norm_label": "eventcreatecontroller",
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_eventcreatecontroller"
     },
@@ -142033,7 +142033,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
-      "community": 1018,
+      "community": 1719,
       "norm_label": "build",
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_build"
     },
@@ -142042,7 +142042,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
-      "community": 1018,
+      "community": 1719,
       "norm_label": "initwithparty",
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_initwithparty"
     },
@@ -142051,7 +142051,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
-      "community": 1018,
+      "community": 1719,
       "norm_label": "updatestarttime",
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_updatestarttime"
     },
@@ -142060,7 +142060,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
-      "community": 1018,
+      "community": 1719,
       "norm_label": "updateendtime",
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_updateendtime"
     },
@@ -142069,7 +142069,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
-      "community": 1018,
+      "community": 1719,
       "norm_label": "updatemaxparticipants",
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_updatemaxparticipants"
     },
@@ -142078,7 +142078,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
-      "community": 1018,
+      "community": 1719,
       "norm_label": "updatetitle",
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_updatetitle"
     },
@@ -142087,7 +142087,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
-      "community": 1018,
+      "community": 1719,
       "norm_label": "updatedescription",
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_updatedescription"
     },
@@ -142096,7 +142096,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
-      "community": 1018,
+      "community": 1719,
       "norm_label": "updateimageurl",
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_updateimageurl"
     },
@@ -142105,7 +142105,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
-      "community": 1018,
+      "community": 1719,
       "norm_label": "updatecontactoptions",
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_updatecontactoptions"
     },
@@ -142114,7 +142114,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
-      "community": 1018,
+      "community": 1719,
       "norm_label": "updatelocation",
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_updatelocation"
     },
@@ -142123,7 +142123,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
-      "community": 1018,
+      "community": 1719,
       "norm_label": "updateaddressdetail",
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_updateaddressdetail"
     },
@@ -142132,7 +142132,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
-      "community": 1018,
+      "community": 1719,
       "norm_label": "updatedirections",
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_updatedirections"
     },
@@ -142141,7 +142141,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
-      "community": 1018,
+      "community": 1719,
       "norm_label": "setvisibility",
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_setvisibility"
     },
@@ -142150,7 +142150,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_partner/lib/src/features/party/event/create/event_create_controller.dart",
       "source_location": null,
-      "community": 1018,
+      "community": 1719,
       "norm_label": "pad2",
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_partner_lib_src_features_party_event_create_event_create_controller_dart_pad2"
     },
@@ -142924,7 +142924,7 @@
       "file_type": "code",
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/shared/packages/minglit_kit/test/src/data/repositories/party_repository_test.dart",
       "source_location": null,
-      "community": 1,
+      "community": 1062,
       "norm_label": "party_repository_test.dart",
       "id": "tmp_minglit_runner_2_work_minglit_minglit_shared_packages_minglit_kit_test_src_data_repositories_party_repository_test_dart"
     },
@@ -142933,7 +142933,7 @@
       "file_type": "code",
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/shared/packages/minglit_kit/test/src/data/repositories/party_repository_test.dart",
       "source_location": null,
-      "community": 1,
+      "community": 1062,
       "norm_label": "main",
       "id": "tmp_minglit_runner_2_work_minglit_minglit_shared_packages_minglit_kit_test_src_data_repositories_party_repository_test_dart_main"
     },
@@ -142942,7 +142942,7 @@
       "file_type": "code",
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/shared/packages/minglit_kit/test/src/data/repositories/party_repository_test.dart",
       "source_location": null,
-      "community": 1,
+      "community": 1062,
       "norm_label": "expectlater",
       "id": "tmp_minglit_runner_2_work_minglit_minglit_shared_packages_minglit_kit_test_src_data_repositories_party_repository_test_dart_expectlater"
     },
@@ -142951,7 +142951,7 @@
       "file_type": "code",
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/shared/packages/minglit_kit/test/src/data/repositories/party_repository_test.dart",
       "source_location": null,
-      "community": 1,
+      "community": 1062,
       "norm_label": "entrygrouptemplate",
       "id": "tmp_minglit_runner_2_work_minglit_minglit_shared_packages_minglit_kit_test_src_data_repositories_party_repository_test_dart_entrygrouptemplate"
     },
@@ -145523,7 +145523,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_user/test/src/features/home/widgets/event_now_bottom_sheet_test.dart",
       "source_location": null,
-      "community": 1015,
+      "community": 1210,
       "norm_label": "event_now_bottom_sheet_test.dart",
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_user_test_src_features_home_widgets_event_now_bottom_sheet_test_dart"
     },
@@ -145532,7 +145532,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_user/test/src/features/home/widgets/event_now_bottom_sheet_test.dart",
       "source_location": null,
-      "community": 1015,
+      "community": 1210,
       "norm_label": "mockticketwalletrepository",
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_user_test_src_features_home_widgets_event_now_bottom_sheet_test_dart_mockticketwalletrepository"
     },
@@ -145541,7 +145541,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_user/test/src/features/home/widgets/event_now_bottom_sheet_test.dart",
       "source_location": null,
-      "community": 1015,
+      "community": 1210,
       "norm_label": "_fixedstatenotifier",
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_user_test_src_features_home_widgets_event_now_bottom_sheet_test_dart_fixedstatenotifier"
     },
@@ -145550,7 +145550,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_user/test/src/features/home/widgets/event_now_bottom_sheet_test.dart",
       "source_location": null,
-      "community": 1015,
+      "community": 1210,
       "norm_label": "main",
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_user_test_src_features_home_widgets_event_now_bottom_sheet_test_dart_main"
     },
@@ -145559,7 +145559,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_user/test/src/features/home/widgets/event_now_bottom_sheet_test.dart",
       "source_location": null,
-      "community": 1015,
+      "community": 1210,
       "norm_label": "makeactiveevent",
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_user_test_src_features_home_widgets_event_now_bottom_sheet_test_dart_makeactiveevent"
     },
@@ -145568,7 +145568,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_user/test/src/features/home/widgets/event_now_bottom_sheet_test.dart",
       "source_location": null,
-      "community": 1015,
+      "community": 1210,
       "norm_label": "todayactiveevent",
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_user_test_src_features_home_widgets_event_now_bottom_sheet_test_dart_todayactiveevent"
     },
@@ -145577,7 +145577,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_user/test/src/features/home/widgets/event_now_bottom_sheet_test.dart",
       "source_location": null,
-      "community": 1015,
+      "community": 1210,
       "norm_label": "createtestwidget",
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_user_test_src_features_home_widgets_event_now_bottom_sheet_test_dart_createtestwidget"
     },
@@ -145586,7 +145586,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/audit-legal-claude-subagents/apps/app_user/test/src/features/home/widgets/event_now_bottom_sheet_test.dart",
       "source_location": null,
-      "community": 1015,
+      "community": 1210,
       "norm_label": "providerscope",
       "id": "users_mark_workspace_minglit_worker_runtime_workspace_audit_legal_claude_subagents_apps_app_user_test_src_features_home_widgets_event_now_bottom_sheet_test_dart_providerscope"
     },
@@ -149976,7 +149976,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/shared/packages/minglit_kit/lib/src/data/repositories/checkin_repository.dart",
       "source_location": null,
-      "community": 1429,
+      "community": 1,
       "norm_label": "checkin_repository.dart",
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_shared_packages_minglit_kit_lib_src_data_repositories_checkin_repository_dart"
     },
@@ -149985,7 +149985,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/shared/packages/minglit_kit/lib/src/data/repositories/checkin_repository.dart",
       "source_location": null,
-      "community": 1429,
+      "community": 1,
       "norm_label": "checkinrepository",
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_shared_packages_minglit_kit_lib_src_data_repositories_checkin_repository_dart_checkinrepository"
     },
@@ -149994,7 +149994,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/shared/packages/minglit_kit/lib/src/data/repositories/checkin_repository.dart",
       "source_location": null,
-      "community": 1429,
+      "community": 1,
       "norm_label": "stateerror",
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_shared_packages_minglit_kit_lib_src_data_repositories_checkin_repository_dart_stateerror"
     },
@@ -150003,7 +150003,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/shared/packages/minglit_kit/lib/src/data/repositories/checkin_repository.dart",
       "source_location": null,
-      "community": 1429,
+      "community": 1,
       "norm_label": "tickettoken",
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_shared_packages_minglit_kit_lib_src_data_repositories_checkin_repository_dart_tickettoken"
     },
@@ -150279,7 +150279,7 @@
       "file_type": "code",
       "source_file": "/private/tmp/feat-2201-party-list-v2/shared/packages/minglit_kit/lib/src/data/repositories/party_repository.dart",
       "source_location": null,
-      "community": 1,
+      "community": 1062,
       "norm_label": "party_repository.dart",
       "id": "private_tmp_feat_2201_party_list_v2_shared_packages_minglit_kit_lib_src_data_repositories_party_repository_dart"
     },
@@ -150288,7 +150288,7 @@
       "file_type": "code",
       "source_file": "/private/tmp/feat-2201-party-list-v2/shared/packages/minglit_kit/lib/src/data/repositories/party_repository.dart",
       "source_location": null,
-      "community": 1,
+      "community": 1062,
       "norm_label": "partyrepository",
       "id": "private_tmp_feat_2201_party_list_v2_shared_packages_minglit_kit_lib_src_data_repositories_party_repository_dart_partyrepository"
     },
@@ -150297,7 +150297,7 @@
       "file_type": "code",
       "source_file": "/private/tmp/feat-2201-party-list-v2/shared/packages/minglit_kit/lib/src/data/repositories/party_repository.dart",
       "source_location": null,
-      "community": 1,
+      "community": 1062,
       "norm_label": "_supabasepartycontext",
       "id": "private_tmp_feat_2201_party_list_v2_shared_packages_minglit_kit_lib_src_data_repositories_party_repository_dart_supabasepartycontext"
     },
@@ -150306,7 +150306,7 @@
       "file_type": "code",
       "source_file": "/private/tmp/feat-2201-party-list-v2/shared/packages/minglit_kit/lib/src/data/repositories/party_repository.dart",
       "source_location": null,
-      "community": 1,
+      "community": 1062,
       "norm_label": "_supabasepartycontextbase",
       "id": "private_tmp_feat_2201_party_list_v2_shared_packages_minglit_kit_lib_src_data_repositories_party_repository_dart_supabasepartycontextbase"
     },
@@ -150315,7 +150315,7 @@
       "file_type": "code",
       "source_file": "/private/tmp/feat-2201-party-list-v2/shared/packages/minglit_kit/lib/src/data/repositories/party_repository.dart",
       "source_location": null,
-      "community": 1,
+      "community": 1062,
       "norm_label": "exception",
       "id": "private_tmp_feat_2201_party_list_v2_shared_packages_minglit_kit_lib_src_data_repositories_party_repository_dart_exception"
     },
@@ -157169,7 +157169,7 @@
       "file_type": "code",
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/notification_repository.dart",
       "source_location": null,
-      "community": 1217,
+      "community": 1,
       "norm_label": "notification_repository.dart",
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_notification_repository_dart"
     },
@@ -157754,7 +157754,7 @@
       "file_type": "code",
       "source_file": "apps/app_user/lib/src/features/ticket/data/ticket_token_service.dart",
       "source_location": null,
-      "community": 1,
+      "community": 1210,
       "norm_label": "ticket_token_service.dart",
       "id": "apps_app_user_lib_src_features_ticket_data_ticket_token_service_dart"
     },
@@ -163774,7 +163774,7 @@
       "file_type": "document",
       "source_file": "docs/features/event-operation/ticket-qr-improvement/spec.md",
       "source_location": "L3",
-      "community": 1293,
+      "community": 1728,
       "norm_label": "\u1100\u1162\u110b\u116d",
       "id": "ticket_qr_improvement_spec_\uac1c\uc694"
     },
@@ -163783,7 +163783,7 @@
       "file_type": "document",
       "source_file": "docs/features/event-operation/ticket-qr-improvement/spec.md",
       "source_location": "L7",
-      "community": 1293,
+      "community": 1728,
       "norm_label": "\u1103\u1175\u110c\u1161\u110b\u1175\u11ab \u1105\u1166\u1111\u1165\u1105\u1165\u11ab\u1109\u1173",
       "id": "ticket_qr_improvement_spec_\ub514\uc790\uc778_\ub808\ud37c\ub7f0\uc2a4"
     },
@@ -163792,7 +163792,7 @@
       "file_type": "document",
       "source_file": "docs/features/event-operation/ticket-qr-improvement/spec.md",
       "source_location": "L15",
-      "community": 1293,
+      "community": 1728,
       "norm_label": "\u1112\u1162\u11a8\u1109\u1175\u11b7 \u110b\u116f\u11ab\u110e\u1175\u11a8",
       "id": "ticket_qr_improvement_spec_\ud575\uc2ec_\uc6d0\uce59"
     },
@@ -163801,7 +163801,7 @@
       "file_type": "document",
       "source_file": "docs/features/event-operation/ticket-qr-improvement/spec.md",
       "source_location": "L22",
-      "community": 1293,
+      "community": 1728,
       "norm_label": "\u110e\u1161\u11b7\u1100\u1169 \u110b\u1162\u11b8 \u1107\u116e\u11ab\u1109\u1165\u11a8",
       "id": "ticket_qr_improvement_spec_\ucc38\uace0_\uc571_\ubd84\uc11d"
     },
@@ -165690,7 +165690,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/shared/packages/minglit_kit/lib/src/data/repositories/notification_repository.dart",
       "source_location": null,
-      "community": 1217,
+      "community": 1,
       "norm_label": "notification_repository.dart",
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_shared_packages_minglit_kit_lib_src_data_repositories_notification_repository_dart"
     },
@@ -165699,7 +165699,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/shared/packages/minglit_kit/lib/src/data/repositories/notification_repository.dart",
       "source_location": null,
-      "community": 1217,
+      "community": 1,
       "norm_label": "notificationrepository",
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_shared_packages_minglit_kit_lib_src_data_repositories_notification_repository_dart_notificationrepository"
     },
@@ -165708,7 +165708,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/shared/packages/minglit_kit/lib/src/data/repositories/notification_repository.dart",
       "source_location": null,
-      "community": 1217,
+      "community": 1,
       "norm_label": "_ensuresuccess",
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_shared_packages_minglit_kit_lib_src_data_repositories_notification_repository_dart_ensuresuccess"
     },
@@ -165717,7 +165717,7 @@
       "file_type": "code",
       "source_file": "/Users/mark/workspace/minglit/.claude/worktrees/mds-icons-react/shared/packages/minglit_kit/lib/src/data/repositories/notification_repository.dart",
       "source_location": null,
-      "community": 1217,
+      "community": 1,
       "norm_label": "functionexception",
       "id": "users_mark_workspace_minglit_claude_worktrees_mds_icons_react_shared_packages_minglit_kit_lib_src_data_repositories_notification_repository_dart_functionexception"
     },
@@ -172718,7 +172718,7 @@
       "file_type": "code",
       "source_file": "shared/packages/minglit_kit/test/src/data/repositories/party_repository_test.dart",
       "source_location": null,
-      "community": 1,
+      "community": 1062,
       "norm_label": "main",
       "id": "shared_packages_minglit_kit_test_src_data_repositories_party_repository_test_dart_main"
     },
@@ -172727,7 +172727,7 @@
       "file_type": "code",
       "source_file": "shared/packages/minglit_kit/test/src/data/repositories/party_repository_test.dart",
       "source_location": null,
-      "community": 1,
+      "community": 1062,
       "norm_label": "expectlater",
       "id": "shared_packages_minglit_kit_test_src_data_repositories_party_repository_test_dart_expectlater"
     },
@@ -172736,7 +172736,7 @@
       "file_type": "code",
       "source_file": "shared/packages/minglit_kit/test/src/data/repositories/party_repository_test.dart",
       "source_location": null,
-      "community": 1,
+      "community": 1062,
       "norm_label": "entrygrouptemplate",
       "id": "shared_packages_minglit_kit_test_src_data_repositories_party_repository_test_dart_entrygrouptemplate"
     },
@@ -173042,7 +173042,7 @@
       "file_type": "code",
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/notification_repository.dart",
       "source_location": null,
-      "community": 1217,
+      "community": 1,
       "norm_label": "notificationrepository",
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_notification_repository_dart_notificationrepository"
     },
@@ -173051,7 +173051,7 @@
       "file_type": "code",
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/notification_repository.dart",
       "source_location": null,
-      "community": 1217,
+      "community": 1,
       "norm_label": "_ensuresuccess",
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_notification_repository_dart_ensuresuccess"
     },
@@ -173060,7 +173060,7 @@
       "file_type": "code",
       "source_file": "shared/packages/minglit_kit/lib/src/data/repositories/notification_repository.dart",
       "source_location": null,
-      "community": 1217,
+      "community": 1,
       "norm_label": "functionexception",
       "id": "shared_packages_minglit_kit_lib_src_data_repositories_notification_repository_dart_functionexception"
     },
@@ -174986,7 +174986,7 @@
       "file_type": "code",
       "source_file": "apps/app_user/patrol_test/test_bundle.dart",
       "source_location": null,
-      "community": 1423,
+      "community": 1429,
       "norm_label": "test_bundle.dart",
       "id": "apps_app_user_patrol_test_test_bundle_dart"
     },
@@ -174995,7 +174995,7 @@
       "file_type": "code",
       "source_file": "apps/app_user/patrol_test/test_bundle.dart",
       "source_location": null,
-      "community": 1423,
+      "community": 1429,
       "norm_label": "runappservice",
       "id": "apps_app_user_patrol_test_test_bundle_dart_runappservice"
     },
@@ -175004,7 +175004,7 @@
       "file_type": "code",
       "source_file": "apps/app_user/patrol_test/test_bundle.dart",
       "source_location": null,
-      "community": 1423,
+      "community": 1429,
       "norm_label": "package:patrol/patrol.dart",
       "id": "package_patrol_patrol_dart"
     },
@@ -175013,7 +175013,7 @@
       "file_type": "code",
       "source_file": "apps/app_user/patrol_test/test_bundle.dart",
       "source_location": null,
-      "community": 1423,
+      "community": 1429,
       "norm_label": "package:patrol/src/platform/contracts/contracts.dart",
       "id": "package_patrol_src_platform_contracts_contracts_dart"
     },
@@ -175022,7 +175022,7 @@
       "file_type": "code",
       "source_file": "apps/app_user/patrol_test/test_bundle.dart",
       "source_location": null,
-      "community": 1423,
+      "community": 1429,
       "norm_label": "package:test_api/src/backend/invoker.dart",
       "id": "package_test_api_src_backend_invoker_dart"
     },
@@ -175031,7 +175031,7 @@
       "file_type": "code",
       "source_file": "apps/app_user/patrol_test/test_bundle.dart",
       "source_location": null,
-      "community": 1423,
+      "community": 1429,
       "norm_label": "spec_walker/discovery/user_home_empty_test.dart",
       "id": "spec_walker_discovery_user_home_empty_test_dart"
     },
@@ -187791,7 +187791,7 @@
       "captured_at": "2026-05-09T19:37:00",
       "author": "spec-walk-user-sonnet",
       "contributor": null,
-      "community": 18,
+      "community": 1070,
       "norm_label": "homeroute spec diff",
       "id": "walk_20260509_home_diff"
     },
@@ -187804,7 +187804,7 @@
       "captured_at": "2026-05-09T19:37:00",
       "author": "spec-walk-user-sonnet",
       "contributor": null,
-      "community": 18,
+      "community": 1070,
       "norm_label": "homeroute uidump",
       "id": "walk_20260509_home_uidump"
     },
@@ -187817,7 +187817,7 @@
       "captured_at": "2026-05-09T19:36:00",
       "author": "spec-walk-user-sonnet",
       "contributor": null,
-      "community": 18,
+      "community": 1070,
       "norm_label": "loginroute spec diff",
       "id": "walk_20260509_login_diff"
     },
@@ -187830,7 +187830,7 @@
       "captured_at": "2026-05-09T19:36:00",
       "author": "spec-walk-user-sonnet",
       "contributor": null,
-      "community": 18,
+      "community": 1070,
       "norm_label": "loginroute uidump",
       "id": "walk_20260509_login_uidump"
     },
@@ -187843,7 +187843,7 @@
       "captured_at": "2026-05-09T19:43:00",
       "author": "spec-walk-user-sonnet",
       "contributor": null,
-      "community": 18,
+      "community": 1070,
       "norm_label": "mypageroute spec diff",
       "id": "walk_20260509_my_page_diff"
     },
@@ -187856,7 +187856,7 @@
       "captured_at": "2026-05-09T19:43:00",
       "author": "spec-walk-user-sonnet",
       "contributor": null,
-      "community": 18,
+      "community": 1070,
       "norm_label": "mypageroute uidump",
       "id": "walk_20260509_my_page_uidump"
     },
@@ -187895,7 +187895,7 @@
       "captured_at": "2026-05-09T19:51:00",
       "author": "spec-walk-user-sonnet",
       "contributor": null,
-      "community": 1707,
+      "community": 18,
       "norm_label": "notificationcenterroute spec diff",
       "id": "walk_20260509_notif_list_diff"
     },
@@ -187908,7 +187908,7 @@
       "captured_at": "2026-05-09T19:51:00",
       "author": "spec-walk-user-sonnet",
       "contributor": null,
-      "community": 1707,
+      "community": 18,
       "norm_label": "notificationcenterroute uidump",
       "id": "walk_20260509_notif_list_uidump"
     },
@@ -187921,7 +187921,7 @@
       "captured_at": "2026-05-09T19:47:00",
       "author": "spec-walk-user-sonnet",
       "contributor": null,
-      "community": 1707,
+      "community": 18,
       "norm_label": "notificationsettingsroute spec diff",
       "id": "walk_20260509_notif_settings_diff"
     },
@@ -187934,7 +187934,7 @@
       "captured_at": "2026-05-09T19:47:00",
       "author": "spec-walk-user-sonnet",
       "contributor": null,
-      "community": 1707,
+      "community": 18,
       "norm_label": "notificationsettingsroute uidump",
       "id": "walk_20260509_notif_settings_uidump"
     },
@@ -187999,7 +187999,7 @@
       "captured_at": "2026-05-09T19:48:00",
       "author": "spec-walk-user-sonnet",
       "contributor": null,
-      "community": 18,
+      "community": 1070,
       "norm_label": "privacyroute spec diff",
       "id": "walk_20260509_privacy_diff"
     },
@@ -188012,7 +188012,7 @@
       "captured_at": "2026-05-09T19:48:00",
       "author": "spec-walk-user-sonnet",
       "contributor": null,
-      "community": 18,
+      "community": 1070,
       "norm_label": "privacyroute uidump",
       "id": "walk_20260509_privacy_uidump"
     },
@@ -188064,7 +188064,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 18,
+      "community": 1070,
       "norm_label": "spec: home_page.html",
       "id": "spec_home_page_html"
     },
@@ -188077,7 +188077,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 18,
+      "community": 1070,
       "norm_label": "spec: login_page.html",
       "id": "spec_login_page_html"
     },
@@ -188090,7 +188090,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 18,
+      "community": 1070,
       "norm_label": "spec: my_page.html",
       "id": "spec_my_page_html"
     },
@@ -188116,7 +188116,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1707,
+      "community": 18,
       "norm_label": "spec: notification_list_screen.html",
       "id": "spec_notification_list_screen_html"
     },
@@ -188129,7 +188129,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1707,
+      "community": 18,
       "norm_label": "spec: notification_settings_screen.html",
       "id": "spec_notification_settings_screen_html"
     },
@@ -188168,7 +188168,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 18,
+      "community": 1070,
       "norm_label": "spec: privacy_page.html",
       "id": "spec_privacy_page_html"
     },
@@ -188207,7 +188207,7 @@
       "captured_at": "2026-05-09",
       "author": "spec-walk-user-sonnet",
       "contributor": null,
-      "community": 18,
+      "community": 1070,
       "norm_label": "spec-uidump drift comparison",
       "id": "concept_spec_drift"
     },
@@ -188506,7 +188506,7 @@
       "captured_at": "2026-05-10T10:02:00",
       "author": null,
       "contributor": null,
-      "community": 18,
+      "community": 1070,
       "norm_label": "homeroute spec_diff (2 drift: bug report, eventnowbar)",
       "id": "home_diff_20260510"
     },
@@ -188519,7 +188519,7 @@
       "captured_at": "2026-05-10",
       "author": null,
       "contributor": null,
-      "community": 18,
+      "community": 1070,
       "norm_label": "homeroute uidump (sort chips + tags)",
       "id": "home_uidump_20260510"
     },
@@ -188532,7 +188532,7 @@
       "captured_at": "2026-05-10T10:40:00",
       "author": null,
       "contributor": null,
-      "community": 1094,
+      "community": 1070,
       "norm_label": "loginroute spec_diff (1 drift: apple absent on android)",
       "id": "login_diff_20260510"
     },
@@ -188545,7 +188545,7 @@
       "captured_at": "2026-05-10",
       "author": null,
       "contributor": null,
-      "community": 1094,
+      "community": 1070,
       "norm_label": "loginroute uidump (verified vibe slogan)",
       "id": "login_uidump_20260510"
     },
@@ -188701,7 +188701,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1094,
+      "community": 1070,
       "norm_label": "platform-specific oauth (apple ios-only on android dump)",
       "id": "concept_platform_specific_login"
     },
@@ -188714,7 +188714,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 18,
+      "community": 1070,
       "norm_label": "bug report button (dev/debug-only artifact)",
       "id": "concept_bug_report_dev_only"
     },
@@ -291422,9 +291422,9 @@
       "source_file": ".github/scripts/check-ios-deploy-branch-conditions.sh",
       "source_location": "L31",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "github_scripts_check_ios_deploy_branch_conditions_sh",
-      "target": "scripts_check_ios_deploy_branch_conditions_assert_flutter_spm_disabled",
-      "confidence_score": 1.0
+      "target": "scripts_check_ios_deploy_branch_conditions_assert_flutter_spm_disabled"
     },
     {
       "relation": "contains",
@@ -471481,5 +471481,5 @@
       "source_file": "docs/legal/retention-map.md"
     }
   ],
-  "built_at_commit": "1b11cb981d0cb9d75211f00ac00949556f9e5b7e"
+  "built_at_commit": "5f53629fee1fa11aab7d03ef8c6df8c888c90af9"
 }
