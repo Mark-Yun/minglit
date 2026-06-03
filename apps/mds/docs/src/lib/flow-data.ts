@@ -480,7 +480,13 @@ const STANDALONE_SPECS: { user: StandaloneSpec[]; partner: StandaloneSpec[] } = 
       specBasename: 'event_matching_results_screen',
     },
   ],
-  partner: [],
+  partner: [
+    {
+      widget: 'OngoingEventListPage',
+      note: 'spec-only · route TBD · #2220 LIVE 운영 dashboard',
+      specBasename: 'ongoing_event_list_page',
+    },
+  ],
 };
 
 /** Sub-component specs for an app. Used by /screens to render nested rows. */
