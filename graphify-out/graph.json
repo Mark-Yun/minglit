@@ -6468,7 +6468,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L23",
       "id": "lib_route_pages_user_partnerdetailroute",
-      "community": 1704,
+      "community": 11,
       "norm_label": "partnerdetailroute"
     },
     {
@@ -6477,7 +6477,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L24",
       "id": "lib_route_pages_partnerdetailroute_widget",
-      "community": 1704,
+      "community": 11,
       "norm_label": "widget"
     },
     {
@@ -6486,7 +6486,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L25",
       "id": "lib_route_pages_partnerdetailroute_file",
-      "community": 1704,
+      "community": 11,
       "norm_label": "file"
     },
     {
@@ -6576,7 +6576,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L39",
       "id": "lib_route_pages_user_eventcheckinroute",
-      "community": 11,
+      "community": 1699,
       "norm_label": "eventcheckinroute"
     },
     {
@@ -6585,7 +6585,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L40",
       "id": "lib_route_pages_eventcheckinroute_widget",
-      "community": 11,
+      "community": 1699,
       "norm_label": "widget"
     },
     {
@@ -6594,7 +6594,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L41",
       "id": "lib_route_pages_eventcheckinroute_file",
-      "community": 11,
+      "community": 1699,
       "norm_label": "file"
     },
     {
@@ -6765,7 +6765,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L67",
       "id": "lib_route_pages_user_accountmanagementroute",
-      "community": 11,
+      "community": 1669,
       "norm_label": "accountmanagementroute"
     },
     {
@@ -6774,7 +6774,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L68",
       "id": "lib_route_pages_accountmanagementroute_widget",
-      "community": 11,
+      "community": 1669,
       "norm_label": "widget"
     },
     {
@@ -6783,7 +6783,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L69",
       "id": "lib_route_pages_accountmanagementroute_file",
-      "community": 11,
+      "community": 1669,
       "norm_label": "file"
     },
     {
@@ -7062,7 +7062,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L111",
       "id": "lib_route_pages_user_eventmatchingroute",
-      "community": 1696,
+      "community": 11,
       "norm_label": "eventmatchingroute"
     },
     {
@@ -7071,7 +7071,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L112",
       "id": "lib_route_pages_eventmatchingroute_widget",
-      "community": 1696,
+      "community": 11,
       "norm_label": "widget"
     },
     {
@@ -7080,7 +7080,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L113",
       "id": "lib_route_pages_eventmatchingroute_file",
-      "community": 1696,
+      "community": 11,
       "norm_label": "file"
     },
     {
@@ -7251,7 +7251,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L145",
       "id": "lib_route_pages_partner_partnerapplyroute",
-      "community": 1731,
+      "community": 1034,
       "norm_label": "partnerapplyroute"
     },
     {
@@ -7260,7 +7260,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L146",
       "id": "lib_route_pages_partnerapplyroute_widget",
-      "community": 1731,
+      "community": 1034,
       "norm_label": "widget"
     },
     {
@@ -7269,7 +7269,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L147",
       "id": "lib_route_pages_partnerapplyroute_file",
-      "community": 1731,
+      "community": 1034,
       "norm_label": "file"
     },
     {
@@ -7278,7 +7278,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L149",
       "id": "lib_route_pages_partner_partnerapplystatusroute",
-      "community": 1034,
+      "community": 1703,
       "norm_label": "partnerapplystatusroute"
     },
     {
@@ -7287,7 +7287,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L150",
       "id": "lib_route_pages_partnerapplystatusroute_widget",
-      "community": 1034,
+      "community": 1703,
       "norm_label": "widget"
     },
     {
@@ -7296,7 +7296,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L151",
       "id": "lib_route_pages_partnerapplystatusroute_file",
-      "community": 1034,
+      "community": 1703,
       "norm_label": "file"
     },
     {
@@ -7350,7 +7350,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L165",
       "id": "lib_route_pages_partner_applicationlistroute",
-      "community": 1034,
+      "community": 1696,
       "norm_label": "applicationlistroute"
     },
     {
@@ -7359,7 +7359,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L166",
       "id": "lib_route_pages_applicationlistroute_widget",
-      "community": 1034,
+      "community": 1696,
       "norm_label": "widget"
     },
     {
@@ -7368,7 +7368,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L167",
       "id": "lib_route_pages_applicationlistroute_file",
-      "community": 1034,
+      "community": 1696,
       "norm_label": "file"
     },
     {
@@ -7566,7 +7566,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L197",
       "id": "lib_route_pages_partner_partylistroute",
-      "community": 1034,
+      "community": 1705,
       "norm_label": "partylistroute"
     },
     {
@@ -7575,7 +7575,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L198",
       "id": "lib_route_pages_partylistroute_widget",
-      "community": 1034,
+      "community": 1705,
       "norm_label": "widget"
     },
     {
@@ -7584,7 +7584,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L199",
       "id": "lib_route_pages_partylistroute_file",
-      "community": 1034,
+      "community": 1705,
       "norm_label": "file"
     },
     {
@@ -7593,7 +7593,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L201",
       "id": "lib_route_pages_partner_partycreateroute",
-      "community": 1034,
+      "community": 1704,
       "norm_label": "partycreateroute"
     },
     {
@@ -7602,7 +7602,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L202",
       "id": "lib_route_pages_partycreateroute_widget",
-      "community": 1034,
+      "community": 1704,
       "norm_label": "widget"
     },
     {
@@ -7611,7 +7611,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L203",
       "id": "lib_route_pages_partycreateroute_file",
-      "community": 1034,
+      "community": 1704,
       "norm_label": "file"
     },
     {
@@ -7620,7 +7620,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L205",
       "id": "lib_route_pages_partner_partydetailroute",
-      "community": 1732,
+      "community": 1034,
       "norm_label": "partydetailroute"
     },
     {
@@ -7629,7 +7629,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L206",
       "id": "lib_route_pages_partydetailroute_widget",
-      "community": 1732,
+      "community": 1034,
       "norm_label": "widget"
     },
     {
@@ -7638,7 +7638,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L207",
       "id": "lib_route_pages_partydetailroute_file",
-      "community": 1732,
+      "community": 1034,
       "norm_label": "file"
     },
     {
@@ -7647,7 +7647,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L209",
       "id": "lib_route_pages_partner_partyeditroute",
-      "community": 1733,
+      "community": 1034,
       "norm_label": "partyeditroute"
     },
     {
@@ -7656,7 +7656,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L210",
       "id": "lib_route_pages_partyeditroute_widget",
-      "community": 1733,
+      "community": 1034,
       "norm_label": "widget"
     },
     {
@@ -7665,7 +7665,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L211",
       "id": "lib_route_pages_partyeditroute_file",
-      "community": 1733,
+      "community": 1034,
       "norm_label": "file"
     },
     {
@@ -7674,7 +7674,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L213",
       "id": "lib_route_pages_partner_partyticketeditroute",
-      "community": 1699,
+      "community": 1034,
       "norm_label": "partyticketeditroute"
     },
     {
@@ -7683,7 +7683,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L214",
       "id": "lib_route_pages_partyticketeditroute_widget",
-      "community": 1699,
+      "community": 1034,
       "norm_label": "widget"
     },
     {
@@ -7692,7 +7692,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L215",
       "id": "lib_route_pages_partyticketeditroute_file",
-      "community": 1699,
+      "community": 1034,
       "norm_label": "file"
     },
     {
@@ -7791,7 +7791,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L233",
       "id": "lib_route_pages_partner_ticketeditroute",
-      "community": 1703,
+      "community": 1034,
       "norm_label": "ticketeditroute"
     },
     {
@@ -7800,7 +7800,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L234",
       "id": "lib_route_pages_ticketeditroute_widget",
-      "community": 1703,
+      "community": 1034,
       "norm_label": "widget"
     },
     {
@@ -7809,7 +7809,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L235",
       "id": "lib_route_pages_ticketeditroute_file",
-      "community": 1703,
+      "community": 1034,
       "norm_label": "file"
     },
     {
@@ -8079,7 +8079,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L289",
       "id": "lib_route_pages_partner_recurrencemanagementroute",
-      "community": 1034,
+      "community": 1706,
       "norm_label": "recurrencemanagementroute"
     },
     {
@@ -8088,7 +8088,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L290",
       "id": "lib_route_pages_recurrencemanagementroute_widget",
-      "community": 1034,
+      "community": 1706,
       "norm_label": "widget"
     },
     {
@@ -8097,7 +8097,7 @@
       "source_file": "apps/mds/docs/src/lib/route-pages.json",
       "source_location": "L291",
       "id": "lib_route_pages_recurrencemanagementroute_file",
-      "community": 1034,
+      "community": 1706,
       "norm_label": "file"
     },
     {
@@ -47829,7 +47829,7 @@
       "author": null,
       "contributor": null,
       "id": "notification_settings_controller_test",
-      "community": 1093,
+      "community": 1214,
       "norm_label": "notificationsettingscontrollertest"
     },
     {
@@ -47842,7 +47842,7 @@
       "author": null,
       "contributor": null,
       "id": "notification_settings_controller",
-      "community": 1093,
+      "community": 1214,
       "norm_label": "notificationsettingscontroller"
     },
     {
@@ -47855,7 +47855,7 @@
       "author": null,
       "contributor": null,
       "id": "notification_repository",
-      "community": 1093,
+      "community": 1214,
       "norm_label": "notificationrepository"
     },
     {
@@ -47868,7 +47868,7 @@
       "author": null,
       "contributor": null,
       "id": "user_settings",
-      "community": 1093,
+      "community": 1214,
       "norm_label": "usersettings model"
     },
     {
@@ -59146,7 +59146,7 @@
       "author": null,
       "contributor": null,
       "id": "iamport_client_iamportclient",
-      "community": 988,
+      "community": 1011,
       "norm_label": "iamportclient"
     },
     {
@@ -59172,7 +59172,7 @@
       "author": null,
       "contributor": null,
       "id": "iamport_client_test_iamportclienttest",
-      "community": 988,
+      "community": 1011,
       "norm_label": "iamportclienttest"
     },
     {
@@ -59224,7 +59224,7 @@
       "author": null,
       "contributor": null,
       "id": "portone_client_portonev2client",
-      "community": 988,
+      "community": 1011,
       "norm_label": "portonev2client"
     },
     {
@@ -59237,7 +59237,7 @@
       "author": null,
       "contributor": null,
       "id": "portone_client_getportoneclient",
-      "community": 988,
+      "community": 1011,
       "norm_label": "getportoneclient"
     },
     {
@@ -69092,7 +69092,7 @@
       "author": null,
       "contributor": null,
       "id": "navigation_observer",
-      "community": 988,
+      "community": 1011,
       "norm_label": "minglitnavigationobserver"
     },
     {
@@ -69105,7 +69105,7 @@
       "author": null,
       "contributor": null,
       "id": "riverpod_ext",
-      "community": 988,
+      "community": 1011,
       "norm_label": "asyncvalueminglitx"
     },
     {
@@ -69118,7 +69118,7 @@
       "author": null,
       "contributor": null,
       "id": "log_util",
-      "community": 988,
+      "community": 1011,
       "norm_label": "log"
     },
     {
@@ -69603,7 +69603,7 @@
       "author": null,
       "contributor": null,
       "id": "error_ui_handler",
-      "community": 988,
+      "community": 1011,
       "norm_label": "handlemingliterror"
     },
     {
@@ -69629,7 +69629,7 @@
       "author": null,
       "contributor": null,
       "id": "feedback_ext",
-      "community": 988,
+      "community": 1011,
       "norm_label": "minglitfeedbackx"
     },
     {
@@ -69655,7 +69655,7 @@
       "author": null,
       "contributor": null,
       "id": "minglit_page_transitions",
-      "community": 988,
+      "community": 1011,
       "norm_label": "minglitpagetransitions"
     },
     {
@@ -72061,7 +72061,7 @@
       "author": null,
       "contributor": null,
       "id": "notification_initializer",
-      "community": 1093,
+      "community": 1214,
       "norm_label": "notificationinitializerprovider"
     },
     {
@@ -72074,7 +72074,7 @@
       "author": null,
       "contributor": null,
       "id": "notification_list_controller",
-      "community": 1093,
+      "community": 1214,
       "norm_label": "notificationlist (controller)"
     },
     {
@@ -72087,7 +72087,7 @@
       "author": null,
       "contributor": null,
       "id": "notification_service",
-      "community": 1093,
+      "community": 1214,
       "norm_label": "notificationservice"
     },
     {
@@ -72100,7 +72100,7 @@
       "author": null,
       "contributor": null,
       "id": "notification_settings_screen",
-      "community": 1093,
+      "community": 1214,
       "norm_label": "notificationsettingsscreen"
     },
     {
@@ -73093,7 +73093,7 @@
       "source_file": "/Users/mark/workspace/minglit-worker-runtime/workspace/needs-swe-sonnet-1/shared/packages/minglit_kit/lib/src/data/models/event_application.dart",
       "source_location": null,
       "id": "package_minglit_kit_src_data_models_verification_submission_dart",
-      "community": 1018,
+      "community": 1,
       "norm_label": "package:minglit_kit/src/data/models/verification_submission.dart"
     },
     {
@@ -73832,7 +73832,7 @@
       "author": null,
       "contributor": null,
       "id": "user_settings_model",
-      "community": 1093,
+      "community": 1214,
       "norm_label": "usersettings model"
     },
     {
@@ -75790,7 +75790,7 @@
       "author": null,
       "contributor": null,
       "id": "app_permission_settings_screen_test",
-      "community": 1093,
+      "community": 1214,
       "norm_label": "apppermissionsettingsscreentest"
     },
     {
@@ -75803,7 +75803,7 @@
       "author": null,
       "contributor": null,
       "id": "app_permission_settings_screen",
-      "community": 1093,
+      "community": 1214,
       "norm_label": "apppermissionsettingsscreen"
     },
     {
@@ -75905,7 +75905,7 @@
       "author": null,
       "contributor": null,
       "id": "current_user_provider",
-      "community": 1093,
+      "community": 1214,
       "norm_label": "currentuserprovider"
     },
     {
@@ -76106,7 +76106,7 @@
       "author": null,
       "contributor": null,
       "id": "notification_service_test",
-      "community": 1093,
+      "community": 1214,
       "norm_label": "notificationservicetest"
     },
     {
@@ -76119,7 +76119,7 @@
       "author": null,
       "contributor": null,
       "id": "notification_list_controller_test",
-      "community": 1093,
+      "community": 1214,
       "norm_label": "notificationlistcontrollertest"
     },
     {
@@ -76132,7 +76132,7 @@
       "author": null,
       "contributor": null,
       "id": "notification_list_provider",
-      "community": 1093,
+      "community": 1214,
       "norm_label": "notificationlistprovider"
     },
     {
@@ -81404,19 +81404,19 @@
       "norm_label": "\u110c\u1161\u110c\u116e \u110a\u1173\u1102\u1173\u11ab \u1106\u1167\u11bc\u1105\u1167\u11bc"
     },
     {
-      "label": "code:bash (npm run dev      # http://localhost:3003)",
+      "label": "code:bash (# repo root \uc5d0\uc11c)",
       "file_type": "document",
       "source_file": "apps/mds/docs/BLUEDOC.md",
       "source_location": "L29",
       "id": "docs_bluedoc_codeblock_1",
       "community": 1455,
-      "norm_label": "code:bash (npm run dev      # http://localhost:3003)"
+      "norm_label": "code:bash (# repo root \u110b\u1166\u1109\u1165)"
     },
     {
       "label": "\uad00\ub828",
       "file_type": "document",
       "source_file": "apps/mds/docs/BLUEDOC.md",
-      "source_location": "L37",
+      "source_location": "L41",
       "id": "docs_bluedoc_\uad00\ub828",
       "community": 1455,
       "norm_label": "\u1100\u116a\u11ab\u1105\u1167\u11ab"
@@ -82657,16 +82657,16 @@
     {
       "label": "index.md",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/party_list_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/party_list_page/index.md",
       "source_location": "L1",
-      "id": "tmp_minglit_runner_2_work_minglit_minglit_apps_mds_docs_public_specs_party_list_page_index_md",
+      "id": "apps_mds_docs_public_specs_party_list_page_index_md",
       "community": 116,
       "norm_label": "index.md"
     },
     {
       "label": "Party List",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/party_list_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/party_list_page/index.md",
       "source_location": "L3",
       "id": "party_list_page_index_party_list",
       "community": 116,
@@ -82675,7 +82675,7 @@
     {
       "label": "Overview",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/party_list_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/party_list_page/index.md",
       "source_location": "L5",
       "id": "party_list_page_index_overview",
       "community": 116,
@@ -82684,7 +82684,7 @@
     {
       "label": "History",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/party_list_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/party_list_page/index.md",
       "source_location": "L19",
       "id": "party_list_page_index_history",
       "community": 116,
@@ -82693,7 +82693,7 @@
     {
       "label": "Layout",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/party_list_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/party_list_page/index.md",
       "source_location": "L32",
       "id": "party_list_page_index_layout",
       "community": 116,
@@ -82702,7 +82702,7 @@
     {
       "label": "Blueprint & tree",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/party_list_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/party_list_page/index.md",
       "source_location": "L36",
       "id": "party_list_page_index_blueprint_tree",
       "community": 116,
@@ -82711,7 +82711,7 @@
     {
       "label": "Spacing & alignment rules",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/party_list_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/party_list_page/index.md",
       "source_location": "L44",
       "id": "party_list_page_index_spacing_alignment_rules",
       "community": 116,
@@ -82720,7 +82720,7 @@
     {
       "label": "PartyListItem sub-anatomy",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/party_list_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/party_list_page/index.md",
       "source_location": "L57",
       "id": "party_list_page_index_partylistitem_sub_anatomy",
       "community": 116,
@@ -82729,7 +82729,7 @@
     {
       "label": "AppBar sub-anatomy",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/party_list_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/party_list_page/index.md",
       "source_location": "L82",
       "id": "party_list_page_index_appbar_sub_anatomy",
       "community": 116,
@@ -82738,7 +82738,7 @@
     {
       "label": "Empty state sub-anatomy",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/party_list_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/party_list_page/index.md",
       "source_location": "L96",
       "id": "party_list_page_index_empty_state_sub_anatomy",
       "community": 116,
@@ -82747,7 +82747,7 @@
     {
       "label": "Help bottom sheet sub-anatomy _(MinglitHelpSheet \ucef4\ud3ec\ub10c\ud2b8 \ud6c4\ubcf4)_",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/party_list_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/party_list_page/index.md",
       "source_location": "L108",
       "id": "party_list_page_index_help_bottom_sheet_sub_anatomy_minglithelpsheet_\ucef4\ud3ec\ub10c\ud2b8_\ud6c4\ubcf4",
       "community": 116,
@@ -82756,7 +82756,7 @@
     {
       "label": "States",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/party_list_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/party_list_page/index.md",
       "source_location": "L134",
       "id": "party_list_page_index_states",
       "community": 116,
@@ -82765,7 +82765,7 @@
     {
       "label": "Default \u00b7 \ud30c\ud2f0 \u2265 1 \ud83c\udfaf baseline \u00b7 \ub4f1\ub85d\ub41c \ud30c\ud2f0\uac00 \ud55c \uac1c \uc774\uc0c1\uc778 \uc77c\ubc18 \uc0c1\ud0dc",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/party_list_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/party_list_page/index.md",
       "source_location": "L140",
       "id": "party_list_page_index_default_\ud30c\ud2f0_1_baseline_\ub4f1\ub85d\ub41c_\ud30c\ud2f0\uac00_\ud55c_\uac1c_\uc774\uc0c1\uc778_\uc77c\ubc18_\uc0c1\ud0dc",
       "community": 116,
@@ -82774,7 +82774,7 @@
     {
       "label": "Empty \u00b7 \ub4f1\ub85d\ub41c \ud30c\ud2f0 0 \uc628\ubcf4\ub529 \uc9c1\ud6c4\ub098 \ubaa8\ub4e0 \ud30c\ud2f0\uac00 \uc815\ub9ac\ub41c \uc9c1\ud6c4\uc758 \ube48 \uc0c1\ud0dc",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/party_list_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/party_list_page/index.md",
       "source_location": "L153",
       "id": "party_list_page_index_empty_\ub4f1\ub85d\ub41c_\ud30c\ud2f0_0_\uc628\ubcf4\ub529_\uc9c1\ud6c4\ub098_\ubaa8\ub4e0_\ud30c\ud2f0\uac00_\uc815\ub9ac\ub41c_\uc9c1\ud6c4\uc758_\ube48_\uc0c1\ud0dc",
       "community": 116,
@@ -82783,7 +82783,7 @@
     {
       "label": "Loading \u00b7 \ud30c\ud2f0 \ubaa9\ub85d \uac00\uc838\uc624\ub294 \uc911 \ud654\uba74 \uc9c4\uc785 \uc9c1\ud6c4 \ub610\ub294 \uc0c8\ub85c\uace0\uce68 \uc9c1\ud6c4",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/party_list_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/party_list_page/index.md",
       "source_location": "L166",
       "id": "party_list_page_index_loading_\ud30c\ud2f0_\ubaa9\ub85d_\uac00\uc838\uc624\ub294_\uc911_\ud654\uba74_\uc9c4\uc785_\uc9c1\ud6c4_\ub610\ub294_\uc0c8\ub85c\uace0\uce68_\uc9c1\ud6c4",
       "community": 116,
@@ -82792,7 +82792,7 @@
     {
       "label": "Error \u00b7 \ubaa9\ub85d \ubd88\ub7ec\uc624\uae30 \uc2e4\ud328 \ub124\ud2b8\uc6cc\ud06c \ub610\ub294 \uc11c\ubc84 \uc624\ub958\ub85c \uacb0\uacfc\ub97c \ubc1b\uc9c0 \ubabb\ud55c \uacbd\uc6b0",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/party_list_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/party_list_page/index.md",
       "source_location": "L179",
       "id": "party_list_page_index_error_\ubaa9\ub85d_\ubd88\ub7ec\uc624\uae30_\uc2e4\ud328_\ub124\ud2b8\uc6cc\ud06c_\ub610\ub294_\uc11c\ubc84_\uc624\ub958\ub85c_\uacb0\uacfc\ub97c_\ubc1b\uc9c0_\ubabb\ud55c_\uacbd\uc6b0",
       "community": 116,
@@ -82801,7 +82801,7 @@
     {
       "label": "Help \u00b7 \ub3c4\uc6c0\ub9d0 bottom sheet \ud83c\udd98 info \uc544\uc774\ucf58 \ud0ed \uc2dc \ub178\ucd9c \u2014 \ud30c\ud2b8\ub108 \uc571 \uc77c\uad00 \ud328\ud134",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/party_list_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/party_list_page/index.md",
       "source_location": "L192",
       "id": "party_list_page_index_help_\ub3c4\uc6c0\ub9d0_bottom_sheet_info_\uc544\uc774\ucf58_\ud0ed_\uc2dc_\ub178\ucd9c_\ud30c\ud2b8\ub108_\uc571_\uc77c\uad00_\ud328\ud134",
       "community": 116,
@@ -82810,7 +82810,7 @@
     {
       "label": "Global Behavior",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/party_list_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/party_list_page/index.md",
       "source_location": "L207",
       "id": "party_list_page_index_global_behavior",
       "community": 116,
@@ -82819,7 +82819,7 @@
     {
       "label": "Cross-cutting interactions",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/party_list_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/party_list_page/index.md",
       "source_location": "L211",
       "id": "party_list_page_index_cross_cutting_interactions",
       "community": 116,
@@ -82828,7 +82828,7 @@
     {
       "label": "Motion timing",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/party_list_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/party_list_page/index.md",
       "source_location": "L222",
       "id": "party_list_page_index_motion_timing",
       "community": 116,
@@ -82837,7 +82837,7 @@
     {
       "label": "Global edge cases",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/party_list_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/party_list_page/index.md",
       "source_location": "L235",
       "id": "party_list_page_index_global_edge_cases",
       "community": 116,
@@ -82846,7 +82846,7 @@
     {
       "label": "Reference",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/party_list_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/party_list_page/index.md",
       "source_location": "L246",
       "id": "party_list_page_index_reference",
       "community": 116,
@@ -82855,7 +82855,7 @@
     {
       "label": "Implementation source",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/party_list_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/party_list_page/index.md",
       "source_location": "L250",
       "id": "party_list_page_index_implementation_source",
       "community": 116,
@@ -82864,7 +82864,7 @@
     {
       "label": "Related screens",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/party_list_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/party_list_page/index.md",
       "source_location": "L264",
       "id": "party_list_page_index_related_screens",
       "community": 116,
@@ -84007,16 +84007,16 @@
     {
       "label": "index.md",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/settlement_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/settlement_page/index.md",
       "source_location": "L1",
-      "id": "tmp_minglit_runner_2_work_minglit_minglit_apps_mds_docs_public_specs_settlement_page_index_md",
+      "id": "apps_mds_docs_public_specs_settlement_page_index_md",
       "community": 117,
       "norm_label": "index.md"
     },
     {
       "label": "Settlement",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/settlement_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/settlement_page/index.md",
       "source_location": "L3",
       "id": "settlement_page_index_settlement",
       "community": 117,
@@ -84025,7 +84025,7 @@
     {
       "label": "Overview",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/settlement_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/settlement_page/index.md",
       "source_location": "L5",
       "id": "settlement_page_index_overview",
       "community": 117,
@@ -84034,7 +84034,7 @@
     {
       "label": "History",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/settlement_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/settlement_page/index.md",
       "source_location": "L19",
       "id": "settlement_page_index_history",
       "community": 117,
@@ -84043,7 +84043,7 @@
     {
       "label": "Layout",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/settlement_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/settlement_page/index.md",
       "source_location": "L31",
       "id": "settlement_page_index_layout",
       "community": 117,
@@ -84052,7 +84052,7 @@
     {
       "label": "Blueprint & tree",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/settlement_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/settlement_page/index.md",
       "source_location": "L35",
       "id": "settlement_page_index_blueprint_tree",
       "community": 117,
@@ -84061,7 +84061,7 @@
     {
       "label": "Spacing & alignment rules",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/settlement_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/settlement_page/index.md",
       "source_location": "L43",
       "id": "settlement_page_index_spacing_alignment_rules",
       "community": 117,
@@ -84070,7 +84070,7 @@
     {
       "label": "AppBar sub-anatomy",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/settlement_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/settlement_page/index.md",
       "source_location": "L55",
       "id": "settlement_page_index_appbar_sub_anatomy",
       "community": 117,
@@ -84079,7 +84079,7 @@
     {
       "label": "Help bottom sheet sub-anatomy _(MinglitHelpSheet \ucef4\ud3ec\ub10c\ud2b8 \ud6c4\ubcf4)_",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/settlement_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/settlement_page/index.md",
       "source_location": "L66",
       "id": "settlement_page_index_help_bottom_sheet_sub_anatomy_minglithelpsheet_\ucef4\ud3ec\ub10c\ud2b8_\ud6c4\ubcf4",
       "community": 117,
@@ -84088,7 +84088,7 @@
     {
       "label": "States",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/settlement_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/settlement_page/index.md",
       "source_location": "L81",
       "id": "settlement_page_index_states",
       "community": 117,
@@ -84097,7 +84097,7 @@
     {
       "label": "List \u00b7 \uc815\uc0b0 \ub0b4\uc5ed (mixed status) \ud83c\udfaf baseline \u00b7 production",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/settlement_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/settlement_page/index.md",
       "source_location": "L87",
       "id": "settlement_page_index_list_\uc815\uc0b0_\ub0b4\uc5ed_mixed_status_baseline_production",
       "community": 117,
@@ -84106,7 +84106,7 @@
     {
       "label": "List \u00b7 Filtered (PROCESSING) \uc9c0\uae09\uc911 chip \uc120\ud0dd \u00b7 \ud574\ub2f9 \uc0c1\ud0dc\ub9cc \ud45c\uc2dc",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/settlement_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/settlement_page/index.md",
       "source_location": "L100",
       "id": "settlement_page_index_list_filtered_processing_\uc9c0\uae09\uc911_chip_\uc120\ud0dd_\ud574\ub2f9_\uc0c1\ud0dc\ub9cc_\ud45c\uc2dc",
       "community": 117,
@@ -84115,7 +84115,7 @@
     {
       "label": "List \u00b7 Empty (no settlements) \ucd5c\ucd08 \uc9c4\uc785 \u00b7 CTA \"\uccab \uc774\ubca4\ud2b8 \ub9cc\ub4e4\uae30\"",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/settlement_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/settlement_page/index.md",
       "source_location": "L113",
       "id": "settlement_page_index_list_empty_no_settlements_\ucd5c\ucd08_\uc9c4\uc785_cta_\uccab_\uc774\ubca4\ud2b8_\ub9cc\ub4e4\uae30",
       "community": 117,
@@ -84124,7 +84124,7 @@
     {
       "label": "Dashboard tab \ub300\uc2dc\ubcf4\ub4dc \ud0ed \u00b7 \uc6d4\ubcc4 \uc694\uc57d + \uc0c1\ud0dc\ubcc4 \uce74\uc6b4\ud2b8",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/settlement_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/settlement_page/index.md",
       "source_location": "L126",
       "id": "settlement_page_index_dashboard_tab_\ub300\uc2dc\ubcf4\ub4dc_\ud0ed_\uc6d4\ubcc4_\uc694\uc57d_\uc0c1\ud0dc\ubcc4_\uce74\uc6b4\ud2b8",
       "community": 117,
@@ -84133,7 +84133,7 @@
     {
       "label": "Loading \uc9c4\uc785 \uc9c1\ud6c4 \ub610\ub294 \uc0c8\ub85c\uace0\uce68 \uc911",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/settlement_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/settlement_page/index.md",
       "source_location": "L139",
       "id": "settlement_page_index_loading_\uc9c4\uc785_\uc9c1\ud6c4_\ub610\ub294_\uc0c8\ub85c\uace0\uce68_\uc911",
       "community": 117,
@@ -84142,7 +84142,7 @@
     {
       "label": "Error \uc815\uc0b0 \ubaa9\ub85d\uc744 \ubc1b\uc9c0 \ubabb\ud568 \u00b7 \uc7ac\uc2dc\ub3c4 CTA",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/settlement_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/settlement_page/index.md",
       "source_location": "L152",
       "id": "settlement_page_index_error_\uc815\uc0b0_\ubaa9\ub85d\uc744_\ubc1b\uc9c0_\ubabb\ud568_\uc7ac\uc2dc\ub3c4_cta",
       "community": 117,
@@ -84151,7 +84151,7 @@
     {
       "label": "Help \u00b7 \ub3c4\uc6c0\ub9d0 bottom sheet \ud83c\udd98 info \uc544\uc774\ucf58 \ud0ed \uc2dc \ub178\ucd9c \u2014 \ud30c\ud2b8\ub108 \uc571 \uc77c\uad00 \ud328\ud134",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/settlement_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/settlement_page/index.md",
       "source_location": "L165",
       "id": "settlement_page_index_help_\ub3c4\uc6c0\ub9d0_bottom_sheet_info_\uc544\uc774\ucf58_\ud0ed_\uc2dc_\ub178\ucd9c_\ud30c\ud2b8\ub108_\uc571_\uc77c\uad00_\ud328\ud134",
       "community": 117,
@@ -84160,7 +84160,7 @@
     {
       "label": "Global Behavior",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/settlement_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/settlement_page/index.md",
       "source_location": "L179",
       "id": "settlement_page_index_global_behavior",
       "community": 117,
@@ -84169,7 +84169,7 @@
     {
       "label": "Cross-cutting interactions",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/settlement_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/settlement_page/index.md",
       "source_location": "L183",
       "id": "settlement_page_index_cross_cutting_interactions",
       "community": 117,
@@ -84178,7 +84178,7 @@
     {
       "label": "Motion timing",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/settlement_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/settlement_page/index.md",
       "source_location": "L193",
       "id": "settlement_page_index_motion_timing",
       "community": 117,
@@ -84187,7 +84187,7 @@
     {
       "label": "Global edge cases",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/settlement_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/settlement_page/index.md",
       "source_location": "L205",
       "id": "settlement_page_index_global_edge_cases",
       "community": 117,
@@ -84196,7 +84196,7 @@
     {
       "label": "Reference",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/settlement_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/settlement_page/index.md",
       "source_location": "L214",
       "id": "settlement_page_index_reference",
       "community": 117,
@@ -84205,7 +84205,7 @@
     {
       "label": "Implementation source",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/settlement_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/settlement_page/index.md",
       "source_location": "L218",
       "id": "settlement_page_index_implementation_source",
       "community": 117,
@@ -84214,7 +84214,7 @@
     {
       "label": "Related screens",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/settlement_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/settlement_page/index.md",
       "source_location": "L231",
       "id": "settlement_page_index_related_screens",
       "community": 117,
@@ -85024,16 +85024,16 @@
     {
       "label": "index.md",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/event_application_manage_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/event_application_manage_page/index.md",
       "source_location": "L1",
-      "id": "tmp_minglit_runner_2_work_minglit_minglit_apps_mds_docs_public_specs_event_application_manage_page_index_md",
+      "id": "apps_mds_docs_public_specs_event_application_manage_page_index_md",
       "community": 108,
       "norm_label": "index.md"
     },
     {
       "label": "Event Application Manage",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/event_application_manage_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/event_application_manage_page/index.md",
       "source_location": "L3",
       "id": "event_application_manage_page_index_event_application_manage",
       "community": 108,
@@ -85042,7 +85042,7 @@
     {
       "label": "Overview",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/event_application_manage_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/event_application_manage_page/index.md",
       "source_location": "L5",
       "id": "event_application_manage_page_index_overview",
       "community": 108,
@@ -85051,7 +85051,7 @@
     {
       "label": "History",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/event_application_manage_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/event_application_manage_page/index.md",
       "source_location": "L19",
       "id": "event_application_manage_page_index_history",
       "community": 108,
@@ -85060,7 +85060,7 @@
     {
       "label": "Layout",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/event_application_manage_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/event_application_manage_page/index.md",
       "source_location": "L31",
       "id": "event_application_manage_page_index_layout",
       "community": 108,
@@ -85069,7 +85069,7 @@
     {
       "label": "Blueprint & tree",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/event_application_manage_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/event_application_manage_page/index.md",
       "source_location": "L35",
       "id": "event_application_manage_page_index_blueprint_tree",
       "community": 108,
@@ -85078,7 +85078,7 @@
     {
       "label": "Spacing & alignment rules",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/event_application_manage_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/event_application_manage_page/index.md",
       "source_location": "L43",
       "id": "event_application_manage_page_index_spacing_alignment_rules",
       "community": 108,
@@ -85087,7 +85087,7 @@
     {
       "label": "AppBar sub-anatomy",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/event_application_manage_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/event_application_manage_page/index.md",
       "source_location": "L54",
       "id": "event_application_manage_page_index_appbar_sub_anatomy",
       "community": 108,
@@ -85096,7 +85096,7 @@
     {
       "label": "Help bottom sheet sub-anatomy _(MinglitHelpSheet \ucef4\ud3ec\ub10c\ud2b8 \ud6c4\ubcf4)_",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/event_application_manage_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/event_application_manage_page/index.md",
       "source_location": "L64",
       "id": "event_application_manage_page_index_help_bottom_sheet_sub_anatomy_minglithelpsheet_\ucef4\ud3ec\ub10c\ud2b8_\ud6c4\ubcf4",
       "community": 108,
@@ -85105,7 +85105,7 @@
     {
       "label": "States",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/event_application_manage_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/event_application_manage_page/index.md",
       "source_location": "L81",
       "id": "event_application_manage_page_index_states",
       "community": 108,
@@ -85114,7 +85114,7 @@
     {
       "label": "State summary \u2014 7 states",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/event_application_manage_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/event_application_manage_page/index.md",
       "source_location": "L87",
       "id": "event_application_manage_page_index_state_summary_7_states",
       "community": 108,
@@ -85123,7 +85123,7 @@
     {
       "label": "Default \u00b7 \ub300\uae30\uc911 (pending) \ud83c\udfaf baseline \u00b7 \ucc98\ub9ac\ud560 \uc2e0\uccad\uc774 \uc788\ub294 \uc77c\ubc18 \uc9c4\uc785",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/event_application_manage_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/event_application_manage_page/index.md",
       "source_location": "L99",
       "id": "event_application_manage_page_index_default_\ub300\uae30\uc911_pending_baseline_\ucc98\ub9ac\ud560_\uc2e0\uccad\uc774_\uc788\ub294_\uc77c\ubc18_\uc9c4\uc785",
       "community": 108,
@@ -85132,7 +85132,7 @@
     {
       "label": "\uc2b9\uc778\ub428 \ud0ed (approved/paid history) tab 1 \u00b7 \ucc98\ub9ac \uc774\ub825",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/event_application_manage_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/event_application_manage_page/index.md",
       "source_location": "L112",
       "id": "event_application_manage_page_index_\uc2b9\uc778\ub428_\ud0ed_approved_paid_history_tab_1_\ucc98\ub9ac_\uc774\ub825",
       "community": 108,
@@ -85141,7 +85141,7 @@
     {
       "label": "\uac70\uc808\ub428 \ud0ed (rejected history) tab 2 \u00b7 \ucc98\ub9ac \uc774\ub825",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/event_application_manage_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/event_application_manage_page/index.md",
       "source_location": "L125",
       "id": "event_application_manage_page_index_\uac70\uc808\ub428_\ud0ed_rejected_history_tab_2_\ucc98\ub9ac_\uc774\ub825",
       "community": 108,
@@ -85150,7 +85150,7 @@
     {
       "label": "Empty \ud574\ub2f9 \ud0ed\uc5d0 \uc2e0\uccad\uc774 \uc5c6\uc744 \ub54c",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/event_application_manage_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/event_application_manage_page/index.md",
       "source_location": "L138",
       "id": "event_application_manage_page_index_empty_\ud574\ub2f9_\ud0ed\uc5d0_\uc2e0\uccad\uc774_\uc5c6\uc744_\ub54c",
       "community": 108,
@@ -85159,7 +85159,7 @@
     {
       "label": "Loading \ub370\uc774\ud130 \ub85c\ub529 \uc911",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/event_application_manage_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/event_application_manage_page/index.md",
       "source_location": "L151",
       "id": "event_application_manage_page_index_loading_\ub370\uc774\ud130_\ub85c\ub529_\uc911",
       "community": 108,
@@ -85168,7 +85168,7 @@
     {
       "label": "Error \ub370\uc774\ud130 \ub85c\ub529 \uc2e4\ud328",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/event_application_manage_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/event_application_manage_page/index.md",
       "source_location": "L164",
       "id": "event_application_manage_page_index_error_\ub370\uc774\ud130_\ub85c\ub529_\uc2e4\ud328",
       "community": 108,
@@ -85177,7 +85177,7 @@
     {
       "label": "Help \u00b7 \ub3c4\uc6c0\ub9d0 bottom sheet \ud83c\udd98 info \uc544\uc774\ucf58 \ud0ed \uc2dc \ub178\ucd9c \u2014 \ud30c\ud2b8\ub108 \uc571 \uc77c\uad00 \ud328\ud134",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/event_application_manage_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/event_application_manage_page/index.md",
       "source_location": "L177",
       "id": "event_application_manage_page_index_help_\ub3c4\uc6c0\ub9d0_bottom_sheet_info_\uc544\uc774\ucf58_\ud0ed_\uc2dc_\ub178\ucd9c_\ud30c\ud2b8\ub108_\uc571_\uc77c\uad00_\ud328\ud134",
       "community": 108,
@@ -85186,7 +85186,7 @@
     {
       "label": "Global Behavior",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/event_application_manage_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/event_application_manage_page/index.md",
       "source_location": "L192",
       "id": "event_application_manage_page_index_global_behavior",
       "community": 108,
@@ -85195,7 +85195,7 @@
     {
       "label": "Cross-cutting interactions",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/event_application_manage_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/event_application_manage_page/index.md",
       "source_location": "L196",
       "id": "event_application_manage_page_index_cross_cutting_interactions",
       "community": 108,
@@ -85204,7 +85204,7 @@
     {
       "label": "Motion timing",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/event_application_manage_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/event_application_manage_page/index.md",
       "source_location": "L206",
       "id": "event_application_manage_page_index_motion_timing",
       "community": 108,
@@ -85213,7 +85213,7 @@
     {
       "label": "Global edge cases",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/event_application_manage_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/event_application_manage_page/index.md",
       "source_location": "L219",
       "id": "event_application_manage_page_index_global_edge_cases",
       "community": 108,
@@ -85222,7 +85222,7 @@
     {
       "label": "Reference",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/event_application_manage_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/event_application_manage_page/index.md",
       "source_location": "L231",
       "id": "event_application_manage_page_index_reference",
       "community": 108,
@@ -85231,7 +85231,7 @@
     {
       "label": "Implementation source",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/event_application_manage_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/event_application_manage_page/index.md",
       "source_location": "L235",
       "id": "event_application_manage_page_index_implementation_source",
       "community": 108,
@@ -85240,7 +85240,7 @@
     {
       "label": "Related screens",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/event_application_manage_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/event_application_manage_page/index.md",
       "source_location": "L248",
       "id": "event_application_manage_page_index_related_screens",
       "community": 108,
@@ -89947,16 +89947,16 @@
     {
       "label": "index.md",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L1",
-      "id": "tmp_minglit_runner_2_work_minglit_minglit_apps_mds_docs_public_specs_partner_home_page_index_md",
+      "id": "apps_mds_docs_public_specs_partner_home_page_index_md",
       "community": 69,
       "norm_label": "index.md"
     },
     {
       "label": "Partner Home",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L3",
       "id": "partner_home_page_index_partner_home",
       "community": 69,
@@ -89965,7 +89965,7 @@
     {
       "label": "Overview",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L5",
       "id": "partner_home_page_index_overview",
       "community": 69,
@@ -89974,7 +89974,7 @@
     {
       "label": "History",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L19",
       "id": "partner_home_page_index_history",
       "community": 69,
@@ -89983,7 +89983,7 @@
     {
       "label": "Layout",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L32",
       "id": "partner_home_page_index_layout",
       "community": 69,
@@ -89992,7 +89992,7 @@
     {
       "label": "Blueprint & tree",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L36",
       "id": "partner_home_page_index_blueprint_tree",
       "community": 69,
@@ -90001,7 +90001,7 @@
     {
       "label": "Spacing & alignment rules",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L44",
       "id": "partner_home_page_index_spacing_alignment_rules",
       "community": 69,
@@ -90010,7 +90010,7 @@
     {
       "label": "AppBar sub-anatomy",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L56",
       "id": "partner_home_page_index_appbar_sub_anatomy",
       "community": 69,
@@ -90019,7 +90019,7 @@
     {
       "label": "Help bottom sheet sub-anatomy _(MinglitHelpSheet \ucef4\ud3ec\ub10c\ud2b8 \ud6c4\ubcf4)_",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L68",
       "id": "partner_home_page_index_help_bottom_sheet_sub_anatomy_minglithelpsheet_\ucef4\ud3ec\ub10c\ud2b8_\ud6c4\ubcf4",
       "community": 69,
@@ -90028,7 +90028,7 @@
     {
       "label": "States",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L83",
       "id": "partner_home_page_index_states",
       "community": 69,
@@ -90037,7 +90037,7 @@
     {
       "label": "Default \u00b7 \uc6b4\uc601 \uc911 \ud83c\udfaf baseline \u00b7 \ucc98\ub9ac \ud544\uc694/\ubaa8\uc9d1 \uc911/\uc885\ub8cc \uc9c1\ud6c4/\uc791\uc131 \uc911 mix",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L89",
       "id": "partner_home_page_index_default_\uc6b4\uc601_\uc911_baseline_\ucc98\ub9ac_\ud544\uc694_\ubaa8\uc9d1_\uc911_\uc885\ub8cc_\uc9c1\ud6c4_\uc791\uc131_\uc911_mix",
       "community": 69,
@@ -90046,7 +90046,7 @@
     {
       "label": "LIVE \u00b7 \uc9c4\ud589 \uc911 \uc774\ubca4\ud2b8 \uc774\ubca4\ud2b8 \uc2dc\uc791 ~ \uc885\ub8cc \uc0ac\uc774 \u2014 \uc9c4\ud589 \uc911 \uc139\uc158\uc774 \ud53c\ub4dc \ucd5c\uc0c1\ub2e8",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L102",
       "id": "partner_home_page_index_live_\uc9c4\ud589_\uc911_\uc774\ubca4\ud2b8_\uc774\ubca4\ud2b8_\uc2dc\uc791_\uc885\ub8cc_\uc0ac\uc774_\uc9c4\ud589_\uc911_\uc139\uc158\uc774_\ud53c\ub4dc_\ucd5c\uc0c1\ub2e8",
       "community": 69,
@@ -90055,7 +90055,7 @@
     {
       "label": "\ud55c\uac00\ud55c \ub0a0 \u00b7 \ucc98\ub9ac\ud560 \uc77c \uac70\uc758 \uc5c6\uc74c \ubaa8\uc9d1 \uc911 1\uac1c\ub9cc, \ub2e4\ub978 \uce74\ud14c\uace0\ub9ac \ubaa8\ub450 \ube44\uc5b4\uc788\uc74c",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L115",
       "id": "partner_home_page_index_\ud55c\uac00\ud55c_\ub0a0_\ucc98\ub9ac\ud560_\uc77c_\uac70\uc758_\uc5c6\uc74c_\ubaa8\uc9d1_\uc911_1\uac1c\ub9cc_\ub2e4\ub978_\uce74\ud14c\uace0\ub9ac_\ubaa8\ub450_\ube44\uc5b4\uc788\uc74c",
       "community": 69,
@@ -90064,7 +90064,7 @@
     {
       "label": "Onboarding \u00b7 \uacc4\uc88c \ub4f1\ub85d \ud544\uc694 !hasBankAccount \u2014 \uc815\uc0b0 \uacc4\uc88c \ubbf8\ub4f1\ub85d",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L128",
       "id": "partner_home_page_index_onboarding_\uacc4\uc88c_\ub4f1\ub85d_\ud544\uc694_hasbankaccount_\uc815\uc0b0_\uacc4\uc88c_\ubbf8\ub4f1\ub85d",
       "community": 69,
@@ -90073,7 +90073,7 @@
     {
       "label": "Onboarding \u00b7 \uccab \ud30c\ud2f0 \ub9cc\ub4e4\uae30 \ud544\uc694 publishedParty 0 \u00b7 draftParty 0 (\uacc4\uc88c \ub4f1\ub85d\uacfc \ub3c5\ub9bd)",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L141",
       "id": "partner_home_page_index_onboarding_\uccab_\ud30c\ud2f0_\ub9cc\ub4e4\uae30_\ud544\uc694_publishedparty_0_draftparty_0_\uacc4\uc88c_\ub4f1\ub85d\uacfc_\ub3c5\ub9bd",
       "community": 69,
@@ -90082,7 +90082,7 @@
     {
       "label": "Onboarding \u00b7 \uccab \uc774\ubca4\ud2b8 \ub9cc\ub4e4\uae30 \ud544\uc694 publishedParty >= 1 \u00b7 publishedEvent 0 \u00b7 draftEvent 0 (\uacc4\uc88c \ub4f1\ub85d\uacfc \ub3c5\ub9bd)",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L154",
       "id": "partner_home_page_index_onboarding_\uccab_\uc774\ubca4\ud2b8_\ub9cc\ub4e4\uae30_\ud544\uc694_publishedparty_1_publishedevent_0_draftevent_0_\uacc4\uc88c_\ub4f1\ub85d\uacfc_\ub3c5\ub9bd",
       "community": 69,
@@ -90091,7 +90091,7 @@
     {
       "label": "Loading state.status async \u00b7 \uc9c4\uc785 \uc9c1\ud6c4 dashboard fetch",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L167",
       "id": "partner_home_page_index_loading_state_status_async_\uc9c4\uc785_\uc9c1\ud6c4_dashboard_fetch",
       "community": 69,
@@ -90100,7 +90100,7 @@
     {
       "label": "Help \u00b7 \ub3c4\uc6c0\ub9d0 bottom sheet \ud83c\udd98 info \uc544\uc774\ucf58 \ud0ed \uc2dc \ub178\ucd9c \u2014 \ud30c\ud2b8\ub108 \uc571 \uc77c\uad00 \ud328\ud134",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L180",
       "id": "partner_home_page_index_help_\ub3c4\uc6c0\ub9d0_bottom_sheet_info_\uc544\uc774\ucf58_\ud0ed_\uc2dc_\ub178\ucd9c_\ud30c\ud2b8\ub108_\uc571_\uc77c\uad00_\ud328\ud134",
       "community": 69,
@@ -90109,7 +90109,7 @@
     {
       "label": "\uce74\ub4dc \ub178\ucd9c \uc21c\uc11c (Order priority)",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L192",
       "id": "partner_home_page_index_\uce74\ub4dc_\ub178\ucd9c_\uc21c\uc11c_order_priority",
       "community": 69,
@@ -90118,7 +90118,7 @@
     {
       "label": "\u2460 \uc6b4\uc601 dashboard \uc21c\uc11c (\ubaa8\ub4e0 prerequisite \ucda9\uc871 \uc2dc)",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L196",
       "id": "partner_home_page_index_1_\uc6b4\uc601_dashboard_\uc21c\uc11c_\ubaa8\ub4e0_prerequisite_\ucda9\uc871_\uc2dc",
       "community": 69,
@@ -90127,7 +90127,7 @@
     {
       "label": "\u2461 Onboarding \uc21c\uc11c (prerequisite \ubbf8\ucda9\uc871)",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L208",
       "id": "partner_home_page_index_2_onboarding_\uc21c\uc11c_prerequisite_\ubbf8\ucda9\uc871",
       "community": 69,
@@ -90136,7 +90136,7 @@
     {
       "label": "\uce74\ub4dc\ubcc4 \uba85\uc138 \u2014 \u2460 \uc6b4\uc601 \ud604\ud669 \uce74\ub4dc (Stat 3-up)",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L220",
       "id": "partner_home_page_index_\uce74\ub4dc\ubcc4_\uba85\uc138_1_\uc6b4\uc601_\ud604\ud669_\uce74\ub4dc_stat_3_up",
       "community": 69,
@@ -90145,7 +90145,7 @@
     {
       "label": "\uce74\ub4dc\ubcc4 \uba85\uc138 \u2014 \u2461 \uc9c4\ud589 \uc911 \uce74\ub4dc \u00b7 \ub2e8\uacc4\ubcc4 \ubcc0\ud615",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L228",
       "id": "partner_home_page_index_\uce74\ub4dc\ubcc4_\uba85\uc138_2_\uc9c4\ud589_\uc911_\uce74\ub4dc_\ub2e8\uacc4\ubcc4_\ubcc0\ud615",
       "community": 69,
@@ -90154,7 +90154,7 @@
     {
       "label": "\uce74\ub4dc\ubcc4 \uba85\uc138 \u2014 \u2462 \uc774\ubca4\ud2b8 \ucc38\uac00 \uc2b9\uc778 \ub300\uae30 \uce74\ub4dc (Compact mint)",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L241",
       "id": "partner_home_page_index_\uce74\ub4dc\ubcc4_\uba85\uc138_3_\uc774\ubca4\ud2b8_\ucc38\uac00_\uc2b9\uc778_\ub300\uae30_\uce74\ub4dc_compact_mint",
       "community": 69,
@@ -90163,7 +90163,7 @@
     {
       "label": "\uce74\ub4dc\ubcc4 \uba85\uc138 \u2014 \u2463 \uc9c4\ud589 \uc784\ubc15 \uce74\ub4dc (Detail + capacity bar)",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L249",
       "id": "partner_home_page_index_\uce74\ub4dc\ubcc4_\uba85\uc138_4_\uc9c4\ud589_\uc784\ubc15_\uce74\ub4dc_detail_capacity_bar",
       "community": 69,
@@ -90172,7 +90172,7 @@
     {
       "label": "\uce74\ub4dc\ubcc4 \uba85\uc138 \u2014 \u2464 \ubaa8\uc9d1 \uc911\uc778 \uc774\ubca4\ud2b8 \uce74\ub4dc (Detail + capacity, link)",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L257",
       "id": "partner_home_page_index_\uce74\ub4dc\ubcc4_\uba85\uc138_5_\ubaa8\uc9d1_\uc911\uc778_\uc774\ubca4\ud2b8_\uce74\ub4dc_detail_capacity_link",
       "community": 69,
@@ -90181,7 +90181,7 @@
     {
       "label": "\uce74\ub4dc\ubcc4 \uba85\uc138 \u2014 \u2465 \uc885\ub8cc \uc9c1\ud6c4 \uce74\ub4dc (Compact \ud68c\uc0c9)",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L265",
       "id": "partner_home_page_index_\uce74\ub4dc\ubcc4_\uba85\uc138_6_\uc885\ub8cc_\uc9c1\ud6c4_\uce74\ub4dc_compact_\ud68c\uc0c9",
       "community": 69,
@@ -90190,7 +90190,7 @@
     {
       "label": "\uce74\ub4dc\ubcc4 \uba85\uc138 \u2014 \u2466 \uc9c0\uae08 \ud560 \uc77c \u2014 \uc791\uc131 \uc911\uc778 \ud30c\ud2f0 \uce74\ub4dc",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L273",
       "id": "partner_home_page_index_\uce74\ub4dc\ubcc4_\uba85\uc138_7_\uc9c0\uae08_\ud560_\uc77c_\uc791\uc131_\uc911\uc778_\ud30c\ud2f0_\uce74\ub4dc",
       "community": 69,
@@ -90199,7 +90199,7 @@
     {
       "label": "\uce74\ub4dc\ubcc4 \uba85\uc138 \u2014 \u2467 Welcome \uce74\ub4dc (Onboarding hero)",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L281",
       "id": "partner_home_page_index_\uce74\ub4dc\ubcc4_\uba85\uc138_8_welcome_\uce74\ub4dc_onboarding_hero",
       "community": 69,
@@ -90208,7 +90208,7 @@
     {
       "label": "\uce74\ub4dc\ubcc4 \uba85\uc138 \u2014 \u2468 Todo \uce74\ub4dc (\uacc4\uc88c/\ud30c\ud2f0/\uc774\ubca4\ud2b8)",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L289",
       "id": "partner_home_page_index_\uce74\ub4dc\ubcc4_\uba85\uc138_9_todo_\uce74\ub4dc_\uacc4\uc88c_\ud30c\ud2f0_\uc774\ubca4\ud2b8",
       "community": 69,
@@ -90217,7 +90217,7 @@
     {
       "label": "Global Behavior",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L299",
       "id": "partner_home_page_index_global_behavior",
       "community": 69,
@@ -90226,7 +90226,7 @@
     {
       "label": "Cross-cutting interactions",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L303",
       "id": "partner_home_page_index_cross_cutting_interactions",
       "community": 69,
@@ -90235,7 +90235,7 @@
     {
       "label": "Feed ordering & grouping rules",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L315",
       "id": "partner_home_page_index_feed_ordering_grouping_rules",
       "community": 69,
@@ -90244,7 +90244,7 @@
     {
       "label": "Motion timing",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L325",
       "id": "partner_home_page_index_motion_timing",
       "community": 69,
@@ -90253,7 +90253,7 @@
     {
       "label": "Global edge cases",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L337",
       "id": "partner_home_page_index_global_edge_cases",
       "community": 69,
@@ -90262,7 +90262,7 @@
     {
       "label": "Reference",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L348",
       "id": "partner_home_page_index_reference",
       "community": 69,
@@ -90271,7 +90271,7 @@
     {
       "label": "Implementation source",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L352",
       "id": "partner_home_page_index_implementation_source",
       "community": 69,
@@ -90280,7 +90280,7 @@
     {
       "label": "\uc9c4\uc785 \uac00\ub2a5\ud55c \uc11c\ube0c \ud398\uc774\uc9c0 (Subpages map)",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L367",
       "id": "partner_home_page_index_\uc9c4\uc785_\uac00\ub2a5\ud55c_\uc11c\ube0c_\ud398\uc774\uc9c0_subpages_map",
       "community": 69,
@@ -90289,7 +90289,7 @@
     {
       "label": "Related screens",
       "file_type": "document",
-      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
       "source_location": "L395",
       "id": "partner_home_page_index_related_screens",
       "community": 69,
@@ -131409,7 +131409,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/qa/user-flow-test-map.md",
       "source_location": "L225",
       "id": "qa_user_flow_test_map_u13_\ucc28\ub2e8_\uc2e0\uace0",
-      "community": 1272,
+      "community": 1454,
       "norm_label": "u13: \u110e\u1161\u1103\u1161\u11ab/\u1109\u1175\u11ab\u1100\u1169"
     },
     {
@@ -131418,7 +131418,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/qa/user-flow-test-map.md",
       "source_location": "L227",
       "id": "qa_user_flow_test_map_tc_u13_001_\ud30c\ud2b8\ub108_\ucc28\ub2e8",
-      "community": 1272,
+      "community": 1454,
       "norm_label": "tc-u13-001: \u1111\u1161\u1110\u1173\u1102\u1165 \u110e\u1161\u1103\u1161\u11ab"
     },
     {
@@ -131427,7 +131427,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/qa/user-flow-test-map.md",
       "source_location": "L232",
       "id": "qa_user_flow_test_map_tc_u13_002_\uc774\ubca4\ud2b8_\uc2e0\uace0",
-      "community": 1272,
+      "community": 1454,
       "norm_label": "tc-u13-002: \u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u1109\u1175\u11ab\u1100\u1169"
     },
     {
@@ -131436,7 +131436,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/qa/user-flow-test-map.md",
       "source_location": "L237",
       "id": "qa_user_flow_test_map_tc_u13_003_\ucc28\ub2e8_\ubaa9\ub85d_\uad00\ub9ac",
-      "community": 1272,
+      "community": 1454,
       "norm_label": "tc-u13-003: \u110e\u1161\u1103\u1161\u11ab \u1106\u1169\u11a8\u1105\u1169\u11a8 \u1100\u116a\u11ab\u1105\u1175"
     },
     {
@@ -131733,7 +131733,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/qa/user-flow-test-map.md",
       "source_location": "L398",
       "id": "qa_user_flow_test_map_p07_\uc774\ubca4\ud2b8_\uc218\uc815_\ucde8\uc18c",
-      "community": 1666,
+      "community": 1272,
       "norm_label": "p07: \u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u1109\u116e\u110c\u1165\u11bc/\u110e\u1171\u1109\u1169"
     },
     {
@@ -131742,7 +131742,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/qa/user-flow-test-map.md",
       "source_location": "L400",
       "id": "qa_user_flow_test_map_tc_p07_001_\uc774\ubca4\ud2b8_\uc815\ubcf4_\uc218\uc815",
-      "community": 1666,
+      "community": 1272,
       "norm_label": "tc-p07-001: \u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u110c\u1165\u11bc\u1107\u1169 \u1109\u116e\u110c\u1165\u11bc"
     },
     {
@@ -131751,7 +131751,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/qa/user-flow-test-map.md",
       "source_location": "L405",
       "id": "qa_user_flow_test_map_tc_p07_002_\uc774\ubca4\ud2b8_\ucde8\uc18c",
-      "community": 1666,
+      "community": 1272,
       "norm_label": "tc-p07-002: \u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u110e\u1171\u1109\u1169"
     },
     {
@@ -131760,7 +131760,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/qa/user-flow-test-map.md",
       "source_location": "L410",
       "id": "qa_user_flow_test_map_tc_p07_003_\ucc38\uac00\uc790_\uc788\ub294_\uc774\ubca4\ud2b8_\ucde8\uc18c_\uacbd\uace0",
-      "community": 1666,
+      "community": 1272,
       "norm_label": "tc-p07-003: \u110e\u1161\u11b7\u1100\u1161\u110c\u1161 \u110b\u1175\u11bb\u1102\u1173\u11ab \u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u110e\u1171\u1109\u1169 \u1100\u1167\u11bc\u1100\u1169"
     },
     {
@@ -136696,7 +136696,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/ux/design-system/03-patterns.md",
       "source_location": "L9",
       "id": "design_system_03_patterns_1_selectable_card",
-      "community": 42,
+      "community": 1666,
       "norm_label": "1. selectable card"
     },
     {
@@ -136705,7 +136705,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/ux/design-system/03-patterns.md",
       "source_location": "L20",
       "id": "design_system_03_patterns_selectable_card_\ud14d\uc2a4\ud2b8_\uc2a4\ud0c0\uc77c",
-      "community": 42,
+      "community": 1666,
       "norm_label": "selectable card \u1110\u1166\u11a8\u1109\u1173\u1110\u1173 \u1109\u1173\u1110\u1161\u110b\u1175\u11af"
     },
     {
@@ -136714,7 +136714,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/ux/design-system/03-patterns.md",
       "source_location": "L31",
       "id": "design_system_03_patterns_shadow_border_\ud504\ub9ac\uc14b",
-      "community": 42,
+      "community": 1666,
       "norm_label": "shadow / border \u1111\u1173\u1105\u1175\u1109\u1166\u11ba"
     },
     {
@@ -136894,7 +136894,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/ux/design-system/03-patterns.md",
       "source_location": "L177",
       "id": "design_system_03_patterns_5_loading_state",
-      "community": 1722,
+      "community": 42,
       "norm_label": "5. loading state"
     },
     {
@@ -136903,7 +136903,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/ux/design-system/03-patterns.md",
       "source_location": "L181",
       "id": "design_system_03_patterns_\uacf5\uc6a9_\uc704\uc82f",
-      "community": 1722,
+      "community": 42,
       "norm_label": "\u1100\u1169\u11bc\u110b\u116d\u11bc \u110b\u1171\u110c\u1166\u11ba"
     },
     {
@@ -136912,7 +136912,7 @@
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/docs/ux/design-system/03-patterns.md",
       "source_location": "L190",
       "id": "design_system_03_patterns_\uc0ac\uc6a9_\uc6d0\uce59",
-      "community": 1722,
+      "community": 42,
       "norm_label": "\u1109\u1161\u110b\u116d\u11bc \u110b\u116f\u11ab\u110e\u1175\u11a8"
     },
     {
@@ -139915,6 +139915,42 @@
       "id": "minglit_demo_bluedoc_\uad00\ub828",
       "community": 1370,
       "norm_label": "\u1100\u116a\u11ab\u1105\u1167\u11ab"
+    },
+    {
+      "label": "index.md",
+      "file_type": "document",
+      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/party_list_page/index.md",
+      "source_location": "L1",
+      "community": 116,
+      "norm_label": "index.md",
+      "id": "tmp_minglit_runner_2_work_minglit_minglit_apps_mds_docs_public_specs_party_list_page_index_md"
+    },
+    {
+      "label": "index.md",
+      "file_type": "document",
+      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/settlement_page/index.md",
+      "source_location": "L1",
+      "community": 117,
+      "norm_label": "index.md",
+      "id": "tmp_minglit_runner_2_work_minglit_minglit_apps_mds_docs_public_specs_settlement_page_index_md"
+    },
+    {
+      "label": "index.md",
+      "file_type": "document",
+      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/event_application_manage_page/index.md",
+      "source_location": "L1",
+      "community": 108,
+      "norm_label": "index.md",
+      "id": "tmp_minglit_runner_2_work_minglit_minglit_apps_mds_docs_public_specs_event_application_manage_page_index_md"
+    },
+    {
+      "label": "index.md",
+      "file_type": "document",
+      "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/apps/mds/docs/public/specs/partner_home_page/index.md",
+      "source_location": "L1",
+      "community": 69,
+      "norm_label": "index.md",
+      "id": "tmp_minglit_runner_2_work_minglit_minglit_apps_mds_docs_public_specs_partner_home_page_index_md"
     },
     {
       "label": "BLUEDOC.md",
@@ -148529,7 +148565,7 @@
       "file_type": "document",
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/AGENTS.md",
       "source_location": "L19",
-      "community": 1454,
+      "community": 1199,
       "norm_label": "versioning conventions",
       "id": "minglit_agents_versioning_conventions"
     },
@@ -148538,7 +148574,7 @@
       "file_type": "document",
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/AGENTS.md",
       "source_location": "L23",
-      "community": 1454,
+      "community": 1199,
       "norm_label": "\u1107\u1165\u110c\u1165\u11ab \u1112\u1167\u11bc\u1109\u1175\u11a8",
       "id": "minglit_agents_\ubc84\uc804_\ud615\uc2dd"
     },
@@ -148547,7 +148583,7 @@
       "file_type": "document",
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/AGENTS.md",
       "source_location": "L36",
-      "community": 1454,
+      "community": 1199,
       "norm_label": "dev / release \u1100\u116e\u1107\u116e\u11ab",
       "id": "minglit_agents_dev_release_\uad6c\ubd84"
     },
@@ -148556,7 +148592,7 @@
       "file_type": "document",
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/AGENTS.md",
       "source_location": "L41",
-      "community": 1454,
+      "community": 1199,
       "norm_label": "\u1111\u1162\u110f\u1175\u110c\u1175\u1107\u1167\u11af \u1107\u1165\u110c\u1165\u11ab \u1112\u1167\u11bc\u1109\u1175\u11a8",
       "id": "minglit_agents_\ud328\ud0a4\uc9c0\ubcc4_\ubc84\uc804_\ud615\uc2dd"
     },
@@ -148565,7 +148601,7 @@
       "file_type": "document",
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/AGENTS.md",
       "source_location": "L54",
-      "community": 1454,
+      "community": 1199,
       "norm_label": "\u1107\u1165\u110c\u1165\u11ab bump \u1107\u1161\u11bc\u1107\u1165\u11b8",
       "id": "minglit_agents_\ubc84\uc804_bump_\ubc29\ubc95"
     },
@@ -148574,7 +148610,7 @@
       "file_type": "document",
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/AGENTS.md",
       "source_location": "L56",
-      "community": 1454,
+      "community": 1199,
       "norm_label": "code:bash (# \u1107\u1165\u110c\u1165\u11ab \u110b\u1175\u11af\u1100\u116a\u11af \u110b\u1165\u11b8\u1103\u1166\u110b\u1175\u1110\u1173 (8\u1100\u1162 \u1103\u1162\u1109\u1161\u11bc \u1111\u1161\u110b\u1175\u11af))",
       "id": "minglit_agents_codeblock_1"
     },
@@ -148583,7 +148619,7 @@
       "file_type": "document",
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/AGENTS.md",
       "source_location": "L65",
-      "community": 1454,
+      "community": 1199,
       "norm_label": "ci \u110c\u1161\u1103\u1169\u11bc\u1112\u116a (\u110b\u1168\u110c\u1165\u11bc \u2014 \u1112\u116e\u1109\u1169\u11a8 pr\u110b\u1166\u1109\u1165 \u1100\u116e\u1112\u1167\u11ab)",
       "id": "minglit_agents_ci_\uc790\ub3d9\ud654_\uc608\uc815_\ud6c4\uc18d_pr\uc5d0\uc11c_\uad6c\ud604"
     },
@@ -148592,7 +148628,7 @@
       "file_type": "document",
       "source_file": "/tmp/minglit-runner-2/work/minglit/minglit/AGENTS.md",
       "source_location": "L70",
-      "community": 1454,
+      "community": 1199,
       "norm_label": "\u1107\u1165\u110c\u1165\u11ab \u1100\u116a\u11ab\u1105\u1175 \u110c\u1166\u110b\u116c \u1103\u1162\u1109\u1161\u11bc",
       "id": "minglit_agents_\ubc84\uc804_\uad00\ub9ac_\uc81c\uc678_\ub300\uc0c1"
     },
@@ -150763,7 +150799,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 988,
+      "community": 1011,
       "norm_label": "verifyrefundeligibility",
       "id": "refund_utils_verifyrefundeligibility"
     },
@@ -150776,7 +150812,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 988,
+      "community": 1011,
       "norm_label": "executerefund()",
       "id": "refund_utils_executerefund"
     },
@@ -150789,7 +150825,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 988,
+      "community": 1011,
       "norm_label": "refunderror",
       "id": "refund_utils_refunderror"
     },
@@ -150815,7 +150851,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 988,
+      "community": 1011,
       "norm_label": "refundutilstest",
       "id": "refund_utils_test_refundutilstest"
     },
@@ -154894,15 +154930,6 @@
     {
       "label": "index.md",
       "file_type": "document",
-      "source_file": "apps/mds/docs/public/specs/settlement_page/index.md",
-      "source_location": "L1",
-      "community": 117,
-      "norm_label": "index.md",
-      "id": "apps_mds_docs_public_specs_settlement_page_index_md"
-    },
-    {
-      "label": "index.md",
-      "file_type": "document",
       "source_file": "apps/mds/docs/public/specs/settlement_detail_page/index.md",
       "source_location": "L1",
       "community": 91,
@@ -154957,15 +154984,6 @@
     {
       "label": "index.md",
       "file_type": "document",
-      "source_file": "apps/mds/docs/public/specs/party_list_page/index.md",
-      "source_location": "L1",
-      "community": 116,
-      "norm_label": "index.md",
-      "id": "apps_mds_docs_public_specs_party_list_page_index_md"
-    },
-    {
-      "label": "index.md",
-      "file_type": "document",
       "source_file": "apps/mds/docs/public/specs/party_detail_page/index.md",
       "source_location": "L1",
       "community": 150,
@@ -155016,15 +155034,6 @@
       "community": 183,
       "norm_label": "index.md",
       "id": "apps_mds_docs_public_specs_partner_login_page_index_md"
-    },
-    {
-      "label": "index.md",
-      "file_type": "document",
-      "source_file": "apps/mds/docs/public/specs/partner_home_page/index.md",
-      "source_location": "L1",
-      "community": 69,
-      "norm_label": "index.md",
-      "id": "apps_mds_docs_public_specs_partner_home_page_index_md"
     },
     {
       "label": "index.md",
@@ -155295,15 +155304,6 @@
       "community": 126,
       "norm_label": "index.md",
       "id": "apps_mds_docs_public_specs_event_application_review_carousel_page_index_md"
-    },
-    {
-      "label": "index.md",
-      "file_type": "document",
-      "source_file": "apps/mds/docs/public/specs/event_application_manage_page/index.md",
-      "source_location": "L1",
-      "community": 108,
-      "norm_label": "index.md",
-      "id": "apps_mds_docs_public_specs_event_application_manage_page_index_md"
     },
     {
       "label": "index.md",
@@ -163875,7 +163875,7 @@
       "file_type": "code",
       "source_file": "/private/tmp/wizard-v2-branch/apps/app_user/test/integration/cuj_signup_to_apply_test.dart",
       "source_location": null,
-      "community": 987,
+      "community": 98,
       "norm_label": "cuj_signup_to_apply_test.dart",
       "id": "private_tmp_wizard_v2_branch_apps_app_user_test_integration_cuj_signup_to_apply_test_dart"
     },
@@ -163884,7 +163884,7 @@
       "file_type": "code",
       "source_file": "/private/tmp/wizard-v2-branch/apps/app_user/test/integration/cuj_signup_to_apply_test.dart",
       "source_location": null,
-      "community": 987,
+      "community": 98,
       "norm_label": "_fakeeventdetailcontroller",
       "id": "private_tmp_wizard_v2_branch_apps_app_user_test_integration_cuj_signup_to_apply_test_dart_fakeeventdetailcontroller"
     },
@@ -163893,7 +163893,7 @@
       "file_type": "code",
       "source_file": "/private/tmp/wizard-v2-branch/apps/app_user/test/integration/cuj_signup_to_apply_test.dart",
       "source_location": null,
-      "community": 987,
+      "community": 98,
       "norm_label": "_fakeeventapplicationcontroller",
       "id": "private_tmp_wizard_v2_branch_apps_app_user_test_integration_cuj_signup_to_apply_test_dart_fakeeventapplicationcontroller"
     },
@@ -163902,7 +163902,7 @@
       "file_type": "code",
       "source_file": "/private/tmp/wizard-v2-branch/apps/app_user/test/integration/cuj_signup_to_apply_test.dart",
       "source_location": null,
-      "community": 987,
+      "community": 98,
       "norm_label": "main",
       "id": "private_tmp_wizard_v2_branch_apps_app_user_test_integration_cuj_signup_to_apply_test_dart_main"
     },
@@ -163911,7 +163911,7 @@
       "file_type": "code",
       "source_file": "/private/tmp/wizard-v2-branch/apps/app_user/test/integration/cuj_signup_to_apply_test.dart",
       "source_location": null,
-      "community": 987,
+      "community": 98,
       "norm_label": "initializedateformatting",
       "id": "private_tmp_wizard_v2_branch_apps_app_user_test_integration_cuj_signup_to_apply_test_dart_initializedateformatting"
     },
@@ -163920,7 +163920,7 @@
       "file_type": "code",
       "source_file": "/private/tmp/wizard-v2-branch/apps/app_user/test/integration/cuj_signup_to_apply_test.dart",
       "source_location": null,
-      "community": 987,
+      "community": 98,
       "norm_label": "eventapplicationstate",
       "id": "private_tmp_wizard_v2_branch_apps_app_user_test_integration_cuj_signup_to_apply_test_dart_eventapplicationstate"
     },
@@ -163929,7 +163929,7 @@
       "file_type": "code",
       "source_file": "/private/tmp/wizard-v2-branch/apps/app_user/test/integration/cuj_signup_to_apply_test.dart",
       "source_location": null,
-      "community": 987,
+      "community": 98,
       "norm_label": "stateerror",
       "id": "private_tmp_wizard_v2_branch_apps_app_user_test_integration_cuj_signup_to_apply_test_dart_stateerror"
     },
@@ -163938,7 +163938,7 @@
       "file_type": "code",
       "source_file": "/private/tmp/wizard-v2-branch/apps/app_user/test/integration/cuj_signup_to_apply_test.dart",
       "source_location": null,
-      "community": 987,
+      "community": 98,
       "norm_label": "build",
       "id": "private_tmp_wizard_v2_branch_apps_app_user_test_integration_cuj_signup_to_apply_test_dart_build"
     },
@@ -163947,7 +163947,7 @@
       "file_type": "code",
       "source_file": "/private/tmp/wizard-v2-branch/apps/app_user/test/integration/cuj_signup_to_apply_test.dart",
       "source_location": null,
-      "community": 987,
+      "community": 98,
       "norm_label": "updateverificationdata",
       "id": "private_tmp_wizard_v2_branch_apps_app_user_test_integration_cuj_signup_to_apply_test_dart_updateverificationdata"
     },
@@ -163956,7 +163956,7 @@
       "file_type": "code",
       "source_file": "/private/tmp/wizard-v2-branch/apps/app_user/test/integration/cuj_signup_to_apply_test.dart",
       "source_location": null,
-      "community": 987,
+      "community": 98,
       "norm_label": "previousstep",
       "id": "private_tmp_wizard_v2_branch_apps_app_user_test_integration_cuj_signup_to_apply_test_dart_previousstep"
     },
@@ -163965,7 +163965,7 @@
       "file_type": "code",
       "source_file": "/private/tmp/wizard-v2-branch/apps/app_user/test/integration/cuj_signup_to_apply_test.dart",
       "source_location": null,
-      "community": 987,
+      "community": 98,
       "norm_label": "markidentitycompleted",
       "id": "private_tmp_wizard_v2_branch_apps_app_user_test_integration_cuj_signup_to_apply_test_dart_markidentitycompleted"
     },
@@ -163974,7 +163974,7 @@
       "file_type": "code",
       "source_file": "/private/tmp/wizard-v2-branch/apps/app_user/test/integration/cuj_signup_to_apply_test.dart",
       "source_location": null,
-      "community": 987,
+      "community": 98,
       "norm_label": "setconsentgranted",
       "id": "private_tmp_wizard_v2_branch_apps_app_user_test_integration_cuj_signup_to_apply_test_dart_setconsentgranted"
     },
@@ -163983,7 +163983,7 @@
       "file_type": "code",
       "source_file": "/private/tmp/wizard-v2-branch/apps/app_user/test/integration/cuj_signup_to_apply_test.dart",
       "source_location": null,
-      "community": 987,
+      "community": 98,
       "norm_label": "resetstatus",
       "id": "private_tmp_wizard_v2_branch_apps_app_user_test_integration_cuj_signup_to_apply_test_dart_resetstatus"
     },
@@ -163992,7 +163992,7 @@
       "file_type": "code",
       "source_file": "/private/tmp/wizard-v2-branch/apps/app_user/test/integration/cuj_signup_to_apply_test.dart",
       "source_location": null,
-      "community": 987,
+      "community": 98,
       "norm_label": "../visual_qa/visual_qa_helper.dart",
       "id": "visual_qa_visual_qa_helper_dart"
     },
@@ -165194,7 +165194,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1214,
+      "community": 1026,
       "norm_label": "\u1111\u1161\u1110\u1173\u1102\u1165 qr \u110e\u1166\u110f\u1173\u110b\u1175\u11ab ux \u1100\u1161\u11bc\u1112\u116a \u1109\u1173\u1111\u1166\u11a8",
       "id": "partner_qr_checkin_ux_spec"
     },
@@ -165207,7 +165207,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1214,
+      "community": 1026,
       "norm_label": "\u1111\u1161\u1110\u1173\u1102\u1165 qr \u110e\u1166\u110f\u1173\u110b\u1175\u11ab ui/ux \u1103\u1175\u110c\u1161\u110b\u1175\u11ab",
       "id": "partner_qr_checkin_ux_uiux"
     },
@@ -165220,7 +165220,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1214,
+      "community": 1026,
       "norm_label": "partner qr checkin ux wireframe",
       "id": "partner_qr_checkin_ux_wireframe"
     },
@@ -165233,7 +165233,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1214,
+      "community": 1026,
       "norm_label": "\u1111\u1161\u1110\u1173\u1102\u1165 qr \u110e\u1166\u110f\u1173\u110b\u1175\u11ab ux \u1100\u1161\u11bc\u1112\u116a \u1110\u1166\u1109\u1173\u1110\u1173 \u1100\u1168\u1112\u116c\u11a8",
       "id": "partner_qr_checkin_ux_test_plan"
     },
@@ -165493,7 +165493,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1214,
+      "community": 1026,
       "norm_label": "spec: ticket qr boarding pass",
       "id": "ticket_qr_improvement_spec"
     },
@@ -165506,7 +165506,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1214,
+      "community": 1026,
       "norm_label": "ticket qr improvement wireframe",
       "id": "ticket_qr_improvement_wireframe"
     },
@@ -165519,7 +165519,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1214,
+      "community": 1026,
       "norm_label": "ticket qr boarding pass test plan",
       "id": "ticket_qr_improvement_test_plan"
     },
@@ -169091,7 +169091,7 @@
       "file_type": "code",
       "source_file": "supabase/functions/_shared/refund_utils.ts",
       "source_location": "L58",
-      "community": 988,
+      "community": 1011,
       "norm_label": ".constructor()",
       "id": "refund_utils_refunderror_constructor"
     },
@@ -173998,7 +173998,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1004,
+      "community": 1214,
       "norm_label": "notificationlistscreen (kit-shared)",
       "id": "notification_list_screen_widget"
     },
@@ -174011,7 +174011,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1004,
+      "community": 1214,
       "norm_label": "notificationcenterroute (user)",
       "id": "notification_center_route_user"
     },
@@ -174024,7 +174024,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1004,
+      "community": 1214,
       "norm_label": "notificationcenterroute (partner)",
       "id": "notification_center_route_partner"
     },
@@ -174037,7 +174037,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1093,
+      "community": 1214,
       "norm_label": "fix #1955 \u2014 markas swallow error",
       "id": "notification_list_fix1955"
     },
@@ -174076,7 +174076,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1093,
+      "community": 1214,
       "norm_label": "usersettings (freezed model)",
       "id": "notification_settings_user_settings_model"
     },
@@ -178106,7 +178106,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1214,
+      "community": 1026,
       "norm_label": "minglit_kit design tokens (minglitcolors / minglitpartnercolors)",
       "id": "minglit_kit_design_tokens"
     },
@@ -178184,7 +178184,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1214,
+      "community": 1026,
       "norm_label": "prd: ticket qr boarding pass redesign",
       "id": "ticket_qr_improvement_prd"
     },
@@ -178210,7 +178210,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1214,
+      "community": 1026,
       "norm_label": "perforationclipper (custom painter)",
       "id": "perforation_clipper"
     },
@@ -178236,7 +178236,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1214,
+      "community": 1026,
       "norm_label": "airline boarding pass design reference",
       "id": "concept_boarding_pass_design"
     },
@@ -178249,7 +178249,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1214,
+      "community": 1026,
       "norm_label": "apple wallet pass pattern",
       "id": "apple_wallet_pass_concept"
     },
@@ -178262,7 +178262,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1214,
+      "community": 1026,
       "norm_label": "mds ticket_qr_screen spec",
       "id": "mds_ticket_qr_screen_spec"
     },
@@ -178275,7 +178275,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1214,
+      "community": 1026,
       "norm_label": "mds my_tickets_page spec",
       "id": "mds_my_tickets_page_spec"
     },
@@ -183228,7 +183228,7 @@
       "captured_at": "2026-05-09T19:37:00",
       "author": "spec-walk-user-sonnet",
       "contributor": null,
-      "community": 1245,
+      "community": 18,
       "norm_label": "homeroute spec diff",
       "id": "walk_20260509_home_diff"
     },
@@ -183241,7 +183241,7 @@
       "captured_at": "2026-05-09T19:37:00",
       "author": "spec-walk-user-sonnet",
       "contributor": null,
-      "community": 1245,
+      "community": 18,
       "norm_label": "homeroute uidump",
       "id": "walk_20260509_home_uidump"
     },
@@ -183254,7 +183254,7 @@
       "captured_at": "2026-05-09T19:36:00",
       "author": "spec-walk-user-sonnet",
       "contributor": null,
-      "community": 1245,
+      "community": 18,
       "norm_label": "loginroute spec diff",
       "id": "walk_20260509_login_diff"
     },
@@ -183267,7 +183267,7 @@
       "captured_at": "2026-05-09T19:36:00",
       "author": "spec-walk-user-sonnet",
       "contributor": null,
-      "community": 1245,
+      "community": 18,
       "norm_label": "loginroute uidump",
       "id": "walk_20260509_login_uidump"
     },
@@ -183280,7 +183280,7 @@
       "captured_at": "2026-05-09T19:43:00",
       "author": "spec-walk-user-sonnet",
       "contributor": null,
-      "community": 1245,
+      "community": 18,
       "norm_label": "mypageroute spec diff",
       "id": "walk_20260509_my_page_diff"
     },
@@ -183293,7 +183293,7 @@
       "captured_at": "2026-05-09T19:43:00",
       "author": "spec-walk-user-sonnet",
       "contributor": null,
-      "community": 1245,
+      "community": 18,
       "norm_label": "mypageroute uidump",
       "id": "walk_20260509_my_page_uidump"
     },
@@ -183332,7 +183332,7 @@
       "captured_at": "2026-05-09T19:51:00",
       "author": "spec-walk-user-sonnet",
       "contributor": null,
-      "community": 18,
+      "community": 1245,
       "norm_label": "notificationcenterroute spec diff",
       "id": "walk_20260509_notif_list_diff"
     },
@@ -183345,7 +183345,7 @@
       "captured_at": "2026-05-09T19:51:00",
       "author": "spec-walk-user-sonnet",
       "contributor": null,
-      "community": 18,
+      "community": 1245,
       "norm_label": "notificationcenterroute uidump",
       "id": "walk_20260509_notif_list_uidump"
     },
@@ -183358,7 +183358,7 @@
       "captured_at": "2026-05-09T19:47:00",
       "author": "spec-walk-user-sonnet",
       "contributor": null,
-      "community": 18,
+      "community": 1245,
       "norm_label": "notificationsettingsroute spec diff",
       "id": "walk_20260509_notif_settings_diff"
     },
@@ -183371,7 +183371,7 @@
       "captured_at": "2026-05-09T19:47:00",
       "author": "spec-walk-user-sonnet",
       "contributor": null,
-      "community": 18,
+      "community": 1245,
       "norm_label": "notificationsettingsroute uidump",
       "id": "walk_20260509_notif_settings_uidump"
     },
@@ -183436,7 +183436,7 @@
       "captured_at": "2026-05-09T19:48:00",
       "author": "spec-walk-user-sonnet",
       "contributor": null,
-      "community": 1245,
+      "community": 18,
       "norm_label": "privacyroute spec diff",
       "id": "walk_20260509_privacy_diff"
     },
@@ -183449,7 +183449,7 @@
       "captured_at": "2026-05-09T19:48:00",
       "author": "spec-walk-user-sonnet",
       "contributor": null,
-      "community": 1245,
+      "community": 18,
       "norm_label": "privacyroute uidump",
       "id": "walk_20260509_privacy_uidump"
     },
@@ -183501,7 +183501,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1245,
+      "community": 18,
       "norm_label": "spec: home_page.html",
       "id": "spec_home_page_html"
     },
@@ -183514,7 +183514,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1245,
+      "community": 18,
       "norm_label": "spec: login_page.html",
       "id": "spec_login_page_html"
     },
@@ -183527,7 +183527,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1245,
+      "community": 18,
       "norm_label": "spec: my_page.html",
       "id": "spec_my_page_html"
     },
@@ -183553,7 +183553,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 18,
+      "community": 1245,
       "norm_label": "spec: notification_list_screen.html",
       "id": "spec_notification_list_screen_html"
     },
@@ -183566,7 +183566,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 18,
+      "community": 1245,
       "norm_label": "spec: notification_settings_screen.html",
       "id": "spec_notification_settings_screen_html"
     },
@@ -183605,7 +183605,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1245,
+      "community": 18,
       "norm_label": "spec: privacy_page.html",
       "id": "spec_privacy_page_html"
     },
@@ -183644,7 +183644,7 @@
       "captured_at": "2026-05-09",
       "author": "spec-walk-user-sonnet",
       "contributor": null,
-      "community": 1245,
+      "community": 18,
       "norm_label": "spec-uidump drift comparison",
       "id": "concept_spec_drift"
     },
@@ -183943,7 +183943,7 @@
       "captured_at": "2026-05-10T10:02:00",
       "author": null,
       "contributor": null,
-      "community": 1245,
+      "community": 18,
       "norm_label": "homeroute spec_diff (2 drift: bug report, eventnowbar)",
       "id": "home_diff_20260510"
     },
@@ -183956,7 +183956,7 @@
       "captured_at": "2026-05-10",
       "author": null,
       "contributor": null,
-      "community": 1245,
+      "community": 18,
       "norm_label": "homeroute uidump (sort chips + tags)",
       "id": "home_uidump_20260510"
     },
@@ -183969,7 +183969,7 @@
       "captured_at": "2026-05-10T10:40:00",
       "author": null,
       "contributor": null,
-      "community": 1245,
+      "community": 1094,
       "norm_label": "loginroute spec_diff (1 drift: apple absent on android)",
       "id": "login_diff_20260510"
     },
@@ -183982,7 +183982,7 @@
       "captured_at": "2026-05-10",
       "author": null,
       "contributor": null,
-      "community": 1245,
+      "community": 1094,
       "norm_label": "loginroute uidump (verified vibe slogan)",
       "id": "login_uidump_20260510"
     },
@@ -184138,7 +184138,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1245,
+      "community": 1094,
       "norm_label": "platform-specific oauth (apple ios-only on android dump)",
       "id": "concept_platform_specific_login"
     },
@@ -184151,7 +184151,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1245,
+      "community": 18,
       "norm_label": "bug report button (dev/debug-only artifact)",
       "id": "concept_bug_report_dev_only"
     },
@@ -188324,7 +188324,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1004,
+      "community": 1214,
       "norm_label": "notificationlistprovider",
       "id": "notification_list_screen_provider"
     },
@@ -188337,7 +188337,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1004,
+      "community": 1214,
       "norm_label": "minglitemptystate",
       "id": "notification_list_screen_emptystate"
     },
@@ -188350,7 +188350,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1004,
+      "community": 1214,
       "norm_label": "minglitasyncvaluewidget",
       "id": "notification_list_screen_asyncvalue"
     },
@@ -188363,7 +188363,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1004,
+      "community": 1214,
       "norm_label": "notification deep-link routing",
       "id": "notification_list_screen_deeplink"
     },
@@ -191678,7 +191678,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1044,
+      "community": 1156,
       "norm_label": "onboardingstateprovider",
       "id": "app_partner_onboarding_state_provider"
     },
@@ -191704,7 +191704,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1044,
+      "community": 1156,
       "norm_label": "currentpartnerinfoprovider",
       "id": "app_partner_current_partner_provider"
     },
@@ -195214,7 +195214,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1669,
+      "community": 1087,
       "norm_label": "backend architecture (supabase infra)",
       "id": "backend_arch_doc"
     },
@@ -195227,7 +195227,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1669,
+      "community": 1087,
       "norm_label": "postgres extensions (postgis, pgvector, pgroonga, pgmq, pg_cron, pg_net, moddatetime, supabase_vault)",
       "id": "concept_postgres_extensions"
     },
@@ -195240,7 +195240,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1669,
+      "community": 1087,
       "norm_label": "search-and-recommendation.md",
       "id": "doc_search_and_recommendation"
     },
@@ -195266,7 +195266,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1669,
+      "community": 1087,
       "norm_label": "trust-and-verification.md",
       "id": "doc_trust_and_verification"
     },
@@ -195942,7 +195942,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 1093,
+      "community": 1214,
       "norm_label": "user-manage-notification ef",
       "id": "user_manage_notification_ef"
     },
@@ -283566,9 +283566,9 @@
       "source_file": ".github/scripts/check-dev-cut-workflow-contract.py",
       "source_location": "L39",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "github_scripts_check_dev_cut_workflow_contract_py",
-      "target": "scripts_check_dev_cut_workflow_contract_named_step_run",
-      "confidence_score": 1.0
+      "target": "scripts_check_dev_cut_workflow_contract_named_step_run"
     },
     {
       "relation": "contains",
@@ -283586,9 +283586,9 @@
       "source_file": ".github/scripts/check-dev-cut-workflow-contract.py",
       "source_location": "L87",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "github_scripts_check_dev_cut_workflow_contract_py",
-      "target": "scripts_check_dev_cut_workflow_contract_assert_promotion_auto_merge_mode_contract",
-      "confidence_score": 1.0
+      "target": "scripts_check_dev_cut_workflow_contract_assert_promotion_auto_merge_mode_contract"
     },
     {
       "relation": "contains",
@@ -283639,9 +283639,9 @@
       "source_file": ".github/scripts/check-dev-cut-workflow-contract.py",
       "source_location": "L44",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_check_dev_cut_workflow_contract_named_step_run",
-      "target": "scripts_check_dev_cut_workflow_contract_fail",
-      "confidence_score": 1.0
+      "target": "scripts_check_dev_cut_workflow_contract_fail"
     },
     {
       "relation": "calls",
@@ -283661,9 +283661,9 @@
       "source_file": ".github/scripts/check-dev-cut-workflow-contract.py",
       "source_location": "L109",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_check_dev_cut_workflow_contract_assert_promotion_auto_merge_mode_contract",
-      "target": "scripts_check_dev_cut_workflow_contract_fail",
-      "confidence_score": 1.0
+      "target": "scripts_check_dev_cut_workflow_contract_fail"
     },
     {
       "relation": "calls",
@@ -283683,9 +283683,9 @@
       "source_file": ".github/scripts/check-dev-cut-workflow-contract.py",
       "source_location": "L40",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_check_dev_cut_workflow_contract_named_step_run",
-      "target": "scripts_check_dev_cut_workflow_contract_load_workflow",
-      "confidence_score": 1.0
+      "target": "scripts_check_dev_cut_workflow_contract_load_workflow"
     },
     {
       "relation": "calls",
@@ -283705,9 +283705,9 @@
       "source_file": ".github/scripts/check-dev-cut-workflow-contract.py",
       "source_location": "L41",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_check_dev_cut_workflow_contract_named_step_run",
-      "target": "scripts_check_dev_cut_workflow_contract_jobs_config",
-      "confidence_score": 1.0
+      "target": "scripts_check_dev_cut_workflow_contract_jobs_config"
     },
     {
       "relation": "calls",
@@ -283727,9 +283727,9 @@
       "source_file": ".github/scripts/check-dev-cut-workflow-contract.py",
       "source_location": "L102",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_check_dev_cut_workflow_contract_assert_promotion_auto_merge_mode_contract",
-      "target": "scripts_check_dev_cut_workflow_contract_named_step_run",
-      "confidence_score": 1.0
+      "target": "scripts_check_dev_cut_workflow_contract_named_step_run"
     },
     {
       "relation": "calls",
@@ -283749,9 +283749,9 @@
       "source_file": ".github/scripts/check-dev-cut-workflow-contract.py",
       "source_location": "L129",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_check_dev_cut_workflow_contract_main",
-      "target": "scripts_check_dev_cut_workflow_contract_assert_promotion_auto_merge_mode_contract",
-      "confidence_score": 1.0
+      "target": "scripts_check_dev_cut_workflow_contract_assert_promotion_auto_merge_mode_contract"
     },
     {
       "relation": "calls",
@@ -283860,9 +283860,9 @@
       "source_file": ".github/scripts/check-android-deploy-workflow-contract.py",
       "source_location": "L39",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "github_scripts_check_android_deploy_workflow_contract_py",
-      "target": "scripts_check_android_deploy_workflow_contract_run_command",
-      "confidence_score": 1.0
+      "target": "scripts_check_android_deploy_workflow_contract_run_command"
     },
     {
       "relation": "contains",
@@ -283880,9 +283880,9 @@
       "source_file": ".github/scripts/check-android-deploy-workflow-contract.py",
       "source_location": "L67",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "github_scripts_check_android_deploy_workflow_contract_py",
-      "target": "scripts_check_android_deploy_workflow_contract_shared_version_metadata_script",
-      "confidence_score": 1.0
+      "target": "scripts_check_android_deploy_workflow_contract_shared_version_metadata_script"
     },
     {
       "relation": "contains",
@@ -283930,9 +283930,9 @@
       "source_file": ".github/scripts/check-android-deploy-workflow-contract.py",
       "source_location": "L162",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "github_scripts_check_android_deploy_workflow_contract_py",
-      "target": "scripts_check_android_deploy_workflow_contract_assert_version_metadata_merge_parent_snapshot_contract",
-      "confidence_score": 1.0
+      "target": "scripts_check_android_deploy_workflow_contract_assert_version_metadata_merge_parent_snapshot_contract"
     },
     {
       "relation": "contains",
@@ -283973,9 +283973,9 @@
       "source_file": ".github/scripts/check-android-deploy-workflow-contract.py",
       "source_location": "L73",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_check_android_deploy_workflow_contract_shared_version_metadata_script",
-      "target": "scripts_check_android_deploy_workflow_contract_fail",
-      "confidence_score": 1.0
+      "target": "scripts_check_android_deploy_workflow_contract_fail"
     },
     {
       "relation": "calls",
@@ -284028,9 +284028,9 @@
       "source_file": ".github/scripts/check-android-deploy-workflow-contract.py",
       "source_location": "L218",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_check_android_deploy_workflow_contract_assert_version_metadata_merge_parent_snapshot_contract",
-      "target": "scripts_check_android_deploy_workflow_contract_fail",
-      "confidence_score": 1.0
+      "target": "scripts_check_android_deploy_workflow_contract_fail"
     },
     {
       "relation": "calls",
@@ -284039,9 +284039,9 @@
       "source_file": ".github/scripts/check-android-deploy-workflow-contract.py",
       "source_location": "L68",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_check_android_deploy_workflow_contract_shared_version_metadata_script",
-      "target": "scripts_check_android_deploy_workflow_contract_load_workflow",
-      "confidence_score": 1.0
+      "target": "scripts_check_android_deploy_workflow_contract_load_workflow"
     },
     {
       "relation": "calls",
@@ -284083,9 +284083,9 @@
       "source_file": ".github/scripts/check-android-deploy-workflow-contract.py",
       "source_location": "L210",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_check_android_deploy_workflow_contract_assert_version_metadata_merge_parent_snapshot_contract",
-      "target": "scripts_check_android_deploy_workflow_contract_run_command",
-      "confidence_score": 1.0
+      "target": "scripts_check_android_deploy_workflow_contract_run_command"
     },
     {
       "relation": "calls",
@@ -284105,9 +284105,9 @@
       "source_file": ".github/scripts/check-android-deploy-workflow-contract.py",
       "source_location": "L143",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_check_android_deploy_workflow_contract_assert_main_build_number_monotonic_contract",
-      "target": "scripts_check_android_deploy_workflow_contract_shared_version_metadata_script",
-      "confidence_score": 1.0
+      "target": "scripts_check_android_deploy_workflow_contract_shared_version_metadata_script"
     },
     {
       "relation": "calls",
@@ -284116,9 +284116,9 @@
       "source_file": ".github/scripts/check-android-deploy-workflow-contract.py",
       "source_location": "L163",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_check_android_deploy_workflow_contract_assert_version_metadata_merge_parent_snapshot_contract",
-      "target": "scripts_check_android_deploy_workflow_contract_shared_version_metadata_script",
-      "confidence_score": 1.0
+      "target": "scripts_check_android_deploy_workflow_contract_shared_version_metadata_script"
     },
     {
       "relation": "calls",
@@ -284171,9 +284171,9 @@
       "source_file": ".github/scripts/check-android-deploy-workflow-contract.py",
       "source_location": "L236",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "scripts_check_android_deploy_workflow_contract_main",
-      "target": "scripts_check_android_deploy_workflow_contract_assert_version_metadata_merge_parent_snapshot_contract",
-      "confidence_score": 1.0
+      "target": "scripts_check_android_deploy_workflow_contract_assert_version_metadata_merge_parent_snapshot_contract"
     },
     {
       "relation": "calls",
@@ -343861,8 +343861,8 @@
       "source_location": "L3",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "tmp_minglit_runner_2_work_minglit_minglit_apps_mds_docs_public_specs_party_list_page_index_md",
-      "target": "party_list_page_index_party_list"
+      "source": "party_list_page_index_party_list",
+      "target": "apps_mds_docs_public_specs_party_list_page_index_md"
     },
     {
       "relation": "contains",
@@ -344041,8 +344041,8 @@
       "source_location": "L3",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "party_list_page_index_party_list",
-      "target": "apps_mds_docs_public_specs_party_list_page_index_md"
+      "source": "tmp_minglit_runner_2_work_minglit_minglit_apps_mds_docs_public_specs_party_list_page_index_md",
+      "target": "party_list_page_index_party_list"
     },
     {
       "relation": "contains",
@@ -345361,8 +345361,8 @@
       "source_location": "L3",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "tmp_minglit_runner_2_work_minglit_minglit_apps_mds_docs_public_specs_settlement_page_index_md",
-      "target": "settlement_page_index_settlement"
+      "source": "settlement_page_index_settlement",
+      "target": "apps_mds_docs_public_specs_settlement_page_index_md"
     },
     {
       "relation": "contains",
@@ -345521,8 +345521,8 @@
       "source_location": "L3",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "settlement_page_index_settlement",
-      "target": "apps_mds_docs_public_specs_settlement_page_index_md"
+      "source": "tmp_minglit_runner_2_work_minglit_minglit_apps_mds_docs_public_specs_settlement_page_index_md",
+      "target": "settlement_page_index_settlement"
     },
     {
       "relation": "contains",
@@ -346491,8 +346491,8 @@
       "source_location": "L3",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "tmp_minglit_runner_2_work_minglit_minglit_apps_mds_docs_public_specs_event_application_manage_page_index_md",
-      "target": "event_application_manage_page_index_event_application_manage"
+      "source": "event_application_manage_page_index_event_application_manage",
+      "target": "apps_mds_docs_public_specs_event_application_manage_page_index_md"
     },
     {
       "relation": "contains",
@@ -346651,8 +346651,8 @@
       "source_location": "L3",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "event_application_manage_page_index_event_application_manage",
-      "target": "apps_mds_docs_public_specs_event_application_manage_page_index_md"
+      "source": "tmp_minglit_runner_2_work_minglit_minglit_apps_mds_docs_public_specs_event_application_manage_page_index_md",
+      "target": "event_application_manage_page_index_event_application_manage"
     },
     {
       "relation": "contains",
@@ -351961,8 +351961,8 @@
       "source_location": "L3",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "tmp_minglit_runner_2_work_minglit_minglit_apps_mds_docs_public_specs_partner_home_page_index_md",
-      "target": "partner_home_page_index_partner_home"
+      "source": "partner_home_page_index_partner_home",
+      "target": "apps_mds_docs_public_specs_partner_home_page_index_md"
     },
     {
       "relation": "contains",
@@ -352241,8 +352241,8 @@
       "source_location": "L3",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "partner_home_page_index_partner_home",
-      "target": "apps_mds_docs_public_specs_partner_home_page_index_md"
+      "source": "tmp_minglit_runner_2_work_minglit_minglit_apps_mds_docs_public_specs_partner_home_page_index_md",
+      "target": "partner_home_page_index_partner_home"
     },
     {
       "relation": "contains",
@@ -458478,5 +458478,5 @@
       "source_file": "docs/legal/retention-map.md"
     }
   ],
-  "built_at_commit": "ce849f04d763bd43ebb12146a4cd4ab10d6143ae"
+  "built_at_commit": "1c7082ed6cde996528f835563a1b1a3e3e5cacfa"
 }
