@@ -87,31 +87,34 @@ jobs:
           REVISION_SHA=""
           git fetch --tags --force
 
-          for sha in $(git rev-list --first-parent -n 80 HEAD); do
-            candidate="$(git tag --points-at "${sha}" \
-              | sed -nE 's/^v[0-9]{2}\.[0-9]{2}\.[0-9]{2}\+([0-9]+)-dev-staging$/\1/p' \
-              | sort -n \
-              | tail -n 1)"
+          SNAPSHOT_SEARCH_LIMIT=300
+          update_snapshot_build() {
+            local candidate="$1"
+            local revision_sha="$2"
             if [[ "${candidate}" =~ ^[0-9]+$ ]]; then
-              SNAPSHOT_BUILD="${candidate}"
-              REVISION_SHA="${sha}"
-              break
+              if [ -z "${SNAPSHOT_BUILD}" ] || [ "$((10#${candidate}))" -gt "$((10#${SNAPSHOT_BUILD}))" ]; then
+                SNAPSHOT_BUILD="${candidate}"
+                REVISION_SHA="${revision_sha}"
+              fi
             fi
+          }
+
+          for sha in $(git rev-list -n "${SNAPSHOT_SEARCH_LIMIT}" HEAD); do
+            while read -r candidate; do
+              [ -n "${candidate}" ] || continue
+              update_snapshot_build "${candidate}" "${sha}"
+            done < <(git tag --points-at "${sha}" \
+              | sed -nE 's/^v[0-9]{2}\.[0-9]{2}\.[0-9]{2}\+([0-9]+)-dev-staging$/\1/p')
 
             message="$(git log -1 --format=%B "${sha}")"
             candidate="$(printf '%s\n' "${message}" | sed -nE 's/.*chore: bump version to v[0-9]{2}\.[0-9]{2}\.[0-9]{2}\+([0-9]+)-dev-staging.*/\1/p' | head -n 1)"
-
-            if [[ "${candidate}" =~ ^[0-9]+$ ]]; then
-              SNAPSHOT_BUILD="${candidate}"
-              REVISION_SHA="${sha}"
-              break
-            fi
+            update_snapshot_build "${candidate}" "${sha}"
           done
 
           # Backward compatibility for builds cut before snapshot build numbers
           # were embedded in tags or bump commit titles.
           if [ -z "${SNAPSHOT_BUILD}" ]; then
-            for sha in $(git rev-list --first-parent -n 80 HEAD); do
+            for sha in $(git rev-list -n "${SNAPSHOT_SEARCH_LIMIT}" HEAD); do
               candidate="$(gh api \
                 "repos/${GITHUB_REPOSITORY}/commits/${sha}/pulls" \
                 -H "Accept: application/vnd.github+json" \
@@ -122,9 +125,8 @@ jobs:
                 candidate="$(git log -1 --format=%B "${sha}" | sed -nE 's/.*\(#([0-9]+)\).*/\1/p' | head -n 1)"
               fi
 
+              update_snapshot_build "${candidate}" "${sha}"
               if [[ "${candidate}" =~ ^[0-9]+$ ]]; then
-                SNAPSHOT_BUILD="${candidate}"
-                REVISION_SHA="${sha}"
                 break
               fi
             done
