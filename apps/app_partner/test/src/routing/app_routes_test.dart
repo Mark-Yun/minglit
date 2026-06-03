@@ -61,7 +61,7 @@ void main() {
       );
     });
 
-    test('home branch has location guide sub-route', () {
+    test('home branch has guide sub-routes', () {
       final shellRoute = routes.whereType<StatefulShellRoute>().first;
       final homeBranch = shellRoute.branches[0];
       final homeRoute = homeBranch.routes.first as GoRoute;
@@ -70,7 +70,7 @@ void main() {
           .whereType<GoRoute>()
           .map((r) => r.path)
           .toSet();
-      expect(subPaths, contains('guide/location'));
+      expect(subPaths, containsAll(['guide', 'guide/location']));
     });
 
     test('settlement branch has bank-account and detail sub-routes', () {

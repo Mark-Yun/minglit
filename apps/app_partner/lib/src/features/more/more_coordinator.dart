@@ -18,6 +18,10 @@ class MoreCoordinator {
     unawaited(_router.push(const NotificationSettingsRoute().location));
   }
 
+  void pushPartnerGuide() {
+    unawaited(_router.push(const PartnerGuideRoute().location));
+  }
+
   void pushMemberList(String partnerId) {
     unawaited(_router.push(MemberListRoute(partnerId: partnerId).location));
   }

@@ -35,6 +35,16 @@ void main() {
       verify(() => mockRouter.push(any())).called(1);
     });
 
+    test('pushPartnerGuide calls router.push with guide hub route', () {
+      final container = createContainer(
+        overrides: [goRouterProvider.overrideWithValue(mockRouter)],
+      );
+
+      container.read(moreCoordinatorProvider).pushPartnerGuide();
+
+      verify(() => mockRouter.push(any(that: equals('/guide')))).called(1);
+    });
+
     test('pushMemberList calls router.push with partnerId in route', () {
       final container = createContainer(
         overrides: [goRouterProvider.overrideWithValue(mockRouter)],

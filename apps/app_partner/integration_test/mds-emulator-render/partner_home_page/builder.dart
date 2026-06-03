@@ -73,6 +73,9 @@ class _NoOpPartnerHomeCoordinator implements PartnerHomeCoordinator {
   void pushLocationGuide() {}
 
   @override
+  void pushPartnerGuide() {}
+
+  @override
   void pushNotificationCenter() {}
 
   @override

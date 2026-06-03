@@ -112,6 +112,8 @@ void main() {
       // Fix #1213: 로그아웃/회원탈퇴/파트너프로필이 계정 관리 서브페이지로 이동 —
       // MorePage에서는 '계정 관리' 항목만 표시됨
       expect(find.text('계정 관리'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('도움말'), 100);
+      expect(find.text('도움말'), findsOneWidget);
       await tester.scrollUntilVisible(find.text('개인정보처리방침'), 100);
       expect(find.text('개인정보처리방침'), findsOneWidget);
       await tester.scrollUntilVisible(find.text('이용약관'), 100);
@@ -142,6 +144,21 @@ void main() {
       await tester.pumpAndSettle();
 
       verify(() => mockCoordinator.pushPartyList()).called(1);
+    });
+
+    testWidgets('tapping 도움말 forwards to coordinator', (tester) async {
+      when(() => mockCoordinator.pushPartnerGuide()).thenReturn(null);
+
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(find.text('도움말'), 100);
+      await tester.ensureVisible(find.text('도움말'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('도움말'));
+      await tester.pumpAndSettle();
+
+      verify(() => mockCoordinator.pushPartnerGuide()).called(1);
     });
 
     testWidgets('계정 관리 is visible on MorePage', (tester) async {

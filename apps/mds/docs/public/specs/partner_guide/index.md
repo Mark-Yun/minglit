@@ -4,14 +4,14 @@
 
 ## Overview
 
-| Status | 🚧 작성 중 (v0.1 초안) |
+| Status | ✅ 구현 반영 (v1.0) |
 |---|---|
 | App | app_partner |
 | Route / Surface | PartnerGuideRoute · widget: PartnerGuidePage |
 | Path | /guide |
-| Purpose | 파트너 도움말의 진입점 페이지. 6개 토픽 리스트로 구성되며, 각 토픽은 바텀시트로 열림 (route 변경 없이 한 페이지 안에서).홈의 각 섹션 ⓘ 버튼은 이 페이지를 거치지 않고 해당 토픽 시트로 직접 진입한다. |
-| 진입점 | ① 파트너 홈 onboarding의 welcome 카드 "도움말 보기" CTA② 더보기 → 마이페이지 → 도움말 메뉴(각 섹션의 ⓘ 버튼은 메인을 거치지 않고 시트 직접 진입) |
-| 설계 패턴 | 토픽 리스트 (메인) + showModalBottomSheet (Flutter) — 단일 route, 시트 stacking으로 sub-page처럼 노출. |
+| Purpose | 파트너 도움말의 진입점 페이지. 6개 토픽 리스트로 구성되며, 각 토픽은 바텀시트로 열린다. 이 HTML은 개별 도움말 페이지가 아니라 재사용 가능한 허브/시트 템플릿이며, 실제 토픽 콘텐츠는 Flutter의 PartnerGuideTopic 데이터로 관리한다. |
+| 진입점 | ① 파트너 홈 onboarding의 welcome 카드 "도움말 보기" CTA② 더보기 → 약관 및 정보 → 도움말 메뉴③ 향후 홈/카드별 ⓘ 버튼은 initialTopicSlug로 해당 토픽 시트를 직접 열 수 있음 |
+| 설계 패턴 | 단일 HTML spec + 데이터 기반 토픽 모델. 현재는 /guide 허브 + showMinglitHelpSheet, 향후 /guide/create-party/location 같은 deep route로 승격 가능. |
 
 [🧱 Layout](#layout) [🎨 States](#states) [📋 Sheet 콘텐츠](#sheets) [📖 Reference](#reference)
 
@@ -19,18 +19,18 @@
 
 ## Layout
 
-메인 토픽 리스트 + 바텀시트 stacking 구조.
+데이터 기반 메인 토픽 리스트 + 바텀시트 템플릿 구조.
 
 ## Tree
 
-단일 route로 동작 — 토픽 탭 시 시트만 stack됨. 시트 dismiss → 메인 리스트로 복귀 (back stack 없음).
+현재는 단일 route로 동작 — 토픽 탭 시 시트만 stack됨. 토픽마다 별도 HTML을 만들지 않고 slug/path를 가진 데이터로 확장한다.
 
 **Scaffold**
 ├─ **AppBar**: 좌측 ← back · 타이틀 "도움말"
 ├─ **body**:
 │   ├─ Intro hero (밍글릿 파트너 가이드 + sub)
 │   ├─ "토픽" 섹션 라벨
-│   └─ **토픽 리스트 카드** (6 rows)
+│   └─ **토픽 리스트 카드** (data-driven · 6 rows)
 │       ├─ 운영 현황 — 대시보드 안내
 │       ├─ 진행 중 — 운영 가이드
 │       ├─ 이벤트 참가 승인 대기 — 승인 가이드
@@ -57,9 +57,9 @@
 | 항목 | 내용 |
 |---|---|
 | 조건 | 도움말 진입 — 메인 토픽 리스트. |
-| 사용자 액션 | ① 토픽 row 탭 → 해당 토픽 바텀시트 push (modal).② AppBar ← back → 이전 화면 (홈 또는 마이페이지). |
-| 컴포넌트 | · AppBar (back + "도움말")· Intro hero (gradient 카드 + 환영 카피)· "토픽" 섹션 라벨· 토픽 리스트 카드 (6 row · iOS Settings 스타일 · 컬러 아이콘 박스) |
-| 노트 | 📝 단일 route. 시트 dismiss 시 이 화면으로 자연 복귀. 홈 ⓘ 버튼은 이 메인 안 거치고 시트 직접 push. |
+| 사용자 액션 | ① 토픽 row 탭 → 해당 토픽 바텀시트 push (modal).② AppBar ← back → 이전 화면 (홈 또는 더보기). |
+| 컴포넌트 | · AppBar (back + "도움말")· Intro hero (Minglit token 기반 안내 카드)· "토픽" 섹션 라벨· 토픽 리스트 카드 (6 row · 토큰 컬러 아이콘 박스) |
+| 노트 | 📝 단일 route. 시트 dismiss 시 이 화면으로 자연 복귀. 토픽 데이터는 slug/routePath를 보유해 deep route 확장 가능. |
 
 ### 시트 열림 — "운영 현황" 예시 토픽 탭 시 push되는 modal sheet
 
@@ -67,7 +67,7 @@
 
 | 항목 | 내용 |
 |---|---|
-| 조건 | 메인에서 토픽 row 탭 또는 홈의 ⓘ 버튼 직접 진입. |
+| 조건 | 메인에서 토픽 row 탭 또는 slug 기반 초기 토픽 진입. |
 | 사용자 액션 | ① 시트 body 스크롤 → 콘텐츠 탐색.② "확인" CTA 또는 시트 외부(overlay) 탭 / swipe down → dismiss.③ Dismiss 후 메인 리스트로 자연 복귀. |
 | 컴포넌트 | · Modal overlay (rgba 0.4)· 시트 (bottom-anchored · max-height 80% · top-radius 20px)· 핸들 + 헤더(타이틀 + 구분선) + 스크롤 body + 풀폭 "확인" CTA· body 안 섹션: 타이틀(14/700) + 본문(13 secondary line-height 1.6) |
 | 노트 | 📝 콘텐츠는 토픽별로 다름 (아래 "Sheet 콘텐츠" 섹션 참고). 닫기 X 없음 — "확인" 또는 swipe. |
@@ -76,7 +76,7 @@
 
 ## Sheet 콘텐츠
 
-6개 토픽별 시트 본문. 시스템 동작 / 기능 위치 / 정책 룰 중심.
+6개 토픽별 시트 본문. 콘텐츠 SSOT는 Flutter PartnerGuideTopic 데이터이며, 이 섹션은 MDS 검토용 요약.
 
 ## 1\. 운영 현황
 
@@ -141,5 +141,5 @@ T-7 이내 이벤트 — 환불 정책과 정산 규칙이 적용되기 시작�
 
 | Spec | Relation |
 |---|---|
-| PartnerHomePage | parent — onboarding welcome 카드 "도움말 보기" CTA + 각 섹션 ⓘ 버튼이 진입점. |
-| 마이페이지 (TBD) | 더보기 → 마이페이지 → 도움말 메뉴 (welcome 카드 dismiss 후에도 항상 접근 가능) |
+| PartnerHomePage | parent — onboarding welcome 카드 "도움말 보기" CTA. |
+| MorePage | 더보기 → 약관 및 정보 → 도움말 메뉴 (welcome 카드 이후에도 항상 접근 가능) |
