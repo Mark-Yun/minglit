@@ -47,7 +47,7 @@
 | Required status checks | `dev-pr-gate` (dev-staging snapshot PR 또는 approved `dev/hotfix/*`) |
 | Required reviewers | 0 |
 | Require conversation resolution | yes |
-| Require linear history | **yes** (nightly snapshot PR 만 들어옴, snapshot 자체가 linear) |
+| Require linear history | **no** (promotion merge commit 이 dev-staging snapshot ancestry 를 보존) |
 | Allowed merge methods | merge commit (snapshot 보존용) |
 | Bypass roles | `minglit-release-bot` only for promotion/version metadata push |
 
@@ -65,8 +65,8 @@
 | Required PR labels | GitHub Ruleset 직접 요구 없음. `main-pr-gate` 가 `rc-main-cut-pass` marker 또는 main hotfix labels 를 검증 |
 | Required reviewers | 0 (workflow auto-merge) |
 | Require conversation resolution | yes |
-| Require linear history | **yes** |
-| Allowed merge methods | **rebase only** (rebase + fast-forward) |
+| Require linear history | **no** |
+| Allowed merge methods | merge commit (RC promotion ancestry 보존용) |
 | Auto-delete head branch on merge | yes (`rc/*` branch 는 main merge 후 삭제, 이력은 protected tag 로 보존) |
 | Bypass roles | `minglit-release-bot` for promotion tag / cleanup, release manager only for catastrophic incident response |
 
@@ -84,8 +84,8 @@
 | Required status checks | `rc-pr-gate` (approved `rc/hotfix/*` PR 에 대해) |
 | Required reviewers | 0 |
 | Require conversation resolution | yes |
-| Require linear history | yes |
-| Allowed merge methods | rebase only |
+| Require linear history | no |
+| Allowed merge methods | approved hotfix merge |
 | Auto-delete head branch on merge | yes (hotfix branch 자동 삭제) |
 | Bypass roles | `minglit-release-bot` only for RC branch creation/deletion and promotion tag push |
 
@@ -160,7 +160,7 @@ Protected branch 에 대한 direct push 는 human 에게 허용하지 않는다.
 |------|----|
 | Actor | `minglit-release-bot` (GitHub App 권장, 대안: fine-grained PAT 전용 bot account) |
 | Token source | GitHub App installation token minted from `minglit_env/{stage}/github.env` (`MINGLIT_RELEASE_BOT_APP_ID` + `MINGLIT_RELEASE_BOT_PRIVATE_KEY_BASE64`) |
-| 사용 workflow | `dev-staging-dev-cut-gate`, `dev-staging-dev-cut`, `dev-rc-cut`, `rc-hotfix-apply`, `rc-main-cut`, `main-deploy` |
+| 사용 workflow | `dev-staging-dev-cut`, `dev-rc-cut`, `rc-hotfix-apply`, `rc-main-cut`, `main-deploy` |
 | Ruleset bypass | `dev-staging`, `dev`, `rc/**`, `main`, protected tag push (`v*`, `promo/**`) |
 | Human 사용 | 금지. 로컬/수동 CLI 에서 token 사용 금지 |
 | Audit | 모든 bot push 는 workflow run URL, actor, target ref, tag 목록을 PR/issue 또는 job summary 에 남김 |

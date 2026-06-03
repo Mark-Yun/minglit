@@ -103,12 +103,6 @@ export interface ComponentSpec {
   dartUsage?: string;
   /** Where this component lives on a screen + spacing relations. */
   placement?: PlacementSpec;
-  /**
-   * Path under /public/specs/components/ to a static HTML design spec
-   * (visual mockup with spec-mode annotations). Optional — not all
-   * components need a visual spec yet.
-   */
-  visualSpec?: string;
   /** Routes / specs that reference this component (anchor IDs). */
   usedIn?: string[];
 }
@@ -209,7 +203,6 @@ MinglitButton.text(
   icon: Icons.arrow_forward,
   onPressed: () => viewMore(),
 )`,
-    visualSpec: '/specs/components/minglit_button.html',
     placement: {
       where: [
         'Bottom CTA — `Detail + Bottom CTA` 스캐폴드의 하단, expand=true 풀폭.',
@@ -2242,7 +2235,7 @@ await showMinglitBottomSheet(
       'confirmLabel ElevatedButton — partner-primary 색상 명시 (테마 상속 아님, 유저/파트너 앱 모두 동일 렌더링 보장)',
     ],
     guidelines: [
-      { kind: 'do',   text: '파트너 앱 화면 AppBar 우측 info 아이콘 탭 → showMinglitHelpSheet 패턴으로 일관 적용.',    recipeKey: 'do-info-icon-pattern' },
+      { kind: 'do',   text: '현재 적용 화면(홈·파티 관리·신청관리·정산)의 AppBar 우측 info 아이콘 탭 → showMinglitHelpSheet 패턴으로 일관 적용. 신규·리뉴얼 화면은 같은 패턴을 채택.', recipeKey: 'do-info-icon-pattern' },
       { kind: 'dont', text: 'HelpSheet 안에 버튼/폼/액션 삽입 금지 — 정보 전달 전용. 액션이 필요하면 별도 Route 사용.', recipeKey: 'dont-action-in-help' },
       { kind: 'do',   text: '섹션 제목은 "질문 형태" — 사용자 mental model에 맞춰 Q&A 구성.',                          recipeKey: 'do-qa-format' },
       { kind: 'dont', text: '단일 섹션만 있을 때 MinglitHelpSheet 사용 금지 — MinglitBottomSheet + Text 사용.',         recipeKey: 'dont-single-section' },
@@ -2269,8 +2262,8 @@ await showMinglitHelpSheet(
 );`,
     placement: {
       where: [
-        '파트너 앱 모든 화면 AppBar 우측 info(help) 아이콘 탭 시 표시.',
-        '어느 화면에서든 showMinglitHelpSheet() 호출로 표시. scaffold 종속 없음.',
+        '현재 적용 화면(홈·파티 관리·신청관리·정산)의 AppBar 우측 info(help) 아이콘 탭 시 표시.',
+        '신규·리뉴얼 파트너 화면은 showMinglitHelpSheet() 호출 패턴으로 확장. scaffold 종속 없음.',
       ],
       spacing: [
         { neighbor: '핸들 바',         gap: 'spacing-xxsmall (2px) 최상단 · spacing-xsmall (4px) 상하 · spacing-small (8px) 아래' },

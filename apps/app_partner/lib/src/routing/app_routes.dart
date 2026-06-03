@@ -10,6 +10,7 @@ import 'package:app_partner/src/features/application/event_application_manage_pa
 import 'package:app_partner/src/features/auth/partner_login_page.dart';
 import 'package:app_partner/src/features/checkin/checkin_placeholder_page.dart';
 import 'package:app_partner/src/features/home/guide/location_guide_page.dart';
+import 'package:app_partner/src/features/home/guide/partner_guide_page.dart';
 import 'package:app_partner/src/features/home/partner_home_page.dart';
 import 'package:app_partner/src/features/member/partner_member_list_page.dart';
 import 'package:app_partner/src/features/member/partner_member_permission_page.dart';
@@ -113,7 +114,10 @@ class NotificationCenterRoute extends GoRouteData
       routes: [
         TypedGoRoute<HomeRoute>(
           path: '/',
-          routes: [TypedGoRoute<LocationGuideRoute>(path: 'guide/location')],
+          routes: [
+            TypedGoRoute<LocationGuideRoute>(path: 'guide/location'),
+            TypedGoRoute<PartnerGuideRoute>(path: 'guide'),
+          ],
         ),
       ],
     ),
@@ -270,6 +274,13 @@ class HomeRoute extends GoRouteData with $HomeRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const PartnerHomePage();
+}
+
+class PartnerGuideRoute extends GoRouteData with $PartnerGuideRoute {
+  const PartnerGuideRoute();
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const PartnerGuidePage();
 }
 
 class ApplicationListRoute extends GoRouteData with $ApplicationListRoute {

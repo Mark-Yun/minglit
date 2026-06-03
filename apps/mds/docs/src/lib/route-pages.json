@@ -190,6 +190,10 @@
       "widget": "LocationGuidePage",
       "file": "apps/app_partner/lib/src/features/home/guide/location_guide_page.dart"
     },
+    "PartnerGuideRoute": {
+      "widget": "PartnerGuidePage",
+      "file": "apps/app_partner/lib/src/features/home/guide/partner_guide_page.dart"
+    },
     "CheckinRoute": {
       "widget": "CheckinPlaceholderPage",
       "file": "apps/app_partner/lib/src/features/checkin/checkin_placeholder_page.dart"

@@ -107,7 +107,7 @@ extension _TicketSelectionWidgets on _TicketSelectionSheetState {
 
   Widget _buildBalanceBadge(ThemeData theme) {
     return MinglitBadge(
-      label: '성비 조절 중',
+      label: '선택 불가',
       color: theme.colorScheme.onSurfaceVariant,
       compact: true,
     );
@@ -121,56 +121,28 @@ extension _TicketSelectionWidgets on _TicketSelectionSheetState {
     );
   }
 
-  Widget buildQuantityStepper() {
-    final theme = Theme.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-        borderRadius: BorderRadius.circular(MinglitRadius.small),
-      ),
-      child: Row(
-        children: [
-          // Fix #2358: tooltip 누락 — NAF="true" 회귀
-          const IconButton(
-            onPressed: null,
-            icon: Icon(Icons.remove, size: MinglitIconSize.xsmall),
-            tooltip: '수량 감소',
-            padding: EdgeInsets.zero,
-            constraints: BoxConstraints(minWidth: 32, minHeight: 32),
-          ),
-          Text(
-            '$_quantity',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          IconButton(
-            onPressed: () =>
-                context.showMinglitInfo('친구와 함께 참가하기 기능은 준비 중입니다.'),
-            icon: const Icon(Icons.add, size: MinglitIconSize.xsmall),
-            tooltip: '수량 증가',
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Fix #180: tickets null 및 firstWhere 매치 실패 시 crash 방지
-  String calculateTotal() {
-    if (_selectedTicketId == null) return '0원';
-    final tickets = widget.event.tickets;
-    if (tickets == null) return '0원';
-    final ticket = tickets.where((t) => t.id == _selectedTicketId).firstOrNull;
-    if (ticket == null) return '0원';
-    return '${NumberFormat('#,###').format(ticket.price * _quantity)}원';
-  }
-
-  Widget buildLoadingState(ThemeData theme) {
-    return const MinglitEmptyState.card(
-      title: '추천 티켓을 확인 중입니다.',
-      icon: Icons.search,
+  Widget buildLoadingState(ThemeData _theme) {
+    return const Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        MinglitSkeleton(width: 86, height: 14),
+        SizedBox(height: MinglitSpacing.small),
+        MinglitSkeleton(
+          height: 76,
+          borderRadius: BorderRadius.all(Radius.circular(MinglitRadius.input)),
+        ),
+        SizedBox(height: MinglitSpacing.small),
+        MinglitSkeleton(
+          height: 76,
+          borderRadius: BorderRadius.all(Radius.circular(MinglitRadius.input)),
+        ),
+        SizedBox(height: MinglitSpacing.large),
+        MinglitSkeleton(
+          height: 48,
+          borderRadius: BorderRadius.all(Radius.circular(MinglitRadius.card)),
+        ),
+      ],
     );
   }
 
@@ -245,45 +217,6 @@ extension _TicketSelectionWidgets on _TicketSelectionSheetState {
           );
         }),
       ],
-    ];
-  }
-
-  List<Widget> buildQuantitySection(ThemeData theme) {
-    return [
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            '수량',
-            style: theme.textTheme.bodyLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          buildQuantityStepper(),
-        ],
-      ),
-      const SizedBox(height: MinglitSpacing.large),
-      const Divider(),
-      const SizedBox(height: MinglitSpacing.medium),
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            '총 결제 금액',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Text(
-            calculateTotal(),
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.primary,
-            ),
-          ),
-        ],
-      ),
-      const SizedBox(height: MinglitSpacing.large),
     ];
   }
 }

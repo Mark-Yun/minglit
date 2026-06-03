@@ -26,6 +26,7 @@ Event _makeEvent({
   int currentParticipants = 4,
   int maxParticipants = 20,
   List<EntryGroup>? entryGroups,
+  List<Ticket>? tickets,
 }) {
   final now = DateTime(2026, 6, 1, 10);
   return Event(
@@ -47,15 +48,17 @@ Event _makeEvent({
       updatedAt: now,
       partner: const Partner(id: 'test-partner', name: '테스트 파트너'),
     ),
-    tickets: [
-      Ticket(
-        id: 'test-ticket',
-        name: '일반 입장권',
-        price: 15000,
-        createdAt: now,
-        updatedAt: now,
-      ),
-    ],
+    tickets:
+        tickets ??
+        [
+          Ticket(
+            id: 'test-ticket',
+            name: '일반 입장권',
+            price: 15000,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ],
   );
 }
 
@@ -71,25 +74,31 @@ List<EntryGroup> _makeEntryGroups(int count) {
   );
 }
 
+Ticket _makeTicketForGroup(
+  String groupId, {
+  required int soldCount,
+  required int quantity,
+}) {
+  final now = DateTime(2026, 6, 1, 10);
+  return Ticket(
+    id: 'ticket-$groupId',
+    name: '그룹 입장권',
+    price: 15000,
+    quantity: quantity,
+    soldCount: soldCount,
+    targetEntryGroupIds: [groupId],
+    createdAt: now,
+    updatedAt: now,
+  );
+}
+
 List<dynamic> _overrides(Event event) {
   return [
     eventDetailControllerProvider(
       _kEventId,
     ).overrideWith(() => _DataController(event)),
-    eventAdmissionControllerProvider(
-      event,
-    ).overrideWith(_GuestController.new),
-    policyRepositoryProvider.overrideWith(
-      (_) => const _FakePolicy(),
-    ),
-    entryGroupParticipantCountsProvider(
-      _kEventId,
-    ).overrideWith(
-      (_) async => {
-        for (var i = 0; i < (event.entryGroups?.length ?? 0); i++)
-          'group-$i': i + 1,
-      },
-    ),
+    eventAdmissionControllerProvider(event).overrideWith(_GuestController.new),
+    policyRepositoryProvider.overrideWith((_) => const _FakePolicy()),
     eventDetailNowProvider.overrideWith(
       (_) =>
           () => DateTime(2026, 6, 1, 10),
@@ -153,7 +162,7 @@ void main() {
     cujCase(
       'happy: 이벤트 상세 → 참가 현황 섹션에 전체 참여 정보 표시',
       app: const EventDetailPage(eventId: _kEventId),
-      overrides: () => _overrides(_makeEvent(currentParticipants: 4)),
+      overrides: () => _overrides(_makeEvent()),
       body: (t) async {
         await _scrollToSection(t);
         // 참여 현황 섹션 타이틀이 렌더링됨
@@ -164,8 +173,7 @@ void main() {
     cujCase(
       'edge: 참여자 0명 이벤트 — 섹션 렌더링, 0/N 표시',
       app: const EventDetailPage(eventId: _kEventId),
-      overrides: () =>
-          _overrides(_makeEvent(currentParticipants: 0, maxParticipants: 20)),
+      overrides: () => _overrides(_makeEvent(currentParticipants: 0)),
       body: (t) async {
         await _scrollToSection(t);
         // 0명인 경우에도 참여 현황 섹션 표시됨
@@ -180,9 +188,7 @@ void main() {
     cujCase(
       'happy: 2그룹 이벤트 — 그룹 카드 2개 렌더링',
       app: const EventDetailPage(eventId: _kEventId),
-      overrides: () => _overrides(
-        _makeEvent(entryGroups: _makeEntryGroups(2)),
-      ),
+      overrides: () => _overrides(_makeEvent(entryGroups: _makeEntryGroups(2))),
       body: (t) async {
         await _scrollToSection(t);
         // 2개 그룹이 있으므로 그룹 라벨(남성/여성) 노출
@@ -193,9 +199,7 @@ void main() {
     cujCase(
       'happy: 3그룹 이상 이벤트 — 그룹 카드 3개 이상 렌더링',
       app: const EventDetailPage(eventId: _kEventId),
-      overrides: () => _overrides(
-        _makeEvent(entryGroups: _makeEntryGroups(3)),
-      ),
+      overrides: () => _overrides(_makeEvent(entryGroups: _makeEntryGroups(3))),
       body: (t) async {
         await _scrollToSection(t);
         // 3개 이상 그룹 — 참여 현황 섹션 존재
@@ -206,9 +210,7 @@ void main() {
     cujCase(
       'edge: 4개 그룹 이벤트 — 페이지 크래시 없이 렌더링',
       app: const EventDetailPage(eventId: _kEventId),
-      overrides: () => _overrides(
-        _makeEvent(entryGroups: _makeEntryGroups(4)),
-      ),
+      overrides: () => _overrides(_makeEvent(entryGroups: _makeEntryGroups(4))),
       body: (t) async {
         await _scrollToSection(t);
         expect(find.text('참여 현황'), findsAtLeast(1));
@@ -221,12 +223,16 @@ void main() {
       'happy: 그룹 카드에 참여 인원 표시',
       app: const EventDetailPage(eventId: _kEventId),
       overrides: () => _overrides(
-        _makeEvent(entryGroups: _makeEntryGroups(1)),
+        _makeEvent(
+          entryGroups: _makeEntryGroups(1),
+          tickets: [_makeTicketForGroup('group-0', soldCount: 8, quantity: 20)],
+        ),
       ),
       body: (t) async {
         await _scrollToSection(t);
-        // 그룹 카드 내 "N명 참여" 텍스트
-        expect(find.textContaining('명 참여'), findsAtLeast(1));
+        // 그룹 카드는 보조 "N명 참여" 캡션 없이 게이지의 current/max만 노출한다.
+        expect(find.text('8/20'), findsAtLeast(1));
+        expect(find.textContaining('명 참여'), findsNothing);
       },
     );
 
@@ -238,37 +244,19 @@ void main() {
           currentParticipants: 10,
           maxParticipants: 10,
           entryGroups: [
-            const EntryGroup(
-              id: 'group-0',
-              eventId: _kEventId,
-              label: '전체',
-            ),
+            const EntryGroup(id: 'group-0', eventId: _kEventId, label: '전체'),
+          ],
+          tickets: [
+            _makeTicketForGroup('group-0', soldCount: 10, quantity: 10),
           ],
         );
-        return [
-          eventDetailControllerProvider(
-            _kEventId,
-          ).overrideWith(() => _DataController(event)),
-          eventAdmissionControllerProvider(
-            event,
-          ).overrideWith(_GuestController.new),
-          policyRepositoryProvider.overrideWith((_) => const _FakePolicy()),
-          // 10명 참여 중
-          entryGroupParticipantCountsProvider(
-            _kEventId,
-          ).overrideWith((_) async => {'group-0': 10}),
-          eventDetailNowProvider.overrideWith(
-            (_) =>
-                () => DateTime(2026, 6, 1, 10),
-          ),
-          currentUserProvider.overrideWith((_) => null),
-          authStateChangesProvider.overrideWith((_) => const Stream.empty()),
-        ];
+        return _overrides(event);
       },
       body: (t) async {
         await _scrollToSection(t);
-        // 10명 참여 중 표시
-        expect(find.textContaining('명 참여'), findsAtLeast(1));
+        // 100% 마감도 단일 current/max 게이지로 표시한다.
+        expect(find.text('10/10'), findsAtLeast(1));
+        expect(find.textContaining('명 참여'), findsNothing);
       },
     );
   });
@@ -277,9 +265,7 @@ void main() {
     cujCase(
       'happy: 참여자 정보 섹션 렌더링 — blur 리스트 토글 (미구현 시 기본 섹션 확인)',
       app: const EventDetailPage(eventId: _kEventId),
-      overrides: () => _overrides(
-        _makeEvent(entryGroups: _makeEntryGroups(2)),
-      ),
+      overrides: () => _overrides(_makeEvent(entryGroups: _makeEntryGroups(2))),
       body: (t) async {
         await _scrollToSection(t);
         // 참여 현황 섹션이 렌더링됨 (blur 리스트 토글은 spec V2 구현 예정)
@@ -292,9 +278,7 @@ void main() {
     cujCase(
       'happy: 참여자 정보 렌더링 — 나이대/뱃지 표시 (spec V2 구현 예정)',
       app: const EventDetailPage(eventId: _kEventId),
-      overrides: () => _overrides(
-        _makeEvent(entryGroups: _makeEntryGroups(2)),
-      ),
+      overrides: () => _overrides(_makeEvent(entryGroups: _makeEntryGroups(2))),
       body: (t) async {
         await _scrollToSection(t);
         // 참여 현황 섹션 렌더링 확인
@@ -319,30 +303,15 @@ void main() {
               gender: 'male',
             ),
           ],
+          tickets: [_makeTicketForGroup('group-0', soldCount: 2, quantity: 10)],
         );
-        return [
-          eventDetailControllerProvider(
-            _kEventId,
-          ).overrideWith(() => _DataController(event)),
-          eventAdmissionControllerProvider(
-            event,
-          ).overrideWith(_GuestController.new),
-          policyRepositoryProvider.overrideWith((_) => const _FakePolicy()),
-          entryGroupParticipantCountsProvider(
-            _kEventId,
-          ).overrideWith((_) async => {'group-0': 2}),
-          eventDetailNowProvider.overrideWith(
-            (_) =>
-                () => DateTime(2026, 6, 1, 10),
-          ),
-          currentUserProvider.overrideWith((_) => null),
-          authStateChangesProvider.overrideWith((_) => const Stream.empty()),
-        ];
+        return _overrides(event);
       },
       body: (t) async {
         await _scrollToSection(t);
-        // 2명 참여 표시 — k-anonymity 비표시 처리는 spec V2 구현 예정
-        expect(find.textContaining('명 참여'), findsAtLeast(1));
+        // k-anonymity 비표시 처리는 spec V2 구현 예정. 현재 카운트는 게이지로만 노출한다.
+        expect(find.text('2/10'), findsAtLeast(1));
+        expect(find.textContaining('명 참여'), findsNothing);
       },
     );
   });
@@ -355,9 +324,7 @@ void main() {
     cujCase(
       'happy: 80% 이상 참여 — 현재 참여 현황 표시 (urgency 뱃지는 V2)',
       app: const EventDetailPage(eventId: _kEventId),
-      overrides: () => _overrides(
-        _makeEvent(currentParticipants: 17, maxParticipants: 20),
-      ),
+      overrides: () => _overrides(_makeEvent(currentParticipants: 17)),
       body: (t) async {
         await _scrollToSection(t);
         // 참여 현황 섹션 렌더링
@@ -376,9 +343,7 @@ void main() {
     cujCase(
       'happy: 비로그인 상태 — 참여 현황 섹션 표시',
       app: const EventDetailPage(eventId: _kEventId),
-      overrides: () => _overrides(
-        _makeEvent(currentParticipants: 4, maxParticipants: 20),
-      ),
+      overrides: () => _overrides(_makeEvent()),
       body: (t) async {
         await _scrollToSection(t);
         // 비로그인 상태에서도 참여 현황 섹션 렌더링
@@ -395,8 +360,6 @@ void main() {
       app: const EventDetailPage(eventId: _kEventId),
       overrides: () => _overrides(
         _makeEvent(
-          currentParticipants: 4,
-          maxParticipants: 20,
           entryGroups: _makeEntryGroups(2),
         ),
       ),
@@ -416,9 +379,7 @@ void main() {
     cujCase(
       'happy: 명단 비공개 이벤트 — 참여 현황 카운트 렌더링',
       app: const EventDetailPage(eventId: _kEventId),
-      overrides: () => _overrides(
-        _makeEvent(currentParticipants: 8, maxParticipants: 20),
-      ),
+      overrides: () => _overrides(_makeEvent(currentParticipants: 8)),
       body: (t) async {
         await _scrollToSection(t);
         // 참여 현황 섹션 렌더링 확인 — 명단 비공개 blur 토글 숨김은 V2 구현 예정
@@ -433,8 +394,6 @@ void main() {
       app: const EventDetailPage(eventId: _kEventId),
       overrides: () => _overrides(
         _makeEvent(
-          currentParticipants: 4,
-          maxParticipants: 20,
           entryGroups: [],
         ),
       ),

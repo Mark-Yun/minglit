@@ -36,6 +36,9 @@ class _NoOpMoreCoordinator implements MoreCoordinator {
   void pushNotificationSettings() {}
 
   @override
+  void pushPartnerGuide() {}
+
+  @override
   void pushPartyList() {}
 
   @override

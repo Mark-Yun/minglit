@@ -1,8 +1,12 @@
 // Fix #2185 (Batch 10): migrate to minglitEdgeFunction wrapper — auth via manifest (system + public)
-import { successResponse, errorResponse } from "../_shared/response_utils.ts";
+import { errorResponse, successResponse } from "../_shared/response_utils.ts";
 import { checkAllFunctions } from "../_shared/env_keystore.ts";
 import { nowISO } from "../_shared/temporal_utils.ts";
-import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
+import {
+  type EFContext,
+  minglitEdgeFunction,
+} from "../_shared/edge_function.ts";
+import { makeSupabaseAdminHeaders } from "../_shared/supabase_client.ts";
 
 interface CheckResult {
   status: "up" | "down";
@@ -29,16 +33,12 @@ async function checkDatabase(): Promise<CheckResult> {
   const start = performance.now();
   try {
     const url = Deno.env.get("SUPABASE_URL") ?? "";
-    const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
     const res = await withTimeout(
       () =>
         fetch(`${url}/rest/v1/`, {
           method: "HEAD",
-          headers: {
-            apikey: key,
-            Authorization: `Bearer ${key}`,
-          },
+          headers: makeSupabaseAdminHeaders(),
         }),
       TIMEOUT_MS,
     );
@@ -63,9 +63,10 @@ async function checkAuth(): Promise<CheckResult> {
     const key = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 
     const res = await withTimeout(
-      () => fetch(`${url}/auth/v1/health`, {
-        headers: { apikey: key },
-      }),
+      () =>
+        fetch(`${url}/auth/v1/health`, {
+          headers: { apikey: key },
+        }),
       TIMEOUT_MS,
     );
 
@@ -86,15 +87,11 @@ async function checkStorage(): Promise<CheckResult> {
   const start = performance.now();
   try {
     const url = Deno.env.get("SUPABASE_URL") ?? "";
-    const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
     const res = await withTimeout(
       () =>
         fetch(`${url}/storage/v1/bucket`, {
-          headers: {
-            apikey: key,
-            Authorization: `Bearer ${key}`,
-          },
+          headers: makeSupabaseAdminHeaders(),
         }),
       TIMEOUT_MS,
     );
@@ -112,7 +109,10 @@ async function checkStorage(): Promise<CheckResult> {
   }
 }
 
-export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
+export const handler = async (
+  req: Request,
+  ctx: EFContext,
+): Promise<Response> => {
   if (req.method !== "GET") {
     return errorResponse("Method not allowed", 405);
   }
@@ -126,8 +126,7 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
     checkStorage(),
   ]);
 
-  const allUp =
-    database.status === "up" &&
+  const allUp = database.status === "up" &&
     auth.status === "up" &&
     storage.status === "up";
 
@@ -135,9 +134,21 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
     status: allUp ? "healthy" : "unhealthy",
     timestamp: nowISO(),
     checks: {
-      database: { status: database.status, latency_ms: database.latency_ms, ...(database.error && { error: database.error }) },
-      auth: { status: auth.status, latency_ms: auth.latency_ms, ...(auth.error && { error: auth.error }) },
-      storage: { status: storage.status, latency_ms: storage.latency_ms, ...(storage.error && { error: storage.error }) },
+      database: {
+        status: database.status,
+        latency_ms: database.latency_ms,
+        ...(database.error && { error: database.error }),
+      },
+      auth: {
+        status: auth.status,
+        latency_ms: auth.latency_ms,
+        ...(auth.error && { error: auth.error }),
+      },
+      storage: {
+        status: storage.status,
+        latency_ms: storage.latency_ms,
+        ...(storage.error && { error: storage.error }),
+      },
     },
   };
 

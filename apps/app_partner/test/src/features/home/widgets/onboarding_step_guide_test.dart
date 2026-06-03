@@ -110,5 +110,31 @@ void main() {
         expect(callCount, 1);
       },
     );
+
+    testWidgets('calls onOpenGuide callback when guide button tapped', (
+      tester,
+    ) async {
+      var callCount = 0;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: MinglitTheme.materialTheme,
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: OnboardingStepGuide(
+                hasParty: false,
+                partyName: null,
+                onCreateParty: () {},
+                onCreateEvent: () {},
+                onOpenGuide: () => callCount++,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('도움말 보기'));
+      expect(callCount, 1);
+    });
   });
 }

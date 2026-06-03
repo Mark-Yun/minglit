@@ -173,7 +173,7 @@ void main() {
   // ─── TicketSelectionSheet Tests ───
 
   group('TicketSelectionSheet', () {
-    testWidgets('loading → "추천 티켓을 확인 중입니다."', (tester) async {
+    testWidgets('loading → MinglitSkeleton placeholders', (tester) async {
       // Delay repo responses so loading state persists
       when(
         () => mockEventRepo.getTicketBalanceStatus(any()),
@@ -182,7 +182,8 @@ void main() {
       await pumpEventDetailWithTickets(tester, event: testEventWithTickets);
       await openTicketSheet(tester);
 
-      expect(find.text('추천 티켓을 확인 중입니다.'), findsOneWidget);
+      expect(find.text('추천 티켓을 확인 중입니다.'), findsNothing);
+      expect(find.byType(MinglitSkeleton), findsWidgets);
     });
 
     testWidgets('empty tickets → "현재 구매 가능한 티켓이 없습니다."', (tester) async {
@@ -216,7 +217,7 @@ void main() {
       expect(find.text('다른 티켓'), findsOneWidget);
     });
 
-    testWidgets('locked ticket → opacity + "성비 조절 중" badge', (tester) async {
+    testWidgets('locked ticket → opacity + "선택 불가" badge', (tester) async {
       // Mark locked ticket as balance-locked
       when(
         () => mockEventRepo.getTicketBalanceStatus(any()),
@@ -227,7 +228,7 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      expect(find.text('성비 조절 중'), findsAtLeast(1));
+      expect(find.text('선택 불가'), findsAtLeast(1));
       // The locked ticket should have Opacity 0.5
       final opacityWidgets = tester
           .widgetList<Opacity>(find.byType(Opacity))

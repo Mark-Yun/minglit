@@ -44,7 +44,7 @@
 
 ## Technical Approach
 
-- **화면 (유저)**: 구매 내역 카드(취소 버튼/환불 상태 라벨), 환불 확인 다이얼로그, 환불 요청 바텀시트(자동 불가), 환불 요청 결과 안내, 이벤트 상세의 환불 안내 시트
+- **화면 (유저)**: 구매 내역 리스트 카드(요약 + 상세 진입), 구매 상세(취소 버튼/환불 상태), 환불 확인 다이얼로그, 환불 요청 바텀시트(자동 불가), 환불 요청 결과 안내, 이벤트 상세의 환불 안내 시트
 - **화면 (파트너)**: 환불 요청 목록, 환불 요청 상세 + 승인/거절
 - **저장**: `refund_requests` 신규 테이블, `policies.refund` 정책 갱신, `event_applications.refund_status` 확장
 - **외부 의존성**: PortOne(결제 취소), 푸시 알림, pg_cron(72h 미응답 에스컬레이션)
@@ -54,7 +54,7 @@
 
 ### Scenario 1: 자동 환불 가능 — 결제 후 3시간 내 취소 (CUJ 1-x)
 
-유저가 구매 내역에서 "취소하기" 탭 → grace period 내 판정 → 환불 확인 다이얼로그 → 확정 시 PortOne 자동 취소.
+유저가 구매 내역 리스트 카드에서 상세로 진입 → 구매 상세에서 "취소하기" 탭 → grace period 내 판정 → 환불 확인 다이얼로그 → 확정 시 PortOne 자동 취소.
 
 ### Scenario 2: 자동 환불 가능 — 이벤트 7일 전 취소 (CUJ 2-x)
 
@@ -76,7 +76,7 @@ grace period 초과 + cutoff 초과 상태에서 취소 시도 → "환불 가�
 
 ### Scenario 1 / 2
 
-구매 내역 카드 "취소하기" → 서버 자동 환불 가능 판정(`user-cancel-order`) → 가능 → 확인 다이얼로그 → 확정 → PortOne 결제 취소 → `event_applications.refund_status = completed` → 유저에 결과 안내
+구매 내역 리스트 카드 탭 → 구매 상세 "취소하기" → 서버 자동 환불 가능 판정(`user-cancel-order`) → 가능 → 확인 다이얼로그 → 확정 → PortOne 결제 취소 → `event_applications.refund_status = completed` → 유저에 결과 안내
 
 ### Scenario 3
 

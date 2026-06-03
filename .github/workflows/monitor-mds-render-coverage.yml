@@ -1,11 +1,13 @@
 name: monitor-mds-render-coverage
 
-# MDS 77 화면 ↔ cataloged 화면 (apps/app_user/integration_test/mds-emulator-render/)
-# 차이를 매일 체크하여 100% 미만 시 GitHub Issue 생성/갱신.
+# MDS render catalog 실 캡처 + coverage 리포트를 실행한다.
+# - app_user/app_partner mds-emulator-render catalog를 shard로 분할해 flutter drive 수행
+# - 생성된 docs/infra/mds-emulator-render/<screen>/state-*.png 를 artifact로 병합
+# - coverage 스크립트 결과를 기반으로 monitor issue를 생성/갱신/종료
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # UTC 자정 = KST 09:00
+    - cron: '0 0 * * *' # UTC 자정 = KST 09:00
   workflow_dispatch:
 
 concurrency:
@@ -17,15 +19,180 @@ permissions:
   issues: write
 
 jobs:
-  coverage:
+  render-capture:
+    name: render-capture-${{ matrix.app }}-shard-${{ matrix.shard_index }}
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [user, partner]
+        shard_index: [0, 1, 2, 3]
+
+    env:
+      APP_NAME: ${{ matrix.app }}
+      SHARD_INDEX: ${{ matrix.shard_index }}
+      SHARD_TOTAL: 4
+
     steps:
       - uses: actions/checkout@v6
 
-      - uses: subosito/flutter-action@v2
+      - name: Create dev Flutter env file
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_DEV_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+          ENVIRONMENT: development
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN_FLUTTER }}
+          STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
+          GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_DEV_WEB_CLIENT_ID }}
+          KAKAO_LOCAL_REST_API_KEY: ${{ secrets.KAKAO_LOCAL_REST_API_KEY }}
+          KAKAO_MAP_JAVASCRIPT_KEY: ${{ secrets.KAKAO_MAP_JAVASCRIPT_KEY }}
+          JUSO_CONFIRM_KEY: ${{ secrets.JUSO_CONFIRM_KEY }}
+          IAMPORT_USER_CODE: ${{ secrets.IAMPORT_USER_CODE }}
+          MOBILE_REDIRECT_SCHEME: ${{ secrets.MOBILE_REDIRECT_SCHEME }}
+        run: bash .github/scripts/create-dev-flutter-env.sh
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
         with:
-          flutter-version: '3.41.9'  # Fix #2640: flutter_quill 11.5.0 incompatible with Flutter 3.44.0
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9' # Fix #2640: flutter_quill 11.5.0 incompatible with Flutter 3.44.0
           cache: true
+
+      - name: Allow git access to Flutter SDK dir
+        run: |
+          FLUTTER_SDK="$(dirname "$(dirname "$(command -v flutter)")")"
+          git config --global --add safe.directory "$FLUTTER_SDK"
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: apps/app_${{ matrix.app }}
+
+      - name: Enable KVM acceleration
+        if: runner.environment == 'github-hosted'
+        run: |
+          sudo mkdir -p /etc/udev/rules.d
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+
+      - name: Prepare empty render artifact directory
+        run: |
+          rm -rf docs/infra/mds-emulator-render
+          mkdir -p docs/infra/mds-emulator-render
+          touch docs/infra/mds-emulator-render/artifact-root.txt
+
+      - name: Run render shard on Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          profile: pixel_6
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          script: |
+            set -euo pipefail
+            APP_DIR="apps/app_${APP_NAME}"
+            OUTPUT_ROOT="docs/infra/mds-emulator-render"
+
+            rm -rf "$OUTPUT_ROOT"
+            mkdir -p "$OUTPUT_ROOT"
+            touch "$OUTPUT_ROOT/artifact-root.txt"
+
+            cd "$APP_DIR"
+
+            mapfile -t SCREENS < <(
+              find integration_test/mds-emulator-render -mindepth 1 -maxdepth 1 -type d -printf '%f\n' \
+                | grep -v '^_' \
+                | sort
+            )
+
+            if [ "${#SCREENS[@]}" -eq 0 ]; then
+              echo "::error::No catalog screen directories found for $APP_NAME"
+              exit 1
+            fi
+
+            RUN_COUNT=0
+            for i in "${!SCREENS[@]}"; do
+              if (( i % SHARD_TOTAL != SHARD_INDEX )); then
+                continue
+              fi
+
+              SCREEN="${SCREENS[$i]}"
+              TARGET="integration_test/mds-emulator-render/${SCREEN}/${SCREEN}_test.dart"
+              SCREEN_OUTPUT="../../${OUTPUT_ROOT}/${SCREEN}"
+
+              if [ ! -f "$TARGET" ]; then
+                echo "::error::Missing render target: $TARGET"
+                exit 1
+              fi
+
+              rm -rf "$SCREEN_OUTPUT"
+
+              echo "[mds-render] app=$APP_NAME shard=${SHARD_INDEX}/${SHARD_TOTAL} target=$TARGET"
+              flutter drive \
+                --driver=test_driver/mds_emulator_render_driver.dart \
+                --target="$TARGET" \
+                --flavor dev \
+                --dart-define-from-file=../../minglit_env/dev/flutter.env \
+                -d emulator-5554
+
+              PNG_COUNT=$(find "$SCREEN_OUTPUT" -maxdepth 1 -type f -name 'state-*.png' | wc -l | tr -d ' ')
+              echo "[mds-render] captured ${PNG_COUNT} PNG(s) for $SCREEN"
+              if [ "$PNG_COUNT" = "0" ]; then
+                echo "::error::No state PNG captured for screen '$SCREEN'"
+                exit 1
+              fi
+
+              RUN_COUNT=$((RUN_COUNT + 1))
+            done
+
+            if [ "$RUN_COUNT" = "0" ]; then
+              echo "::error::Shard ${SHARD_INDEX}/${SHARD_TOTAL} had no assigned targets"
+              exit 1
+            fi
+
+            TOTAL_PNG=$(find "../../${OUTPUT_ROOT}" -type f -name 'state-*.png' | wc -l | tr -d ' ')
+            echo "[mds-render] shard complete: app=$APP_NAME shard=$SHARD_INDEX targets=$RUN_COUNT pngs=$TOTAL_PNG"
+
+      - name: Upload render shard artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mds-render-${{ matrix.app }}-shard-${{ matrix.shard_index }}
+          path: docs/infra/mds-emulator-render
+          if-no-files-found: warn
+          retention-days: 14
+
+  coverage:
+    runs-on: ubuntu-latest
+    needs: [render-capture]
+    if: ${{ always() && !cancelled() }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9' # Keep in sync with render-capture job.
+          cache: true
+
+      - name: Clean merged render artifact directory
+        run: |
+          rm -rf docs/infra/mds-emulator-render
+          mkdir -p docs/infra/mds-emulator-render
+
+      - name: Download render artifacts
+        uses: actions/download-artifact@v5
+        with:
+          pattern: mds-render-*-shard-*
+          merge-multiple: true
+          path: docs/infra/mds-emulator-render
 
       - name: Run coverage report (JSON)
         id: cov
@@ -34,8 +201,13 @@ jobs:
           dart run scripts/mds_render_coverage.dart --json > /tmp/cov.json
           EXIT=$?
           set -e
+
           cat /tmp/cov.json
           echo "exit_code=$EXIT" >> "$GITHUB_OUTPUT"
+
+          RENDERED_PNGS=$(find docs/infra/mds-emulator-render -type f -name 'state-*.png' | wc -l | tr -d ' ')
+          echo "rendered_pngs=$RENDERED_PNGS" >> "$GITHUB_OUTPUT"
+
           # 사람 친화 출력도 로그에
           dart run scripts/mds_render_coverage.dart || true
 
@@ -43,7 +215,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # cov.json 파싱
           SCREEN_PCT=$(jq -r '.screen_coverage_pct' /tmp/cov.json)
           STATE_PCT=$(jq -r '.state_coverage_pct' /tmp/cov.json)
           CATALOGED=$(jq -r '.cataloged_screens' /tmp/cov.json)
@@ -56,14 +227,12 @@ jobs:
 
           ISSUE_TITLE_PREFIX="[mds-render-coverage]"
 
-          # 기존 open 이슈 찾기
           EXISTING=$(gh issue list \
             --search "$ISSUE_TITLE_PREFIX in:title state:open" \
             --json number,title \
             --jq '.[0].number // empty')
 
           if [ "${{ steps.cov.outputs.exit_code }}" = "0" ]; then
-            # 100% 달성 → 기존 이슈 close
             if [ -n "$EXISTING" ]; then
               gh issue close "$EXISTING" \
                 --comment "✅ Coverage 100% achieved on $(date -u +%Y-%m-%d). Auto-closed by monitor-mds-render-coverage."
@@ -74,9 +243,13 @@ jobs:
             exit 0
           fi
 
-          # 100% 미만 → 이슈 본문 생성
           BODY=$(cat <<EOF
           > 자동 갱신: $(date -u +%Y-%m-%dT%H:%M:%SZ) by monitor-mds-render-coverage
+
+          ## Render run summary
+          - Render shard result: **${{ needs.render-capture.result }}**
+          - Captured PNG files in this run: **${{ steps.cov.outputs.rendered_pngs }}**
+          - Coverage script exit code: **${{ steps.cov.outputs.exit_code }}**
 
           ## Summary
           - 화면 커버리지: **${SCREEN_PCT}%** (${CATALOGED}/${MDS_SCREENS})
@@ -107,7 +280,7 @@ jobs:
 
           ## 다음 액션
           - 새 화면 추가: \`apps/app_user/integration_test/mds-emulator-render/home_page/\` 패턴 복제
-          - state 추가: 해당 화면의 \`<screen>_test.dart\` 의 catalog states list 에 entry 추가
+          - state 추가: 해당 화면의 \`<screen>_test.dart\` catalog states list entry 추가
           - 상세: \`apps/app_user/integration_test/mds-emulator-render/architecture.md\`
           EOF
           )
@@ -120,4 +293,27 @@ jobs:
               --title "$ISSUE_TITLE_PREFIX ${UNCOVERED} screens + ${INCOMPLETE} incomplete (${STATE_PCT}% states)" \
               --label "docs,P3-low" \
               --body "$BODY"
+          fi
+
+      - name: Fail on render capture malfunction
+        run: |
+          if [ "${{ needs.render-capture.result }}" != "success" ]; then
+            echo "::error::render-capture job failed (${{ needs.render-capture.result }})"
+            exit 1
+          fi
+
+          if [ "${{ steps.cov.outputs.rendered_pngs }}" = "0" ]; then
+            echo "::error::No rendered PNG artifact was produced"
+            exit 1
+          fi
+
+          if [ "${{ steps.cov.outputs.exit_code }}" = "2" ]; then
+            echo "::error::Coverage script execution failed"
+            exit 1
+          fi
+
+          if [ "${{ steps.cov.outputs.exit_code }}" = "0" ]; then
+            echo "Coverage 100%"
+          else
+            echo "Coverage below 100% (issue updated)"
           fi

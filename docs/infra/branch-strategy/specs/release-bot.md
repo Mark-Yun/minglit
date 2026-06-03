@@ -84,14 +84,14 @@ git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
 
 | Workflow | 사용 이유 |
 |----------|-----------|
-| `dev-staging-dev-cut-gate` | dev-staging version bump/tag |
-| `dev-staging-dev-cut` | immutable nightly branch 생성, dev PR 생성 |
+| `dev-staging-dev-cut-gate` | manual candidate inspect (read-only) |
+| `dev-staging-dev-cut` | dev-staging version bump/tag, immutable nightly branch 생성, dev PR 생성 |
 | `shared-set-commit-status` | commit status 를 쓰는 low-level reusable |
-| `set-dev-soak-status` | dev soak signal 을 `dev-soak/*` context 로 매핑 |
+| `set-dev-soak-status` | dev health signal 을 legacy `dev-soak/*` context 로 매핑 |
 | `set-rc-soak-status` | rc soak signal 을 `rc-soak/*` context 로 매핑 |
 | `monitor-event-flow-*` / `shared-notify` | backend simulator 실패 시 `set-dev-soak-status` 로 failure status + issue 기록 |
-| AI app soak status writer | 앱 소킹/실디바이스 이상 발견 시 `set-dev-soak-status` 로 failure status 기록 |
-| `dev-rc-cut-gate` | 24h soak run history 확인 후 `set-dev-soak-status` 로 `dev-soak/*` success + `dev-rc-cut-pass` status 기록 |
+| AI app review status writer | 앱 review/실디바이스 이상 발견 시 `set-dev-soak-status` 로 failure status 기록 |
+| `dev-rc-cut-gate` | required dev health run history 확인 후 `set-dev-soak-status` 로 `dev-soak/*` success + `dev-rc-cut-pass` status 기록 |
 | `dev-rc-cut` | `rc/YYYY-Wxx` branch 생성, `promo/rc-*` tag |
 | `rc-main-cut` | rc → main promotion PR 생성/auto-merge |
 | `rc-hotfix-apply` | dev-staging fix commit 을 active RC 로 cherry-pick 하는 branch/PR 생성 |

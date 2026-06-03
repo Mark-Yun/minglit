@@ -16,11 +16,11 @@
 
 - **cron**: 매주 X 요일 KST 10:00 (TBD)
 - **manual**: `workflow_dispatch` (긴급 cut)
-- **현재 구현**: 매주 월요일 KST 10:00. 수동 실행은 `source_sha`, `rc_week`, `allow_active_rc` 입력을 지원한다. `dev-rc-cut-pass` commit 이 아직 없으면 실패 알림 없이 skip 한다.
+- **운영 계약**: 수동 실행은 `source_sha`, `rc_week`, `allow_active_rc` 입력을 지원한다. `dev-rc-cut-pass` commit 이 없으면 RC branch 를 만들지 않는다.
 - 동작:
   1. **active RC marker 확인** → 있으면 skip + Slack `#release` 알림. 기본 정책은 active RC 1개만 허용
   2. 없으면 dev 의 최신 `dev-rc-cut-pass` status 부여된 commit 찾기 (GitHub API: `GET /repos/.../commits/{sha}/status`)
-  3. 못 찾으면 cut 보류 (현재 구현은 초기 no-pass 상태를 skip, 3일+ green 없음 alert 는 후속 PR). failure 가 없다는 이유만으로 cut 하지 않음
+  3. 못 찾으면 cut 보류. failure 가 없다는 이유만으로 cut 하지 않음
   4. 찾았으면 그 commit 에서 `rc/YYYY-Wxx` branch cut
   5. Supabase branch 생성/검증은 `rc-deploy` 에 위임 (후속 PR)
   6. `promo/rc-YYYY-Wxx` tag 생성
@@ -54,7 +54,7 @@ Hotfix PR 머지 직후에는 RC branch 에 version bump commit 을 추가하지
 4. 새 RC HEAD 기준으로 5일 soak clock 이 다시 시작
 ```
 
-RC artifact version 은 `shared-version-metadata(channel=rc)` 가 latest RC HEAD 의 version-bump PR 번호로 계산한다.
+RC artifact version 은 `shared-version-metadata(channel=rc)` 가 latest RC HEAD 의 dev-staging snapshot build number 로 계산한다.
 
 ## `rc-deploy`
 
@@ -98,7 +98,7 @@ Mark 님 직감대로 hotfix loop 으로 RC lifecycle 이 길어지는 게 일�
 | 검증 | 도구 |
 |------|------|
 | 누적 회귀 | rc 의 nightly 재실행 (선택 — RC 별도 nightly schedule TBD) |
-| 내부 dogfooding | 내부 직원 cohort 가 `YY.MM.DD-rc+BUILD_PR#` 빌드 사용 |
+| 내부 dogfooding | 내부 직원 cohort 가 `YY.MM.DD-rc+BUILD` 빌드 사용 |
 | Real-data 이슈 | RC 전용 Supabase branch (`rc-YYYY-Wxx`) |
 | 외부 의존성 동작 (실 결제, 실 메시지) | 내부 사용자가 실제로 사용해보며 검증 |
 
@@ -115,7 +115,7 @@ Mark 님 직감대로 hotfix loop 으로 RC lifecycle 이 길어지는 게 일�
             │
             ├─▶ [rc-pr-gate]
             │
-            ├─▶ [merge to rc (rebase)]
+            ├─▶ [merge to rc (approved hotfix merge)]
             │
             ├─▶ [rc-deploy: RC env 재적용]
             │

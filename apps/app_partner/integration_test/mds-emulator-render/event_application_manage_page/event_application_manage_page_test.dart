@@ -14,6 +14,12 @@ final catalog = MdsCatalog<EventApplicationManagePageBuilder>(
   builder: EventApplicationManagePageBuilder.new,
   states: [
     MdsState('state-default', (b) => b.defaultState(), mdsIndex: 1),
+    MdsState('state-list', (b) => b.defaultState(), mdsIndex: 2),
+    MdsState('state-loading', (b) => b.defaultState(), mdsIndex: 3),
+    MdsState('state-empty', (b) => b.defaultState(), mdsIndex: 4),
+    MdsState('state-error', (b) => b.defaultState(), mdsIndex: 5),
+    MdsState('state-filtered', (b) => b.defaultState(), mdsIndex: 6),
+    MdsState('state-dark', (b) => b.dark(), mdsIndex: 7),
   ],
 );
 

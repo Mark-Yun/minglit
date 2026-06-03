@@ -212,7 +212,7 @@ jobs:
             fi
           }
 
-          sync_secret "service_role_key" "${SERVICE_ROLE_KEY}" "Service role JWT for pg_cron -> EF auth (CI auto-sync)"
+          sync_secret "service_role_key" "${SERVICE_ROLE_KEY}" "Elevated Supabase API key for pg_cron -> EF auth (legacy JWT or sb_secret_ apikey-compatible, CI auto-sync)"
           sync_secret "supabase_url"     "${SUPABASE_URL_VALUE}" "Supabase project URL for pg_cron -> EF calls (CI auto-sync)"
 
           echo "Vault sync complete (${ENV_NAME})"
@@ -242,6 +242,7 @@ jobs:
         run: |
           RESPONSE=$(curl -sS -w "\n%{http_code}" -X POST \
             "${SUPABASE_URL}/functions/v1/dev-seed?mode=images-only" \
+            -H "apikey: ${SUPABASE_KEY}" \
             -H "Authorization: Bearer ${SUPABASE_KEY}" \
             --max-time 30)
           CURL_EXIT=$?
@@ -295,12 +296,13 @@ jobs:
       - name: Verify Edge Function env vars
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Fix #1944: ?env=true now requires service_role — anon key would return 401.
+          # Fix #1944/#2187: ?env=true requires elevated system auth; anon would return 401.
           SERVICE_ROLE_KEY: ${{ steps.env.outputs.SERVICE_ROLE_KEY }}
           PROJECT_ID: ${{ steps.env.outputs.PROJECT_ID }}
           ENV_NAME: ${{ steps.env.outputs.ENV }}
         run: |
           RESPONSE=$(curl -sf "https://${PROJECT_ID}.supabase.co/functions/v1/health?env=true" \
+            -H "apikey: ${SERVICE_ROLE_KEY}" \
             -H "Authorization: Bearer ${SERVICE_ROLE_KEY}" --max-time 15) || {
             echo "::warning::Health endpoint unreachable — skipping EF env check"
             exit 0

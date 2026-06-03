@@ -24,8 +24,8 @@
 | Key | Description | Required |
 |-----|-------------|----------|
 | `SUPABASE_URL` | Supabase project URL (auto-injected) | Yes |
-| `SUPABASE_SERVICE_ROLE_KEY` | Service role JWT (auto-injected) | Yes |
-| `SUPABASE_SERVICE_ROLE_SECRET` | Supabase `sb_secret_...` key for system callers using the `apikey` header | No |
+| `SUPABASE_SECRET_KEYS` | Supabase `sb_secret_...` JSON dictionary for admin clients and system callers using the `apikey` header | No |
+| `SUPABASE_SERVICE_ROLE_KEY` | Legacy service_role JWT (auto-injected) | Yes |
 | `SENTRY_DSN` | Sentry error tracking | No |
 | `AXIOM_API_TOKEN` | Axiom structured logging | No |
 | `AXIOM_DATASET` | Axiom dataset name | No |
@@ -161,12 +161,13 @@
 | `SUPABASE_DEV_PROJECT_ID` | Dev project ref | Yes |
 | `SUPABASE_DEV_URL` | Dev Supabase URL | Yes |
 | `SUPABASE_DEV_PUBLISHABLE_KEY` | Dev publishable key | Yes |
-| `SUPABASE_DEV_SECRET_KEY` | Dev service role key | Yes |
+| `SUPABASE_DEV_SECRET_KEY` | Dev elevated Supabase API key (legacy service_role JWT or sb_secret_ secret key) | Yes |
 | `SUPABASE_RC_URL` | RC Supabase URL for manual simulator runs | No |
 | `SUPABASE_RC_SECRET_KEY` | RC service role key for manual simulator runs | No |
 | `SUPABASE_MAIN_DB_PASSWORD` | Main DB password | Yes |
 | `SUPABASE_MAIN_PROJECT_ID` | Main project ref | Yes |
 | `SUPABASE_MAIN_PUBLISHABLE_KEY` | Main publishable key | Yes |
+| `SUPABASE_MAIN_SECRET_KEY` | Main elevated Supabase API key (legacy service_role JWT or sb_secret_ secret key) | Yes |
 | `OPENAI_API_KEY` | OpenAI API | Yes |
 | `GH_PAT_FOR_BUG_REPORT` | GitHub PAT for issues | Yes |
 | `SENTRY_DSN_EDGE_FUNCTIONS` | Sentry DSN for EF | Yes |
@@ -179,5 +180,5 @@
 
 | Key | Description | Required |
 |-----|-------------|----------|
-| `publishable_key` | Legacy anon JWT for pg_cron -> EF auth | Yes |
+| `service_role_key` | Elevated Supabase API key for pg_cron -> EF auth (legacy service_role JWT or sb_secret_ secret key) | Yes |
 | `supabase_url` | Project URL for pg_cron -> EF calls | Yes |

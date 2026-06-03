@@ -28,8 +28,11 @@ on:
         description: GitHub Release title suffix.
         value: ${{ jobs.metadata.outputs.release_name }}
       pr_number:
-        description: Version-bump PR number used as the monotonic build number.
+        description: Backward-compatible alias for snapshot_build.
         value: ${{ jobs.metadata.outputs.pr_number }}
+      snapshot_build:
+        description: Monotonic snapshot build number parsed from the dev-staging snapshot tag or bump commit.
+        value: ${{ jobs.metadata.outputs.snapshot_build }}
       source_sha:
         description: Resolved source SHA.
         value: ${{ jobs.metadata.outputs.source_sha }}
@@ -47,6 +50,7 @@ jobs:
       release_tag: ${{ steps.metadata.outputs.release_tag }}
       release_name: ${{ steps.metadata.outputs.release_name }}
       pr_number: ${{ steps.metadata.outputs.pr_number }}
+      snapshot_build: ${{ steps.metadata.outputs.snapshot_build }}
       source_sha: ${{ steps.metadata.outputs.source_sha }}
     steps:
       - uses: actions/checkout@v6
@@ -79,24 +83,38 @@ jobs:
           PY
           )"
           BASE_VERSION="${ROOT_VERSION%-dev-staging}"
-          BUMP_PR_NUM=""
+          SNAPSHOT_BUILD=""
           REVISION_SHA=""
+          git fetch --tags --force
 
-          for sha in $(git rev-list --first-parent -n 80 HEAD); do
+          SNAPSHOT_SEARCH_LIMIT=300
+          update_snapshot_build() {
+            local candidate="$1"
+            local revision_sha="$2"
+            if [[ "${candidate}" =~ ^[0-9]+$ ]]; then
+              if [ -z "${SNAPSHOT_BUILD}" ] || [ "$((10#${candidate}))" -gt "$((10#${SNAPSHOT_BUILD}))" ]; then
+                SNAPSHOT_BUILD="${candidate}"
+                REVISION_SHA="${revision_sha}"
+              fi
+            fi
+          }
+
+          for sha in $(git rev-list -n "${SNAPSHOT_SEARCH_LIMIT}" HEAD); do
+            while read -r candidate; do
+              [ -n "${candidate}" ] || continue
+              update_snapshot_build "${candidate}" "${sha}"
+            done < <(git tag --points-at "${sha}" \
+              | sed -nE 's/^v[0-9]{2}\.[0-9]{2}\.[0-9]{2}\+([0-9]+)-dev-staging$/\1/p')
+
             message="$(git log -1 --format=%B "${sha}")"
             candidate="$(printf '%s\n' "${message}" | sed -nE 's/.*chore: bump version to v[0-9]{2}\.[0-9]{2}\.[0-9]{2}\+([0-9]+)-dev-staging.*/\1/p' | head -n 1)"
-
-            if [[ "${candidate}" =~ ^[0-9]+$ ]]; then
-              BUMP_PR_NUM="${candidate}"
-              REVISION_SHA="${sha}"
-              break
-            fi
+            update_snapshot_build "${candidate}" "${sha}"
           done
 
-          # Backward compatibility for builds cut before version-bump PR numbers
-          # were embedded in the squash title.
-          if [ -z "${BUMP_PR_NUM}" ]; then
-            for sha in $(git rev-list --first-parent -n 80 HEAD); do
+          # Backward compatibility for builds cut before snapshot build numbers
+          # were embedded in tags or bump commit titles.
+          if [ -z "${SNAPSHOT_BUILD}" ]; then
+            for sha in $(git rev-list -n "${SNAPSHOT_SEARCH_LIMIT}" HEAD); do
               candidate="$(gh api \
                 "repos/${GITHUB_REPOSITORY}/commits/${sha}/pulls" \
                 -H "Accept: application/vnd.github+json" \
@@ -107,44 +125,44 @@ jobs:
                 candidate="$(git log -1 --format=%B "${sha}" | sed -nE 's/.*\(#([0-9]+)\).*/\1/p' | head -n 1)"
               fi
 
+              update_snapshot_build "${candidate}" "${sha}"
               if [[ "${candidate}" =~ ^[0-9]+$ ]]; then
-                BUMP_PR_NUM="${candidate}"
-                REVISION_SHA="${sha}"
                 break
               fi
             done
           fi
 
-          if ! [[ "${BUMP_PR_NUM}" =~ ^[0-9]+$ ]]; then
-            echo "::error::Unable to determine version-bump PR number for ${SOURCE_SHA} (${SOURCE_REF})."
+          if ! [[ "${SNAPSHOT_BUILD}" =~ ^[0-9]+$ ]]; then
+            echo "::error::Unable to determine snapshot build number for ${SOURCE_SHA} (${SOURCE_REF})."
             exit 1
           fi
 
-          PR_NUMBER_INT="${BUMP_PR_NUM}"
-          if ! [[ "${PR_NUMBER_INT}" =~ ^[0-9]+$ ]]; then
-            echo "::error::Invalid version-bump PR number '${PR_NUMBER_INT}'."
+          SNAPSHOT_BUILD_INT="${SNAPSHOT_BUILD}"
+          if ! [[ "${SNAPSHOT_BUILD_INT}" =~ ^[0-9]+$ ]]; then
+            echo "::error::Invalid snapshot build number '${SNAPSHOT_BUILD_INT}'."
             exit 1
           fi
 
           if [ "${CHANNEL}" = "main" ]; then
             VERSION_NAME="${BASE_VERSION}"
-            YY="$(printf '%s' "${BASE_VERSION}" | cut -d. -f1)"
-            MM="$(printf '%s' "${BASE_VERSION}" | cut -d. -f2)"
-            if ! [[ "${YY}" =~ ^[0-9]{2}$ && "${MM}" =~ ^[0-9]{2}$ ]]; then
-              echo "::error::BASE_VERSION '${BASE_VERSION}' must start with YY.MM for main channel."
-              exit 1
+            if [ "${SNAPSHOT_BUILD_INT}" -lt 100000 ]; then
+              YY="$(printf '%s' "${BASE_VERSION}" | cut -d. -f1)"
+              MM="$(printf '%s' "${BASE_VERSION}" | cut -d. -f2)"
+              if ! [[ "${YY}" =~ ^[0-9]{2}$ && "${MM}" =~ ^[0-9]{2}$ ]]; then
+                echo "::error::BASE_VERSION '${BASE_VERSION}' must start with YY.MM for legacy main channel build."
+                exit 1
+              fi
+              LEGACY_SEED=$((10#${YY} * 1000000 + 10#${MM} * 10000))
+              BUILD_NUMBER=$((LEGACY_SEED + SNAPSHOT_BUILD_INT))
+              BUILD_NUMBER_RULE="legacy_seed_plus_snapshot_build"
+            else
+              BUILD_NUMBER="${SNAPSHOT_BUILD_INT}"
+              BUILD_NUMBER_RULE="snapshot_build_number"
             fi
-            LEGACY_SEED=$((10#${YY} * 1000000 + 10#${MM} * 10000))
-            BUILD_NUMBER=$((LEGACY_SEED + PR_NUMBER_INT))
-            if [ "${BUILD_NUMBER}" -le "${PR_NUMBER_INT}" ]; then
-              echo "::error::Computed main build_number must exceed PR number (${PR_NUMBER_INT})."
-              exit 1
-            fi
-            BUILD_NUMBER_RULE="legacy_seed_plus_version_bump_pr"
           else
             VERSION_NAME="${BASE_VERSION}-${CHANNEL}"
-            BUILD_NUMBER="${PR_NUMBER_INT}"
-            BUILD_NUMBER_RULE="version_bump_pr_number"
+            BUILD_NUMBER="${SNAPSHOT_BUILD_INT}"
+            BUILD_NUMBER_RULE="snapshot_build_number"
           fi
 
           {
@@ -153,7 +171,8 @@ jobs:
             echo "build_number=${BUILD_NUMBER}"
             echo "release_tag=build-${CHANNEL}-v${VERSION_NAME}+${BUILD_NUMBER}"
             echo "release_name=${CHANNEL} v${VERSION_NAME} (${BUILD_NUMBER})"
-            echo "pr_number=${BUMP_PR_NUM}"
+            echo "pr_number=${SNAPSHOT_BUILD}"
+            echo "snapshot_build=${SNAPSHOT_BUILD}"
             echo "source_sha=${SOURCE_SHA}"
           } >> "$GITHUB_OUTPUT"
 
@@ -166,7 +185,7 @@ jobs:
             echo "| source_ref | ${SOURCE_REF} |"
             echo "| source_sha | ${SOURCE_SHA} |"
             echo "| revision_sha | ${REVISION_SHA} |"
-            echo "| version_bump_pr | #${BUMP_PR_NUM} |"
+            echo "| snapshot_build | ${SNAPSHOT_BUILD} |"
             echo "| base_version | ${BASE_VERSION} |"
             echo "| version_name | ${VERSION_NAME} |"
             echo "| build_number | ${BUILD_NUMBER} |"

@@ -92,12 +92,6 @@ jobs:
               | head -n 200
             echo '```'
             echo ""
-            echo "## tpm 트리아지 가이드"
-            echo ""
-            echo "- spec 변경이 **코드 반영을 요구**하면 → \`needs-swe\` 부여 (본문에 관련 Flutter 위젯 경로 명시)"
-            echo "- spec 변경이 **단순 정리/리팩터링**이면 → close"
-            echo "- 판단 애매하면 → \`needs-uiux\` 부여 (ux-designer 워커가 drift 분석)"
-            echo ""
             echo "## 관련 Flutter 코드 검색 힌트"
             echo ""
             echo '```bash'
@@ -124,5 +118,6 @@ jobs:
 
           gh issue create \
             --repo "$REPO" \
-            --title "[mds-change] ${FILE_COUNT}개 spec 변경 — 코드 반영 검토 필요 (${COMMIT_SHA:0:7})" \
-            --body "$BODY"
+            --title "[mds-change] ${FILE_COUNT}개 spec 변경 — 구현·문서·CUJ 영향 검토 필요 (${COMMIT_SHA:0:7})" \
+            --body "$BODY" \
+            --label needs-arch

@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — OngoingEventListPage (app_partner · spec-only)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   OngoingEventListPage-specific atoms.
+
+   Partner LIVE operation dashboard:
+   - event day participant roster
+   - check-in counter + QR mode
+   - row tap -> bottom action sheet
+   - route / Flutter implementation TBD (#2220)
+   ============================================================ */
+.viewport {
+  --color-primary: var(--color-partner-primary);
+  --spec-blueprint-rgb: 108, 60, 225;
+}
+body.dark-mode .viewport {
+  --color-primary: var(--color-partner-dark-primary);
+}
+
+.oel-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xsmall);
+  padding: 0 var(--spacing-xsmall);
+  background: var(--color-surface);
+}
+.oel-appbar__back,
+.oel-appbar__icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-primary);
+  flex-shrink: 0;
+}
+.oel-appbar__title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.oel-body {
+  position: absolute;
+  top: 56px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--color-surface);
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding-bottom: 88px;
+}
+.oel-body::-webkit-scrollbar { display: none; }
+
+.oel-live-strip {
+  margin: var(--spacing-medium) var(--spacing-screen-edge) var(--spacing-small);
+  padding: var(--spacing-small) var(--spacing-medium);
+  border-radius: var(--radius-card);
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-primary) 22%, transparent);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+}
+.oel-live-strip--muted,
+.oel-live-strip--ended {
+  background: var(--color-background);
+  border-color: var(--color-divider);
+}
+.oel-live-strip--success {
+  background: color-mix(in srgb, var(--color-success) 12%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--color-success) 24%, transparent);
+}
+.oel-live-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  position: relative;
+  flex-shrink: 0;
+}
+.oel-live-dot--success { background: var(--color-success); }
+.oel-live-dot--muted { background: var(--color-text-secondary); }
+.oel-live-dot--pulse {
+  animation: oel-dot-pulse 1.4s ease-in-out infinite;
+}
+.oel-live-dot--pulse::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: inherit;
+  animation: oel-halo 1.6s ease-out infinite;
+  z-index: -1;
+}
+@keyframes oel-dot-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+@keyframes oel-halo {
+  0% { transform: scale(1); opacity: 0.35; }
+  80%, 100% { transform: scale(2.5); opacity: 0; }
+}
+.oel-live-text { flex: 1; min-width: 0; }
+.oel-live-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  line-height: 1.25;
+}
+.oel-live-sub {
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  line-height: 1.35;
+}
+.oel-wakelock {
+  height: 24px;
+  padding: 0 var(--spacing-small);
+  border-radius: var(--radius-chip);
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  color: var(--color-primary);
+  font-size: 10px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.oel-summary {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0 var(--spacing-screen-edge) var(--spacing-medium);
+  padding: var(--spacing-medium);
+  border-radius: var(--radius-card);
+  background: var(--color-background);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+.oel-summary__top {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-medium);
+}
+.oel-score { flex: 1; min-width: 0; }
+.oel-score__label {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-weight: 700;
+}
+.oel-score__num {
+  margin-top: 2px;
+  font-size: 30px;
+  line-height: 1;
+  font-weight: 900;
+  color: var(--color-text-primary);
+}
+.oel-score__num strong { color: var(--color-primary); }
+.oel-score__sub {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+.oel-qr-toggle {
+  height: 40px;
+  padding: 0 var(--spacing-medium);
+  border-radius: var(--radius-button);
+  background: var(--color-primary);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.oel-qr-toggle--disabled {
+  background: var(--color-divider);
+  color: var(--color-text-secondary);
+}
+.oel-qr-toggle--outlined {
+  background: transparent;
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+}
+.oel-progress {
+  height: 8px;
+  margin-top: var(--spacing-medium);
+  border-radius: var(--radius-chip);
+  background: var(--color-divider);
+  overflow: hidden;
+}
+.oel-progress__bar {
+  height: 100%;
+  width: 64%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-tertiary));
+}
+.oel-progress__bar--full { width: 100%; background: var(--color-success); }
+.oel-progress__bar--low { width: 0%; background: var(--color-divider); }
+.oel-progress__bar--ended { width: 82%; background: var(--color-text-secondary); }
+.oel-filter-row {
+  display: flex;
+  gap: var(--spacing-xsmall);
+  margin-top: var(--spacing-medium);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.oel-filter-row::-webkit-scrollbar { display: none; }
+.oel-chip {
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--spacing-small);
+  border-radius: var(--radius-chip);
+  border: 1px solid var(--color-divider);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.oel-chip--selected {
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--color-primary) 42%, transparent);
+  color: var(--color-primary);
+}
+
+.oel-search {
+  margin: 0 var(--spacing-screen-edge) var(--spacing-small);
+  height: 40px;
+  border-radius: var(--radius-input);
+  background: var(--color-background);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+  padding: 0 var(--spacing-medium);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.oel-scanner {
+  margin: 0 var(--spacing-screen-edge) var(--spacing-medium);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  background: #101114;
+  color: #fff;
+  min-height: 176px;
+  position: relative;
+}
+.oel-scanner__top {
+  padding: var(--spacing-medium);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 800;
+}
+.oel-scanner__camera {
+  height: 124px;
+  margin: 0 var(--spacing-medium) var(--spacing-medium);
+  border-radius: var(--radius-card);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.08), transparent 38%),
+    radial-gradient(circle at center, rgba(108,60,225,0.28), transparent 58%),
+    #17181c;
+}
+.oel-scanner__frame {
+  width: 82px;
+  height: 82px;
+  border: 3px solid rgba(255, 255, 255, 0.82);
+  border-radius: var(--radius-small);
+}
+.oel-scanner__caption {
+  position: absolute;
+  bottom: 12px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.oel-section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: var(--spacing-small) var(--spacing-screen-edge);
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.oel-section-title span {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-weight: 700;
+}
+
+.oel-list {
+  margin: 0 var(--spacing-screen-edge);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  background: var(--color-background);
+}
+.oel-row {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+  padding: var(--spacing-small) var(--spacing-medium);
+  border-bottom: 1px solid var(--color-divider);
+  box-sizing: border-box;
+}
+.oel-row:last-child { border-bottom: 0; }
+.oel-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-warning);
+  flex-shrink: 0;
+}
+.oel-status-dot--success { background: var(--color-success); }
+.oel-status-dot--error { background: var(--color-error); }
+.oel-status-dot--muted { background: var(--color-text-secondary); }
+.oel-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+.oel-person { flex: 1; min-width: 0; }
+.oel-person__name {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.oel-person__sub {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.oel-badge {
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--spacing-small);
+  border-radius: var(--radius-chip);
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 14%, transparent);
+  white-space: nowrap;
+}
+.oel-badge--success {
+  color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 14%, transparent);
+}
+.oel-badge--error {
+  color: var(--color-error);
+  background: color-mix(in srgb, var(--color-error) 12%, transparent);
+}
+.oel-badge--muted {
+  color: var(--color-text-secondary);
+  background: color-mix(in srgb, var(--color-text-secondary) 12%, transparent);
+}
+
+.oel-bottom-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  min-height: 72px;
+  background: var(--color-surface);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+  padding: var(--spacing-small) var(--spacing-screen-edge) var(--spacing-medium);
+  display: flex;
+  gap: var(--spacing-small);
+  align-items: center;
+  box-sizing: border-box;
+}
+.oel-bottom-btn {
+  flex: 1;
+  height: 44px;
+  border-radius: var(--radius-button);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  background: var(--color-primary);
+  color: #fff;
+}
+.oel-bottom-btn--secondary {
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-divider);
+}
+.oel-bottom-btn--disabled {
+  background: var(--color-divider);
+  color: var(--color-text-secondary);
+}
+
+.oel-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--color-surface);
+  border-top-left-radius: var(--radius-card);
+  border-top-right-radius: var(--radius-card);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.18);
+  padding: var(--spacing-medium) var(--spacing-screen-edge) var(--spacing-large);
+}
+.oel-sheet__handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--color-divider);
+  margin: 0 auto var(--spacing-medium);
+}
+.oel-sheet__title {
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--color-text-primary);
+}
+.oel-sheet__sub {
+  margin-top: 2px;
+  margin-bottom: var(--spacing-medium);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.oel-sheet-row {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+  border-top: 1px solid var(--color-divider);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.oel-sheet-row:first-of-type { border-top: 0; }
+.oel-sheet-row__icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.oel-empty {
+  margin: var(--spacing-large) var(--spacing-screen-edge);
+  min-height: 220px;
+  border-radius: var(--radius-card);
+  background: var(--color-background);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--spacing-small);
+  padding: var(--spacing-large);
+}
+.oel-empty__icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-success) 14%, transparent);
+  color: var(--color-success);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 900;
+}
+.oel-empty__title {
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--color-text-primary);
+}
+.oel-empty__sub {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+.oel-readonly-mask { opacity: 0.58; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<header>
+  <h1>Ongoing Event List</h1>
+</header>
+
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr><th style="width: 140px;">Status</th><td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— spec v0.1 · Flutter route / implementation TBD</em></td></tr>
+      <tr><th>App</th><td><code>app_partner</code></td></tr>
+      <tr><th>Category</th><td>event operation · check-in · live dashboard</td></tr>
+      <tr><th>Route / Surface</th><td><code>OngoingEventListPage</code> · spec-only surface (route 미구현)</td></tr>
+      <tr><th>Path</th><td><code>TBD</code> · 권장: <code>/events/:eventId/ongoing</code> 또는 <code>/events/:eventId/live</code></td></tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="/specs/partner_home_page/index.html"><code>PartnerHomePage</code></a> LIVE/진행 임박 카드 · <a href="/specs/partner_event_detail_page/index.html"><code>PartnerEventDetailPage</code></a> 참가 현황.<br>
+          <strong>Children</strong>: row action bottom sheet · inline QR scanner 영역 (별도 route 없음).
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>이벤트 당일 파트너가 참가자 명단과 체크인 상태를 한 화면에서 운영하는 LIVE dashboard. 상단 sticky 카운터와 QR 모드, 검색/필터, 명단 row action sheet를 결합해 운영 중 시선 이동과 오작동을 줄인다.</td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td><strong>Entry points</strong>: PartnerHomePage LIVE/진행 임박 카드의 "참가자 명단" CTA · PartnerEventDetailPage 참가 현황 · Checkin tab의 오늘 이벤트 선택.<br><strong>Exit points</strong>: 뒤로 가기 → parent route · row action sheet dismiss · 종료 후 read-only 회고에서 EventApplicationListPage/Settlement flow로 이동 가능.</td>
+      </tr>
+      <tr><th>Background</th><td>기존 참가 신청 리스트는 심사/결제 상태 관리에 최적화되어 있다. 실제 이벤트 운영 시간에는 체크인 완료율, 미도착자 탐색, QR 스캔, 수동 체크인/노쇼/메모가 더 중요하므로 별도 운영 모드가 필요하다.</td></tr>
+      <tr><th>Frequency</th><td>이벤트 당일 집중 사용. 시작 2시간 전부터 종료 후 24시간까지 접근 가능하고, 이후에는 read-only history surface로만 연결한다.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="doc">
+  <h2>History</h2>
+  <table class="ref">
+    <thead><tr><th style="width: 110px;">Date</th><th style="width: 80px;">Version</th><th style="width: 120px;">Author</th><th>Changes</th></tr></thead>
+    <tbody>
+      <tr><td>2026-06-03</td><td>0.1</td><td>codex</td><td>Initial MDS spec for #2220. Defines 5 operational states, sticky LIVE counter, inline QR split, participant row action sheet, wakelock indicator, and route/implementation TBD boundaries.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#global-behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">Single scroll screen with sticky operations summary and inline scanner mode.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Top blueprint</h2>
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;"><span class="blueprint__region-label">① AppBar · back + title + broadcast/search actions</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:72px;left:16px;right:16px;height:58px;"><span class="blueprint__region-label">② Status strip · state message + LIVE dot + wakelock indicator</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:146px;left:16px;right:16px;height:132px;"><span class="blueprint__region-label">③ Sticky summary · checked-in / total + QR toggle + progress + filter chips</span></div>
+        <div class="blueprint__region" style="top:294px;left:16px;right:16px;height:40px;"><span class="blueprint__region-label">④ Search field · name / phone last 4 / ticket</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:350px;left:16px;right:16px;height:176px;"><span class="blueprint__region-label">⑤ Inline QR scanner · visible only when QR mode active</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:542px;left:16px;right:16px;height:136px;"><span class="blueprint__region-label">⑥ Participant list · status dot + avatar + name + ticket/group + badge</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:0;left:0;right:0;height:72px;"><span class="blueprint__region-label">⑦ Bottom action bar · walk-in + bulk action</span></div>
+        <div class="blueprint__align-marker" style="top:8px;right:8px;">screen-edge pad 16</div>
+      </div>
+      <div class="layout-tree"><b>Scaffold</b>(simpleAppBar)
+ ├─ <b>AppBar</b>(title: "참가자 명단")
+ ├─ <b>ListView</b>
+ │  ├─ <b>StatusStrip</b>(phase, wakelock)
+ │  ├─ <b>StickySummaryCard</b>(counter, progress, QR toggle, chips)
+ │  ├─ <b>SearchField</b>
+ │  ├─ <b>InlineScannerPanel</b> (only QR mode)
+ │  ├─ <b>ParticipantSectionHeader</b>
+ │  └─ <b>ParticipantList</b>
+ │     └─ <b>ParticipantRow</b> × N
+ ├─ <b>BottomActionBar</b>(walk-in, bulk)
+ └─ <b>MinglitBottomSheet</b>(row actions)
+      </div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Region anatomy</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 64px;">Region</th><th>Element</th><th>Composition</th><th>Spacing / Token</th></tr></thead>
+      <tbody>
+        <tr><td>①</td><td>AppBar</td><td>Back · title · broadcast icon · overflow/search icon</td><td><code>MinglitTheme.simpleAppBar</code> · height 56 · icon <code>MinglitIconSize.medium (24px)</code></td></tr>
+        <tr><td>②</td><td>Status strip</td><td>Dot + title/subtitle + optional wakelock pill</td><td>margin h <code>MinglitSpacing.screenEdge (16px)</code> · radius <code>MinglitRadius.card</code></td></tr>
+        <tr><td>③</td><td>Sticky summary</td><td>Counter, QR toggle, progress bar, filter chips</td><td>sticky top 0 · bg <code>MinglitColors.background</code> · shadow subtle</td></tr>
+        <tr><td>④</td><td>Search field</td><td>Search icon + placeholder · no keyboard action button in spec</td><td>height 40 · radius <code>MinglitRadius.input</code></td></tr>
+        <tr><td>⑤</td><td>Inline scanner</td><td>Dark camera panel + scan frame · not modal overlay</td><td>min-height 176 · dark surface forced · radius <code>MinglitRadius.card</code></td></tr>
+        <tr><td>⑥</td><td>Participant row</td><td>Status dot · avatar · name/subtitle · status badge</td><td>min-height 64 · divider <code>MinglitColors.divider</code></td></tr>
+        <tr><td>⑦</td><td>Bottom action bar</td><td>워크인 추가 + 일괄 액션/공지</td><td>height 72 · bottom safe-area aware · shadow upward</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">5 operational states keyed by event phase and check-in progress.</span>
+  </div>
+
+  <section class="doc">
+    <h2>State summary matrix</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 180px;">State</th><th style="width: 120px;">Tag</th><th>Condition</th><th>Key visual differentiator</th></tr></thead>
+      <tbody>
+        <tr><td>시작 전</td><td><code>pre_start</code></td><td>이벤트 시작 2시간보다 이전</td><td>QR toggle disabled · 준비 안내 strip</td></tr>
+        <tr><td>체크인 가능</td><td><code>checkin_ready</code></td><td>T-2h ~ start time</td><td>QR toggle enabled · "이제 체크인 받을 수 있어요" strip</td></tr>
+        <tr><td>LIVE 진행 중</td><td><code>live</code></td><td>start time ~ end time</td><td>LIVE pulse · wakelock indicator · inline scanner split</td></tr>
+        <tr><td>체크인 완료</td><td><code>all_checked_in</code></td><td>paid participant all checked-in before/while live</td><td>100% success progress · scanner collapsed · success empty card</td></tr>
+        <tr><td>종료 후</td><td><code>ended_readonly</code></td><td>end time + up to 24h</td><td>read-only strip · actions disabled · no QR</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>State details</h2>
+
+    <table class="ref state-mini is-baseline-tint">
+      <thead><tr><th colspan="3"><strong>LIVE 진행 중</strong> 🎯 <small>baseline · inline QR split · wakelock on</small></th></tr></thead>
+      <tbody>
+        <tr>
+          <td rowspan="6" class="state-mini__mock">
+            <div class="viewport">
+              <div class="oel-appbar"><div class="oel-appbar__back">‹</div><div class="oel-appbar__title">참가자 명단</div><div class="oel-appbar__icon">📣</div><div class="oel-appbar__icon">⋯</div></div>
+              <div class="oel-body">
+                <div class="oel-live-strip"><div class="oel-live-dot oel-live-dot--pulse"></div><div class="oel-live-text"><div class="oel-live-title">LIVE 운영 중 · 38분 남음</div><div class="oel-live-sub">미체크인 5명 · 노쇼 후보를 확인하세요</div></div><div class="oel-wakelock">화면 켜짐</div></div>
+                <div class="oel-summary"><div class="oel-summary__top"><div class="oel-score"><div class="oel-score__label">체크인 완료</div><div class="oel-score__num"><strong>19</strong>/24</div><div class="oel-score__sub">79% · 마지막 19:42</div></div><div class="oel-qr-toggle">QR 받기</div></div><div class="oel-progress"><div class="oel-progress__bar"></div></div><div class="oel-filter-row"><div class="oel-chip oel-chip--selected">전체 24</div><div class="oel-chip">미체크인 5</div><div class="oel-chip">체크인 19</div><div class="oel-chip">노쇼 0</div></div></div>
+                <div class="oel-search">🔎 이름, 전화번호 뒤 4자리, 티켓 검색</div>
+                <div class="oel-scanner"><div class="oel-scanner__top"><span>QR 스캔 모드</span><span>수동 입력</span></div><div class="oel-scanner__camera"><div class="oel-scanner__frame"></div><div class="oel-scanner__caption">QR을 프레임 안에 맞춰주세요</div></div></div>
+                <div class="oel-section-title">참가자 <span>최근 체크인 순</span></div>
+                <div class="oel-list"><div class="oel-row"><div class="oel-status-dot"></div><div class="oel-avatar">민</div><div class="oel-person"><div class="oel-person__name">김민서</div><div class="oel-person__sub">A그룹 · 010-**34</div></div><div class="oel-badge">미체크인</div></div><div class="oel-row"><div class="oel-status-dot oel-status-dot--success"></div><div class="oel-avatar">준</div><div class="oel-person"><div class="oel-person__name">박준호</div><div class="oel-person__sub">B그룹 · 19:42 체크인</div></div><div class="oel-badge oel-badge--success">체크인</div></div></div>
+              </div>
+              <div class="oel-bottom-bar"><div class="oel-bottom-btn oel-bottom-btn--secondary">워크인 추가</div><div class="oel-bottom-btn">일괄 액션</div></div>
+              <div class="oel-sheet"><div class="oel-sheet__handle"></div><div class="oel-sheet__title">김민서</div><div class="oel-sheet__sub">A그룹 · 미체크인 · 결제 완료</div><div class="oel-sheet-row"><span class="oel-sheet-row__icon">✓</span>수동 체크인</div><div class="oel-sheet-row"><span class="oel-sheet-row__icon">!</span>노쇼 처리</div><div class="oel-sheet-row"><span class="oel-sheet-row__icon">✎</span>운영 메모</div></div>
+              <span class="annotation" style="top:78px;left:24px;">LIVE pulse + wakelock</span><span class="annotation" style="top:152px;left:22px;">sticky counter</span><span class="annotation" style="top:342px;left:22px;">inline scanner</span><span class="callout" style="top:90px;left:12px;">ⓐ</span><span class="callout" style="top:180px;right:18px;">ⓑ</span><span class="callout" style="top:460px;right:18px;">ⓒ</span>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td><td>이벤트 시작 시각 이상, 종료 전. QR mode enabled. 카메라 권한 허용. paid participant 1명 이상.</td>
+        </tr>
+        <tr><td class="state-mini__aspect">사용자 액션</td><td>QR 스캔 · 검색 · filter chip 전환 · row tap → action sheet · 워크인 추가 · 일괄 노쇼/공지.</td></tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>카메라 권한 거부 시 scanner 영역이 권한 안내 + 설정 이동 CTA로 대체. 명단/수동 체크인은 계속 사용 가능.</td></tr>
+        <tr><td class="state-mini__aspect">컴포넌트</td><td><code>MinglitTheme.simpleAppBar</code> · sticky <code>MinglitCard</code> · <code>MinglitFilterChip</code> · inline scanner panel · <code>MinglitBottomSheet</code>.</td></tr>
+        <tr><td class="state-mini__aspect">토큰</td><td><code>MinglitColors.primary</code> partner seed · <code>MinglitSpacing.medium (16px)</code> · <code>MinglitRadius.card</code> · <code>MinglitOpacity.tintFill</code> · <code>MinglitAnimation.fast (200ms)</code>.</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>ⓐ LIVE 상태는 <a href="/specs/event_now_bar/index.html"><code>EventNowBar</code></a> pulse language와 맞춘다. ⓑ 카운터가 운영 기준점. ⓒ QR은 overlay가 아니라 inline split이다.</td></tr>
+      </tbody>
+    </table>
+
+    <table class="ref state-mini">
+      <thead><tr><th colspan="3"><strong>시작 전</strong> <small>pre_start · QR disabled · 준비 확인</small></th></tr></thead>
+      <tbody>
+        <tr>
+          <td rowspan="6" class="state-mini__mock">
+            <div class="viewport">
+              <div class="oel-appbar"><div class="oel-appbar__back">‹</div><div class="oel-appbar__title">참가자 명단</div><div class="oel-appbar__icon">⋯</div></div>
+              <div class="oel-body">
+                <div class="oel-live-strip oel-live-strip--muted"><div class="oel-live-dot oel-live-dot--muted"></div><div class="oel-live-text"><div class="oel-live-title">아직 체크인 전이에요</div><div class="oel-live-sub">오늘 19:30 시작 · T-3h 20m</div></div></div>
+                <div class="oel-summary"><div class="oel-summary__top"><div class="oel-score"><div class="oel-score__label">체크인 완료</div><div class="oel-score__num"><strong>0</strong>/24</div><div class="oel-score__sub">T-2부터 QR 체크인 가능</div></div><div class="oel-qr-toggle oel-qr-toggle--disabled">QR 대기</div></div><div class="oel-progress"><div class="oel-progress__bar oel-progress__bar--low"></div></div><div class="oel-filter-row"><div class="oel-chip oel-chip--selected">전체 24</div><div class="oel-chip">A그룹 12</div><div class="oel-chip">B그룹 12</div></div></div>
+                <div class="oel-search">🔎 참가자 검색</div>
+                <div class="oel-section-title">참가자 <span>결제일 최신순</span></div>
+                <div class="oel-list"><div class="oel-row"><div class="oel-status-dot oel-status-dot--muted"></div><div class="oel-avatar">서</div><div class="oel-person"><div class="oel-person__name">이서연</div><div class="oel-person__sub">A그룹 · 결제 완료</div></div><div class="oel-badge oel-badge--muted">대기</div></div><div class="oel-row"><div class="oel-status-dot oel-status-dot--muted"></div><div class="oel-avatar">훈</div><div class="oel-person"><div class="oel-person__name">최지훈</div><div class="oel-person__sub">B그룹 · 결제 완료</div></div><div class="oel-badge oel-badge--muted">대기</div></div></div>
+              </div>
+              <div class="oel-bottom-bar"><div class="oel-bottom-btn oel-bottom-btn--secondary">공지 준비</div><div class="oel-bottom-btn oel-bottom-btn--disabled">일괄 액션</div></div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td><td>+ 시작 2시간보다 이전. 참가자는 확정됐지만 현장 체크인은 아직 열지 않음.</td>
+        </tr>
+        <tr><td class="state-mini__aspect">사용자 액션</td><td>↔ 검색/명단 조회 가능. QR toggle / 체크인 처리 액션은 disabled. 공지 준비만 가능.</td></tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>+ 결제 만료/환불 참가자는 기본 filter에서 숨기고 "전체"에도 포함하지 않음. 필요한 경우 EventApplicationListPage에서 확인.</td></tr>
+        <tr><td class="state-mini__aspect">컴포넌트</td><td>− inline scanner · − wakelock pill · ↔ status strip muted.</td></tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>↔ primary CTA → disabled tone <code>MinglitColors.divider</code> + <code>onSurfaceVariant</code>.</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 운영자가 미리 명단을 확인하고 전화/공지 준비를 할 수 있지만 실제 체크인 기록은 생성하지 않는다.</td></tr>
+      </tbody>
+    </table>
+
+    <table class="ref state-mini">
+      <thead><tr><th colspan="3"><strong>체크인 가능</strong> <small>checkin_ready · T-2h · scanner optional</small></th></tr></thead>
+      <tbody>
+        <tr>
+          <td rowspan="6" class="state-mini__mock">
+            <div class="viewport">
+              <div class="oel-appbar"><div class="oel-appbar__back">‹</div><div class="oel-appbar__title">참가자 명단</div><div class="oel-appbar__icon">📣</div></div>
+              <div class="oel-body">
+                <div class="oel-live-strip"><div class="oel-live-dot oel-live-dot--pulse"></div><div class="oel-live-text"><div class="oel-live-title">이제 체크인 받을 수 있어요</div><div class="oel-live-sub">시작 전 1시간 12분 · 현장 준비를 시작하세요</div></div></div>
+                <div class="oel-summary"><div class="oel-summary__top"><div class="oel-score"><div class="oel-score__label">체크인 완료</div><div class="oel-score__num"><strong>3</strong>/24</div><div class="oel-score__sub">초기 입장 3명</div></div><div class="oel-qr-toggle oel-qr-toggle--outlined">QR 켜기</div></div><div class="oel-progress"><div class="oel-progress__bar" style="width:12%;"></div></div><div class="oel-filter-row"><div class="oel-chip oel-chip--selected">전체 24</div><div class="oel-chip">미체크인 21</div><div class="oel-chip">체크인 3</div></div></div>
+                <div class="oel-search">🔎 참가자 검색</div><div class="oel-section-title">미체크인 <span>가나다순</span></div>
+                <div class="oel-list"><div class="oel-row"><div class="oel-status-dot"></div><div class="oel-avatar">유</div><div class="oel-person"><div class="oel-person__name">유하린</div><div class="oel-person__sub">A그룹 · 010-**82</div></div><div class="oel-badge">미체크인</div></div><div class="oel-row"><div class="oel-status-dot oel-status-dot--success"></div><div class="oel-avatar">정</div><div class="oel-person"><div class="oel-person__name">정도윤</div><div class="oel-person__sub">B그룹 · 18:04 체크인</div></div><div class="oel-badge oel-badge--success">체크인</div></div></div>
+              </div>
+              <div class="oel-bottom-bar"><div class="oel-bottom-btn oel-bottom-btn--secondary">워크인 추가</div><div class="oel-bottom-btn">일괄 공지</div></div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td><td>+ 시작 2시간 이내, 아직 LIVE 시작 전. QR check-in window open.</td>
+        </tr>
+        <tr><td class="state-mini__aspect">사용자 액션</td><td>+ QR 켜기 · 수동 체크인 · 워크인 추가 · 일괄 공지. row action sheet는 LIVE와 동일.</td></tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>+ 시작 전이므로 wakelock은 자동으로 켜지지 않음. QR mode를 켤 때만 화면 켜짐 안내를 one-shot toast로 노출.</td></tr>
+        <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ QR toggle disabled → outlined enabled. Scanner는 off by default.</td></tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>+ status strip primary tint <code>MinglitOpacity.tintFill</code> · QR outlined border <code>MinglitColors.primary</code>.</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 시작 전 입장 운영을 허용하지만 LIVE 배너 카피는 쓰지 않는다. "체크인 가능"과 "LIVE"를 명확히 분리한다.</td></tr>
+      </tbody>
+    </table>
+
+    <table class="ref state-mini">
+      <thead><tr><th colspan="3"><strong>체크인 완료</strong> <small>all_checked_in · success · scanner collapsed</small></th></tr></thead>
+      <tbody>
+        <tr>
+          <td rowspan="6" class="state-mini__mock">
+            <div class="viewport">
+              <div class="oel-appbar"><div class="oel-appbar__back">‹</div><div class="oel-appbar__title">참가자 명단</div><div class="oel-appbar__icon">📣</div></div>
+              <div class="oel-body">
+                <div class="oel-live-strip oel-live-strip--success"><div class="oel-live-dot oel-live-dot--success"></div><div class="oel-live-text"><div class="oel-live-title">모든 참가자가 체크인했어요</div><div class="oel-live-sub">총 24명 · 마지막 19:48</div></div></div>
+                <div class="oel-summary"><div class="oel-summary__top"><div class="oel-score"><div class="oel-score__label">체크인 완료</div><div class="oel-score__num"><strong>24</strong>/24</div><div class="oel-score__sub">100% 완료</div></div><div class="oel-qr-toggle oel-qr-toggle--disabled">QR 종료</div></div><div class="oel-progress"><div class="oel-progress__bar oel-progress__bar--full"></div></div><div class="oel-filter-row"><div class="oel-chip oel-chip--selected">체크인 24</div><div class="oel-chip">노쇼 0</div></div></div>
+                <div class="oel-empty"><div class="oel-empty__icon">✓</div><div class="oel-empty__title">입장이 모두 완료됐어요</div><div class="oel-empty__sub">명단은 아래 체크인 완료 탭에서 계속 확인할 수 있어요.</div></div>
+                <div class="oel-section-title">체크인 완료 <span>최근순</span></div><div class="oel-list"><div class="oel-row"><div class="oel-status-dot oel-status-dot--success"></div><div class="oel-avatar">준</div><div class="oel-person"><div class="oel-person__name">박준호</div><div class="oel-person__sub">B그룹 · 19:48 체크인</div></div><div class="oel-badge oel-badge--success">체크인</div></div></div>
+              </div>
+              <div class="oel-bottom-bar"><div class="oel-bottom-btn oel-bottom-btn--secondary">워크인 추가</div><div class="oel-bottom-btn oel-bottom-btn--disabled">일괄 액션</div></div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td><td>+ paid participant 전원 checkedIn. 이벤트 종료 전이어도 이 state 우선.</td>
+        </tr>
+        <tr><td class="state-mini__aspect">사용자 액션</td><td>↔ 개별 row tap 가능. − QR 스캔 기본 CTA. + 워크인 추가는 유지(현장 추가 인원 가능).</td></tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>+ 워크인 추가로 total이 늘면 즉시 LIVE/체크인 가능 state로 돌아가고 progress가 100% 미만이 된다.</td></tr>
+        <tr><td class="state-mini__aspect">컴포넌트</td><td>− inline scanner · + success empty confirmation card · progress full.</td></tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>↔ primary progress → <code>MinglitColors.success</code>. Disabled QR uses divider/onSurfaceVariant.</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 confetti는 짧은 one-shot 효과로만 허용. 반복 애니메이션 없이 운영 집중도를 해치지 않는다.</td></tr>
+      </tbody>
+    </table>
+
+    <table class="ref state-mini">
+      <thead><tr><th colspan="3"><strong>종료 후</strong> <small>ended_readonly · 24h window · no write actions</small></th></tr></thead>
+      <tbody>
+        <tr>
+          <td rowspan="6" class="state-mini__mock">
+            <div class="viewport">
+              <div class="oel-appbar"><div class="oel-appbar__back">‹</div><div class="oel-appbar__title">참가자 명단</div><div class="oel-appbar__icon">⋯</div></div>
+              <div class="oel-body">
+                <div class="oel-live-strip oel-live-strip--ended"><div class="oel-live-dot oel-live-dot--muted"></div><div class="oel-live-text"><div class="oel-live-title">이벤트가 종료됐어요</div><div class="oel-live-sub">체크인 기록은 정산 기준으로 보관돼요</div></div></div>
+                <div class="oel-summary"><div class="oel-summary__top"><div class="oel-score"><div class="oel-score__label">최종 체크인</div><div class="oel-score__num"><strong>20</strong>/24</div><div class="oel-score__sub">노쇼 4명 · 정산 반영 예정</div></div><div class="oel-qr-toggle oel-qr-toggle--disabled">읽기 전용</div></div><div class="oel-progress"><div class="oel-progress__bar oel-progress__bar--ended"></div></div><div class="oel-filter-row"><div class="oel-chip oel-chip--selected">전체 24</div><div class="oel-chip">체크인 20</div><div class="oel-chip">노쇼 4</div></div></div>
+                <div class="oel-search">🔎 기록 검색</div><div class="oel-section-title">운영 기록 <span>read-only</span></div><div class="oel-list oel-readonly-mask"><div class="oel-row"><div class="oel-status-dot oel-status-dot--error"></div><div class="oel-avatar">린</div><div class="oel-person"><div class="oel-person__name">오예린</div><div class="oel-person__sub">A그룹 · 미도착</div></div><div class="oel-badge oel-badge--error">노쇼</div></div><div class="oel-row"><div class="oel-status-dot oel-status-dot--success"></div><div class="oel-avatar">현</div><div class="oel-person"><div class="oel-person__name">강도현</div><div class="oel-person__sub">B그룹 · 19:18 체크인</div></div><div class="oel-badge oel-badge--success">체크인</div></div></div>
+              </div>
+              <div class="oel-bottom-bar"><div class="oel-bottom-btn oel-bottom-btn--secondary">정산 보기</div><div class="oel-bottom-btn oel-bottom-btn--disabled">수정 불가</div></div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td><td>+ 이벤트 종료 후 24시간 이내. 이후 parent detail/history에서만 접근하거나 route redirect.</td>
+        </tr>
+        <tr><td class="state-mini__aspect">사용자 액션</td><td>↔ 검색/필터/기록 확인 가능. − QR · 수동 체크인 · 노쇼 변경 · 워크인 추가. + 정산 보기 CTA.</td></tr>
+        <tr><td class="state-mini__aspect">에지케이스</td><td>+ 종료 직후 pending write가 있으면 optimistic 결과를 유지하고 서버 확정 실패 시 snack bar + row error badge.</td></tr>
+        <tr><td class="state-mini__aspect">컴포넌트</td><td>− scanner · − wakelock · ↔ action bar becomes read-only/history actions.</td></tr>
+        <tr><td class="state-mini__aspect">토큰</td><td>↔ primary/success emphasis → neutral <code>MinglitColors.onSurfaceVariant</code> · opacity <code>MinglitOpacity.disabled</code>.</td></tr>
+        <tr><td class="state-mini__aspect">노트</td><td>📝 종료 후 기록은 정산 기준이므로 실수로 바뀌지 않아야 한다. 변경이 필요한 경우 별도 운영자 override flow에서 다룬다.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">Cross-cutting rules shared by all states.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Interaction model</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 220px;">Interaction</th><th>Behavior</th></tr></thead>
+      <tbody>
+        <tr><td>Participant row tap</td><td>Always opens <code>MinglitBottomSheet</code>. Direct row buttons are avoided to reduce wrong taps during live operation.</td></tr>
+        <tr><td>QR mode</td><td>Inline split, not fullscreen overlay. The roster remains visible above/below the scanner so the operator can search or manually check in without closing camera mode.</td></tr>
+        <tr><td>Search</td><td>Client-side filter first by name, phone last 4 digits, ticket label, entry group. Server refresh does not clear query.</td></tr>
+        <tr><td>Bulk action</td><td>Long press or "일괄 액션" enters multi-select mode. Context action bar replaces bottom bar.</td></tr>
+        <tr><td>Broadcast</td><td>AppBar broadcast icon sends notice to not-yet-checked-in participants by default; confirm sheet required before send.</td></tr>
+        <tr><td>Wakelock</td><td>Auto enabled in LIVE state or when QR mode is active. Disabled on route dispose and when entering ended_readonly.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion &amp; timing</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 220px;">Transition</th><th style="width: 140px;">Duration</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>pre_start → checkin_ready</td><td><code>MinglitAnimation.medium</code> (350ms)</td><td>Status strip crossfade + QR toggle disabled → outlined enabled.</td></tr>
+        <tr><td>checkin_ready → live</td><td><code>MinglitAnimation.fast</code> (200ms)</td><td>LIVE pulse appears; wakelock pill slides/fades in.</td></tr>
+        <tr><td>QR mode on/off</td><td><code>MinglitAnimation.medium</code> (350ms)</td><td>Scanner panel expands/collapses inline. Roster scroll position is preserved.</td></tr>
+        <tr><td>Row action sheet</td><td><code>MinglitAnimation.fast</code> (200ms)</td><td>Bottom sheet standard entrance. Background does not blur.</td></tr>
+        <tr><td>all_checked_in success</td><td><code>MinglitAnimation.slow</code> (500ms)</td><td>Optional one-shot success burst, then static success card.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>Network loss</strong> — existing list remains visible with stale-data banner. Write actions queue optimistically for up to one retry; failure reverts the row and shows a snack bar.</li>
+      <li><strong>Camera permission denied</strong> — scanner panel becomes permission guidance. Search and manual check-in remain active.</li>
+      <li><strong>Concurrent staff operation</strong> — server update wins. If another staff checks in the same participant, the row animates to checked-in and local action sheet closes with a toast.</li>
+      <li><strong>Large text</strong> — participant row subtitle may wrap to 2 lines; badge stays trailing and never overlays the name.</li>
+      <li><strong>Dark mode</strong> — regular screen follows partner theme. Scanner camera panel is always dark for contrast.</li>
+      <li><strong>24h cutoff</strong> — direct deep link after read-only window redirects to PartnerEventDetailPage with a toast explaining that LIVE operation mode is closed.</li>
+    </ul>
+  </section>
+</div>
+
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">Implementation TBD + neighboring specs.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 200px;">Item</th><th>Path / Reference</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Widget class</strong></td><td><code>OngoingEventListPage</code> (TBD)</td></tr>
+        <tr><td><strong>File path</strong></td><td><code>TBD</code> · recommended <code>apps/app_partner/lib/src/features/party/event/ongoing/ongoing_event_list_page.dart</code></td></tr>
+        <tr><td><strong>Controller / Provider</strong></td><td><code>TBD</code> · event roster stream + check-in mutation controller</td></tr>
+        <tr><td><strong>Route</strong></td><td><code>TBD</code> · recommended <code>OngoingEventListRoute(eventId)</code> · path <code>/events/:eventId/ongoing</code></td></tr>
+        <tr><td><strong>Issue</strong></td><td><a href="https://github.com/Mark-Yun/minglit/issues/2220">#2220 — OngoingEventListPage spec</a></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 280px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr><td><a href="/specs/partner_home_page/index.html"><code>PartnerHomePage</code></a></td><td>Primary future entry: LIVE / 진행 임박 card "참가자 명단" CTA.</td></tr>
+        <tr><td><a href="/specs/partner_event_detail_page/index.html"><code>PartnerEventDetailPage</code></a></td><td>Parent event context; 참가 현황 section can deep link here when event is within operation window.</td></tr>
+        <tr><td><a href="/specs/event_application_list_page/index.html"><code>EventApplicationListPage</code></a></td><td>Sibling roster/history list focused on application/payment/review status, not live operation.</td></tr>
+        <tr><td><a href="/specs/checkin_placeholder_page/index.html"><code>CheckinPlaceholderPage</code></a></td><td>Bottom-nav check-in entry surface; can route here when exactly one live/upcoming event is selected.</td></tr>
+        <tr><td><a href="/specs/event_now_bar/index.html"><code>EventNowBar</code></a></td><td>LIVE pulse / active-event visual language reference.</td></tr>
+        <tr><td><a href="/specs/event_check_in_screen/index.html"><code>EventCheckInScreen</code></a></td><td>User-side QR presentation; partner scanner should use compatible QR status semantics.</td></tr>
+        <tr><td><a href="/specs/partner_member_list_page/index.html"><code>PartnerMemberListPage</code></a></td><td>Person list row density, avatar, role/status badge reference.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>

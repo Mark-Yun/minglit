@@ -28,6 +28,11 @@ const _testsRoots = [
   'apps/app_partner/integration_test/cuj',
 ];
 
+const _skippedSpecCategoryReasons = {
+  'admin': 'Admin features are outside the Flutter app CUJ scope until an '
+      'admin console test root exists.',
+};
+
 // spec.md CUJ row: `| 1-1 | P0 | name | ... |`
 // 헤더(`| ID | ...`)와 separator(`|---|`)는 ID 가 `\d+-\d+` 패턴이 아니라 자동 제외.
 final _cujRowPattern = RegExp(
@@ -59,6 +64,7 @@ void main(List<String> args) {
 
     // 1. Spec 스캔
     final features = <String, FeatureCoverage>{};
+    final skippedFeatures = <Map<String, dynamic>>[];
     for (final category in _listDirs(_specsRoot)) {
       final catPath = '$_specsRoot/$category';
       for (final feature in _listDirs(catPath)) {
@@ -67,6 +73,16 @@ void main(List<String> args) {
         if (!File(specPath).existsSync()) continue;
         final cov = FeatureCoverage(category, feature);
         _parseSpec(specPath, cov);
+        final skipReason = _skippedSpecCategoryReasons[category];
+        if (skipReason != null) {
+          skippedFeatures.add({
+            'category': category,
+            'feature': feature,
+            'spec_cujs': cov.specIds.length,
+            'reason': skipReason,
+          });
+          continue;
+        }
         features['$category/$feature'] = cov;
       }
     }
@@ -140,6 +156,11 @@ void main(List<String> args) {
       'coverage_pct': pct.toStringAsFixed(1),
       'uncovered_features': uncoveredList,
       'orphan_features': orphanList,
+      'skipped_features': skippedFeatures,
+      'skipped_cujs': skippedFeatures.fold<int>(
+        0,
+        (sum, f) => sum + (f['spec_cujs'] as int),
+      ),
       'per_feature': sortedKeys.map((k) {
         final f = features[k]!;
         return {
@@ -203,7 +224,8 @@ void _printHuman(Map<String, dynamic> s) {
   print('═' * 60);
   print('  CUJ Coverage');
   print('═' * 60);
-  print('  CUJs : ${s['covered_cujs']}/${s['spec_cujs']} (${s['coverage_pct']}%)');
+  print(
+      '  CUJs : ${s['covered_cujs']}/${s['spec_cujs']} (${s['coverage_pct']}%)');
   print('');
   print('─── Per-feature ─────────────────────────────────────────');
   for (final f in s['per_feature'] as List) {
@@ -232,6 +254,15 @@ void _printHuman(Map<String, dynamic> s) {
     for (final f in orphan) {
       print('  - ${f['category']}/${f['feature']}: '
           '${(f['orphan'] as List).join(', ')}');
+    }
+  }
+  final skipped = s['skipped_features'] as List;
+  if (skipped.isNotEmpty) {
+    print('');
+    print('─── Skipped specs (outside Flutter CUJ scope) ───────────');
+    for (final f in skipped) {
+      print('  - ${f['category']}/${f['feature']}: '
+          '${f['spec_cujs']} CUJs — ${f['reason']}');
     }
   }
 }

@@ -234,10 +234,6 @@
   color: var(--color-text-primary);
   margin-bottom: var(--spacing-xxsmall);
 }
-.entry-group-card__count {
-  font-size: var(--typography-font-size-caption);
-  color: var(--color-text-secondary);
-}
 .entry-group-card__gauge {
   position: absolute;
   top: var(--spacing-small);
@@ -247,16 +243,17 @@
   align-items: flex-end;
   gap: 3px;
 }
-.gauge-bar-wrap {
-  width: 80px;
-  height: 6px;
-  border-radius: 3px;
-  background: var(--color-divider);
-  overflow: hidden;
+.gauge-segments {
+  display: flex;
+  gap: 2px;
 }
-.gauge-bar-fill {
-  height: 100%;
-  border-radius: 3px;
+.gauge-segment {
+  width: 10px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--color-divider);
+}
+.gauge-segment--filled {
   background: var(--color-primary);
 }
 .gauge-label {
@@ -515,6 +512,22 @@
     </thead>
     <tbody>
       <tr>
+        <td>2026-06-01</td>
+        <td>2.2</td>
+        <td>codex</td>
+        <td>
+          <strong>Issue #2409 participant count sync</strong> — §3 입장 그룹 카드에서 좌측 <code>N명 참여</code> 보조 캡션을 제거하고, 우측 <code>MinglitParticipantGauge</code>의 <code>current/max</code>만 단일 참가 현황 표시로 사용하도록 정렬.
+        </td>
+      </tr>
+      <tr>
+        <td>2026-06-01</td>
+        <td>2.1</td>
+        <td>codex</td>
+        <td>
+          <strong>Issue #2399 avatar drift sync</strong> — §1 partner row avatar를 live code의 <code>MinglitAvatarImage(radius: MinglitRadius.input, url, fallbackIcon: Icons.store)</code> 기준으로 갱신. 기존 <code>CircleAvatar</code> 표현은 Fix #1936 이후 stale.
+        </td>
+      </tr>
+      <tr>
         <td>2026-05-01</td>
         <td>2.0</td>
         <td>mark-yun</td>
@@ -635,7 +648,7 @@
    │           │     │     └─ tabs: 기본 정보 / 상세 소개 / 참가 현황 / 필요 인증 / 환불 정책
    │           │     │
    │           │     ├─ <b>SliverToBoxAdapter</b>: §1 기본 정보     ← ③
-   │           │     │  ├─ partner row (CircleAvatar + name + chevron)
+   │           │     │  ├─ partner row (MinglitAvatarImage + name + chevron)
    │           │     │  ├─ title Text(headlineSmall bold)
    │           │     │  ├─ <b>_InfoTile</b> — 날짜·시간·진행 시간
    │           │     │  ├─ <b>_InfoTile</b> — 장소 이름·주소
@@ -725,7 +738,7 @@
       ├─ <em>Partner row</em> (if partner != null)              ← ㉠
       │  └─ <b>GestureDetector</b>(opaque · onTap: pushPartnerDetail)
       │     └─ Row
-      │        ├─ <b>CircleAvatar</b>(radius: <i>radius-input = 12</i>) — 24×24
+      │        ├─ <b>MinglitAvatarImage</b>(radius: <i>MinglitRadius.input = 12</i>, fallbackIcon: Icons.store) — 24×24
       │        ├─ Gap: <i>spacing-small (8)</i>
       │        ├─ Flexible Text(<i>titleSmall · onSurfaceVariant</i>)
       │        ├─ Gap: <i>spacing-xsmall (4)</i>
@@ -934,7 +947,8 @@
     <h2>§3 참가 현황 — sub-anatomy</h2>
     <p class="intro">
       §3 영역의 내부 구조 — "참여 현황" 섹션 헤더 + 입장권(또는 입장 그룹)별 카드 리스트.
-      각 카드에는 좌측에 그룹명 + 현재 참여 인원, 우측에 정원 대비 현재 참여 비율을 보여주는 가로 게이지 바와 "현재/정원" 텍스트가 함께 붙는다.
+      각 카드에는 좌측에 그룹명, 우측에 정원 대비 현재 참여 비율을 보여주는 <code>MinglitParticipantGauge</code>와 <code>current/max</code> 텍스트가 함께 붙는다.
+      그룹 카드 안에서는 <code>N명 참여</code> 보조 캡션을 따로 노출하지 않는다.
       입장 그룹이 정의되지 않은 단순 이벤트는 카드 없이 "N명 / M명" 텍스트 한 줄만 노출된다.
     </p>
     <div class="layout-grid">
@@ -945,7 +959,7 @@
           <span class="blueprint__region-label" style="font-size:10px;">㉠ Section header — "참여 현황"</span>
         </div>
         <div class="blueprint__region blueprint__region--shaded" style="top:56px;left:16px;right:16px;height:64px;">
-          <span class="blueprint__region-label" style="font-size:10px;">㉡ Entry group card #1 — name + count + gauge</span>
+          <span class="blueprint__region-label" style="font-size:10px;">㉡ Entry group card #1 — name + gauge</span>
         </div>
         <div class="blueprint__region blueprint__region--shaded" style="top:136px;left:16px;right:16px;height:64px;">
           <span class="blueprint__region-label" style="font-size:10px;">㉢ Entry group card #2</span>
@@ -967,14 +981,11 @@
       ├─ <em>Entry group card #1</em>                      ← ㉡
       │  └─ <b>Container</b>(border 1px · radius-small · h-margin screenEdge)
       │     └─ Stack
-      │        ├─ Column(crossAxis: start)
-      │        │  ├─ <i>그룹 이름</i> (bodyMedium · w600)
-      │        │  └─ <i>"N명 참여"</i> (bodySmall · text-secondary)
+      │        ├─ <i>그룹 이름</i> (bodyMedium · w600)
       │        └─ <em>Gauge cluster</em> (Positioned top-right)
-      │           ├─ <b>MinglitParticipantGauge</b> — 80×6 알약 바
-      │           │  · 채워진 부분: <i>color-primary</i>
-      │           │  · 빈 부분: <i>color-divider</i>
-      │           └─ <i>"현재/정원"</i> 라벨 (10 · w600 · text-secondary)
+      │           └─ <b>MinglitParticipantGauge</b>
+      │              · 3-segment gauge + <i>"current/max"</i> + people icon
+      │              · 카운트 source: matching ticket sold_count / quantity
       │
       └─ <em>Entry group card #2 …</em>                    ← ㉢
          · 동일 구조, 정원 / 현재 인원만 다름
@@ -993,9 +1004,8 @@
       <tbody>
         <tr><td>㉠</td><td>Section header</td><td>좌측 정렬 · 섹션 첫 줄</td><td>padding: <code>medium</code> · <code>screenEdge</code> · <code>sm</code> · text <code>bodyMedium</code> w700 <code>color-text-primary</code></td></tr>
         <tr><td>㉡㉢</td><td>Entry group card</td><td>풀폭 (좌우 16 margin) · 내부 Stack</td><td>border 1px <code>color-divider</code> · radius <code>radius-small (8)</code> · padding <code>spacing-small (8)</code> · 카드 사이 <code>spacing-medium (16)</code></td></tr>
-        <tr><td>—</td><td>그룹 이름 / 인원수</td><td>카드 좌측 column</td><td>이름 <code>bodyMedium</code> w600 · 인원수 <code>bodySmall</code> <code>color-text-secondary</code> · 줄 간격 <code>spacing-xxsmall (2)</code></td></tr>
-        <tr><td>—</td><td>Gauge bar</td><td>카드 우측 상단 정렬</td><td>너비 80 · 높이 6 · radius 3 · 채움 <code>color-primary</code> · 배경 <code>color-divider</code></td></tr>
-        <tr><td>—</td><td>"현재/정원" 라벨</td><td>gauge 바로 아래 우측 정렬</td><td>10px · w600 · <code>color-text-secondary</code></td></tr>
+        <tr><td>—</td><td>그룹 이름</td><td>카드 좌측</td><td><code>bodyMedium</code> w600 · <code>color-text-primary</code></td></tr>
+        <tr><td>—</td><td>MinglitParticipantGauge</td><td>카드 우측 상단 정렬</td><td>3-segment gauge · <code>current/max</code> label · people icon · Minglit 컴포넌트 토큰 사용</td></tr>
       </tbody>
     </table>
   </section>
@@ -1527,17 +1537,15 @@
             <div class="minglit-section-header">참여 현황</div>
             <div class="entry-group-card">
               <div class="entry-group-card__name">일반 참여 (남성)</div>
-              <div class="entry-group-card__count">8명 참여</div>
               <div class="entry-group-card__gauge">
-                <div class="gauge-bar-wrap"><div class="gauge-bar-fill" style="width:65%;"></div></div>
+                <div class="gauge-segments"><span class="gauge-segment gauge-segment--filled"></span><span class="gauge-segment gauge-segment--filled"></span><span class="gauge-segment gauge-segment--filled"></span></div>
                 <div class="gauge-label">13/20</div>
               </div>
             </div>
             <div class="entry-group-card">
               <div class="entry-group-card__name">일반 참여 (여성)</div>
-              <div class="entry-group-card__count">10명 참여</div>
               <div class="entry-group-card__gauge">
-                <div class="gauge-bar-wrap"><div class="gauge-bar-fill" style="width:80%;"></div></div>
+                <div class="gauge-segments"><span class="gauge-segment gauge-segment--filled"></span><span class="gauge-segment gauge-segment--filled"></span><span class="gauge-segment gauge-segment--filled"></span></div>
                 <div class="gauge-label">16/20</div>
               </div>
             </div>
@@ -1596,7 +1604,7 @@
               <div style="position:absolute;top:105px;left:0;right:0;bottom:80px;overflow:hidden;">
                 <!-- §3 ending -->
                 <div style="padding:0 16px 12px;font-size:13px;color:var(--color-text-secondary);line-height:1.55;opacity:0.5;border-bottom:1px solid var(--color-divider);">
-                  … 일반 참여 (여성) 16/20명 참여
+                  … 일반 참여 (여성) 16/20
                 </div>
                 <!-- §4 필요 인증 (active) -->
                 <div class="minglit-section-header">필요 인증</div>
@@ -2036,6 +2044,7 @@
         <tr><td><strong>Widget class</strong></td><td><code>EventDetailPage</code> + <code>_EventDetailContent</code> + <code>_BottomTicketBar</code> (모두 같은 파일에 part of)</td></tr>
         <tr><td><strong>File path</strong></td><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/event/detail/event_detail_page.dart"><code>apps/app_user/lib/src/features/event/detail/event_detail_page.dart</code></a></td></tr>
         <tr><td><strong>Part files</strong></td><td><code>event_detail_content.dart</code> · <code>event_bottom_ticket_bar.dart</code> · <code>event_entry_conditions_section.dart</code> · <code>event_verification_section.dart</code> · <code>event_refund_policy_section.dart</code> · <code>event_quill_viewer.dart</code> · <code>event_info_tile.dart</code> · <code>event_detail_content_skeleton.dart</code></td></tr>
+        <tr><td><strong>Partner avatar widget</strong></td><td><code>MinglitAvatarImage</code> (kit-shared) in <code>event_detail_content.dart</code> · <code>radius: MinglitRadius.input</code> · <code>url: partnerProfileImageUrl</code> · <code>fallbackIcon: Icons.store</code> · <code>fallbackIconSize: MinglitIconSize.xsmall</code></td></tr>
         <tr><td><strong>Controller / Provider</strong></td><td><code>eventDetailControllerProvider(eventId)</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/event/logic/event_detail_controller.dart"><code>event_detail_controller.dart</code></a></td></tr>
         <tr><td><strong>Coordinator</strong></td><td><code>eventCoordinatorProvider</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/event/logic/event_coordinator.dart"><code>event_coordinator.dart</code></a> — pushPartnerDetail · pushLogin · 등</td></tr>
         <tr><td><strong>Admission state</strong></td><td><code>eventAdmissionControllerProvider(event)</code> — see <a href="/specs/event_bottom_ticket_bar/index.html">EventBottomTicketBar spec</a></td></tr>

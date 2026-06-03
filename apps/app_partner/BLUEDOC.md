@@ -43,9 +43,8 @@ Minglit 의 **파트너 사장님 Flutter 앱**. 매장 관리·멤버 초대·�
 
 ## 관련
 
-- [architecture.md](./architecture.md) — 파트너 앱 라우팅·권한 redirect 상세
-- [minglit_kit/BLUEDOC.md](../../shared/packages/minglit_kit/BLUEDOC.md) — 공용 패키지
+- [architecture.md](./architecture.md) — 라우팅·권한 / [minglit_kit](../../shared/packages/minglit_kit/BLUEDOC.md) — 공용 패키지
 - [README.md](./README.md) — 빌드·실행 / [integration_test/cuj](./integration_test/cuj/BLUEDOC.md) — CUJ
 
 ---
-_Reviewed: 2026-05-28 19:40_
+_Reviewed: 2026-06-03 13:01_

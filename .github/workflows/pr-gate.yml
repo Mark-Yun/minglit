@@ -14,10 +14,10 @@ on:
         type: string
         default: 'dev'
       run_cuj_integration:
-        description: 'Run emulator CUJ integration jobs when app/kit paths changed'
+        description: 'Debug-only CUJ switch. Regular CUJ health runs from monitor-dev-cuj on dev push.'
         required: false
         type: boolean
-        default: true
+        default: false
 
 concurrency:
   # Branch-specific wrappers own the user-facing required check name.
@@ -115,13 +115,17 @@ jobs:
         if: ${{ !cancelled() }}
         run: python3 .github/scripts/check-android-deploy-workflow-contract.py
 
-      - name: Check dev soak workflow contract
+      - name: Check dev health workflow contract
         if: ${{ !cancelled() }}
         run: python3 .github/scripts/check-dev-soak-workflow-contract.py
 
       - name: Check dev cut workflow contract
         if: ${{ !cancelled() }}
         run: python3 .github/scripts/check-dev-cut-workflow-contract.py
+
+      - name: Check iOS deploy workflow contract
+        if: ${{ !cancelled() }}
+        run: bash .github/scripts/check-ios-deploy-branch-conditions.sh
 
       - name: Verify androidx.test runner/orchestrator version alignment
         if: ${{ !cancelled() }}

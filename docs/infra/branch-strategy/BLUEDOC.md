@@ -8,16 +8,17 @@
 flowchart LR
   agent[Agent / Human PR] --> dsg[dev-staging-pr-gate]
   dsg --> ds[dev-staging]
-  ds --> dss[dev-staging-dev-cut-gate]
-  dss --> dstag["v*-dev-staging tag"]
+  ds --> nc[dev-staging-dev-cut]
+  nc --> dstag["v*-dev-staging tag"]
 
-  dstag --> nc[dev-staging-dev-cut]
   nc --> npg[dev-pr-gate]
   npg --> dev[dev]
 
-  dev -. 24h soak .-> rg[dev-rc-cut-gate]
+  dev --> dh[dev health / CUJ signals]
+  dh --> rg[dev-rc-cut-gate]
   monitor["monitor-event-flow-* batch"] -. dev-soak/backend-simulator .-> dev
-  ai["AI app soak / real-device"] -. dev-soak/app-ai-review .-> dev
+  cuj["monitor-dev-cuj"] -. dev-soak/cuj-* .-> dev
+  ai["AI app review / real-device"] -. dev-soak/app-ai-review .-> dev
   rg -->|pass| rgp["dev-rc-cut-pass status"]
   rg -->|blocked| issue[status failure + issue/audit]
   rgp --> rcut[dev-rc-cut]
@@ -45,10 +46,10 @@ flowchart LR
 | 단계 | Entry workflow | 역할 |
 |------|----------------|------|
 | dev-staging PR | `dev-staging-pr-gate` | feature/agent PR 의 빠른 CI gate |
-| dev-staging 지속 검증 | `monitor-dev-staging-health` | 6시간마다 EF unit/integration + user/partner CUJ 로 nightly 전 회귀 감지 |
-| dev-staging → dev cut gate | `dev-staging-dev-cut-gate` | dev 로 promote 할 coherent dev-staging snapshot 을 `v*-dev-staging` tag 로 선별 |
-| dev-staging → dev cut | `dev-staging-dev-cut` + `dev-pr-gate` | gate 가 선별한 snapshot 을 dev PR 로 promote |
-| dev → rc cut gate | `dev-rc-cut-gate` | 24h dev soak status + dev cron install run 확인 후 `dev-rc-cut-pass` status 부여 |
+| dev-staging 지속 검증 | `monitor-dev-staging-health` | nightly 전 backend/EF 회귀 조기 감지 |
+| dev-staging → dev cut gate | `dev-staging-dev-cut-gate` | 수동 candidate inspect 전용. per-merge mutation 없음 |
+| dev-staging → dev cut | `dev-staging-dev-cut` + `dev-pr-gate` | daily cut 시점에 coherent snapshot 을 직접 bump/tag 하고 dev PR 로 promote |
+| dev → rc cut gate | `dev-rc-cut-gate` | dev health/CUJ status + dev cron install run 확인 후 `dev-rc-cut-pass` status 부여 |
 | dev deploy/validation | `dev-deploy` | dev 환경 deploy/validation orchestrator. 이벤트 플로우 시뮬레이터는 dev Supabase pg_cron 으로 별도 운영 |
 | dev → rc cut | `dev-rc-cut` | latest `dev-rc-cut-pass` commit 에서 `rc/YYYY-Wxx` 생성 |
 | rc hotfix | dev-staging fix PR + `rc-pr-gate` | dev-staging 에 먼저 반영된 fix commit 을 active RC 로 cherry-pick/promote |
@@ -62,7 +63,7 @@ flowchart LR
 | 단계 | 역할 | 진입 방식 |
 |------|------|-----------|
 | `dev-staging` | AI agent commit zone | 일반 PR + auto-merge + 가벼운 `pr-gate` |
-| `dev` | soak-validated trunk | daily `dev-staging-dev-cut` → 24h soak → `dev-rc-cut-gate` |
+| `dev` | integration-health trunk | daily `dev-staging-dev-cut` → dev push health/CUJ → `dev-rc-cut-gate` |
 | `rc/YYYY-Wxx` | mobile RC, 5일 soak | weekly cut from latest dev-rc-cut-pass |
 | `main` | mobile-stable snapshot | rc → main 머지 (soak 통과 시) |
 
@@ -78,12 +79,14 @@ flowchart LR
 
 | 문서 | 내용 |
 |------|------|
+| [promotion-contract.md](./promotion-contract.md) | 승격 정책 + concrete workflow/status/tag/failure contract |
 | [branch-flow.md](./branch-flow.md) | flow + protection + tag + hotfix |
 | [test-strategy.md](./test-strategy.md) | per-stage gates |
 | [error-detection.md](./error-detection.md) | detection layers |
 | [dev-staging-pipeline.md](./dev-staging-pipeline.md) | 일반 PR/auto-merge + pr-gate + safety net CI |
 | [dev-pipeline.md](./dev-pipeline.md) | dev-staging-dev-cut + dev-rc-cut-gate + auto-deploy chain |
-| [dev-soak-status-model.md](./dev-soak-status-model.md) | dev soak commit status contexts + run history based `dev-rc-cut-gate` 판정 |
+| [dev-soak-status-model.md](./dev-soak-status-model.md) | legacy `dev-soak/*` status contexts + run history based `dev-rc-cut-gate` 판정 |
+| [rc-eligibility.md](./rc-eligibility.md) | `dev-rc-cut-pass` RC eligibility marker 호환 계약 |
 | [rc-promotion.md](./rc-promotion.md) | dev-rc-cut + soak + dev-staging-first hotfix |
 | [main-promotion.md](./main-promotion.md) | rc → main + main-deploy + min-version |
 | [hotfix-policy.md](./hotfix-policy.md) | dev/rc/main 직접 PR 차단 + branch별 hotfix 승인 규칙 |
@@ -100,13 +103,13 @@ flowchart LR
 - 코드 promotion = 한 방향 PR, 기능 promotion = flag flip
 - `*-cut-gate` = 다음 브랜치로 promote 할 source artifact 선별/마킹, `*-cut` = 그 artifact 로 PR/branch 생성. 검증과 promotion 을 같은 workflow 에 섞지 않는다
 - dev/rc release 판정은 **true evidence 기반**이다. failure issue/status 가 없다는 것은 `unknown` 이며 pass 가 아니다. cut-gate 는 명시적인 success status, required workflow run history, git lineage 같은 positive evidence 만 소비한다
-- dev soak 판정의 source-of-truth 는 GitHub Issue/label 이 아니라 commit status context + workflow run history 다 ([dev-soak-status-model.md](./dev-soak-status-model.md))
+- RC eligibility 판정의 source-of-truth 는 GitHub Issue/label 이 아니라 commit status context + workflow run history 다 ([promotion-contract.md](./promotion-contract.md), [dev-soak-status-model.md](./dev-soak-status-model.md))
 - cut-gate Issue 는 사람이 진행 상태를 추적하기 위한 projection 이다. 생성/갱신/닫기는 `.github/actions/cut-issue` 와 `close-cut-issue-on-pr-merge` 가 담당하며, promotion 판정 SSOT 로 사용하지 않는다
-- 모든 branch linear ON — dev-staging: squash, dev/rc/main: rebase
-- Protected branch 직접 push 는 human 금지. dev-staging version bump, promotion branch/tag, RC cleanup 은 `minglit-release-bot` 전용 token + Ruleset bypass 로만 허용
+- 일반 작업 PR 은 dev-staging 에서 squash 로 정리한다. Branch promotion PR 은 source branch ancestry 보존을 위해 merge commit 을 사용하며, dev/rc/main 에 linear history 를 강제하지 않는다
+- Protected branch 직접 push 는 human 금지. dev-staging daily cut version bump, promotion branch/tag, RC cleanup 은 `minglit-release-bot` 전용 token + Ruleset bypass 로만 허용
 - `deploy-dev-event-flow-cron` 은 `dev` push 에서만 `dev-event-flow-simulator` pg_cron 을 설치한다. `monitor-event-flow-*` 는 수동 smoke 이며, RC cron 은 RC project 준비 후 별도 설치한다
 - main 머지 = backend + mobile 모두 prod deploy. backend prod deploy 는 `main-deploy` 에서 한 번에 수행한다
-- 소스 파일 version bump 는 `dev-staging-dev-cut-gate` 가 만든 version-bump PR 에만 남긴다. 날짜 버전(`YY.MM.DD`) + version-bump PR 번호 build number 를 사용하고, `dev`/`rc`/`main` 은 branch state 를 바꾸지 않고 deploy workflow 가 metadata 를 build-time 에 주입한다
+- 소스 파일 version bump 는 `dev-staging-dev-cut` 이 promote 할 dev-staging snapshot 에만 남긴다. release bot 이 protected `dev-staging` 에 직접 bump commit 을 fast-forward push 하고, 날짜 버전(`YY.MM.DD`) + snapshot build number(`YYMMDDNN`) tag 를 붙인다. `dev`/`rc`/`main` 은 branch state 를 바꾸지 않고 deploy workflow 가 metadata 를 build-time 에 주입한다
 - `main-deploy` 는 prod deploy execution 을 담당한다. main push 에서 version bump commit 을 만들지 않고, release asset/tag/marker 는 deploy metadata 를 기준으로 생성한다
 - 모바일 배포 산출물(APK/AAB/IPA)은 GitHub Release asset 이 canonical archive 다. Actions artifact 는 테스트 리포트/스크린샷/로그 같은 단기 디버깅 산출물에만 사용한다
 - 일반 PR 은 `dev-staging` 으로만 진입한다. `dev`, `rc/*`, `main` 직접 PR 은 promotion 또는 승인된 hotfix 만 허용한다 ([hotfix-policy.md](./hotfix-policy.md))
@@ -126,7 +129,7 @@ Promotion PR 제목은 workflow 이름과 source artifact 를 앞에 둔다. PR 
 
 ### RC Eligibility Marker
 
-RC cut 의 source-of-truth status 이름은 **`dev-rc-cut-pass`** 이다. `rc-eligible` 은 현재 구현된 workflow/status 명칭이 아니며, 새 이름으로 바꾸려면 `dev-rc-cut-gate`, `dev-rc-cut`, `main-pr-gate`, 문서 전체를 같은 PR 에서 일괄 변경한다.
+RC cut 의 source-of-truth status 이름은 **`dev-rc-cut-pass`** 이다. `rc-eligible` 은 workflow/status 명칭으로 쓰지 않으며, 새 이름으로 바꾸려면 `dev-rc-cut-gate`, `dev-rc-cut`, `main-pr-gate`, 문서 전체를 같은 PR 에서 일괄 변경한다.
 
 ---
-_Reviewed: 2026-05-25 16:20_
+_Reviewed: 2026-06-03 15:15_

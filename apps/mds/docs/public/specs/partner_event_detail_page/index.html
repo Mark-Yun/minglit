@@ -1081,7 +1081,7 @@ body.dark-mode .viewport {
     <tbody>
       <tr>
         <th style="width: 140px;">Status</th>
-        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 6 state · 파트너 이벤트 운영(티켓 관리 + 참가 신청 심사) 단일 진입점</em></td>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 6 render state + PartnerHome v2 4 phase contract · 파트너 이벤트 운영 단일 진입점</em></td>
       </tr>
       <tr>
         <th>App</th>
@@ -1103,20 +1103,21 @@ body.dark-mode .viewport {
         <th>Hierarchy</th>
         <td>
           <strong>Parent</strong>: <a href="/specs/party_detail_page/index.html"><code>PartyDetailPage</code></a> (이벤트 카드 탭 시 push)<br>
-          <strong>Children</strong>: <a href="/specs/event_edit_page/index.html"><code>EventEditRoute</code></a> (Hero "일정" 영역 탭 — 이벤트 정보 수정) · <a href="/specs/ticket_create_page/index.html"><code>TicketCreateRoute</code></a> (Add 카드 탭) · <a href="/specs/ticket_edit_page/index.html"><code>TicketEditRoute</code></a> (티켓 카드 탭) · <code>EventApplicationReviewDialog</code> (심사 대기 카드 탭 — 다이얼로그)
+          <strong>Parent</strong>: <a href="/specs/partner_home_page/index.html"><code>PartnerHomePage</code></a> v2 phase cards (모집 중 / 진행 임박 / LIVE / 종료 직후) · <a href="/specs/party_detail_page/index.html"><code>PartyDetailPage</code></a> (이벤트 카드 탭 시 push)<br>
+          <strong>Children</strong>: <a href="/specs/event_edit_page/index.html"><code>EventEditRoute</code></a> (Hero "일정" 영역 탭 — 이벤트 정보 수정) · <a href="/specs/ticket_create_page/index.html"><code>TicketCreateRoute</code></a> (Add 카드 탭) · <a href="/specs/ticket_edit_page/index.html"><code>TicketEditRoute</code></a> (티켓 카드 탭) · <a href="/specs/event_application_list_page/index.html"><code>EventApplicationListRoute</code></a> (참가 현황 / 심사하기 / 참가자 보기) · <a href="/specs/ongoing_event_list_page/index.html"><code>OngoingEventListPage</code></a> (LIVE 참가자 명단 / 수동 체크인) · <code>EventApplicationReviewDialog</code> (심사 대기 카드 탭 — 다이얼로그)
         </td>
       </tr>
       <tr>
         <th>Purpose</th>
         <td>
-          파트너가 자신의 파티에 속한 단일 이벤트를 한 화면에서 운영하도록 한다 — 좌측 탭(운영 관리)에서는 일정 / 정원 / 상태 / 공개 설정 같은 핵심 메타를 한눈에 보고 그 아래에서 입장권을 추가하거나 수정할 수 있고, 우측 탭(참가 신청)에서는 들어온 신청을 심사 대기 / 처리 완료로 묶어 빠르게 승인 · 거절할 수 있다.
+          파트너가 자신의 파티에 속한 단일 이벤트를 한 화면에서 운영하도록 한다. 모집 중에는 티켓/신청/매출을 조정하는 운영 desk, 진행 임박에는 준비 상태를 확인하는 runbook, LIVE 중에는 <a href="/specs/ongoing_event_list_page/index.html">참가자 명단</a>으로 이어지는 control room, 종료 직후에는 결과/후기/사진/다음 회차 행동을 회수하는 post-event hub 역할을 한다.
         </td>
       </tr>
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: <a href="/specs/party_detail_page/index.html">PartyDetailPage</a>의 이벤트 카드 탭 → 이 화면 진입 (운영 관리 탭이 기본).<br>
-          <strong>Exit points</strong>: AppBar back → 파티 상세 / <strong>Hero "일정" 영역 탭 → <a href="/specs/event_edit_page/index.html">EventEditPage</a></strong> (이벤트 정보 수정) / Add 카드 (또는 빈 상태 카드) → <a href="/specs/ticket_create_page/index.html">TicketCreatePage</a> / 티켓 카드 탭 → <a href="/specs/ticket_edit_page/index.html">TicketEditPage</a> / 신청 카드(심사 대기) 탭 → 심사 다이얼로그 → 승인/거절 후 같은 화면 머무름 / "참가 신청" 탭 전환 → 같은 페이지 안에서 본문 교체.
+          <strong>Entry points</strong>: <a href="/specs/partner_home_page/index.html">PartnerHomePage</a>의 모집 중 / 진행 임박 / 진행 중 / 종료 직후 카드 영역 탭 → 이 화면 진입 · <a href="/specs/party_detail_page/index.html">PartyDetailPage</a>의 이벤트 카드 탭 → 이 화면 진입.<br>
+          <strong>Exit points</strong>: AppBar back → 홈 또는 파티 상세 / <strong>Hero "일정" 영역 탭 → <a href="/specs/event_edit_page/index.html">EventEditPage</a></strong> (이벤트 정보 수정) / Add 카드 (또는 빈 상태 카드) → <a href="/specs/ticket_create_page/index.html">TicketCreatePage</a> / 티켓 카드 탭 → <a href="/specs/ticket_edit_page/index.html">TicketEditPage</a> / 참가 현황·심사하기·참가자 보기 → <a href="/specs/event_application_list_page/index.html">EventApplicationListPage</a> / LIVE primary "참가자 명단" → <a href="/specs/ongoing_event_list_page/index.html">OngoingEventListPage</a> / 신청 카드(심사 대기) 탭 → 심사 다이얼로그 → 승인/거절 후 같은 화면 머무름.
         </td>
       </tr>
       <tr>
@@ -1150,6 +1151,14 @@ body.dark-mode .viewport {
       </tr>
     </thead>
     <tbody>
+      <tr>
+        <td>2026-06-03</td>
+        <td>1.1</td>
+        <td>codex</td>
+        <td>
+          #2222 PartnerHomePage v2 TBD 정리의 일부로 partner-side EventDetailPage를 phase card 도착지로 확정. 모집 중 / 진행 임박 / LIVE / 종료 직후 phase contract를 추가하고, LIVE 운영은 <a href="/specs/ongoing_event_list_page/index.html"><code>OngoingEventListPage</code></a>와 연결.
+        </td>
+      </tr>
       <tr>
         <td>2026-05-01</td>
         <td>1.0</td>
@@ -1643,14 +1652,57 @@ body.dark-mode .viewport {
     <span class="glyph">🎨</span>
     <h2>States</h2>
     <span class="lede">
-      3 state (Default · Loading · Error). Default = baseline (데이터 로드 완료 · 티켓 ≥ 1개 · 신청 진행 중).
-      각 state는 mini-table 6-row (조건/사용자액션/에지케이스/컴포넌트/토큰/노트). 나머지 state는 additive diff (<code>+</code> · <code>−</code> · <code>↔ X → Y</code> · <code>동일</code> · <code>—</code>).
+      6 render state (Default · Cancelled · Completed · Empty applications · Loading · Error) + PartnerHome v2 lifecycle phase contract.
+      각 mini-table은 6-row (조건/사용자액션/에지케이스/컴포넌트/토큰/노트). phase contract는 홈 카드가 이 화면을 어떤 모드로 열어야 하는지 정의한다.
     </span>
   </div>
 
   <section class="doc">
+    <h2>PartnerHome v2 phase contract</h2>
+    <p class="intro">
+      #2222의 EventDetailPage v2 범위. 새 화면을 만들지 않고, <a href="/specs/partner_home_page/index.html"><code>PartnerHomePage</code></a> v2 카드가 같은 partner-side <code>EventDetailPage</code>를 네 가지 lifecycle phase로 여는 규칙을 고정한다.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 150px;">Phase</th>
+          <th style="width: 220px;">PartnerHome entry</th>
+          <th style="width: 230px;">조건</th>
+          <th>Detail mode / primary action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="is-baseline-tint">
+          <td><strong>모집 중</strong></td>
+          <td>모집 중 카드 영역 탭</td>
+          <td><code>status=scheduled</code> · 이벤트 시작 전 · 신청/티켓 운영 가능</td>
+          <td>Default 운영 desk. Hero 아래 참가 현황 + 기대 매출 + 입장 그룹/티켓 CRUD를 유지한다. Primary는 <strong>심사하기</strong> 또는 <strong>참가자 보기</strong>, secondary는 일정/티켓 수정.</td>
+        </tr>
+        <tr>
+          <td><strong>진행 임박</strong></td>
+          <td>진행 임박 카드 영역 탭</td>
+          <td><code>D-7 ~ T-2h</code> 또는 체크인 전 D-day</td>
+          <td>D-day chip과 준비 안내를 강조한다. QR은 아직 직접 열지 않고, <strong>참가자 보기</strong> / <strong>참가자 명단</strong>으로 명단 확인과 공지 준비를 유도한다. 일정 변경은 가능하지만 확정 참가자에게 자동 알림이 나간다는 경고를 표시한다.</td>
+        </tr>
+        <tr>
+          <td><strong>LIVE 진행 중</strong></td>
+          <td>진행 중 카드 영역 탭</td>
+          <td><code>checkin_window_open=true</code> 또는 <code>start_time ≤ now &lt; end_time</code></td>
+          <td>상단 chip을 LIVE/체크인 가능 톤으로 전환하고 티켓/일정 편집 액션은 숨김 또는 read-only로 낮춘다. Primary는 <a href="/specs/ongoing_event_list_page/index.html"><strong>참가자 명단</strong></a>, secondary는 QR 체크인. Wakelock/진행률/워크인/노쇼 처리는 OngoingEventListPage가 담당한다.</td>
+        </tr>
+        <tr>
+          <td><strong>종료 직후</strong></td>
+          <td>종료 직후 카드 영역 탭</td>
+          <td><code>end_time ≤ now</code> · 정산 전 또는 후기/사진 회수 전</td>
+          <td>Completed render state를 post-event hub로 해석한다. Primary는 <strong>결과 / 사진 / 후기</strong> 회수, secondary는 <strong>다음 회차 만들기</strong>. 정산 상세는 SettlementPage로 분리하고, 환불 요청은 EventApplicationListPage에서 처리한다.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
     <h2>State summary</h2>
-    <p class="intro">한눈에 6 state 비교. 자세한 사양은 아래 각 mini-table.</p>
+    <p class="intro">한눈에 6 render state 비교. phase별 운영 모드는 위 contract를 우선 적용하고, 실제 렌더 diff는 아래 각 mini-table을 따른다.</p>
     <table class="ref">
       <thead>
         <tr>
@@ -2619,7 +2671,7 @@ body.dark-mode .viewport {
       <tbody>
         <tr>
           <td>뒤로 가기 (OS back / AppBar 뒤로 버튼)</td>
-          <td>파티 상세로 복귀 — 모든 state에서 동일.</td>
+          <td>직전 entry surface로 복귀 — PartnerHome phase card에서 왔으면 홈으로, PartyDetailPage에서 왔으면 파티 상세로 돌아간다. 모든 state에서 동일.</td>
         </tr>
         <tr>
           <td>(deprecated) 탭 전환</td>
@@ -2628,6 +2680,10 @@ body.dark-mode .viewport {
         <tr>
           <td>다른 화면에서 돌아옴 (TicketCreate / TicketEdit / 심사 다이얼로그)</td>
           <td>이 화면은 자동으로 최신 데이터를 다시 받아옴 — 새로 만든 티켓이 리스트에 추가되거나, 심사 처리된 신청이 처리 완료 그룹으로 이동한다.</td>
+        </tr>
+        <tr>
+          <td>LIVE phase primary "참가자 명단"</td>
+          <td><a href="/specs/ongoing_event_list_page/index.html"><code>OngoingEventListPage</code></a>로 push. 본 화면은 이벤트 단위 운영 hub이고, 체크인 진행률 / 워크인 / 노쇼 / 전화 액션은 LIVE dashboard가 담당한다.</td>
         </tr>
         <tr>
           <td>심사 처리 성공 (참가 신청 탭에서)</td>
@@ -2756,12 +2812,14 @@ body.dark-mode .viewport {
     <table class="ref">
       <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
       <tbody>
+        <tr><td><a href="/specs/partner_home_page/index.html"><code>PartnerHomePage</code></a></td><td>Parent — 모집 중 / 진행 임박 / LIVE / 종료 직후 phase card 영역 탭 시 이 화면으로 진입한다.</td></tr>
         <tr><td><a href="/specs/party_detail_page/index.html"><code>PartyDetailPage</code></a></td><td>Parent — 이 화면으로 진입하는 주 경로 (이벤트 카드 탭).</td></tr>
         <tr><td><a href="/specs/event_edit_page/index.html"><code>EventEditPage</code></a></td><td>Hero "일정" 영역 탭 → 이벤트 정보 수정 화면. 확정 참가자 ≥1명이면 일정·장소 변경 시 사유 입력 + 자동 알림 정책 발동.</td></tr>
         <tr><td><a href="/specs/ticket_create_page/index.html"><code>TicketCreatePage</code></a></td><td>빈 상태 카드(티켓 0개) / 리스트 끝 Add 카드 → 모두 여기로 이동 (단일 진입점).</td></tr>
         <tr><td><a href="/specs/ticket_edit_page/index.html"><code>TicketEditPage</code></a></td><td>입장권 카드 탭 → 해당 티켓을 선택한 상태로 이 화면으로 이동.</td></tr>
         <tr><td><a href="/specs/event_application_manage_page/index.html"><code>EventApplicationManagePage</code></a></td><td>여러 이벤트의 신청을 한꺼번에 관리하는 화면 — 본 화면의 참가 현황 카드 → EventApplicationListRoute가 단일 이벤트 버전이고, 이 화면은 cross-event 버전.</td></tr>
         <tr><td><a href="/specs/event_application_detail_page/index.html"><code>EventApplicationDetailPage</code></a></td><td>개별 신청 상세 — 본 화면에서는 다이얼로그로 처리하지만, 더 깊은 정보가 필요할 때 이쪽으로 향한다.</td></tr>
+        <tr><td><a href="/specs/ongoing_event_list_page/index.html"><code>OngoingEventListPage</code></a></td><td>LIVE phase primary destination — 참가자 명단, QR inline split, 수동 체크인, 워크인, 노쇼, 전화 액션을 담당한다.</td></tr>
         <tr><td><a href="/specs/event_create_page/index.html"><code>EventCreatePage</code></a></td><td>이 화면이 보여주는 이벤트를 처음 만든 화면 — 같은 event 데이터의 생성 단계.</td></tr>
         <tr><td><a href="/specs/event_detail_page/index.html"><code>EventDetailPage (user)</code></a></td><td>같은 이벤트의 user 측 화면 — 영업 톤(이미지 캐러셀 + CTA 바). 같은 데이터, 정반대 관점.</td></tr>
       </tbody>
@@ -2777,10 +2835,10 @@ body.dark-mode .viewport {
   <ul class="notes" style="line-height: 1.9;">
     <li>✅ <strong>Header</strong> — Title (h1)만</li>
     <li>✅ <strong>Overview</strong> — Status (✅ 디자인완료) · App · Category · Route · Path · Hierarchy · Purpose · User journey · Background · Frequency 10행 모두 채움</li>
-    <li>✅ <strong>History</strong> — v1.0 (2026-05-01) 초기 작성</li>
+    <li>✅ <strong>History</strong> — v1.0 (2026-05-01) 초기 작성 · v1.1 (2026-06-03) #2222 PartnerHome v2 phase contract</li>
     <li>✅ <strong>Layout — top blueprint</strong> — AppBar + Title + Detail card + Stats card + Tickets section + Visibility footer 6블록 + tree</li>
     <li>✅ <strong>Layout — Sub-anatomy 3종</strong> — Title block · Detail info card · Tickets section (참가 신청은 EventApplicationListRoute 별도 spec)</li>
-    <li>✅ <strong>States — 6종</strong> — Default · 이벤트 취소됨 · 이벤트 완료됨 · 신청 0건 · Loading · Error</li>
+    <li>✅ <strong>States — 6종 + phase contract</strong> — Default · 이벤트 취소됨 · 이벤트 완료됨 · 신청 0건 · Loading · Error + 모집 중 / 진행 임박 / LIVE / 종료 직후</li>
     <li>✅ <strong>States — mini-table 6 rows</strong> — 6 state 모두 (조건/액션/에지/컴포넌트/토큰/노트)</li>
     <li>✅ <strong>States — Default baseline 풀 리스트</strong> — 컴포넌트 + 토큰 풀 명시</li>
     <li>✅ <strong>States — additive diff</strong> — 나머지 3 state는 ↔ / + / − prefix 사용</li>

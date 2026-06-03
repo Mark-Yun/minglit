@@ -715,3 +715,22 @@ enabled = true
 verify_jwt = false  # system caller; wrapper accepts legacy bearer or sb_secret apikey
 import_map = "./deno.json"
 entrypoint = "./functions/ai-extract-tags/index.ts"
+
+# Fix #2187 follow-up: keep all auth-manifest entries explicitly registered.
+[functions.user-mark-match-results-viewed]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/user-mark-match-results-viewed/index.ts"
+
+[functions.partner-review-applications]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/partner-review-applications/index.ts"
+
+[functions.commit-match-likes]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/commit-match-likes/index.ts"

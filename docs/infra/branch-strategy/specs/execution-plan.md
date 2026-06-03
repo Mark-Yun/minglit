@@ -22,14 +22,14 @@
 | Spec workflow | 기존 매핑 | 작업 분류 |
 |---------------|----------|----------|
 | `pr-gate-core` (reusable) | `pr-gate` 의 step 들을 reusable workflow_call 로 추출 + stage parameter 추가 | **refactor** |
-| `version-bump` (reusable) | source-controlled dev-staging snapshot version bump | **refactor** |
+| `version-bump` (reusable) | legacy/building block for source-controlled version file changes. Active daily cut uses direct `scripts/bump-version.sh` inside `dev-staging-dev-cut` | **refactor** |
 | `shared-set-commit-status` | commit status write 공통 reusable | **신규** |
-| `set-dev-soak-status`, `set-rc-soak-status` | stage별 soak status write API (`workflow_call` + `workflow_dispatch`) | **신규** |
-| dev soak monitor/status model | 기존 `monitor-event-flow-*`, real-device workflow, AI agent signal 을 `dev-soak/*` commit status 로 통합 | **신규 (조합)** |
+| `set-dev-soak-status`, `set-rc-soak-status` | stage별 status write API (`workflow_call` + `workflow_dispatch`). `dev-soak/*` 는 dev health legacy prefix | **신규** |
+| dev health monitor/status model | 기존 `monitor-event-flow-*`, `monitor-dev-cuj`, real-device workflow, AI agent signal 을 `dev-soak/*` commit status 로 통합 | **신규 (조합)** |
 | `auto-issue` (reusable) | (없음) | **신규** |
 | `cherry-pick-pr` (reusable) | (없음) | **신규** |
 | `dev-staging-pr-gate` | `pr-gate` 를 dev-staging base 로 재사용 (stage=dev-staging) | **신규 (얇은 wrapper)** |
-| `dev-staging-dev-cut-gate` | dev-staging post-merge version bump/tag orchestration | **신규 (조합)** |
+| `dev-staging-dev-cut-gate` | manual candidate inspect. No per-merge mutation | **신규 (경량)** |
 | `dev-staging-dev-cut` | (없음) | **신규** |
 | `dev-pr-gate` | `dev-staging-pr-gate` 와 동일 (stage=dev) | **신규 (얇은 wrapper)** |
 | `dev-rc-cut-gate` | 기존 `rc-gate` rename + `dev-rc-cut-pass` status set. full suite 는 후속 gate 확장 | **rename/refactor** |
@@ -72,7 +72,7 @@
 |------|------|------|
 | 2a | `pr-gate.yml` 단일 파일 유지하면서 내부 jobs 를 `workflow_call` 받게 변경 + stage parameter 추가. `pr-gate-core` 별도 파일 아님 | PR 흐름 동일, 내부 jobs reusable 化 |
 | 2b | stage 별 `extra_steps` 지원 (dev-staging / rc / main) | 기존 동작 동일 |
-| 2c | `version-bump` reusable extract | dev-staging snapshot bump caller 가 reusable 호출하게 변경 |
+| 2c | dev-staging cut-time version bump 정리 | `dev-staging-dev-cut` 이 daily cut 시점에 direct bump/tag 후 promote. per-merge version-bump PR 제거 |
 | 2d | `minglit-release-bot` 생성 + App ID/private key 등록 + workflow permission 최소화 | protected branch/tag push 를 human 대신 bot 으로 수행 |
 | 2e | `auto-issue` reusable 추가 | 신규 — 기존 영향 없음 |
 | 2f | **`ci-result` 폐기** — branch protection 의 required check 를 각 branch 의 `*-pr-gate` 로 변경 | `dev-staging` 부터 적용, dev/rc/main 은 해당 workflow 가 각 branch 에 도달한 뒤 적용 |
@@ -111,7 +111,7 @@
 |------|------|------|
 | 4a | `shared-set-commit-status`, `set-dev-soak-status`, `set-rc-soak-status` 구현 | Phase 2 |
 | 4b | `shared-notify` 가 실패 시 `set-dev-soak-status` 호출 + issue title/body/log tail 개선 | 4a |
-| 4c | `dev-rc-cut-gate` 를 24h soak evaluator 로 변경 (run history + `dev-soak/*` status 확인) | 4a, 4b |
+| 4c | `dev-rc-cut-gate` 를 dev health evaluator 로 변경 (run history + `dev-soak/*` status 확인) | 4a, 4b |
 | 4d | `main-pr-gate` 에 RC lineage / `rc-main-cut-pass` / contract 재검증 추가 | Phase 2 |
 | 4e | `cherry-pick-pr` reusable, `rc-hotfix-apply` | Phase 2 |
 
@@ -230,7 +230,7 @@ Phase 1 (skeletal) → Phase 2 (CI/PR flow) → Phase 3 (branch CD)
 - **4a / 4b 는 같은 PR 가능**: `shared-set-commit-status` 와 `shared-notify` 연동은 API contract 가 작아서 같이 검증 가능하다. 단 `set-dev-soak-status` 수동 dispatch dry-run 은 먼저 통과해야 한다
 - **status write API → evaluator 사이 verification 필요**: `set-dev-soak-status` 는 AI agent/monitor 가 직접 쓰는 public API 이므로 context mapping, 권한, target SHA 를 먼저 검증한다
 - **4e 는 4d 와 독립 가능**: rc-hotfix-apply 는 rc promotion 흐름의 일부지만 main protection 적용과 직접 의존하지 않는다
-- **가장 critical**: `dev-rc-cut-gate` evaluator — 첫 verification 기간 1주 이상 추천 (24h soak/run history/status context 판정이 release cut 을 직접 막음)
+- **가장 critical**: `dev-rc-cut-gate` evaluator — 첫 verification 기간 1주 이상 추천 (run history/status context 판정이 release cut 을 직접 막음)
 
 권장 변경 없음. 위 순서 그대로 진행.
 

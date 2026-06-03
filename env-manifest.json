@@ -49,10 +49,13 @@
           "desc": "Supabase project URL (auto-injected)"
         },
         "SUPABASE_SERVICE_ROLE_KEY": {
-          "desc": "Service role JWT (auto-injected)"
+          "desc": "Legacy service_role JWT (auto-injected)"
         }
       },
       "optional": {
+        "SUPABASE_SECRET_KEYS": {
+          "desc": "Supabase sb_secret API key JSON dictionary (auto-injected in hosted Edge Functions)"
+        },
         "SENTRY_DSN": {
           "desc": "Sentry error tracking"
         },
@@ -261,7 +264,7 @@
         "desc": "Dev publishable key"
       },
       "SUPABASE_DEV_SECRET_KEY": {
-        "desc": "Dev service role key"
+        "desc": "Dev elevated Supabase API key (legacy service_role JWT or sb_secret_ secret key)"
       },
       "SUPABASE_MAIN_DB_PASSWORD": {
         "desc": "Main DB password"
@@ -271,6 +274,9 @@
       },
       "SUPABASE_MAIN_PUBLISHABLE_KEY": {
         "desc": "Main publishable key"
+      },
+      "SUPABASE_MAIN_SECRET_KEY": {
+        "desc": "Main elevated Supabase API key (legacy service_role JWT or sb_secret_ secret key)"
       },
       "OPENAI_API_KEY": {
         "desc": "OpenAI API"
@@ -300,7 +306,7 @@
   "vault": {
     "required": {
       "service_role_key": {
-        "desc": "Service role JWT for pg_cron -> EF auth (PR #1758: requireServiceRole guard)"
+        "desc": "Elevated Supabase API key for pg_cron -> EF auth (legacy service_role JWT or sb_secret_ secret key)"
       },
       "supabase_url": {
         "desc": "Project URL for pg_cron -> EF calls"

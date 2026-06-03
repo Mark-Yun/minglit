@@ -34,8 +34,8 @@ title=$(jq -r '.pull_request.title // ""' "$GITHUB_EVENT_PATH")
 body=$(jq -r '.pull_request.body // ""' "$GITHUB_EVENT_PATH")
 
 case "$author" in
-  dependabot[bot]|minglit-release-bot[bot])
-    echo "Bot-authored PR by $author; skipping PR issue reference check."
+  dependabot\[bot\]|app/dependabot|minglit-release-bot\[bot\])
+    echo "Allowlisted bot-authored PR by $author; skipping PR issue reference check."
     exit 0
     ;;
 esac

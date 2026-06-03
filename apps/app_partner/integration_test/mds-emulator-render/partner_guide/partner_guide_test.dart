@@ -14,6 +14,7 @@ final catalog = MdsCatalog<PartnerGuideBuilder>(
   builder: PartnerGuideBuilder.new,
   states: [
     MdsState('state-default', (b) => b.defaultState(), mdsIndex: 1),
+    MdsState('state-topic-sheet', (b) => b.withTopicSheet(), mdsIndex: 2),
   ],
 );
 

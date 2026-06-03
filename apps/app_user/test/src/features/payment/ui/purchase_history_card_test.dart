@@ -237,5 +237,57 @@ void main() {
       expect(find.text('문의하기'), findsNothing);
       expect(find.text('예매 취소'), findsNothing);
     });
+
+    testWidgets('카드 헤더에 상세 보기 affordance를 노출하고 상태 배지는 info row에서 유지한다', (
+      tester,
+    ) async {
+      final mockHistory = [
+        EventApplication(
+          id: 'app3',
+          eventId: 'event3',
+          ticketId: 'ticket3',
+          userId: 'user1',
+          status: 'paid',
+          paymentAmount: 42000,
+          paidAt: DateTime(2026, 4, 2),
+          createdAt: DateTime(2026, 4, 2),
+          updatedAt: DateTime(2026, 4, 2),
+          event: Event(
+            id: 'event3',
+            partyId: 'party3',
+            startTime: DateTime(2030, 5, 3, 20),
+            endTime: DateTime(2030, 5, 3, 22),
+            createdAt: DateTime(2026, 4, 2),
+            updatedAt: DateTime(2026, 4, 2),
+            title: 'Spec v1.3 Event',
+          ),
+          ticket: Ticket(
+            id: 'ticket3',
+            name: '프리미엄 티켓',
+            createdAt: DateTime(2026, 4, 2),
+            updatedAt: DateTime(2026, 4, 2),
+          ),
+        ),
+      ];
+
+      when(
+        () => mockEventRepository.getMyPurchaseHistory('user1'),
+      ).thenAnswer((_) async => mockHistory);
+
+      await tester.pumpWidget(
+        createTestWidget([
+          currentUserProvider.overrideWith((ref) => mockUser),
+          eventRepositoryProvider.overrideWithValue(mockEventRepository),
+        ]),
+      );
+
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('상세 보기'), findsOneWidget);
+      expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+      expect(find.text('결제완료'), findsOneWidget);
+    });
   });
 }

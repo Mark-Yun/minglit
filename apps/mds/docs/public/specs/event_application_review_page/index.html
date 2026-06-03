@@ -349,11 +349,11 @@ body.dark-mode .ear-card { background: var(--color-dark-surface); }
     <tbody>
       <tr>
         <th style="width: 140px;">Status</th>
-        <td><strong>🚧 디자인중</strong> <em style="color: var(--color-text-secondary);">— PurchaseHistoryDetailPage 심사 상태 row tap 시 push할 자식 spec. Flutter 미구현 (TBD).</em></td>
+        <td><strong>✅ 구현됨</strong> <em style="color: var(--color-text-secondary);">— PurchaseHistoryDetailPage 심사 상태 row tap 시 push되는 자식 화면. Flutter 위젯/라우트 구현 완료.</em></td>
       </tr>
       <tr><th>App</th><td><code>app_user</code></td></tr>
       <tr><th>Category</th><td>my · payment · review</td></tr>
-      <tr><th>Route / Surface</th><td><code>EventApplicationReviewRoute</code> · widget: <code>EventApplicationReviewPage</code> <em style="color: var(--color-text-secondary);">(TBD)</em></td></tr>
+      <tr><th>Route / Surface</th><td><code>EventApplicationReviewRoute</code> · widget: <code>EventApplicationReviewPage</code></td></tr>
       <tr><th>Path</th><td><code>/purchase-history/:applicationId/review</code></td></tr>
       <tr>
         <th>Hierarchy</th>
@@ -404,6 +404,16 @@ body.dark-mode .ear-card { background: var(--color-dark-surface); }
     </thead>
     <tbody>
       <tr>
+        <td>2026-06-01</td>
+        <td>1.11</td>
+        <td>codex</td>
+        <td>
+          <strong>Issue #2404 구현 상태 sync</strong> — <code>EventApplicationReviewPage</code> / <code>EventApplicationReviewRoute</code>가 live code에 존재하므로 Overview와 Reference의 stale <code>TBD</code> 표기를 제거.
+          실제 source path를 <code>apps/app_user/lib/src/features/payment/ui/event_application_review_page.dart</code>로 고정하고, controller/repository row를 <code>purchaseHistoryDetailProvider</code> + <code>getPurchaseHistoryDetailById</code> 기준으로 갱신.
+          Timeline도 mds_core의 <code>MinglitTimeline</code> / <code>MinglitTimelineStep</code> 구현 완료 상태를 반영.
+        </td>
+      </tr>
+      <tr>
         <td>2026-05-03</td>
         <td>1.10</td>
         <td>mark-yun</td>
@@ -432,7 +442,7 @@ body.dark-mode .ear-card { background: var(--color-dark-surface); }
         <td>
           <strong>Timeline 패턴을 MinglitTimeline 컴포넌트로 promote</strong> — Sub-anatomy ②의 inline timeline 패턴(dot/line/heading + status enum)을 mds 공용 컴포넌트로 분리. <code>MinglitTimeline</code> + <code>MinglitTimelineStep</code> 작성 (<a href="/components#MinglitTimeline">/components#MinglitTimeline</a>). 다른 use case(정산 진행 / 환불 진행 / 배송 추적 등)에서 재사용 가능.
           <strong>Page-specific은 children slot으로 주입</strong> — ReasonBox / "제출한 정보" collapsible / 검토자 메모 / "다시 신청하기" CTA는 모두 review-specific이므로 컴포넌트 안에 들어가지 않음. step의 children slot으로 작성 측에서 자유 컨텐츠 주입. 컴포넌트는 dot/line/heading만 책임.
-          <strong>Implementation source 갱신</strong> — 기존 file-private <code>_Timeline</code> / <code>_TimelineStep</code> 표현 → <code>MinglitTimeline</code> + <code>MinglitTimelineStep</code> reference로 변경. mds_core에 widget 신규 추가 필요 (후속 PR).
+          <strong>Implementation source 갱신</strong> — 기존 file-private <code>_Timeline</code> / <code>_TimelineStep</code> 표현 → <code>MinglitTimeline</code> + <code>MinglitTimelineStep</code> reference로 변경. 당시 mds_core widget 추가가 후속이었고, v1.11 기준 구현 완료.
         </td>
       </tr>
       <tr>
@@ -1419,20 +1429,20 @@ body.dark-mode .ear-card { background: var(--color-dark-surface); }
   <div class="perspective__header">
     <span class="glyph">📖</span>
     <h2>Reference</h2>
-    <span class="lede">implementation source + 인접 화면. 🚧 디자인중 — 미존재 항목은 TBD.</span>
+    <span class="lede">implementation source + 인접 화면. 구현된 route/widget/source를 기준으로 추적한다.</span>
   </div>
 
   <section class="doc">
     <h2>Implementation source</h2>
     <table class="ref">
       <tbody>
-        <tr><th style="width: 200px;">Widget class</th><td><code>EventApplicationReviewPage</code> · <code>TBD</code></td></tr>
-        <tr><th>File path</th><td><code>apps/app_user/lib/src/features/event/admission/event_application_review_page.dart</code> · <code>TBD</code></td></tr>
-        <tr><th>Controller</th><td>부모 detail의 <code>PurchaseHistoryController</code> 재사용 (단일 application 조회) 또는 별도 <code>EventApplicationReviewController</code> 신규 — submission(VerificationSubmission) join 포함 · <code>TBD</code></td></tr>
-        <tr><th>Route</th><td><code>EventApplicationReviewRoute</code> · path: <code>/purchase-history/:applicationId/review</code> · <code>TBD</code></td></tr>
-        <tr><th>Repository</th><td><code>eventRepositoryProvider.getApplicationById(id)</code> + <code>verificationRepositoryProvider.getSubmissionByApplicationId(id)</code> · <code>TBD</code></td></tr>
+        <tr><th style="width: 200px;">Widget class</th><td><code>EventApplicationReviewPage</code></td></tr>
+        <tr><th>File path</th><td><code>apps/app_user/lib/src/features/payment/ui/event_application_review_page.dart</code></td></tr>
+        <tr><th>Controller</th><td><code>purchaseHistoryDetailProvider(applicationId)</code> — cached <code>PurchaseHistoryController</code> 결과를 우선 사용하고, 없으면 단일 application detail을 조회.</td></tr>
+        <tr><th>Route</th><td><code>EventApplicationReviewRoute</code> · path: <code>/purchase-history/:applicationId/review</code></td></tr>
+        <tr><th>Repository</th><td><code>eventRepositoryProvider.getPurchaseHistoryDetailById(applicationId)</code></td></tr>
         <tr><th>Async wrapper</th><td><a href="/components#MinglitAsyncValueWidget"><code>MinglitAsyncValueWidget</code></a></td></tr>
-        <tr><th>Timeline 컴포넌트</th><td><a href="/components#MinglitTimeline"><code>MinglitTimeline</code></a> + <code>MinglitTimelineStep</code> (v1.8 promoted) — mds_core에 widget 신규 추가 필요 (TBD). step 내부 컨텐츠는 children slot으로 주입.</td></tr>
+        <tr><th>Timeline 컴포넌트</th><td><a href="/components#MinglitTimeline"><code>MinglitTimeline</code></a> + <code>MinglitTimelineStep</code> (mds_core 구현 완료). step 내부 컨텐츠는 <code>child</code> slot으로 주입.</td></tr>
         <tr><th>신청 답변 위젯</th><td>file-private <code>_AnswersCard</code> + <code>_AnswerRow</code> — collapsible (AnimatedSize · ExpansionTile 변형 또는 직접 구현)</td></tr>
         <tr><th>"다시 신청하기" 라우팅</th><td><code>EventDetailRoute(eventId)</code>로 단일 push (v1.10 통일 동작). detail에서 status 분기 처리.</td></tr>
         <tr><th>Icons (Material)</th><td><code>arrow_back</code> · <code>error_outline</code> · <code>expand_more</code> (chevron — 답변 카드 toggle) · <code>chevron_right</code> (CTA 화살표)</td></tr>

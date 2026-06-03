@@ -118,7 +118,7 @@ void main() {
       );
 
       expect(result.recommendedTicket, isNull);
-      expect(result.ineligibleReasons['ticket_m'], '성비 조절 중');
+      expect(result.ineligibleReasons['ticket_m'], '현재 모집 상황에 따라 선택할 수 없어요.');
     });
 
     test('marks ticket ineligible when gender mismatches', () {

@@ -6,7 +6,7 @@
 
 | 대상 base | hotfix branch | 용도 |
 |-----------|---------------|------|
-| `dev` | `dev/hotfix/<slug>` | dev soak 를 막는 긴급 수정. 수정 후 다음 `dev-rc-cut-gate` 가 다시 검증 |
+| `dev` | `dev/hotfix/<slug>` | dev health / RC eligibility 를 막는 긴급 수정. 수정 후 다음 `dev-rc-cut-gate` 가 다시 검증 |
 | `rc/YYYY-Wxx` | `rc/hotfix/<slug>` | active RC 검증 중 발견된 release blocker 수정. 기본은 dev-staging fix commit 을 cherry-pick 한 PR |
 | `main` | `main/hotfix/<slug>` | prod incident 또는 store release 직전 치명 이슈 수정 |
 

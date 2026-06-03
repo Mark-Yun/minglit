@@ -247,6 +247,12 @@
     </thead>
     <tbody>
       <tr>
+        <td>2026-06-01</td>
+        <td>1.1</td>
+        <td>codex</td>
+        <td><strong>Issue #2399 avatar drift sync</strong> — ListTile leading spec을 Material <code>CircleAvatar</code> 표현에서 live code의 <code>MinglitAvatarImage(radius: 20, url, fallbackIcon: Icons.store)</code> 기준으로 갱신. Fix #1936의 이미지 캐싱 + 에러 fallback 일원화를 spec에도 반영.</td>
+      </tr>
+      <tr>
         <td>2026-05-01</td>
         <td>1.0</td>
         <td>mark-yun</td>
@@ -310,7 +316,7 @@
    ├─ <b>Center</b> + <b>Text</b>('차단된 파트너가 없습니다')   <i>(차단된 파트너 0건)</i>
    └─ <b>ListView.builder</b>(파트너 리스트)                   <i>(차단된 파트너 1건 이상)</i>
       └─ <b>ListTile</b>                                       ← ③
-         ├─ <b>leading: CircleAvatar</b>(image | Icon(store))
+         ├─ <b>leading: MinglitAvatarImage</b>(radius: 20, url, fallbackIcon: Icons.store)
          ├─ <b>title: Text</b>(name)
          └─ <b>trailing: TextButton</b>('차단 해제') → <code>_unblock(id)</code></div>
     </div>
@@ -341,7 +347,7 @@
       <div class="blueprint" style="height: 96px;">
         <div class="blueprint__region blueprint__region--full"></div>
         <div class="blueprint__region blueprint__region--shaded" style="top:12px; left:16px; width:40px; height:40px;">
-          <span class="blueprint__region-label">㉠ leading · CircleAvatar 40px</span>
+          <span class="blueprint__region-label">㉠ leading · MinglitAvatarImage 40px</span>
         </div>
         <div class="blueprint__region blueprint__region--shaded" style="top:24px; left:72px; right:120px; height:24px;">
           <span class="blueprint__region-label">㉡ title · bodyLarge</span>
@@ -353,9 +359,9 @@
 
       <div class="layout-tree"><b>ListTile</b>
 ├─ <em>leading</em>                          ← ㉠
-│  └─ <b>CircleAvatar</b>(40px)
-│     ├─ <b>backgroundImage</b>: NetworkImage(profile_image_url)  <i>(존재 시)</i>
-│     └─ child: <b>Icon</b>(<code>Icons.store</code>)              <i>(이미지 없을 때)</i>
+│  └─ <b>MinglitAvatarImage</b>(radius: 20)
+│     ├─ <b>url</b>: profile_image_url                            <i>(존재 시)</i>
+│     └─ <b>fallbackIcon</b>: <code>Icons.store</code>             <i>(이미지 없거나 로드 실패 시)</i>
 │
 ├─ <em>title</em>                            ← ㉡
 │  └─ <b>Text</b>(name) — <code>bodyLarge</code> · ellipsis
@@ -370,7 +376,7 @@
         <tr><th style="width:60px;">#</th><th style="width:180px;">Region</th><th style="width:220px;">Alignment</th><th>Spacing / tokens</th></tr>
       </thead>
       <tbody>
-        <tr><td>㉠</td><td>leading · CircleAvatar</td><td>vertical center · left 16</td><td>40 × 40 · radius: 50%</td></tr>
+        <tr><td>㉠</td><td>leading · MinglitAvatarImage</td><td>vertical center · left 16</td><td>40 × 40 · radius 20</td></tr>
         <tr><td>㉡</td><td>title</td><td>vertical center · gap: 16 (Material default)</td><td><code>bodyLarge</code> · ellipsis · color-text-primary</td></tr>
         <tr><td>㉢</td><td>trailing · TextButton</td><td>vertical center · right 16 · padding 자체 8/12</td><td>"차단 해제" · color-primary · weight 600</td></tr>
       </tbody>
@@ -469,7 +475,7 @@
           <td>
             · <code>AppBar</code>(plain Material · title: "차단 목록") — ⓐ<br>
             · <code>ListView.builder</code> · <code>ListTile</code> × N — ⓑⓒⓓ<br>
-            · leading: <code>CircleAvatar</code>(<code>NetworkImage</code> | <code>Icon(Icons.store)</code>) — ⓑ<br>
+            · leading: <code>MinglitAvatarImage</code>(<code>url</code> | <code>fallbackIcon: Icons.store</code>) — ⓑ<br>
             · title: <code>Text</code>(<code>bodyLarge</code> · ellipsis) — ⓒ<br>
             · trailing: <code>TextButton</code>("차단 해제") — ⓓ
           </td>
@@ -478,7 +484,7 @@
           <td class="state-mini__aspect">토큰</td>
           <td>
             · color: <code>color-surface</code> (Scaffold + AppBar bg), <code>color-text-primary</code> (title · AppBar title), <code>color-divider</code> (avatar fallback bg), <code>color-primary</code> (TextButton fg "차단 해제"), <code>color-text-secondary</code> (avatar fallback icon)<br>
-            · radius: avatar 50% (CircleAvatar)<br>
+            · radius: avatar 20 (<code>MinglitAvatarImage.radius</code>)<br>
             · spacing: ListTile 기본 (좌우 16 · 상하 자동 64), AppBar 56<br>
             · typography: <code>bodyLarge</code> (16/400/1.45 · title), AppBar title 18/700
           </td>
@@ -775,6 +781,10 @@
         <tr>
           <th>File path</th>
           <td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/settings/blocked_partners_page.dart"><code>apps/app_user/lib/src/features/settings/blocked_partners_page.dart</code></a></td>
+        </tr>
+        <tr>
+          <th>Avatar widget</th>
+          <td><code>MinglitAvatarImage</code> (kit-shared) · <code>radius: 20</code> · <code>url: profile_image_url</code> · <code>fallbackIcon: Icons.store</code></td>
         </tr>
         <tr>
           <th>Repository</th>

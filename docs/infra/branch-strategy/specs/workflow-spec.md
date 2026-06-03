@@ -32,15 +32,15 @@
 
 ### `version-bump`
 
-`bump-version.sh` 실행 + commit. dev-staging 에서는 direct push 하지 않고 version-bump PR 안에서 사용한다.
+`bump-version.sh` 실행 + commit. 현재 active path 에서는 `dev-staging-dev-cut` 이 cut-time direct bump 로 수행하며, reusable 은 legacy/building block 으로 유지한다.
 
 | 항목 | 값 |
 |------|----|
 | Trigger | `workflow_call` |
-| Inputs | `version`: YY.MM.DD[-stage], optional `build_number`: version-bump PR number |
+| Inputs | `version`: YY.MM.DD[-stage], optional `build_number`: snapshot build number |
 | Outputs | `commit_sha`, `tag_name` |
 | 핵심 steps | `bash scripts/bump-version.sh {version} {build_number}` · commit |
-| Called by | `dev-staging-dev-cut-gate` |
+| Called by | legacy/manual bump flows. Active daily cut 은 `dev-staging-dev-cut` 내부에서 `scripts/bump-version.sh` 를 직접 실행 |
 
 `dev`/`rc`/`main` promotion 은 version bump commit 을 만들지 않는다. 앱/스토어/릴리즈 에셋에 노출되는 version 은 deploy workflow 가 `shared-version-metadata` 로 계산해 build command 에 주입한다.
 
@@ -52,11 +52,11 @@ Deploy artifact version metadata 를 계산하는 reusable workflow.
 |------|----|
 | Trigger | `workflow_call` |
 | Inputs | `channel`: dev\|rc\|main, `source-ref`: ref/SHA |
-| Outputs | `base_version`, `version_name`, `build_number`, `release_tag`, `release_name`, `pr_number`, `source_sha` |
-| 규칙 | `version_name = YY.MM.DD[-channel]`, `build_number = version-bump PR number` |
+| Outputs | `base_version`, `version_name`, `build_number`, `release_tag`, `release_name`, `snapshot_build`, `source_sha` (`pr_number` 는 backward-compatible alias) |
+| 규칙 | `version_name = YY.MM.DD[-channel]`, `build_number = dev-staging snapshot build number` |
 | Called by | `shared-android-deploy`, `shared-ios-deploy`, 후속 `rc-deploy` |
 
-source-ref 의 first-parent history 에서 latest version-bump squash commit 을 찾고, commit title/tag 에 포함된 version-bump PR number 를 build number 로 사용한다. source PR 번호는 release note/trace metadata 로만 사용한다.
+source-ref 의 first-parent history 에서 latest `vYY.MM.DD+BUILD-dev-staging` tag 또는 matching bump commit 을 찾고, `BUILD` 를 deploy build number 로 사용한다. source PR 번호는 release note/trace metadata 로만 사용한다.
 
 ### `shared-set-commit-status`
 
@@ -73,15 +73,15 @@ GitHub commit status 를 쓰는 low-level reusable workflow. Stage/signal mappin
 
 ### `set-dev-soak-status`
 
-Dev soak status write API. `workflow_call` 과 `workflow_dispatch` 를 모두 지원한다.
+Dev health status write API. `workflow_call` 과 `workflow_dispatch` 를 모두 지원한다. `dev-soak/*` prefix 는 legacy compatibility context 다.
 
 | 항목 | 값 |
 |------|----|
 | Trigger | `workflow_call` + `workflow_dispatch` |
-| Inputs | `signal`: backend-simulator\|real-device\|app-ai-review, `state`, `sha`, `target_url`, `description` |
-| Mapping | `backend-simulator` → `dev-soak/backend-simulator`; `real-device` → `dev-soak/real-device`; `app-ai-review` → `dev-soak/app-ai-review` |
+| Inputs | `signal`: backend-simulator\|cuj-user\|cuj-partner\|real-device\|app-ai-review, `state`, `sha`, `target_url`, `description` |
+| Mapping | `backend-simulator` → `dev-soak/backend-simulator`; `cuj-user` → `dev-soak/cuj-user`; `cuj-partner` → `dev-soak/cuj-partner`; `real-device` → `dev-soak/real-device`; `app-ai-review` → `dev-soak/app-ai-review` |
 | Steps | validate signal/state → context mapping → calls `shared-set-commit-status` |
-| Called by | `monitor-event-flow-*`, real-device workflow, AI agent, `dev-rc-cut-gate` |
+| Called by | `monitor-event-flow-*`, `monitor-dev-cuj`, real-device workflow, AI agent, `dev-rc-cut-gate` |
 
 ### `set-rc-soak-status`
 
@@ -117,7 +117,7 @@ Cut gate 추적용 GitHub Issue 를 생성/갱신/닫는 UI surface. Gate 판정
 | 항목 | 값 |
 |------|----|
 | Trigger | composite action (`.github/actions/cut-issue`) + `pull_request.closed` workflow |
-| Inputs | `operation`, `gate-key`, `subject-id`, `title`, `status`, `summary`, `details` |
+| Inputs | `operation`, `gate-key`, `subject-id`, `title`, `status`, `summary`, `details`, optional `extra-labels` |
 | Outputs | `issue-number`, `issue-url` |
 | Labels | `cut-gate`, `gate/{lane}`, `status/{waiting,blocked,ready,promoting,done}` |
 | Marker | `<!-- minglit:cut-gate:{gate-key}:{subject-id} -->` |
@@ -165,12 +165,12 @@ Cross-branch cherry-pick PR 자동 생성.
 
 | 항목 | 값 |
 |------|----|
-| Trigger | `push` to `dev-staging` (PR squash merge 후) |
-| Inputs | (from event) PR number, merged SHA |
-| Outputs | version-bump PR + tag `v{YY.MM.DD}+{BUILD_PR#}-dev-staging` after merge |
-| Steps | (1) skip generated bump/graphify commits (2) close stale open `version-bump/dev-staging/*` PRs (3) create version-bump PR from current snapshot (4) amend bump commit so Flutter build number equals that PR number (5) enable auto-merge (6) on bump PR merge, create dev-staging snapshot tag |
+| Trigger | `workflow_dispatch` |
+| Inputs | optional `candidate_ref` |
+| Outputs | candidate SHA + existing snapshot tag summary |
+| Steps | (1) fetch dev-staging/tags (2) resolve candidate (3) report whether candidate already has `v{YY.MM.DD}+{BUILD}-dev-staging` tag |
 
-`dev-staging-dev-cut-gate` 는 dev-staging merge 마다 실행되므로 cut tracking issue 를 만들지 않는다. 하루 1회 실제 promotion 을 만드는 `dev-staging-dev-cut` 이 tracking issue 를 `status/promoting` 으로 생성/갱신한다.
+`dev-staging-dev-cut-gate` 는 per-merge mutation 을 하지 않는다. 하루 1회 실제 promotion 을 만드는 `dev-staging-dev-cut` 이 version bump/tag, cut tracking issue, promotion PR 을 담당한다.
 
 ### dev-staging → dev
 
@@ -182,7 +182,7 @@ Cross-branch cherry-pick PR 자동 생성.
 | Inputs | optional `tag_name` (`v*-dev-staging`) |
 | Outputs | PR number (dev-staging → dev) or skip |
 | PR title | `ci(dev-staging-dev-cut): promote {tag_name} to dev` |
-| Steps | (1) 이전 `dev-staging-dev-cut` PR open 이면 skip + Slack (2) 가장 최근 `v*-dev-staging` tag SHA 조회, 또는 입력 `tag_name` 사용 (3) dev 가 그 SHA 를 이미 포함하면 skip ("no new commits") (4) `cut/dev-staging-dev/YYYY-MM-DD-{sha8}` promotion branch 를 tag SHA 에서 생성 (5) cut tracking issue 를 `status/promoting` 으로 갱신 (6) `gh pr create` (base=dev, head=`cut/dev-staging-dev/YYYY-MM-DD-{sha8}`) + issue close marker + auto-merge 활성화 (`rebase`, active dev ruleset 의 linear history 와 호환) |
+| Steps | (1) 이전 `dev-staging-dev-cut` PR open 이면 skip (2) 입력 `tag_name` 이 있으면 해당 tag 를 promote 대상으로 사용 (3) 입력이 없으면 `origin/dev-staging` HEAD 가 이미 dev 에 포함됐는지 확인 (4) HEAD 에 기존 snapshot tag 가 있으면 재사용 (5) tag 가 없으면 `YY.MM.DD-dev-staging` + `YYMMDDNN` build number 로 version bump commit 을 만들고 release bot 이 protected `dev-staging` 에 fast-forward push (6) 같은 commit 에 `vYY.MM.DD+YYMMDDNN-dev-staging` tag push (7) `cut/dev-staging-dev/YYYY-MM-DD-{sha8}` promotion branch 를 tag SHA 에서 생성 (8) `gh pr create` (base=dev, head=`cut/dev-staging-dev/YYYY-MM-DD-{sha8}`) (9) PR URL 을 포함한 cut tracking issue 를 `status/promoting` + `needs-swe` 로 갱신 (10) PR body 에 issue close marker 를 다시 쓰고 auto-merge 활성화 (`merge commit`, dev-staging snapshot ancestry 보존) |
 
 #### `dev-pr-gate`
 
@@ -199,12 +199,12 @@ Cross-branch cherry-pick PR 자동 생성.
 | Trigger | `schedule` (cut 직전, TBD) + `workflow_dispatch` |
 | Inputs | optional `candidate_sha` (default: latest `origin/dev` HEAD) |
 | Outputs | commit status `dev-rc-cut-pass` (success only) + `dev-soak/*` success confirmations + cut issue `gate/dev-rc` |
-| Steps | calls `shared-soak-gate` with candidate=`origin/dev`, min_soak_hours=24, required runs=`deploy-dev-event-flow-cron>=1` on matching SHA, failure context=`dev-soak/backend-simulator`, success context=`dev-soak/backend-simulator`, pass context=`dev-rc-cut-pass`; then upserts cut issue as `status/waiting` or `status/ready` |
+| Steps | calls `shared-soak-gate` with candidate=`origin/dev`, min_soak_hours=0, required runs=`deploy-dev-event-flow-cron>=1` and `monitor-dev-cuj>=1` on matching SHA, failure contexts=`dev-soak/backend-simulator` + `dev-soak/cuj-*`, success contexts=required `dev-soak/*`, pass context=`dev-rc-cut-pass`; then upserts cut issue as `status/waiting` or `status/ready` |
 | Failure path | 조건 미충족 또는 required success evidence 누락이면 `dev-rc-cut-pass` 를 쓰지 않는다. 실패를 발견한 monitor/AI agent 가 이미 `dev-soak/*` failure 를 쓴다 |
 
 > **No auto-revert** — snapshot 모델: 실패 = no `dev-rc-cut-pass`, dev keeps moving, 새 fix 가 자연스럽게 다음 dev-staging-dev-cut 후 새 candidate 로 검증됨.
 > **Naming** — `dev-rc-cut-pass` 가 canonical RC eligibility marker 이다. `rc-eligible` 은 현재 workflow/status 명칭이 아니다.
-> **SSOT** — dev soak 판정은 [../dev-soak-status-model.md](../dev-soak-status-model.md) 의 commit status + run history 를 따른다. GitHub Issue 는 사람이 보는 incident/audit surface 다.
+> **SSOT** — dev health / RC eligibility 판정은 [../promotion-contract.md](../promotion-contract.md) 와 [../dev-soak-status-model.md](../dev-soak-status-model.md) 의 commit status + run history 를 따른다. GitHub Issue 는 사람이 보는 incident/audit surface 다.
 > **True evidence** — failure status/issue 가 없다는 것은 `unknown` 이다. pass marker 는 required success status 와 run history 가 모두 존재할 때만 쓴다.
 
 #### `dev-deploy`
@@ -224,6 +224,15 @@ Cross-branch cherry-pick PR 자동 생성.
 | Branch/env | dev 를 계속 관찰. RC cut 후에는 RC env/Supabase branch 도 pre-main 검증 signal 로 사용 |
 | Outputs | event-flow simulation signal, `set-dev-soak-status(signal=backend-simulator,state=failure)`, issue/alert |
 | Note | fixed-time small tick. actor/user/partner/event sampling 만 랜덤화하고, party/event 는 partner EF, 신청 대상은 `user-event-feed` 로 만든다 |
+
+#### `monitor-dev-cuj`
+
+| 항목 | 값 |
+|------|----|
+| Trigger | `push` to `dev` + `workflow_dispatch` |
+| Branch/env | latest dev commit. User/partner app CUJ 를 각각 실행 |
+| Outputs | `set-dev-soak-status(signal=cuj-user|cuj-partner,state=success|failure)`, issue/alert with failed CUJ files |
+| Note | CUJ runner 는 첫 실패에서 중단하지 않고 모든 CUJ file 을 실행한 뒤 실패 목록을 aggregate 한다 |
 
 ### rc
 
@@ -246,7 +255,7 @@ Cross-branch cherry-pick PR 자동 생성.
 
 #### RC hotfix post-merge behavior
 
-RC branch 에 version bump commit/tag 를 만들던 이전 설계. 최신 정책에서는 RC hotfix merge 후에도 branch state 를 바꾸지 않는다. RC deploy artifact version 은 `shared-version-metadata(channel=rc)` 가 latest version-bump PR number 로 계산한다.
+RC branch 에 version bump commit/tag 를 만들던 이전 설계. 최신 정책에서는 RC hotfix merge 후에도 branch state 를 바꾸지 않는다. RC deploy artifact version 은 `shared-version-metadata(channel=rc)` 가 latest dev-staging snapshot build number 로 계산한다.
 
 #### `rc-deploy`
 
@@ -320,8 +329,8 @@ RC branch 에 version bump commit/tag 를 만들던 이전 설계. 최신 정책
        ↓
 [dev-staging-pr-gate] ──auto-merge──▶ dev-staging push
                                                 ↓
-                                         [dev-staging-dev-cut-gate]
-                                                ↓ tag v{YY.MM.DD}+{BUILD_PR#}-dev-staging
+                                         [daily dev-staging-dev-cut]
+                                                ↓ direct bump + tag v{YY.MM.DD}+{BUILD}-dev-staging
 
 [daily KST 02:00]
     ↓
@@ -371,8 +380,8 @@ Promotion/deploy entry workflows support `workflow_dispatch` dry-run where mutat
 
 | Workflow | Dry-run behavior |
 |----------|------------------|
-| `dev-staging-dev-cut` | selects `v*-dev-staging`, computes cut branch, skips branch push/PR/auto-merge |
-| `dev-rc-cut-gate` | evaluates soak/run/status inputs, skips `dev-soak/*` and `dev-rc-cut-pass` status writes |
+| `dev-staging-dev-cut` | computes/reuses dev-staging snapshot tag, computes cut branch, skips version bump/tag/branch push/PR/auto-merge |
+| `dev-rc-cut-gate` | evaluates dev health run/status inputs, skips `dev-soak/*` and `dev-rc-cut-pass` status writes |
 | `dev-rc-cut` | selects source SHA/RC week, skips RC branch push/promo tag |
 | `rc-main-cut-gate` | selects RC branch and evaluates soak, skips `rc-main-cut-pass` status write |
 | `rc-main-cut` | selects RC branch, skips main PR/auto-merge |
@@ -397,8 +406,8 @@ Use dry-run before connecting new deploy backends or changing branch rulesets. D
 ## 관련
 
 - [../branch-flow.md](../branch-flow.md) — workflow 가 흘러가는 branch 그림
-- [../test-strategy.md](../test-strategy.md) — pr-gate-core 와 dev soak signal 배치
-- [../dev-soak-status-model.md](../dev-soak-status-model.md) — dev soak commit status / run history SSOT
+- [../test-strategy.md](../test-strategy.md) — pr-gate-core 와 dev health signal 배치
+- [../dev-soak-status-model.md](../dev-soak-status-model.md) — legacy `dev-soak/*` commit status / run history SSOT
 - [../error-detection.md](../error-detection.md) — auto-issue 의 priority 와 채널
 - [../life-of-flag.md](../life-of-flag.md) — flag lifecycle
 - [../versioning.md](../versioning.md) — source snapshot version + deploy metadata

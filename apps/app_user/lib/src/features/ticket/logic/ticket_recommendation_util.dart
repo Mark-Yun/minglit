@@ -61,7 +61,7 @@ class TicketRecommendationUtil {
     required Map<String, bool> balanceStatus,
   }) {
     if (balanceStatus[ticket.id] == false) {
-      return const _TicketEligibility.ineligible('성비 조절 중');
+      return const _TicketEligibility.ineligible('현재 모집 상황에 따라 선택할 수 없어요.');
     }
 
     if (userProfile == null) {

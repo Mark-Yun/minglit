@@ -696,6 +696,14 @@ body.dark-mode .visual-gallery .chip-bar__divider {
     </thead>
     <tbody>
       <tr>
+        <td>2026-06-01</td>
+        <td>1.1</td>
+        <td>codex</td>
+        <td>
+          <strong>Issue #2399 avatar drift sync</strong> — authenticated AppBar profile action을 live code의 <code>IconButton(icon: MinglitAvatarImage(radius: 14, url, fallbackIconSize: 14))</code> 기준으로 갱신. 기존 <code>CircleAvatar</code> 표현은 Fix #1936 이후 stale.
+        </td>
+      </tr>
+      <tr>
         <td>2026-05-01</td>
         <td>1.0</td>
         <td>mark-yun</td>
@@ -774,7 +782,7 @@ body.dark-mode .visual-gallery .chip-bar__divider {
       │  ├─ actions: <b>BugReportAction</b> (dev)
       │  │           <b>IconButton</b> search (tooltip "검색")
       │  │           <b>IconButton</b> notifications (tooltip "알림")  <i>(authenticated)</i>
-      │  │           <b>CircleAvatar</b> 28px profile (wrap IconButton tooltip "마이페이지")  <i>(authenticated)</i>
+      │  │           <b>IconButton</b>(icon: MinglitAvatarImage radius 14, tooltip "마이페이지")  <i>(authenticated)</i>
       │  │           <b>IconButton</b> person_outline (tooltip "마이페이지")  <i>(unauthenticated)</i>
       │  └─ backgroundColor: surface
       │
@@ -872,8 +880,8 @@ body.dark-mode .visual-gallery .chip-bar__divider {
    │  ├─ [dev] <b>BugReportAction</b> (visibleForTesting)
    │  ├─ <b>IconButton</b>(Icons.search, 22, tooltip "검색") — 40×40 hit zone
    │  ├─ <b>IconButton</b>(Icons.notifications_outlined, 22, tooltip "알림") <i>— authenticated only</i>
-   │  └─ <b>CircleAvatar</b>(28, wrap tooltip "마이페이지") <i>or</i> <b>IconButton</b>(person_outline, 22, tooltip "마이페이지")
-   │     <i>— authenticated → 프로필 사진 / unauthenticated → 사람 아이콘</i>
+   │  └─ <b>IconButton</b>(icon: MinglitAvatarImage radius 14, tooltip "마이페이지") <i>or</i> <b>IconButton</b>(person_outline, 22, tooltip "마이페이지")
+   │     <i>— authenticated → 프로필 사진 또는 fallback icon / unauthenticated → 사람 아이콘</i>
    │
    └─ Padding(right: <i>spacing-small = 8px</i>)
 
@@ -894,7 +902,7 @@ body.dark-mode .visual-gallery .chip-bar__divider {
         <tr><td>—</td><td>AppBar 외부</td><td>height 56 · 풀폭</td><td>left: <code>spacing-screen-edge (16px)</code> · right: <code>spacing-small (8px)</code> · bottom: <code>1px color-divider</code></td></tr>
         <tr><td>㉠</td><td>Logo</td><td>좌측 정렬 · 자연 너비 (flex 0)</td><td>height: 36px · width: auto · 좌측 가장자리에서 16px</td></tr>
         <tr><td>—</td><td>Spacer</td><td>flex grow (남는 공간 흡수)</td><td>로고 우측 끝 ↔ 액션 좌측 끝 사이 가변 폭</td></tr>
-        <tr><td>㉡</td><td>Actions</td><td>우측 끝 정렬 · margin-left: auto로 push</td><td>icon 사이 gap: 0 (각 IconButton의 40×40 hit zone에 자체 padding) · icon 시각 사이즈: 22 · avatar: 28</td></tr>
+        <tr><td>㉡</td><td>Actions</td><td>우측 끝 정렬 · margin-left: auto로 push</td><td>icon 사이 gap: 0 (각 IconButton의 40×40 hit zone에 자체 padding) · icon 시각 사이즈: 22 · avatar: MinglitAvatarImage radius 14 (28×28)</td></tr>
       </tbody>
     </table>
   </section>
@@ -1732,6 +1740,7 @@ active 상태: bg=primary 0.08 · border=primary · color=primary · w600</div>
     <table class="ref">
       <tbody>
         <tr><th style="width: 200px;">Widget</th><td><code>HomePage</code> — <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/features/home/home_page.dart"><code>apps/app_user/lib/src/features/home/home_page.dart</code></a></td></tr>
+        <tr><th>AppBar avatar widget</th><td><code>MinglitAvatarImage</code> (kit-shared) inside <code>IconButton</code> · <code>radius: 14</code> · <code>url: user.userMetadata['avatar_url']</code> · <code>fallbackIconSize: 14</code></td></tr>
         <tr><th>Route</th><td><code>HomeRoute</code> · <code>/</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_user/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
         <tr><th>Feed provider</th><td><code>recommendationFeedProvider</code> — pgvector 기반 개인화 (loading / data / error AsyncValue 분기 — 5 page state로 노출)</td></tr>
         <tr><th>Auth gate</th><td><code>currentUserProvider</code> — null 시 guest state 노출</td></tr>

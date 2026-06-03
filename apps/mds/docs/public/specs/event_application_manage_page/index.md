@@ -53,17 +53,17 @@ AppBar(가운데 '신청관리' + 하단 3탭) + 탭별 body + 하단 Navigation
 
 ## AppBar sub-anatomy
 
-파트너 앱 simpleAppBar — centered title + 우측 actions(info). 글로벌 일관 패턴이라 모든 파트너 화면이 동일 구조를 따른다 (info icon은 화면별 컨텍스트 도움말 sheet 트리거).
+현재 적용 화면(홈·파티 관리·신청관리·정산)의 simpleAppBar 도움말 패턴 — centered title + 우측 actions(info). 이 화면들은 같은 AppBar info 도움말 구조를 사용한다.
 
 | Region | Alignment | Notes |
 |---|---|---|
 | ① Title (centered) | 중앙 정렬 · 1줄 | "신청관리" · --typography-font-size-app-bar-title 18 · w600 · color-text-primary. |
-| ② Info action (trailing) | 우측 · 40×40 hit-region | info_outline 22×22 · 탭 시 도움말 bottom sheet 진입 (State 7). 파트너 앱 모든 화면에 동일 패턴 적용 — 각 화면별 컨텍스트 도움말 콘텐츠는 호출 측에서 정의. |
+| ② Info action (trailing) | 우측 · 40×40 hit-region | info_outline 22×22 · 탭 시 도움말 bottom sheet 진입 (State 7). 현재 적용 화면은 홈·파티 관리·신청관리·정산이며, 각 화면별 컨텍스트 도움말 콘텐츠는 호출 측에서 정의한다. |
 | — | AppBar bg | --color-surface · surfaceTint transparent · border-bottom 없음. |
 
 ## Help bottom sheet sub-anatomy _(MinglitHelpSheet 컴포넌트 후보)_
 
-info 아이콘 탭 시 노출되는 컨텍스트 도움말 sheet. 파트너 앱 모든 주요 화면에서 같은 chrome 재사용 — 화면별 sections 콘텐츠만 다름.
+info 아이콘 탭 시 노출되는 컨텍스트 도움말 sheet. 현재 적용 화면(홈·파티 관리·신청관리·정산)은 같은 chrome을 재사용하며, 화면별 sections 콘텐츠만 다름.
 
 | Region | Alignment | Notes |
 |---|---|---|
@@ -180,12 +180,12 @@ info 아이콘 탭 시 노출되는 컨텍스트 도움말 sheet. 파트너 앱 
 
 | 항목 | 내용 |
 |---|---|
-| 조건 | AppBar의 info 아이콘 탭 → 화면 위 bottom sheet 슬라이드 업. 파트너 앱 전체 일관 패턴 (모든 주요 화면에서 info → 컨텍스트 도움말). |
+| 조건 | AppBar의 info 아이콘 탭 → 화면 위 bottom sheet 슬라이드 업. 현재 적용 화면(홈·파티 관리·신청관리·정산)의 일관 패턴 (info → 컨텍스트 도움말). |
 | 사용자 액션 | ① "확인" 버튼 탭 — sheet dismiss, 원래 화면으로 복귀 (primary path).② handle 드래그 다운 / scrim 탭 — 동일하게 dismiss (gesture path · 보조).③ sheet 내부 스크롤 — 도움말 항목이 많을 때 세로 스크롤 (max-height 75% · scrollable body · CTA는 sheet 하단 고정). |
 | 에지케이스 | · 도움말 항목이 길어 max-height 초과 시 sheet 내부 스크롤 (scaffold body는 잠금).· keyboard가 올라오는 입력 시나리오는 본 sheet에 없음 — 입력 도구 X.· 다중 sheet 진입 (info 안에서 또 info 등) 금지 — sheet 위 sheet stacking 안 함. |
 | 컴포넌트 (제안) | · MinglitHelpSheet (mds_core 신규 컴포넌트 후보) — 파트너 앱 일관 패턴화.· props: title: String · sections: List<HelpSection>.· 화면별 도움말 내용은 호출 측에서 정의 — sheet 컴포넌트는 chrome만 책임.· 진입: showModalBottomSheet(isScrollControlled · barrierColor · shape rounded top). |
 | 토큰 | · scrim: rgba(0,0,0,0.45)· sheet bg --color-background · 상단 모서리 radius-card· handle 36×4 · radius 2 · --color-divider· header 16/700 primary · CTA "확인" — bottom sticky · height 48 · partner-primary filled · 15/700 white · margin medium· section title 14/700 primary · section body 13 secondary · line-height 1.55· max-height 75vh |
-| 노트 | 📝 화면별 sections 콘텐츠(도움말 Q&A)는 추후 별도 이슈로 디자인 결정 예정. 파트너 앱 모든 화면이 동일 info 아이콘 → bottom sheet 패턴을 따른다. |
+| 노트 | 📝 화면별 sections 콘텐츠(도움말 Q&A)는 호출 측에서 정의한다. 현재 적용 화면은 홈·파티 관리·신청관리·정산이며, 신규·리뉴얼 파트너 화면은 동일 info 아이콘 → bottom sheet 패턴을 채택한다. |
 
 🔄
 

@@ -1,18 +1,14 @@
 part of 'event_detail_page.dart';
 
-class _EntryConditionsSection extends ConsumerWidget {
+class _EntryConditionsSection extends StatelessWidget {
   const _EntryConditionsSection({required this.event});
 
   final Event event;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final entryGroups = event.entryGroups ?? [];
-    final countsAsync = ref.watch(
-      entryGroupParticipantCountsProvider(event.id),
-    );
-    final counts = countsAsync.value ?? {};
 
     // Fix #172: 다른 섹션(Section 4, 5)과 동일하게 좌우 패딩 추가
     return MinglitSection(
@@ -50,7 +46,6 @@ class _EntryConditionsSection extends ConsumerWidget {
                   (sum, t) => sum + t.quantity,
                 );
                 final showGauge = matchingTickets.isNotEmpty;
-                final participantCount = counts[group.id] ?? 0;
 
                 return Stack(
                   children: [
@@ -65,21 +60,9 @@ class _EntryConditionsSection extends ConsumerWidget {
                           color: theme.colorScheme.outlineVariant,
                         ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          EntryGroupDetail(
-                            group: group.toTemplate(),
-                            showVerificationBadges: false,
-                          ),
-                          const SizedBox(height: MinglitSpacing.xsmall),
-                          Text(
-                            '$participantCount명 참여',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
+                      child: EntryGroupDetail(
+                        group: group.toTemplate(),
+                        showVerificationBadges: false,
                       ),
                     ),
                     if (showGauge)
