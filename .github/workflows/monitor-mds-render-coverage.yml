@@ -84,7 +84,7 @@ jobs:
         run: |
           rm -rf docs/infra/mds-emulator-render
           mkdir -p docs/infra/mds-emulator-render
-          touch docs/infra/mds-emulator-render/.artifact-root
+          touch docs/infra/mds-emulator-render/artifact-root.txt
 
       - name: Run render shard on Android emulator
         uses: reactivecircus/android-emulator-runner@v2
@@ -102,7 +102,7 @@ jobs:
 
             rm -rf "$OUTPUT_ROOT"
             mkdir -p "$OUTPUT_ROOT"
-            touch "$OUTPUT_ROOT/.artifact-root"
+            touch "$OUTPUT_ROOT/artifact-root.txt"
 
             cd "$APP_DIR"
 
