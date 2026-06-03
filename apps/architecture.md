@@ -77,6 +77,20 @@ UI (ref.watch, AsyncValue 패턴으로 loading/error 처리)
 Coordinator (routing or state 변경)
 ```
 
+### 3.1 Optimistic UI Authority
+
+Optimistic UI is allowed only as a temporary local projection of an Edge
+Function request. The EF response is the authoritative state:
+
+- On success, reconcile local state to the EF response payload, not to the
+  original optimistic payload.
+- On failure, restore the previous state and surface a `MinglitUserException`
+  or `MinglitSystemException` through the standard feedback path.
+- If the EF returns a canonical status, timestamp, capacity decision, payment
+  state, or permission result, overwrite speculative client state with it.
+- Direct Supabase writes remain forbidden; optimistic controllers must call a
+  Repository method that invokes an EF or a documented read-only query.
+
 ## 4. Provider Organization
 
 | Provider 타입 | 위치 |
@@ -121,6 +135,29 @@ Riverpod 패턴: `AsyncValueMinglitX<T>.showMinglitError(context)` / `guardMingl
 | Configuration | `url_config.dart`, `iamport_config.dart` |
 | Location | `location_service.dart` |
 | Utility | `age_util`, `refund_calculator`, `ticket_crypto` 등 도메인 특화 |
+
+## 7. Release Build Protection
+
+Flutter release artifacts must not carry elevated Supabase credentials. Client
+builds may receive only publishable/public keys such as
+`SUPABASE_PUBLISHABLE_KEY`; service-role JWTs, `sb_secret_...`, and
+`SUPABASE_*_SECRET_KEY` values are server-only.
+
+Android release builds use Dart obfuscation and split debug info:
+
+```bash
+flutter build apk --release --obfuscate --split-debug-info=build/symbols/<stage>
+flutter build appbundle --release --obfuscate --split-debug-info=build/symbols/<stage>
+```
+
+CI enforcement:
+
+- `.github/workflows/pr-gate.yml` builds release APK/AAB for artifact secret
+  scanning with obfuscation enabled.
+- `.github/workflows/shared-android-deploy.yml` builds deploy artifacts with
+  obfuscation and uploads `build/symbols` as a workflow artifact.
+- `.github/scripts/scan-build-artifact-secrets.py` remains the binary/source
+  safety net for `service_role` JWT and `sb_secret_...` leakage.
 
 ## 관련
 

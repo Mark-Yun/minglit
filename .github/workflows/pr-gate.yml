@@ -619,6 +619,8 @@ jobs:
           flutter build apk \
             --flavor dev \
             --release \
+            --obfuscate \
+            --split-debug-info=build/symbols/dev \
             --build-number=${{ github.run_number }} \
             --dart-define=SUPABASE_URL="$SUPABASE_DEV_URL" \
             --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_DEV_PUBLISHABLE_KEY" \
@@ -637,6 +639,8 @@ jobs:
           flutter build appbundle \
             --flavor dev \
             --release \
+            --obfuscate \
+            --split-debug-info=build/symbols/dev \
             --build-number=${{ github.run_number }} \
             --dart-define=SUPABASE_URL="$SUPABASE_DEV_URL" \
             --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_DEV_PUBLISHABLE_KEY" \

@@ -166,11 +166,50 @@ jobs:
 
       - name: Build APK (Dev)
         if: inputs.deploy-stage == 'dev'
-        run: flutter build apk --flavor dev --release --build-name=${{ needs.version.outputs.version_name }} --build-number=${{ needs.version.outputs.build_number }} --dart-define=APP_VERSION=${{ needs.version.outputs.version_name }} --dart-define=APP_CHANNEL=dev --dart-define=SOURCE_BRANCH=dev --dart-define=GIT_SHA=${{ needs.version.outputs.source_sha }} --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_DEV_URL }} --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }} --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN_FLUTTER }} --dart-define=ENVIRONMENT=development --dart-define=JUSO_CONFIRM_KEY=${{ secrets.JUSO_CONFIRM_KEY }}
+        run: |
+          flutter build apk \
+            --flavor dev \
+            --release \
+            --obfuscate \
+            --split-debug-info=build/symbols/dev \
+            --build-name=${{ needs.version.outputs.version_name }} \
+            --build-number=${{ needs.version.outputs.build_number }} \
+            --dart-define=APP_VERSION=${{ needs.version.outputs.version_name }} \
+            --dart-define=APP_CHANNEL=dev \
+            --dart-define=SOURCE_BRANCH=dev \
+            --dart-define=GIT_SHA=${{ needs.version.outputs.source_sha }} \
+            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_DEV_URL }} \
+            --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }} \
+            --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN_FLUTTER }} \
+            --dart-define=ENVIRONMENT=development \
+            --dart-define=JUSO_CONFIRM_KEY=${{ secrets.JUSO_CONFIRM_KEY }}
 
       - name: Build AAB (Main)
         if: inputs.deploy-stage == 'main'
-        run: flutter build appbundle --flavor prod --release --build-name=${{ needs.version.outputs.version_name }} --build-number=${{ needs.version.outputs.build_number }} --dart-define=APP_VERSION=${{ needs.version.outputs.version_name }} --dart-define=APP_CHANNEL=main --dart-define=SOURCE_BRANCH=main --dart-define=GIT_SHA=${{ needs.version.outputs.source_sha }} --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_MAIN_URL }} --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }} --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN_FLUTTER }} --dart-define=ENVIRONMENT=production --dart-define=JUSO_CONFIRM_KEY=${{ secrets.JUSO_CONFIRM_KEY }}
+        run: |
+          flutter build appbundle \
+            --flavor prod \
+            --release \
+            --obfuscate \
+            --split-debug-info=build/symbols/main \
+            --build-name=${{ needs.version.outputs.version_name }} \
+            --build-number=${{ needs.version.outputs.build_number }} \
+            --dart-define=APP_VERSION=${{ needs.version.outputs.version_name }} \
+            --dart-define=APP_CHANNEL=main \
+            --dart-define=SOURCE_BRANCH=main \
+            --dart-define=GIT_SHA=${{ needs.version.outputs.source_sha }} \
+            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_MAIN_URL }} \
+            --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }} \
+            --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN_FLUTTER }} \
+            --dart-define=ENVIRONMENT=production \
+            --dart-define=JUSO_CONFIRM_KEY=${{ secrets.JUSO_CONFIRM_KEY }}
+
+      - name: Upload obfuscation symbols
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-${{ inputs.app-name }}-${{ inputs.deploy-stage }}-symbols-${{ needs.version.outputs.version_name }}
+          path: ${{ inputs.app-directory }}/build/symbols
+          if-no-files-found: warn
 
       - name: Generate release bot token
         id: release-bot
