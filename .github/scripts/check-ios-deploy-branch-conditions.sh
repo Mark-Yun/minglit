@@ -3,6 +3,10 @@ set -euo pipefail
 
 ACTION_FILE=".github/actions/ios-deploy/action.yml"
 WORKFLOW_FILE=".github/workflows/shared-ios-deploy.yml"
+APP_PUBSPECS=(
+  "apps/app_user/pubspec.yaml"
+  "apps/app_partner/pubspec.yaml"
+)
 
 require_file() {
   local file="$1"
@@ -14,11 +18,45 @@ require_file() {
 
 require_file "$ACTION_FILE"
 require_file "$WORKFLOW_FILE"
+for pubspec in "${APP_PUBSPECS[@]}"; do
+  require_file "$pubspec"
+done
 
 count_matches() {
   local pattern="$1"
   local file="$2"
   (grep -nE "$pattern" "$file" || true) | wc -l | tr -d ' '
+}
+
+assert_flutter_spm_disabled() {
+  local pubspec="$1"
+  if ! awk '
+    /^flutter:[[:space:]]*$/ {
+      in_flutter = 1
+      in_config = 0
+      next
+    }
+    in_flutter && /^[^[:space:]#][^:]*:/ {
+      in_flutter = 0
+      in_config = 0
+    }
+    in_flutter && /^[[:space:]]{2}config:[[:space:]]*$/ {
+      in_config = 1
+      next
+    }
+    in_config && /^[[:space:]]{2}[^[:space:]#][^:]*:/ {
+      in_config = 0
+    }
+    in_config && /^[[:space:]]{4}enable-swift-package-manager:[[:space:]]*false([[:space:]]*(#.*)?)?$/ {
+      found = 1
+    }
+    END {
+      exit found ? 0 : 1
+    }
+  ' "$pubspec"; then
+    echo "ERROR: $pubspec must set flutter.config.enable-swift-package-manager: false for CocoaPods-based iOS deploy"
+    exit 1
+  fi
 }
 
 # Regression guard: dev-staging (and any non-main branch) must go through
@@ -82,4 +120,8 @@ if (( direct_build_invocation_count > 0 )); then
   exit 1
 fi
 
-echo "OK: iOS deploy workflow contract validated (branch, timeout, heartbeat, exit-code)"
+for pubspec in "${APP_PUBSPECS[@]}"; do
+  assert_flutter_spm_disabled "$pubspec"
+done
+
+echo "OK: iOS deploy workflow contract validated (branch, timeout, heartbeat, exit-code, SPM disabled)"

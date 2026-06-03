@@ -1,9 +1,21 @@
 name: sync-pr-branches
 
-# Invoked by post-merge.yml on push to dev. workflow_dispatch retained for manual reruns.
+# Invoked by post-merge.yml on push to dev-staging. workflow_dispatch retained for manual reruns.
 on:
   workflow_call:
+    inputs:
+      base_ref:
+        description: PR base branch to scan for auto-merge branch updates.
+        required: false
+        type: string
+        default: dev-staging
   workflow_dispatch:
+    inputs:
+      base_ref:
+        description: PR base branch to scan for auto-merge branch updates.
+        required: false
+        type: string
+        default: dev-staging
 
 # Fix #1972: permissions moved to job level (minimum necessary scope)
 # Workflow-level permissions removed to avoid granting write access to all jobs.
@@ -11,7 +23,7 @@ on:
 # Fix #2634: cancel-in-progress causes every run to be cancelled when dev merges happen in rapid succession.
 # update-branch is idempotent — duplicate runs are safe; cancellation is harmful.
 concurrency:
-  group: ${{ github.workflow }}
+  group: ${{ github.workflow }}-${{ inputs.base_ref || 'dev-staging' }}
   cancel-in-progress: false
 
 jobs:
@@ -30,20 +42,22 @@ jobs:
           # created with conclusion=action_required and never execute). PAT-authed
           # pushes count as real-user events and trigger downstream CI normally.
           GH_TOKEN: ${{ secrets.GH_PAT_VERSION_BUMP }}
+          BASE_REF: ${{ inputs.base_ref }}
         run: |
           REPO="${{ github.repository }}"
+          BASE_REF="${BASE_REF:-dev-staging}"
           # Fix #1972: cap on update *attempts* (not enumeration) so every PR's
           # mergeStateStatus is visible. PRs beyond the cap are handled next push.
           MAX_UPDATES=20
           UPDATE_COUNT=0
 
-          echo "Checking open PRs with auto-merge enabled..."
+          echo "Checking open PRs with auto-merge enabled for base ${BASE_REF}..."
 
           while IFS= read -r PR_NUM; do
             [ -z "$PR_NUM" ] && continue
 
             if [ "$UPDATE_COUNT" -ge "$MAX_UPDATES" ]; then
-              echo "⚠️  WARNING: reached update cap of $MAX_UPDATES — remaining PRs handled on next dev push"
+              echo "⚠️  WARNING: reached update cap of $MAX_UPDATES — remaining PRs handled on next ${BASE_REF} push"
               break
             fi
 
@@ -59,6 +73,6 @@ jobs:
             else
               echo "PR #$PR_NUM is $MERGE_STATE — skipping"
             fi
-          done < <(gh pr list --repo "$REPO" --base dev --state open --limit 100 \
+          done < <(gh pr list --repo "$REPO" --base "$BASE_REF" --state open --limit 100 \
             --json number,autoMergeRequest \
             --jq '.[] | select(.autoMergeRequest != null) | .number')

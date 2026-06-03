@@ -160,6 +160,18 @@ void main() {
       expect(group.createdAt, isNotNull);
     });
 
+    test('createFromTemplate can preserve a source id for EF remapping', () {
+      final template = EntryGroupTemplate.fromJson({
+        'id': 'egt_1',
+        'party_id': 'party_1',
+        'label': 'VIP',
+      });
+
+      final group = EntryGroup.createFromTemplate(template, id: template.id);
+
+      expect(group.id, 'egt_1');
+    });
+
     test('toTemplate converts to EntryGroupTemplate', () {
       final group = EntryGroup.fromJson(groupJson());
       final template = group.toTemplate();

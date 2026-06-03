@@ -88,6 +88,26 @@ function selectLocationRoute(partnerId = TEST_PARTNER_ID): FetchRoute {
   };
 }
 
+function selectLocationNotFoundRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/locations") &&
+      req.url.includes("select=") &&
+      req.method === "GET",
+    handler: () => jsonResponse(null),
+  };
+}
+
+function selectLocationErrorRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/locations") &&
+      req.url.includes("select=") &&
+      req.method === "GET",
+    handler: () => jsonResponse({ message: "load error" }, { status: 500 }),
+  };
+}
+
 function insertLocationRoute(id = TEST_LOCATION_ID): FetchRoute {
   return {
     matcher: (req) =>
@@ -96,11 +116,27 @@ function insertLocationRoute(id = TEST_LOCATION_ID): FetchRoute {
   };
 }
 
+function insertLocationErrorRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/locations") && req.method === "POST",
+    handler: () => jsonResponse({ message: "insert error" }, { status: 500 }),
+  };
+}
+
 function updateLocationRoute(): FetchRoute {
   return {
     matcher: (req) =>
       req.url.includes("/rest/v1/locations") && req.method === "PATCH",
     handler: () => new Response(null, { status: 200 }),
+  };
+}
+
+function updateLocationErrorRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/locations") && req.method === "PATCH",
+    handler: () => jsonResponse({ message: "update error" }, { status: 500 }),
   };
 }
 
@@ -243,6 +279,77 @@ function updateTicketTemplateRoute(): FetchRoute {
   };
 }
 
+function selectTicketTemplateByIdRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/ticket_templates") &&
+      req.url.includes("select=") &&
+      req.method === "GET",
+    handler: () =>
+      jsonResponse({ id: "ticket-template-001", party_id: TEST_PARTY_ID }),
+  };
+}
+
+function selectTicketTemplateNotFoundRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/ticket_templates") &&
+      req.url.includes("select=") &&
+      req.method === "GET",
+    handler: () => jsonResponse(null),
+  };
+}
+
+function selectTicketTemplateErrorRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/ticket_templates") &&
+      req.url.includes("select=") &&
+      req.method === "GET",
+    handler: () => jsonResponse({ message: "load error" }, { status: 500 }),
+  };
+}
+
+function insertSingleTicketTemplateRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/ticket_templates") && req.method === "POST",
+    handler: () => jsonResponse({ id: "ticket-template-001" }),
+  };
+}
+
+function insertSingleTicketTemplateErrorRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/ticket_templates") && req.method === "POST",
+    handler: () => jsonResponse({ message: "insert error" }, { status: 500 }),
+  };
+}
+
+function deleteTicketTemplateRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/ticket_templates") && req.method === "DELETE",
+    handler: () => new Response(null, { status: 200 }),
+  };
+}
+
+function updateTicketTemplateErrorRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/ticket_templates") && req.method === "PATCH",
+    handler: () => jsonResponse({ message: "update error" }, { status: 500 }),
+  };
+}
+
+function deleteTicketTemplateErrorRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/ticket_templates") && req.method === "DELETE",
+    handler: () => jsonResponse({ message: "delete error" }, { status: 500 }),
+  };
+}
+
 function insertTicketTemplatesRoute(): FetchRoute {
   return {
     matcher: (req) =>
@@ -273,7 +380,8 @@ Deno.test({
 });
 
 Deno.test({
-  name: "GET returns 405 (requires auth — wrapper checks auth before handler checks method)",
+  name:
+    "GET returns 405 (requires auth — wrapper checks auth before handler checks method)",
   fn: async () => {
     const { fetchMock } = createFetchMock([authRoute()]);
     await withEnv(ENV, async () => {
@@ -351,7 +459,7 @@ Deno.test({
         const res = await handler(req);
         assertEquals(res.status, 400);
         const body = await readJson(res);
-        assertEquals(body.error, "Missing or invalid \"action\" field");
+        assertEquals(body.error, 'Missing or invalid "action" field');
       });
     });
   },
@@ -966,6 +1074,78 @@ Deno.test({
 
     assertEquals(entryGroupInserts.length, 1);
     assertEquals(entryGroupUpdates.length, 0);
+    assertEquals(
+      JSON.parse(entryGroupInserts[0].body ?? "[]"),
+      [
+        {
+          party_id: TEST_PARTY_ID,
+          label: "신규 그룹",
+          gender: "female",
+          birth_year_min: 1995,
+          birth_year_max: 2005,
+          required_verification_ids: [],
+        },
+      ],
+    );
+  },
+});
+
+Deno.test({
+  name: "update: entry_group_templates with temporary id inserts new row",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock, calls } = createFetchMock([
+      authRoute(),
+      selectPartyRoute(),
+      permRoute(),
+      selectEntryGroupTemplatesRoute(["egt_existing"]),
+      updateEntryGroupTemplateRoute(),
+      insertEntryGroupTemplatesRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update",
+          party_id: TEST_PARTY_ID,
+          entry_group_templates: [
+            {
+              id: "egt_existing",
+              label: "기존 그룹",
+              gender: "male",
+              birth_year_min: 1990,
+              birth_year_max: 2000,
+              required_verification_ids: [],
+            },
+            {
+              id: "eg_temp_1",
+              label: "신규 그룹",
+              gender: "female",
+              birth_year_min: 1995,
+              birth_year_max: 2005,
+              required_verification_ids: [],
+            },
+          ],
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+      });
+    });
+
+    const entryGroupUpdates = calls.filter(
+      (c) =>
+        c.url.includes("/rest/v1/entry_group_templates") &&
+        c.method === "PATCH",
+    );
+    const entryGroupInserts = calls.filter(
+      (c) =>
+        c.url.includes("/rest/v1/entry_group_templates") && c.method === "POST",
+    );
+
+    assertEquals(entryGroupUpdates.length, 1);
+    assertEquals(entryGroupInserts.length, 1);
     assertEquals(
       JSON.parse(entryGroupInserts[0].body ?? "[]"),
       [
@@ -1670,6 +1850,553 @@ Deno.test({
           (c) => c.url.includes("/rest/v1/parties") && c.method === "PATCH",
         );
         assertEquals(partyPatches.length, 0);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "create_location: inserts partner-owned location",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      permRoute(),
+      insertLocationRoute("loc-new"),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "create_location",
+          partner_id: TEST_PARTNER_ID,
+          location: {
+            name: "새 장소",
+            address: "서울시 강남구",
+            address_detail: "2층",
+          },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+        const body = await readJson(res);
+        assertEquals(body.location_id, "loc-new");
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "update_location: updates permitted location",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectLocationRoute(),
+      permRoute(),
+      updateLocationRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update_location",
+          location_id: TEST_LOCATION_ID,
+          location: {
+            address_detail: "3층",
+            directions_guide: "3번 출구",
+          },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "create_ticket_template: inserts permitted party template",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectPartyRoute(),
+      permRoute(),
+      insertSingleTicketTemplateRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "create_ticket_template",
+          ticket_template: {
+            party_id: TEST_PARTY_ID,
+            name: "일반 티켓",
+            price: 30000,
+            quantity: 20,
+          },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+        const body = await readJson(res);
+        assertEquals(body.ticket_template_id, "ticket-template-001");
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "update_ticket_template: updates permitted party template",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectTicketTemplateByIdRoute(),
+      selectPartyRoute(),
+      permRoute(),
+      updateTicketTemplateRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update_ticket_template",
+          ticket_template_id: "ticket-template-001",
+          ticket_template: {
+            name: "수정 티켓",
+            price: 25000,
+            quantity: 20,
+          },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "delete_ticket_template: deletes permitted party template",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectTicketTemplateByIdRoute(),
+      selectPartyRoute(),
+      permRoute(),
+      deleteTicketTemplateRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "delete_ticket_template",
+          ticket_template_id: "ticket-template-001",
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "create_location: rejects invalid payloads before DB write",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([authRoute()]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        let req = authenticatedJsonRequest("http://localhost", {
+          action: "create_location",
+          location: { name: "장소", address: "주소" },
+        });
+        let res = await handler(req);
+        assertEquals(res.status, 400);
+
+        req = authenticatedJsonRequest("http://localhost", {
+          action: "create_location",
+          partner_id: TEST_PARTNER_ID,
+          location: "invalid",
+        });
+        res = await handler(req);
+        assertEquals(res.status, 400);
+
+        req = authenticatedJsonRequest("http://localhost", {
+          action: "create_location",
+          partner_id: TEST_PARTNER_ID,
+          location: { address: "주소" },
+        });
+        res = await handler(req);
+        assertEquals(res.status, 400);
+
+        req = authenticatedJsonRequest("http://localhost", {
+          action: "create_location",
+          partner_id: TEST_PARTNER_ID,
+          location: { name: "장소" },
+        });
+        res = await handler(req);
+        assertEquals(res.status, 400);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "create_location: returns 500 when insert fails",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      permRoute(),
+      insertLocationErrorRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "create_location",
+          partner_id: TEST_PARTNER_ID,
+          location: { name: "장소", address: "주소" },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 500);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "update_location: rejects invalid payloads before DB write",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([authRoute()]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        let req = authenticatedJsonRequest("http://localhost", {
+          action: "update_location",
+          location: { address_detail: "3층" },
+        });
+        let res = await handler(req);
+        assertEquals(res.status, 400);
+
+        req = authenticatedJsonRequest("http://localhost", {
+          action: "update_location",
+          location_id: TEST_LOCATION_ID,
+          location: null,
+        });
+        res = await handler(req);
+        assertEquals(res.status, 400);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "update_location: handles load/not-found/no-fields/update errors",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    await withEnv(ENV, async () => {
+      let fetchMock = createFetchMock([
+        authRoute(),
+        selectLocationErrorRoute(),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update_location",
+          location_id: TEST_LOCATION_ID,
+          location: { address_detail: "3층" },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 500);
+      });
+
+      fetchMock = createFetchMock([
+        authRoute(),
+        selectLocationNotFoundRoute(),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update_location",
+          location_id: TEST_LOCATION_ID,
+          location: { address_detail: "3층" },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 404);
+      });
+
+      fetchMock = createFetchMock([
+        authRoute(),
+        selectLocationRoute(),
+        permRoute(),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update_location",
+          location_id: TEST_LOCATION_ID,
+          location: {},
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+      });
+
+      fetchMock = createFetchMock([
+        authRoute(),
+        selectLocationRoute(),
+        permRoute(),
+        updateLocationErrorRoute(),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update_location",
+          location_id: TEST_LOCATION_ID,
+          location: { address_detail: "3층" },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 500);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "ticket_template: rejects invalid create/update/delete payloads",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([authRoute()]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        let req = authenticatedJsonRequest("http://localhost", {
+          action: "create_ticket_template",
+          ticket_template: null,
+        });
+        let res = await handler(req);
+        assertEquals(res.status, 400);
+
+        req = authenticatedJsonRequest("http://localhost", {
+          action: "create_ticket_template",
+          ticket_template: { name: "티켓", quantity: 1 },
+        });
+        res = await handler(req);
+        assertEquals(res.status, 400);
+
+        req = authenticatedJsonRequest("http://localhost", {
+          action: "update_ticket_template",
+          ticket_template: { name: "티켓", quantity: 1 },
+        });
+        res = await handler(req);
+        assertEquals(res.status, 400);
+
+        req = authenticatedJsonRequest("http://localhost", {
+          action: "update_ticket_template",
+          ticket_template_id: "ticket-template-001",
+          ticket_template: [],
+        });
+        res = await handler(req);
+        assertEquals(res.status, 400);
+
+        req = authenticatedJsonRequest("http://localhost", {
+          action: "delete_ticket_template",
+        });
+        res = await handler(req);
+        assertEquals(res.status, 400);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "create_ticket_template: handles validation and insert errors",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    await withEnv(ENV, async () => {
+      let fetchMock = createFetchMock([
+        authRoute(),
+        selectPartyRoute(),
+        permRoute(),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "create_ticket_template",
+          ticket_template: {
+            party_id: TEST_PARTY_ID,
+            name: "",
+            quantity: 1,
+          },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+      });
+
+      fetchMock = createFetchMock([
+        authRoute(),
+        selectPartyRoute(),
+        permRoute(),
+        insertSingleTicketTemplateErrorRoute(),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "create_ticket_template",
+          ticket_template: {
+            party_id: TEST_PARTY_ID,
+            name: "일반 티켓",
+            quantity: 1,
+          },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 500);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name:
+    "update_ticket_template: handles load/not-found/validation/update errors",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    await withEnv(ENV, async () => {
+      let fetchMock = createFetchMock([
+        authRoute(),
+        selectTicketTemplateErrorRoute(),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update_ticket_template",
+          ticket_template_id: "ticket-template-001",
+          ticket_template: { name: "티켓", quantity: 1 },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 500);
+      });
+
+      fetchMock = createFetchMock([
+        authRoute(),
+        selectTicketTemplateNotFoundRoute(),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update_ticket_template",
+          ticket_template_id: "ticket-template-001",
+          ticket_template: { name: "티켓", quantity: 1 },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 404);
+      });
+
+      fetchMock = createFetchMock([
+        authRoute(),
+        selectTicketTemplateByIdRoute(),
+        selectPartyRoute(),
+        permRoute(),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update_ticket_template",
+          ticket_template_id: "ticket-template-001",
+          ticket_template: { name: "티켓", quantity: -1 },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+      });
+
+      fetchMock = createFetchMock([
+        authRoute(),
+        selectTicketTemplateByIdRoute(),
+        selectPartyRoute(),
+        permRoute(),
+        updateTicketTemplateErrorRoute(),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update_ticket_template",
+          ticket_template_id: "ticket-template-001",
+          ticket_template: { name: "티켓", quantity: 1 },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 500);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "delete_ticket_template: handles load/not-found/delete errors",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    await withEnv(ENV, async () => {
+      let fetchMock = createFetchMock([
+        authRoute(),
+        selectTicketTemplateErrorRoute(),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "delete_ticket_template",
+          ticket_template_id: "ticket-template-001",
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 500);
+      });
+
+      fetchMock = createFetchMock([
+        authRoute(),
+        selectTicketTemplateNotFoundRoute(),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "delete_ticket_template",
+          ticket_template_id: "ticket-template-001",
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 404);
+      });
+
+      fetchMock = createFetchMock([
+        authRoute(),
+        selectTicketTemplateByIdRoute(),
+        selectPartyRoute(),
+        permRoute(),
+        deleteTicketTemplateErrorRoute(),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "delete_ticket_template",
+          ticket_template_id: "ticket-template-001",
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 500);
       });
     });
   },

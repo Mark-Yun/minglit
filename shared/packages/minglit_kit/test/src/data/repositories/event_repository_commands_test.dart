@@ -516,7 +516,14 @@ void main() {
 
   group('EventRepository.deleteApplication', () {
     test('completes without error', () async {
-      mockTable(mockClient, 'event_applications');
+      when(
+        () => mockFunctions.invoke(
+          'user-cancel-order',
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer(
+        (_) async => FunctionResponse(status: 200, data: {'success': true}),
+      );
 
       await expectLater(
         repository.deleteApplication(
@@ -528,10 +535,16 @@ void main() {
     });
 
     test('rethrows on error', () async {
-      mockTable(
-        mockClient,
-        'event_applications',
-        shouldThrow: Exception('delete error'),
+      when(
+        () => mockFunctions.invoke(
+          'user-cancel-order',
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer(
+        (_) async => FunctionResponse(
+          status: 500,
+          data: {'error': 'delete error'},
+        ),
       );
 
       await expectLater(

@@ -296,13 +296,39 @@ mixin _VerificationCommandRepository on _SupabaseVerificationContext {
       ' status: $status',
     );
     try {
-      await supabaseClient
-          .from('event_applications')
-          .update({
-            'status': status,
-            'rejection_reason': ?rejectionReason,
-          })
-          .eq('id', applicationId);
+      final FunctionResponse response;
+      if (status == 'approved') {
+        response = await supabaseClient.functions.invoke(
+          'partner-approve-application',
+          body: {
+            'action': 'approve',
+            'application_id': applicationId,
+          },
+        );
+      } else if (status == 'rejected') {
+        final trimmedReason = rejectionReason?.trim();
+        final reason = trimmedReason == null || trimmedReason.isEmpty
+            ? '신청이 거절되었습니다.'
+            : trimmedReason;
+        response = await supabaseClient.functions.invoke(
+          'partner-reject-application',
+          body: {
+            'application_id': applicationId,
+            'reason': reason,
+          },
+        );
+      } else {
+        throw MinglitUserException('지원하지 않는 신청 상태입니다: $status');
+      }
+
+      if (response.status != 200) {
+        final respData = response.data;
+        final errorMsg = respData is Map
+            ? (respData['error'] as String?) ??
+                  'Failed to update application status'
+            : 'Failed to update application status';
+        throw MinglitUserException(errorMsg);
+      }
       Log.d('updateApplicationStatus success');
     } catch (e, st) {
       Log.e('❌ [VerificationRepo] updateApplicationStatus Error', e, st);

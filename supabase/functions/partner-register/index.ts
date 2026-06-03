@@ -1,12 +1,12 @@
 // partner-register — Partner application (save draft, submit, update)
 // Issue #311: RLS write strategy 전환
 
-import {
-  errorResponse,
-  successResponse,
-} from "../_shared/response_utils.ts";
+import { errorResponse, successResponse } from "../_shared/response_utils.ts";
 import { parseAction } from "../_shared/request_utils.ts";
-import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
+import {
+  type EFContext,
+  minglitEdgeFunction,
+} from "../_shared/edge_function.ts";
 import {
   requireNonEmpty,
   validateBizNumber,
@@ -45,11 +45,18 @@ const CLEARABLE_FIELDS: ReadonlySet<string> = new Set([
   "profile_image_path",
 ]);
 
-export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
+const REVIEW_STATUSES = ["approved", "needs_correction", "rejected"] as const;
+
+export const handler = async (
+  req: Request,
+  ctx: EFContext,
+): Promise<Response> => {
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
   const { supabase } = ctx;
-  if (ctx.auth.type !== "user") return errorResponse("Unexpected auth type", 500);
+  if (ctx.auth.type !== "user") {
+    return errorResponse("Unexpected auth type", 500);
+  }
   const userId = ctx.auth.userId;
 
   const result = await parseAction(req);
@@ -232,7 +239,7 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
         return errorResponse("Failed to verify uploaded files", 500);
       }
 
-      if (!fileData.some((file) => file.name === filename)) {
+      if (!fileData.some((file: { name: string }) => file.name === filename)) {
         errors.push({ field, message });
       }
     }
@@ -329,7 +336,83 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
     return successResponse({ success: true, application_id: applicationId });
   }
 
+  // ─── review ───
+  if (action === "review") {
+    const applicationId = body.application_id;
+    if (typeof applicationId !== "string" || !applicationId) {
+      return errorResponse("Missing application_id", 400);
+    }
+
+    const status = body.status;
+    if (
+      typeof status !== "string" ||
+      !REVIEW_STATUSES.includes(status as typeof REVIEW_STATUSES[number])
+    ) {
+      return errorResponse(
+        `Invalid status. Must be one of: ${REVIEW_STATUSES.join(", ")}`,
+        400,
+      );
+    }
+
+    const adminComment = typeof body.admin_comment === "string"
+      ? body.admin_comment
+      : null;
+
+    const adminCheck = await requireSuperAdmin(supabase, userId);
+    if (adminCheck instanceof Response) return adminCheck;
+
+    const { data: app, error: fetchError } = await supabase
+      .from("partner_applications")
+      .select("id, status")
+      .eq("id", applicationId)
+      .maybeSingle();
+
+    if (fetchError) return errorResponse("Failed to load application", 500);
+    if (!app) return errorResponse("Application not found", 404);
+    if (app.status !== "pending") {
+      return errorResponse(
+        `Application cannot be reviewed in status '${app.status}'`,
+        400,
+      );
+    }
+
+    const { error: updateError } = await supabase
+      .from("partner_applications")
+      .update({
+        status,
+        admin_comment: adminComment,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", applicationId)
+      .eq("status", "pending");
+
+    if (updateError) {
+      return errorResponse(
+        `Failed to review application: ${updateError.message}`,
+        500,
+      );
+    }
+
+    return successResponse({ success: true, application_id: applicationId });
+  }
+
   return errorResponse(`Unknown action: ${action}`, 400);
 };
 
 minglitEdgeFunction(handler);
+
+async function requireSuperAdmin(
+  supabase: EFContext["supabase"],
+  userId: string,
+): Promise<true | Response> {
+  const { data, error } = await supabase
+    .from("app_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "super_admin")
+    .maybeSingle();
+
+  if (error) return errorResponse("Failed to verify admin role", 500);
+  if (!data) return errorResponse("Forbidden: super_admin required", 403);
+  return true;
+}

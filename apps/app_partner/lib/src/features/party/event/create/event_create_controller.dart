@@ -61,7 +61,12 @@ class EventCreateController extends _$EventCreateController {
 
     // 3. Map entry group templates to instances
     final initialEntryGroups =
-        party.entryGroups?.map(EntryGroup.createFromTemplate).toList() ?? [];
+        party.entryGroups
+            ?.map(
+              (group) => EntryGroup.createFromTemplate(group, id: group.id),
+            )
+            .toList() ??
+        [];
 
     state = state.copyWith(
       title: baseEvent.title ?? '',
@@ -131,7 +136,8 @@ class EventCreateController extends _$EventCreateController {
   Future<void> submit() async {
     state = state.copyWith(status: const AsyncValue<void>.loading());
 
-    // Fix #1037: snapshot recurrence state before any await to avoid race conditions
+    // Fix #1037: snapshot recurrence state before any await to avoid race
+    // conditions.
     final recurrenceSnapshot = ref.read(recurrenceSettingsControllerProvider);
 
     final result = await AsyncValue.guard(() async {
@@ -193,7 +199,8 @@ class EventCreateController extends _$EventCreateController {
       }
 
       ref.invalidate(partyEventsProvider(state.partyId));
-      // Fix #1943: bump shared signal so dashboard refreshes without cross-feature import
+      // Fix #1943: bump shared signal so dashboard refreshes without
+      // cross-feature import.
       ref.read(dashboardRefreshProvider.notifier).bump();
     });
 

@@ -4,7 +4,11 @@ import {
   successResponse,
 } from "../../_shared/response_utils.ts";
 import { requirePartnerPermission } from "../../_shared/partner_permissions.ts";
-import { LOCATION_FIELDS, PARTY_FIELDS, VALID_STATUSES } from "../_lib/constants.ts";
+import {
+  LOCATION_FIELDS,
+  PARTY_FIELDS,
+  VALID_STATUSES,
+} from "../_lib/constants.ts";
 import { validateEntryGroupTemplates } from "../_lib/validators.ts";
 
 export async function handleUpdate(
@@ -56,7 +60,9 @@ export async function handleUpdate(
     if (partyUpdates.status !== undefined) {
       if (
         typeof partyUpdates.status !== "string" ||
-        !VALID_STATUSES.includes(partyUpdates.status as typeof VALID_STATUSES[number])
+        !VALID_STATUSES.includes(
+          partyUpdates.status as typeof VALID_STATUSES[number],
+        )
       ) {
         return errorResponse(
           `Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}`,
@@ -261,11 +267,14 @@ export async function handleUpdate(
     const existingIds = (existing ?? []).map((r: { id: string }) =>
       r.id as string
     );
+    const existingIdSet = new Set(existingIds);
     const incomingWithId = templates.filter((t) =>
-      typeof t.id === "string" && (t.id as string).length > 0
+      typeof t.id === "string" && (t.id as string).length > 0 &&
+      existingIdSet.has(t.id as string)
     );
     const incomingWithoutId = templates.filter((t) =>
-      !t.id || (t.id as string).length === 0
+      !t.id || (t.id as string).length === 0 ||
+      !existingIdSet.has(t.id as string)
     );
     const keptIds = incomingWithId.map((t) => t.id as string);
     const toDeleteIds = existingIds.filter((id: string) =>
@@ -273,11 +282,10 @@ export async function handleUpdate(
     );
 
     if (toDeleteIds.length > 0) {
-      const { data: affectedTickets, error: fetchTicketsError } =
-        await supabase
-          .from("ticket_templates")
-          .select("id, target_entry_group_ids")
-          .eq("party_id", partyId);
+      const { data: affectedTickets, error: fetchTicketsError } = await supabase
+        .from("ticket_templates")
+        .select("id, target_entry_group_ids")
+        .eq("party_id", partyId);
       if (fetchTicketsError) {
         return errorResponse(
           `Failed to fetch ticket templates: ${fetchTicketsError.message}`,
@@ -287,7 +295,7 @@ export async function handleUpdate(
 
       for (const ticket of (affectedTickets ?? [])) {
         const tt = ticket as { id: string; target_entry_group_ids: string[] };
-        const hadAny = toDeleteIds.some((d) =>
+        const hadAny = toDeleteIds.some((d: string) =>
           tt.target_entry_group_ids?.includes(d)
         );
         if (hadAny) {

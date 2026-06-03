@@ -26,35 +26,41 @@ mixin _PartyEventRepository on _SupabasePartyContext {
     try {
       final eventJson = event.toDbJson();
 
-      final data = await supabaseClient
-          .from('events')
-          .insert(eventJson)
-          .select()
-          .single();
+      final body = <String, dynamic>{
+        'action': 'create',
+        'party_id': event.partyId,
+        'event': eventJson..remove('party_id'),
+        if (event.entryGroups != null)
+          'entry_groups': event.entryGroups!.map((g) {
+            final sourceId = g.id.trim();
+            final groupJson = g.toDbJson()..remove('event_id');
+            if (sourceId.isNotEmpty) {
+              groupJson['source_entry_group_id'] = sourceId;
+            }
+            return groupJson;
+          }).toList(),
+        if (event.tickets != null)
+          'tickets': event.tickets!
+              .map(
+                (t) => t.toDbJson()..remove('event_id'),
+              )
+              .toList(),
+      };
 
-      final createdEvent = Event.fromJson(data);
-
-      // Create associated entry groups if provided
-      final eventGroups = event.entryGroups;
-      if (eventGroups != null && eventGroups.isNotEmpty) {
-        final groupsJson = eventGroups
-            .map((g) => g.copyWith(eventId: createdEvent.id).toDbJson())
-            .toList();
-        // minglit_lints: allow-supabase-write — reason: EF migration pending (Phase 2 partner-side, tracked in #2392)
-        await supabaseClient.from('entry_groups').insert(groupsJson);
+      final response = await supabaseClient.functions.invoke(
+        'partner-manage-event',
+        body: body,
+      );
+      if (response.status != 200) {
+        final error = response.data is Map
+            ? (response.data as Map)['error'] ?? 'Failed to create event'
+            : 'Failed to create event';
+        throw Exception(error);
       }
 
-      // Create associated tickets if provided
-      final eventTickets = event.tickets;
-      if (eventTickets != null && eventTickets.isNotEmpty) {
-        final ticketsJson = eventTickets
-            .map((t) => t.toDbJson(eventId: createdEvent.id))
-            .toList();
-
-        // minglit_lints: allow-supabase-write — reason: EF migration pending (Phase 2 partner-side, tracked in #2392)
-        await supabaseClient.from('tickets').insert(ticketsJson);
-      }
-
+      final data = response.data as Map<String, dynamic>;
+      final eventId = data['event_id'] as String;
+      final createdEvent = await _getEventById(eventId);
       Log.d('createEvent success | id: ${createdEvent.id}');
       return createdEvent;
     } catch (e, st) {
@@ -69,20 +75,39 @@ mixin _PartyEventRepository on _SupabasePartyContext {
     try {
       final json = event.toDbJson();
 
-      final data = await supabaseClient
-          .from('events')
-          .update(json)
-          .eq('id', event.id)
-          .select()
-          .single();
+      final response = await supabaseClient.functions.invoke(
+        'partner-manage-event',
+        body: {
+          'action': 'update',
+          'event_id': event.id,
+          'event': json
+            ..remove('party_id')
+            ..remove('location'),
+        },
+      );
+      if (response.status != 200) {
+        final error = response.data is Map
+            ? (response.data as Map)['error'] ?? 'Failed to update event'
+            : 'Failed to update event';
+        throw Exception(error);
+      }
 
-      final result = Event.fromJson(data);
+      final result = await _getEventById(event.id);
       Log.d('updateEvent success | id: ${result.id}');
       return result;
     } catch (e, st) {
       Log.e('❌ [PartyRepo] updateEvent Error', e, st);
       rethrow;
     }
+  }
+
+  Future<Event> _getEventById(String eventId) async {
+    final data = await supabaseClient
+        .from('events')
+        .select('*, entry_groups(*), tickets(*)')
+        .eq('id', eventId)
+        .single();
+    return Event.fromJson(data);
   }
 
   /// Updates only the status of an event.

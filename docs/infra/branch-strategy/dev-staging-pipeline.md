@@ -2,10 +2,11 @@
 
 AI agent 와 feature/fix/chore PR 이 `dev-staging` 브랜치로 들어오는 진입점. 일반 PR + auto-merge 로 처리하고, `dev-staging-pr-gate` 가 가벼운 검증을 담당한다. source version bump 와 `v*-dev-staging` tag 는 PR 머지마다 만들지 않고, 하루 1회 `dev-staging-dev-cut` 이 promote 할 snapshot 에만 만든다.
 
-## 두 가지 workflow
+## 세 가지 workflow
 
 1. **`dev-staging-pr-gate`** — PR 머지 전
-2. **`dev-staging-dev-cut`** — daily cut 시점 (direct version bump commit + tag + dev promotion PR)
+2. **`post-merge`** — PR 머지 후 dev-staging follow-up (auto-merge PR branch update + MDS triage)
+3. **`dev-staging-dev-cut`** — daily cut 시점 (direct version bump commit + tag + dev promotion PR)
 
 ## PR + Auto-Merge
 
@@ -31,10 +32,10 @@ AI agent 와 feature/fix/chore PR 이 `dev-staging` 브랜치로 들어오는 �
 - 운영 복잡도를 낮추고 기존 GitHub auto-merge 흐름을 재사용한다
 - 필요해지면 `dev-staging` 에만 merge queue 를 후속 도입한다
 
-### 결정해야 할 것
+### 운영 기준
 
-- branch update 자동화 방식 (`gh api update-branch` vs 기존 sync-pr-branches 재사용)
-- merge queue 도입 기준 (동시 PR 수, conflict 빈도, stale 재실행 비용)
+- branch update 자동화는 `post-merge` 가 `sync-pr-branches` 를 `base_ref=dev-staging` 으로 호출한다.
+- merge queue 도입 기준은 동시 PR 수, conflict 빈도, stale 재실행 비용을 보고 별도 판단한다.
 
 ## `dev-staging-pr-gate`
 

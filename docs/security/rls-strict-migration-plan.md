@@ -2,7 +2,7 @@
 
 > **Issue**: #2393  
 > **Date**: 2026-05-17  
-> **Status**: Phase 1 완료 — Phase 2~5 pending
+> **Status**: Phase 2 완료 (#2990) — Phase 3~5 pending (#2991)
 
 ## 목표
 
@@ -75,7 +75,9 @@ Flutter 앱(publishable key)의 Supabase 직접 write를 전면 차단하고, �
 | `submitApplication()` | `partner-register` |
 | `saveDraft()` | `partner-register` |
 
-### 신규 EF가 필요한 항목
+### Phase 1 당시 EF 보강 필요 항목
+
+아래 항목은 Phase 2 (#2990)에서 처리 완료.
 
 | 항목 | 근거 |
 |------|------|
@@ -86,30 +88,37 @@ Flutter 앱(publishable key)의 Supabase 직접 write를 전면 차단하고, �
 
 ---
 
-## Phase 2: 직접 write → EF 마이그레이션 (미착수)
+## Phase 2: 직접 write → EF 마이그레이션 (완료)
 
-### 우선순위
+> Tracking issue: #2990
+> Verification date: 2026-06-03
 
-**Group A — EF 이미 존재, Flutter만 수정**
-- `social_repository.dart` 3개 write → `user-manage-social` 사용
-- `notification_repository.dart` 3개 write → `user-manage-notification` 사용
-- `party_event_repository.dart` + `location_repository.dart` + `ticket_repository.dart` → `partner-manage-party` / `partner-manage-event` 사용
+### 완료 범위
 
-**Group B — EF 기능 확장 후 Flutter 수정**
-- `settlement_repository.dart` → `partner-manage-settlement` 확인 후 upsert 액션 추가
-- `verification_command_repository.dart:301` → `partner-approve-application` / `partner-reject-application` 확인
-- `ticket_repository.dart:185` (DELETE) → `partner-manage-event`에 delete_ticket_template 액션 추가
+| 영역 | 처리 |
+|------|------|
+| Social / Notification write | `user-manage-social`, `user-manage-notification` 경유 |
+| Event create/update, entry groups, tickets | `partner-manage-event` 경유 |
+| Location, ticket template, entry group template | `partner-manage-party` 경유 |
+| Partner settlement bank account | `partner-manage-settlement` 경유 |
+| Partner application review | `partner-register` `review` action 경유 |
+| Event application approve/reject | `partner-approve-application`, `partner-reject-application` 경유 |
+| User application delete/cancel | `user-cancel-order` 경유 |
 
-**Group C — 신규 EF 필요**
-- `event_applications.DELETE` → `user-cancel-order` 확장 or 별도 EF
-- `partner_applications.UPDATE` → `partner-review-application` EF 신규 생성
-- `entry_group_templates` CRUD → 기존 EF에 통합 or 별도
+### 완료 검증
+
+```bash
+rg -n "\.(insert|update|upsert|delete)\s*\(" \
+  shared/packages/minglit_kit/lib/src/data/repositories --glob '*.dart'
+```
+
+2026-06-03 기준 결과 0건. Repository layer의 Supabase DB 직접 write는 제거되어 Phase 3 GRANT 회수 진행 가능.
 
 ---
 
-## Phase 3: GRANT 회수 Migration (미착수)
+## Phase 3: GRANT 회수 Migration (미착수, #2991)
 
-> **전제조건**: Phase 2 완료 후 진행. Phase 2 미완료 시 진행 금지.
+> **전제조건**: Phase 2 완료. 진행 전 dev DB에서 GRANT 현황과 EF smoke test를 확인한다.
 
 ```sql
 -- Migration: supabase/migrations/YYYYMMDD000001_revoke_write_grants_from_publishable_key.sql
