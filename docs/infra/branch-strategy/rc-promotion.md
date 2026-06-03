@@ -16,11 +16,11 @@
 
 - **cron**: 매주 X 요일 KST 10:00 (TBD)
 - **manual**: `workflow_dispatch` (긴급 cut)
-- **현재 구현**: 매주 월요일 KST 10:00. 수동 실행은 `source_sha`, `rc_week`, `allow_active_rc` 입력을 지원한다. `dev-rc-cut-pass` commit 이 아직 없으면 실패 알림 없이 skip 한다.
+- **운영 계약**: 수동 실행은 `source_sha`, `rc_week`, `allow_active_rc` 입력을 지원한다. `dev-rc-cut-pass` commit 이 없으면 RC branch 를 만들지 않는다.
 - 동작:
   1. **active RC marker 확인** → 있으면 skip + Slack `#release` 알림. 기본 정책은 active RC 1개만 허용
   2. 없으면 dev 의 최신 `dev-rc-cut-pass` status 부여된 commit 찾기 (GitHub API: `GET /repos/.../commits/{sha}/status`)
-  3. 못 찾으면 cut 보류 (현재 구현은 초기 no-pass 상태를 skip, 3일+ green 없음 alert 는 후속 PR). failure 가 없다는 이유만으로 cut 하지 않음
+  3. 못 찾으면 cut 보류. failure 가 없다는 이유만으로 cut 하지 않음
   4. 찾았으면 그 commit 에서 `rc/YYYY-Wxx` branch cut
   5. Supabase branch 생성/검증은 `rc-deploy` 에 위임 (후속 PR)
   6. `promo/rc-YYYY-Wxx` tag 생성

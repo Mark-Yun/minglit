@@ -1,6 +1,6 @@
 # Branch Flow
 
-`dev-staging → dev → rc → main` 4-stage 모델의 머지 방향, branch protection, promotion tag, deploy/validation chain.
+`dev-staging → dev → rc → main` 4-stage 모델의 머지 방향, branch protection, promotion tag, deploy/validation chain. Concrete workflow/status/tag/failure contract 는 [promotion-contract.md](./promotion-contract.md) 를 기준으로 한다.
 
 ## 흐름 다이어그램
 
@@ -95,7 +95,12 @@ monitor-event-flow-*:
 monitor-dev-staging-health:
   schedule: every 6 hours
   branch: dev-staging
-  purpose: EF unit/integration + user/partner CUJ early regression signal
+  purpose: EF unit/integration early regression signal
+
+monitor-dev-cuj:
+  trigger: push to dev
+  branch: dev
+  purpose: user/partner CUJ health signal
 ```
 
 ### main push → prod deploy chain
@@ -131,6 +136,10 @@ Mobile APK/AAB/IPA archive 는 GitHub Release asset 이 canonical 이다. Action
 - 주간 dev-rc-cut 요일
 - Fastlane / store upload 설정
 - `RELEASE.md` 작성
+
+## 관련
+
+- [promotion-contract.md](./promotion-contract.md) — 승격 정책 + concrete marker/failure contract
 
 ---
 _Reviewed: 2026-05-24 10:24_

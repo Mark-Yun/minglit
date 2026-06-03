@@ -1,0 +1,167 @@
+name: monitor-dev-cuj
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: Optional full dev commit SHA. Defaults to latest origin/dev.
+        required: false
+        type: string
+
+concurrency:
+  group: monitor-dev-cuj-${{ github.event_name == 'push' && github.sha || inputs.candidate_sha || github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+  statuses: write
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      candidate_sha: ${{ steps.plan.outputs.candidate_sha }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Resolve dev CUJ candidate
+        id: plan
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PUSH_SHA: ${{ github.sha }}
+          INPUT_CANDIDATE_SHA: ${{ inputs.candidate_sha || '' }}
+        run: |
+          set -euo pipefail
+
+          git fetch origin dev --depth=200
+
+          CANDIDATE_SHA="${INPUT_CANDIDATE_SHA}"
+          if [ "${EVENT_NAME}" = "push" ]; then
+            CANDIDATE_SHA="${PUSH_SHA}"
+          fi
+          if [ -z "${CANDIDATE_SHA}" ]; then
+            CANDIDATE_SHA="$(git rev-parse FETCH_HEAD)"
+          fi
+          if ! [[ "${CANDIDATE_SHA}" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "::error::candidate_sha must be a full 40-character commit SHA."
+            exit 1
+          fi
+          if ! git cat-file -e "${CANDIDATE_SHA}^{commit}" 2>/dev/null; then
+            git fetch origin '+refs/heads/dev:refs/remotes/origin/dev' --depth=200
+          fi
+          if ! git cat-file -e "${CANDIDATE_SHA}^{commit}" 2>/dev/null; then
+            echo "::error::candidate_sha is not reachable from fetched dev history: ${CANDIDATE_SHA}"
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor "${CANDIDATE_SHA}" FETCH_HEAD; then
+            echo "::error::candidate_sha must be reachable from origin/dev: ${CANDIDATE_SHA}"
+            exit 1
+          fi
+
+          echo "candidate_sha=${CANDIDATE_SHA}" >> "${GITHUB_OUTPUT}"
+
+          {
+            echo "## monitor-dev-cuj"
+            echo ""
+            echo "| Field | Value |"
+            echo "|---|---|"
+            echo "| target_ref | dev |"
+            echo "| candidate_sha | ${CANDIDATE_SHA} |"
+            echo "| trigger | ${EVENT_NAME} |"
+            echo "| checks | user CUJ, partner CUJ |"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+  cuj-user:
+    needs: [plan]
+    uses: ./.github/workflows/shared-cuj-integration.yml
+    with:
+      app-name: user
+      target-ref: ${{ needs.plan.outputs.candidate_sha }}
+    secrets: inherit
+
+  cuj-partner:
+    needs: [plan]
+    uses: ./.github/workflows/shared-cuj-integration.yml
+    with:
+      app-name: partner
+      target-ref: ${{ needs.plan.outputs.candidate_sha }}
+    secrets: inherit
+
+  status-cuj-user:
+    needs: [plan, cuj-user]
+    if: always() && needs.plan.result == 'success'
+    permissions:
+      contents: read
+      statuses: write
+    uses: ./.github/workflows/set-dev-soak-status.yml
+    with:
+      signal: cuj-user
+      state: ${{ needs['cuj-user'].result == 'success' && 'success' || 'failure' }}
+      sha: ${{ needs.plan.outputs.candidate_sha }}
+      target_url: ${{ format('{0}/{1}/actions/runs/{2}', github.server_url, github.repository, github.run_id) }}
+      description: ${{ needs['cuj-user'].result == 'success' && 'User CUJ health passed' || 'User CUJ health failed' }}
+    secrets: inherit
+
+  status-cuj-partner:
+    needs: [plan, cuj-partner]
+    if: always() && needs.plan.result == 'success'
+    permissions:
+      contents: read
+      statuses: write
+    uses: ./.github/workflows/set-dev-soak-status.yml
+    with:
+      signal: cuj-partner
+      state: ${{ needs['cuj-partner'].result == 'success' && 'success' || 'failure' }}
+      sha: ${{ needs.plan.outputs.candidate_sha }}
+      target_url: ${{ format('{0}/{1}/actions/runs/{2}', github.server_url, github.repository, github.run_id) }}
+      description: ${{ needs['cuj-partner'].result == 'success' && 'Partner CUJ health passed' || 'Partner CUJ health failed' }}
+    secrets: inherit
+
+  notify-cuj-user-failure:
+    needs: [plan, cuj-user, status-cuj-user]
+    if: always()
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+      statuses: write
+    uses: ./.github/workflows/shared-notify.yml
+    with:
+      failed: ${{ needs.plan.result != 'success' || needs['cuj-user'].result != 'success' || needs['status-cuj-user'].result != 'success' }}
+      workflow_name: Dev User CUJ Health Monitor
+      severity: P1-high
+      stage: dev-soak
+      signal: cuj-user
+      blocks_rc_cut: ${{ needs.plan.result == 'success' && needs['cuj-user'].result != 'success' }}
+      commit_sha: ${{ needs.plan.outputs.candidate_sha }}
+      target_url: ${{ format('{0}/{1}/actions/runs/{2}', github.server_url, github.repository, github.run_id) }}
+      status_description: ${{ needs['cuj-user'].result == 'success' && 'User CUJ status write failed' || 'User CUJ health failed' }}
+      job_results: '{"plan":"${{ needs.plan.result }}","cuj-user":"${{ needs[''cuj-user''].result }}","status-cuj-user":"${{ needs[''status-cuj-user''].result }}"}'
+    secrets: inherit
+
+  notify-cuj-partner-failure:
+    needs: [plan, cuj-partner, status-cuj-partner]
+    if: always()
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+      statuses: write
+    uses: ./.github/workflows/shared-notify.yml
+    with:
+      failed: ${{ needs.plan.result != 'success' || needs['cuj-partner'].result != 'success' || needs['status-cuj-partner'].result != 'success' }}
+      workflow_name: Dev Partner CUJ Health Monitor
+      severity: P1-high
+      stage: dev-soak
+      signal: cuj-partner
+      blocks_rc_cut: ${{ needs.plan.result == 'success' && needs['cuj-partner'].result != 'success' }}
+      commit_sha: ${{ needs.plan.outputs.candidate_sha }}
+      target_url: ${{ format('{0}/{1}/actions/runs/{2}', github.server_url, github.repository, github.run_id) }}
+      status_description: ${{ needs['cuj-partner'].result == 'success' && 'Partner CUJ status write failed' || 'Partner CUJ health failed' }}
+      job_results: '{"plan":"${{ needs.plan.result }}","cuj-partner":"${{ needs[''cuj-partner''].result }}","status-cuj-partner":"${{ needs[''status-cuj-partner''].result }}"}'
+    secrets: inherit

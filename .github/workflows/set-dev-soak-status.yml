@@ -6,7 +6,7 @@ on:
       signal:
         type: string
         required: true
-        description: 'Dev soak signal. Allowed: backend-simulator, real-device, app-ai-review.'
+        description: 'Dev health signal. Allowed: backend-simulator, cuj-user, cuj-partner, real-device, app-ai-review.'
       state:
         type: string
         required: true
@@ -39,11 +39,13 @@ on:
   workflow_dispatch:
     inputs:
       signal:
-        description: Dev soak signal.
+        description: Dev health signal.
         required: true
         type: choice
         options:
           - backend-simulator
+          - cuj-user
+          - cuj-partner
           - real-device
           - app-ai-review
       state:
@@ -92,10 +94,12 @@ jobs:
 
           case "${INPUT_SIGNAL}" in
             backend-simulator) CONTEXT="dev-soak/backend-simulator" ;;
+            cuj-user) CONTEXT="dev-soak/cuj-user" ;;
+            cuj-partner) CONTEXT="dev-soak/cuj-partner" ;;
             real-device) CONTEXT="dev-soak/real-device" ;;
             app-ai-review) CONTEXT="dev-soak/app-ai-review" ;;
             *)
-              echo "::error::signal must be one of: backend-simulator, real-device, app-ai-review."
+              echo "::error::signal must be one of: backend-simulator, cuj-user, cuj-partner, real-device, app-ai-review."
               exit 1
               ;;
           esac

@@ -41,7 +41,7 @@ jobs:
             echo "| target_ref | dev-staging |"
             echo "| candidate_sha | ${CANDIDATE_SHA} |"
             echo "| cadence | every 6 hours |"
-            echo "| checks | EF unit, EF integration, user CUJ, partner CUJ |"
+            echo "| checks | EF unit, EF integration |"
           } >> "$GITHUB_STEP_SUMMARY"
 
   ef-unit:
@@ -153,22 +153,6 @@ jobs:
         if: always()
         run: supabase stop --no-backup || true
 
-  cuj-user:
-    needs: [plan]
-    uses: ./.github/workflows/shared-cuj-integration.yml
-    with:
-      app-name: user
-      target-ref: ${{ needs.plan.outputs.candidate_sha }}
-    secrets: inherit
-
-  cuj-partner:
-    needs: [plan]
-    uses: ./.github/workflows/shared-cuj-integration.yml
-    with:
-      app-name: partner
-      target-ref: ${{ needs.plan.outputs.candidate_sha }}
-    secrets: inherit
-
   status-ef-unit:
     needs: [plan, ef-unit]
     if: always() && needs.plan.result == 'success'
@@ -197,36 +181,8 @@ jobs:
       description: ${{ needs['ef-integration'].result == 'success' && 'EF integration health passed' || 'EF integration health failed' }}
     secrets: inherit
 
-  status-cuj-user:
-    needs: [plan, cuj-user]
-    if: always() && needs.plan.result == 'success'
-    permissions:
-      contents: read
-      statuses: write
-    uses: ./.github/workflows/shared-set-commit-status.yml
-    with:
-      sha: ${{ needs.plan.outputs.candidate_sha }}
-      context: dev-staging-health/cuj-user
-      state: ${{ needs['cuj-user'].result == 'success' && 'success' || 'failure' }}
-      description: ${{ needs['cuj-user'].result == 'success' && 'User CUJ health passed' || 'User CUJ health failed' }}
-    secrets: inherit
-
-  status-cuj-partner:
-    needs: [plan, cuj-partner]
-    if: always() && needs.plan.result == 'success'
-    permissions:
-      contents: read
-      statuses: write
-    uses: ./.github/workflows/shared-set-commit-status.yml
-    with:
-      sha: ${{ needs.plan.outputs.candidate_sha }}
-      context: dev-staging-health/cuj-partner
-      state: ${{ needs['cuj-partner'].result == 'success' && 'success' || 'failure' }}
-      description: ${{ needs['cuj-partner'].result == 'success' && 'Partner CUJ health passed' || 'Partner CUJ health failed' }}
-    secrets: inherit
-
   notify-failure:
-    needs: [plan, ef-unit, ef-integration, cuj-user, cuj-partner]
+    needs: [plan, ef-unit, ef-integration]
     if: always()
     permissions:
       actions: read
@@ -239,4 +195,4 @@ jobs:
       severity: P1-high
       commit_sha: ${{ needs.plan.outputs.candidate_sha }}
       target_url: ${{ format('{0}/{1}/actions/runs/{2}', github.server_url, github.repository, github.run_id) }}
-      job_results: '{"ef-unit":"${{ needs[''ef-unit''].result }}","ef-integration":"${{ needs[''ef-integration''].result }}","cuj-user":"${{ needs[''cuj-user''].result }}","cuj-partner":"${{ needs[''cuj-partner''].result }}"}'
+      job_results: '{"ef-unit":"${{ needs[''ef-unit''].result }}","ef-integration":"${{ needs[''ef-integration''].result }}"}'
