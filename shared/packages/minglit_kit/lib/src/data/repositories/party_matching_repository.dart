@@ -11,14 +11,6 @@ mixin _PartyMatchingRepository on _SupabasePartyContext {
       'count: ${templates.length}',
     );
     try {
-      // Fix #1740: entry_groups(Event Level)은 party_id 컬럼 없음 — entry_group_templates(Party Level) 사용
-      await supabaseClient
-          .from('entry_group_templates')
-          .delete()
-          .eq('party_id', partyId);
-
-      if (templates.isEmpty) return;
-
       final groupsJson = templates
           .map(
             (group) => group.copyWith(partyId: partyId).toJson()
@@ -27,8 +19,21 @@ mixin _PartyMatchingRepository on _SupabasePartyContext {
           )
           .toList();
 
-      // minglit_lints: allow-supabase-write — reason: EF migration pending (Phase 2 partner-side, tracked in #2392)
-      await supabaseClient.from('entry_group_templates').insert(groupsJson);
+      final response = await supabaseClient.functions.invoke(
+        'partner-manage-party',
+        body: {
+          'action': 'update',
+          'party_id': partyId,
+          'entry_group_templates': groupsJson,
+        },
+      );
+      if (response.status != 200) {
+        final error = response.data is Map
+            ? (response.data as Map)['error'] ??
+                  'Failed to replace entry group templates'
+            : 'Failed to replace entry group templates';
+        throw Exception(error);
+      }
       Log.d('replaceEntryGroupTemplates success');
     } catch (e, st) {
       Log.e('❌ [PartyRepo] replaceEntryGroupTemplates Error', e, st);

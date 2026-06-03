@@ -159,14 +159,18 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
       '''reviewApplication called | id: $applicationId, status: $status, comment: $adminComment''',
     );
     try {
-      await supabaseClient
-          .from('partner_applications')
-          .update({
-            'status': status,
-            'admin_comment': adminComment,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', applicationId);
+      final response = await supabaseClient.functions.invoke(
+        'partner-register',
+        body: {
+          'action': 'review',
+          'application_id': applicationId,
+          'status': status,
+          if (adminComment != null) 'admin_comment': adminComment,
+        },
+      );
+      if (response.status != 200) {
+        throw _efError(response, 'Failed to review application');
+      }
       Log.d('reviewApplication success');
     } catch (e, st) {
       Log.e('❌ [PartnerRepo] reviewApplication Error', e, st);

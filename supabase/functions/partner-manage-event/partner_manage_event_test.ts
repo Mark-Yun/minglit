@@ -3,13 +3,13 @@ import {
   authenticatedJsonRequest,
   captureServeHandler,
   createFetchMock,
+  type FetchRoute,
   jsonRequest,
   jsonResponse,
   readJson,
   withEnv,
   withMockedFetch,
   withNoIntervals,
-  type FetchRoute,
 } from "../_test_utils/mock_http.ts";
 
 const TEST_USER_ID = "user-partner-owner";
@@ -55,7 +55,10 @@ function permRoute(hasPermission = true): FetchRoute {
     handler: () =>
       jsonResponse(
         hasPermission
-          ? { partner_id: TEST_PARTNER_ID, permissions: ["PARTNER_EDIT", "PARTY_MANAGE"] }
+          ? {
+            partner_id: TEST_PARTNER_ID,
+            permissions: ["PARTNER_EDIT", "PARTY_MANAGE"],
+          }
           : null,
       ),
   };
@@ -66,7 +69,10 @@ function permNoEventManageRoute(): FetchRoute {
     matcher: (req) =>
       req.url.includes("partner_member_permissions") && req.method === "GET",
     handler: () =>
-      jsonResponse({ partner_id: TEST_PARTNER_ID, permissions: ["PARTNER_EDIT"] }),
+      jsonResponse({
+        partner_id: TEST_PARTNER_ID,
+        permissions: ["PARTNER_EDIT"],
+      }),
   };
 }
 
@@ -81,7 +87,11 @@ function selectPartyRoute(
       req.url.includes("select=") &&
       req.method === "GET",
     handler: () =>
-      jsonResponse({ id: TEST_PARTY_ID, partner_id: partnerId, location_id: locationId }),
+      jsonResponse({
+        id: TEST_PARTY_ID,
+        partner_id: partnerId,
+        location_id: locationId,
+      }),
   };
 }
 
@@ -141,15 +151,66 @@ function updateEventRoute(): FetchRoute {
   };
 }
 
+function insertEventChangeLogRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/event_change_logs") && req.method === "POST",
+    handler: () => jsonResponse({ id: "change-log-001" }),
+  };
+}
+
+function selectLocationRoute(partnerId = TEST_PARTNER_ID): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/locations") &&
+      req.url.includes("select=") &&
+      req.method === "GET",
+    handler: () => jsonResponse({ id: "loc-001", partner_id: partnerId }),
+  };
+}
+
+function selectLocationNotFoundRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/locations") &&
+      req.url.includes("select=") &&
+      req.method === "GET",
+    handler: () => jsonResponse(null),
+  };
+}
+
+function selectLocationErrorRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/locations") &&
+      req.url.includes("select=") &&
+      req.method === "GET",
+    handler: () => jsonResponse({ message: "load error" }, { status: 500 }),
+  };
+}
+
 // Entry group templates/groups routes
 function selectEntryGroupTemplatesRoute(): FetchRoute {
   return {
     matcher: (req) =>
-      req.url.includes("/rest/v1/entry_group_templates") && req.method === "GET",
+      req.url.includes("/rest/v1/entry_group_templates") &&
+      req.method === "GET",
     handler: () =>
       jsonResponse([
-        { label: "남성", gender: "male", birth_year_min: 2000, birth_year_max: 2005, required_verification_ids: [] },
-        { label: "여성", gender: "female", birth_year_min: 2000, birth_year_max: 2005, required_verification_ids: [] },
+        {
+          label: "남성",
+          gender: "male",
+          birth_year_min: 2000,
+          birth_year_max: 2005,
+          required_verification_ids: [],
+        },
+        {
+          label: "여성",
+          gender: "female",
+          birth_year_min: 2000,
+          birth_year_max: 2005,
+          required_verification_ids: [],
+        },
       ]),
   };
 }
@@ -157,8 +218,18 @@ function selectEntryGroupTemplatesRoute(): FetchRoute {
 function selectEntryGroupTemplatesEmptyRoute(): FetchRoute {
   return {
     matcher: (req) =>
-      req.url.includes("/rest/v1/entry_group_templates") && req.method === "GET",
+      req.url.includes("/rest/v1/entry_group_templates") &&
+      req.method === "GET",
     handler: () => jsonResponse([]),
+  };
+}
+
+function selectEntryGroupTemplatesErrorRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/entry_group_templates") &&
+      req.method === "GET",
+    handler: () => jsonResponse({ message: "load error" }, { status: 500 }),
   };
 }
 
@@ -166,7 +237,23 @@ function insertEntryGroupsRoute(): FetchRoute {
   return {
     matcher: (req) =>
       req.url.includes("/rest/v1/entry_groups") && req.method === "POST",
-    handler: () => jsonResponse([{ id: "eg-001" }, { id: "eg-002" }]),
+    handler: async (req) => {
+      const rows = await req.json();
+      const length = Array.isArray(rows) ? rows.length : 1;
+      return jsonResponse(
+        Array.from({ length }, (_, i) => ({
+          id: `eg-${String(i + 1).padStart(3, "0")}`,
+        })),
+      );
+    },
+  };
+}
+
+function insertEntryGroupsErrorRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/entry_groups") && req.method === "POST",
+    handler: () => jsonResponse({ message: "insert error" }, { status: 500 }),
   };
 }
 
@@ -177,9 +264,39 @@ function selectTicketTemplatesRoute(): FetchRoute {
       req.url.includes("/rest/v1/ticket_templates") && req.method === "GET",
     handler: () =>
       jsonResponse([
-        { id: TEST_TEMPLATE_ID_1, name: "남성 티켓", description: null, price: 30000, target_entry_group_ids: [], required_verification_ids: [] },
-        { id: TEST_TEMPLATE_ID_2, name: "여성 티켓", description: null, price: 20000, target_entry_group_ids: [], required_verification_ids: [] },
+        {
+          id: TEST_TEMPLATE_ID_1,
+          name: "남성 티켓",
+          description: null,
+          price: 30000,
+          target_entry_group_ids: [],
+          required_verification_ids: [],
+        },
+        {
+          id: TEST_TEMPLATE_ID_2,
+          name: "여성 티켓",
+          description: null,
+          price: 20000,
+          target_entry_group_ids: [],
+          required_verification_ids: [],
+        },
       ]),
+  };
+}
+
+function selectTicketTemplatesEmptyRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/ticket_templates") && req.method === "GET",
+    handler: () => jsonResponse([]),
+  };
+}
+
+function selectTicketTemplatesErrorRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/ticket_templates") && req.method === "GET",
+    handler: () => jsonResponse({ message: "load error" }, { status: 500 }),
   };
 }
 
@@ -188,6 +305,30 @@ function insertTicketsRoute(): FetchRoute {
     matcher: (req) =>
       req.url.includes("/rest/v1/tickets") && req.method === "POST",
     handler: () => jsonResponse([]),
+  };
+}
+
+function insertTicketsErrorRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/tickets") && req.method === "POST",
+    handler: () => jsonResponse({ message: "insert error" }, { status: 500 }),
+  };
+}
+
+function insertSingleTicketRoute(id = TEST_TICKET_ID_1): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/tickets") && req.method === "POST",
+    handler: () => jsonResponse({ id }),
+  };
+}
+
+function insertSingleTicketErrorRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/tickets") && req.method === "POST",
+    handler: () => jsonResponse({ message: "insert error" }, { status: 500 }),
   };
 }
 
@@ -200,8 +341,16 @@ function selectTicketsRoute(soldCount1 = 0, soldCount2 = 0): FetchRoute {
       req.method === "GET",
     handler: () =>
       jsonResponse([
-        { id: TEST_TICKET_ID_1, sold_count: soldCount1, event_id: TEST_EVENT_ID },
-        { id: TEST_TICKET_ID_2, sold_count: soldCount2, event_id: TEST_EVENT_ID },
+        {
+          id: TEST_TICKET_ID_1,
+          sold_count: soldCount1,
+          event_id: TEST_EVENT_ID,
+        },
+        {
+          id: TEST_TICKET_ID_2,
+          sold_count: soldCount2,
+          event_id: TEST_EVENT_ID,
+        },
       ]),
   };
 }
@@ -221,7 +370,9 @@ Deno.test({
   fn: async () => {
     await withEnv(ENV, async () => {
       await withNoIntervals(async () => {
-        const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
         const req = new Request("http://localhost", { method: "OPTIONS" });
         const res = await handler(req);
         assertEquals(res.status, 200);
@@ -238,7 +389,9 @@ Deno.test({
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
-          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const handler = await captureServeHandler(
+            new URL("./index.ts", import.meta.url),
+          );
           const req = new Request("http://localhost", {
             method: "GET",
             headers: { Authorization: "Bearer test-token" },
@@ -254,7 +407,9 @@ Deno.test({
 Deno.test({
   name: "Missing auth returns 401",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authFailRoute()]);
 
     await withEnv(ENV, async () => {
@@ -270,7 +425,9 @@ Deno.test({
 Deno.test({
   name: "Invalid JSON body returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -293,7 +450,9 @@ Deno.test({
 Deno.test({
   name: "Missing action returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -302,7 +461,7 @@ Deno.test({
         const res = await handler(req);
         assertEquals(res.status, 400);
         const body = await readJson(res);
-        assertEquals(body.error, "Missing or invalid \"action\" field");
+        assertEquals(body.error, 'Missing or invalid "action" field');
       });
     });
   },
@@ -311,12 +470,16 @@ Deno.test({
 Deno.test({
   name: "Unknown action returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const req = authenticatedJsonRequest("http://localhost", { action: "delete" });
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "delete",
+        });
         const res = await handler(req);
         assertEquals(res.status, 400);
         const body = await readJson(res);
@@ -331,7 +494,9 @@ Deno.test({
 Deno.test({
   name: "create: event + entry_groups + tickets from templates",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectPartyRoute(),
@@ -348,7 +513,11 @@ Deno.test({
         const req = authenticatedJsonRequest("http://localhost", {
           action: "create",
           party_id: TEST_PARTY_ID,
-          event: { start_time: FUTURE_START, end_time: FUTURE_END, max_participants: 20 },
+          event: {
+            start_time: FUTURE_START,
+            end_time: FUTURE_END,
+            max_participants: 20,
+          },
           tickets: [
             { template_id: TEST_TEMPLATE_ID_1, quantity: 10 },
             { template_id: TEST_TEMPLATE_ID_2, quantity: 10 },
@@ -367,7 +536,9 @@ Deno.test({
 Deno.test({
   name: "create: event with vote_start_at/vote_end_at",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectPartyRoute(),
@@ -403,7 +574,9 @@ Deno.test({
 Deno.test({
   name: "create: past start_time returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectPartyRoute(),
@@ -429,7 +602,9 @@ Deno.test({
 Deno.test({
   name: "create: start_time >= end_time returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -451,7 +626,9 @@ Deno.test({
 Deno.test({
   name: "create: missing party_id returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -472,7 +649,9 @@ Deno.test({
 Deno.test({
   name: "create: missing event object returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -491,7 +670,9 @@ Deno.test({
 Deno.test({
   name: "create: no partner membership returns 403",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectPartyRoute(),
@@ -515,7 +696,9 @@ Deno.test({
 Deno.test({
   name: "create: no PARTY_MANAGE/EVENT_MANAGE permission returns 403",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectPartyRoute(),
@@ -541,7 +724,9 @@ Deno.test({
 Deno.test({
   name: "update: start_time change",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectEventRoute(),
@@ -569,7 +754,9 @@ Deno.test({
 Deno.test({
   name: "update: missing event_id returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -590,7 +777,9 @@ Deno.test({
 Deno.test({
   name: "update: event not found returns 404",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectEventNotFoundRoute(),
@@ -613,7 +802,9 @@ Deno.test({
 Deno.test({
   name: "update: other partner's event returns 403",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectEventRoute("scheduled", "other-partner"),
@@ -637,7 +828,9 @@ Deno.test({
 Deno.test({
   name: "update: no fields to update returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectEventRoute(),
@@ -665,7 +858,9 @@ Deno.test({
 Deno.test({
   name: "update_status: scheduled → cancelled",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectEventRoute("scheduled"),
@@ -692,7 +887,9 @@ Deno.test({
 Deno.test({
   name: "update_status: completed → 400 (system only)",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -705,7 +902,10 @@ Deno.test({
         const res = await handler(req);
         assertEquals(res.status, 400);
         const body = await readJson(res);
-        assertEquals(body.error, "Cannot set status to completed — system only");
+        assertEquals(
+          body.error,
+          "Cannot set status to completed — system only",
+        );
       });
     });
   },
@@ -714,7 +914,9 @@ Deno.test({
 Deno.test({
   name: "update_status: cancelled event cannot change status",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectEventRoute("cancelled"),
@@ -740,7 +942,9 @@ Deno.test({
 Deno.test({
   name: "update_status: missing event_id returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -759,7 +963,9 @@ Deno.test({
 Deno.test({
   name: "update_status: event not found returns 404",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectEventNotFoundRoute(),
@@ -782,7 +988,9 @@ Deno.test({
 Deno.test({
   name: "update_status: other partner's event returns 403",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectEventRoute("scheduled", "other-partner"),
@@ -808,7 +1016,9 @@ Deno.test({
 Deno.test({
   name: "update_tickets: price change",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectEventRoute(),
@@ -838,7 +1048,9 @@ Deno.test({
 Deno.test({
   name: "update_tickets: quantity below sold_count returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectEventRoute(),
@@ -867,7 +1079,9 @@ Deno.test({
 Deno.test({
   name: "update_tickets: missing event_id returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -888,7 +1102,9 @@ Deno.test({
 Deno.test({
   name: "update_tickets: empty tickets array returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -908,7 +1124,9 @@ Deno.test({
 Deno.test({
   name: "update_tickets: other partner's event returns 403",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectEventRoute("scheduled", "other-partner"),
@@ -924,6 +1142,581 @@ Deno.test({
         });
         const res = await handler(req);
         assertEquals(res.status, 403);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "create: accepts direct entry_groups and tickets",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectPartyRoute(),
+      permRoute(),
+      insertEventRoute(),
+      insertEntryGroupsRoute(),
+      insertTicketsRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "create",
+          party_id: TEST_PARTY_ID,
+          event: {
+            start_time: FUTURE_START,
+            end_time: FUTURE_END,
+            title: "Direct event",
+          },
+          entry_groups: [
+            {
+              label: "전체",
+              gender: null,
+              required_verification_ids: [],
+            },
+          ],
+          tickets: [
+            {
+              name: "일반 티켓",
+              price: 30000,
+              quantity: 20,
+              target_entry_group_ids: [],
+              required_verification_ids: [],
+            },
+          ],
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+        const body = await readJson(res);
+        assertEquals(body.event_id, TEST_EVENT_ID);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "create: remaps direct ticket target ids to inserted entry group ids",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock, calls } = createFetchMock([
+      authRoute(),
+      selectPartyRoute(),
+      permRoute(),
+      insertEventRoute(),
+      insertEntryGroupsRoute(),
+      insertTicketsRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "create",
+          party_id: TEST_PARTY_ID,
+          event: {
+            start_time: FUTURE_START,
+            end_time: FUTURE_END,
+            title: "Direct event",
+          },
+          entry_groups: [
+            {
+              source_entry_group_id: "egt_male",
+              label: "남성",
+              gender: "male",
+              required_verification_ids: [],
+            },
+            {
+              source_entry_group_id: "egt_female",
+              label: "여성",
+              gender: "female",
+              required_verification_ids: [],
+            },
+          ],
+          tickets: [
+            {
+              name: "여성 티켓",
+              price: 30000,
+              quantity: 20,
+              target_entry_group_ids: ["egt_female"],
+              required_verification_ids: [],
+            },
+          ],
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+      });
+    });
+
+    const entryGroupInsert = calls.find((c) =>
+      c.url.includes("/rest/v1/entry_groups") && c.method === "POST"
+    );
+    const ticketInsert = calls.find((c) =>
+      c.url.includes("/rest/v1/tickets") && c.method === "POST"
+    );
+    const insertedEntryGroups = JSON.parse(entryGroupInsert?.body ?? "[]");
+    const insertedTickets = JSON.parse(ticketInsert?.body ?? "[]");
+    assertEquals(insertedEntryGroups[1].source_entry_group_id, undefined);
+    assertEquals(insertedTickets[0].target_entry_group_ids, ["eg-002"]);
+  },
+});
+
+Deno.test({
+  name:
+    "create: rejects direct ticket target ids without matching entry group source",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock, calls } = createFetchMock([
+      authRoute(),
+      selectPartyRoute(),
+      permRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "create",
+          party_id: TEST_PARTY_ID,
+          event: {
+            start_time: FUTURE_START,
+            end_time: FUTURE_END,
+            title: "Direct event",
+          },
+          entry_groups: [
+            {
+              label: "전체",
+              required_verification_ids: [],
+            },
+          ],
+          tickets: [
+            {
+              name: "조건 티켓",
+              price: 30000,
+              quantity: 20,
+              target_entry_group_ids: ["egt_missing"],
+              required_verification_ids: [],
+            },
+          ],
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(
+          body.error,
+          "tickets[0].target_entry_group_ids[0] must reference entry_groups[].source_entry_group_id",
+        );
+      });
+    });
+
+    const eventInserts = calls.filter((c) =>
+      c.url.includes("/rest/v1/events") && c.method === "POST"
+    );
+    assertEquals(eventInserts.length, 0);
+  },
+});
+
+Deno.test({
+  name: "create_ticket: inserts a ticket for permitted event",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectEventRoute(),
+      permRoute(),
+      insertSingleTicketRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "create_ticket",
+          ticket: {
+            event_id: TEST_EVENT_ID,
+            name: "추가 티켓",
+            price: 10000,
+            quantity: 5,
+          },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+        const body = await readJson(res);
+        assertEquals(body.ticket_id, TEST_TICKET_ID_1);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "create: rejects invalid direct child inputs before event insert",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectPartyRoute(),
+      permRoute(),
+    ]);
+
+    const baseBody = {
+      action: "create",
+      party_id: TEST_PARTY_ID,
+      event: { start_time: FUTURE_START, end_time: FUTURE_END },
+    };
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const cases: Array<Record<string, unknown>> = [
+          { ...baseBody, entry_groups: "invalid" },
+          { ...baseBody, entry_groups: ["invalid"] },
+          { ...baseBody, entry_groups: [{ gender: "unknown" }] },
+          { ...baseBody, tickets: "invalid" },
+          { ...baseBody, tickets: ["invalid"] },
+          {
+            ...baseBody,
+            tickets: [
+              { template_id: TEST_TEMPLATE_ID_1, quantity: 1 },
+              { name: "직접 티켓", quantity: 1 },
+            ],
+          },
+          {
+            ...baseBody,
+            tickets: [{ template_id: TEST_TEMPLATE_ID_1, quantity: -1 }],
+          },
+          { ...baseBody, tickets: [{ quantity: 1 }] },
+          { ...baseBody, tickets: [{ name: "티켓", price: -1 }] },
+          { ...baseBody, tickets: [{ name: "티켓", quantity: -1 }] },
+          {
+            ...baseBody,
+            event: {
+              start_time: FUTURE_START,
+              end_time: FUTURE_END,
+              location_id: 123,
+            },
+          },
+        ];
+
+        for (const body of cases) {
+          const res = await handler(
+            authenticatedJsonRequest("http://localhost", body),
+          );
+          assertEquals(res.status, 400);
+        }
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "create: handles location and child insert/fetch failures",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    const bodyWithLocation = {
+      action: "create",
+      party_id: TEST_PARTY_ID,
+      event: {
+        start_time: FUTURE_START,
+        end_time: FUTURE_END,
+        location_id: "loc-001",
+      },
+    };
+
+    await withEnv(ENV, async () => {
+      let fetchMock = createFetchMock([
+        authRoute(),
+        selectPartyRoute(),
+        permRoute(),
+        selectLocationErrorRoute(),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", bodyWithLocation),
+        );
+        assertEquals(res.status, 500);
+      });
+
+      fetchMock = createFetchMock([
+        authRoute(),
+        selectPartyRoute(),
+        permRoute(),
+        selectLocationNotFoundRoute(),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", bodyWithLocation),
+        );
+        assertEquals(res.status, 404);
+      });
+
+      fetchMock = createFetchMock([
+        authRoute(),
+        selectPartyRoute(),
+        permRoute(),
+        selectLocationRoute("other-partner"),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", bodyWithLocation),
+        );
+        assertEquals(res.status, 403);
+      });
+
+      fetchMock = createFetchMock([
+        authRoute(),
+        selectPartyRoute(),
+        permRoute(),
+        insertEventRoute(),
+        insertEntryGroupsErrorRoute(),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "create",
+            party_id: TEST_PARTY_ID,
+            event: { start_time: FUTURE_START, end_time: FUTURE_END },
+            entry_groups: [{ label: "전체" }],
+          }),
+        );
+        assertEquals(res.status, 500);
+      });
+
+      fetchMock = createFetchMock([
+        authRoute(),
+        selectPartyRoute(),
+        permRoute(),
+        insertEventRoute(),
+        selectEntryGroupTemplatesErrorRoute(),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "create",
+            party_id: TEST_PARTY_ID,
+            event: { start_time: FUTURE_START, end_time: FUTURE_END },
+          }),
+        );
+        assertEquals(res.status, 500);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "create: handles ticket template and ticket insert failures",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const baseBody = {
+      action: "create",
+      party_id: TEST_PARTY_ID,
+      event: { start_time: FUTURE_START, end_time: FUTURE_END },
+      tickets: [{ template_id: TEST_TEMPLATE_ID_1, quantity: 1 }],
+    };
+
+    await withEnv(ENV, async () => {
+      let fetchMock = createFetchMock([
+        authRoute(),
+        selectPartyRoute(),
+        permRoute(),
+        insertEventRoute(),
+        selectEntryGroupTemplatesEmptyRoute(),
+        selectTicketTemplatesErrorRoute(),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", baseBody),
+        );
+        assertEquals(res.status, 500);
+      });
+
+      fetchMock = createFetchMock([
+        authRoute(),
+        selectPartyRoute(),
+        permRoute(),
+        insertEventRoute(),
+        selectEntryGroupTemplatesEmptyRoute(),
+        selectTicketTemplatesEmptyRoute(),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", baseBody),
+        );
+        assertEquals(res.status, 400);
+      });
+
+      fetchMock = createFetchMock([
+        authRoute(),
+        selectPartyRoute(),
+        permRoute(),
+        insertEventRoute(),
+        selectEntryGroupTemplatesEmptyRoute(),
+        selectTicketTemplatesRoute(),
+        insertTicketsErrorRoute(),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", baseBody),
+        );
+        assertEquals(res.status, 500);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "create_ticket: rejects invalid payloads and handles insert failure",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    await withEnv(ENV, async () => {
+      let fetchMock = createFetchMock([authRoute()]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        let res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "create_ticket",
+            ticket: null,
+          }),
+        );
+        assertEquals(res.status, 400);
+
+        res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "create_ticket",
+            ticket: { name: "티켓", quantity: 1 },
+          }),
+        );
+        assertEquals(res.status, 400);
+      });
+
+      fetchMock = createFetchMock([
+        authRoute(),
+        selectEventRoute(),
+        permRoute(),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "create_ticket",
+            ticket: { event_id: TEST_EVENT_ID, quantity: 1 },
+          }),
+        );
+        assertEquals(res.status, 400);
+      });
+
+      fetchMock = createFetchMock([
+        authRoute(),
+        selectEventRoute(),
+        permRoute(),
+        insertSingleTicketErrorRoute(),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "create_ticket",
+            ticket: {
+              event_id: TEST_EVENT_ID,
+              name: "티켓",
+              quantity: 1,
+            },
+          }),
+        );
+        assertEquals(res.status, 500);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name:
+    "update: validates location_id and writes change log when reason is set",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    await withEnv(ENV, async () => {
+      let fetchMock = createFetchMock([
+        authRoute(),
+        selectEventRoute(),
+        permRoute(),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "update",
+            event_id: TEST_EVENT_ID,
+            event: { location_id: 123 },
+          }),
+        );
+        assertEquals(res.status, 400);
+      });
+
+      fetchMock = createFetchMock([
+        authRoute(),
+        selectEventRoute(),
+        permRoute(),
+        selectLocationNotFoundRoute(),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "update",
+            event_id: TEST_EVENT_ID,
+            event: { location_id: "loc-001" },
+          }),
+        );
+        assertEquals(res.status, 404);
+      });
+
+      fetchMock = createFetchMock([
+        authRoute(),
+        selectEventRoute(),
+        permRoute(),
+        selectLocationRoute("other-partner"),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "update",
+            event_id: TEST_EVENT_ID,
+            event: { location_id: "loc-001" },
+          }),
+        );
+        assertEquals(res.status, 403);
+      });
+
+      fetchMock = createFetchMock([
+        authRoute(),
+        selectEventRoute(),
+        permRoute(),
+        updateEventRoute(),
+        insertEventChangeLogRoute(),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const newStart = new Date(Date.now() + 86400000 * 4).toISOString();
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "update",
+            event_id: TEST_EVENT_ID,
+            event: { start_time: newStart },
+            reason: "일정 변경",
+          }),
+        );
+        assertEquals(res.status, 200);
       });
     });
   },

@@ -142,14 +142,23 @@ class TicketRepository {
     try {
       final json = template.toDbJson();
 
-      final data = await _supabase
-          .from('ticket_templates')
-          .update(json)
-          .eq('id', template.id)
-          .select()
-          .single();
+      final response = await _supabase.functions.invoke(
+        'partner-manage-party',
+        body: {
+          'action': 'update_ticket_template',
+          'ticket_template_id': template.id,
+          'ticket_template': json..remove('party_id'),
+        },
+      );
+      if (response.status != 200) {
+        final error = response.data is Map
+            ? (response.data as Map)['error'] ??
+                  'Failed to update ticket template'
+            : 'Failed to update ticket template';
+        throw Exception(error);
+      }
 
-      final result = TicketTemplate.fromJson(data);
+      final result = await getTicketTemplateById(template.id);
       Log.d('updateTicketTemplate success | id: ${result.id}');
       return result;
     } catch (e, st) {
@@ -164,13 +173,24 @@ class TicketRepository {
     try {
       final json = template.toDbJson();
 
-      final data = await _supabase
-          .from('ticket_templates')
-          .insert(json)
-          .select()
-          .single();
+      final response = await _supabase.functions.invoke(
+        'partner-manage-party',
+        body: {
+          'action': 'create_ticket_template',
+          'ticket_template': json,
+        },
+      );
+      if (response.status != 200) {
+        final error = response.data is Map
+            ? (response.data as Map)['error'] ??
+                  'Failed to create ticket template'
+            : 'Failed to create ticket template';
+        throw Exception(error);
+      }
 
-      final result = TicketTemplate.fromJson(data);
+      final data = response.data as Map<String, dynamic>;
+      final templateId = data['ticket_template_id'] as String;
+      final result = await getTicketTemplateById(templateId);
       Log.d('createTicketTemplate success | id: ${result.id}');
       return result;
     } catch (e, st) {
@@ -183,8 +203,20 @@ class TicketRepository {
   Future<void> deleteTicketTemplate(String id) async {
     Log.d('deleteTicketTemplate called | id: $id');
     try {
-      // minglit_lints: allow-supabase-write — reason: EF migration pending (Phase 2 partner-side, tracked in #2392)
-      await _supabase.from('ticket_templates').delete().eq('id', id);
+      final response = await _supabase.functions.invoke(
+        'partner-manage-party',
+        body: {
+          'action': 'delete_ticket_template',
+          'ticket_template_id': id,
+        },
+      );
+      if (response.status != 200) {
+        final error = response.data is Map
+            ? (response.data as Map)['error'] ??
+                  'Failed to delete ticket template'
+            : 'Failed to delete ticket template';
+        throw Exception(error);
+      }
       Log.d('deleteTicketTemplate success | id: $id');
     } catch (e, st) {
       Log.e('deleteTicketTemplate failed: $id', e, st);
@@ -202,13 +234,23 @@ class TicketRepository {
         ..remove('updated_at')
         ..remove('sold_count');
 
-      final data = await _supabase
-          .from('tickets')
-          .insert(json)
-          .select()
-          .single();
+      final response = await _supabase.functions.invoke(
+        'partner-manage-event',
+        body: {
+          'action': 'create_ticket',
+          'ticket': json,
+        },
+      );
+      if (response.status != 200) {
+        final error = response.data is Map
+            ? (response.data as Map)['error'] ?? 'Failed to create ticket'
+            : 'Failed to create ticket';
+        throw Exception(error);
+      }
 
-      final result = Ticket.fromJson(data);
+      final data = response.data as Map<String, dynamic>;
+      final ticketId = data['ticket_id'] as String;
+      final result = await getTicketById(ticketId);
       Log.d('createTicket success | id: ${result.id}');
       return result;
     } catch (e, st) {
@@ -232,19 +274,37 @@ class TicketRepository {
         );
       }
 
+      final eventId = ticket.eventId;
+      if (eventId == null || eventId.isEmpty) {
+        throw const MinglitUserException('이벤트 정보가 없는 티켓은 수정할 수 없습니다.');
+      }
+
       final json = ticket.toJson()
         ..remove('created_at')
         ..remove('updated_at') // moddatetime trigger handles this
         ..remove('sold_count'); // sold_count is managed by system
 
-      final data = await _supabase
-          .from('tickets')
-          .update(json)
-          .eq('id', ticket.id)
-          .select()
-          .single();
+      final response = await _supabase.functions.invoke(
+        'partner-manage-event',
+        body: {
+          'action': 'update_tickets',
+          'event_id': eventId,
+          'tickets': [
+            {
+              ...json,
+              'ticket_id': ticket.id,
+            },
+          ],
+        },
+      );
+      if (response.status != 200) {
+        final error = response.data is Map
+            ? (response.data as Map)['error'] ?? 'Failed to update ticket'
+            : 'Failed to update ticket';
+        throw Exception(error);
+      }
 
-      final result = Ticket.fromJson(data);
+      final result = await getTicketById(ticket.id);
       Log.d('updateTicket success | id: ${result.id}');
       return result;
     } catch (e, st) {

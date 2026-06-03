@@ -127,7 +127,14 @@ void main() {
 
     group('reviewApplication', () {
       test('completes successfully', () async {
-        unawaited(mockTable(mockClient, 'partner_applications'));
+        when(
+          () => mockFunctions.invoke(
+            'partner-register',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(status: 200, data: {'success': true}),
+        );
 
         await expectLater(
           repository.reviewApplication(
@@ -140,11 +147,15 @@ void main() {
       });
 
       test('throws on error', () async {
-        unawaited(
-          mockTable(
-            mockClient,
-            'partner_applications',
-            shouldThrow: Exception('review failed'),
+        when(
+          () => mockFunctions.invoke(
+            'partner-register',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 500,
+            data: {'error': 'review failed'},
           ),
         );
 

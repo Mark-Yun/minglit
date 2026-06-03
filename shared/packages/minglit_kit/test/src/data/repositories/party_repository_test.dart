@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/models/event.dart';
 import 'package:minglit_kit/src/data/models/party.dart';
 import 'package:minglit_kit/src/data/models/party_entry_group.dart';
+import 'package:minglit_kit/src/data/models/ticket.dart';
 import 'package:minglit_kit/src/data/repositories/party_repository.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -630,6 +631,17 @@ void main() {
 
     group('createEvent', () {
       test('returns created event on success', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-event',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true, 'event_id': 'event_1'},
+          ),
+        );
         unawaited(mockTable(mockClient, 'events', singleData: eventJson));
 
         final event = Event.fromJson(eventJson);
@@ -639,9 +651,77 @@ void main() {
         expect(result.partyId, 'party_1');
       });
 
+      test(
+        'passes entry group source ids for ticket target remapping',
+        () async {
+          when(
+            () => mockFunctions.invoke(
+              'partner-manage-event',
+              body: any(named: 'body'),
+            ),
+          ).thenAnswer(
+            (_) async => FunctionResponse(
+              status: 200,
+              data: {'success': true, 'event_id': 'event_1'},
+            ),
+          );
+          unawaited(mockTable(mockClient, 'events', singleData: eventJson));
+
+          final event = Event.fromJson(eventJson).copyWith(
+            entryGroups: [
+              EntryGroup(
+                id: 'egt_1',
+                eventId: '',
+                label: 'VIP',
+                createdAt: now,
+                updatedAt: now,
+              ),
+            ],
+            tickets: [
+              Ticket(
+                id: '',
+                name: 'VIP 티켓',
+                createdAt: now,
+                updatedAt: now,
+                price: 30000,
+                quantity: 20,
+                targetEntryGroupIds: ['egt_1'],
+              ),
+            ],
+          );
+
+          await repository.createEvent(event);
+
+          final captured =
+              verify(
+                    () => mockFunctions.invoke(
+                      'partner-manage-event',
+                      body: captureAny(named: 'body'),
+                    ),
+                  ).captured.single
+                  as Map<String, dynamic>;
+          final groups = captured['entry_groups'] as List;
+          final tickets = captured['tickets'] as List;
+          expect(groups.single, isNot(containsPair('id', anything)));
+          expect(groups.single, containsPair('source_entry_group_id', 'egt_1'));
+          expect(
+            tickets.single,
+            containsPair('target_entry_group_ids', ['egt_1']),
+          );
+        },
+      );
+
       test('throws on error', () async {
-        unawaited(
-          mockTable(mockClient, 'events', shouldThrow: Exception('error')),
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-event',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 500,
+            data: {'error': 'error'},
+          ),
         );
 
         final event = Event.fromJson(eventJson);
@@ -654,6 +734,17 @@ void main() {
 
     group('updateEvent', () {
       test('returns updated event on success', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-event',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true},
+          ),
+        );
         unawaited(mockTable(mockClient, 'events', singleData: eventJson));
 
         final event = Event.fromJson(eventJson);
@@ -663,8 +754,16 @@ void main() {
       });
 
       test('throws on error', () async {
-        unawaited(
-          mockTable(mockClient, 'events', shouldThrow: Exception('error')),
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-event',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 500,
+            data: {'error': 'error'},
+          ),
         );
 
         final event = Event.fromJson(eventJson);
@@ -793,7 +892,14 @@ void main() {
       // entry_group_templates(Party Level) 테이블 사용으로 수정.
 
       test('completes with empty templates (delete only)', () async {
-        unawaited(mockTable(mockClient, 'entry_group_templates'));
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-party',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(status: 200, data: {'success': true}),
+        );
 
         await expectLater(
           repository.replaceEntryGroupTemplates('party_1', []),
@@ -802,7 +908,14 @@ void main() {
       });
 
       test('completes with templates (delete + insert)', () async {
-        unawaited(mockTable(mockClient, 'entry_group_templates'));
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-party',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(status: 200, data: {'success': true}),
+        );
 
         final templates = [
           const EntryGroupTemplate(
@@ -822,11 +935,15 @@ void main() {
       });
 
       test('throws on error', () async {
-        unawaited(
-          mockTable(
-            mockClient,
-            'entry_group_templates',
-            shouldThrow: Exception('error'),
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-party',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 500,
+            data: {'error': 'error'},
           ),
         );
 
@@ -837,23 +954,30 @@ void main() {
       });
 
       test(
-        'Fix #1740: uses entry_group_templates table (not entry_groups)',
+        'Fix #1740: sends entry_group_templates via partner-manage-party',
         () async {
-          final templatesBuilder = mockTable(
-            mockClient,
-            'entry_group_templates',
+          when(
+            () => mockFunctions.invoke(
+              'partner-manage-party',
+              body: any(named: 'body'),
+            ),
+          ).thenAnswer(
+            (_) async => FunctionResponse(status: 200, data: {'success': true}),
           );
 
           await repository.replaceEntryGroupTemplates('party_1', []);
 
-          final eqFilters = templatesBuilder.recordedFilters
-              .where((f) => f.method == 'eq')
-              .toList();
-          expect(
-            eqFilters.any((f) => f.column == 'party_id'),
-            isTrue,
-            reason: 'entry_group_templates must be filtered by party_id',
-          );
+          final captured =
+              verify(
+                    () => mockFunctions.invoke(
+                      'partner-manage-party',
+                      body: captureAny(named: 'body'),
+                    ),
+                  ).captured.single
+                  as Map<String, dynamic>;
+          expect(captured['action'], 'update');
+          expect(captured['party_id'], 'party_1');
+          expect(captured['entry_group_templates'], isEmpty);
           // entry_groups 테이블 호출 없음 확인
           verifyNever(() => mockClient.from('entry_groups'));
         },
