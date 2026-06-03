@@ -80,6 +80,12 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
 
+      - name: Prepare empty render artifact directory
+        run: |
+          rm -rf docs/infra/mds-emulator-render
+          mkdir -p docs/infra/mds-emulator-render
+          touch docs/infra/mds-emulator-render/artifact-root.txt
+
       - name: Run render shard on Android emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -96,6 +102,7 @@ jobs:
 
             rm -rf "$OUTPUT_ROOT"
             mkdir -p "$OUTPUT_ROOT"
+            touch "$OUTPUT_ROOT/artifact-root.txt"
 
             cd "$APP_DIR"
 
