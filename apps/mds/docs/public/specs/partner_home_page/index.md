@@ -67,7 +67,7 @@ AppBar(로고 좌측) + 스크롤 body + 하단 NavigationBar. body는 **오버�
 
 ## Help bottom sheet sub-anatomy _(MinglitHelpSheet 컴포넌트 후보)_
 
-info 아이콘 탭 시 노출되는 컨텍스트 도움말 sheet. 파트너 앱 모든 주요 화면에서 같은 chrome 재사용 — 화면별 sections 콘텐츠만 다름.
+info 아이콘 탭 시 노출되는 컨텍스트 도움말 sheet. 현재 적용 화면(홈·파티 관리·신청관리·정산)은 같은 chrome을 재사용하며, 화면별 sections 콘텐츠만 다름.
 
 | Region | Alignment | Notes |
 |---|---|---|

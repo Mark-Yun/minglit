@@ -107,7 +107,7 @@ D-day chip tier (MinglitDDayChip 컴포넌트)
 
 ## Help bottom sheet sub-anatomy _(MinglitHelpSheet 컴포넌트 후보)_
 
-info 아이콘 또는 Empty의 help 버튼 탭 시 노출되는 컨텍스트 도움말 sheet. 첫 사용자가 가질 만한 Q&A 4개 시퀀스 (개념 → 용어 → 상태 → 핵심 규칙). 파트너 앱 모든 주요 화면에서 같은 chrome 재사용 — 화면별 sections 콘텐츠만 다름.
+info 아이콘 또는 Empty의 help 버튼 탭 시 노출되는 컨텍스트 도움말 sheet. 첫 사용자가 가질 만한 Q&A 4개 시퀀스 (개념 → 용어 → 상태 → 핵심 규칙). 현재 적용 화면(홈·파티 관리·신청관리·정산)은 같은 chrome을 재사용하며, 화면별 sections 콘텐츠만 다름.
 
 | Region | Alignment | Notes |
 |---|---|---|

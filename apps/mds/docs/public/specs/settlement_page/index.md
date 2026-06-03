@@ -65,7 +65,7 @@ Scaffold + AppBar(title:"정산", actions: 지갑 IconButton, bottom: 2-tab TabB
 
 ## Help bottom sheet sub-anatomy _(MinglitHelpSheet 컴포넌트 후보)_
 
-info 아이콘 탭 시 노출되는 컨텍스트 도움말 sheet. 파트너 앱 모든 주요 화면에서 같은 chrome 재사용 — 화면별 sections 콘텐츠만 다름.
+info 아이콘 탭 시 노출되는 컨텍스트 도움말 sheet. 현재 적용 화면(홈·파티 관리·신청관리·정산)은 같은 chrome을 재사용하며, 화면별 sections 콘텐츠만 다름.
 
 | Region | Alignment | Notes |
 |---|---|---|
@@ -168,7 +168,7 @@ info 아이콘 탭 시 노출되는 컨텍스트 도움말 sheet. 파트너 앱 
 
 | 항목 | 내용 |
 |---|---|
-| 조건 | AppBar의 info 아이콘 탭 → 화면 위 bottom sheet 슬라이드 업. 파트너 앱 전체 일관 패턴. |
+| 조건 | AppBar의 info 아이콘 탭 → 화면 위 bottom sheet 슬라이드 업. 현재 적용 화면(홈·파티 관리·신청관리·정산)의 일관 도움말 패턴. |
 | 사용자 액션 | ① "확인" 버튼 탭 — sheet dismiss (primary).② handle 드래그 / scrim 탭 — dismiss (보조).③ sheet 내부 스크롤 — max-height 초과 시. |
 | 컴포넌트 | · MinglitHelpSheet — props: title: String · sections: List<HelpSection>.· 화면별 도움말 내용은 호출 측에서 정의 — sheet chrome만 책임.· 진입: showModalBottomSheet(isScrollControlled · barrierColor · shape rounded top). |
 | 토큰 | · scrim: rgba(0,0,0,0.45) · sheet bg --color-background · 상단 모서리 radius-card· handle 36×4 · --color-divider · header 16/700 primary· CTA "확인" — height 48 · partner-primary filled · 15/700 white · margin medium· max-height 75vh |
