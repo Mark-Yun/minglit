@@ -2,11 +2,11 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>Spec — CheckinPlaceholderPage (app_partner · CheckinTabRoute)</title>
+<title>Spec — CheckinTabRoute (app_partner · route resolver)</title>
 <link rel="stylesheet" href="/specs/_spec.css">
 <style>
 /* ============================================================
-   CheckinPlaceholderPage-specific atoms.
+   CheckinTabRoute-specific atoms.
    Partner brand override — page is in app_partner.
    ============================================================ */
 .viewport {
@@ -208,44 +208,44 @@ body.dark-mode .viewport {
 <div class="page">
 
 <header>
-  <h1>체크인 진입</h1>
+  <h1>체크인 탭 라우팅</h1>
 </header>
 
 <section class="doc">
   <h2>Overview</h2>
   <table class="ref">
     <tbody>
-      <tr><th style="width: 140px;">Status</th><td><strong>✅ 디자인완료</strong></td></tr>
+      <tr><th style="width: 140px;">Status</th><td><strong>✅ 라우팅 계약완료</strong> <em style="color: var(--color-text-secondary);">— visible screen은 OngoingEventListPage로 수렴</em></td></tr>
       <tr><th>App</th><td><code>app_partner</code></td></tr>
       <tr><th>Category</th><td>checkin (탭)</td></tr>
-      <tr><th>Route / Surface</th><td><code>CheckinPlaceholderPage</code> — Bottom nav 체크인 탭 직접 자식 (route라기보다 IndexedStack child)</td></tr>
-      <tr><th>Path</th><td><em>—</em> (탭 자식 · URL 없음, parent shell이 <code>/partner/home</code>)</td></tr>
+      <tr><th>Route / Surface</th><td><code>CheckinTabRoute</code> / <code>CheckinPlaceholderPage</code> — Bottom nav 체크인 탭의 route resolver</td></tr>
+      <tr><th>Path</th><td><code>/checkin</code> — parent shell의 하단 nav 체크인 탭</td></tr>
       <tr>
         <th>Hierarchy</th>
         <td>
           <strong>Parent</strong>: <a href="/specs/partner_home_page/index.html"><code>PartnerHomePage</code></a> shell의 BottomNavBar 체크인 탭<br>
-          <strong>Children</strong>: <code>QRScannerScreen</code> (탐색 시작점 · 별도 화면)
+          <strong>Children</strong>: <a href="/specs/ongoing_event_list_page/index.html"><code>OngoingEventListPage</code></a> (오늘 이벤트 1개 또는 선택 완료) · Empty state (0개) · Event selector (2개 이상)
         </td>
       </tr>
       <tr>
         <th>Purpose</th>
         <td>
-          파트너가 체크인 탭을 누르는 순간 오늘 진행 예정 이벤트 수에 따라 자동으로 다른 화면을 보여준다 — 이벤트가 없으면 안내, 1개면 즉시 스캐너, 2개 이상이면 선택 목록.
-          단순 진입 마찰을 줄여 가장 흔한 1-event 케이스에서 별도 선택 없이 바로 스캔 가능.
+          파트너가 체크인 탭을 누르는 순간 오늘 운영 가능한 이벤트 수에 따라 적절한 운영 화면으로 보낸다.
+          이 route 자체는 독립 운영 화면이 아니며, 이벤트가 있으면 <code>OngoingEventListPage</code>가 참가자 명단 · QR mode · 수동 체크인을 모두 담당한다.
         </td>
       </tr>
       <tr>
         <th>User journey</th>
         <td>
           <strong>Entry points</strong>: 파트너 홈의 하단 체크인 탭 진입.<br>
-          <strong>Exit points</strong>: 이벤트 1개일 땐 곧장 다크 테마 스캐너 화면으로 진입. 2개 이상일 땐 카드 선택 후 스캐너로 이동. 이벤트가 없으면 다른 탭으로만 이탈.
+          <strong>Exit points</strong>: 이벤트 1개일 땐 해당 이벤트의 <code>OngoingEventListPage</code>로 바로 진입. 2개 이상일 땐 이벤트 선택 후 <code>OngoingEventListPage</code>로 이동. 이벤트가 없으면 빈 안내만 노출하고 다른 탭으로 이탈.
         </td>
       </tr>
       <tr>
         <th>Background</th>
         <td>
-          파트너가 운영일에 체크인 탭을 누를 때 가장 잦은 시나리오는 "오늘 1 이벤트". 매번 선택 화면을 거치게 하면 마찰이 커서 1개일 때는 자동으로 스캐너에 진입.
-          "오늘"의 기준은 시작 3시간 전부터 종료 1시간 후까지의 윈도우.
+          PartnerHome LIVE/진행 임박 카드에서도 여러 이벤트 운영이 가능하므로, 체크인 탭은 별도 dashboard를 새로 만들지 않는다.
+          1개 이벤트는 운영 dashboard로 직행하고, 2개 이상일 때만 event selector가 잠깐 개입한다. "오늘"의 기준은 시작 3시간 전부터 종료 1시간 후까지의 윈도우.
         </td>
       </tr>
       <tr><th>Frequency</th><td>운영일에 매 진입마다 (체크인 시작/중간 중)</td></tr>
@@ -260,6 +260,12 @@ body.dark-mode .viewport {
       <tr><th style="width: 110px;">Date</th><th style="width: 80px;">Version</th><th style="width: 120px;">Author</th><th>Changes</th></tr>
     </thead>
     <tbody>
+      <tr>
+        <td>2026-06-03</td>
+        <td>1.1</td>
+        <td>codex</td>
+        <td>#2999: CheckinPlaceholderPage를 visible screen이 아닌 CheckinTabRoute resolver 계약으로 재정의. 1-event QR scanner 직행을 deprecated하고 OngoingEventListPage를 canonical 운영 화면으로 지정. 2+ events는 selector 후 OngoingEventListPage로 수렴.</td>
+      </tr>
       <tr>
         <td>2026-05-01</td>
         <td>1.0</td>
@@ -281,13 +287,13 @@ body.dark-mode .viewport {
   <div class="perspective__header">
     <span class="glyph">🧱</span>
     <h2>Layout</h2>
-    <span class="lede">파트너 정보를 불러오고 오늘 예정 이벤트 수(0 / 1 / 2+)에 따라 화면이 갈린다. state별 레이아웃이 완전히 다름.</span>
+    <span class="lede">파트너 정보를 불러오고 오늘 운영 가능한 이벤트 수(0 / 1 / 2+)에 따라 route destination이 갈린다. visible operation surface는 OngoingEventListPage다.</span>
   </div>
 
   <section class="doc">
     <h2>Blueprint &amp; tree</h2>
     <p class="intro">
-      모든 state는 simpleAppBar('체크인') + body. body 형태가 state별로 갈림 — Empty(중앙 정렬 컬럼) / Selection(상단 헤더 + ListView) / 1-event는 자체 화면 push라 본 페이지 잔영 없음.
+      이 route는 resolver다. 0-event만 빈 안내를 직접 보여주고, 1-event/2+ 선택 완료는 OngoingEventListPage로 이동한다. 기존 QRScannerScreen 직행 구현은 legacy로만 남긴다.
     </p>
 
     <div class="layout-grid">
@@ -308,9 +314,9 @@ body.dark-mode .viewport {
    ├─ 로딩  → 중앙 스피너
    ├─ 에러  → 중앙 평문 텍스트
    └─ 결과 (오늘 이벤트 수에 따라)
-      · 1개  → 다크 테마 스캐너 화면이 본 화면을 대체
+      · 1개  → OngoingEventListPage(eventId) 직접 진입
       · 0개  → 빈 안내 화면 (중앙 정렬)
-      · 2+개 → 선택 리스트 화면 (헤더 + 카드)</div>
+      · 2+개 → 이벤트 선택 → OngoingEventListPage(eventId)</div>
     </div>
   </section>
 
@@ -398,7 +404,7 @@ body.dark-mode .viewport {
   <div class="perspective__header">
     <span class="glyph">🎨</span>
     <h2>States</h2>
-    <span class="lede">5종 — 파트너/이벤트 데이터 로딩 단계 + 오늘 이벤트 수에 따른 3-way 분기. baseline은 Selection (2+events) — 가장 정보 풍부한 케이스.</span>
+    <span class="lede">5종 — 파트너/이벤트 데이터 로딩 단계 + 오늘 이벤트 수에 따른 3-way 분기. baseline은 Selection (2+events) — selector 후 운영 dashboard로 이동한다.</span>
   </div>
 
   <section class="doc">
@@ -408,8 +414,8 @@ body.dark-mode .viewport {
         <tr><th style="width: 220px;">State</th><th style="width: 100px;">Tag</th><th style="width: 220px;">조건 (요약)</th><th>Key visual differentiator</th></tr>
       </thead>
       <tbody>
-        <tr><td><strong>Selection (2+ events)</strong> 🎯</td><td>baseline</td><td>오늘 예정 이벤트 2개 이상</td><td>상단 헤더 + 시간순 카드 리스트 · LIVE 배지 가능</td></tr>
-        <tr><td><strong>Direct scan (1 event)</strong></td><td>auto-route</td><td>오늘 예정 이벤트 1개</td><td>본 화면에 머무르지 않고 즉시 다크 테마 스캐너로 진입</td></tr>
+        <tr><td><strong>Selection (2+ events)</strong> 🎯</td><td>baseline</td><td>오늘 예정 이벤트 2개 이상</td><td>상단 헤더 + 시간순 카드 리스트 · 선택 후 OngoingEventListPage</td></tr>
+        <tr><td><strong>Direct dashboard (1 event)</strong></td><td>auto-route</td><td>오늘 예정 이벤트 1개</td><td>본 화면에 머무르지 않고 즉시 OngoingEventListPage로 진입</td></tr>
         <tr><td><strong>Empty (0 events)</strong></td><td>no events</td><td>오늘 예정 이벤트 없음</td><td>중앙 QR 아이콘 + 안내 문구 풀-페이지</td></tr>
         <tr><td><strong>Loading</strong></td><td>async</td><td>파트너/이벤트 데이터 로딩 중</td><td>중앙 스피너 단독</td></tr>
         <tr><td><strong>Error</strong></td><td>fail</td><td>데이터 로딩 실패</td><td>중앙 평문 에러 텍스트 (재시도 CTA 없음)</td></tr>
@@ -479,7 +485,7 @@ body.dark-mode .viewport {
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
-            <td>이벤트 카드 탭 → 다크 테마 스캐너 화면으로 진입.</td>
+            <td>이벤트 카드 탭 → 해당 이벤트의 <a href="/specs/ongoing_event_list_page/index.html"><code>OngoingEventListPage</code></a>로 진입.</td>
           </tr>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
@@ -510,35 +516,38 @@ body.dark-mode .viewport {
         </tbody>
       </table>
 
-      <!-- Direct scan -->
+      <!-- Direct dashboard -->
       <table class="ref state-mini">
         <thead>
-          <tr><th colspan="3"><strong>Direct scan (1 event)</strong> <span class="tag">auto-route</span></th></tr>
+          <tr><th colspan="3"><strong>Direct dashboard (1 event)</strong> <span class="tag">auto-route</span></th></tr>
         </thead>
         <tbody>
           <tr>
             <td rowspan="6" class="state-mini__mock">
               <div class="viewport">
-                <div class="cp-scanner">
-                  <div class="cp-scanner__appbar">
+                <div class="cp-appbar">
+                  <div class="cp-appbar__back">
                     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
-                    한강 노을 와인 모임
                   </div>
-                  <div class="cp-scanner__viewport">
-                    <div class="cp-scanner__frame"></div>
-                    <div class="cp-scanner__hint">QR을 프레임 안에 맞춰주세요</div>
+                  <div class="cp-appbar__title">체크인</div>
+                </div>
+                <div class="cp-body">
+                  <div class="cp-empty">
+                    <div class="cp-empty__icon">→</div>
+                    <div class="cp-empty__title">참가자 체크인으로 이동</div>
+                    <div class="cp-empty__sub">오늘 이벤트 1개<br>운영 화면 자동 진입</div>
                   </div>
                 </div>
               </div>
             </td>
             <td class="state-mini__aspect">조건</td>
-            <td>오늘 예정 이벤트가 정확히 1개. 체크인 탭을 누르는 즉시 본 화면을 거치지 않고 스캐너 화면이 그 자리에 채워짐.</td>
+            <td>오늘 예정 이벤트가 정확히 1개. 체크인 탭을 누르는 즉시 본 화면을 거치지 않고 <a href="/specs/ongoing_event_list_page/index.html"><code>OngoingEventListPage</code></a>로 진입.</td>
           </tr>
-          <tr><td class="state-mini__aspect">사용자 액션</td><td>스캐너 화면 자체의 액션으로 위임 (별도 spec).</td></tr>
-          <tr><td class="state-mini__aspect">에지케이스</td><td>스캐너는 시스템이 라이트 모드여도 항상 다크 테마로 노출 (카메라 화면에서 가독성 유지).</td></tr>
-          <tr><td class="state-mini__aspect">컴포넌트</td><td>↔ 체크인 AppBar가 사라지고 스캐너 화면이 자체 AppBar와 함께 본 화면을 대체.</td></tr>
-          <tr><td class="state-mini__aspect">토큰</td><td>↔ 라이트 컬러 스킴 → 다크 스킴 강제 (partner primary 시드).</td></tr>
-          <tr><td class="state-mini__aspect">노트</td><td>📝 본 페이지의 '체크인' AppBar는 이 분기에서 노출되지 않음 — 스캐너 화면이 자체 화면을 가짐. 사용자 입장에선 "탭하자마자 스캐너"라 본 페이지 잔영 없음.</td></tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>OngoingEventListPage의 QR mode / 검색 / row action sheet로 위임.</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>Flutter 현 구현은 QRScannerScreen 직행이지만, MDS TO-BE에서는 scanner를 inline QR mode로 흡수한다.</td></tr>
+          <tr><td class="state-mini__aspect">컴포넌트</td><td>+ <code>OngoingEventListPage</code> sticky counter · inline QR scanner · participant row action sheet.</td></tr>
+          <tr><td class="state-mini__aspect">토큰</td><td>+ operation dashboard tokens follow OngoingEventListPage; standalone dark scanner theme is deprecated.</td></tr>
+          <tr><td class="state-mini__aspect">노트</td><td>📝 본 페이지의 '체크인' AppBar는 이 분기에서 노출되지 않음. 사용자는 바로 "참가자 체크인" 운영 화면을 본다.</td></tr>
         </tbody>
       </table>
 
@@ -651,10 +660,10 @@ body.dark-mode .viewport {
     <table class="ref">
       <thead><tr><th style="width: 220px;">사용자 액션</th><th>화면에 보이는 결과</th></tr></thead>
       <tbody>
-        <tr><td>체크인 탭 진입</td><td>데이터를 다시 조회 → 로딩 → 결과/에러/빈 상태 중 하나로 분기.</td></tr>
+        <tr><td>체크인 탭 진입</td><td>데이터를 다시 조회 → 0개 empty / 1개 OngoingEventListPage / 2+ selector로 분기.</td></tr>
         <tr><td>다른 탭으로 이탈</td><td>잠시 캐시가 유지되어 짧은 시간 내 재진입 시 빠르게 복원.</td></tr>
         <tr><td>OS 뒤로가기 (Android)</td><td>본 화면은 탭의 자식이라 무시됨 — 앱 종료 또는 셸 이전 화면으로.</td></tr>
-        <tr><td>스캐너에서 뒤로가기</td><td>본 페이지로 복귀. 1-event 자동 진입 케이스에서는 이때 본 페이지를 처음 보게 됨.</td></tr>
+        <tr><td>OngoingEventListPage에서 뒤로가기</td><td>하단 체크인 탭 상태로 복귀. 1-event 자동 진입 케이스에서는 필요 시 resolver가 다시 같은 이벤트로 보낸다.</td></tr>
       </tbody>
     </table>
   </section>
@@ -664,7 +673,7 @@ body.dark-mode .viewport {
     <table class="ref" style="margin-bottom: 16px;">
       <thead><tr><th style="width: 200px;">Token</th><th style="width: 80px;">Value</th><th>Use case</th></tr></thead>
       <tbody>
-        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>스캐너 화면 진입 (1-event 자동)</td></tr>
+        <tr><td><code>MinglitAnimation.fast</code></td><td>200ms</td><td>OngoingEventListPage 진입 (1-event 자동)</td></tr>
         <tr><td><code>MinglitAnimation.medium</code></td><td>350ms</td><td>로딩 ↔ 결과 크로스페이드</td></tr>
       </tbody>
     </table>
@@ -672,7 +681,7 @@ body.dark-mode .viewport {
       <thead><tr><th style="width: 220px;">Transition</th><th style="width: 140px;">Duration (token)</th><th>Curve / notes</th></tr></thead>
       <tbody>
         <tr><td>탭 진입 → 로딩 → 결과</td><td><code>medium</code> (350ms)</td><td>크로스페이드 전환</td></tr>
-        <tr><td>1-event 자동 → 스캐너</td><td><code>fast</code> (200ms)</td><td>Material slide push</td></tr>
+        <tr><td>1-event 자동 → OngoingEventListPage</td><td><code>fast</code> (200ms)</td><td>Material slide push 또는 shell child replace</td></tr>
         <tr><td>카드 리플 (Selection)</td><td><code>micro</code> (100ms)</td><td>Material 기본 ripple</td></tr>
       </tbody>
     </table>
@@ -683,7 +692,7 @@ body.dark-mode .viewport {
     <ul class="notes">
       <li><strong>네트워크 끊김</strong> — 이벤트 조회 실패 → "이벤트를 불러올 수 없습니다" 평문 텍스트. 재시도 버튼 없음 (디자인 부채).</li>
       <li><strong>오늘 윈도우 경계</strong> — 시작 3시간 전부터 종료 1시간 후까지. 자정 이후도 같은 "오늘"로 잡힐 수 있음.</li>
-      <li><strong>다크 모드</strong> — 본 페이지는 라이트/다크 자동. 단, 1-event 분기로 진입한 스캐너 화면은 항상 다크.</li>
+      <li><strong>다크 모드</strong> — 본 페이지는 라이트/다크 자동. QR scanner 단독 다크 화면은 deprecated; OngoingEventListPage의 inline QR panel만 forced dark.</li>
       <li><strong>접근성</strong> — 빈 상태/에러 메시지는 자동으로 읽힘. 큰 아이콘은 장식용으로 처리 권장 (현재 미적용).</li>
     </ul>
   </section>
@@ -701,11 +710,12 @@ body.dark-mode .viewport {
     <table class="ref">
       <thead><tr><th style="width: 200px;">항목</th><th>Path / Reference</th></tr></thead>
       <tbody>
-        <tr><td><strong>Widget class</strong></td><td><code>CheckinPlaceholderPage</code> (ConsumerWidget)</td></tr>
+        <tr><td><strong>Widget class</strong></td><td><code>CheckinPlaceholderPage</code> (ConsumerWidget · route resolver)</td></tr>
         <tr><td><strong>File path</strong></td><td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/features/checkin/checkin_placeholder_page.dart"><code>apps/app_partner/lib/src/features/checkin/checkin_placeholder_page.dart</code></a></td></tr>
         <tr><td><strong>Provider</strong></td><td><code>currentPartnerInfoProvider</code> · <code>todayEventsProvider(partnerId)</code> (FutureProvider.family.autoDispose)</td></tr>
-        <tr><td><strong>Internal widgets</strong></td><td><code>_CheckinEntryPage</code> · <code>_ScannerWrapper</code> · <code>_CheckinSelectionPage</code></td></tr>
-        <tr><td><strong>Route</strong></td><td><em>—</em> (BottomNav 탭 자식 — IndexedStack child of partner shell)</td></tr>
+        <tr><td><strong>Internal widgets</strong></td><td><code>_CheckinEntryPage</code> · <code>_ScannerWrapper</code> (legacy) · <code>_CheckinSelectionPage</code></td></tr>
+        <tr><td><strong>Route</strong></td><td><code>/checkin</code> — BottomNav 탭 자식 / CheckinTabRoute</td></tr>
+        <tr><td><strong>Implementation note</strong></td><td>현 Flutter는 1-event에서 <code>QRScannerScreen</code> 직행. #2999 MDS 계약은 이를 deprecated하고 <code>OngoingEventListPage</code> 진입으로 교체하는 TO-BE를 정의한다.</td></tr>
       </tbody>
     </table>
   </section>
@@ -715,7 +725,8 @@ body.dark-mode .viewport {
     <table class="ref">
       <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
       <tbody>
-        <tr><td><a href="/specs/partner_home_page/index.html"><code>PartnerHomePage</code></a></td><td>Sibling — BottomNav 같은 shell의 다른 탭.</td></tr>
+        <tr><td><a href="/specs/partner_home_page/index.html"><code>PartnerHomePage</code></a></td><td>Parent shell — 하단 nav 체크인 탭과 LIVE 카드 "참가자 체크인" CTA.</td></tr>
+        <tr><td><a href="/specs/ongoing_event_list_page/index.html"><code>OngoingEventListPage</code></a></td><td>Canonical destination — 참가자 명단 · QR mode · 수동 체크인 · 워크인 / 노쇼 운영.</td></tr>
         <tr><td><a href="/specs/event_check_in_screen/index.html"><code>EventCheckInScreen</code></a></td><td>관련 — 사용자측 체크인 화면 (역할 반대).</td></tr>
         <tr><td><a href="/specs/event_checked_in_screen/index.html"><code>EventCheckedInScreen</code></a></td><td>관련 — 체크인 완료 후 사용자 화면.</td></tr>
       </tbody>
