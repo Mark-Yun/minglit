@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DEV_STAGING_DEV_CUT = ROOT / ".github/workflows/dev-staging-dev-cut.yml"
 RC_MAIN_CUT = ROOT / ".github/workflows/rc-main-cut.yml"
 SHARED_NOTIFY = ROOT / ".github/workflows/shared-notify.yml"
+CUT_ISSUE_ACTION = ROOT / ".github/actions/cut-issue/action.yml"
 
 
 def fail(message: str) -> None:
@@ -83,13 +84,56 @@ def assert_dev_staging_dev_cut_contract() -> None:
     if str(with_config.get("fetch-depth")) != "0":
         fail("dev-staging-dev-cut checkout fetch-depth must be 0")
 
+    required_order = [
+        "Create dev promotion PR",
+        "Track dev promotion issue",
+        "Update dev promotion PR and enable auto-merge",
+    ]
+    positions: dict[str, int] = {}
+    for name in required_order:
+        for index, step in enumerate(steps):
+            if isinstance(step, dict) and step.get("name") == name:
+                positions[name] = index
+                break
+        else:
+            fail(f"dev-staging-dev-cut must define step '{name}'")
+    if positions[required_order[0]] > positions[required_order[1]]:
+        fail("dev-staging-dev-cut must create promotion PR before tracking the cut issue")
+    if positions[required_order[1]] > positions[required_order[2]]:
+        fail("dev-staging-dev-cut must track the cut issue before updating/enabling PR auto-merge")
+
+    track_step = steps[positions["Track dev promotion issue"]]
+    if not isinstance(track_step, dict):
+        fail("Track dev promotion issue step did not parse as a mapping")
+    if track_step.get("uses") != "./.github/actions/cut-issue":
+        fail("Track dev promotion issue must use ./.github/actions/cut-issue")
+    track_with = track_step.get("with", {})
+    if not isinstance(track_with, dict):
+        fail("Track dev promotion issue with block did not parse as a mapping")
+    if track_with.get("extra-labels") != "needs-swe":
+        fail("dev-staging-dev-cut cut issue must apply needs-swe")
+    details = str(track_with.get("details", ""))
+    required_details = [
+        "## Agent Contract",
+        "목표: 최신 `dev-staging` snapshot이 최종적으로 `dev`에 승격되도록 케어한다.",
+        "종료 조건",
+        "`exec-report` 조건 예시",
+        "fix PR만 `dev`로 cherry-pick하지 않는다.",
+        "위 목록은 예시다.",
+        "protected branch에 직접 push하지 않는다.",
+        "minglit:swe-task",
+    ]
+    for fragment in required_details:
+        if fragment not in details:
+            fail(f"dev-staging-dev-cut cut issue details missing fragment: {fragment}")
+
 
 def assert_promotion_auto_merge_mode_contract() -> None:
     promotion_steps = [
         (
             DEV_STAGING_DEV_CUT,
             "create-dev-cut-pr",
-            "Create dev promotion PR and enable auto-merge",
+            "Update dev promotion PR and enable auto-merge",
         ),
         (
             RC_MAIN_CUT,
@@ -124,10 +168,25 @@ def assert_shared_notify_contract() -> None:
         fail("shared-notify must call gh run view with explicit --repo context")
 
 
+def assert_cut_issue_action_contract() -> None:
+    text = CUT_ISSUE_ACTION.read_text(encoding="utf-8")
+    required_fragments = [
+        "extra-labels:",
+        'create_label "needs-swe"',
+        'create_label "exec-report"',
+        "INPUT_EXTRA_LABELS",
+        '--add-label "$(paste -sd, "${EXTRA_LABELS_FILE}")"',
+    ]
+    for fragment in required_fragments:
+        if fragment not in text:
+            fail(f"cut-issue action missing fragment: {fragment}")
+
+
 def main() -> None:
     assert_dev_staging_dev_cut_contract()
     assert_promotion_auto_merge_mode_contract()
     assert_shared_notify_contract()
+    assert_cut_issue_action_contract()
     print("Dev cut workflow contract OK")
 
 

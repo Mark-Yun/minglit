@@ -29,6 +29,10 @@ inputs:
     description: Additional markdown details.
     required: false
     default: ''
+  extra-labels:
+    description: Optional comma/newline separated labels to apply in addition to cut-gate labels.
+    required: false
+    default: ''
   close-comment:
     description: Comment used when closing an issue.
     required: false
@@ -57,6 +61,7 @@ runs:
         INPUT_STATUS: ${{ inputs.status }}
         INPUT_SUMMARY: ${{ inputs.summary }}
         INPUT_DETAILS: ${{ inputs.details }}
+        INPUT_EXTRA_LABELS: ${{ inputs.extra-labels }}
         INPUT_CLOSE_COMMENT: ${{ inputs.close-comment }}
       run: |
         set -euo pipefail
@@ -100,6 +105,21 @@ runs:
         create_label "status/ready" "0E8A16" "Cut gate is ready"
         create_label "status/promoting" "1D76DB" "Promotion is in progress"
         create_label "status/done" "C2E0C6" "Cut gate tracking is complete"
+        create_label "needs-swe" "BFDADC" "Needs SWE agent care"
+        create_label "exec-report" "D93F0B" "Agent cannot safely continue; operator action is required"
+
+        EXTRA_LABELS_FILE="$(mktemp)"
+        printf '%s\n' "${INPUT_EXTRA_LABELS}" \
+          | tr ',' '\n' \
+          | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' \
+          | awk 'NF' \
+          | sort -u > "${EXTRA_LABELS_FILE}"
+        while IFS= read -r label; do
+          case "${label}" in
+            needs-swe|exec-report) ;;
+            *) create_label "${label}" "BFDADC" "Additional cut-gate label" ;;
+          esac
+        done < "${EXTRA_LABELS_FILE}"
 
         ISSUE_NUMBER="$(gh api \
           --method GET \
@@ -177,6 +197,11 @@ runs:
         gh issue edit "${ISSUE_NUMBER}" \
           --repo "${REPO}" \
           --add-label "cut-gate,${GATE_LABEL},${STATUS_LABEL}" >/dev/null
+        if [ -s "${EXTRA_LABELS_FILE}" ]; then
+          gh issue edit "${ISSUE_NUMBER}" \
+            --repo "${REPO}" \
+            --add-label "$(paste -sd, "${EXTRA_LABELS_FILE}")" >/dev/null
+        fi
 
         if [ "${INPUT_OPERATION}" = "close" ]; then
           COMMENT="${INPUT_CLOSE_COMMENT}"
