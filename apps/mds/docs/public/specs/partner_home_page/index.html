@@ -966,15 +966,21 @@ body.dark-mode .viewport {
         <th>Changes</th>
       </tr>
     </thead>
-	    <tbody>
-	      <tr>
-	        <td>2026-06-03</td>
-	        <td>2.1</td>
-	        <td>codex</td>
-	        <td>#2999: LIVE/진행 임박 카드의 <code>QR 코드 체크인</code> + <code>참가자 명단</code> dual CTA를 <code>참가자 체크인</code> single CTA로 수렴. CTA destination은 OngoingEventListPage이며 QR은 inline mode로 처리.</td>
-	      </tr>
-	      <tr>
-	        <td>2026-05-05</td>
+    <tbody>
+      <tr>
+        <td>2026-06-03</td>
+        <td>2.2</td>
+        <td>codex</td>
+        <td>진행 임박 및 D-0 체크인 대기 카드는 active check-in 전 단계로 분리. CTA를 <code>참가자 체크인</code> primary에서 <code>참가자 리스트</code> outline으로 낮추고, T-2 이후 진행 중/체크인 가능 카드만 primary <code>참가자 체크인</code> CTA를 사용하도록 정리.</td>
+      </tr>
+      <tr>
+        <td>2026-06-03</td>
+        <td>2.1</td>
+        <td>codex</td>
+        <td>#2999: LIVE/진행 임박 카드의 <code>QR 코드 체크인</code> + <code>참가자 명단</code> dual CTA를 <code>참가자 체크인</code> single CTA로 수렴. CTA destination은 OngoingEventListPage이며 QR은 inline mode로 처리.</td>
+      </tr>
+      <tr>
+        <td>2026-05-05</td>
         <td>2.0</td>
         <td>mark-yun</td>
         <td>
@@ -1332,9 +1338,9 @@ body.dark-mode .viewport {
                           <div class="ph-card__detail-tag">브런치</div>
                           <div class="ph-card__detail-tag">강남</div>
                         </div>
-                        <button class="ph-card__cta">
+                        <button class="ph-card__cta ph-card__cta--outlined">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-	                          참가자 체크인
+                          참가자 리스트
                         </button>
                       </div>
                     </div>
@@ -1581,9 +1587,9 @@ body.dark-mode .viewport {
                           <div class="ph-card__detail-tag">살사</div>
                           <div class="ph-card__detail-tag">강남</div>
                         </div>
-                        <button class="ph-card__cta">
+                        <button class="ph-card__cta ph-card__cta--outlined">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                          참가자 체크인
+                          참가자 리스트
                         </button>
                       </div>
                     </div>
@@ -2351,7 +2357,7 @@ body.dark-mode .viewport {
         <tr>
           <td>2</td>
           <td><strong>진행 중</strong></td>
-          <td>이벤트 detail 카드 (LIVE chip + single CTA 참가자 체크인) 또는 사전 체크인 대기 카드</td>
+          <td>이벤트 detail 카드 (D-0 체크인 대기 = 참가자 리스트 outline / T-2 이후 = 참가자 체크인 primary / LIVE chip)</td>
           <td>🟣 primary blink</td>
           <td>이벤트 당일(D-0) 또는 LIVE 진행 중인 이벤트 1+</td>
         </tr>
@@ -2365,7 +2371,7 @@ body.dark-mode .viewport {
         <tr>
           <td>4</td>
           <td><strong>진행 임박</strong></td>
-          <td>이벤트 detail 카드 (D-day chip + capacity bar 3-layer + 참가자 체크인 CTA)</td>
+          <td>이벤트 detail 카드 (D-day chip + capacity bar 3-layer + 참가자 리스트 outline CTA)</td>
           <td>🟠 secondary</td>
           <td>T-7 이내 이벤트 (승인 대기는 별도 섹션, 여기엔 처리 완료된 이벤트만)</td>
         </tr>
@@ -2505,7 +2511,7 @@ body.dark-mode .viewport {
     <h2>카드별 명세 — ② 진행 중 카드 · 단계별 변형</h2>
     <p class="intro">
       "진행 중" 섹션의 카드는 이벤트 당일(D-0) 새벽부터 종료까지 같은 슬롯에서 단계별로 모습이 바뀐다.
-      <strong>체크인은 이벤트 시작 2시간 전부터 활성</strong> — 홈 CTA는 항상 <code>참가자 체크인</code> 하나이며, 그 전엔 OngoingEventListPage 내부 QR mode만 비활성이고 명단/공지 준비는 가능.
+      <strong>체크인은 이벤트 시작 2시간 전부터 활성</strong> — D-0 새벽~T-2에는 <code>참가자 리스트</code> outline으로 OngoingEventListPage pre_start/list mode에 진입하고, T-2 이후부터 <code>참가자 체크인</code> primary로 전환한다.
       LIVE 진입 후엔 chip이 빨간색 펄스로 변경되고 진행 바가 체크인/참가/정원 3-layer로 시각화됨.
     </p>
     <table class="ref">
@@ -2536,7 +2542,10 @@ body.dark-mode .viewport {
                   </div>
                   <div class="ph-card__detail-meta">강남 와인러버스 · 체크인 17:30부터</div>
                   <div class="ph-card__cta-note">체크인은 17:30부터 가능해요</div>
-                  <button class="ph-card__cta">참가자 체크인</button>
+                  <button class="ph-card__cta ph-card__cta--outlined">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                    참가자 리스트
+                  </button>
                 </div>
               </div>
             </div>
@@ -2544,10 +2553,10 @@ body.dark-mode .viewport {
           <td>
             오늘 진행 예정이지만 아직 체크인 시작 전.<br>
             · D-day chip: warning yellow "오늘 19:30"<br>
-            · CTA는 <strong>"참가자 체크인"</strong> single primary — OngoingEventListPage pre_start로 진입<br>
+            · CTA는 <strong>"참가자 리스트"</strong> outline — OngoingEventListPage pre_start/list mode로 진입<br>
             · 내부 QR mode는 disabled, 명단 조회 / 공지 준비만 가능<br>
             · 체크인 시작 시간 inline note (warning 톤)<br>
-            · 시간이 가까워지면 "체크인 N분 후" 카운트다운으로 변경 가능
+            · T-2부터 "참가자 체크인" primary CTA로 전환
           </td>
         </tr>
         <tr>
@@ -2588,7 +2597,7 @@ body.dark-mode .viewport {
             체크인 윈도우 열림.<br>
             · D-day chip: primary "체크인 가능" (보라)<br>
             · 진행 바 노출 시작 — 페이드(참가) 영역만 visible<br>
-            · CTA는 <strong>"참가자 체크인"</strong> single primary<br>
+            · CTA는 <strong>"참가자 체크인"</strong> single primary — OngoingEventListPage checkin_ready 상태로 진입<br>
             · OngoingEventListPage 내부 QR mode 활성 — 기본은 명단+요약, 운영자가 QR mode를 켤 수 있음<br>
             · 첫 참가자가 도착하기 시작하는 단계
           </td>
@@ -2822,7 +2831,7 @@ body.dark-mode .viewport {
        ============================================================ -->
   <section class="doc">
     <h2>카드별 명세 — ④ 진행 임박 카드 (Detail + capacity bar)</h2>
-    <p class="intro">T-7 이내 이벤트. capacity bar (확정/심사대기/정원 3-layer) + 참가자 체크인 CTA 강조. QR mode는 OngoingEventListPage 내부에서 시간 조건에 따라 활성화한다.</p>
+    <p class="intro">T-7 이내 이벤트. capacity bar (확정/심사대기/정원 3-layer) + 참가자 리스트 outline CTA. 아직 active check-in 단계가 아니므로 액션 강도는 낮추고, OngoingEventListPage는 pre_start/readiness list mode로 열린다.</p>
     <table class="ref">
       <thead><tr><th style="width: 360px;">Mockup</th><th>명세</th></tr></thead>
       <tbody>
@@ -2859,7 +2868,7 @@ body.dark-mode .viewport {
                     <div class="ph-card__detail-tag">브런치</div>
                     <div class="ph-card__detail-tag">강남</div>
                   </div>
-                  <button class="ph-card__cta">참가자 체크인</button>
+                  <button class="ph-card__cta ph-card__cta--outlined">참가자 리스트</button>
                 </div>
               </div>
             </div>
@@ -2871,14 +2880,14 @@ body.dark-mode .viewport {
             · capacity bar (3-layer): 확정 solid primary + 심사대기 0.35 fade + 정원 트랙<br>
             · legend (3 dots + 라벨): 확정 / 심사 대기 / 정원<br>
             · tags (회색 칩): 카테고리 / 지역<br>
-            · primary CTA "참가자 체크인"<br><br>
+            · outline CTA "참가자 리스트"<br><br>
             <strong>D-day chip 색</strong>: D-1~7 = primary purple (soon)<br><br>
             <strong>Variants</strong>:<br>
             · D-3 일반 케이스 (mockup)<br>
             · 정원 만석: capacity bar 100% + chip 라벨 "마감"<br>
             · D-1: chip "D-1" 같은 색 + meta 강조<br>
             · 심사 대기 0: 페이드 영역 0% (해당 이벤트는 다 처리됨)<br><br>
-            <strong>Tap 액션</strong>: 카드 영역 → 이벤트 상세 / "참가자 체크인" CTA → OngoingEventListPage (D-3/D-1은 pre_start/readiness, T-2부터 QR mode 가능)
+            <strong>Tap 액션</strong>: 카드 영역 → 이벤트 상세 / "참가자 리스트" CTA → OngoingEventListPage pre_start/readiness list mode (QR mode는 D-0/T-2부터 활성)
           </td>
         </tr>
       </tbody>
@@ -3423,10 +3432,22 @@ body.dark-mode .viewport {
           <td>guide 메인 거치지 않고 해당 토픽 modal sheet push</td>
         </tr>
         <tr>
-          <td>진행 중 / D-0 진행 임박 카드 — "참가자 체크인" CTA</td>
+          <td>진행 중 / D-0 체크인 대기 카드 — "참가자 리스트" CTA</td>
           <td><a href="/specs/ongoing_event_list_page/index.html"><code>OngoingEventListPage</code></a></td>
           <td>✅</td>
-          <td>QR inline mode / 참가자 명단 / 수동 체크인 / 워크인 / 노쇼 / 전화 액션 모두 여기서 (#2220, #2999)</td>
+          <td>outline CTA · pre_start/list mode · QR mode disabled, 명단/공지 준비 가능 (#2220, #2999)</td>
+        </tr>
+        <tr>
+          <td>진행 중 / T-2 이후 체크인 가능·LIVE 카드 — "참가자 체크인" CTA</td>
+          <td><a href="/specs/ongoing_event_list_page/index.html"><code>OngoingEventListPage</code></a></td>
+          <td>✅</td>
+          <td>primary CTA · QR inline mode / 참가자 명단 / 수동 체크인 / 워크인 / 노쇼 / 전화 액션 모두 여기서 (#2220, #2999)</td>
+        </tr>
+        <tr>
+          <td>진행 임박 카드 — "참가자 리스트" CTA</td>
+          <td><a href="/specs/ongoing_event_list_page/index.html"><code>OngoingEventListPage</code></a></td>
+          <td>✅</td>
+          <td>outline CTA · pre_start/readiness list mode · QR mode는 D-0/T-2부터 활성 (#2220, #2999)</td>
         </tr>
         <tr>
           <td>진행 중 / 모집 중 / 진행 임박 카드 영역 탭</td>
