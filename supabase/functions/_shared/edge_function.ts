@@ -13,9 +13,18 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { createServiceClient } from "./supabase_client.ts";
+import {
+  createServiceClient,
+  getLegacyServiceRoleJwt,
+  getSupabaseSecretApiKeys,
+} from "./supabase_client.ts";
 import { corsResponse, errorResponse } from "./response_utils.ts";
-import { initSentry, captureException, log as axiomLog, flush as axiomFlush } from "./logger.ts";
+import {
+  captureException,
+  flush as axiomFlush,
+  initSentry,
+  log as axiomLog,
+} from "./logger.ts";
 import authManifest from "../auth-manifest.json" with { type: "json" };
 
 // --------------------------------------------------------------------------
@@ -44,19 +53,19 @@ export interface EFContext {
 export type ExternalAuth =
   | { type: "ip_allowlist"; ips: string[] }
   | {
-      type: "hmac";
-      /** Deno env var name that holds the HMAC secret */
-      secret_env: string;
-      /** Request header carrying the signature (e.g. "x-portone-signature-v2") */
-      header: string;
-    }
+    type: "hmac";
+    /** Deno env var name that holds the HMAC secret */
+    secret_env: string;
+    /** Request header carrying the signature (e.g. "x-portone-signature-v2") */
+    header: string;
+  }
   | {
-      type: "custom";
-      /** Path to an auth checker module, relative to the EF directory.
-       *  The module must export `check(req: Request): Promise<{ok:true;reason:string}|{ok:false}>`.
-       */
-      module: string;
-    };
+    type: "custom";
+    /** Path to an auth checker module, relative to the EF directory.
+     *  The module must export `check(req: Request): Promise<{ok:true;reason:string}|{ok:false}>`.
+     */
+    module: string;
+  };
 
 /** Interface that a `custom` external_auth module must satisfy. */
 export interface CustomAuthChecker {
@@ -102,7 +111,7 @@ function detectFnName(opts: MinglitEFOptions): string {
   if (m) return m[1];
   throw new Error(
     `[minglitEdgeFunction] Cannot detect EF name from Deno.mainModule=${main}. ` +
-    `Set MINGLIT_EF_TEST_FN_NAME env var or pass opts.fnName.`,
+      `Set MINGLIT_EF_TEST_FN_NAME env var or pass opts.fnName.`,
   );
 }
 
@@ -111,7 +120,7 @@ function loadPolicy(fnName: string): EFPolicy {
   if (!policy) {
     throw new Error(
       `[minglitEdgeFunction] auth-manifest.json missing entry for '${fnName}'. ` +
-      `Add it before deploy.`,
+        `Add it before deploy.`,
     );
   }
   return policy;
@@ -122,7 +131,7 @@ function readEnvironment(): Environment {
   if (!env) {
     throw new Error(
       `[minglitEdgeFunction] ENVIRONMENT env var not set. ` +
-      `Required for env gate. Check supabase secrets set ENVIRONMENT=...`,
+        `Required for env gate. Check supabase secrets set ENVIRONMENT=...`,
     );
   }
   // Normalize 'development' alias of 'dev'
@@ -141,7 +150,10 @@ function readEnvironment(): Environment {
  * @param deprecated ISO date string from the manifest (e.g. "2026-12-01").
  * @returns          New Response with the deprecation headers added.
  */
-export function addDeprecationHeaders(res: Response, deprecated: string): Response {
+export function addDeprecationHeaders(
+  res: Response,
+  deprecated: string,
+): Response {
   const date = new Date(deprecated);
   if (Number.isNaN(date.getTime())) return res;
   const httpDate = date.toUTCString();
@@ -150,7 +162,11 @@ export function addDeprecationHeaders(res: Response, deprecated: string): Respon
   headers.set("Deprecation", `@${httpDate}`);
   // RFC 8594 §3 — Sunset header: the point at which the resource is removed
   headers.set("Sunset", httpDate);
-  return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
+  return new Response(res.body, {
+    status: res.status,
+    statusText: res.statusText,
+    headers,
+  });
 }
 
 /**
@@ -172,7 +188,9 @@ export async function checkExternalAuth(
       const realIp = req.headers.get("x-real-ip");
       const cfIp = req.headers.get("cf-connecting-ip");
       const xff = req.headers.get("x-forwarded-for");
-      const xffRightmost = xff ? xff.split(",").map(s => s.trim()).pop() : null;
+      const xffRightmost = xff
+        ? xff.split(",").map((s) => s.trim()).pop()
+        : null;
       const clientIp = realIp || cfIp || xffRightmost;
       if (clientIp && external.ips.includes(clientIp)) {
         return { ok: true, reason: `ip_allowlist:${clientIp}` };
@@ -200,17 +218,26 @@ export async function checkExternalAuth(
       );
 
       // Accept both "<hex>" and "sha256=<hex>" formats (PortOne V2 uses the prefixed form).
-      const sigHex = signature.startsWith("sha256=") ? signature.slice(7) : signature;
+      const sigHex = signature.startsWith("sha256=")
+        ? signature.slice(7)
+        : signature;
       // Reject odd-length or non-hex chars before decoding. parseInt("aZ",16) silently
       // stops at "Z" returning 10, so a regex guard is required to reject malformed input.
-      if (sigHex.length % 2 !== 0 || !/^[0-9a-fA-F]+$/.test(sigHex)) return { ok: false };
+      if (sigHex.length % 2 !== 0 || !/^[0-9a-fA-F]+$/.test(sigHex)) {
+        return { ok: false };
+      }
       const sigBytes = new Uint8Array(sigHex.length / 2);
       for (let i = 0; i < sigHex.length; i += 2) {
         sigBytes[i / 2] = parseInt(sigHex.slice(i, i + 2), 16);
       }
 
       // crypto.subtle.verify performs constant-time HMAC comparison internally.
-      const valid = await crypto.subtle.verify("HMAC", key, sigBytes, new TextEncoder().encode(body));
+      const valid = await crypto.subtle.verify(
+        "HMAC",
+        key,
+        sigBytes,
+        new TextEncoder().encode(body),
+      );
       if (valid) {
         return { ok: true, reason: `hmac:${external.header}` };
       }
@@ -219,7 +246,10 @@ export async function checkExternalAuth(
 
     case "custom": {
       // Resolve path relative to this EF's directory (escape hatch for bespoke auth).
-      const moduleUrl = new URL(external.module, new URL(`../${fnName}/`, import.meta.url));
+      const moduleUrl = new URL(
+        external.module,
+        new URL(`../${fnName}/`, import.meta.url),
+      );
       const mod = await import(moduleUrl.href) as CustomAuthChecker;
       return await mod.check(req);
     }
@@ -229,8 +259,9 @@ export async function checkExternalAuth(
 /**
  * Checks system caller credentials.
  *
- * Legacy service_role stays on `Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>`.
- * New Supabase secret keys (`sb_secret_...`) are not JWTs and must use `apikey`.
+ * Legacy service_role JWT stays on `Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>`.
+ * New Supabase secret keys (`SUPABASE_SECRET_KEYS['default']`, `sb_secret_...`) are
+ * not JWTs and must use `apikey`.
  * Exported for unit testing; not part of the stable public API.
  */
 export function checkSystemAuth(
@@ -239,7 +270,7 @@ export function checkSystemAuth(
   const authHeader = req.headers.get("Authorization") ?? "";
   if (authHeader.startsWith("Bearer ")) {
     const token = authHeader.slice(7);
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const serviceKey = getLegacyServiceRoleJwt();
 
     if (serviceKey && token === serviceKey) {
       return { ok: true, keyFormat: "legacy" };
@@ -247,8 +278,7 @@ export function checkSystemAuth(
   }
 
   const apiKey = req.headers.get("apikey") ?? "";
-  const serviceSecret = Deno.env.get("SUPABASE_SERVICE_ROLE_SECRET");
-  if (serviceSecret && apiKey === serviceSecret) {
+  if (apiKey && getSupabaseSecretApiKeys().includes(apiKey)) {
     return { ok: true, keyFormat: "secret" };
   }
 
@@ -289,7 +319,9 @@ export async function verifyAuth(
   // external (Authorization 헤더 무관 — IP / HMAC 등 다른 신호 사용)
   if (allow("external")) {
     if (!policy.external_auth) {
-      throw new Error(`[minglitEdgeFunction] policy.callers includes 'external' but external_auth missing`);
+      throw new Error(
+        `[minglitEdgeFunction] policy.callers includes 'external' but external_auth missing`,
+      );
     }
     const ext = await checkExternalAuth(req, policy.external_auth, fnName);
     if (ext.ok) return { type: "external", reason: ext.reason };
@@ -324,7 +356,10 @@ function makeContext(opts: {
 // Public API
 // --------------------------------------------------------------------------
 
-export function minglitEdgeFunction(handler: EFHandler, opts: MinglitEFOptions = {}): void {
+export function minglitEdgeFunction(
+  handler: EFHandler,
+  opts: MinglitEFOptions = {},
+): void {
   // Lazy init: try at module load, fall back to first-request retry.
   // Eager init succeeds in production (deploy-time env present).
   // Test env may set required env vars after module import — retry on first request.
@@ -356,7 +391,12 @@ export function minglitEdgeFunction(handler: EFHandler, opts: MinglitEFOptions =
     }
     const { fnName, policy, env } = _ctx;
     const requestId = crypto.randomUUID();
-    axiomLog({ function: fnName, level: "info", message: "invoked", metadata: { method: req.method, requestId } });
+    axiomLog({
+      function: fnName,
+      level: "info",
+      message: "invoked",
+      metadata: { method: req.method, requestId },
+    });
 
     try {
       // CORS preflight
@@ -382,12 +422,24 @@ export function minglitEdgeFunction(handler: EFHandler, opts: MinglitEFOptions =
       // Context + handler 호출
       const ctx = makeContext({ auth, fnName, env, requestId });
       let res = await handler(req, ctx);
-      if (policy.deprecated) res = addDeprecationHeaders(res, policy.deprecated);
-      axiomLog({ function: fnName, level: "info", message: "completed", metadata: { status: res.status, requestId } });
+      if (policy.deprecated) {
+        res = addDeprecationHeaders(res, policy.deprecated);
+      }
+      axiomLog({
+        function: fnName,
+        level: "info",
+        message: "completed",
+        metadata: { status: res.status, requestId },
+      });
       return res;
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      axiomLog({ function: fnName, level: "error", message: msg, metadata: { requestId } });
+      axiomLog({
+        function: fnName,
+        level: "error",
+        message: msg,
+        metadata: { requestId },
+      });
       captureException(e instanceof Error ? e : new Error(msg));
       return errorResponse("Internal error", 500);
     } finally {

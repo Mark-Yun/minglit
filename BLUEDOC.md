@@ -25,9 +25,10 @@ Minglit 모노레포의 **프로젝트 전체 진입점**. 처음 온 에이전�
 ## 관련
 
 - [README.md](./README.md) — 레포 기본 설명
+- [docs/env-reference.md](./docs/env-reference.md) — `env-manifest.json` 기반 자동 생성 env reference
 - [docs/architecture/](./docs/architecture/) — 결제, 검색/추천, 신뢰/인증, 이벤트 파이프라인 등 주요 설계 문서
 - [docs/qa/automation-test-guide.md](./docs/qa/automation-test-guide.md) — 변경 유형별 테스트 기준
 - [docs/operations/edge-functions.md](./docs/operations/edge-functions.md) — Edge Function 디버깅/운영
 
 ---
-_Reviewed: 2026-05-23 10:47_
+_Reviewed: 2026-06-03 12:58_

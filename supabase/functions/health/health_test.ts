@@ -11,11 +11,19 @@ import {
 Deno.test({
   name: "health - returns 200 with healthy status when all checks pass",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
 
     const { fetchMock } = createFetchMock([
-      { matcher: "/rest/v1/", handler: () => new Response(null, { status: 200 }) },
-      { matcher: "/auth/v1/health", handler: () => jsonResponse({ status: "ok" }) },
+      {
+        matcher: "/rest/v1/",
+        handler: () => new Response(null, { status: 200 }),
+      },
+      {
+        matcher: "/auth/v1/health",
+        handler: () => jsonResponse({ status: "ok" }),
+      },
       { matcher: "/storage/v1/bucket", handler: () => jsonResponse([]) },
     ]);
 
@@ -27,7 +35,9 @@ Deno.test({
       SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
     }, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const response = await handler(new Request("http://localhost", { method: "GET" }));
+        const response = await handler(
+          new Request("http://localhost", { method: "GET" }),
+        );
         assertEquals(response.status, 200);
 
         const body = await readJson(response);
@@ -41,13 +51,72 @@ Deno.test({
 });
 
 Deno.test({
-  name: "health - returns 503 when database is down",
+  name: "health - uses SUPABASE_SECRET_KEYS with apikey header only",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    const assertSecretApiKey = (req: Request) => {
+      assertEquals(req.headers.get("apikey"), "sb_secret_health_key");
+      assertEquals(req.headers.get("Authorization"), null);
+    };
 
     const { fetchMock } = createFetchMock([
-      { matcher: "/rest/v1/", handler: () => new Response(null, { status: 500 }) },
-      { matcher: "/auth/v1/health", handler: () => jsonResponse({ status: "ok" }) },
+      {
+        matcher: "/rest/v1/",
+        handler: (req) => {
+          assertSecretApiKey(req);
+          return new Response(null, { status: 200 });
+        },
+      },
+      {
+        matcher: "/auth/v1/health",
+        handler: () => jsonResponse({ status: "ok" }),
+      },
+      {
+        matcher: "/storage/v1/bucket",
+        handler: (req) => {
+          assertSecretApiKey(req);
+          return jsonResponse([]);
+        },
+      },
+    ]);
+
+    await withEnv({
+      ENVIRONMENT: "dev",
+      MINGLIT_EF_TEST_FN_NAME: "health",
+      SUPABASE_URL: "http://localhost:54321",
+      SUPABASE_ANON_KEY: "test-anon-key",
+      SUPABASE_SERVICE_ROLE_KEY: undefined,
+      SUPABASE_SECRET_KEYS: JSON.stringify({ default: "sb_secret_health_key" }),
+    }, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const response = await handler(
+          new Request("http://localhost", { method: "GET" }),
+        );
+        assertEquals(response.status, 200);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "health - returns 503 when database is down",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: "/rest/v1/",
+        handler: () => new Response(null, { status: 500 }),
+      },
+      {
+        matcher: "/auth/v1/health",
+        handler: () => jsonResponse({ status: "ok" }),
+      },
       { matcher: "/storage/v1/bucket", handler: () => jsonResponse([]) },
     ]);
 
@@ -59,7 +128,9 @@ Deno.test({
       SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
     }, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const response = await handler(new Request("http://localhost", { method: "GET" }));
+        const response = await handler(
+          new Request("http://localhost", { method: "GET" }),
+        );
         assertEquals(response.status, 503);
 
         const body = await readJson(response);
@@ -74,11 +145,19 @@ Deno.test({
 Deno.test({
   name: "health - response contains required keys",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
 
     const { fetchMock } = createFetchMock([
-      { matcher: "/rest/v1/", handler: () => new Response(null, { status: 200 }) },
-      { matcher: "/auth/v1/health", handler: () => jsonResponse({ status: "ok" }) },
+      {
+        matcher: "/rest/v1/",
+        handler: () => new Response(null, { status: 200 }),
+      },
+      {
+        matcher: "/auth/v1/health",
+        handler: () => jsonResponse({ status: "ok" }),
+      },
       { matcher: "/storage/v1/bucket", handler: () => jsonResponse([]) },
     ]);
 
@@ -90,7 +169,9 @@ Deno.test({
       SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
     }, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const response = await handler(new Request("http://localhost", { method: "GET" }));
+        const response = await handler(
+          new Request("http://localhost", { method: "GET" }),
+        );
         const body = await readJson(response);
 
         assertEquals(typeof body.status, "string");
@@ -107,11 +188,19 @@ Deno.test({
 Deno.test({
   name: "health - returns Content-Type application/json",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
 
     const { fetchMock } = createFetchMock([
-      { matcher: "/rest/v1/", handler: () => new Response(null, { status: 200 }) },
-      { matcher: "/auth/v1/health", handler: () => jsonResponse({ status: "ok" }) },
+      {
+        matcher: "/rest/v1/",
+        handler: () => new Response(null, { status: 200 }),
+      },
+      {
+        matcher: "/auth/v1/health",
+        handler: () => jsonResponse({ status: "ok" }),
+      },
       { matcher: "/storage/v1/bucket", handler: () => jsonResponse([]) },
     ]);
 
@@ -123,7 +212,9 @@ Deno.test({
       SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
     }, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const response = await handler(new Request("http://localhost", { method: "GET" }));
+        const response = await handler(
+          new Request("http://localhost", { method: "GET" }),
+        );
         assertEquals(response.headers.get("Content-Type"), "application/json");
       });
     });
@@ -133,7 +224,9 @@ Deno.test({
 Deno.test({
   name: "health - rejects non-GET with 405",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
 
     await withEnv({
       ENVIRONMENT: "dev",
@@ -142,7 +235,9 @@ Deno.test({
       SUPABASE_ANON_KEY: "test-anon-key",
       SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
     }, async () => {
-      const response = await handler(new Request("http://localhost", { method: "POST" }));
+      const response = await handler(
+        new Request("http://localhost", { method: "POST" }),
+      );
       assertEquals(response.status, 405);
     });
   },
@@ -152,11 +247,19 @@ Deno.test({
 Deno.test({
   name: "health - ?env=true without auth returns 401",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
 
     const { fetchMock } = createFetchMock([
-      { matcher: "/rest/v1/", handler: () => new Response(null, { status: 200 }) },
-      { matcher: "/auth/v1/health", handler: () => jsonResponse({ status: "ok" }) },
+      {
+        matcher: "/rest/v1/",
+        handler: () => new Response(null, { status: 200 }),
+      },
+      {
+        matcher: "/auth/v1/health",
+        handler: () => jsonResponse({ status: "ok" }),
+      },
       { matcher: "/storage/v1/bucket", handler: () => jsonResponse([]) },
     ]);
 
@@ -180,11 +283,19 @@ Deno.test({
 Deno.test({
   name: "health - ?env=true with wrong bearer returns 401",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
 
     const { fetchMock } = createFetchMock([
-      { matcher: "/rest/v1/", handler: () => new Response(null, { status: 200 }) },
-      { matcher: "/auth/v1/health", handler: () => jsonResponse({ status: "ok" }) },
+      {
+        matcher: "/rest/v1/",
+        handler: () => new Response(null, { status: 200 }),
+      },
+      {
+        matcher: "/auth/v1/health",
+        handler: () => jsonResponse({ status: "ok" }),
+      },
       { matcher: "/storage/v1/bucket", handler: () => jsonResponse([]) },
     ]);
 
@@ -211,11 +322,19 @@ Deno.test({
 Deno.test({
   name: "health - ?env=true with correct service role returns env_check",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
 
     const { fetchMock } = createFetchMock([
-      { matcher: "/rest/v1/", handler: () => new Response(null, { status: 200 }) },
-      { matcher: "/auth/v1/health", handler: () => jsonResponse({ status: "ok" }) },
+      {
+        matcher: "/rest/v1/",
+        handler: () => new Response(null, { status: 200 }),
+      },
+      {
+        matcher: "/auth/v1/health",
+        handler: () => jsonResponse({ status: "ok" }),
+      },
       { matcher: "/storage/v1/bucket", handler: () => jsonResponse([]) },
     ]);
 
@@ -231,6 +350,48 @@ Deno.test({
           new Request("http://localhost?env=true", {
             method: "GET",
             headers: { Authorization: "Bearer test-service-key" },
+          }),
+        );
+        const body = await readJson(response);
+        assertEquals(typeof body.env_check, "object");
+        assertEquals(typeof body.env_check.status, "string");
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "health - ?env=true with secret apikey returns env_check",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: "/rest/v1/",
+        handler: () => new Response(null, { status: 200 }),
+      },
+      {
+        matcher: "/auth/v1/health",
+        handler: () => jsonResponse({ status: "ok" }),
+      },
+      { matcher: "/storage/v1/bucket", handler: () => jsonResponse([]) },
+    ]);
+
+    await withEnv({
+      ENVIRONMENT: "dev",
+      MINGLIT_EF_TEST_FN_NAME: "health",
+      SUPABASE_URL: "http://localhost:54321",
+      SUPABASE_ANON_KEY: "test-anon-key",
+      SUPABASE_SERVICE_ROLE_KEY: undefined,
+      SUPABASE_SECRET_KEYS: JSON.stringify({ default: "sb_secret_health_key" }),
+    }, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const response = await handler(
+          new Request("http://localhost?env=true", {
+            method: "GET",
+            headers: { apikey: "sb_secret_health_key" },
           }),
         );
         const body = await readJson(response);
