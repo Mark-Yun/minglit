@@ -35,14 +35,15 @@ void main() {
       verify(() => mockRouter.push(any())).called(1);
     });
 
-    test('pushPartnerGuide calls router.push with guide hub route', () {
+    test('pushPartnerGuide calls router.go with guide hub route', () {
       final container = createContainer(
         overrides: [goRouterProvider.overrideWithValue(mockRouter)],
       );
 
       container.read(moreCoordinatorProvider).pushPartnerGuide();
 
-      verify(() => mockRouter.push(any(that: equals('/guide')))).called(1);
+      verifyNever(() => mockRouter.push(any()));
+      verify(() => mockRouter.go(any(that: equals('/guide')))).called(1);
     });
 
     test('pushMemberList calls router.push with partnerId in route', () {
@@ -80,7 +81,7 @@ void main() {
       ).called(1);
     });
 
-    // Fix #1834: push() cross-branch (more → settlement) fails in StatefulShellRoute.
+    // Fix #1834: push() cross-branch (more -> settlement) fails in shell route.
     // Must use go() — not push() — so this test guards against regression.
     test(
       'pushBankAccountManagement calls router.go with /settlement/bank-account',

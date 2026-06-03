@@ -19,7 +19,7 @@ class MoreCoordinator {
   }
 
   void pushPartnerGuide() {
-    unawaited(_router.push(const PartnerGuideRoute().location));
+    _router.go(const PartnerGuideRoute().location);
   }
 
   void pushMemberList(String partnerId) {
@@ -38,7 +38,7 @@ class MoreCoordinator {
   // Fix #1568: 정산 계좌 관리 진입점
   // Fix #1834: push() cross-branch (/more → /settlement) fails silently in
   // StatefulShellRoute (same class of bug as #1680). Use go() to switch branch
-  // directly — matching the pattern of goToSettlement() in SettlementCoordinator.
+  // directly, matching goToSettlement() in SettlementCoordinator.
   void pushBankAccountManagement() {
     _router.go(const BankAccountRoute().location);
   }
