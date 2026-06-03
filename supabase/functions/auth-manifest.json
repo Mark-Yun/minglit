@@ -184,6 +184,18 @@
     "apply-event": {
       "callers": ["user"],
       "envs": ["dev", "production"],
+      "rate_limit": {
+        "scope": "user",
+        "bucket": "apply-event-submit",
+        "capacity": 5,
+        "refill_per_second": 0.0833333333
+      },
+      "idempotency": {
+        "scope": "apply-event-submit",
+        "required": true,
+        "ttl_seconds": 86400,
+        "in_progress_ttl_seconds": 60
+      },
       "description": "유저 이벤트 신청 (무료/유료 분기, verification_data 처리)"
     },
     "user-create-order": {
@@ -199,6 +211,12 @@
     "user-event-feed": {
       "callers": ["user", "public"],
       "envs": ["dev", "production"],
+      "rate_limit": {
+        "scope": "auth_or_ip",
+        "bucket": "event-feed",
+        "capacity": 120,
+        "refill_per_second": 2
+      },
       "description": "이벤트 피드 조회 (정렬/필터/커서 페이지네이션, nearby는 user 필수)"
     },
     "user-delete-account": {
@@ -279,6 +297,12 @@
     "health": {
       "callers": ["system", "public"],
       "envs": ["dev", "production"],
+      "rate_limit": {
+        "scope": "ip",
+        "bucket": "health-public",
+        "capacity": 60,
+        "refill_per_second": 1
+      },
       "description": "인프라 헬스 체크 (DB/Auth/Storage). ?env=true 는 system caller 전용"
     }
   }

@@ -23,6 +23,7 @@ void main() {
       when(
         () => mockFunctions.invoke(
           'apply-event',
+          headers: any(named: 'headers'),
           body: any(named: 'body'),
         ),
       ).thenAnswer(
@@ -42,12 +43,27 @@ void main() {
 
       expect(result, isA<FreeApplyEventResult>());
       expect(result.applicationId, 'app_free_1');
+
+      final capturedHeaders =
+          verify(
+                () => mockFunctions.invoke(
+                  'apply-event',
+                  headers: captureAny(named: 'headers'),
+                  body: any(named: 'body'),
+                ),
+              ).captured.single
+              as Map<String, String>;
+      expect(
+        capturedHeaders['Idempotency-Key'],
+        startsWith('apply-event:'),
+      );
     });
 
     test('returns PaidApplyEventResult for paid ticket response', () async {
       when(
         () => mockFunctions.invoke(
           'apply-event',
+          headers: any(named: 'headers'),
           body: any(named: 'body'),
         ),
       ).thenAnswer(
@@ -84,6 +100,7 @@ void main() {
       when(
         () => mockFunctions.invoke(
           'apply-event',
+          headers: any(named: 'headers'),
           body: any(named: 'body'),
         ),
       ).thenAnswer(
@@ -108,6 +125,7 @@ void main() {
           verify(
                 () => mockFunctions.invoke(
                   'apply-event',
+                  headers: any(named: 'headers'),
                   body: captureAny(named: 'body'),
                 ),
               ).captured.single
@@ -119,6 +137,7 @@ void main() {
       when(
         () => mockFunctions.invoke(
           'apply-event',
+          headers: any(named: 'headers'),
           body: any(named: 'body'),
         ),
       ).thenAnswer(
@@ -140,6 +159,7 @@ void main() {
           verify(
                 () => mockFunctions.invoke(
                   'apply-event',
+                  headers: any(named: 'headers'),
                   body: captureAny(named: 'body'),
                 ),
               ).captured.single
@@ -151,6 +171,7 @@ void main() {
       when(
         () => mockFunctions.invoke(
           'apply-event',
+          headers: any(named: 'headers'),
           body: any(named: 'body'),
         ),
       ).thenThrow(Exception('EF error'));
@@ -171,6 +192,7 @@ void main() {
         when(
           () => mockFunctions.invoke(
             'apply-event',
+            headers: any(named: 'headers'),
             body: any(named: 'body'),
           ),
         ).thenAnswer(
@@ -190,6 +212,7 @@ void main() {
         when(
           () => mockFunctions.invoke(
             'apply-event',
+            headers: any(named: 'headers'),
             body: any(named: 'body'),
           ),
         ).thenAnswer(

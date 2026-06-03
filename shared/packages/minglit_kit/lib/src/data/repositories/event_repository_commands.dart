@@ -172,6 +172,9 @@ mixin _EventRepositoryCommands on _SupabaseEventContext {
     try {
       final response = await supabaseClient.functions.invoke(
         'apply-event',
+        headers: {
+          'Idempotency-Key': 'apply-event:${const Uuid().v4()}',
+        },
         body: {
           'event_id': eventId,
           'ticket_id': ticketId,

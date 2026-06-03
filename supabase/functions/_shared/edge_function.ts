@@ -18,7 +18,8 @@ import {
   getLegacyServiceRoleJwt,
   getSupabaseSecretApiKeys,
 } from "./supabase_client.ts";
-import { corsResponse, errorResponse } from "./response_utils.ts";
+import { corsHeaders, corsResponse, errorResponse } from "./response_utils.ts";
+import { parseJsonBody } from "./request_utils.ts";
 import {
   captureException,
   flush as axiomFlush,
@@ -76,6 +77,8 @@ export interface EFPolicy {
   callers: Caller[];
   envs: Environment[];
   external_auth?: ExternalAuth;
+  rate_limit?: RateLimitConfig | RateLimitConfig[];
+  idempotency?: IdempotencyConfig;
   /**
    * ISO date string (e.g. "2026-12-01") — if set, every response from this EF
    * will carry `Deprecation` and `Sunset` headers (RFC 8594) so clients can
@@ -85,12 +88,57 @@ export interface EFPolicy {
   description?: string;
 }
 
+export type RateLimitScope = "user" | "ip" | "auth_or_ip";
+
+export interface RateLimitConfig {
+  scope: RateLimitScope;
+  /** Stable policy name. Final DB key is namespaced by function + caller. */
+  bucket: string;
+  /** Maximum burst tokens. */
+  capacity: number;
+  /** Tokens refilled per second. Token bucket semantics. */
+  refill_per_second: number;
+  /** Per-request cost. Defaults to 1. */
+  cost?: number;
+}
+
+export interface IdempotencyConfig {
+  /** Header name. Defaults to Idempotency-Key. */
+  header?: string;
+  /** Missing key returns 400 when true. */
+  required?: boolean;
+  /** Stable operation scope, for example "apply-event". */
+  scope: string;
+  /** Completed response cache TTL. Defaults to 24h. */
+  ttl_seconds?: number;
+  /** In-progress lock TTL. Defaults to 60s. */
+  in_progress_ttl_seconds?: number;
+  /** Cache 4xx responses as completed. Defaults to true. 5xx is never cached. */
+  cache_errors?: boolean;
+}
+
+export type JsonBodyValidator = (
+  body: Record<string, unknown>,
+) => void | Response | Promise<void | Response>;
+
+export interface RequestSchema {
+  /** Allowed HTTP methods. OPTIONS is always handled before schema validation. */
+  methods?: string[];
+  /** JSON object body validator. Uses req.clone(), so handlers can still read req. */
+  jsonBody?: JsonBodyValidator;
+}
+
 export interface MinglitEFOptions {
   /**
    * fnName override. 기본값: Deno.mainModule 에서 자동 감지.
    * 테스트 환경에서 mainModule 이 EF 디렉토리를 가리키지 않을 때 명시적으로 설정.
    */
   fnName?: string;
+  /**
+   * Opt-in request schema enforcement before auth/rate-limit/idempotency side
+   * effects. Use this when an EF has a stable JSON request contract.
+   */
+  schema?: RequestSchema;
 }
 
 export type EFHandler = (req: Request, ctx: EFContext) => Promise<Response>;
@@ -169,6 +217,68 @@ export function addDeprecationHeaders(
   });
 }
 
+function jsonResponse(
+  body: unknown,
+  status = 200,
+): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      ...corsHeaders,
+      "Content-Type": "application/json",
+    },
+  });
+}
+
+async function sha256Hex(input: string): Promise<string> {
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(input),
+  );
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+async function enforceRequestSchema(
+  req: Request,
+  schema?: RequestSchema,
+): Promise<Response | undefined> {
+  if (!schema) return undefined;
+
+  if (schema.methods && !schema.methods.includes(req.method)) {
+    return errorResponse("Method not allowed", 405);
+  }
+
+  if (schema.jsonBody) {
+    const body = await parseJsonBody(req.clone());
+    if (body instanceof Response) return body;
+    const validation = await schema.jsonBody(body);
+    if (validation instanceof Response) return validation;
+  }
+
+  return undefined;
+}
+
+/**
+ * Trusted client-IP extraction for public/IP rate limits and IP allowlists.
+ *
+ * Assumption: these headers are set by Supabase/Cloudflare ingress. If callers
+ * can inject them directly in a non-proxied local setup, IP buckets still fail
+ * closed to a shared "unknown" key rather than bypassing the limit.
+ */
+export function getTrustedClientIp(req: Request): string | null {
+  const realIp = req.headers.get("x-real-ip");
+  if (realIp) return realIp.trim();
+
+  const cfIp = req.headers.get("cf-connecting-ip");
+  if (cfIp) return cfIp.trim();
+
+  const xff = req.headers.get("x-forwarded-for");
+  if (!xff) return null;
+  return xff.split(",").map((s) => s.trim()).filter(Boolean).pop() ?? null;
+}
+
 /**
  * Verifies external caller auth per the manifest's `external_auth` policy.
  * Exported for unit testing; not part of the stable public API.
@@ -185,13 +295,7 @@ export async function checkExternalAuth(
   switch (external.type) {
     case "ip_allowlist": {
       // Fix #1892 H2 패턴: x-real-ip > cf-connecting-ip > x-forwarded-for rightmost
-      const realIp = req.headers.get("x-real-ip");
-      const cfIp = req.headers.get("cf-connecting-ip");
-      const xff = req.headers.get("x-forwarded-for");
-      const xffRightmost = xff
-        ? xff.split(",").map((s) => s.trim()).pop()
-        : null;
-      const clientIp = realIp || cfIp || xffRightmost;
+      const clientIp = getTrustedClientIp(req);
       if (clientIp && external.ips.includes(clientIp)) {
         return { ok: true, reason: `ip_allowlist:${clientIp}` };
       }
@@ -352,6 +456,291 @@ function makeContext(opts: {
   };
 }
 
+function firstRpcRow<T>(data: unknown): T | undefined {
+  if (Array.isArray(data)) return data[0] as T | undefined;
+  if (data && typeof data === "object") return data as T;
+  return undefined;
+}
+
+function normalizeRateLimits(
+  rateLimit?: RateLimitConfig | RateLimitConfig[],
+): RateLimitConfig[] {
+  if (!rateLimit) return [];
+  return Array.isArray(rateLimit) ? rateLimit : [rateLimit];
+}
+
+function rateLimitRequesterKey(
+  req: Request,
+  auth: AuthContext,
+  scope: RateLimitScope,
+): string | Response {
+  if (scope === "user") {
+    if (auth.type !== "user") {
+      return errorResponse("Rate limit requires user auth", 401);
+    }
+    return `user:${auth.userId}`;
+  }
+
+  if (scope === "auth_or_ip" && auth.type === "user") {
+    return `user:${auth.userId}`;
+  }
+
+  const ip = getTrustedClientIp(req) ?? "unknown";
+  return `ip:${ip}`;
+}
+
+async function enforceRateLimits(
+  req: Request,
+  ctx: EFContext,
+  policy: EFPolicy,
+): Promise<Response | undefined> {
+  for (const limit of normalizeRateLimits(policy.rate_limit)) {
+    const requester = rateLimitRequesterKey(req, ctx.auth, limit.scope);
+    if (requester instanceof Response) return requester;
+
+    const key = `ef:${ctx.fnName}:${limit.bucket}:${limit.scope}:${requester}`;
+    const { data, error } = await ctx.supabase.rpc(
+      "consume_edge_rate_limit",
+      {
+        p_key: key,
+        p_capacity: limit.capacity,
+        p_refill_per_second: limit.refill_per_second,
+        p_cost: limit.cost ?? 1,
+      },
+    );
+
+    if (error) {
+      axiomLog({
+        function: ctx.fnName,
+        level: "error",
+        message: "rate limit check failed",
+        metadata: { requestId: ctx.requestId, detail: error.message },
+      });
+      return errorResponse("Rate limit unavailable", 500);
+    }
+
+    const row = firstRpcRow<{
+      allowed: boolean;
+      remaining: number | string;
+      retry_after_seconds: number | string;
+    }>(data);
+    if (!row) return errorResponse("Rate limit unavailable", 500);
+
+    if (!row.allowed) {
+      const retryAfter = Math.max(
+        1,
+        Math.ceil(Number(row.retry_after_seconds) || 1),
+      );
+      const res = errorResponse(
+        "Rate limit exceeded",
+        429,
+        { retry_after_seconds: retryAfter },
+      );
+      res.headers.set("Retry-After", String(retryAfter));
+      return res;
+    }
+  }
+
+  return undefined;
+}
+
+export interface ActiveIdempotency {
+  readonly scope: string;
+  readonly requesterKey: string;
+  readonly key: string;
+  readonly requestHash: string;
+  readonly config: IdempotencyConfig;
+}
+
+function idempotencyRequesterKey(req: Request, auth: AuthContext): string {
+  switch (auth.type) {
+    case "user":
+      return `user:${auth.userId}`;
+    case "system":
+      return `system:${auth.keyFormat ?? "unknown"}`;
+    case "external":
+      return `external:${auth.reason}`;
+    case "public":
+      return `ip:${getTrustedClientIp(req) ?? "unknown"}`;
+  }
+}
+
+function readIdempotencyKey(
+  req: Request,
+  config: IdempotencyConfig,
+): string | Response | undefined {
+  const header = config.header ?? "Idempotency-Key";
+  const raw = req.headers.get(header);
+  const key = raw?.trim();
+
+  if (!key) {
+    return config.required
+      ? errorResponse(`Missing ${header}`, 400)
+      : undefined;
+  }
+
+  if (key.length > 255 || /[\u0000-\u001f\u007f]/.test(key)) {
+    return errorResponse(`Invalid ${header}`, 400);
+  }
+
+  return key;
+}
+
+async function requestHash(req: Request): Promise<string> {
+  const url = new URL(req.url);
+  const body = await req.clone().text();
+  return await sha256Hex(
+    `${req.method}\n${url.pathname}${url.search}\n${body}`,
+  );
+}
+
+async function beginIdempotency(
+  req: Request,
+  ctx: EFContext,
+  config?: IdempotencyConfig,
+): Promise<{ active?: ActiveIdempotency; response?: Response }> {
+  if (!config) return {};
+
+  const key = readIdempotencyKey(req, config);
+  if (key instanceof Response) return { response: key };
+  if (!key) return {};
+
+  const requesterKey = idempotencyRequesterKey(req, ctx.auth);
+  const hash = await requestHash(req);
+  const { data, error } = await ctx.supabase.rpc(
+    "begin_edge_idempotency",
+    {
+      p_scope: config.scope,
+      p_requester_key: requesterKey,
+      p_idempotency_key: key,
+      p_request_hash: hash,
+      p_ttl_seconds: config.ttl_seconds ?? 86_400,
+      p_in_progress_ttl_seconds: config.in_progress_ttl_seconds ?? 60,
+    },
+  );
+
+  if (error) {
+    axiomLog({
+      function: ctx.fnName,
+      level: "error",
+      message: "idempotency begin failed",
+      metadata: { requestId: ctx.requestId, detail: error.message },
+    });
+    return { response: errorResponse("Idempotency check failed", 500) };
+  }
+
+  const row = firstRpcRow<{
+    decision: "started" | "replay" | "in_progress" | "conflict";
+    response_status: number | null;
+    response_body: unknown;
+    retry_after_seconds: number | string | null;
+  }>(data);
+
+  if (!row) return { response: errorResponse("Idempotency check failed", 500) };
+
+  if (row.decision === "started") {
+    return {
+      active: {
+        scope: config.scope,
+        requesterKey,
+        key,
+        requestHash: hash,
+        config,
+      },
+    };
+  }
+
+  if (row.decision === "replay") {
+    const res = jsonResponse(
+      row.response_body ?? {},
+      row.response_status ?? 200,
+    );
+    res.headers.set("Idempotency-Replayed", "true");
+    return { response: res };
+  }
+
+  const retryAfter = Math.max(
+    1,
+    Math.ceil(Number(row.retry_after_seconds) || 1),
+  );
+  const message = row.decision === "conflict"
+    ? "Idempotency key reused with a different request"
+    : "Idempotency key is already in progress";
+  const res = errorResponse(message, 409, { retry_after_seconds: retryAfter });
+  res.headers.set("Retry-After", String(retryAfter));
+  return { response: res };
+}
+
+async function failIdempotency(
+  ctx: EFContext,
+  active: ActiveIdempotency,
+): Promise<void> {
+  const { error } = await ctx.supabase.rpc(
+    "fail_edge_idempotency",
+    {
+      p_scope: active.scope,
+      p_requester_key: active.requesterKey,
+      p_idempotency_key: active.key,
+      p_request_hash: active.requestHash,
+    },
+  );
+  if (error) {
+    axiomLog({
+      function: ctx.fnName,
+      level: "warn",
+      message: "idempotency fail mark failed",
+      metadata: { requestId: ctx.requestId, detail: error.message },
+    });
+  }
+}
+
+async function completeIdempotency(
+  ctx: EFContext,
+  active: ActiveIdempotency,
+  res: Response,
+): Promise<void> {
+  const cacheErrors = active.config.cache_errors ?? true;
+  if (res.status >= 500 || (!cacheErrors && res.status >= 400)) {
+    await failIdempotency(ctx, active);
+    return;
+  }
+
+  const contentType = res.headers.get("Content-Type") ?? "";
+  if (!contentType.toLowerCase().includes("application/json")) {
+    await failIdempotency(ctx, active);
+    return;
+  }
+
+  let body: unknown;
+  try {
+    body = await res.clone().json();
+  } catch {
+    await failIdempotency(ctx, active);
+    return;
+  }
+
+  const { error } = await ctx.supabase.rpc(
+    "complete_edge_idempotency",
+    {
+      p_scope: active.scope,
+      p_requester_key: active.requesterKey,
+      p_idempotency_key: active.key,
+      p_request_hash: active.requestHash,
+      p_response_status: res.status,
+      p_response_body: body,
+      p_ttl_seconds: active.config.ttl_seconds ?? 86_400,
+    },
+  );
+  if (error) {
+    axiomLog({
+      function: ctx.fnName,
+      level: "warn",
+      message: "idempotency complete failed",
+      metadata: { requestId: ctx.requestId, detail: error.message },
+    });
+  }
+}
+
 // --------------------------------------------------------------------------
 // Public API
 // --------------------------------------------------------------------------
@@ -398,6 +787,8 @@ export function minglitEdgeFunction(
       metadata: { method: req.method, requestId },
     });
 
+    let requestCtx: EFContext | undefined;
+    let activeIdempotency: ActiveIdempotency | undefined;
     try {
       // CORS preflight
       if (req.method === "OPTIONS") return corsResponse();
@@ -406,6 +797,11 @@ export function minglitEdgeFunction(
       if (!policy.envs.includes(env)) {
         return errorResponse(`Function disabled in ${env}`, 403);
       }
+
+      // Schema validation runs before expensive side effects. It uses req.clone()
+      // so existing handlers can continue to parse the original request body.
+      const schemaError = await enforceRequestSchema(req, opts.schema);
+      if (schemaError) return schemaError;
 
       // Auth 검증
       const auth = await verifyAuth(req, policy, fnName);
@@ -421,9 +817,27 @@ export function minglitEdgeFunction(
 
       // Context + handler 호출
       const ctx = makeContext({ auth, fnName, env, requestId });
+      requestCtx = ctx;
+      const idempotency = await beginIdempotency(
+        req,
+        ctx,
+        policy.idempotency,
+      );
+      if (idempotency.response) return idempotency.response;
+      activeIdempotency = idempotency.active;
+
+      const rateLimitError = await enforceRateLimits(req, ctx, policy);
+      if (rateLimitError) {
+        if (activeIdempotency) await failIdempotency(ctx, activeIdempotency);
+        return rateLimitError;
+      }
+
       let res = await handler(req, ctx);
       if (policy.deprecated) {
         res = addDeprecationHeaders(res, policy.deprecated);
+      }
+      if (activeIdempotency) {
+        await completeIdempotency(ctx, activeIdempotency, res);
       }
       axiomLog({
         function: fnName,
@@ -441,6 +855,9 @@ export function minglitEdgeFunction(
         metadata: { requestId },
       });
       captureException(e instanceof Error ? e : new Error(msg));
+      if (activeIdempotency && requestCtx) {
+        await failIdempotency(requestCtx, activeIdempotency);
+      }
       return errorResponse("Internal error", 500);
     } finally {
       await axiomFlush();
