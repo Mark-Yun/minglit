@@ -402,7 +402,7 @@ const ROUTE_DESIGN_OVERRIDES: Record<string, string> = {
   // PartnerGuideRoute → template-driven guide hub. Default rule yields
   // 'partner_guide_page', but the single reusable spec is partner_guide.
   'partner-PartnerGuideRoute':        '/specs/partner_guide/index.html',
-  // CheckinRoute → CheckinPlaceholderPage. Default rule yields 'checkin_page'.
+  // CheckinRoute → CheckinTabRoute resolver spec. Default rule yields 'checkin_page'.
   'partner-CheckinRoute':            '/specs/checkin_placeholder_page/index.html',
   // ApplicationDetailRoute (partner) → PartnerApplicationDetailPage (admin-side
   // partner application review). Distinct from EventApplicationDetailRoute.
