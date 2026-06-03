@@ -9,6 +9,7 @@ class OnboardingStepGuide extends StatelessWidget {
     required this.partyName,
     required this.onCreateParty,
     required this.onCreateEvent,
+    this.onOpenGuide,
     super.key,
   });
 
@@ -16,6 +17,7 @@ class OnboardingStepGuide extends StatelessWidget {
   final String? partyName;
   final VoidCallback onCreateParty;
   final VoidCallback onCreateEvent;
+  final VoidCallback? onOpenGuide;
 
   @override
   Widget build(BuildContext context) {
@@ -216,6 +218,20 @@ class OnboardingStepGuide extends StatelessWidget {
         // How it works (only before party creation)
         if (!hasParty) ...[
           const SizedBox(height: MinglitSpacing.large),
+          if (onOpenGuide != null) ...[
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: onOpenGuide,
+                icon: const Icon(
+                  Icons.help_outline,
+                  size: MinglitIconSize.small,
+                ),
+                label: const Text('도움말 보기'),
+              ),
+            ),
+            const SizedBox(height: MinglitSpacing.medium),
+          ],
           Container(
             padding: const EdgeInsets.all(MinglitSpacing.medium),
             decoration: BoxDecoration(

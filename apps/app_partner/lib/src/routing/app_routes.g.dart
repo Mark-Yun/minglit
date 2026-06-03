@@ -180,6 +180,10 @@ RouteBase get $partnerShellRoute => StatefulShellRouteData.$route(
               path: 'guide/location',
               factory: $LocationGuideRoute._fromState,
             ),
+            GoRouteData.$route(
+              path: 'guide',
+              factory: $PartnerGuideRoute._fromState,
+            ),
           ],
         ),
       ],
@@ -383,6 +387,27 @@ mixin $LocationGuideRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/guide/location');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $PartnerGuideRoute on GoRouteData {
+  static PartnerGuideRoute _fromState(GoRouterState state) =>
+      const PartnerGuideRoute();
+
+  @override
+  String get location => GoRouteData.$location('/guide');
 
   @override
   void go(BuildContext context) => context.go(location);

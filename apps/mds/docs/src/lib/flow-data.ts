@@ -114,6 +114,7 @@ const APP_PARTNER_ONBOARDING_FLOW = `flowchart LR
 
 const APP_PARTNER_MAIN_FLOW = `flowchart TB
   Start([Start]) --> HomeRoute
+  HomeRoute -->|"view guide hub"| PartnerGuideRoute
   HomeRoute -->|"view location guide"| LocationGuideRoute
   HomeRoute -->|"tap notifications"| NotificationCenterRoute
   HomeRoute -->|"bottom nav"| ApplicationListRoute
@@ -124,6 +125,7 @@ const APP_PARTNER_MAIN_FLOW = `flowchart TB
   SettlementRoute -->|"tap settlement item"| SettlementDetailRoute
   SettlementRoute -->|"manage bank account"| BankAccountRoute
   HomeRoute -->|"bottom nav"| MoreRoute
+  MoreRoute -->|"help"| PartnerGuideRoute
   MoreRoute -->|"manage parties (/more/parties)"| PartyListRoute
   PartyListRoute -->|"create party"| PartyCreateRoute
   PartyListRoute -->|"tap party"| PartyDetailRoute
@@ -320,6 +322,7 @@ const KNOWN_SPEC_FILES: { user: ReadonlySet<string>; partner: ReadonlySet<string
     'partner_application_detail_page',
     'partner_apply_page',
     'partner_apply_status_page',
+    'partner_guide',
     'partner_event_detail_page',
     'partner_home_page',
     'partner_login_page',
@@ -396,6 +399,9 @@ const ROUTE_DESIGN_OVERRIDES: Record<string, string> = {
   // rule yields 'login_page', which would point to the user spec — override to
   // the partner-specific spec.
   'partner-LoginRoute':              '/specs/partner_login_page/index.html',
+  // PartnerGuideRoute → template-driven guide hub. Default rule yields
+  // 'partner_guide_page', but the single reusable spec is partner_guide.
+  'partner-PartnerGuideRoute':        '/specs/partner_guide/index.html',
   // CheckinRoute → CheckinPlaceholderPage. Default rule yields 'checkin_page'.
   'partner-CheckinRoute':            '/specs/checkin_placeholder_page/index.html',
   // ApplicationDetailRoute (partner) → PartnerApplicationDetailPage (admin-side
@@ -474,13 +480,7 @@ const STANDALONE_SPECS: { user: StandaloneSpec[]; partner: StandaloneSpec[] } = 
       specBasename: 'event_matching_results_screen',
     },
   ],
-  partner: [
-    {
-      widget: 'PartnerGuide',
-      note: 'spec-only · route TBD',
-      specBasename: 'partner_guide',
-    },
-  ],
+  partner: [],
 };
 
 /** Sub-component specs for an app. Used by /screens to render nested rows. */

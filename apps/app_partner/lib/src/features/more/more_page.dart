@@ -159,6 +159,11 @@ class MorePage extends ConsumerWidget {
               header: '약관 및 정보',
               children: [
                 MinglitSettingsTile(
+                  leading: Icons.help_outline,
+                  title: '도움말',
+                  onTap: moreCoordinator.pushPartnerGuide,
+                ),
+                MinglitSettingsTile(
                   leading: Icons.privacy_tip_outlined,
                   title: '개인정보처리방침',
                   onTap: () {

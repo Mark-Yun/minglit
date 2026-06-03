@@ -149,6 +149,7 @@ class PartnerHomePage extends ConsumerWidget {
                           coordinator.pushEventCreate(selected.id);
                         }
                       },
+                      onOpenGuide: coordinator.pushPartnerGuide,
                     ),
                   ] else ...[
                     HomeOverviewBlock(
