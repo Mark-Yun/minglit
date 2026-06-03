@@ -18,7 +18,7 @@
 | `sync-` | repo 에 자동 commit/push 가 실패함 (dev-staging push 또는 merge 기반) | `sync-graphify`, `sync-mds-mockups`, `sync-pr-branches`, `sync-test-coverage` |
 | `set-` | GitHub status/metadata 를 쓰는 수동·자동 API entrypoint 실패 | `set-dev-soak-status`, `set-rc-soak-status` |
 | `triage-` | 이슈 생성·슬래시 명령 (commit 없음) | `triage-mds-issue`, `triage-slash` |
-| `post-merge` | dev push 직후 follow-up 자동화의 단일 entry point (5 reusable orchestrator) | `post-merge` |
+| `post-merge` | dev-staging push 직후 일반 PR flow follow-up 자동화의 단일 entry point | `post-merge` |
 | `tool-` | (수동으로 부를 때만 도는 도구) | (현재 없음 — 새 수동 도구 추가 시 prefix) |
 | `shared-` | (다른 워크플로우의 부품 — 단독 실행 X) | `shared-notify`, `shared-android-deploy`, `shared-ios-deploy`, `shared-vercel-deploy`, `shared-set-commit-status`, `shared-soak-gate`, `shared-promo-tag`, `shared-pr-source-guard` |
 | branch-strategy stage name | branch-strategy 문서의 stage entry workflow | `dev-staging-pr-gate`, `dev-staging-dev-cut-gate`, `dev-staging-dev-cut`, `dev-pr-gate`, `dev-rc-cut-gate`, `dev-rc-cut`, `rc-pr-gate`, `rc-main-cut-gate`, `rc-main-cut`, `main-pr-gate` |
@@ -68,7 +68,7 @@
 - `pr-setup-` vs `pr-review-setup-` vs `sync-` vs `triage-` 의 기준:
   - `pr-setup-` = PR push 마다 PR 브랜치를 mutate (#2627 이후 인스턴스 없음 — auto-format 은 `pr-gate` 의 `format-check` 잡으로 대체)
   - `pr-review-setup-` = PR 의 "리뷰 준비 단계" 자동화 (auto-merge enable, `needs-review` 라벨 부여)
-  - `sync-` = dev push 또는 merge 기반으로 repo 에 commit 을 자동 push
+  - `sync-` = dev-staging push 또는 merge 기반으로 repo 에 commit 을 자동 push
   - `triage-` = 이슈 생성·슬래시 명령 (commit 없음, PR 외 컨텍스트에서도 동작)
 
 ## 관련

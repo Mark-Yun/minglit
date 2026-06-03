@@ -9,7 +9,7 @@
                               │
                               └─daily dev-staging-dev-cut merge-commit snapshot PR──▶ dev
                                                               │
-                                                              ├─▶ dev-rc-cut-gate (post-merge 자동)
+                                                              ├─▶ dev push health/deploy + daily dev-rc-cut-gate
                                                               │      │
                                                               │      ├─ pass: status dev-rc-cut-pass
                                                               │      │         │
