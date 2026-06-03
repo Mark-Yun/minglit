@@ -402,8 +402,8 @@ Flutter 앱(publishable key = anon/authenticated role)은 **READ 전용**이다.
 | 계층 | 수단 | 상태 |
 |------|------|------|
 | IDE | `no_supabase_writes_outside_ef` custom_lint 룰 | ✅ 운영 중 (`shared/packages/minglit_lints/`) |
-| CI | `dart run custom_lint` PR-gate 스텝 | 진행 중 (issue #2392) |
-| DB | `REVOKE INSERT/UPDATE/DELETE/TRUNCATE FROM anon, authenticated` | 진행 중 (issue #2393 Phase 3) |
+| CI | `dart run custom_lint` PR-gate 스텝 | ✅ 운영 중 (`.github/workflows/pr-gate.yml`) |
+| DB | `REVOKE INSERT/UPDATE/DELETE/TRUNCATE FROM anon, authenticated` | 진행 중 (issue #2991 / #2393 Phase 3) |
 
 #### lint 룰: `no_supabase_writes_outside_ef`
 

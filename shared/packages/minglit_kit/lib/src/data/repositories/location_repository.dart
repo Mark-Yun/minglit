@@ -78,10 +78,12 @@ class LocationRepository {
       // Format: POINT(longitude latitude)
       final point = 'POINT(${location.longitude} ${location.latitude})';
 
-      final data = await _supabase
-          .from('locations')
-          .insert({
-            'partner_id': location.partnerId,
+      final response = await _supabase.functions.invoke(
+        'partner-manage-party',
+        body: {
+          'action': 'create_location',
+          'partner_id': location.partnerId,
+          'location': {
             'name': location.name,
             'address': location.address,
             'address_detail': location.addressDetail,
@@ -91,17 +93,20 @@ class LocationRepository {
             'directions_guide': location.directionsGuide,
             'postal_code': location.postalCode,
             'geo_point': point,
-          })
-          .select()
-          .single();
+          },
+        },
+      );
+      if (response.status != 200) {
+        final error = response.data is Map
+            ? (response.data as Map)['error'] ?? 'Failed to create location'
+            : 'Failed to create location';
+        throw Exception(error);
+      }
 
-      // Merging input lat/lng into response data since insert().select()
-      // returns table columns (geo_point WKB) not view columns (lat/lng).
-      final mergedData = Map<String, dynamic>.from(data);
-      mergedData['lat'] = location.latitude;
-      mergedData['lng'] = location.longitude;
-
-      final result = Location.fromJson(mergedData);
+      final data = response.data as Map<String, dynamic>;
+      final locationId = data['location_id'] as String;
+      final result = await getLocationById(locationId);
+      if (result == null) throw Exception('Created location not found');
       Log.d('createLocation success | id: ${result.id}');
       return result;
     } catch (e, st) {
@@ -122,14 +127,23 @@ class LocationRepository {
   }) async {
     Log.d('updateLocationDetails called | locationId: $locationId');
     try {
-      await _supabase
-          .from('locations')
-          .update({
+      final response = await _supabase.functions.invoke(
+        'partner-manage-party',
+        body: {
+          'action': 'update_location',
+          'location_id': locationId,
+          'location': {
             'address_detail': addressDetail,
             'directions_guide': directionsGuide,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', locationId);
+          },
+        },
+      );
+      if (response.status != 200) {
+        final error = response.data is Map
+            ? (response.data as Map)['error'] ?? 'Failed to update location'
+            : 'Failed to update location';
+        throw Exception(error);
+      }
       Log.d('updateLocationDetails success');
     } catch (e, st) {
       Log.e('❌ [LocationRepo] updateLocationDetails Error', e, st);

@@ -37,11 +37,20 @@ mixin _EventRepositoryCommands on _SupabaseEventContext {
   }) async {
     Log.d('deleteApplication called | event: $eventId, user: $userId');
     try {
-      await supabaseClient
-          .from('event_applications')
-          .delete()
-          .eq('event_id', eventId)
-          .eq('user_id', userId);
+      final response = await supabaseClient.functions.invoke(
+        'user-cancel-order',
+        body: {
+          'event_id': eventId,
+          'reason': 'application_deleted',
+        },
+      );
+      if (response.status != 200) {
+        final data = response.data;
+        final errorMsg = data is Map
+            ? (data['error'] as String?) ?? '신청 삭제에 실패했습니다.'
+            : '신청 삭제에 실패했습니다.';
+        throw MinglitUserException(errorMsg);
+      }
       Log.i('✅ [EventRepo] Application deleted.');
     } catch (e, st) {
       Log.e('❌ [EventRepo] deleteApplication Error', e, st);

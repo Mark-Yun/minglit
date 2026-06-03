@@ -3,11 +3,11 @@ import {
   authenticatedJsonRequest,
   captureServeHandler,
   createFetchMock,
+  type FetchRoute,
   jsonResponse,
   readJson,
   withEnv,
   withMockedFetch,
-  type FetchRoute,
 } from "../_test_utils/mock_http.ts";
 
 const TEST_USER_ID = "user-applicant-001";
@@ -54,8 +54,18 @@ function authFailRoute(): FetchRoute {
   };
 }
 
+function superAdminRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/app_roles") && req.method === "GET",
+    handler: () => jsonResponse({ role: "super_admin" }),
+  };
+}
+
 // SELECT route for fetching application
-function selectAppRoute(app: Record<string, unknown> | null = VALID_APP): FetchRoute {
+function selectAppRoute(
+  app: Record<string, unknown> | null = VALID_APP,
+): FetchRoute {
   return {
     matcher: (req) =>
       req.url.includes("/rest/v1/partner_applications") &&
@@ -69,7 +79,8 @@ function selectAppRoute(app: Record<string, unknown> | null = VALID_APP): FetchR
 function insertRoute(id = TEST_APP_ID): FetchRoute {
   return {
     matcher: (req) =>
-      req.url.includes("/rest/v1/partner_applications") && req.method === "POST",
+      req.url.includes("/rest/v1/partner_applications") &&
+      req.method === "POST",
     handler: () => jsonResponse({ id }),
   };
 }
@@ -77,7 +88,8 @@ function insertRoute(id = TEST_APP_ID): FetchRoute {
 function insertErrorRoute(): FetchRoute {
   return {
     matcher: (req) =>
-      req.url.includes("/rest/v1/partner_applications") && req.method === "POST",
+      req.url.includes("/rest/v1/partner_applications") &&
+      req.method === "POST",
     handler: () => jsonResponse({ message: "insert error" }, { status: 500 }),
   };
 }
@@ -86,7 +98,8 @@ function insertErrorRoute(): FetchRoute {
 function updateRoute(): FetchRoute {
   return {
     matcher: (req) =>
-      req.url.includes("/rest/v1/partner_applications") && req.method === "PATCH",
+      req.url.includes("/rest/v1/partner_applications") &&
+      req.method === "PATCH",
     handler: () => new Response(null, { status: 200 }),
   };
 }
@@ -94,7 +107,8 @@ function updateRoute(): FetchRoute {
 function updateErrorRoute(): FetchRoute {
   return {
     matcher: (req) =>
-      req.url.includes("/rest/v1/partner_applications") && req.method === "PATCH",
+      req.url.includes("/rest/v1/partner_applications") &&
+      req.method === "PATCH",
     handler: () => jsonResponse({ message: "update error" }, { status: 500 }),
   };
 }
@@ -103,14 +117,20 @@ function updateErrorRoute(): FetchRoute {
 // Returns matching file names based on the search query parameter
 function storageListRoute(hasFiles = true): FetchRoute {
   return {
-    matcher: (req) => req.url.includes("/storage/v1/object/list/partner-proofs"),
+    matcher: (req) =>
+      req.url.includes("/storage/v1/object/list/partner-proofs"),
     handler: (req) => {
       if (!hasFiles) return jsonResponse([]);
       // Extract search param from body or URL to return matching filename
       const url = new URL(req.url);
-      const prefix = url.pathname.replace("/storage/v1/object/list/partner-proofs/", "");
+      const prefix = url.pathname.replace(
+        "/storage/v1/object/list/partner-proofs/",
+        "",
+      );
       // Return a generic file that matches any search
-      return jsonResponse([{ name: "biz_reg_123.pdf" }, { name: "bankbook_123.pdf" }]);
+      return jsonResponse([{ name: "biz_reg_123.pdf" }, {
+        name: "bankbook_123.pdf",
+      }]);
     },
   };
 }
@@ -119,7 +139,9 @@ function storageListRoute(hasFiles = true): FetchRoute {
 Deno.test({
   name: "handles OPTIONS preflight request",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([]);
 
     await withEnv(ENV, async () => {
@@ -137,7 +159,9 @@ Deno.test({
 Deno.test({
   name: "returns 401 without authorization",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authFailRoute()]);
 
     await withEnv(ENV, async () => {
@@ -158,7 +182,9 @@ Deno.test({
 Deno.test({
   name: "returns 400 for missing action",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -168,7 +194,7 @@ Deno.test({
         );
         assertEquals(res.status, 400);
         const body = await readJson(res);
-        assertEquals(body.error, "Missing or invalid \"action\" field");
+        assertEquals(body.error, 'Missing or invalid "action" field');
       });
     });
   },
@@ -178,7 +204,9 @@ Deno.test({
 Deno.test({
   name: "returns 400 for unknown action",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -202,7 +230,9 @@ Deno.test({
 Deno.test({
   name: "save_draft: new insert returns application_id",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       insertRoute("new-app-id"),
@@ -229,10 +259,16 @@ Deno.test({
 Deno.test({
   name: "save_draft: existing update returns application_id",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
-      selectAppRoute({ id: TEST_APP_ID, user_id: TEST_USER_ID, status: "draft" }),
+      selectAppRoute({
+        id: TEST_APP_ID,
+        user_id: TEST_USER_ID,
+        status: "draft",
+      }),
       updateRoute(),
     ]);
 
@@ -258,14 +294,17 @@ Deno.test({
 Deno.test({
   name: "save_draft: current_step is persisted",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     let insertBody: string | null = null;
 
     const { fetchMock } = createFetchMock([
       authRoute(),
       {
         matcher: (req) =>
-          req.url.includes("/rest/v1/partner_applications") && req.method === "POST",
+          req.url.includes("/rest/v1/partner_applications") &&
+          req.method === "POST",
         handler: async (req) => {
           insertBody = await req.clone().text();
           return jsonResponse({ id: "new-id" });
@@ -294,10 +333,16 @@ Deno.test({
 Deno.test({
   name: "save_draft: returns 403 for other user's draft",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
-      selectAppRoute({ id: TEST_APP_ID, user_id: OTHER_USER_ID, status: "draft" }),
+      selectAppRoute({
+        id: TEST_APP_ID,
+        user_id: OTHER_USER_ID,
+        status: "draft",
+      }),
     ]);
 
     await withEnv(ENV, async () => {
@@ -319,10 +364,16 @@ Deno.test({
 Deno.test({
   name: "save_draft: returns 400 when application is pending",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
-      selectAppRoute({ id: TEST_APP_ID, user_id: TEST_USER_ID, status: "pending" }),
+      selectAppRoute({
+        id: TEST_APP_ID,
+        user_id: TEST_USER_ID,
+        status: "pending",
+      }),
     ]);
 
     await withEnv(ENV, async () => {
@@ -336,7 +387,10 @@ Deno.test({
         );
         assertEquals(res.status, 400);
         const body = await readJson(res);
-        assertEquals(body.error, "Application cannot be updated in current status");
+        assertEquals(
+          body.error,
+          "Application cannot be updated in current status",
+        );
       });
     });
   },
@@ -346,7 +400,9 @@ Deno.test({
 Deno.test({
   name: "save_draft: returns 500 when insert fails",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       insertErrorRoute(),
@@ -374,7 +430,9 @@ Deno.test({
 Deno.test({
   name: "submit: draft → pending with valid data",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     // Use valid biz_number with correct checksum: 1208100083
     const validApp = { ...VALID_APP, biz_number: "1208100088" };
     const { fetchMock } = createFetchMock([
@@ -404,7 +462,9 @@ Deno.test({
 Deno.test({
   name: "submit: returns 400 with validation details for missing fields",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const incompleteApp = {
       id: TEST_APP_ID,
       user_id: TEST_USER_ID,
@@ -456,7 +516,9 @@ Deno.test({
 Deno.test({
   name: "submit: returns 400 for invalid biz_number format",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const badBizApp = { ...VALID_APP, biz_number: "123" };
     const { fetchMock } = createFetchMock([
       authRoute(),
@@ -475,7 +537,9 @@ Deno.test({
         assertEquals(res.status, 400);
         const body = await readJson(res);
         assertEquals(body.error, "validation_failed");
-        const bizErr = body.details.find((d: { field: string }) => d.field === "biz_number");
+        const bizErr = body.details.find((d: { field: string }) =>
+          d.field === "biz_number"
+        );
         assertEquals(bizErr !== undefined, true);
       });
     });
@@ -486,8 +550,14 @@ Deno.test({
 Deno.test({
   name: "submit: returns 400 for invalid email format",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    const badEmailApp = { ...VALID_APP, biz_number: "1208100088", contact_email: "not-an-email" };
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const badEmailApp = {
+      ...VALID_APP,
+      biz_number: "1208100088",
+      contact_email: "not-an-email",
+    };
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectAppRoute(badEmailApp),
@@ -505,7 +575,9 @@ Deno.test({
         assertEquals(res.status, 400);
         const body = await readJson(res);
         assertEquals(body.error, "validation_failed");
-        const emailErr = body.details.find((d: { field: string }) => d.field === "contact_email");
+        const emailErr = body.details.find((d: { field: string }) =>
+          d.field === "contact_email"
+        );
         assertEquals(emailErr !== undefined, true);
       });
     });
@@ -516,7 +588,9 @@ Deno.test({
 Deno.test({
   name: "submit: returns 400 when storage file not found",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const validApp = { ...VALID_APP, biz_number: "1208100088" };
     const { fetchMock } = createFetchMock([
       authRoute(),
@@ -544,7 +618,9 @@ Deno.test({
 Deno.test({
   name: "submit: returns 403 for file path with other user's prefix",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const hackedApp = {
       ...VALID_APP,
       biz_number: "1208100088",
@@ -575,14 +651,18 @@ Deno.test({
 Deno.test({
   name: "submit: returns 500 when storage list fails",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const validApp = { ...VALID_APP, biz_number: "1208100088" };
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectAppRoute(validApp),
       {
-        matcher: (req) => req.url.includes("/storage/v1/object/list/partner-proofs"),
-        handler: () => jsonResponse({ message: "storage error" }, { status: 500 }),
+        matcher: (req) =>
+          req.url.includes("/storage/v1/object/list/partner-proofs"),
+        handler: () =>
+          jsonResponse({ message: "storage error" }, { status: 500 }),
       },
     ]);
 
@@ -606,7 +686,9 @@ Deno.test({
 Deno.test({
   name: "submit: returns 400 when already pending",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const pendingApp = { ...VALID_APP, status: "pending" };
     const { fetchMock } = createFetchMock([
       authRoute(),
@@ -623,7 +705,10 @@ Deno.test({
         );
         assertEquals(res.status, 400);
         const body = await readJson(res);
-        assertEquals(body.error, "Application cannot be submitted in current status");
+        assertEquals(
+          body.error,
+          "Application cannot be submitted in current status",
+        );
       });
     });
   },
@@ -633,8 +718,14 @@ Deno.test({
 Deno.test({
   name: "submit: needs_correction → pending transition success",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-    const correctionApp = { ...VALID_APP, status: "needs_correction", biz_number: "1208100088" };
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const correctionApp = {
+      ...VALID_APP,
+      status: "needs_correction",
+      biz_number: "1208100088",
+    };
     const { fetchMock } = createFetchMock([
       authRoute(),
       selectAppRoute(correctionApp),
@@ -662,7 +753,9 @@ Deno.test({
 Deno.test({
   name: "submit: returns 400 for missing application_id",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -684,7 +777,9 @@ Deno.test({
 Deno.test({
   name: "submit: returns 403 for other user's application",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const otherApp = { ...VALID_APP, user_id: OTHER_USER_ID };
     const { fetchMock } = createFetchMock([
       authRoute(),
@@ -713,10 +808,16 @@ Deno.test({
 Deno.test({
   name: "update: draft status allows update",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
-      selectAppRoute({ id: TEST_APP_ID, user_id: TEST_USER_ID, status: "draft" }),
+      selectAppRoute({
+        id: TEST_APP_ID,
+        user_id: TEST_USER_ID,
+        status: "draft",
+      }),
       updateRoute(),
     ]);
 
@@ -742,10 +843,16 @@ Deno.test({
 Deno.test({
   name: "update: needs_correction status allows update",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
-      selectAppRoute({ id: TEST_APP_ID, user_id: TEST_USER_ID, status: "needs_correction" }),
+      selectAppRoute({
+        id: TEST_APP_ID,
+        user_id: TEST_USER_ID,
+        status: "needs_correction",
+      }),
       updateRoute(),
     ]);
 
@@ -770,10 +877,16 @@ Deno.test({
 Deno.test({
   name: "update: returns 400 when status is pending",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
-      selectAppRoute({ id: TEST_APP_ID, user_id: TEST_USER_ID, status: "pending" }),
+      selectAppRoute({
+        id: TEST_APP_ID,
+        user_id: TEST_USER_ID,
+        status: "pending",
+      }),
     ]);
 
     await withEnv(ENV, async () => {
@@ -787,7 +900,10 @@ Deno.test({
         );
         assertEquals(res.status, 400);
         const body = await readJson(res);
-        assertEquals(body.error, "Application cannot be updated in current status");
+        assertEquals(
+          body.error,
+          "Application cannot be updated in current status",
+        );
       });
     });
   },
@@ -797,10 +913,16 @@ Deno.test({
 Deno.test({
   name: "update: returns 403 for other user's application",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
-      selectAppRoute({ id: TEST_APP_ID, user_id: OTHER_USER_ID, status: "draft" }),
+      selectAppRoute({
+        id: TEST_APP_ID,
+        user_id: OTHER_USER_ID,
+        status: "draft",
+      }),
     ]);
 
     await withEnv(ENV, async () => {
@@ -822,7 +944,9 @@ Deno.test({
 Deno.test({
   name: "update: returns 400 for missing application_id",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -845,10 +969,16 @@ Deno.test({
 Deno.test({
   name: "update: returns 400 when no valid fields in data",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
-      selectAppRoute({ id: TEST_APP_ID, user_id: TEST_USER_ID, status: "draft" }),
+      selectAppRoute({
+        id: TEST_APP_ID,
+        user_id: TEST_USER_ID,
+        status: "draft",
+      }),
     ]);
 
     await withEnv(ENV, async () => {
@@ -870,16 +1000,20 @@ Deno.test({
 
 // ─── save_draft: non-clearable null omitted, clearable null preserved ───
 Deno.test({
-  name: "save_draft: non-clearable null is omitted, clearable null is preserved in payload",
+  name:
+    "save_draft: non-clearable null is omitted, clearable null is preserved in payload",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     let insertBody: string | null = null;
 
     const { fetchMock } = createFetchMock([
       authRoute(),
       {
         matcher: (req) =>
-          req.url.includes("/rest/v1/partner_applications") && req.method === "POST",
+          req.url.includes("/rest/v1/partner_applications") &&
+          req.method === "POST",
         handler: async (req) => {
           insertBody = await req.clone().text();
           return jsonResponse({ id: "new-id" });
@@ -893,10 +1027,10 @@ Deno.test({
           authenticatedJsonRequest("http://localhost", {
             action: "save_draft",
             data: {
-              brand_name: null,         // non-clearable → omit
-              biz_type: null,           // non-clearable → omit
-              introduction: null,       // clearable → preserve as null
-              tax_email: null,          // clearable → preserve as null
+              brand_name: null, // non-clearable → omit
+              biz_type: null, // non-clearable → omit
+              introduction: null, // clearable → preserve as null
+              tax_email: null, // clearable → preserve as null
               profile_image_path: null, // clearable → preserve as null
               current_step: 1,
             },
@@ -916,17 +1050,25 @@ Deno.test({
 
 // ─── update: non-clearable null omitted, clearable null preserved ───
 Deno.test({
-  name: "update: non-clearable null is omitted, clearable null is preserved in payload",
+  name:
+    "update: non-clearable null is omitted, clearable null is preserved in payload",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     let patchBody: string | null = null;
 
     const { fetchMock } = createFetchMock([
       authRoute(),
-      selectAppRoute({ id: TEST_APP_ID, user_id: TEST_USER_ID, status: "needs_correction" }),
+      selectAppRoute({
+        id: TEST_APP_ID,
+        user_id: TEST_USER_ID,
+        status: "needs_correction",
+      }),
       {
         matcher: (req) =>
-          req.url.includes("/rest/v1/partner_applications") && req.method === "PATCH",
+          req.url.includes("/rest/v1/partner_applications") &&
+          req.method === "PATCH",
         handler: async (req) => {
           patchBody = await req.clone().text();
           return new Response(null, { status: 200 });
@@ -941,10 +1083,10 @@ Deno.test({
             action: "update",
             application_id: TEST_APP_ID,
             data: {
-              brand_name: null,         // non-clearable → omit
-              biz_type: null,           // non-clearable → omit
-              introduction: null,       // clearable → preserve as null
-              tax_email: null,          // clearable → preserve as null
+              brand_name: null, // non-clearable → omit
+              biz_type: null, // non-clearable → omit
+              introduction: null, // clearable → preserve as null
+              tax_email: null, // clearable → preserve as null
               profile_image_path: null, // clearable → preserve as null
             },
           }),
@@ -965,15 +1107,22 @@ Deno.test({
 Deno.test({
   name: "update: only whitelisted fields are sent to DB",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     let patchBody: string | null = null;
 
     const { fetchMock } = createFetchMock([
       authRoute(),
-      selectAppRoute({ id: TEST_APP_ID, user_id: TEST_USER_ID, status: "draft" }),
+      selectAppRoute({
+        id: TEST_APP_ID,
+        user_id: TEST_USER_ID,
+        status: "draft",
+      }),
       {
         matcher: (req) =>
-          req.url.includes("/rest/v1/partner_applications") && req.method === "PATCH",
+          req.url.includes("/rest/v1/partner_applications") &&
+          req.method === "PATCH",
         handler: async (req) => {
           patchBody = await req.clone().text();
           return new Response(null, { status: 200 });
@@ -1001,6 +1150,117 @@ Deno.test({
         assertEquals(parsed.status, undefined);
         assertEquals(parsed.user_id, undefined);
         assertEquals(parsed.id, undefined);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "review: super_admin can approve pending application",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute("admin-user-001"),
+      superAdminRoute(),
+      selectAppRoute({ id: TEST_APP_ID, status: "pending" }),
+      updateRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "review",
+            application_id: TEST_APP_ID,
+            status: "approved",
+            admin_comment: "ok",
+          }),
+        );
+        assertEquals(res.status, 200);
+        const body = await readJson(res);
+        assertEquals(body.application_id, TEST_APP_ID);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "review: rejects invalid requests and non-reviewable applications",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    await withEnv(ENV, async () => {
+      let fetchMock = createFetchMock([authRoute("admin-user-001")]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        let res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "review",
+            status: "approved",
+          }),
+        );
+        assertEquals(res.status, 400);
+
+        res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "review",
+            application_id: TEST_APP_ID,
+            status: "draft",
+          }),
+        );
+        assertEquals(res.status, 400);
+      });
+
+      fetchMock = createFetchMock([
+        authRoute("admin-user-001"),
+        superAdminRoute(),
+        selectAppRoute(null),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "review",
+            application_id: TEST_APP_ID,
+            status: "approved",
+          }),
+        );
+        assertEquals(res.status, 404);
+      });
+
+      fetchMock = createFetchMock([
+        authRoute("admin-user-001"),
+        superAdminRoute(),
+        selectAppRoute({ id: TEST_APP_ID, status: "approved" }),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "review",
+            application_id: TEST_APP_ID,
+            status: "rejected",
+          }),
+        );
+        assertEquals(res.status, 400);
+      });
+
+      fetchMock = createFetchMock([
+        authRoute("admin-user-001"),
+        superAdminRoute(),
+        selectAppRoute({ id: TEST_APP_ID, status: "pending" }),
+        updateErrorRoute(),
+      ]).fetchMock;
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "review",
+            application_id: TEST_APP_ID,
+            status: "needs_correction",
+          }),
+        );
+        assertEquals(res.status, 500);
       });
     });
   },

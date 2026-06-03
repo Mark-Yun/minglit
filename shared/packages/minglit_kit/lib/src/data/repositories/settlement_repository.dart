@@ -274,13 +274,22 @@ class SettlementRepository {
       'upsertBankAccount called | partnerId: $partnerId, bankName: $bankName',
     );
     try {
-      // minglit_lints: allow-supabase-write — reason: EF migration pending (Phase 2 partner-side, tracked in #2392)
-      await _supabase.from('partner_settlements').upsert({
-        'partner_id': partnerId,
-        'bank_name': bankName,
-        'account_holder': accountHolder,
-        'account_number': accountNumber,
-      }, onConflict: 'partner_id');
+      final response = await _supabase.functions.invoke(
+        'partner-manage-settlement',
+        body: {
+          'action': 'upsert_bank_account',
+          'partner_id': partnerId,
+          'bank_name': bankName,
+          'account_holder': accountHolder,
+          'account_number': accountNumber,
+        },
+      );
+      if (response.status != 200) {
+        final error = response.data is Map
+            ? (response.data as Map)['error'] ?? 'Failed to upsert bank account'
+            : 'Failed to upsert bank account';
+        throw Exception(error);
+      }
 
       Log.d('upsertBankAccount success | partnerId: $partnerId');
     } catch (e, st) {

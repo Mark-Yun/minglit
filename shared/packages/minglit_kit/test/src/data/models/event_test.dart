@@ -189,6 +189,35 @@ void main() {
       expect(event.metadata['show_participant_list'], false);
     });
 
+    test(
+      'createFromParty preserves entry group template ids as source ids',
+      () {
+        final party = Party.fromJson({
+          'id': 'party_1',
+          'partner_id': 'pt_1',
+          'title': 'Template Party',
+          'created_at': now.toIso8601String(),
+          'updated_at': now.toIso8601String(),
+          'entry_group_templates': [
+            {
+              'id': 'egt_1',
+              'party_id': 'party_1',
+              'label': 'VIP',
+            },
+          ],
+        });
+
+        final event = Event.createFromParty(
+          party,
+          startTime: now,
+          endTime: later,
+        );
+
+        expect(event.entryGroups, isNotNull);
+        expect(event.entryGroups!.single.id, 'egt_1');
+      },
+    );
+
     test('createFromParty metadata is a deep copy', () {
       final party = Party.fromJson({
         'id': 'party_1',
@@ -328,7 +357,8 @@ void main() {
       expect(event.description, isNotNull);
       expect(event.description!['ops'], isA<List<dynamic>>());
       final ops = event.description!['ops'] as List<dynamic>;
-      expect(ops.first['insert'], '파티 설명입니다\n');
+      final firstOp = ops.first as Map<String, dynamic>;
+      expect(firstOp['insert'], '파티 설명입니다\n');
     });
 
     test('returns null description when value is null', () {

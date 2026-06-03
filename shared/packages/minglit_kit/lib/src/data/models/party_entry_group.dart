@@ -63,10 +63,11 @@ abstract class EntryGroup with _$EntryGroup {
   factory EntryGroup.createFromTemplate(
     EntryGroupTemplate template, {
     String eventId = '',
+    String? id,
   }) {
     final now = DateTime.now();
     return EntryGroup(
-      id: '',
+      id: id ?? '',
       eventId: eventId,
       label: template.label,
       gender: template.gender,

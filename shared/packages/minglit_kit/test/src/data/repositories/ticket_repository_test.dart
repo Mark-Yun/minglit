@@ -4,12 +4,15 @@ import 'package:minglit_kit/src/data/models/ticket.dart';
 import 'package:minglit_kit/src/data/models/ticket_template.dart';
 import 'package:minglit_kit/src/data/repositories/ticket_repository.dart';
 import 'package:minglit_kit/src/utils/exceptions.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../helpers/mocks.dart';
 import '../../../helpers/supabase_mock_helpers.dart';
 
 void main() {
   late MockSupabaseClient mockClient;
+  late MockFunctionsClient mockFunctions;
   late TicketRepository repository;
 
   final now = DateTime.now();
@@ -41,6 +44,7 @@ void main() {
 
   setUp(() {
     mockClient = createMockSupabase();
+    mockFunctions = mockClient.functions as MockFunctionsClient;
     repository = TicketRepository(supabase: mockClient);
   });
 
@@ -145,13 +149,23 @@ void main() {
 
     group('createTicket', () {
       test('creates and returns new ticket', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-event',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true, 'ticket_id': 'ticket_1'},
+          ),
+        );
         unawaited(
           mockTable(
             mockClient,
             'tickets',
             selectData: [ticketJson],
             singleData: ticketJson,
-            insertReturnData: ticketJson,
           ),
         );
 
@@ -165,13 +179,23 @@ void main() {
 
     group('createTicketTemplate', () {
       test('creates and returns new template', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-party',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true, 'ticket_template_id': 'template_1'},
+          ),
+        );
         unawaited(
           mockTable(
             mockClient,
             'ticket_templates',
             selectData: [templateJson],
             singleData: templateJson,
-            insertReturnData: templateJson,
           ),
         );
 
@@ -215,7 +239,19 @@ void main() {
           'ticket_1',
         )).copyWith(quantity: 200); // 200 >= 10 (soldCount)
 
-        // Re-setup: getTicketById + update chain
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-event',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true},
+          ),
+        );
+
+        // Re-setup: getTicketById after EF update
         unawaited(mockTable(mockClient, 'tickets', singleData: updatedJson));
 
         final result = await repository.updateTicket(ticket);
@@ -232,6 +268,17 @@ void main() {
         final template = await repository.getTicketTemplateById('template_1');
 
         final updatedJson = {...templateJson, 'name': '업데이트된 템플릿'};
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-party',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true},
+          ),
+        );
         unawaited(
           mockTable(
             mockClient,
@@ -249,7 +296,17 @@ void main() {
 
     group('deleteTicketTemplate', () {
       test('completes without error', () async {
-        unawaited(mockTable(mockClient, 'ticket_templates'));
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-party',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true},
+          ),
+        );
 
         await expectLater(
           repository.deleteTicketTemplate('template_1'),

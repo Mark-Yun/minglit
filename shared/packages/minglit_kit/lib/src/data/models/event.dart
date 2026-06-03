@@ -89,7 +89,7 @@ abstract class Event with _$Event {
       minConfirmedCount: party.minConfirmedCount,
       maxParticipants: party.maxParticipants,
       entryGroups: party.entryGroups
-          ?.map(EntryGroup.createFromTemplate)
+          ?.map((group) => EntryGroup.createFromTemplate(group, id: group.id))
           .toList(),
     );
   }

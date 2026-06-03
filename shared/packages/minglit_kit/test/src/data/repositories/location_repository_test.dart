@@ -1,12 +1,15 @@
 import 'dart:async' show unawaited;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/repositories/location_repository.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../helpers/mocks.dart';
 import '../../../helpers/supabase_mock_helpers.dart';
 
 void main() {
   late MockSupabaseClient mockClient;
+  late MockFunctionsClient mockFunctions;
   late LocationRepository repository;
 
   final now = DateTime.now();
@@ -29,6 +32,7 @@ void main() {
 
   setUp(() {
     mockClient = createMockSupabase();
+    mockFunctions = mockClient.functions as MockFunctionsClient;
     repository = LocationRepository(supabase: mockClient);
   });
 
@@ -107,49 +111,53 @@ void main() {
           'updated_at': now.toIso8601String(),
         };
 
-        unawaited(
-          mockTable(
-            mockClient,
-            'locations',
-            insertReturnData: createdJson,
+        final createdViewJson = {
+          ...createdJson,
+          'lat': 37.5555,
+          'lng': 126.9220,
+        };
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-party',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true, 'location_id': 'loc_new'},
           ),
         );
 
-        // Parse it manually since Location.fromJson
-        // expects locations_view format
         unawaited(
           mockTable(
             mockClient,
-            'locations',
-            insertReturnData: {
-              ...createdJson,
-              'lat': 37.5555,
-              'lng': 126.9220,
-            },
+            'locations_view',
+            maybeSingleData: createdViewJson,
           ),
         );
-
-        // We test that createLocation does not throw
         final newLoc = await repository.createLocation(
-          await (() async {
-            unawaited(
-              mockTable(
-                mockClient,
-                'locations_view',
-                maybeSingleData: locationJson,
-              ),
-            );
-            return (await repository.getLocationById('loc_1'))!;
-          })(),
+          await (() async => repository.getLocationById('loc_new'))().then(
+            (location) => location!,
+          ),
         );
 
-        expect(newLoc.id, isNotEmpty);
+        expect(newLoc.id, 'loc_new');
       });
     });
 
     group('updateLocationDetails', () {
       test('completes without error', () async {
-        unawaited(mockTable(mockClient, 'locations'));
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-party',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true},
+          ),
+        );
 
         await expectLater(
           repository.updateLocationDetails(

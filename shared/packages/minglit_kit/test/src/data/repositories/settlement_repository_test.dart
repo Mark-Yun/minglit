@@ -53,10 +53,12 @@ Map<String, dynamic> _settlementItemJson({String id = 'item_1'}) => {
 
 void main() {
   late MockSupabaseClient mockClient;
+  late MockFunctionsClient mockFunctions;
   late SettlementRepository repository;
 
   setUp(() {
     mockClient = createMockSupabase();
+    mockFunctions = mockClient.functions as MockFunctionsClient;
     repository = SettlementRepository(supabase: mockClient);
   });
 
@@ -479,7 +481,17 @@ void main() {
     // -------------------------------------------------------------------------
     group('upsertBankAccount', () {
       test('completes without error', () async {
-        mockTable(mockClient, 'partner_settlements');
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-settlement',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true},
+          ),
+        );
 
         await expectLater(
           repository.upsertBankAccount(
@@ -493,10 +505,16 @@ void main() {
       });
 
       test('throws on db error', () async {
-        mockTable(
-          mockClient,
-          'partner_settlements',
-          shouldThrow: Exception('upsert failed'),
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-settlement',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 500,
+            data: {'error': 'upsert failed'},
+          ),
         );
 
         await expectLater(
