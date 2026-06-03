@@ -540,7 +540,7 @@ body.dark-mode .viewport {
   <h2>Overview</h2>
   <table class="ref">
     <tbody>
-      <tr><th style="width: 140px;">Status</th><td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— canonical destination for "참가자 체크인" · Flutter route / implementation TBD</em></td></tr>
+      <tr><th style="width: 140px;">Status</th><td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— canonical destination for PartnerHome "참가자 리스트" pre-start entry + "참가자 체크인" active entry · Flutter route / implementation TBD</em></td></tr>
       <tr><th>App</th><td><code>app_partner</code></td></tr>
       <tr><th>Category</th><td>event operation · check-in · live dashboard</td></tr>
       <tr><th>Route / Surface</th><td><code>OngoingEventListPage</code> · participant check-in / live operation dashboard</td></tr>
@@ -548,7 +548,7 @@ body.dark-mode .viewport {
       <tr>
         <th>Hierarchy</th>
         <td>
-          <strong>Parent</strong>: <a href="/specs/partner_home_page/index.html"><code>PartnerHomePage</code></a> LIVE/D-0 진행 임박 카드 "참가자 체크인" CTA · <a href="/specs/checkin_placeholder_page/index.html"><code>CheckinTabRoute</code></a> 1-event direct / 2+ selector · <a href="/specs/partner_event_detail_page/index.html"><code>PartnerEventDetailPage</code></a> 참가 현황.<br>
+          <strong>Parent</strong>: <a href="/specs/partner_home_page/index.html"><code>PartnerHomePage</code></a> 진행 임박/D-0 체크인 대기 카드 "참가자 리스트" outline CTA · T-2 이후 체크인 가능/LIVE 카드 "참가자 체크인" primary CTA · <a href="/specs/checkin_placeholder_page/index.html"><code>CheckinTabRoute</code></a> 1-event direct / 2+ selector · <a href="/specs/partner_event_detail_page/index.html"><code>PartnerEventDetailPage</code></a> 참가 현황.<br>
           <strong>Children</strong>: row action bottom sheet · inline QR scanner 영역 (별도 route 없음).
         </td>
       </tr>
@@ -558,7 +558,7 @@ body.dark-mode .viewport {
       </tr>
       <tr>
         <th>User journey</th>
-        <td><strong>Entry points</strong>: PartnerHomePage LIVE/D-0 진행 임박 카드의 "참가자 체크인" CTA · PartnerEventDetailPage 참가 현황 · CheckinTabRoute의 1-event direct / 2+ event selector.<br><strong>Exit points</strong>: 뒤로 가기 → parent route · row action sheet dismiss · 종료 후 read-only 회고에서 EventApplicationListPage/Settlement flow로 이동 가능.</td>
+        <td><strong>Entry points</strong>: PartnerHomePage 진행 임박/D-0 체크인 대기 카드의 "참가자 리스트" outline CTA(pre_start/readiness list mode) · PartnerHomePage T-2 이후 체크인 가능/LIVE 카드의 "참가자 체크인" primary CTA(checkin_ready/live mode) · PartnerEventDetailPage 참가 현황 · CheckinTabRoute의 1-event direct / 2+ event selector.<br><strong>Exit points</strong>: 뒤로 가기 → parent route · row action sheet dismiss · 종료 후 read-only 회고에서 EventApplicationListPage/Settlement flow로 이동 가능.</td>
       </tr>
       <tr><th>Background</th><td>기존 참가 신청 리스트는 심사/결제 상태 관리에 최적화되어 있다. 실제 이벤트 운영 시간에는 체크인 완료율, 미도착자 탐색, QR 스캔, 수동 체크인/노쇼/메모가 더 중요하므로 별도 운영 모드가 필요하다.</td></tr>
       <tr><th>Frequency</th><td>이벤트 당일 집중 사용. 시작 2시간 전부터 종료 후 24시간까지 접근 가능하고, 이후에는 read-only history surface로만 연결한다.</td></tr>
@@ -570,9 +570,10 @@ body.dark-mode .viewport {
   <h2>History</h2>
   <table class="ref">
     <thead><tr><th style="width: 110px;">Date</th><th style="width: 80px;">Version</th><th style="width: 120px;">Author</th><th>Changes</th></tr></thead>
-	    <tbody>
-	      <tr><td>2026-06-03</td><td>0.2</td><td>codex</td><td>#2999: PartnerHome의 "QR 코드 체크인" + "참가자 명단" dual CTA를 "참가자 체크인" single CTA로 수렴. CheckinTabRoute 1-event direct / 2+ selector의 canonical destination으로 지정.</td></tr>
-	      <tr><td>2026-06-03</td><td>0.1</td><td>codex</td><td>Initial MDS spec for #2220. Defines 5 operational states, sticky LIVE counter, inline QR split, participant row action sheet, wakelock indicator, and route/implementation TBD boundaries.</td></tr>
+    <tbody>
+      <tr><td>2026-06-03</td><td>0.3</td><td>codex</td><td>PartnerHome CTA contract sync: 진행 임박/D-0 체크인 대기는 "참가자 리스트" outline으로 pre_start/readiness list mode에 진입하고, T-2 이후 체크인 가능/LIVE는 "참가자 체크인" primary로 checkin_ready/live mode에 진입.</td></tr>
+      <tr><td>2026-06-03</td><td>0.2</td><td>codex</td><td>#2999: PartnerHome의 "QR 코드 체크인" + "참가자 명단" dual CTA를 "참가자 체크인" single CTA로 수렴. CheckinTabRoute 1-event direct / 2+ selector의 canonical destination으로 지정.</td></tr>
+      <tr><td>2026-06-03</td><td>0.1</td><td>codex</td><td>Initial MDS spec for #2220. Defines 5 operational states, sticky LIVE counter, inline QR split, participant row action sheet, wakelock indicator, and route/implementation TBD boundaries.</td></tr>
     </tbody>
   </table>
 </section>
@@ -873,7 +874,7 @@ body.dark-mode .viewport {
     <table class="ref">
       <thead><tr><th style="width: 280px;">Spec</th><th>Relation</th></tr></thead>
       <tbody>
-        <tr><td><a href="/specs/partner_home_page/index.html"><code>PartnerHomePage</code></a></td><td>Primary entry: LIVE / D-0 진행 임박 card "참가자 체크인" CTA.</td></tr>
+        <tr><td><a href="/specs/partner_home_page/index.html"><code>PartnerHomePage</code></a></td><td>Primary entries: 진행 임박/D-0 체크인 대기 card "참가자 리스트" outline CTA → pre_start/readiness list mode · T-2 이후 체크인 가능/LIVE card "참가자 체크인" primary CTA → checkin_ready/live mode.</td></tr>
         <tr><td><a href="/specs/checkin_placeholder_page/index.html"><code>CheckinTabRoute</code></a></td><td>Bottom nav resolver: 1 event direct, 2+ events after event selection.</td></tr>
         <tr><td><a href="/specs/partner_event_detail_page/index.html"><code>PartnerEventDetailPage</code></a></td><td>Parent event context; 참가 현황 section can deep link here when event is within operation window.</td></tr>
         <tr><td><a href="/specs/event_application_list_page/index.html"><code>EventApplicationListPage</code></a></td><td>Sibling roster/history list focused on application/payment/review status, not live operation.</td></tr>
