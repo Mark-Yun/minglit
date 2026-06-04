@@ -71,7 +71,6 @@
   color: var(--color-text-primary);
   margin-bottom: var(--spacing-sm);
 }
-
 /* --- Info row (read-only key/value) --- */
 .bank-info-row {
   display: flex;
@@ -142,6 +141,12 @@
   color: var(--color-error);
   padding: 4px 14px 0;
 }
+.bank-field__chev {
+  margin-left: auto;
+  width: 18px;
+  height: 18px;
+  color: var(--color-text-secondary);
+}
 
 /* --- Filled button (FilledButton — full width · partner primary) --- */
 .bank-btn {
@@ -211,6 +216,57 @@
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
+
+/* --- Bank select sheet target state --- */
+.bank-sheet-backdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--color-scrim);
+  display: flex;
+  align-items: flex-end;
+}
+.bank-sheet {
+  width: 100%;
+  max-height: 74%;
+  background: var(--color-background);
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  padding: var(--spacing-medium);
+  box-shadow: 0 -8px 24px rgba(0,0,0,0.18);
+}
+.bank-sheet__handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--color-divider);
+  margin: 0 auto var(--spacing-medium);
+}
+.bank-sheet__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-small);
+}
+.bank-sheet__search {
+  height: 44px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-input);
+  padding: 0 var(--spacing-medium);
+  display: flex;
+  align-items: center;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  margin-bottom: var(--spacing-small);
+}
+.bank-sheet__option {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--color-divider);
+  color: var(--color-text-primary);
+  font-size: 15px;
+}
+.bank-sheet__option:last-child { border-bottom: none; }
 </style>
 </head>
 <body>
@@ -238,7 +294,7 @@
     <tbody>
       <tr>
         <th style="width: 140px;">Status</th>
-        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 6개 state · 등록/조회/편집/저장 lifecycle 커버</em></td>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 6개 구현 state + onboarding/검증 target contract</em></td>
       </tr>
       <tr>
         <th>App</th>
@@ -246,7 +302,7 @@
       </tr>
       <tr>
         <th>Category</th>
-        <td>settlement · account management</td>
+        <td>settlement · account management · onboarding</td>
       </tr>
       <tr>
         <th>Route / Surface</th>
@@ -259,23 +315,23 @@
       <tr>
         <th>Hierarchy</th>
         <td>
-          <strong>Parent</strong>: <a href="/specs/settlement_page/index.html"><code>SettlementPage</code></a> <em>("계좌 관리" 액션으로 진입)</em><br>
+          <strong>Parent</strong>: <a href="/specs/partner_home_page/index.html"><code>PartnerHomePage</code></a> <em>(onboarding todo "계좌 등록")</em> 또는 <a href="/specs/settlement_page/index.html"><code>SettlementPage</code></a> <em>("계좌 관리" 액션)</em><br>
           <strong>Children</strong>: <em>—</em>
         </td>
       </tr>
       <tr>
         <th>Purpose</th>
         <td>
-          파트너가 정산금을 수령할 은행 계좌를 등록·조회·수정한다. 등록된 계좌가 있으면
-          마스킹된 요약(현재 계좌 카드)과 수정 폼을 함께 노출한다. 계좌 미등록 상태에서는
-          빈 메시지 카드와 입력 폼만 표시한다.
+          파트너가 정산금을 수령할 은행 계좌를 등록·조회·수정한다. onboarding에서는 홈 todo의 canonical destination이며,
+          등록된 계좌가 있으면 마스킹된 요약(현재 계좌 카드)과 수정 폼을 함께 노출한다. 계좌 미등록 상태에서는
+          은행 선택, 계좌번호 입력, 예금주/사업자명 확인, 계좌 검증 상태를 한 화면에서 처리한다.
         </td>
       </tr>
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: 정산 화면 → "계좌 관리" 액션 (또는 정산 상세의 지급 실패 상태에서 안내 메시지를 통해 진입).<br>
-          <strong>Exit points</strong>: 뒤로 가기 → 정산 화면으로 복귀 / 저장 성공 → 안내 메시지 + 화면 자동 갱신 (카드/폼 모두 새 값으로 반영).
+          <strong>Entry points</strong>: PartnerHome todo "계좌 등록" / 정산 화면 → "계좌 관리" 액션 / 정산 상세의 지급 실패 안내.<br>
+          <strong>Exit points</strong>: 뒤로 가기 → 진입 부모로 복귀 / 검증 완료 저장 → 안내 메시지 + 화면 자동 갱신. Home에서 진입한 경우 <code>bankAccountReady</code>가 true일 때만 todo가 사라진다. <code>bankAccountReady</code>는 <code>verified</code> 또는 운영 승인된 <code>manual_review_approved</code> 상태를 의미하며, 단순 계좌 저장 여부(<code>hasBankAccount</code>)와 분리한다.
         </td>
       </tr>
       <tr>
@@ -283,13 +339,97 @@
         <td>
           밍글릿은 정산 후 등록된 계좌로 송금한다. 계좌 정보가 없거나 잘못되면
           지급이 실패해 재지급 요청 경로로 빠진다. 본 화면은 그 원인을 사용자가 직접 해결할 수 있는
-          유일한 surface. 계좌번호는 카드 표시 시에만 마스킹(<code>**** 1234</code>)되고,
-          편집 폼에는 평문으로 채워진다 — drift 참고.
+          유일한 surface. 현재 Flutter는 자유 입력 후 바로 upsert하지만, canonical target은 은행 선택 sheet와 검증 status를 거친 뒤
+          정산 가능 계좌로 확정한다. 계좌번호는 카드 표시 시에만 마스킹(<code>**** 1234</code>)되고, 편집 폼에는 평문으로 채워진다 — drift 참고.
         </td>
       </tr>
       <tr>
         <th>Frequency</th>
-        <td>입점 직후 1회 등록. 계좌 변경 시 비정기적 재방문. payout FAILED 발생 시 즉시 재방문.</td>
+        <td>입점 직후 onboarding에서 1회 등록. 계좌 변경 시 비정기적 재방문. payout FAILED 또는 검증 실패 발생 시 즉시 재방문.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="doc">
+  <h2>Canonical onboarding contract</h2>
+  <p class="intro">
+    #3001 기준 이 화면은 정산 탭의 계좌 관리뿐 아니라 PartnerHome onboarding todo의 공식 도착지다.
+    아래 contract는 spec target이며, 현재 Flutter 구현과 다른 항목은 Reference의 구현 gap으로 추적한다.
+  </p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 220px;">Concern</th>
+        <th style="width: 260px;">Canonical rule</th>
+        <th>State transition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Home todo entry</td>
+        <td><code>PartnerHomePage</code>의 "계좌 등록" row 탭 → <code>BankAccountRoute</code>.</td>
+        <td>Home stack은 유지. back은 Home으로 복귀. 정산 탭에서 진입한 경우 back은 <code>SettlementPage</code>로 복귀.</td>
+      </tr>
+      <tr>
+        <td>은행 선택</td>
+        <td>자유 입력이 아니라 bottom sheet single-select. 검색 + 주요 은행 quick list + 기타 은행 검색 결과를 제공한다.</td>
+        <td>은행 선택 전에는 저장 비활성 또는 validation error. 선택 후 sheet dismiss, field에는 bank display name이 들어간다.</td>
+      </tr>
+      <tr>
+        <td>계좌번호 입력</td>
+        <td>digits-only, 10-16자리. 붙여넣기 비숫자는 제거한다.</td>
+        <td>길이/형식 오류는 field-level error. 저장 전에는 서버 검증을 호출하지 않는다.</td>
+      </tr>
+      <tr>
+        <td>예금주/사업자명 매칭</td>
+        <td>사용자 입력 예금주와 partner legal/business name을 검증 결과에 같이 표시한다.</td>
+        <td>불일치면 <code>verification_failed</code>. 사용자는 수정하거나 수동 검증 요청으로 전환할 수 있다.</td>
+      </tr>
+      <tr>
+        <td>완료 조건</td>
+        <td><code>verified</code> 또는 운영 승인된 <code>manual_review_approved</code>만 정산 가능 계좌로 본다.</td>
+        <td>완료 후 Home을 invalidate하면 "계좌 등록" todo가 사라진다. pending/failed/manual_review_pending은 todo를 유지한다.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="doc">
+  <h2>Verification state model</h2>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 190px;">Status</th>
+        <th style="width: 260px;">Visible UI</th>
+        <th>User action / fallback</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>not_started</code></td>
+        <td>미등록 form. 은행 선택, 예금주, 계좌번호 field와 저장 CTA.</td>
+        <td>모든 field valid → <code>verifying</code>.</td>
+      </tr>
+      <tr>
+        <td><code>verifying</code></td>
+        <td>저장 CTA disabled + inline spinner. 입력 field read-only. 안내: "계좌를 확인하고 있어요."</td>
+        <td>성공 → <code>verified</code>. 실패 → <code>verification_failed</code>. timeout → <code>manual_review_pending</code> 제안.</td>
+      </tr>
+      <tr>
+        <td><code>verified</code></td>
+        <td>현재 계좌 카드 + <code>MinglitBadge(label: '확인 완료', compact: true, color: MinglitColors.success)</code>. 계좌번호는 last4만 표시.</td>
+        <td>Home todo 제거. 정산 탭에서는 계좌 수정 가능.</td>
+      </tr>
+      <tr>
+        <td><code>verification_failed</code></td>
+        <td><code>MinglitBadge(label: '확인 실패', compact: true, color: MinglitColors.error)</code> + field-level reason. 예: 은행/계좌번호 불일치, 예금주 불일치, 휴면/해지 계좌.</td>
+        <td>수정 후 재시도 또는 "수동 검증 요청" outline CTA.</td>
+      </tr>
+      <tr>
+        <td><code>manual_review_pending</code></td>
+        <td><code>MinglitBadge(label: '운영팀 확인 중', compact: true, color: MinglitColors.warning)</code>. 저장 CTA 대신 상태 확인/문의 CTA.</td>
+        <td>Home todo는 "계좌 확인 중" subcopy로 유지. 운영 승인 시 todo 제거, 반려 시 failed로 복귀.</td>
       </tr>
     </tbody>
   </table>
@@ -313,6 +453,12 @@
       </tr>
     </thead>
     <tbody>
+      <tr>
+        <td>2026-06-04</td>
+        <td>1.1</td>
+        <td>codex</td>
+        <td>#3001: PartnerHome onboarding todo의 canonical destination으로 확정. 은행 선택 sheet, 계좌번호 검증, 예금주/사업자명 매칭, failed/manual review state model과 Flutter 구현 gap을 추가.</td>
+      </tr>
       <tr>
         <td>2026-05-01</td>
         <td>1.0</td>
@@ -433,12 +579,12 @@
   <div class="perspective__header">
     <span class="glyph">🎨</span>
     <h2>States</h2>
-    <span class="lede">시각 변형 6종. baseline = Account registered, 나머지는 additive diff.</span>
+    <span class="lede">현재 구현 6종 + bank select sheet target. baseline = Account registered, 나머지는 additive diff.</span>
   </div>
 
   <section class="doc">
     <p class="intro">
-      <strong>State 종류 식별 기준</strong>: 계좌 정보의 등록 여부 · 저장 진행 여부 · 첫 데이터 조회 진행 여부 · 폼 검증 결과. 모든 state는 같은 화면 구조 위에서 데이터에 따라 분기되어 노출된다.
+      <strong>State 종류 식별 기준</strong>: 계좌 정보의 등록 여부 · 저장 진행 여부 · 첫 데이터 조회 진행 여부 · 폼 검증 결과 · 검증 서버 상태. 구현 완료 전까지 verification status는 target contract로 취급한다.
     </p>
 
     <!-- State 1: Account registered (baseline) -->
@@ -547,10 +693,11 @@
                     <div class="bank-empty">등록된 계좌 정보가 없습니다.</div>
                   </div>
                   <div class="bank-card">
-                    <div class="bank-card__title">계좌 수정</div>
+                    <div class="bank-card__title">계좌 등록</div>
                     <div class="bank-field">
                       <div class="bank-field__input"></div>
-                      <div class="bank-field__label">은행명</div>
+                      <div class="bank-field__label">은행 선택</div>
+                      <svg class="bank-field__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
                     </div>
                     <div class="bank-field" style="margin-top:8px;">
                       <div class="bank-field__input"></div>
@@ -571,15 +718,15 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
-          <td>+ <strong>빈 폼 입력</strong> → 모든 필드를 채우고 저장 → 화면 갱신 → 등록된 계좌 화면으로 전환<br>나머지 동일</td>
+          <td>+ <strong>은행 선택 field 탭</strong> → 은행 선택 sheet<br>+ <strong>빈 폼 입력</strong> → 모든 필드를 채우고 저장 → verifying → verified면 등록된 계좌 화면으로 전환<br>나머지 동일</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 미등록 상태에서도 폼 카드 타이틀이 "계좌 수정"으로 고정되어 의미와 어긋남 — "계좌 등록"이 더 정확 (drift)</td>
+          <td>· 현재 Flutter는 은행명을 자유 입력하고 미등록 상태에서도 폼 카드 타이틀이 "계좌 수정"으로 고정됨 — spec target은 "계좌 등록" + bank select sheet (implementation gap)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ <code>AccountCard</code> 내부 → 텍스트 한 줄(<em>"등록된 계좌 정보가 없습니다."</em>) — title/InfoRow 모두 미렌더<br>− <code>_InfoRow</code> × 3<br>↔ TextFormField prefill → 빈 문자열</td>
+          <td>↔ <code>AccountCard</code> 내부 → 텍스트 한 줄(<em>"등록된 계좌 정보가 없습니다."</em>) — title/InfoRow 모두 미렌더<br>− <code>_InfoRow</code> × 3<br>↔ bank field → read-only select trigger<br>↔ TextFormField prefill → 빈 문자열</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
@@ -587,7 +734,83 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 입점 직후 onboarding의 implicit 후속 단계. 명시적 안내 문구는 없음 — 빈 카드 + 폼 자체가 CTA.</td>
+          <td>📝 PartnerHome todo에서 진입하는 canonical onboarding state. 검증 완료 후 Home provider를 invalidate하면 todo가 사라진다.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- State 2A: Bank selection sheet target -->
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Bank selection sheet</strong> <small>target · 은행 single-select bottom sheet</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="state-mini__mock" rowspan="6">
+            <div class="viewport">
+              <div class="bank-scaffold">
+                <div class="bank-appbar">
+                  <div class="bank-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></div>
+                  <div class="bank-appbar__title">계좌 관리</div>
+                </div>
+                <div class="bank-body">
+                  <div class="bank-card">
+                    <div class="bank-empty">등록된 계좌 정보가 없습니다.</div>
+                  </div>
+                  <div class="bank-card">
+                    <div class="bank-card__title">계좌 등록</div>
+                    <div class="bank-field bank-field--focused">
+                      <div class="bank-field__input">은행을 선택해 주세요<svg class="bank-field__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+                      <div class="bank-field__label" style="top:0;font-size:11px;">은행 선택</div>
+                    </div>
+                    <div class="bank-field" style="margin-top:8px;">
+                      <div class="bank-field__input"></div>
+                      <div class="bank-field__label">예금주</div>
+                    </div>
+                    <div class="bank-field" style="margin-top:8px;">
+                      <div class="bank-field__input"></div>
+                      <div class="bank-field__label">계좌번호</div>
+                    </div>
+                    <button class="bank-btn">저장</button>
+                  </div>
+                </div>
+                <div class="bank-sheet-backdrop">
+                  <div class="bank-sheet">
+                    <div class="bank-sheet__handle"></div>
+                    <div class="bank-sheet__title">은행 선택</div>
+                    <div class="bank-sheet__search">은행명을 검색하세요</div>
+                    <div class="bank-sheet__option">국민은행<span>추천</span></div>
+                    <div class="bank-sheet__option">신한은행</div>
+                    <div class="bank-sheet__option">우리은행</div>
+                    <div class="bank-sheet__option">카카오뱅크</div>
+                    <div class="bank-sheet__option">토스뱅크</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>미등록 또는 수정 form에서 은행 field를 탭한 상태. sheet는 modal bottom sheet로 화면 위에 뜬다.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>① 은행 row 탭 → field에 bank display name 반영 후 sheet dismiss<br>② 검색 입력 → 결과 list filter<br>③ backdrop/back → dismiss, 기존 선택 유지</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>· 검색 결과 0개 → "은행명을 다시 확인해 주세요" empty<br>· 기존 등록 계좌 수정 시 현재 은행 row에 check mark 노출<br>· 네트워크 없이도 bank catalog는 local/static manifest 우선</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td><code>MinglitBottomSheet</code> target · search field · bank option row · selected check icon. 현재 Flutter 구현은 TextFormField 자유 입력이라 후속 구현 필요.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td><code>MinglitBottomSheet</code> chrome 기준: top corners <code>MinglitRadius.card</code> · scrim <code>MinglitColors.scrim</code>/<code>color-scrim</code> · sheet padding <code>MinglitSpacing.medium</code> · option gap <code>MinglitSpacing.small</code> · divider <code>MinglitColors.divider</code>. 별도 radius/scrim 숫자를 override하지 않는다.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>📝 은행명 오타로 지급 실패가 나는 root cause를 줄이는 target UX. bank code 저장 여부는 Flutter/backend 후속에서 확정한다.</td>
         </tr>
       </tbody>
     </table>
@@ -611,10 +834,10 @@
                     <div class="bank-empty">등록된 계좌 정보가 없습니다.</div>
                   </div>
                   <div class="bank-card">
-                    <div class="bank-card__title">계좌 수정</div>
+                    <div class="bank-card__title">계좌 등록</div>
                     <div class="bank-field bank-field--filled">
                       <div class="bank-field__input">신한은행</div>
-                      <div class="bank-field__label" style="top:0;font-size:11px;">은행명</div>
+                      <div class="bank-field__label" style="top:0;font-size:11px;">은행 선택</div>
                     </div>
                     <div class="bank-field bank-field--error" style="margin-top:8px;">
                       <div class="bank-field__input"></div>
@@ -644,7 +867,7 @@
           <td>
             · 계좌번호 입력은 숫자만 수용 — 키 입력 / 붙여넣기 모두 비숫자 차단 (Fix #1938)<br>
             · 9자리 이하 / 17자리 이상 → "10~16자리 숫자여야 합니다." 표시<br>
-            · 빈 필드 3종은 각각의 안내 문구 ('은행명/예금주/계좌번호를 입력해 주세요.')
+            · 빈 필드 3종은 각각의 안내 문구 ('은행을 선택해 주세요' / '예금주를 입력해 주세요' / '계좌번호를 입력해 주세요.')
           </td>
         </tr>
         <tr>
@@ -687,7 +910,7 @@
                     <div class="bank-card__title">계좌 수정</div>
                     <div class="bank-field bank-field--filled">
                       <div class="bank-field__input">국민은행</div>
-                      <div class="bank-field__label" style="top:0;font-size:11px;">은행명</div>
+                      <div class="bank-field__label" style="top:0;font-size:11px;">은행 선택</div>
                     </div>
                     <div class="bank-field bank-field--filled" style="margin-top:8px;">
                       <div class="bank-field__input">김민글</div>
@@ -697,20 +920,20 @@
                       <div class="bank-field__input">020987654321</div>
                       <div class="bank-field__label" style="top:0;font-size:11px;">계좌번호</div>
                     </div>
-                    <button class="bank-btn bank-btn--disabled"><div class="bank-btn__spinner" style="border-top-color:var(--color-text-secondary);border-color:rgba(0,0,0,0.15);"></div>저장 중...</button>
+                    <button class="bank-btn bank-btn--disabled"><div class="bank-btn__spinner" style="border-top-color:var(--color-text-secondary);border-color:rgba(0,0,0,0.15);"></div>확인 중...</button>
                   </div>
                 </div>
               </div>
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>검증 통과 후 저장이 진행 중인 상태.</td>
+          <td>클라이언트 검증 통과 후 서버 저장/계좌 검증이 진행 중인 상태. target status는 <code>verifying</code>.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
             − 저장 버튼 다시 탭 → 무반응<br>
-            ↔ 입력 필드 → 여전히 편집 가능 (drift)<br>
+            ↔ 입력 필드 → target은 read-only, 현재 구현은 여전히 편집 가능 (drift)<br>
             ↔ 뒤로 가기 → 가능 (저장은 백그라운드에서 진행되며 결과는 안내 메시지로 노출됨)
           </td>
         </tr>
@@ -718,13 +941,13 @@
           <td class="state-mini__aspect">에지케이스</td>
           <td>
             · 응답 지연 → 버튼 스피너만 길게 보임 (별도 타임아웃 없음)<br>
-            · 네트워크 오류 → 오류 안내 메시지가 노출되고 버튼이 다시 활성화됨 (폼은 그대로 유지)<br>
+            · 네트워크 오류/검증 실패 → <code>verification_failed</code> callout + 재시도/수동 검증 요청 fallback<br>
             · 파트너 컨텍스트가 없으면 저장이 진행되지 않음
           </td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
-          <td>↔ FilledButton → onPressed: null + 라벨 "저장 중..."<br>+ 버튼 내 spinner 시각 표현 (현재 소스는 텍스트만 변경 · spinner는 spec 권장 — drift)</td>
+          <td>↔ FilledButton → onPressed: null + 라벨 "확인 중..."<br>+ 버튼 내 spinner 시각 표현 (현재 소스는 "저장 중..." 텍스트만 변경 · spinner는 spec 권장 — drift)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">토큰</td>
@@ -732,7 +955,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 ⚠️ 현재 비활성 상태에서 라벨만 "저장 중..."으로 변경됨 — 인라인 스피너 추가는 본 spec의 디자인 개선 권고. 재지급 요청 버튼과 같이 인라인 progress indicator 권장.</td>
+          <td>📝 ⚠️ 현재 비활성 상태에서 라벨만 "저장 중..."으로 변경됨 — target은 "확인 중..." + fields read-only + verification timeout handling.</td>
         </tr>
       </tbody>
     </table>
@@ -780,7 +1003,7 @@
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>저장이 성공하면 안내 메시지가 잠깐 노출되고 카드가 새 값으로 갱신됨.</td>
+          <td>저장과 계좌 검증이 성공하면 안내 메시지가 잠깐 노출되고 카드가 새 값으로 갱신됨. target status는 <code>verified</code>.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
@@ -788,7 +1011,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
-          <td>· 갱신 중 화면을 빠져나가면 안전하게 무시됨<br>· 카드만 새 값으로 갱신되고 편집 폼은 직전 입력값을 유지 (재진입 전까지는 변경 안 됨, drift)</td>
+          <td>· 갱신 중 화면을 빠져나가면 안전하게 무시됨<br>· Home에서 진입했다면 provider invalidate 후 "계좌 등록" todo 제거<br>· 카드만 새 값으로 갱신되고 편집 폼은 직전 입력값을 유지 (재진입 전까지는 변경 안 됨, drift)</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">컴포넌트</td>
@@ -800,7 +1023,7 @@
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 안내 메시지 한 줄. 재시도/되돌리기 버튼 없음 — 재시도는 사용자가 버튼을 다시 누르는 방식.</td>
+          <td>📝 안내 메시지 한 줄. Home todo 소멸의 기준은 단순 upsert가 아니라 <code>verified</code> 또는 운영 승인 완료.</td>
         </tr>
       </tbody>
     </table>
@@ -965,14 +1188,20 @@
         <tr><th>Route</th><td><code>BankAccountRoute</code> · <code>/settlement/bank-account</code> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/app_partner/lib/src/routing/app_routes.dart"><code>app_routes.dart</code></a></td></tr>
         <tr><th>Provider</th><td><code>currentPartnerInfoProvider</code> (partner null 가드) · <code>settlementRepositoryProvider</code> → <code>getBankAccount(partnerId)</code> · <code>upsertBankAccount(...)</code></td></tr>
         <tr><th>Theme</th><td>partner brand primary <code>MinglitPartnerColors.primary</code> = #6c3ce1 — 모든 active accent (FilledButton bg · focused 입력 border/라벨 · 스피너) 에 적용</td></tr>
-        <tr><th>Validators</th><td>은행명 / 예금주: non-empty · 계좌번호: <code>RegExp(r'^\d{10,16}$')</code> + <code>FilteringTextInputFormatter.digitsOnly</code> (Fix #1938)</td></tr>
+        <tr><th>Validators</th><td>은행: selected bank id/display name required · 예금주: non-empty + partner legal/business name matching target · 계좌번호: <code>RegExp(r'^\d{10,16}$')</code> + <code>FilteringTextInputFormatter.digitsOnly</code> (Fix #1938)</td></tr>
         <tr><th>⚠️ 알려진 drift</th><td>
+          · PartnerHome todo → BankAccountRoute edge는 spec target이고, v1 Flutter Home에서는 아직 직접 surface되지 않음<br>
+          · 은행 선택 sheet 미구현 — 현재는 은행명 자유 입력 TextFormField<br>
+          · 계좌 verified/failed/manual_review_pending 상태 미구현 — 현재는 upsert 성공을 곧 저장 성공으로 처리<br>
           · 계좌번호 폼 prefill 평문 (카드 표시는 마스킹 — 비대칭 보안)<br>
           · "계좌 수정" 카드 타이틀이 미등록 상태에도 동일 ("계좌 등록"이 정확)<br>
           · Saving state에서 입력 필드 disable 안 됨 (controller readOnly 미설정)<br>
           · fetch 실패가 별도 error state로 surface되지 않고 미등록(State 2)로 합류<br>
           · 저장 실패 SnackBar에 raw exception toString 노출<br>
           · 1원 인증 등 계좌 검증 UI 미존재 — 입력값을 그대로 upsert
+        </td></tr>
+        <tr><th>needs-swe follow-up</th><td>
+          <a href="https://github.com/Mark-Yun/minglit/issues/3047">#3047</a> Flutter 구현 필요: Home onboarding todo route 연결, bank catalog + bottom sheet, verification API/status model, failed/manual review UI, Home todo invalidation 조건(<code>verified</code> 또는 운영 승인 완료).
         </td></tr>
       </tbody>
     </table>
@@ -983,6 +1212,14 @@
     <table class="ref">
       <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
       <tbody>
+        <tr>
+          <td><a href="/specs/partner_home_page/index.html"><code>PartnerHomePage</code></a></td>
+          <td>Onboarding todo "계좌 등록"의 parent. 검증 완료 후 todo가 사라지고, failed/manual review pending이면 todo가 유지된다.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/settlement_page/index.html"><code>SettlementPage</code></a></td>
+          <td>Top-level 정산 탭 parent. "계좌 관리" 액션으로 본 화면에 진입한다.</td>
+        </tr>
         <tr>
           <td><a href="/specs/settlement_detail_page/index.html"><code>SettlementDetailPage</code></a></td>
           <td>FAILED 상태에서 "계좌 정보를 확인해 주세요." 안내 → 본 화면이 root cause 자가 해결 surface.</td>
