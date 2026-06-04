@@ -369,7 +369,8 @@ END;
 $$;
 
 CREATE OR REPLACE FUNCTION public.cleanup_edge_runtime_guardrails(
-  p_now timestamptz DEFAULT now()
+  p_now timestamptz DEFAULT now(),
+  p_rate_limit_bucket_ttl_seconds integer DEFAULT 86400
 )
 RETURNS integer
 LANGUAGE plpgsql
@@ -377,13 +378,25 @@ SECURITY DEFINER
 SET search_path = public, pg_temp
 AS $$
 DECLARE
-  v_count integer;
+  v_idempotency_count integer;
+  v_rate_limit_bucket_count integer;
 BEGIN
+  IF p_rate_limit_bucket_ttl_seconds <= 0 THEN
+    RAISE EXCEPTION 'rate limit bucket TTL must be positive';
+  END IF;
+
   DELETE FROM public.edge_idempotency_keys
   WHERE expires_at <= p_now;
 
-  GET DIAGNOSTICS v_count = ROW_COUNT;
-  RETURN v_count;
+  GET DIAGNOSTICS v_idempotency_count = ROW_COUNT;
+
+  DELETE FROM public.edge_rate_limit_buckets
+  WHERE updated_at <= p_now - make_interval(
+    secs => p_rate_limit_bucket_ttl_seconds
+  );
+
+  GET DIAGNOSTICS v_rate_limit_bucket_count = ROW_COUNT;
+  RETURN v_idempotency_count + v_rate_limit_bucket_count;
 END;
 $$;
 
@@ -395,7 +408,7 @@ REVOKE ALL ON FUNCTION public.complete_edge_idempotency(text, text, text, text, 
   FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.fail_edge_idempotency(text, text, text, text, integer, timestamptz)
   FROM PUBLIC, anon, authenticated;
-REVOKE ALL ON FUNCTION public.cleanup_edge_runtime_guardrails(timestamptz)
+REVOKE ALL ON FUNCTION public.cleanup_edge_runtime_guardrails(timestamptz, integer)
   FROM PUBLIC, anon, authenticated;
 
 GRANT EXECUTE ON FUNCTION public.consume_edge_rate_limit(text, numeric, numeric, numeric, timestamptz)
@@ -406,5 +419,5 @@ GRANT EXECUTE ON FUNCTION public.complete_edge_idempotency(text, text, text, tex
   TO service_role;
 GRANT EXECUTE ON FUNCTION public.fail_edge_idempotency(text, text, text, text, integer, timestamptz)
   TO service_role;
-GRANT EXECUTE ON FUNCTION public.cleanup_edge_runtime_guardrails(timestamptz)
+GRANT EXECUTE ON FUNCTION public.cleanup_edge_runtime_guardrails(timestamptz, integer)
   TO service_role;

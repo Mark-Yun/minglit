@@ -167,19 +167,22 @@ mixin _EventRepositoryCommands on _SupabaseEventContext {
     required String eventId,
     required String ticketId,
     Map<String, dynamic>? verificationData,
+    String? idempotencyKey,
   }) async {
     Log.d('applyEvent called | event: $eventId, ticket: $ticketId');
     try {
+      final body = <String, dynamic>{
+        'event_id': eventId,
+        'ticket_id': ticketId,
+        'verification_data': ?verificationData,
+      };
       final response = await supabaseClient.functions.invoke(
         'apply-event',
         headers: {
-          'Idempotency-Key': 'apply-event:${const Uuid().v4()}',
+          'Idempotency-Key':
+              idempotencyKey ?? _buildApplyEventIdempotencyKey(body),
         },
-        body: {
-          'event_id': eventId,
-          'ticket_id': ticketId,
-          'verification_data': ?verificationData,
-        },
+        body: body,
       );
 
       // Fix #1409: 비-200 응답 시 response.data가 null이어서 캐스트 크래시 발생.
@@ -215,6 +218,31 @@ mixin _EventRepositoryCommands on _SupabaseEventContext {
       Log.e('❌ [EventRepo] applyEvent Error', e, st);
       rethrow;
     }
+  }
+
+  String _buildApplyEventIdempotencyKey(Map<String, dynamic> body) {
+    final canonicalBody = _canonicalJson(body);
+    final digest = sha256.convert(utf8.encode(canonicalBody));
+    return 'apply-event:$digest';
+  }
+
+  String _canonicalJson(Object? value) {
+    return jsonEncode(_canonicalizeJson(value));
+  }
+
+  Object? _canonicalizeJson(Object? value) {
+    if (value is Map) {
+      final entries = value.entries.toList()
+        ..sort((a, b) => a.key.toString().compareTo(b.key.toString()));
+      return {
+        for (final entry in entries)
+          entry.key.toString(): _canonicalizeJson(entry.value),
+      };
+    }
+    if (value is Iterable) {
+      return [for (final item in value) _canonicalizeJson(item)];
+    }
+    return value;
   }
 
   /// Fix #653: Approves a single event application via Edge Function.

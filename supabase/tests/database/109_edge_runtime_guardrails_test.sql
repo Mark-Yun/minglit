@@ -1,6 +1,6 @@
 BEGIN;
 
-SELECT plan(23);
+SELECT plan(25);
 
 SELECT has_table('edge_rate_limit_buckets');
 SELECT has_table('edge_idempotency_keys');
@@ -31,7 +31,7 @@ SELECT has_function(
 SELECT has_function(
   'public',
   'cleanup_edge_runtime_guardrails',
-  ARRAY['timestamp with time zone'],
+  ARRAY['timestamp with time zone', 'integer'],
   'cleanup_edge_runtime_guardrails function exists'
 );
 
@@ -43,7 +43,7 @@ SELECT is_empty(
       ('public.begin_edge_idempotency(text,text,text,text,integer,integer,timestamp with time zone)'),
       ('public.complete_edge_idempotency(text,text,text,text,integer,jsonb,integer,timestamp with time zone)'),
       ('public.fail_edge_idempotency(text,text,text,text,integer,timestamp with time zone)'),
-      ('public.cleanup_edge_runtime_guardrails(timestamp with time zone)')
+      ('public.cleanup_edge_runtime_guardrails(timestamp with time zone,integer)')
   )
   SELECT function_signature
   FROM target
@@ -61,7 +61,7 @@ SELECT is_empty(
       ('public.begin_edge_idempotency(text,text,text,text,integer,integer,timestamp with time zone)'),
       ('public.complete_edge_idempotency(text,text,text,text,integer,jsonb,integer,timestamp with time zone)'),
       ('public.fail_edge_idempotency(text,text,text,text,integer,timestamp with time zone)'),
-      ('public.cleanup_edge_runtime_guardrails(timestamp with time zone)')
+      ('public.cleanup_edge_runtime_guardrails(timestamp with time zone,integer)')
   )
   SELECT function_signature
   FROM target
@@ -79,7 +79,7 @@ SELECT is_empty(
       ('public.begin_edge_idempotency(text,text,text,text,integer,integer,timestamp with time zone)'),
       ('public.complete_edge_idempotency(text,text,text,text,integer,jsonb,integer,timestamp with time zone)'),
       ('public.fail_edge_idempotency(text,text,text,text,integer,timestamp with time zone)'),
-      ('public.cleanup_edge_runtime_guardrails(timestamp with time zone)')
+      ('public.cleanup_edge_runtime_guardrails(timestamp with time zone,integer)')
   )
   SELECT function_signature
   FROM target
@@ -279,12 +279,37 @@ SELECT results_eq(
   'cleanup fixture idempotency row is inserted'
 );
 
+SELECT results_eq(
+  $$
+  SELECT allowed, remaining::integer, retry_after_seconds
+  FROM public.consume_edge_rate_limit(
+    'test:cleanup:bucket',
+    1,
+    1,
+    1,
+    '2026-01-01T00:00:00Z'::timestamptz
+  )
+  $$,
+  $$ VALUES (true, 0, 0) $$,
+  'cleanup fixture rate limit bucket is inserted'
+);
+
 SELECT is(
   public.cleanup_edge_runtime_guardrails(
-    '2026-01-01T00:00:02Z'::timestamptz
+    '2026-01-01T00:00:02Z'::timestamptz,
+    2
   ),
-  1,
-  'expired idempotency records are cleaned up'
+  2,
+  'expired idempotency records and stale rate limit buckets are cleaned up'
+);
+
+SELECT is_empty(
+  $$
+  SELECT 1
+  FROM public.edge_rate_limit_buckets
+  WHERE key = 'test:cleanup:bucket'
+  $$,
+  'stale rate limit buckets are removed'
 );
 
 SELECT * FROM finish();
