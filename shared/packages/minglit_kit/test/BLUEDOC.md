@@ -39,4 +39,4 @@ CI 자동 실행: `pr-gate.test-flutter-apps` matrix (minglit_kit 변경 시). �
 - [tests/_coverage/BLUEDOC](../../../../tests/_coverage/BLUEDOC.md)
 
 ---
-_Reviewed: 2026-05-23 00:00_
+_Reviewed: 2026-06-04 22:12_

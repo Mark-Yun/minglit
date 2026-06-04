@@ -60,7 +60,7 @@ void main() {
     });
 
     test(
-      'uses a stable idempotency key for the same application payload',
+      'generates a fresh default idempotency key for each repository call',
       () async {
         when(
           () => mockFunctions.invoke(
@@ -109,7 +109,15 @@ void main() {
         expect(capturedHeaders, hasLength(2));
         expect(
           capturedHeaders.first['Idempotency-Key'],
+          startsWith('apply-event:'),
+        );
+        expect(
           capturedHeaders.last['Idempotency-Key'],
+          startsWith('apply-event:'),
+        );
+        expect(
+          capturedHeaders.first['Idempotency-Key'],
+          isNot(capturedHeaders.last['Idempotency-Key']),
         );
       },
     );

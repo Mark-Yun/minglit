@@ -179,8 +179,7 @@ mixin _EventRepositoryCommands on _SupabaseEventContext {
       final response = await supabaseClient.functions.invoke(
         'apply-event',
         headers: {
-          'Idempotency-Key':
-              idempotencyKey ?? _buildApplyEventIdempotencyKey(body),
+          'Idempotency-Key': idempotencyKey ?? newApplyEventIdempotencyKey(),
         },
         body: body,
       );
@@ -218,31 +217,6 @@ mixin _EventRepositoryCommands on _SupabaseEventContext {
       Log.e('❌ [EventRepo] applyEvent Error', e, st);
       rethrow;
     }
-  }
-
-  String _buildApplyEventIdempotencyKey(Map<String, dynamic> body) {
-    final canonicalBody = _canonicalJson(body);
-    final digest = sha256.convert(utf8.encode(canonicalBody));
-    return 'apply-event:$digest';
-  }
-
-  String _canonicalJson(Object? value) {
-    return jsonEncode(_canonicalizeJson(value));
-  }
-
-  Object? _canonicalizeJson(Object? value) {
-    if (value is Map) {
-      final entries = value.entries.toList()
-        ..sort((a, b) => a.key.toString().compareTo(b.key.toString()));
-      return {
-        for (final entry in entries)
-          entry.key.toString(): _canonicalizeJson(entry.value),
-      };
-    }
-    if (value is Iterable) {
-      return [for (final item in value) _canonicalizeJson(item)];
-    }
-    return value;
   }
 
   /// Fix #653: Approves a single event application via Edge Function.
