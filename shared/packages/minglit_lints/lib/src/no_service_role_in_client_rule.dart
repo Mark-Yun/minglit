@@ -1,3 +1,4 @@
+import 'package:analyzer/dart/ast/token.dart';
 import 'package:analyzer/error/listener.dart';
 import 'package:custom_lint_builder/custom_lint_builder.dart';
 
@@ -111,6 +112,20 @@ class NoServiceRoleInClientRule extends DartLintRule {
     CustomLintContext context,
   ) {
     if (!shouldLintPath(resolver.path)) return;
+
+    void reportDangerousToken(Token? token) {
+      if (token == null) return;
+      if (!isDangerousIdentifier(token.lexeme)) return;
+      reporter.atToken(token, _code);
+    }
+
+    context.registry.addVariableDeclaration((node) {
+      reportDangerousToken(node.name);
+    });
+
+    context.registry.addFormalParameter((node) {
+      reportDangerousToken(node.name);
+    });
 
     context.registry.addSimpleIdentifier((node) {
       if (!isDangerousIdentifier(node.name)) return;
