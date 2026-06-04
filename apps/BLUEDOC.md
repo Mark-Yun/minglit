@@ -17,6 +17,7 @@ Minglit 의 **사용자 대면 애플리케이션** 폴더. Flutter 모바일 �
 
 - **Feature-first 구조** — 모든 코드는 `lib/src/features/<feature>/` 아래로 응집. 기술적 폴더 (`screens/`, `widgets/`) 금지.
 - **공용 로직은 `minglit_kit`** — 두 앱 모두 쓰는 Repository·Provider·UI 는 `shared/packages/minglit_kit/` 에. 앱 레포에는 앱 고유 로직만.
+- **Admin Next.js console 은 미스캐폴드 상태** — canonical target 은 `apps/admin_web/`; 현재 목록의 `app_* admin/` 기능은 제품 admin-dashboard 구현이 아님.
 - **Coordinator 가 routing 을 담당** — UI 위젯은 "어디로 갈지" 모름. `ref.read(<feature>CoordinatorProvider).goTo...()` 만 호출.
 - **Cross-feature import 금지** — `pr-gate.check-cross-feature-imports` job 이 차단 (Fix #1872).
 - **Type-safe routing** — `go_router_builder` 로 컴파일 타임 검증. URL 문자열 직접 입력 금지.
@@ -30,4 +31,4 @@ Minglit 의 **사용자 대면 애플리케이션** 폴더. Flutter 모바일 �
 - [CLAUDE.md `## Build Defaults`](../CLAUDE.md) — flutter build 명령 / Java 17 설정
 
 ---
-_Reviewed: 2026-05-27 21:56_
+_Reviewed: 2026-06-04 22:19_

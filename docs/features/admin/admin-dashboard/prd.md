@@ -4,6 +4,15 @@
 
 Minglit 내부 운영자가 Supabase Google 로그인으로 본인 확인을 마친 뒤, 서버에서 검증된 admin 권한에 따라 관리자 메뉴를 사용하는 웹 기반 admin console. 현재 출시 범위는 admin 로그인, 권한 확인, 확장 가능한 shell/menu 구조까지다. 기능 dashboard 는 후속 메뉴로 분리하고, 이번 범위에서는 별도 board/spec 를 만들지 않는다.
 
+## Implementation Status
+
+> Issue #2559 기준 현황 정리.
+
+- 전용 Next.js admin dashboard 앱은 아직 모노레포에 없다. `apps/admin_web/` 이 canonical target 이지만 scaffold 전 상태다.
+- `apps/app_partner/lib/src/features/admin/` 은 파트너 앱 내부의 입점 신청 심사 보조 화면이다. 이 PRD 의 Next.js admin console 구현으로 간주하지 않는다.
+- `apps/app_user/lib/src/features/admin/` 은 운영/통계 계약 하네스 성격이며, admin-dashboard 제품 구현 대상이 아니다.
+- 따라서 이 PRD 의 구현 상태는 **planned / unscaffolded** 이다. 구현 착수 PR 은 `apps/admin_web/` scaffold, `apps/BLUEDOC.md` 갱신, 배포/CI 엔트리 정의를 함께 포함해야 한다.
+
 ## Motivation / Problem to Solve
 
 - admin 기능을 메뉴별로 추가할 기준 shell 이 없어, 기능이 늘수록 인증/권한/네비게이션/에러 UX 가 중복될 위험이 있다.

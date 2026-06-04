@@ -11,6 +11,18 @@
 > - CUJ tests:
 >   - 계획: `apps/admin/e2e/cuj/admin_dashboard.spec.ts`
 
+## Implementation Status
+
+Issue #2559 확인 결과, 이 spec 의 Next.js admin dashboard 는 아직 구현되지 않았다.
+
+| 항목 | 상태 |
+|------|------|
+| Canonical app path | `apps/admin_web/` |
+| Current repo status | 디렉터리/Next.js app 미존재 |
+| Existing Flutter admin screens | `apps/app_partner/lib/src/features/admin/` 의 파트너 신청 심사 보조 화면. 이 spec 구현으로 보지 않음 |
+| Existing user-app admin harness | `apps/app_user/lib/src/features/admin/` 의 운영/통계 계약 하네스. 이 spec 구현으로 보지 않음 |
+| Next implementation step | `apps/admin_web/` scaffold + auth/MFA skeleton + CI/deploy entry 정의 |
+
 ## CUJs
 
 | ID  | Priority | CUJ Name | Details | FR | NFR |
