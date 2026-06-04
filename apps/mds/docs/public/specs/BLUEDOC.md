@@ -40,4 +40,4 @@ MDS 화면 spec 의 **source HTML + 자동 산출물 디렉터리**. Flutter 화
 - [`../../src/lib/flow-data.ts`](../../src/lib/flow-data.ts) — route/spec 매핑
 
 ---
-_Reviewed: 2026-06-03 17:27_
+_Reviewed: 2026-06-04 20:50_
