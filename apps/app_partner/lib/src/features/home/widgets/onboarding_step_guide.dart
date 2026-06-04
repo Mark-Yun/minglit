@@ -9,6 +9,7 @@ class OnboardingStepGuide extends StatelessWidget {
     required this.partyName,
     required this.onCreateParty,
     required this.onCreateEvent,
+    this.draftEventCard,
     this.onOpenGuide,
     super.key,
   });
@@ -17,6 +18,7 @@ class OnboardingStepGuide extends StatelessWidget {
   final String? partyName;
   final VoidCallback onCreateParty;
   final VoidCallback onCreateEvent;
+  final Widget? draftEventCard;
   final VoidCallback? onOpenGuide;
 
   @override
@@ -194,26 +196,33 @@ class OnboardingStepGuide extends StatelessWidget {
           ),
         ],
 
-        const SizedBox(height: MinglitSpacing.medium),
+        if (hasParty && draftEventCard != null) ...[
+          const SizedBox(height: MinglitSpacing.medium),
+          draftEventCard!,
+        ] else ...[
+          const SizedBox(height: MinglitSpacing.medium),
 
-        // Main CTA
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton.icon(
-            onPressed: hasParty ? onCreateEvent : onCreateParty,
-            icon: Icon(
-              hasParty ? Icons.event_outlined : Icons.celebration_outlined,
-              size: MinglitIconSize.small,
-            ),
-            label: Text(hasParty ? '첫 이벤트 만들기' : '첫 파티 만들기'),
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: MinglitSpacing.sm),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(MinglitRadius.input),
+          // Main CTA
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: hasParty ? onCreateEvent : onCreateParty,
+              icon: Icon(
+                hasParty ? Icons.event_outlined : Icons.celebration_outlined,
+                size: MinglitIconSize.small,
+              ),
+              label: Text(hasParty ? '첫 이벤트 만들기' : '첫 파티 만들기'),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  vertical: MinglitSpacing.sm,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(MinglitRadius.input),
+                ),
               ),
             ),
           ),
-        ),
+        ],
 
         // How it works (only before party creation)
         if (!hasParty) ...[

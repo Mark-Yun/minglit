@@ -1,8 +1,9 @@
 import 'dart:async';
 
-import 'package:app_partner/src/logic/event_operation_phase.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:app_partner/src/logic/dashboard_refresh_notifier.dart';
+import 'package:app_partner/src/logic/event_create_draft_repository.dart';
+import 'package:app_partner/src/logic/event_operation_phase.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -20,6 +21,7 @@ abstract class PartnerDashboardState with _$PartnerDashboardState {
     @Default([]) List<Event> preparingEvents,
     @Default([]) List<Party> activeParties,
     @Default([]) List<Party> draftParties,
+    @Default([]) List<EventCreateDraft> draftEvents,
     @Default(0) int totalPartyCount,
     @Default(0) int totalAttendees,
     // Fix #1215: tracks ALL events ever created, not just upcoming ones.
@@ -62,6 +64,7 @@ class PartnerDashboardController extends _$PartnerDashboardController {
           preparingEvents: [],
           activeParties: [],
           draftParties: [],
+          draftEvents: [],
           totalPartyCount: 0,
           totalAttendees: 0,
           hasAnyEvents: false,
@@ -70,14 +73,14 @@ class PartnerDashboardController extends _$PartnerDashboardController {
       }
       final eventRepo = ref.read(eventRepositoryProvider);
       final partyRepo = ref.read(partyRepositoryProvider);
+      final draftRepo = ref.read(eventCreateDraftRepositoryProvider);
       // 1. Pending Count
       final pendingCount = await eventRepo.getPendingApplicationCount(
         partner.id,
       );
 
-      // Fix #2219: use getEventsByPartnerId (gt end_time) so liveEvents is populated.
-      // getUpcomingEvents (gte start_time, 7-day window) excludes started events,
-      // making liveEvents always empty and overview counts too low.
+      // Fix #2219: getUpcomingEvents excludes started events, making
+      // liveEvents always empty and overview counts too low.
       final upcomingEvents = await eventRepo.getEventsByPartnerId(partner.id);
 
       // 3. Active Parties
@@ -102,9 +105,15 @@ class PartnerDashboardController extends _$PartnerDashboardController {
         final phase = getEventPhase(event);
         return phase == EventPhase.preStart || phase == EventPhase.checkinReady;
       }).toList();
+      final activePartyIds = activeParties.map((party) => party.id).toSet();
+      final draftEvents = (await draftRepo.getDrafts())
+          .where((draft) => activePartyIds.contains(draft.partyId))
+          .toList();
+      final draftEventPartyIds = draftEvents.map((draft) => draft.partyId);
       final draftParties = activeParties
           .where(
             (party) =>
+                !draftEventPartyIds.contains(party.id) &&
                 upcomingEvents.every((event) => event.partyId != party.id),
           )
           .toList();
@@ -124,6 +133,7 @@ class PartnerDashboardController extends _$PartnerDashboardController {
         preparingEvents: preparingEvents,
         activeParties: activeParties,
         draftParties: draftParties,
+        draftEvents: draftEvents,
         totalPartyCount: activeParties.length,
         totalAttendees: totalAttendees,
         hasAnyEvents: hasAnyEvents,

@@ -1,5 +1,6 @@
 import 'package:app_partner/src/features/home/partner_dashboard_controller.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
+import 'package:app_partner/src/logic/event_create_draft_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -44,6 +45,22 @@ const _testPartner = Partner(
   contactEmail: 'test@partner.com',
 );
 
+class _FakeEventCreateDraftRepository implements EventCreateDraftRepository {
+  const _FakeEventCreateDraftRepository();
+
+  @override
+  Future<void> deleteDraft(String partyId) async {}
+
+  @override
+  Future<EventCreateDraft?> getDraft(String partyId) async => null;
+
+  @override
+  Future<List<EventCreateDraft>> getDrafts() async => const [];
+
+  @override
+  Future<void> saveDraft(EventCreateDraft draft) async {}
+}
+
 void main() {
   late MockEventRepository mockEventRepo;
   late MockPartyRepository mockPartyRepo;
@@ -55,8 +72,9 @@ void main() {
     when(
       () => mockEventRepo.getPendingApplicationCount(any()),
     ).thenAnswer((_) async => 3);
-    // Fix #2219: controller now uses getEventsByPartnerId (gt end_time) to include
-    // live events. getUpcomingEvents (gte start_time) excluded started events.
+    // Fix #2219: controller now uses getEventsByPartnerId (gt end_time)
+    // to include live events. getUpcomingEvents (gte start_time) excluded
+    // started events.
     when(
       () => mockEventRepo.getEventsByPartnerId(any()),
     ).thenAnswer((_) async => [_testEvent]);
@@ -81,6 +99,9 @@ void main() {
         currentPartnerInfoProvider.overrideWith((_) async => partner),
         eventRepositoryProvider.overrideWithValue(mockEventRepo),
         partyRepositoryProvider.overrideWithValue(mockPartyRepo),
+        eventCreateDraftRepositoryProvider.overrideWithValue(
+          const _FakeEventCreateDraftRepository(),
+        ),
       ],
     );
 
@@ -107,6 +128,9 @@ void main() {
           currentPartnerInfoProvider.overrideWith((_) async => _testPartner),
           eventRepositoryProvider.overrideWithValue(mockEventRepo),
           partyRepositoryProvider.overrideWithValue(mockPartyRepo),
+          eventCreateDraftRepositoryProvider.overrideWithValue(
+            const _FakeEventCreateDraftRepository(),
+          ),
         ],
       );
 
@@ -179,9 +203,9 @@ void main() {
       },
     );
 
-    // Fix #2219: regression guard — liveEvents must be populated when an active
-    // event has started. This was broken when getUpcomingEvents (gte start_time)
-    // was used; getEventsByPartnerId (gt end_time) fixes it.
+    // Fix #2219: regression guard. liveEvents must be populated when an
+    // active event has started. This was broken when getUpcomingEvents
+    // (gte start_time) was used; getEventsByPartnerId (gt end_time) fixes it.
     test(
       'liveEvents is populated from active events that have started',
       () async {
@@ -217,7 +241,8 @@ void main() {
           state.totalAttendees,
           5,
           reason:
-              'Live event participants must count toward overview total (#2219)',
+              'Live event participants must count toward overview total '
+              '(#2219)',
         );
       },
     );
@@ -228,6 +253,9 @@ void main() {
           currentPartnerInfoProvider.overrideWith((_) async => null),
           eventRepositoryProvider.overrideWithValue(mockEventRepo),
           partyRepositoryProvider.overrideWithValue(mockPartyRepo),
+          eventCreateDraftRepositoryProvider.overrideWithValue(
+            const _FakeEventCreateDraftRepository(),
+          ),
         ],
       );
       final sub = container.listen(
