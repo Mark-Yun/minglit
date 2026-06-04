@@ -206,10 +206,17 @@ REVOKE EXECUTE ON FUNCTION public.handle_new_user_settings()
 GRANT EXECUTE ON FUNCTION public.handle_new_user_settings()
   TO service_role;
 
-REVOKE EXECUTE ON FUNCTION public.handle_partner_application_approved()
-  FROM PUBLIC, anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.handle_partner_application_approved()
-  TO service_role;
+DO $$
+BEGIN
+  -- Some long-lived dev databases predate the partner application wizard trigger
+  -- function even though fresh databases create it from the historical migration.
+  -- Guard this legacy-only hardening step so the rest of the migration can apply.
+  IF to_regprocedure('public.handle_partner_application_approved()') IS NOT NULL THEN
+    EXECUTE 'REVOKE EXECUTE ON FUNCTION public.handle_partner_application_approved() FROM PUBLIC, anon, authenticated';
+    EXECUTE 'GRANT EXECUTE ON FUNCTION public.handle_partner_application_approved() TO service_role';
+  END IF;
+END;
+$$;
 
 REVOKE EXECUTE ON FUNCTION public.handle_storage_object_created()
   FROM PUBLIC, anon, authenticated;
