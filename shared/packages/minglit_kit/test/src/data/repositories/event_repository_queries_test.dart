@@ -1102,6 +1102,95 @@ void main() {
       });
     });
 
+    group('getPartnerOperationWindowEvents', () {
+      test('returns live and ended-window partner events', () async {
+        final liveEventJson = {
+          ...eventJson,
+          'id': 'event_live',
+          'status': 'ongoing',
+          'start_time': now
+              .subtract(const Duration(hours: 1))
+              .toIso8601String(),
+          'end_time': now.add(const Duration(hours: 2)).toIso8601String(),
+        };
+        final endedWindowEventJson = {
+          ...eventJson,
+          'id': 'event_ended_window',
+          'status': 'completed',
+          'start_time': now
+              .subtract(const Duration(hours: 5))
+              .toIso8601String(),
+          'end_time': now.subtract(const Duration(hours: 2)).toIso8601String(),
+        };
+        final builder = mockTable(
+          mockClient,
+          'events',
+          selectData: [liveEventJson, endedWindowEventJson],
+        );
+
+        final result = await repository.getPartnerOperationWindowEvents(
+          'partner_1',
+        );
+
+        expect(result.map((event) => event.id), [
+          'event_live',
+          'event_ended_window',
+        ]);
+        expect(
+          builder.recordedFilters.any(
+            (f) => f.method == 'gt' && f.column == 'end_time',
+          ),
+          isTrue,
+          reason: 'operation window must include live and end+24h events',
+        );
+        expect(
+          builder.recordedFilters.any(
+            (f) => f.method == 'lte' && f.column == 'start_time',
+          ),
+          isTrue,
+          reason: 'operation window must cap future events at T-7',
+        );
+        expect(
+          builder.recordedFilters.any(
+            (f) =>
+                f.method == 'not' &&
+                f.column == 'status' &&
+                f.value == 'eq:cancelled',
+          ),
+          isTrue,
+          reason: 'cancelled events must not appear in operation surfaces',
+        );
+      });
+
+      test(
+        'returns empty list when no operation-window events exist',
+        () async {
+          unawaited(mockTable(mockClient, 'events', selectData: []));
+
+          final result = await repository.getPartnerOperationWindowEvents(
+            'partner_1',
+          );
+
+          expect(result, isEmpty);
+        },
+      );
+
+      test('throws on error', () async {
+        unawaited(
+          mockTable(
+            mockClient,
+            'events',
+            shouldThrow: Exception('error'),
+          ),
+        );
+
+        await expectLater(
+          repository.getPartnerOperationWindowEvents('partner_1'),
+          throwsA(anything),
+        );
+      });
+    });
+
     group('getClosingSoonEvents', () {
       test('returns list of closing soon events', () async {
         unawaited(

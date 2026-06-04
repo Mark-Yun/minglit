@@ -11,6 +11,7 @@ class OngoingEventListPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final phase = getEventPhase(event);
     if (isCheckinActionEnabled(event)) {
       return Theme(
         data: ThemeData.dark().copyWith(
@@ -25,10 +26,11 @@ class OngoingEventListPage extends StatelessWidget {
 
     final theme = Theme.of(context);
     final timeFmt = DateFormat('HH:mm');
-    final checkinStart = event.startTime.subtract(const Duration(hours: 2));
+    final checkinStart = event.startTime.subtract(const Duration(minutes: 30));
+    final isEnded = phase == EventPhase.ended;
 
     return Scaffold(
-      appBar: MinglitTheme.simpleAppBar(title: '참가자 리스트'),
+      appBar: MinglitTheme.simpleAppBar(title: isEnded ? '운영 결과' : '참가자 리스트'),
       body: ListView(
         padding: const EdgeInsets.all(MinglitSpacing.medium),
         children: [
@@ -40,8 +42,10 @@ class OngoingEventListPage extends StatelessWidget {
           ),
           const SizedBox(height: MinglitSpacing.xsmall),
           Text(
-            '${timeFmt.format(event.startTime)} 시작 · '
-            '체크인 ${timeFmt.format(checkinStart)}부터',
+            isEnded
+                ? '${timeFmt.format(event.endTime)} 종료 · 읽기 전용'
+                : '${timeFmt.format(event.startTime)} 시작 · '
+                      '체크인 ${timeFmt.format(checkinStart)}부터',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -66,7 +70,9 @@ class OngoingEventListPage extends StatelessWidget {
                   const SizedBox(width: MinglitSpacing.small),
                   Expanded(
                     child: Text(
-                      'T-2 전에는 QR/수동 체크인이 비활성화됩니다. 명단과 참가 현황을 미리 확인해 주세요.',
+                      isEnded
+                          ? '이벤트가 종료됐어요. 체크인 기록은 정산 기준으로 보관돼요.'
+                          : '시작 30분 전까지 QR/수동 체크인이 비활성화됩니다. 명단과 참가 현황을 미리 확인해 주세요.',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSecondaryContainer,
                       ),
@@ -78,8 +84,10 @@ class OngoingEventListPage extends StatelessWidget {
           ),
           const SizedBox(height: MinglitSpacing.large),
           MinglitButton(
-            label: '체크인은 ${timeFmt.format(checkinStart)}부터 가능',
-            icon: Icons.qr_code_scanner,
+            label: isEnded
+                ? '읽기 전용'
+                : '체크인은 ${timeFmt.format(checkinStart)}부터 가능',
+            icon: isEnded ? Icons.lock_outline : Icons.qr_code_scanner,
           ),
         ],
       ),

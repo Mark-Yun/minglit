@@ -54,7 +54,7 @@ const partnerGuideTopics = [
       HelpSection(
         title: '체크인은 언제부터 가능한가요?',
         body:
-            '이벤트 시작 2시간 전부터 QR 체크인이 활성화돼요. '
+            '이벤트 시작 30분 전부터 QR 체크인이 활성화돼요. '
             '그 전에는 QR 체크인 버튼이 비활성 상태로 보여요.',
       ),
       HelpSection(

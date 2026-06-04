@@ -10,6 +10,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:mocktail/mocktail.dart';
+
+import '../../../utils/mocks.dart';
 
 /// Fake platform implementation for MobileScanner.
 ///
@@ -117,6 +120,115 @@ void main() {
         child: const MaterialApp(home: CheckinPlaceholderPage()),
       );
     }
+
+    test(
+      'todayEventsProvider keeps live and ended-window events from repository',
+      () async {
+        final mockRepo = MockEventRepository();
+        final liveEvent = Event(
+          id: 'live-event',
+          partyId: 'party-1',
+          startTime: now.subtract(const Duration(hours: 1)),
+          endTime: now.add(const Duration(hours: 2)),
+          createdAt: now,
+          updatedAt: now,
+          title: 'Live Event',
+        );
+        final endedWindowEvent = Event(
+          id: 'ended-window-event',
+          partyId: 'party-1',
+          startTime: now.subtract(const Duration(hours: 5)),
+          endTime: now.subtract(const Duration(hours: 2)),
+          createdAt: now,
+          updatedAt: now,
+          title: 'Ended Window Event',
+        );
+        final oldEndedEvent = Event(
+          id: 'old-ended-event',
+          partyId: 'party-1',
+          startTime: now.subtract(const Duration(hours: 30)),
+          endTime: now.subtract(const Duration(hours: 25)),
+          createdAt: now,
+          updatedAt: now,
+          title: 'Old Ended Event',
+        );
+
+        when(
+          () => mockRepo.getPartnerOperationWindowEvents('partner-1'),
+        ).thenAnswer(
+          (_) async => [liveEvent, endedWindowEvent, oldEndedEvent],
+        );
+
+        final container = ProviderContainer(
+          overrides: [eventRepositoryProvider.overrideWithValue(mockRepo)],
+        );
+        addTearDown(container.dispose);
+
+        final events = await container.read(
+          todayEventsProvider('partner-1').future,
+        );
+
+        expect(events.map((event) => event.id), [
+          'live-event',
+          'ended-window-event',
+        ]);
+        verify(
+          () => mockRepo.getPartnerOperationWindowEvents('partner-1'),
+        ).called(1);
+        verifyNever(() => mockRepo.getUpcomingEvents(any()));
+      },
+    );
+
+    testWidgets(
+      'OngoingEventListPage shows readiness list before backend active window',
+      (tester) async {
+        final waitingEvent = Event(
+          id: 'waiting-event',
+          partyId: 'party-1',
+          startTime: now.add(const Duration(minutes: 90)),
+          endTime: now.add(const Duration(hours: 3)),
+          createdAt: now,
+          updatedAt: now,
+          title: 'Waiting Event',
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(home: OngoingEventListPage(event: waitingEvent)),
+        );
+
+        expect(find.byType(QRScannerScreen), findsNothing);
+        expect(find.text('참가자 리스트'), findsOneWidget);
+        expect(find.textContaining('시작 30분 전까지'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'OngoingEventListPage renders ended-window event as read-only',
+      (tester) async {
+        final endedEvent = Event(
+          id: 'ended-event',
+          partyId: 'party-1',
+          startTime: now.subtract(const Duration(hours: 5)),
+          endTime: now.subtract(const Duration(hours: 2)),
+          createdAt: now,
+          updatedAt: now,
+          title: 'Ended Event',
+          currentParticipants: 12,
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(home: OngoingEventListPage(event: endedEvent)),
+        );
+
+        expect(find.byType(QRScannerScreen), findsNothing);
+        expect(find.text('운영 결과'), findsOneWidget);
+        expect(find.textContaining('종료 · 읽기 전용'), findsOneWidget);
+        expect(find.textContaining('이벤트가 종료됐어요'), findsOneWidget);
+        expect(find.text('읽기 전용'), findsOneWidget);
+        expect(find.textContaining('QR/수동 체크인이 비활성화'), findsNothing);
+        expect(find.textContaining('체크인은'), findsNothing);
+      },
+    );
 
     testWidgets('shows loading indicator when partner info is loading', (
       tester,

@@ -77,7 +77,7 @@ final FutureProviderFamily<List<Event>, String> todayEventsProvider =
       partnerId,
     ) async {
       final repo = ref.read(eventRepositoryProvider);
-      final upcoming = await repo.getUpcomingEvents(partnerId);
+      final upcoming = await repo.getPartnerOperationWindowEvents(partnerId);
 
       return upcoming.where(isOngoingListWindow).toList();
     });

@@ -13,7 +13,7 @@ EventPhase getEventPhase(Event event) {
   if (now.isAfter(event.endTime)) return EventPhase.ended;
   if (now.isAfter(event.startTime)) return EventPhase.live;
   final untilStart = event.startTime.difference(now);
-  if (untilStart <= const Duration(hours: 2)) {
+  if (untilStart <= const Duration(minutes: 30)) {
     return EventPhase.checkinReady;
   }
   if (untilStart <= const Duration(days: 7)) {
@@ -78,6 +78,7 @@ bool isOngoingListWindow(Event event) {
 }
 
 bool isCheckinActionEnabled(Event event) {
-  final phase = getEventPhase(event);
-  return phase == EventPhase.checkinReady || phase == EventPhase.live;
+  final now = DateTime.now();
+  final backendReadyAt = event.startTime.subtract(const Duration(minutes: 30));
+  return !now.isBefore(backendReadyAt) && now.isBefore(event.endTime);
 }

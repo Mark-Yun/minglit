@@ -21,12 +21,12 @@ Event _makeEvent({
       startTime = now.add(const Duration(days: 8));
       endTime = now.add(const Duration(days: 8, hours: 2));
     case 'preStart':
-      // T-7 through T-2
+      // T-7 through T-30m
       startTime = now.add(const Duration(days: 3));
       endTime = now.add(const Duration(days: 3, hours: 2));
     case 'checkinReady':
-      // T-2 through start
-      startTime = now.add(const Duration(minutes: 90));
+      // T-30m through start
+      startTime = now.add(const Duration(minutes: 20));
       endTime = now.add(const Duration(hours: 3));
     case 'live':
       // started but not ended

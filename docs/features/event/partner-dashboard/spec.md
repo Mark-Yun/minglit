@@ -22,8 +22,8 @@
 | 1-4 | P0 | 이번 주 성과 3칸 그리드 | • 매출 / 신청 / 체크인율<br>• 지난주 대비 % 표시<br>• 신규 파트너(데이터 없음) 시 섹션 숨김 | FR-6 | NFR-1 |
 | 1-5 | P1 | 섹션 독립 로딩 — 한 섹션 실패 시 나머지 정상 | • 할 일 칩 / 액션카드 / 이번 주 성과 각각 독립 provider<br>• 한 섹션 에러 → 해당 섹션만 에러 UI<br>• 다른 섹션 정상 표시 | FR-7 | NFR-2 |
 | 2-1 | P0 | 다가오는 이벤트가 모집 중 phase | • 이벤트 시작까지 T-7 초과<br>• 카드에 "모집 중" 배지 + D-N<br>• Primary CTA: 신청 현황 보기<br>• 보조: 수정 / 공유 | FR-8, FR-9, FR-10 | NFR-1 |
-| 2-2 | P0 | 이벤트가 pre_start/list phase (T-7~T-2) | • 시작 7일 전부터 2시간 전까지<br>• 배지 "체크인 대기" + 남은 시간<br>• Outline CTA: 참가자 리스트<br>• OngoingEventListPage pre_start/list mode에서 QR/check-in disabled | FR-9, FR-10 | NFR-1 |
-| 2-3 | P0 | 이벤트가 checkin_ready / LIVE phase | • T-2 ~ 시작 전 또는 이벤트 시작 ~ 종료 사이<br>• 배지 "체크인 가능" 또는 "LIVE"<br>• Primary CTA: 참가자 체크인<br>• OngoingEventListPage checkin_ready/live mode에서 QR/수동 체크인 활성 | FR-9, FR-10 | NFR-1, NFR-5 |
+| 2-2 | P0 | 이벤트가 pre_start/list phase (T-7~T-30m) | • 시작 7일 전부터 30분 전까지<br>• 배지 "체크인 대기" + 남은 시간<br>• Outline CTA: 참가자 리스트<br>• OngoingEventListPage pre_start/list mode에서 QR/check-in disabled | FR-9, FR-10 | NFR-1 |
+| 2-3 | P0 | 이벤트가 checkin_ready / LIVE phase | • T-30m ~ 시작 전 또는 이벤트 시작 ~ 종료 사이<br>• 배지 "체크인 가능" 또는 "LIVE"<br>• Primary CTA: 참가자 체크인<br>• OngoingEventListPage checkin_ready/live mode에서 QR/수동 체크인 활성 | FR-9, FR-10 | NFR-1, NFR-5 |
 | 2-4 | P1 | 이벤트가 종료 24h 이내 (ended) | • 종료 후 24h 이내<br>• 배지 "종료" + "N시간 전"<br>• Primary CTA: 다음 회차 만들기<br>• 보조: 상세 결과 | FR-9, FR-10, FR-11 | NFR-1 |
 | 2-5 | P1 | 이벤트 없을 때 빈 상태 | • 파티는 있고 이벤트 0개<br>• "이벤트를 만들어 신청을 받아보세요" + CTA | FR-12 | NFR-1 |
 | 3-1 | P0 | 신청관리 탭 — 이벤트별 그루핑 | • 신청관리 탭 진입<br>• 대기중 / 승인됨 / 거절됨 3 탭<br>• 대기중 기본 표시<br>• 이벤트 헤더 + 신청자 row 그룹 | FR-13, FR-14 | NFR-1 |
@@ -46,9 +46,9 @@
 - **FR-5**: 카운트 0 시 칩 비활성(회색). 미답변 리뷰는 시스템 미구현이므로 "준비 중" 라벨 + 탭 시 "곧 출시" 토스트.
 - **FR-6**: 이번 주 성과 3칸 그리드 — 매출 / 신청 / 체크인율 + 지난주 대비 %. 신규 파트너 (데이터 없음) 시 섹션 숨김. 로딩 중 스켈레톤. 에러 시 섹션 숨김(비핵심).
 - **FR-7**: 할 일 칩 / 이벤트 액션카드 / 이번 주 성과는 각각 독립 데이터 로딩 단위. 한 단위 에러가 다른 단위 표시를 차단하지 않음.
-- **FR-8**: 이벤트 액션카드는 가장 시급한 이벤트 1건만 표시. 우선순위: LIVE > checkin_ready(T-2~start) > pre_start(T-7~T-2) > 종료(24h 이내) > 모집 중. 동일 phase 면 시작 시간 빠른 순.
+- **FR-8**: 이벤트 액션카드는 가장 시급한 이벤트 1건만 표시. 우선순위: LIVE > checkin_ready(T-30m~start) > pre_start(T-7~T-30m) > 종료(24h 이내) > 모집 중. 동일 phase 면 시작 시간 빠른 순.
 - **FR-9**: 액션카드는 phase(모집 중 / pre_start / checkin_ready / LIVE / 종료) 에 따라 배지 + 색상 + 메인 CTA + 보조 액션이 자동 분기.
-- **FR-10**: phase 정의 — 모집 중 = 시작까지 T-7 초과 / pre_start = T-7~T-2 / checkin_ready = T-2~시작 / LIVE = 시작~종료 / 종료 = 종료 후 24h 이내. 종료 후 24h 경과 시 카드에서 제외.
+- **FR-10**: phase 정의 — 모집 중 = 시작까지 T-7 초과 / pre_start = T-7~T-30m / checkin_ready = T-30m~시작 / LIVE = 시작~종료 / 종료 = 종료 후 24h 이내. 종료 후 24h 경과 시 카드에서 제외.
 - **FR-11**: 종료 phase 의 "다음 회차 만들기" CTA 는 이벤트 생성 화면으로 이동하면서 파티 / 장소 / 인원 / 티켓 설정을 프리필. 날짜 / 시간만 비워둠.
 - **FR-12**: 파티 있고 이벤트 0개 시 액션카드 자리에 "이벤트를 만들어 신청을 받아보세요" + 이벤트 생성 CTA. 파티 0개 시 온보딩 스텝 가이드 표시.
 - **FR-13**: 신청관리 탭은 3 탭(대기중 / 승인됨 / 거절됨). 기본 대기중.
@@ -56,7 +56,7 @@
 - **FR-15**: 신청 row 우측에 인라인 승인 / 거절 아이콘. 탭 시 즉시 처리 (상세 진입 없음). 처리 후 row 사라짐 + 카운트 갱신.
 - **FR-16**: 하단 고정 "전체 승인 (N건)" 버튼. 탭 시 확인 다이얼로그 후 해당 탭의 대기 신청 전원 승인. 결제 트리거 / 알림은 서버 부수 효과로 일괄 처리.
 - **FR-17**: 체크인 탭 진입 시 운영 window(T-7~종료+24h) 이벤트 수를 판정 — 0 / 1 / 2+ 별 분기.
-- **FR-18**: 이벤트 1건 → OngoingEventListPage 즉시 진입. 2건+ → 이벤트 선택 리스트 → 선택 후 OngoingEventListPage. T-7~T-2는 pre_start/list mode로 QR/check-in action disabled, T-2 이후는 checkin_ready/live mode로 활성.
+- **FR-18**: 이벤트 1건 → OngoingEventListPage 즉시 진입. 2건+ → 이벤트 선택 리스트 → 선택 후 OngoingEventListPage. T-7~T-30m는 pre_start/list mode로 QR/check-in action disabled, T-30m 이후는 checkin_ready/live mode로 활성.
 - **FR-19**: 오늘 이벤트 0건 시 "오늘 예정된 이벤트가 없습니다" + 다음 이벤트 정보(날짜 / 시간 / 이름) 표시.
 - **FR-20**: QR 스캐너 화면만 다크 배경 (카메라 사용). 바텀탭 영역도 다크 배경 유지. 다른 화면 전환 시 라이트 복귀.
 - **FR-21**: 파티 0개면 스텝 가이드 / 파티 1+ + 이벤트 0개면 이벤트 넛지 / 이벤트 1+ 면 일반 대시보드. 첫 이벤트 생성 시 자동으로 일반 대시보드로 전환.
@@ -98,7 +98,7 @@
 - [ ] **다음 회차 만들기 프리필 범위** — 시간만 제외 vs 시간+제목 제외?
 - [ ] **전체 승인 임계치** — N건 이상이면 비동기 배치 처리?
 - [ ] **온보딩 가이드 dismiss 가능성** — 한 번 닫으면 영구 사라짐 vs 항상 표시?
-- [x] **체크인 운영 범위** — MDS 2.2/0.3 기준 T-7~T-2 pre_start/list, T-2 이후 checkin_ready/live, 종료+24h readonly로 확정
+- [x] **체크인 운영 범위** — backend event-checkin guard 기준 T-7~T-30m pre_start/list, T-30m 이후 checkin_ready/live, 종료+24h readonly로 확정
 - [ ] **이번 주 성과 비교 기준** — 지난주 vs 전월 동일 주차?
 - [ ] **미답변 리뷰 칩** — 리뷰 시스템 출시 전까지 칩 자체를 숨길지 vs "준비 중" 노출?
 
@@ -139,8 +139,8 @@
 | Phase | 조건 | 배지 | 메인 CTA | 보조 액션 |
 |-------|------|------|---------|----------|
 | 모집 중 | 시작까지 T-7 초과 | "모집 중" (초록) + D-N | 신청 현황 보기 | 이벤트 수정 / 공유·홍보 |
-| pre_start | T-7 ~ T-2 | "체크인 대기" + 남은 시간 | 참가자 리스트 (outline) | QR/check-in disabled |
-| checkin_ready | T-2 ~ 시작 | "체크인 가능" + 남은 시간 | 참가자 체크인 | QR/수동 체크인 활성 |
+| pre_start | T-7 ~ T-30m | "체크인 대기" + 남은 시간 | 참가자 리스트 (outline) | QR/check-in disabled |
+| checkin_ready | T-30m ~ 시작 | "체크인 가능" + 남은 시간 | 참가자 체크인 | QR/수동 체크인 활성 |
 | LIVE | 시작 ~ 종료 | "LIVE" (보라 + 펄스) + 경과 시간 | 참가자 체크인 | 참석 현황 |
 | 종료 | 종료 후 ~ 24h | "종료" (회색) + 종료 후 시간 | 다음 회차 만들기 | 상세 결과 |
 
@@ -168,7 +168,7 @@
   2개+ → 이벤트 선택 리스트 → 선택 후 OngoingEventListPage
 ```
 
-T-7~T-2는 pre_start/list mode, T-2 이후는 checkin_ready/live mode.
+T-7~T-30m는 pre_start/list mode, T-30m 이후는 checkin_ready/live mode.
 
 ### OngoingEventListPage / QR 스캐너 내부 구현
 

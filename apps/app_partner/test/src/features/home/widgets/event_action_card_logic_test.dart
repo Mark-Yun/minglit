@@ -34,17 +34,17 @@ void main() {
       expect(getEventPhase(event), EventPhase.recruiting);
     });
 
-    test('returns checkinReady when start is 90 minutes away', () {
+    test('returns checkinReady when start is 20 minutes away', () {
       final now = DateTime.now();
       final event = _makeEvent(
         id: 'e2',
-        startTime: now.add(const Duration(minutes: 90)),
+        startTime: now.add(const Duration(minutes: 20)),
         endTime: now.add(const Duration(hours: 4)),
       );
       expect(getEventPhase(event), EventPhase.checkinReady);
     });
 
-    test('returns preStart when start is inside T-7 but before T-2', () {
+    test('returns preStart when start is inside T-7 but before T-30m', () {
       final now = DateTime.now();
       final event = _makeEvent(
         id: 'e2b',
@@ -78,12 +78,12 @@ void main() {
     });
 
     test(
-      'returns checkinReady when start is exactly 2 hours away',
+      'returns checkinReady when start is inside backend active window',
       () {
         final now = DateTime.now();
         final event = _makeEvent(
           id: 'e5',
-          startTime: now.add(const Duration(hours: 2)),
+          startTime: now.add(const Duration(minutes: 20)),
           endTime: now.add(const Duration(hours: 5)),
         );
         expect(getEventPhase(event), EventPhase.checkinReady);
@@ -112,7 +112,7 @@ void main() {
       final now = DateTime.now();
       final checkinReady = _makeEvent(
         id: 'checkin-ready',
-        startTime: now.add(const Duration(minutes: 90)),
+        startTime: now.add(const Duration(minutes: 20)),
         endTime: now.add(const Duration(hours: 4)),
       );
       final recruiting = _makeEvent(
@@ -170,6 +170,52 @@ void main() {
       );
       final result = selectPrimaryEvent([oldEnded]);
       expect(result, isNull);
+    });
+  });
+
+  group('isCheckinActionEnabled', () {
+    test('returns false before backend active window', () {
+      final now = DateTime.now();
+      final event = _makeEvent(
+        id: 'early',
+        startTime: now.add(const Duration(minutes: 90)),
+        endTime: now.add(const Duration(hours: 3)),
+      );
+
+      expect(isCheckinActionEnabled(event), isFalse);
+    });
+
+    test('returns true within 30 minutes before start', () {
+      final now = DateTime.now();
+      final event = _makeEvent(
+        id: 'ready',
+        startTime: now.add(const Duration(minutes: 20)),
+        endTime: now.add(const Duration(hours: 3)),
+      );
+
+      expect(isCheckinActionEnabled(event), isTrue);
+    });
+
+    test('returns true for live events', () {
+      final now = DateTime.now();
+      final event = _makeEvent(
+        id: 'live',
+        startTime: now.subtract(const Duration(minutes: 10)),
+        endTime: now.add(const Duration(hours: 2)),
+      );
+
+      expect(isCheckinActionEnabled(event), isTrue);
+    });
+
+    test('returns false after event end', () {
+      final now = DateTime.now();
+      final event = _makeEvent(
+        id: 'ended',
+        startTime: now.subtract(const Duration(hours: 3)),
+        endTime: now.subtract(const Duration(hours: 1)),
+      );
+
+      expect(isCheckinActionEnabled(event), isFalse);
     });
   });
 }
