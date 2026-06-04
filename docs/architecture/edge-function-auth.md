@@ -126,6 +126,8 @@ EF 들과 같은 디렉토리 — wrapper 가 import 가능 + locality 좋음.
       "callers": ["system" | "user" | "external" | "public"],
       "envs": ["local" | "development" | "dev" | "production"],
       "external_auth": { ... },     // optional, callers 에 "external" 있을 때
+      "rate_limit": { ... },        // optional — token bucket count rate limit
+      "idempotency": { ... },       // optional — Idempotency-Key response replay
       "deprecated": "YYYY-MM-DD",   // optional — 설정 시 모든 응답에 RFC 8594 Deprecation/Sunset 헤더 추가
       "description": "한 줄 요약"
     }
@@ -140,6 +142,8 @@ EF 들과 같은 디렉토리 — wrapper 가 import 가능 + locality 좋음.
 | `callers` | `Caller[]` | ✅ | 허용 호출자 (OR) |
 | `envs` | `string[]` | ✅ | 동작 허용 환경 — 외 환경 호출 시 403 |
 | `external_auth` | `object` | callers 에 `external` 있으면 | 외부 인증 검증 정책 |
+| `rate_limit` | `object` 또는 `object[]` | 선택 | `consume_edge_rate_limit` token bucket 정책. `scope` 는 `user` / `ip` / `auth_or_ip` |
+| `idempotency` | `object` | 선택 | `Idempotency-Key` 기반 duplicate 처리. JSON response replay 가 표준 |
 | `deprecated` | `string` (ISO date) | 선택 | 설정 시 모든 응답에 RFC 8594 `Deprecation: @<date>` + `Sunset: <date>` 헤더 자동 추가. 클라이언트가 EOL을 감지해 마이그레이션 준비 가능. |
 | `description` | `string` | 권장 | 한 줄 한국어 설명 (audit 용) |
 
@@ -272,11 +276,14 @@ export function minglitEdgeFunction(handler: EFHandler, opts?: MinglitEFOptions)
 #### Request (호출마다)
 5. CORS preflight (`OPTIONS`) → `corsResponse()` 즉시 반환
 6. **Env 가드** — `ENVIRONMENT ∉ policy.envs` → `errorResponse("Function disabled in <env>", 403)`
-7. **Auth 검증** — §2.2 우선순위 따라 검증
+7. **Schema validation** — `opts.schema` 가 있으면 method/JSON body 를 `req.clone()` 으로 검증
+8. **Auth 검증** — §2.2 우선순위 따라 검증
    - 매칭 caller 없음 → `errorResponse("Unauthorized" | "Forbidden", 401 | 403)`
-8. `EFContext` 조립 (lazy getter 포함)
-9. `handler(req, ctx)` 호출, 응답 반환
-10. catch: `captureException` + sentry log + `errorResponse("Internal error", 500)`
+9. `EFContext` 조립 (lazy getter 포함)
+10. **Idempotency** — manifest `idempotency` 이 있으면 `Idempotency-Key` begin/replay/conflict 처리
+11. **Rate limit** — manifest `rate_limit` 이 있으면 `consume_edge_rate_limit` token bucket 소비. 새 idempotency 작업이 여기서 막히면 failed 로 풀어 재시도 가능하게 한다.
+12. `handler(req, ctx)` 호출, 응답 반환. JSON 응답은 idempotency completed cache 에 저장
+13. catch: idempotency failed mark + `captureException` + sentry log + `errorResponse("Internal error", 500)`
 
 ### 4.3 응답 형식
 
@@ -422,6 +429,70 @@ Deno.test("rejects user caller (manifest disallows)", async () => {
 ```
 
 wrapper 자체의 caller/env 검증 로직은 별도 `_shared/edge_function_test.ts` 에서 통합 테스트.
+
+### 4.7 Runtime guardrails
+
+#### Schema validation
+
+`minglitEdgeFunction(handler, { schema })` 는 handler 호출 전 요청 계약을 검증한다.
+JSON body validation 은 `req.clone()` 을 사용하므로 기존 handler 의 `req.json()`
+호출과 호환된다. 새 EF 는 stable request contract 가 있으면 wrapper schema 를 우선
+붙이고, handler 내부 parsing 은 business-level normalisation 으로 남긴다.
+
+#### Count rate limit
+
+Manifest `rate_limit` 은 DB-backed token bucket 이다.
+
+```json
+"rate_limit": {
+  "scope": "auth_or_ip",
+  "bucket": "event-feed",
+  "capacity": 120,
+  "refill_per_second": 2
+}
+```
+
+- `user`: authenticated user id 기준. user caller 가 아니면 401.
+- `ip`: trusted client IP 기준.
+- `auth_or_ip`: user caller 는 user id, public/external/system fallback 은 IP.
+- DB primitive: `public.consume_edge_rate_limit(...)`.
+- RPC 실패는 fail-closed 500. Abuse 방어가 필요한 EF 만 opt-in 한다.
+
+Trusted IP extraction 은 `x-real-ip > cf-connecting-ip > x-forwarded-for`
+rightmost 순서다. 이 헤더들은 Supabase/Cloudflare ingress 가 설정한다는 가정에
+의존한다. 로컬/비표준 proxy 에서 IP 를 확정할 수 없으면 `ip:unknown` 공유
+bucket 으로 제한되어 우회하지 않는다.
+
+Production public EF 는 IP 기반 기본값을 명시해야 한다. 현재 production public
+surface 는 `user-event-feed`(`auth_or_ip`) 와 `health`(`ip`) 이다. dev-only
+public EF 는 `envs` gate 로 production 에서 차단되며, production 으로 승격될 때
+`rate_limit` 추가가 필요하다.
+
+#### Idempotency
+
+Manifest `idempotency` 는 `Idempotency-Key` header 를 기준으로 duplicate 요청을
+처리한다.
+
+```json
+"idempotency": {
+  "scope": "apply-event-submit",
+  "required": true,
+  "ttl_seconds": 86400,
+  "in_progress_ttl_seconds": 60
+}
+```
+
+저장 키는 `(scope, requester_key, idempotency_key)` 이고, request hash 가 다르면
+409 conflict 를 반환한다. 같은 key/hash 의 completed 요청은 저장된 JSON response
+와 HTTP status 를 replay 하며 `Idempotency-Replayed: true` 를 붙인다. in-progress
+요청은 409 + `Retry-After` 를 반환한다.
+
+DB primitive:
+
+- `public.begin_edge_idempotency(...)`
+- `public.complete_edge_idempotency(...)`
+- `public.fail_edge_idempotency(...)`
+- `public.cleanup_edge_runtime_guardrails(...)`
 
 ---
 

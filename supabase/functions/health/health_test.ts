@@ -8,6 +8,22 @@ import {
   withMockedFetch,
 } from "../_test_utils/mock_http.ts";
 
+function guardrailRoutes(rateAllowed = true) {
+  return [{
+    matcher: (req: Request) =>
+      req.url.includes("/rest/v1/rpc/consume_edge_rate_limit") &&
+      req.method === "POST",
+    handler: () =>
+      jsonResponse([
+        {
+          allowed: rateAllowed,
+          remaining: rateAllowed ? 59 : 0,
+          retry_after_seconds: rateAllowed ? 0 : 30,
+        },
+      ]),
+  }];
+}
+
 Deno.test({
   name: "health - returns 200 with healthy status when all checks pass",
   fn: async () => {
@@ -16,6 +32,7 @@ Deno.test({
     );
 
     const { fetchMock } = createFetchMock([
+      ...guardrailRoutes(),
       {
         matcher: "/rest/v1/",
         handler: () => new Response(null, { status: 200 }),
@@ -63,6 +80,7 @@ Deno.test({
     };
 
     const { fetchMock } = createFetchMock([
+      ...guardrailRoutes(),
       {
         matcher: "/rest/v1/",
         handler: (req) => {
@@ -102,6 +120,41 @@ Deno.test({
 });
 
 Deno.test({
+  name: "health - public IP rate limit exceeded returns 429",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    const { fetchMock } = createFetchMock([
+      ...guardrailRoutes(false),
+    ]);
+
+    await withEnv({
+      ENVIRONMENT: "dev",
+      MINGLIT_EF_TEST_FN_NAME: "health",
+      SUPABASE_URL: "http://localhost:54321",
+      SUPABASE_ANON_KEY: "test-anon-key",
+      SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
+    }, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const response = await handler(
+          new Request("http://localhost", {
+            method: "GET",
+            headers: { "x-real-ip": "203.0.113.10" },
+          }),
+        );
+        const body = await readJson(response);
+
+        assertEquals(response.status, 429);
+        assertEquals(response.headers.get("Retry-After"), "30");
+        assertEquals(body.error, "Rate limit exceeded");
+      });
+    });
+  },
+});
+
+Deno.test({
   name: "health - returns 503 when database is down",
   fn: async () => {
     const handler = await captureServeHandler(
@@ -109,6 +162,7 @@ Deno.test({
     );
 
     const { fetchMock } = createFetchMock([
+      ...guardrailRoutes(),
       {
         matcher: "/rest/v1/",
         handler: () => new Response(null, { status: 500 }),
@@ -150,6 +204,7 @@ Deno.test({
     );
 
     const { fetchMock } = createFetchMock([
+      ...guardrailRoutes(),
       {
         matcher: "/rest/v1/",
         handler: () => new Response(null, { status: 200 }),
@@ -193,6 +248,7 @@ Deno.test({
     );
 
     const { fetchMock } = createFetchMock([
+      ...guardrailRoutes(),
       {
         matcher: "/rest/v1/",
         handler: () => new Response(null, { status: 200 }),
@@ -252,6 +308,7 @@ Deno.test({
     );
 
     const { fetchMock } = createFetchMock([
+      ...guardrailRoutes(),
       {
         matcher: "/rest/v1/",
         handler: () => new Response(null, { status: 200 }),
@@ -288,6 +345,7 @@ Deno.test({
     );
 
     const { fetchMock } = createFetchMock([
+      ...guardrailRoutes(),
       {
         matcher: "/rest/v1/",
         handler: () => new Response(null, { status: 200 }),
@@ -327,6 +385,7 @@ Deno.test({
     );
 
     const { fetchMock } = createFetchMock([
+      ...guardrailRoutes(),
       {
         matcher: "/rest/v1/",
         handler: () => new Response(null, { status: 200 }),
@@ -368,6 +427,7 @@ Deno.test({
     );
 
     const { fetchMock } = createFetchMock([
+      ...guardrailRoutes(),
       {
         matcher: "/rest/v1/",
         handler: () => new Response(null, { status: 200 }),

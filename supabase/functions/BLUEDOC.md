@@ -42,4 +42,4 @@ minglit 의 backend API 진입점. 60+ EF 와 공용 `_shared/`, 테스트 유�
 
 ---
 
-_Reviewed: 2026-06-03 23:00_
+_Reviewed: 2026-06-04 22:22_

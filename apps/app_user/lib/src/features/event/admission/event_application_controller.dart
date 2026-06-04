@@ -93,6 +93,7 @@ class PartnerVerifEntry {
 @riverpod
 class EventApplicationController extends _$EventApplicationController {
   late final Event _event;
+  String? _applyEventIdempotencyKey;
 
   @override
   EventApplicationState build(Event event) {
@@ -127,6 +128,7 @@ class EventApplicationController extends _$EventApplicationController {
   }
 
   Future<void> selectTicket(Ticket ticket) async {
+    _clearApplyEventIdempotencyKey();
     // Fix #2211: set loading=true before async load so canMoveNext blocks
     // the identity-step "next" button until verifications have settled.
     state = state.copyWith(
@@ -178,6 +180,7 @@ class EventApplicationController extends _$EventApplicationController {
     );
     fields[fieldKey] = value;
     newData[verificationId] = fields;
+    _clearApplyEventIdempotencyKey();
     state = state.copyWith(verificationData: newData);
   }
 
@@ -197,6 +200,7 @@ class EventApplicationController extends _$EventApplicationController {
       partnerVerifications: entries,
       verificationData: mergedData,
     );
+    _clearApplyEventIdempotencyKey();
   }
 
   Future<void> nextStep(BuildContext context) async {
@@ -269,25 +273,37 @@ class EventApplicationController extends _$EventApplicationController {
       final ticket = state.selectedTicket!;
       final event = await _loadEvent();
       final verificationData = _buildVerificationPayload(event, ticket);
+      final idempotencyKey = _currentApplyEventIdempotencyKey();
 
       final result = await repository.applyEvent(
         eventId: _event.id,
         ticketId: ticket.id,
         verificationData: verificationData,
+        idempotencyKey: idempotencyKey,
       );
 
       switch (result) {
         case FreeApplyEventResult():
+          _clearApplyEventIdempotencyKey();
           state = state.copyWith(status: EventApplicationStatus.success);
         case PaidApplyEventResult():
-          if (!context.mounted) return;
-          await _processPaidApplication(
-            context: context,
-            repository: repository,
-            ticket: ticket,
-            user: user,
-            result: result,
-          );
+          if (!context.mounted) {
+            _clearApplyEventIdempotencyKey();
+            return;
+          }
+          try {
+            await _processPaidApplication(
+              context: context,
+              repository: repository,
+              ticket: ticket,
+              user: user,
+              result: result,
+            );
+            _clearApplyEventIdempotencyKey();
+          } on Object {
+            _clearApplyEventIdempotencyKey();
+            rethrow;
+          }
       }
     } on Object catch (e, st) {
       _handleError(e, st);
@@ -477,6 +493,14 @@ class EventApplicationController extends _$EventApplicationController {
     final cached = ref.read(eventDetailControllerProvider(_event.id)).value;
     if (cached != null) return cached;
     return ref.read(eventRepositoryProvider).getEventById(_event.id);
+  }
+
+  String _currentApplyEventIdempotencyKey() {
+    return _applyEventIdempotencyKey ??= newApplyEventIdempotencyKey();
+  }
+
+  void _clearApplyEventIdempotencyKey() {
+    _applyEventIdempotencyKey = null;
   }
 
   void resetStatus() {

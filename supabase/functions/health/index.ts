@@ -175,4 +175,8 @@ export const handler = async (
   return errorResponse("unhealthy", 503, body);
 };
 
-minglitEdgeFunction(handler);
+minglitEdgeFunction(handler, {
+  schema: {
+    methods: ["GET"],
+  },
+});

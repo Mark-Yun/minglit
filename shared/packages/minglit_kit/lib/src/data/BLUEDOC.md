@@ -26,4 +26,4 @@ Supabase 테이블·RPC 접근의 단일 출처. Repository 클래스가 UI 와 
 - [apps/architecture.md](../../../../../apps/architecture.md) — kit 사용 측 (Flutter 앱)
 
 ---
-_Reviewed: 2026-05-17 22:32_
+_Reviewed: 2026-06-04 22:19_

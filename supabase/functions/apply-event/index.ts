@@ -1,10 +1,11 @@
 // Fix #2185 (Batch 5): migrate to minglitEdgeFunction wrapper — auth via manifest (user caller)
+import { errorResponse, successResponse } from "../_shared/response_utils.ts";
 import {
-  errorResponse,
-  successResponse,
-} from "../_shared/response_utils.ts";
-import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
+  type EFContext,
+  minglitEdgeFunction,
+} from "../_shared/edge_function.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
+import { isPlainRecord } from "../_shared/input_validation.ts";
 import {
   isEventFull,
   isTicketSoldOut,
@@ -34,15 +35,15 @@ function parseVerifications(
         if (
           v &&
           typeof v === "object" &&
-          typeof (v as { verification_id?: unknown }).verification_id === "string"
+          typeof (v as { verification_id?: unknown }).verification_id ===
+            "string"
         ) {
           const item = v as { verification_id: string; data?: unknown };
-          const data =
-            item.data &&
-            typeof item.data === "object" &&
-            !Array.isArray(item.data)
-              ? (item.data as Record<string, unknown>)
-              : {};
+          const data = item.data &&
+              typeof item.data === "object" &&
+              !Array.isArray(item.data)
+            ? (item.data as Record<string, unknown>)
+            : {};
           return [{ verification_id: item.verification_id, data }];
         }
         return [];
@@ -64,6 +65,31 @@ function parseVerifications(
 
 type SupabaseClient = EFContext["supabase"];
 
+function validateApplyEventBody(
+  body: Record<string, unknown>,
+): Response | void {
+  const eventId = body["event_id"];
+  const ticketId = body["ticket_id"];
+  if (
+    typeof eventId !== "string" || eventId.length === 0 ||
+    typeof ticketId !== "string" || ticketId.length === 0
+  ) {
+    return errorResponse(
+      "Missing required parameters: event_id, ticket_id",
+      400,
+    );
+  }
+
+  const verificationData = body["verification_data"];
+  if (
+    verificationData !== undefined &&
+    verificationData !== null &&
+    !isPlainRecord(verificationData)
+  ) {
+    return errorResponse("Invalid field: verification_data", 400);
+  }
+}
+
 /** Upserts all verifications and inserts submission records.
  *  Returns an error Response on first failure, null on success.
  */
@@ -78,7 +104,10 @@ async function upsertVerifications(
   // skip would make the caller treat the request as success with no rows saved.
   if (items.length > 0 && !partnerId) {
     console.error("upsertVerifications: items provided without partnerId");
-    return errorResponse("Invalid verification payload: missing partner_id", 400);
+    return errorResponse(
+      "Invalid verification payload: missing partner_id",
+      400,
+    );
   }
   for (const item of items) {
     if (!item.verification_id || !partnerId) continue;
@@ -119,8 +148,13 @@ async function upsertVerifications(
   return null;
 }
 
-export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
-  if (ctx.auth.type !== "user") return errorResponse("Unexpected auth type", 500);
+export const handler = async (
+  req: Request,
+  ctx: EFContext,
+): Promise<Response> => {
+  if (ctx.auth.type !== "user") {
+    return errorResponse("Unexpected auth type", 500);
+  }
   const userId = ctx.auth.userId;
   const { supabase } = ctx;
 
@@ -134,8 +168,9 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
       verification_data?: Record<string, unknown>;
     };
 
-    const { partnerId: verifPartnerId, items: verifItems } =
-      parseVerifications(verification_data);
+    const { partnerId: verifPartnerId, items: verifItems } = parseVerifications(
+      verification_data,
+    );
 
     if (!event_id || !ticket_id) {
       return errorResponse(
@@ -406,14 +441,13 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
       // 신규 무료 신청: apply_event RPC 호출 — DB 레벨 balance 체크 + 신청 완료
       // RPC handles one verification entry (first item). Additional verifications
       // are upserted separately after the RPC creates the application record.
-      const rpcVerifData =
-        verifItems.length > 0
-          ? {
-              partner_id: verifPartnerId,
-              verification_id: verifItems[0].verification_id,
-              data: verifItems[0].data,
-            }
-          : null;
+      const rpcVerifData = verifItems.length > 0
+        ? {
+          partner_id: verifPartnerId,
+          verification_id: verifItems[0].verification_id,
+          data: verifItems[0].data,
+        }
+        : null;
 
       const { data: applicationId, error: rpcError } = await supabase.rpc(
         "apply_event",
@@ -464,4 +498,9 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
   }
 };
 
-minglitEdgeFunction(handler);
+minglitEdgeFunction(handler, {
+  schema: {
+    methods: ["POST"],
+    jsonBody: validateApplyEventBody,
+  },
+});

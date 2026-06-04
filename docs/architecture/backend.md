@@ -104,6 +104,8 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 | `location_access_log` | 위치정보 이용 확인자료 (위치정보법 §16, 6개월 보관) | user_id, accessed_at, purpose (nearby_search), country_code |
 | `ef_auth_manifest` | pg_cron 대상 EF 인증 레벨 선언 (Fix #1760, cron-targeted EF 전용) | ef_name (PK), required_auth (service_role), description |
 | `webhook_imp_uid_log` | PortOne V1 결제 웹훅 idempotency 로그 (Fix #1949, 재처리 방지) | imp_uid (PK), merchant_uid, processed_at |
+| `edge_rate_limit_buckets` | Edge Function token-bucket count rate limit 상태 (#2992) | key (PK), tokens, capacity, refill_per_second, last_refill_at |
+| `edge_idempotency_keys` | Edge Function `Idempotency-Key` response replay/cache (#2992) | scope + requester_key + idempotency_key (PK), request_hash, status, response_body, expires_at |
 
 #### Tags & Discovery (태그/디스커버리)
 
