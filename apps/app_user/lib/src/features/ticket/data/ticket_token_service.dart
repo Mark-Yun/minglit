@@ -9,7 +9,7 @@ part 'ticket_token_service.g.dart';
 TicketTokenService ticketTokenService(Ref ref) {
   return TicketTokenService(
     wallet: ref.watch(ticketWalletRepositoryProvider),
-    supabase: ref.watch(supabaseClientProvider),
+    supabase: EnvKeyStore.isDemo ? null : ref.watch(supabaseClientProvider),
   );
 }
 
@@ -19,11 +19,11 @@ TicketTokenService ticketTokenService(Ref ref) {
 ///
 /// Fix #1206: Fetches token from Edge Function when not in local wallet
 class TicketTokenService {
-  TicketTokenService({required this.wallet, required SupabaseClient supabase})
+  TicketTokenService({required this.wallet, required SupabaseClient? supabase})
     : _supabase = supabase;
 
   final TicketWalletRepository wallet;
-  final SupabaseClient _supabase;
+  final SupabaseClient? _supabase;
 
   Future<TicketToken?> getToken(String ticketId) async {
     // 1. Check local wallet first
@@ -32,9 +32,14 @@ class TicketTokenService {
       return cached;
     }
 
+    if (EnvKeyStore.isDemo) return null;
+
     // 2. Fetch from Edge Function
     try {
-      final response = await _supabase.functions.invoke(
+      final supabase = _supabase;
+      if (supabase == null) return null;
+
+      final response = await supabase.functions.invoke(
         'user-get-ticket-token',
         body: {'ticket_id': ticketId},
       );

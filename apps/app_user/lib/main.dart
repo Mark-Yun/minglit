@@ -82,11 +82,6 @@ class _AppView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final startupState = ref.watch(appStartupProvider);
-    final goRouter = ref.watch(goRouterProvider);
-    if (startupState is AsyncData<void>) {
-      // Activate notification initializer only after critical startup succeeds.
-      ref.watch(notificationInitializerProvider);
-    }
     // Fix #1746: guard with ref.watch to handle the case where startup
     // already completed before this listener was registered (listener only
     // fires on transitions, not on the current state).
@@ -99,7 +94,46 @@ class _AppView extends ConsumerWidget {
       FlutterNativeSplash.remove();
     }
 
+    if (startupState is AsyncData<void>) {
+      return const _ReadyAppView();
+    }
+
     // ignore: use_minglit_async_value_widget - This is the app entry point, MaterialApp is not yet available.
+    return MaterialApp(
+      title: 'Minglit User',
+      debugShowCheckedModeBanner: false,
+      theme: MinglitTheme.materialTheme,
+      darkTheme: MinglitTheme.materialThemeDark,
+      themeMode: ref.watch(themeControllerProvider),
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: startupState.when(
+        data: (_) => const SizedBox.shrink(),
+        loading: () => const SizedBox.shrink(),
+        error: (e, st) => StartupFatalErrorView(
+          error: e,
+          onRetry: () => ref.invalidate(appStartupProvider),
+        ),
+      ),
+    );
+  }
+}
+
+class _ReadyAppView extends ConsumerWidget {
+  const _ReadyAppView();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final goRouter = ref.watch(goRouterProvider);
+
+    // Activate notification initializer only after critical startup succeeds.
+    ref.watch(notificationInitializerProvider);
+
     return MaterialApp.router(
       title: 'Minglit User',
       debugShowCheckedModeBanner: false,
@@ -115,22 +149,13 @@ class _AppView extends ConsumerWidget {
       ],
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) {
-        return MinglitAsyncValueWidget(
-          value: startupState,
-          data: (_) => BugReporterWrapper(
-            navigatorKey: rootNavigatorKey,
-            // Fix #382: child 강제 언래핑 제거 — nullable child에 fallback 추가
-            child: PendingDeletionRecoveryListener(
-              child: MinglitGlobalLoadingOverlay(
-                child: child ?? const SizedBox.shrink(),
-              ),
+        return BugReporterWrapper(
+          navigatorKey: rootNavigatorKey,
+          // Fix #382: child 강제 언래핑 제거 — nullable child에 fallback 추가
+          child: PendingDeletionRecoveryListener(
+            child: MinglitGlobalLoadingOverlay(
+              child: child ?? const SizedBox.shrink(),
             ),
-          ),
-          // Hidden behind native splash — show nothing.
-          loading: () => const SizedBox.shrink(),
-          error: (e, st) => StartupFatalErrorView(
-            error: e,
-            onRetry: () => ref.invalidate(appStartupProvider),
           ),
         );
       },

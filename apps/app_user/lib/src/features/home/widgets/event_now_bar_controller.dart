@@ -134,7 +134,8 @@ class EventNowBarStateNotifier extends _$EventNowBarStateNotifier {
       }
     } on Exception catch (e, st) {
       Log.e(
-        '⚠️ [EventNowBar] matchCandidates unavailable, degrading to lower state',
+        '⚠️ [EventNowBar] matchCandidates unavailable, '
+        'degrading to lower state',
         e,
         st,
       );
@@ -177,6 +178,8 @@ class EventRealtime extends _$EventRealtime {
 
   @override
   void build(String eventId) {
+    if (EnvKeyStore.isDemo) return;
+
     final supabase = ref.watch(supabaseClientProvider);
 
     _channel = supabase.channel('event-now-$eventId');
