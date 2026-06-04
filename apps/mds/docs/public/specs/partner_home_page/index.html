@@ -968,6 +968,12 @@ body.dark-mode .viewport {
     </thead>
     <tbody>
       <tr>
+        <td>2026-06-04</td>
+        <td>2.3</td>
+        <td>codex</td>
+        <td>#3004: Subpages map의 남은 TBD를 실제 spec link / follow-up issue / intentional deferred로 분류. 신청관리·계좌·첫 이벤트·정산은 기존 partner spec으로 연결하고, partner 활성 이벤트 리스트는 app_user <code>PartnerEventsPage</code> 오용을 피하기 위해 #3040으로 분리.</td>
+      </tr>
+      <tr>
         <td>2026-06-03</td>
         <td>2.2</td>
         <td>codex</td>
@@ -3377,29 +3383,29 @@ body.dark-mode .viewport {
   <section class="doc">
     <h2>진입 가능한 서브 페이지 (Subpages map)</h2>
     <p class="intro">
-      홈에서 도달할 수 있는 모든 화면 / 라우트. status: ✅ spec 있음 · 🚧 작성 중 · 📝 TBD (미작성).
+      홈에서 도달할 수 있는 모든 화면 / 라우트. status: ✅ spec 있음 · 🚧 작성 중 · 📝 follow-up 분리 · — route 없음/현재 페이지.
     </p>
     <table class="ref">
       <thead>
         <tr>
           <th style="width: 200px;">진입점</th>
           <th style="width: 220px;">도착 화면</th>
-          <th style="width: 60px;">Status</th>
+          <th style="width: 90px;">Status</th>
           <th>비고</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td>AppBar 알림 아이콘</td>
-          <td>알림 센터</td>
-          <td>📝 TBD</td>
-          <td>shell push · 미읽음 99+ 캡 처리</td>
+          <td><a href="/specs/notification_list_screen/index.html"><code>NotificationListScreen</code></a> (partner variant)</td>
+          <td>📝 #3003</td>
+          <td>shared notification center spec은 있음 · partner 신청/체크인/정산 grouping과 미읽음 99+ cap은 #3003에서 확정</td>
         </tr>
         <tr>
           <td>AppBar 버그 리포트 (dev)</td>
-          <td>버그 리포트 화면</td>
-          <td>📝 TBD</td>
-          <td>개발 빌드 한정 · 운영 빌드 미노출</td>
+          <td><code>BugReportAction</code> (dev-only component)</td>
+          <td>—</td>
+          <td>개발 빌드 한정 action · production route 없음 · 별도 MDS 화면 spec 의도 없음</td>
         </tr>
         <tr>
           <td>운영 현황 — "등록된 파티"</td>
@@ -3409,15 +3415,15 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td>운영 현황 — "모집 중인 이벤트"</td>
-          <td>이벤트 리스트</td>
-          <td>📝 TBD</td>
-          <td>모집/임박/진행 중 활성 이벤트 모두</td>
+          <td>Partner active event list surface</td>
+          <td>📝 #3040</td>
+          <td>모집/임박/진행 중 활성 이벤트 모두 · app_user <code>PartnerEventsPage</code>로 연결하지 않음</td>
         </tr>
         <tr>
           <td>운영 현황 — "참가예정 고객"</td>
-          <td>신청관리 탭</td>
-          <td>📝 TBD</td>
-          <td>하단 nav 신청관리와 동일 surface</td>
+          <td><a href="/specs/event_application_manage_page/index.html"><code>EventApplicationManagePage</code></a></td>
+          <td>✅</td>
+          <td>하단 nav 신청관리와 동일 <code>ApplicationListRoute</code> · cross-event 신청관리 boundary 강화는 #3000</td>
         </tr>
         <tr>
           <td>Welcome 카드 "도움말 보기"</td>
@@ -3469,9 +3475,9 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td>Todo "계좌 등록"</td>
-          <td>계좌 등록 화면</td>
-          <td>📝 TBD</td>
-          <td>은행 / 계좌번호 / 인증 흐름</td>
+          <td><a href="/specs/bank_account_page/index.html"><code>BankAccountPage</code></a></td>
+          <td>✅</td>
+          <td>은행 / 계좌번호 / 인증 흐름 · onboarding todo state/검증 강화는 #3001</td>
         </tr>
         <tr>
           <td>Todo "첫 파티 만들기"</td>
@@ -3481,9 +3487,9 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td>Todo "첫 이벤트 만들기"</td>
-          <td>이벤트 생성 위저드</td>
-          <td>📝 TBD</td>
-          <td>날짜 / 시간 / 정원 / 가격 / 장소</td>
+          <td><a href="/specs/event_create_page/index.html"><code>EventCreatePage</code></a></td>
+          <td>✅</td>
+          <td>날짜 / 시간 / 정원 / 가격 / 장소 · 첫 이벤트 wizard/파티 선택·resume 강화는 #3002</td>
         </tr>
         <tr>
           <td>지금 할 일 — 작성 중 파티 카드</td>
@@ -3493,9 +3499,9 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td>하단 nav — 신청관리</td>
-          <td>신청관리 탭</td>
-          <td>📝 TBD</td>
-          <td>모든 이벤트의 신청 통합 리스트</td>
+          <td><a href="/specs/event_application_manage_page/index.html"><code>EventApplicationManagePage</code></a></td>
+          <td>✅</td>
+          <td>모든 이벤트의 신청 통합 리스트 · canonical boundary follow-up #3000</td>
         </tr>
         <tr>
           <td>하단 nav — 체크인</td>
@@ -3505,9 +3511,9 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td>하단 nav — 정산</td>
-          <td><a href="/specs/settlement_detail_page/index.html"><code>SettlementDetailPage</code></a> (탭 내 항목)</td>
-          <td>📝 TBD</td>
-          <td>SETTLEMENT_VIEW 권한 보유 시만 노출</td>
+          <td><a href="/specs/settlement_page/index.html"><code>SettlementPage</code></a></td>
+          <td>✅</td>
+          <td><code>SettlementRoute</code> top-level tab · <code>SettlementDetailPage</code>는 월별 tile child · SETTLEMENT_VIEW 권한 보유 시만 노출</td>
         </tr>
         <tr>
           <td>하단 nav — 더보기 → 마이페이지 → 도움말</td>
@@ -3543,6 +3549,18 @@ body.dark-mode .viewport {
           <td>Onboarding 상태에서 "첫 파티 만들기" CTA의 도착지.</td>
         </tr>
         <tr>
+          <td><a href="/specs/event_create_page/index.html"><code>EventCreatePage</code></a></td>
+          <td>Onboarding 상태에서 "첫 이벤트 만들기" CTA의 도착지. 첫 이벤트 wizard 강화는 #3002에서 추적.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/bank_account_page/index.html"><code>BankAccountPage</code></a></td>
+          <td>Todo "계좌 등록"의 도착지. 계좌 onboarding state 강화는 #3001에서 추적.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_application_manage_page/index.html"><code>EventApplicationManagePage</code></a></td>
+          <td>오버뷰 "참가예정 고객" stat 및 하단 nav 신청관리의 공통 도착지.</td>
+        </tr>
+        <tr>
           <td><a href="/specs/event_application_list_page/index.html"><code>EventApplicationListPage</code></a></td>
           <td>처리 필요 카드 탭 시 도착지 (해당 이벤트의 신청 검토 화면).</td>
         </tr>
@@ -3551,8 +3569,16 @@ body.dark-mode .viewport {
           <td>모집 중 / 진행 임박 / 진행 중 / 종료 직후 카드 영역 탭 시 도착지. 같은 partner-side detail이 phase별 운영 모드로 변한다.</td>
         </tr>
         <tr>
-          <td><a href="/specs/settlement_detail_page/index.html"><code>SettlementDetailPage</code></a></td>
-          <td>하단 정산 탭 진입 후 항목 탭으로 진입하는 detail (SETTLEMENT_VIEW 권한 보유 시).</td>
+          <td><a href="/specs/settlement_page/index.html"><code>SettlementPage</code></a></td>
+          <td>하단 nav 정산의 top-level 도착지. 월별 tile 탭 후 <a href="/specs/settlement_detail_page/index.html"><code>SettlementDetailPage</code></a>로 진입.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/notification_list_screen/index.html"><code>NotificationListScreen</code></a></td>
+          <td>AppBar 알림 아이콘의 shared 도착지. partner notification center 강화는 #3003에서 추적.</td>
+        </tr>
+        <tr>
+          <td>Partner active event list surface</td>
+          <td>오버뷰 "모집 중인 이벤트" stat의 미작성 partner-side 도착지. user-side <a href="/specs/partner_events_page/index.html"><code>PartnerEventsPage</code></a>와 분리해서 #3040에서 추적.</td>
         </tr>
         <tr>
           <td><a href="/foundations/layout">Layout foundations</a></td>
