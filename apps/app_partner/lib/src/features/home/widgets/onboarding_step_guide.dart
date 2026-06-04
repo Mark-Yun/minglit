@@ -6,7 +6,10 @@ import 'package:minglit_kit/minglit_kit.dart';
 class OnboardingStepGuide extends StatelessWidget {
   const OnboardingStepGuide({
     required this.hasParty,
+    required this.bankAccountReady,
+    required this.bankVerificationStatus,
     required this.partyName,
+    required this.onOpenBankAccount,
     required this.onCreateParty,
     required this.onCreateEvent,
     this.draftEventCard,
@@ -15,7 +18,10 @@ class OnboardingStepGuide extends StatelessWidget {
   });
 
   final bool hasParty;
+  final bool bankAccountReady;
+  final String bankVerificationStatus;
   final String? partyName;
+  final VoidCallback onOpenBankAccount;
   final VoidCallback onCreateParty;
   final VoidCallback onCreateEvent;
   final Widget? draftEventCard;
@@ -25,7 +31,7 @@ class OnboardingStepGuide extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final progress = hasParty ? 3 : 2;
+    final progress = 1 + (bankAccountReady ? 1 : 0) + (hasParty ? 1 : 0);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -110,11 +116,13 @@ class OnboardingStepGuide extends StatelessWidget {
                 colorScheme: colorScheme,
               ),
               const Divider(height: 1),
-              // Step 2: Done
               _StepRow(
                 number: 2,
-                title: '계좌 등록',
-                isDone: true,
+                title: _bankStepTitle,
+                isDone: bankAccountReady,
+                isCurrent: !bankAccountReady,
+                subtitle: _bankStepSubtitle,
+                onTap: onOpenBankAccount,
                 theme: theme,
                 colorScheme: colorScheme,
               ),
@@ -297,6 +305,23 @@ class OnboardingStepGuide extends StatelessWidget {
       ],
     );
   }
+
+  String get _bankStepTitle {
+    if (bankAccountReady) return '계좌 확인 완료';
+    if (bankVerificationStatus == 'manual_review_pending') return '계좌 확인 중';
+    return '계좌 등록';
+  }
+
+  String get _bankStepSubtitle {
+    if (bankAccountReady) return '정산 받을 계좌가 준비되었어요';
+    if (bankVerificationStatus == 'verification_failed') {
+      return '계좌 정보를 다시 확인해주세요';
+    }
+    if (bankVerificationStatus == 'manual_review_pending') {
+      return '운영 확인이 완료되면 사라져요';
+    }
+    return '정산 받을 계좌를 등록해주세요';
+  }
 }
 
 class _StepRow extends StatelessWidget {
@@ -309,6 +334,7 @@ class _StepRow extends StatelessWidget {
     this.isCurrent = false,
     this.isLocked = false,
     this.subtitle,
+    this.onTap,
   });
 
   final int number;
@@ -317,6 +343,7 @@ class _StepRow extends StatelessWidget {
   final bool isCurrent;
   final bool isLocked;
   final String? subtitle;
+  final VoidCallback? onTap;
   final ThemeData theme;
   final ColorScheme colorScheme;
 
@@ -326,76 +353,87 @@ class _StepRow extends StatelessWidget {
 
     return Opacity(
       opacity: opacity,
-      child: Container(
-        color: isCurrent
-            ? colorScheme.primary.withValues(alpha: MinglitOpacity.tintFill)
-            : null,
-        padding: const EdgeInsets.symmetric(
-          horizontal: MinglitSpacing.medium,
-          vertical: MinglitSpacing.sm,
-        ),
-        child: Row(
-          children: [
-            // Number/check circle
-            Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                color: isDone
-                    ? MinglitColors.success
-                    : isCurrent
-                    ? colorScheme.primary
-                    : theme.colorScheme.surfaceContainerHighest,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: isDone
-                    ? Icon(Icons.check, color: colorScheme.onPrimary, size: 16)
-                    : Text(
-                        number.toString(),
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: isCurrent ? colorScheme.onPrimary : null,
-                          fontWeight: FontWeight.w800,
+      child: InkWell(
+        onTap: isLocked ? null : onTap,
+        child: Container(
+          color: isCurrent
+              ? colorScheme.primary.withValues(alpha: MinglitOpacity.tintFill)
+              : null,
+          padding: const EdgeInsets.symmetric(
+            horizontal: MinglitSpacing.medium,
+            vertical: MinglitSpacing.sm,
+          ),
+          child: Row(
+            children: [
+              // Number/check circle
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: isDone
+                      ? MinglitColors.success
+                      : isCurrent
+                      ? colorScheme.primary
+                      : theme.colorScheme.surfaceContainerHighest,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: isDone
+                      ? Icon(
+                          Icons.check,
+                          color: colorScheme.onPrimary,
+                          size: 16,
+                        )
+                      : Text(
+                          number.toString(),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: isCurrent ? colorScheme.onPrimary : null,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
-                      ),
+                ),
               ),
-            ),
-            const SizedBox(width: MinglitSpacing.sm),
-            // Title + subtitle
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      fontWeight: isCurrent ? FontWeight.w800 : FontWeight.w600,
-                      decoration: isDone ? TextDecoration.lineThrough : null,
-                      color: isDone ? theme.colorScheme.onSurfaceVariant : null,
-                    ),
-                  ),
-                  if (subtitle != null)
+              const SizedBox(width: MinglitSpacing.sm),
+              // Title + subtitle
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      subtitle!,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: isDone && subtitle == '방금 완료!'
-                            ? MinglitColors.success
-                            : theme.colorScheme.onSurfaceVariant,
-                        fontWeight: isDone && subtitle == '방금 완료!'
-                            ? FontWeight.w600
+                      title,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: isCurrent
+                            ? FontWeight.w800
+                            : FontWeight.w600,
+                        decoration: isDone ? TextDecoration.lineThrough : null,
+                        color: isDone
+                            ? theme.colorScheme.onSurfaceVariant
                             : null,
                       ),
                     ),
-                ],
+                    if (subtitle != null)
+                      Text(
+                        subtitle!,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: isDone && subtitle == '방금 완료!'
+                              ? MinglitColors.success
+                              : theme.colorScheme.onSurfaceVariant,
+                          fontWeight: isDone && subtitle == '방금 완료!'
+                              ? FontWeight.w600
+                              : null,
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            ),
-            if (isCurrent)
-              Icon(
-                Icons.chevron_right,
-                color: colorScheme.primary,
-                size: MinglitIconSize.small,
-              ),
-          ],
+              if (isCurrent)
+                Icon(
+                  Icons.chevron_right,
+                  color: colorScheme.primary,
+                  size: MinglitIconSize.small,
+                ),
+            ],
+          ),
         ),
       ),
     );

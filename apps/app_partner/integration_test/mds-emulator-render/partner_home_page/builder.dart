@@ -41,6 +41,8 @@ class _LoadedDashboardController extends PartnerDashboardController {
       totalPartyCount: 1,
       totalAttendees: 16,
       hasAnyEvents: true,
+      bankAccountReady: true,
+      bankVerificationStatus: bankVerificationStatusManualApproved,
     );
   }
 }
@@ -62,6 +64,9 @@ class _NoOpPartnerHomeCoordinator implements PartnerHomeCoordinator {
 
   @override
   void pushApplicationList() {}
+
+  @override
+  void pushBankAccount() {}
 
   @override
   void pushEventCreate(String partyId) {}

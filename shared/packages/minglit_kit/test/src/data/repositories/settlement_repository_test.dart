@@ -437,9 +437,11 @@ void main() {
     group('getBankAccount', () {
       test('returns bank account map', () async {
         final bankJson = {
+          'bank_code': 'kb',
           'bank_name': '국민은행',
           'account_holder': '홍길동',
           'account_number': '123-456-789',
+          'bank_verification_status': 'manual_review_pending',
         };
         mockTable(
           mockClient,
@@ -450,8 +452,10 @@ void main() {
         final result = await repository.getBankAccount('partner_1');
 
         expect(result, isNotNull);
-        expect(result!['bank_name'], '국민은행');
+        expect(result!['bank_code'], 'kb');
+        expect(result['bank_name'], '국민은행');
         expect(result['account_holder'], '홍길동');
+        expect(result['bank_verification_status'], 'manual_review_pending');
       });
 
       test('returns null when not found', () async {
@@ -496,6 +500,7 @@ void main() {
         await expectLater(
           repository.upsertBankAccount(
             partnerId: 'partner_1',
+            bankCode: 'kb',
             bankName: '국민은행',
             accountHolder: '홍길동',
             accountNumber: '123-456-789',
@@ -520,10 +525,57 @@ void main() {
         await expectLater(
           repository.upsertBankAccount(
             partnerId: 'partner_1',
+            bankCode: 'kb',
             bankName: '국민은행',
             accountHolder: '홍길동',
             accountNumber: '123-456-789',
           ),
+          throwsA(isA<Exception>()),
+        );
+      });
+    });
+
+    // -------------------------------------------------------------------------
+    // requestManualBankAccountReview
+    // -------------------------------------------------------------------------
+    group('requestManualBankAccountReview', () {
+      test('completes without error', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-settlement',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {
+              'success': true,
+              'bank_verification_status': 'manual_review_pending',
+            },
+          ),
+        );
+
+        await expectLater(
+          repository.requestManualBankAccountReview(partnerId: 'partner_1'),
+          completes,
+        );
+      });
+
+      test('throws on backend error', () async {
+        when(
+          () => mockFunctions.invoke(
+            'partner-manage-settlement',
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 500,
+            data: {'error': 'manual review failed'},
+          ),
+        );
+
+        await expectLater(
+          repository.requestManualBankAccountReview(partnerId: 'partner_1'),
           throwsA(isA<Exception>()),
         );
       });

@@ -1,7 +1,14 @@
 -- Fix #2322: partner_settlements INSERT RLS 회귀 방지 테스트
 -- upsertBankAccount() 경로 — SETTLEMENT_EDIT 권한 보유자만 INSERT 가능
 BEGIN;
-SELECT plan(5);
+SELECT plan(10);
+
+-- Issue #3047: bank account verification status contract
+SELECT has_column('partner_settlements', 'bank_code');
+SELECT has_column('partner_settlements', 'bank_verification_status');
+SELECT has_column('partner_settlements', 'bank_verification_reason');
+SELECT has_column('partner_settlements', 'bank_verification_requested_at');
+SELECT has_column('partner_settlements', 'bank_verified_at');
 
 SELECT tests.create_supabase_user('owner_user', 'settlement_insert_owner@test.com');
 SELECT tests.create_supabase_user('outsider_user', 'settlement_insert_outsider@test.com');
@@ -44,12 +51,14 @@ SELECT throws_ok(
 SELECT tests.authenticate_as_service_role();
 SELECT lives_ok(
   format(
-    $$INSERT INTO public.partner_settlements (partner_id, bank_name, account_number, account_holder)
-      VALUES (%L, 'Kakaobank', '111-222-333', 'Test Owner')
+    $$INSERT INTO public.partner_settlements (partner_id, bank_code, bank_name, account_number, account_holder, bank_verification_status)
+      VALUES (%L, 'kakao', 'Kakaobank', '111-222-333', 'Test Owner', 'manual_review_pending')
       ON CONFLICT (partner_id) DO UPDATE
-        SET bank_name      = EXCLUDED.bank_name,
-            account_number = EXCLUDED.account_number,
-            account_holder = EXCLUDED.account_holder$$,
+        SET bank_code                = EXCLUDED.bank_code,
+            bank_name                = EXCLUDED.bank_name,
+            account_number           = EXCLUDED.account_number,
+            account_holder           = EXCLUDED.account_holder,
+            bank_verification_status = EXCLUDED.bank_verification_status$$,
     current_setting('tests.partner_id')
   ),
   'service_role can upsert (INSERT path) bank account into partner_settlements'
@@ -58,12 +67,14 @@ SELECT lives_ok(
 -- Test 3: service_role/EF path — upsert UPDATE 경로도 성공
 SELECT lives_ok(
   format(
-    $$INSERT INTO public.partner_settlements (partner_id, bank_name, account_number, account_holder)
-      VALUES (%L, 'Kookmin', '444-555-666', 'Test Owner Updated')
+    $$INSERT INTO public.partner_settlements (partner_id, bank_code, bank_name, account_number, account_holder, bank_verification_status)
+      VALUES (%L, 'kb', 'Kookmin', '444-555-666', 'Test Owner Updated', 'manual_review_approved')
       ON CONFLICT (partner_id) DO UPDATE
-        SET bank_name      = EXCLUDED.bank_name,
-            account_number = EXCLUDED.account_number,
-            account_holder = EXCLUDED.account_holder$$,
+        SET bank_code                = EXCLUDED.bank_code,
+            bank_name                = EXCLUDED.bank_name,
+            account_number           = EXCLUDED.account_number,
+            account_holder           = EXCLUDED.account_holder,
+            bank_verification_status = EXCLUDED.bank_verification_status$$,
     current_setting('tests.partner_id')
   ),
   'service_role can upsert (UPDATE path) bank account into partner_settlements'

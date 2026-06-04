@@ -18,10 +18,10 @@ BEGIN
   -- Insert partner_settlements (bank account info)
   INSERT INTO public.partner_settlements (
     partner_id, biz_type, biz_name, biz_number, representative_name,
-    bank_name, account_number, account_holder
+    bank_name, account_number, account_holder, bank_verification_status
   ) VALUES (
     v_partner_id, 'individual', 'Test Biz', '123-45-67890', 'Test Rep',
-    'Kakao Bank', '3333-01-1234567', 'Test Rep'
+    'Kakao Bank', '3333-01-1234567', 'Test Rep', 'manual_review_approved'
   );
 
   v_cs := repeat('a', 64);
@@ -113,10 +113,10 @@ BEGIN
 
   INSERT INTO public.partner_settlements (
     partner_id, biz_type, biz_name, biz_number, representative_name,
-    bank_name, account_number, account_holder
+    bank_name, account_number, account_holder, bank_verification_status
   ) VALUES (
     v_partner2_id, 'individual', 'Test Biz 2', '987-65-43210', 'Test Rep 2',
-    'Shinhan Bank', '110-123-456789', 'Test Rep 2'
+    'Shinhan Bank', '110-123-456789', 'Test Rep 2', 'verified'
   );
 
   v_cs := repeat('b', 64);
@@ -192,6 +192,93 @@ SELECT results_eq(
   WHERE partner_id = (SELECT val FROM payout_test_state WHERE key='partner_id_1')::uuid$$,
   $$VALUES (true)$$,
   'payout_request_idempotency_key matches format prod:payout:{partner_id}:{currency}:{yyyyMMdd}-001'
+);
+
+-- ============================================================
+-- 8. 미승인 계좌는 payout 생성/연결에서 제외
+-- ============================================================
+DO $$
+DECLARE
+  v_pending_partner_id uuid;
+  v_failed_partner_id  uuid;
+  v_cs                 char(64);
+BEGIN
+  INSERT INTO public.partners (name)
+  VALUES ('Payout Assembly Pending Bank Partner')
+  RETURNING id INTO v_pending_partner_id;
+
+  INSERT INTO public.partners (name)
+  VALUES ('Payout Assembly Failed Bank Partner')
+  RETURNING id INTO v_failed_partner_id;
+
+  INSERT INTO public.partner_settlements (
+    partner_id, biz_type, biz_name, biz_number, representative_name,
+    bank_name, account_number, account_holder, bank_verification_status
+  ) VALUES
+    (
+      v_pending_partner_id, 'individual', 'Pending Biz', '111-22-33333',
+      'Pending Rep', 'Kakao Bank', '3333-01-7654321', 'Pending Rep',
+      'manual_review_pending'
+    ),
+    (
+      v_failed_partner_id, 'individual', 'Failed Biz', '222-33-44444',
+      'Failed Rep', 'Shinhan Bank', '110-987-654321', 'Failed Rep',
+      'verification_failed'
+    );
+
+  v_cs := repeat('c', 64);
+
+  INSERT INTO public.settlement_items (
+    partner_id, settlement_period_start, settlement_period_end,
+    currency, source_type, source_id, status,
+    gross_amount, platform_fee_rate, platform_fee_amount,
+    pg_fee_rate, pg_fee_amount, vat_rate, vat_amount, net_amount, calc_checksum
+  ) VALUES
+    (
+      v_pending_partner_id, '2026-02-01', '2026-02-28', 'KRW', 'TEST',
+      'payout-test-pending-bank-001', 'READY',
+      70000, 5.00, 3500, 3.50, 2450, 10.00, 605, 63445, v_cs
+    ),
+    (
+      v_failed_partner_id, '2026-02-01', '2026-02-28', 'KRW', 'TEST',
+      'payout-test-failed-bank-001', 'READY',
+      90000, 5.00, 4500, 3.50, 3150, 10.00, 765, 81585, v_cs
+    );
+
+  INSERT INTO payout_test_state (key, val)
+  VALUES
+    ('pending_bank_partner_id', v_pending_partner_id::text),
+    ('failed_bank_partner_id', v_failed_partner_id::text);
+END;
+$$;
+
+SELECT lives_ok(
+  $$SELECT assemble_payouts()$$,
+  'assemble_payouts() skips unapproved bank accounts without error'
+);
+
+SELECT results_eq(
+  $$SELECT count(*)::int
+    FROM payouts
+    WHERE partner_id IN (
+      (SELECT val FROM payout_test_state WHERE key='pending_bank_partner_id')::uuid,
+      (SELECT val FROM payout_test_state WHERE key='failed_bank_partner_id')::uuid
+    )$$,
+  $$VALUES (0)$$,
+  'pending/failed bank verification statuses do not create payouts'
+);
+
+SELECT results_eq(
+  $$SELECT count(*)::int
+    FROM settlement_items
+    WHERE partner_id IN (
+      (SELECT val FROM payout_test_state WHERE key='pending_bank_partner_id')::uuid,
+      (SELECT val FROM payout_test_state WHERE key='failed_bank_partner_id')::uuid
+    )
+      AND status = 'READY'
+      AND payout_id IS NULL$$,
+  $$VALUES (2)$$,
+  'pending/failed bank verification statuses leave READY settlement_items unlinked'
 );
 
 SELECT * FROM finish();
