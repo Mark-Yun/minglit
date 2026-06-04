@@ -90,6 +90,8 @@ SELECT is_empty(
         ('public.save_user_consents(uuid, jsonb)'),
         ('public.process_qr_checkin(uuid, uuid, uuid)'),
         ('public.process_manual_checkin(uuid, uuid)'),
+        ('public.request_retry_payout(uuid, uuid)'),
+        ('public.set_social_interaction(text, text, text, boolean)'),
         ('public.create_party_with_tags(jsonb, uuid[])'),
         ('public.update_party_tags(uuid, uuid[])'),
         ('public.upsert_user_interest_tags(uuid[])')

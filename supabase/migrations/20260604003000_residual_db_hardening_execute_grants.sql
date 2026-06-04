@@ -86,15 +86,16 @@ REVOKE EXECUTE ON FUNCTION public.get_event_participants_for_checkin(uuid)
 GRANT EXECUTE ON FUNCTION public.get_event_participants_for_checkin(uuid)
   TO authenticated, service_role;
 
+-- Write-capable RPCs are EF-owned under the publishable write lockdown.
 REVOKE EXECUTE ON FUNCTION public.process_manual_checkin(uuid, uuid)
-  FROM PUBLIC, anon;
+  FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.process_manual_checkin(uuid, uuid)
-  TO authenticated, service_role;
+  TO service_role;
 
 REVOKE EXECUTE ON FUNCTION public.process_qr_checkin(uuid, uuid, uuid)
-  FROM PUBLIC, anon;
+  FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.process_qr_checkin(uuid, uuid, uuid)
-  TO authenticated, service_role;
+  TO service_role;
 
 REVOKE EXECUTE ON FUNCTION public.get_ticket_public_key()
   FROM PUBLIC, anon;
@@ -102,19 +103,19 @@ GRANT EXECUTE ON FUNCTION public.get_ticket_public_key()
   TO authenticated, service_role;
 
 REVOKE EXECUTE ON FUNCTION public.request_retry_payout(uuid, uuid)
-  FROM PUBLIC, anon;
+  FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.request_retry_payout(uuid, uuid)
-  TO authenticated, service_role;
+  TO service_role;
 
 REVOKE EXECUTE ON FUNCTION public.save_user_consents(uuid, jsonb)
-  FROM PUBLIC, anon;
+  FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.save_user_consents(uuid, jsonb)
-  TO authenticated, service_role;
+  TO service_role;
 
 REVOKE EXECUTE ON FUNCTION public.set_social_interaction(text, text, text, boolean)
-  FROM PUBLIC, anon;
+  FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.set_social_interaction(text, text, text, boolean)
-  TO authenticated, service_role;
+  TO service_role;
 
 -- Edge Function, cron, and trigger internals. Trigger execution does not depend
 -- on client-role EXECUTE privileges; direct RPC access should stay closed.
