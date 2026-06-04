@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[2]
 MONITOR_DISTRIBUTED = ROOT / ".github/workflows/monitor-event-flow-distributed.yml"
 MONITOR_DEV_STAGING_HEALTH = ROOT / ".github/workflows/monitor-dev-staging-health.yml"
 MONITOR_DEV_CUJ = ROOT / ".github/workflows/monitor-dev-cuj.yml"
+SHARED_CUJ_INTEGRATION = ROOT / ".github/workflows/shared-cuj-integration.yml"
 DEPLOY_DEV_EVENT_FLOW_CRON = ROOT / ".github/workflows/deploy-dev-event-flow-cron.yml"
 SET_DEV_SOAK_STATUS = ROOT / ".github/workflows/set-dev-soak-status.yml"
 DEV_RC_CUT_GATE = ROOT / ".github/workflows/dev-rc-cut-gate.yml"
@@ -253,6 +254,14 @@ def assert_monitor_dev_cuj_contract() -> None:
 
 
 def assert_cuj_runner_contract() -> None:
+    workflow = load_workflow(SHARED_CUJ_INTEGRATION)
+    jobs = jobs_config(workflow, SHARED_CUJ_INTEGRATION)
+    cuj_job = jobs.get("cuj-integration", {})
+    if not isinstance(cuj_job, dict):
+        fail("shared-cuj-integration must define cuj-integration job")
+    if int(cuj_job.get("timeout-minutes", 0)) < 60:
+        fail("shared-cuj-integration timeout-minutes must be >= 60")
+
     for path in [RUN_USER_CUJ, RUN_PARTNER_CUJ]:
         script = path.read_text(encoding="utf-8")
         required_fragments = [
