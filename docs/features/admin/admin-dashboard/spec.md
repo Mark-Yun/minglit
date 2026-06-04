@@ -5,11 +5,11 @@
 > - MDS specs:
 >   - `apps/mds/docs/public/specs/admin_console_dashboard/` — Supabase Google OAuth login, admin guard, extensible admin shell
 > - Apps:
->   - 계획: `apps/admin/` — Next.js admin console
+>   - 계획: `apps/admin_web/` — Next.js admin console
 > - Backend EFs:
 >   - P0: 해당 없음 — 서버 route/API 에서 Supabase 세션과 admin membership/capability 검증
 > - CUJ tests:
->   - 계획: `apps/admin/e2e/cuj/admin_dashboard.spec.ts`
+>   - 계획: `apps/admin_web/e2e/cuj/admin_dashboard.spec.ts`
 
 ## Implementation Status
 
@@ -71,7 +71,7 @@ Issue #2559 확인 결과, 이 spec 의 Next.js admin dashboard 는 아직 구�
 
 ## Open Questions
 
-- [ ] Admin app 위치를 `apps/admin` 으로 확정할지, 기존 landing/admin path 에 얹을지 결정.
+- [x] Admin app 위치는 `apps/admin_web/` 으로 확정. 아직 scaffold 전 상태.
 - [ ] Supabase admin membership source: JWT custom claim, `admin_members` 테이블, 또는 둘의 조합 중 선택.
 - [ ] P1 보안 강화에서 Supabase MFA(TOTP / phone factor)를 언제 켤지 결정.
 - [ ] 첫 후속 운영 메뉴를 무엇으로 둘지 결정.

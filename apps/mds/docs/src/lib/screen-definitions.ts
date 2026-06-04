@@ -53,7 +53,7 @@ export const SCREEN_SURFACES: ScreenSurface[] = [
   {
     id: 'web_admin',
     label: 'web_admin',
-    description: 'Desktop web admin console screens. Defined manually until apps/admin exists.',
+    description: 'Desktop web admin console screens. Defined manually until apps/admin_web exists.',
   },
 ];
 
@@ -66,7 +66,7 @@ const WEB_ADMIN_SCREENS: ScreenDefinition[] = [
     screen: 'AdminConsoleDashboard',
     route: '/admin',
     specBasename: 'admin_console_dashboard',
-    codeSourcePath: 'apps/admin/',
+    codeSourcePath: 'apps/admin_web/',
     codeSourceExists: false,
     note: 'P0 shell/entry: Supabase Google OAuth login, admin guard, extensible menu frame.',
   },

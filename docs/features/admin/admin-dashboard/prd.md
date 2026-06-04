@@ -51,7 +51,7 @@ Minglit 내부 운영자가 Supabase Google 로그인으로 본인 확인을 마
 
 ## Technical Approach
 
-- **앱**: 별도 Next.js admin app (`apps/admin` 예정). desktop-first admin UI.
+- **앱**: 별도 Next.js admin app (`apps/admin_web/` 예정). desktop-first admin UI.
 - **인증**: Supabase Auth Google OAuth 로그인. 서버에서 현재 세션의 user 를 확인하고 admin membership / role claim 을 조회한다.
 - **인가**: 메뉴 및 route 는 capability 기반으로 가드한다. 예: `admin.users.read`, `admin.partners.review`, `admin.system.read`.
 - **메뉴 registry**: 각 메뉴는 `id`, `label`, `route`, `requiredCapability`, `status`, `loader/error/empty` contract 를 가진다.
