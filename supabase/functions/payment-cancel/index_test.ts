@@ -378,6 +378,42 @@ Deno.test("payment-cancel :: system rejected requested refund → 200", async ()
   });
 });
 
+Deno.test("payment-cancel :: system rejection bypasses user refund windows → 200", async () => {
+  const handler = await getHandler();
+  const sb = fakeSupabase()
+    .on("event_applications", "select", {
+      data: makeApp({
+        paid_at: INELIGIBLE_PAID_AT,
+        status: "rejected",
+        refund_status: "requested",
+        user_id: "other-user",
+      }),
+    })
+    .on("event_applications", "update", { error: null });
+
+  const { fetchMock } = createFetchMock([
+    portoneTokenRoute,
+    portoneCancelRoute,
+  ]);
+
+  await withEnv(PORTONE_ENV, async () => {
+    await withMockedFetch(fetchMock, async () => {
+      const res = await runHandler(handler, {
+        body: { payment_id: "imp_123", reason: "partner rejected" },
+        ctx: makeCtx({
+          supabase: sb,
+          auth: { type: "system", keyFormat: "secret" },
+        }),
+      });
+      assertEquals(res.status, 200);
+      const body = await readJson<{ success: boolean }>(res);
+      assertEquals(body.success, true);
+      assertEquals(sb.callsFor("events", "select").length, 0);
+      assertEquals(sb.callsFor("get_current_policy", "rpc").length, 0);
+    });
+  });
+});
+
 // 11. Happy path — paidAt null but within cutoff → 200
 Deno.test("payment-cancel :: paidAt=null + within cutoff → 200", async () => {
   const handler = await getHandler();

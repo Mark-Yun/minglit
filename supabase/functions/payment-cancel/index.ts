@@ -83,49 +83,51 @@ export const handler = async (
       }
     }
 
-    // 1.5c Verify refund eligibility against policy
-    const [eventResult, policyResult] = await Promise.all([
-      supabase
-        .from("events")
-        .select("start_time")
-        .eq("id", application.event_id)
-        .single(),
-      supabase.rpc("get_current_policy", { p_key: "refund" }),
-    ]);
+    if (ctx.auth.type === "user") {
+      // 1.5c Verify direct user cancellations against the refund policy.
+      const [eventResult, policyResult] = await Promise.all([
+        supabase
+          .from("events")
+          .select("start_time")
+          .eq("id", application.event_id)
+          .single(),
+        supabase.rpc("get_current_policy", { p_key: "refund" }),
+      ]);
 
-    // Fix #133: 이벤트/정책 조회 실패 시 적격성 검사를 건너뛰지 않고 명시적으로 에러 반환
-    if (eventResult.error || !eventResult.data) {
-      log({
-        function: FN,
-        level: "error",
-        message: "Failed to fetch event",
-        metadata: { detail: eventResult.error },
+      // Fix #133: 이벤트/정책 조회 실패 시 적격성 검사를 건너뛰지 않고 명시적으로 에러 반환
+      if (eventResult.error || !eventResult.data) {
+        log({
+          function: FN,
+          level: "error",
+          message: "Failed to fetch event",
+          metadata: { detail: eventResult.error },
+        });
+        return errorResponse("Failed to verify refund eligibility", 500);
+      }
+
+      if (policyResult.error || !policyResult.data) {
+        log({
+          function: FN,
+          level: "error",
+          message: "Failed to fetch policy",
+          metadata: { detail: policyResult.error },
+        });
+        return errorResponse("Failed to verify refund eligibility", 500);
+      }
+
+      // Fix #299: 환불 적격성 검증을 shared 모듈로 위임
+      const policy = parseRefundPolicy(policyResult.data);
+      const eligibility = verifyRefundEligibility({
+        paidAt: application.paid_at as string | null,
+        eventStartTime: eventResult.data.start_time,
+        ...policy,
       });
-      return errorResponse("Failed to verify refund eligibility", 500);
-    }
 
-    if (policyResult.error || !policyResult.data) {
-      log({
-        function: FN,
-        level: "error",
-        message: "Failed to fetch policy",
-        metadata: { detail: policyResult.error },
-      });
-      return errorResponse("Failed to verify refund eligibility", 500);
-    }
-
-    // Fix #299: 환불 적격성 검증을 shared 모듈로 위임
-    const policy = parseRefundPolicy(policyResult.data);
-    const eligibility = verifyRefundEligibility({
-      paidAt: application.paid_at as string | null,
-      eventStartTime: eventResult.data.start_time,
-      ...policy,
-    });
-
-    if (!eligibility.eligible) {
-      return errorResponse("refund_not_eligible", 400, {
-        reason: eligibility.reason,
-      });
+      if (!eligibility.eligible) {
+        return errorResponse("refund_not_eligible", 400, {
+          reason: eligibility.reason,
+        });
+      }
     }
 
     // Fix #299: PortOne 환불 실행을 shared 모듈로 위임
