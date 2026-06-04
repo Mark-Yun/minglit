@@ -13,6 +13,8 @@ part 'manual_checkin_controller.g.dart';
 class ManualCheckinController extends _$ManualCheckinController {
   @override
   Future<List<CheckinParticipant>> build(String eventId) async {
+    if (EnvKeyStore.isDemo) return const [];
+
     final supabase = ref.watch(supabaseClientProvider);
     return _fetchParticipants(supabase, eventId);
   }
@@ -35,6 +37,8 @@ class ManualCheckinController extends _$ManualCheckinController {
   ///
   /// 반환값: 'success' | 'already_checked_in' | 'not_found'
   Future<String> checkin(String ticketId) async {
+    if (EnvKeyStore.isDemo) return 'success';
+
     final supabase = ref.read(supabaseClientProvider);
 
     // Optimistic 업데이트: 즉시 UI 반영

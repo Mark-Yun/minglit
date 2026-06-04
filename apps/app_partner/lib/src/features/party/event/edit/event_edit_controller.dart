@@ -91,9 +91,10 @@ class EventEditController extends _$EventEditController {
   Future<EventEditState> build(String eventId) async {
     final eventRepository = ref.watch(eventRepositoryProvider);
     final event = await eventRepository.getEventById(eventId);
-    // Fix #2110: Use event.currentParticipants as authoritative confirmed count.
-    // getApplicationsByEventId() may return paginated/incomplete results, causing
-    // under-counting that could bypass lock policy and min-participant guards.
+    // Fix #2110: Use event.currentParticipants as authoritative confirmed
+    // count. getApplicationsByEventId() may return paginated/incomplete
+    // results, causing under-counting that could bypass lock policy and
+    // min-participant guards.
     // Mirrors event_detail_page.dart which already uses the same source.
     final confirmedCount = event.currentParticipants;
 
@@ -149,7 +150,8 @@ class EventEditController extends _$EventEditController {
   // Fix #2110: submit via partner-manage-event EF (action=update) instead of
   // direct client write — EF enforces PARTY_MANAGE/EVENT_MANAGE permission and
   // service_role writes, preventing RLS policy bypass.
-  // `reason` is required when confirmedCount >= 1 and schedule changed (UI enforces via dialog).
+  // `reason` is required when confirmedCount >= 1 and schedule changed.
+  // The UI enforces this via a dialog.
   Future<void> submit({String? reason}) async {
     final current = state.asData?.value;
     if (current == null || !current.isDirty || current.isLoading) return;
@@ -157,20 +159,29 @@ class EventEditController extends _$EventEditController {
     state = AsyncValue.data(current.copyWith(isLoading: true));
 
     try {
+      if (EnvKeyStore.isDemo) {
+        state = AsyncValue.data(
+          current.copyWith(isDirty: false, isLoading: false),
+        );
+        return;
+      }
+
+      final body = <String, Object?>{
+        'action': 'update',
+        'event_id': current.event.id,
+        'event': {
+          'title': current.title,
+          'start_time': current.startTime.toUtc().toIso8601String(),
+          'end_time': current.endTime.toUtc().toIso8601String(),
+          'max_participants': current.maxParticipants,
+        },
+      };
+      if (reason != null) body['reason'] = reason;
+
       final supabase = ref.read(supabaseClientProvider);
       final response = await supabase.functions.invoke(
         'partner-manage-event',
-        body: {
-          'action': 'update',
-          'event_id': current.event.id,
-          'event': {
-            'title': current.title,
-            'start_time': current.startTime.toUtc().toIso8601String(),
-            'end_time': current.endTime.toUtc().toIso8601String(),
-            'max_participants': current.maxParticipants,
-          },
-          if (reason != null) 'reason': reason,
-        },
+        body: body,
       );
 
       if (response.status != 200) {
