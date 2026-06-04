@@ -61,6 +61,7 @@ class EventCreateController extends _$EventCreateController {
     final savedDraft = await ref
         .read(eventCreateDraftRepositoryProvider)
         .getDraft(party.id);
+    if (!ref.mounted) return;
     if (savedDraft != null) {
       state = savedDraft.toState();
       ref.read(recurrenceSettingsControllerProvider.notifier).snapshot =
@@ -174,6 +175,7 @@ class EventCreateController extends _$EventCreateController {
     // conditions.
     final recurrenceSnapshot = ref.read(recurrenceSettingsControllerProvider);
     final draftRepo = ref.read(eventCreateDraftRepositoryProvider);
+    final dashboardRefresh = ref.read(dashboardRefreshProvider.notifier);
     final draftPartyId = state.partyId;
 
     final result = await AsyncValue.guard(() async {
@@ -237,11 +239,12 @@ class EventCreateController extends _$EventCreateController {
       ref.invalidate(partyEventsProvider(state.partyId));
       // Fix #1943: bump shared signal so dashboard refreshes without
       // cross-feature import.
-      ref.read(dashboardRefreshProvider.notifier).bump();
+      dashboardRefresh.bump();
     });
 
     if (result.hasValue) {
       await draftRepo.deleteDraft(draftPartyId);
+      dashboardRefresh.bump();
     }
     if (!ref.mounted) return;
     state = state.copyWith(
@@ -267,12 +270,16 @@ class EventCreateController extends _$EventCreateController {
     _draftSaveDebounce?.cancel();
     final updatedAt = DateTime.now();
     final recurrence = ref.read(recurrenceSettingsControllerProvider);
+    final draftRepo = ref.read(eventCreateDraftRepositoryProvider);
+    final dashboardRefresh = ref.read(dashboardRefreshProvider.notifier);
     final draft = EventCreateDraft.fromState(
       state: state,
       recurrence: recurrence,
       updatedAt: updatedAt,
     );
-    await ref.read(eventCreateDraftRepositoryProvider).saveDraft(draft);
+    await draftRepo.saveDraft(draft);
+    dashboardRefresh.bump();
+    if (!ref.mounted) return;
     state = state.copyWith(draftId: draft.id, draftUpdatedAt: updatedAt);
   }
 }

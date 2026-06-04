@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:app_partner/src/features/home/partner_dashboard_controller.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/party/event/create/event_create_controller.dart';
-import 'package:app_partner/src/logic/event_create_draft_repository.dart';
 import 'package:app_partner/src/features/party/logic/recurrence_settings_controller.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
+import 'package:app_partner/src/logic/dashboard_refresh_notifier.dart';
+import 'package:app_partner/src/logic/event_create_draft_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -75,6 +78,35 @@ class _FakeEventCreateDraftRepository implements EventCreateDraftRepository {
   @override
   Future<void> saveDraft(EventCreateDraft draft) async {
     _drafts[draft.partyId] = draft;
+  }
+}
+
+class _DelayedEventCreateDraftRepository
+    extends _FakeEventCreateDraftRepository {
+  final saveStarted = Completer<void>();
+  final allowSave = Completer<void>();
+  final getStarted = Completer<void>();
+  final allowGet = Completer<void>();
+  EventCreateDraft? draftToReturn;
+
+  bool hasSavedDraft(String partyId) => _drafts.containsKey(partyId);
+
+  @override
+  Future<EventCreateDraft?> getDraft(String partyId) async {
+    if (!getStarted.isCompleted) {
+      getStarted.complete();
+    }
+    await allowGet.future;
+    return draftToReturn;
+  }
+
+  @override
+  Future<void> saveDraft(EventCreateDraft draft) async {
+    if (!saveStarted.isCompleted) {
+      saveStarted.complete();
+    }
+    await allowSave.future;
+    await super.saveDraft(draft);
   }
 }
 
@@ -284,6 +316,48 @@ void main() {
           expect(recurrence.isEnabled, isTrue);
           expect(recurrence.pattern, RecurrencePattern.biweekly);
           expect(recurrence.daysOfWeek, [2, 4]);
+        },
+      );
+
+      test(
+        'does not write restored draft state after provider disposal',
+        () async {
+          final draftRepo = _DelayedEventCreateDraftRepository()
+            ..draftToReturn = EventCreateDraft(
+              id: 'draft-1',
+              partyId: 'party-1',
+              checkpointTabIndex: 0,
+              startTime: DateTime(2030, 1, 1, 19),
+              endTime: DateTime(2030, 1, 1, 22),
+              maxParticipants: 20,
+              title: 'Saved Draft Event',
+              description: const {},
+              contactOptions: const {},
+              entryGroups: const [],
+              tickets: const [],
+              recurrence: const RecurrenceSettingsState(),
+              updatedAt: DateTime(2030, 1, 1, 18),
+            );
+          final container = createContainer(
+            overrides: [
+              partyRepositoryProvider.overrideWithValue(mockPartyRepo),
+              eventCreateDraftRepositoryProvider.overrideWithValue(draftRepo),
+            ],
+          );
+          final provider = eventCreateControllerProvider('party-1');
+          final sub = container.listen(provider, (_, _) {});
+          final notifier = container.read(provider.notifier);
+
+          final init = notifier.initWithParty(
+            party: _makeParty(),
+            templates: [_makeTemplate()],
+          );
+          await draftRepo.getStarted.future;
+          sub.close();
+          await Future<void>.delayed(Duration.zero);
+          draftRepo.allowGet.complete();
+
+          await expectLater(init, completes);
         },
       );
     });
@@ -584,6 +658,52 @@ void main() {
         expect(draft!.title, 'Auto Saved Event');
         expect(draft.checkpointTabIndex, 1);
       });
+
+      test('bumps dashboard refresh after saving a draft', () async {
+        final draftRepo = _FakeEventCreateDraftRepository();
+        final container = createContainer(
+          overrides: [
+            partyRepositoryProvider.overrideWithValue(mockPartyRepo),
+            eventCreateDraftRepositoryProvider.overrideWithValue(draftRepo),
+          ],
+        );
+
+        final notifier = container.read(
+          eventCreateControllerProvider('party-1').notifier,
+        );
+        notifier.updateTitle('Auto Saved Event');
+        final refreshBefore = container.read(dashboardRefreshProvider);
+
+        await notifier.saveDraftNow();
+
+        expect(container.read(dashboardRefreshProvider), refreshBefore + 1);
+      });
+
+      test(
+        'does not write auto-save state after provider disposal',
+        () async {
+          final draftRepo = _DelayedEventCreateDraftRepository();
+          final container = createContainer(
+            overrides: [
+              partyRepositoryProvider.overrideWithValue(mockPartyRepo),
+              eventCreateDraftRepositoryProvider.overrideWithValue(draftRepo),
+            ],
+          );
+          final provider = eventCreateControllerProvider('party-1');
+          final sub = container.listen(provider, (_, _) {});
+          final notifier = container.read(provider.notifier);
+          notifier.updateTitle('Auto Saved Event');
+
+          final save = notifier.saveDraftNow();
+          await draftRepo.saveStarted.future;
+          sub.close();
+          await Future<void>.delayed(Duration.zero);
+          draftRepo.allowSave.complete();
+
+          await expectLater(save, completes);
+          expect(draftRepo.hasSavedDraft('party-1'), isTrue);
+        },
+      );
     });
 
     group('submit', () {
@@ -678,6 +798,58 @@ void main() {
         await notifier.submit();
 
         expect(await draftRepo.getDraft('party-1'), isNull);
+      });
+
+      test('bumps dashboard refresh after deleting published draft', () async {
+        final draftRepo = _FakeEventCreateDraftRepository();
+        await draftRepo.saveDraft(
+          EventCreateDraft.fromState(
+            state: EventCreateState(
+              partyId: 'party-1',
+              startTime: DateTime(2030, 1, 1, 19),
+              endTime: DateTime(2030, 1, 1, 22),
+              title: 'Saved Draft Event',
+            ),
+            recurrence: const RecurrenceSettingsState(),
+            updatedAt: DateTime(2030, 1, 1, 18),
+          ),
+        );
+        when(() => mockPartyRepo.createEvent(any())).thenAnswer(
+          (_) async => Event(
+            id: 'new-event',
+            partyId: 'party-1',
+            startTime: DateTime.now(),
+            endTime: DateTime.now(),
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+
+        final container = createContainer(
+          overrides: [
+            partyRepositoryProvider.overrideWithValue(mockPartyRepo),
+            locationRepositoryProvider.overrideWithValue(mockLocationRepo),
+            eventCreateDraftRepositoryProvider.overrideWithValue(draftRepo),
+            partyDetailProvider('party-1').overrideWith(
+              (ref) async => _makeParty(locationId: 'loc-1'),
+            ),
+          ],
+        );
+        final notifier = container.read(
+          eventCreateControllerProvider('party-1').notifier,
+        );
+        notifier.updateLocation(_makeLocation());
+        final refreshBefore = container.read(dashboardRefreshProvider);
+
+        await notifier.submit();
+
+        expect(await draftRepo.getDraft('party-1'), isNull);
+        expect(
+          container.read(dashboardRefreshProvider),
+          refreshBefore + 2,
+          reason:
+              'Submit bumps once for event creation and again after draft cleanup',
+        );
       });
 
       test('creates location first when selectedLocation has no id', () async {
