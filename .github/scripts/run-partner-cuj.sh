@@ -12,28 +12,21 @@ if [ ! -d "$CUJ_DIR" ]; then
   exit 0
 fi
 
-found=0
-failed=0
-failures=()
+cuj_files=()
 while IFS= read -r f; do
   [ -f "$f" ] || continue
-  found=1
-  echo "▶ Running: $f"
-  if ! flutter test "$f" \
-    --flavor dev \
-    --dart-define-from-file="$DART_DEFINE_FILE"; then
-    failed=1
-    failures+=("$f")
-    echo "❌ Failed: $f"
-  fi
+  cuj_files+=("$f")
 done < <(find "$CUJ_DIR" -name "*_test.dart" -not -path "*/_engine/*" | sort)
 
-if [ "$found" -eq 0 ]; then
+if [ "${#cuj_files[@]}" -eq 0 ]; then
   echo "⏭ No CUJ tests found in $CUJ_DIR, skipping."
+  exit 0
 fi
 
-if [ "$failed" -ne 0 ]; then
-  echo "❌ CUJ failures:"
-  printf ' - %s\n' "${failures[@]}"
-  exit 1
-fi
+echo "▶ Running ${#cuj_files[@]} CUJ files in one Flutter test invocation:"
+printf ' - %s\n' "${cuj_files[@]}"
+
+flutter test "${cuj_files[@]}" \
+  --flavor dev \
+  --dart-define-from-file="$DART_DEFINE_FILE" \
+  --no-pub
