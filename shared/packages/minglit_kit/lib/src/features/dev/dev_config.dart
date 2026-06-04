@@ -1,24 +1,25 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 /// Configuration for Dev features.
 class DevConfig {
-  static SupabaseClient? _adminClient;
-
-  /// Initialize with Service Role Key (ONLY IN DEV MAIN).
-  static void init(String url, String serviceRoleKey) {
-    _adminClient = SupabaseClient(url, serviceRoleKey);
+  /// Legacy initializer kept only to avoid breaking stale dev imports.
+  ///
+  /// Flutter clients must not construct elevated Supabase clients. Dev/admin
+  /// operations should go through dev-only Edge Functions instead.
+  @Deprecated(
+    'Client admin Supabase access was removed. Use dev Edge Functions.',
+  )
+  static void init(String url, String elevatedCredential) {
+    throw UnsupportedError(
+      'Client admin Supabase access was removed. Use dev Edge Functions.',
+    );
   }
 
-  /// Get the admin client. Throws if not initialized.
-  static SupabaseClient get adminClient {
-    if (_adminClient == null) {
-      throw StateError(
-        'DevConfig not initialized. Call init() with Service Role Key.',
-      );
-    }
-    return _adminClient!;
+  /// Removed legacy admin client accessor.
+  static Never get adminClient {
+    throw StateError(
+      'Client admin Supabase access was removed. Use dev Edge Functions.',
+    );
   }
 
-  /// Whether the admin client has been initialized.
-  static bool get isInitialized => _adminClient != null;
+  /// Client admin access is no longer initialized in Flutter code.
+  static bool get isInitialized => false;
 }

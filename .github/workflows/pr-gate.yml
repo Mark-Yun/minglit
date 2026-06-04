@@ -179,6 +179,7 @@ jobs:
       app_user: ${{ steps.filter.outputs.app_user }}
       app_partner: ${{ steps.filter.outputs.app_partner }}
       minglit_kit: ${{ steps.filter.outputs.minglit_kit }}
+      minglit_lints: ${{ steps.filter.outputs.minglit_lints }}
       ios_connectivity_plus_cap: ${{ steps.filter.outputs.ios_connectivity_plus_cap }}
       demo_android: ${{ steps.filter.outputs.demo_android }}
       mds_core: ${{ steps.filter.outputs.mds_core }}
@@ -218,6 +219,10 @@ jobs:
           minglit_kit:
             - 'shared/packages/minglit_kit/**'
             - 'shared/packages/**'
+          minglit_lints:
+            - 'shared/packages/minglit_lints/**'
+            - 'pubspec.yaml'
+            - 'pubspec.lock'
           ios_connectivity_plus_cap:
             - 'pubspec.yaml'
             - 'pubspec.lock'
@@ -309,6 +314,33 @@ jobs:
       - name: Guard iOS connectivity_plus cap
         run: bash .github/scripts/check-ios-connectivity-plus-cap.sh
 
+  test-minglit-lints:
+    name: test-minglit-lints
+    needs: changes
+    if: ${{ needs.changes.outputs.minglit_lints == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref || github.ref }}
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9'  # Fix #2640: flutter_quill 11.5.0 incompatible with Flutter 3.44.0
+          cache: true
+      - name: Cache pub packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-minglit-lints-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Test minglit_lints
+        run: dart test shared/packages/minglit_lints
+
   # App CI (User + Partner)
   test-flutter-apps:
     name: test-app-unit-widget-integration
@@ -386,11 +418,11 @@ jobs:
       - name: Custom lint (minglit_kit)
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         run: dart run custom_lint
-        working-directory: shared/packages/minglit_kit
+        working-directory: .
       - name: Custom lint
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' && matrix.app != 'mds_core' }}
         run: dart run custom_lint
-        working-directory: ${{ matrix.directory }}
+        working-directory: .
       - name: Test
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         run: dart run test_reporter -- flutter test --coverage --exclude-tags golden --file-reporter=json:test-results.json
@@ -619,6 +651,8 @@ jobs:
           flutter build apk \
             --flavor dev \
             --release \
+            --obfuscate \
+            --split-debug-info=build/symbols/dev \
             --build-number=${{ github.run_number }} \
             --dart-define=SUPABASE_URL="$SUPABASE_DEV_URL" \
             --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_DEV_PUBLISHABLE_KEY" \
@@ -637,6 +671,8 @@ jobs:
           flutter build appbundle \
             --flavor dev \
             --release \
+            --obfuscate \
+            --split-debug-info=build/symbols/dev \
             --build-number=${{ github.run_number }} \
             --dart-define=SUPABASE_URL="$SUPABASE_DEV_URL" \
             --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_DEV_PUBLISHABLE_KEY" \

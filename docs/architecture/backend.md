@@ -413,6 +413,7 @@ Flutter 앱(publishable key = anon/authenticated role)은 **READ 전용**이다.
 | 계층 | 수단 | 상태 |
 |------|------|------|
 | IDE | `no_supabase_writes_outside_ef` custom_lint 룰 | ✅ 운영 중 (`shared/packages/minglit_lints/`) |
+| IDE | `no_service_role_in_client` custom_lint 룰 | ✅ 운영 중 (`shared/packages/minglit_lints/`) |
 | CI | `dart run custom_lint` PR-gate 스텝 | ✅ 운영 중 (`.github/workflows/pr-gate.yml`) |
 | DB | `REVOKE INSERT/UPDATE/DELETE/TRUNCATE FROM anon, authenticated` + write RLS policy gate + write-capable SECURITY DEFINER RPC EXECUTE gate | ✅ 구현 완료 (`20260603215321_rls_strict_revoke_publishable_writes.sql`, `107_rls_strict_publishable_write_lockdown_test.sql`) |
 
@@ -427,6 +428,20 @@ Flutter 앱(publishable key = anon/authenticated role)은 **READ 전용**이다.
   supabase.from('legacy_table').insert(data);
   ```
   `reason:` 필드 필수. 이유 없는 억제 주석은 lint error.
+
+#### lint 룰: `no_service_role_in_client`
+
+- **위치**: `shared/packages/minglit_lints/lib/src/no_service_role_in_client_rule.dart`
+- **적용 범위**: `apps/app_user/lib`, `apps/app_partner/lib`, `shared/packages/minglit_kit/lib`
+- **차단 패턴**: `service_role` literal, `sb_secret_...`, `SUPABASE_SERVICE_ROLE_KEY`,
+  `SUPABASE_SECRET_KEYS`, `SUPABASE_*_SECRET_KEY`, `serviceRoleKey`/`sbSecret`
+  계열 identifier.
+- **허용 패턴**: `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_URL`,
+  `STATSIG_CLIENT_KEY`, `KAKAO_*`, `JUSO_CONFIRM_KEY` 같은 publishable/public
+  client config.
+- **서버 전용 예외**: Edge Functions, migrations, `.github/`, `docs/`, scripts,
+  tests 는 client Dart lint 범위 밖이다. Elevated key names may be documented
+  there intentionally.
 
 ---
 

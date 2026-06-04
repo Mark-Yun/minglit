@@ -10,3 +10,18 @@ analyzer:
 linter:
   rules:
     public_member_api_docs: false
+
+custom_lint:
+  rules:
+    # Security rules run from the workspace root because custom_lint 0.8.1 does
+    # not discover Dart workspace package roots from package subdirectories.
+    - no_service_role_in_client: true
+    - no_supabase_writes_outside_ef: true
+    # Existing noisy UI/demo migration rules stay package-local until their
+    # tracked cleanup work is complete.
+    - use_minglit_async_value_widget: false
+    - use_minglit_progress_indicator: false
+    - minglit_no_hardcoded_text_style: false
+    - minglit_no_hardcoded_colors: false
+    - no_hardcoded_padding: false
+    - minglit_no_direct_supabase_instance: true
