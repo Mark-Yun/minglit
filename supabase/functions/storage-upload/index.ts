@@ -2,14 +2,11 @@
 // Fix #2993: Storage quota, byte-rate, concurrency, and reconcile pipeline.
 
 import {
-  minglitEdgeFunction,
   type EFContext,
+  minglitEdgeFunction,
 } from "../_shared/edge_function.ts";
 import { parseAction } from "../_shared/request_utils.ts";
-import {
-  errorResponse,
-  successResponse,
-} from "../_shared/response_utils.ts";
+import { errorResponse, successResponse } from "../_shared/response_utils.ts";
 
 const COVERED_BUCKETS = new Set([
   "verification-proofs",
@@ -326,7 +323,7 @@ function readString(
   field: string,
 ): string | Response {
   const value = body[field];
-  if (typeof value !== "string" || value.trim().isEmpty) {
+  if (typeof value !== "string" || value.trim().length === 0) {
     return errorResponse(`Missing or invalid field: ${field}`, 400);
   }
   return value.trim();

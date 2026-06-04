@@ -2,10 +2,10 @@
 
 import { assertEquals, assertStringIncludes } from "@std/assert";
 import {
+  type Handler,
   makeCtx,
   readJson,
   runHandler,
-  type Handler,
 } from "../_shared/_testing/mod.ts";
 import { importHandlerWithStubbedServe } from "../_test_utils/mock_http.ts";
 
@@ -49,10 +49,13 @@ function makeStorageUploadSupabase(opts: {
     rpc(name: string, args: Record<string, unknown>) {
       calls.push({ type: "rpc", name, args });
       return {
-        single: () => Promise.resolve(rpcResults.shift() ?? {
-          data: null,
-          error: { message: `no fake rpc result for ${name}` },
-        }),
+        single: () =>
+          Promise.resolve(
+            rpcResults.shift() ?? {
+              data: null,
+              error: { message: `no fake rpc result for ${name}` },
+            },
+          ),
       };
     },
     storage: {
@@ -72,7 +75,8 @@ function makeStorageUploadSupabase(opts: {
               data: {
                 path,
                 token: "signed-token",
-                signedUrl: `https://storage.test/${bucket}/${path}?token=signed-token`,
+                signedUrl:
+                  `https://storage.test/${bucket}/${path}?token=signed-token`,
               },
               error: null,
             });
@@ -85,7 +89,8 @@ function makeStorageUploadSupabase(opts: {
             });
             return {
               data: {
-                publicUrl: `https://storage.test/object/public/${bucket}/${path}`,
+                publicUrl:
+                  `https://storage.test/object/public/${bucket}/${path}`,
               },
             };
           },
@@ -125,6 +130,24 @@ function makeStorageUploadSupabase(opts: {
   };
 
   return { supabase, calls };
+}
+
+function completeUploadRow(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
+  return {
+    upload_id: "upload-1",
+    bucket_id: "party-assets",
+    object_path: "partner-1/hero.jpg",
+    upload_bucket_id: "party-assets-pending",
+    upload_object_path: "partner-1/hero.jpg",
+    status: "completed",
+    actual_size: 1024,
+    rejection_reason: null,
+    mime_type: "image/jpeg",
+    public_bucket: true,
+    ...overrides,
+  };
 }
 
 Deno.test("presign creates reservation and signed upload token", async () => {
@@ -405,4 +428,316 @@ Deno.test("presign aborts reservation when signed URL creation fails", async () 
     calls.some((call) => call.name === "abort_storage_upload"),
     true,
   );
+});
+
+Deno.test("handler rejects non-user auth and unknown actions", async () => {
+  const handler = await getHandler();
+  const { supabase } = makeStorageUploadSupabase({ rpcResults: [] });
+
+  const nonUser = await runHandler(handler, {
+    method: "POST",
+    body: { action: "presign" },
+    ctx: makeCtx({
+      supabase: supabase as never,
+      auth: { type: "system" },
+    }),
+  });
+  assertEquals(nonUser.status, 500);
+  assertEquals((await readPayload(nonUser)).error, "Unexpected auth type");
+
+  const unknown = await runHandler(handler, {
+    method: "POST",
+    body: { action: "retry" },
+    ctx: makeCtx({ supabase: supabase as never, userId: "user-1" }),
+  });
+  assertEquals(unknown.status, 400);
+  assertEquals((await readPayload(unknown)).error, "Unknown action: retry");
+});
+
+Deno.test("presign validates input before reserving upload", async () => {
+  const handler = await getHandler();
+  const cases: Array<{
+    name: string;
+    body: Record<string, unknown>;
+    error: string;
+  }> = [
+    {
+      name: "missing bucket",
+      body: {
+        declared_size: 1024,
+        mime: "image/png",
+        extension: ".png",
+      },
+      error: "Missing or invalid field: bucket",
+    },
+    {
+      name: "bad declared size",
+      body: {
+        bucket: "party-assets",
+        declared_size: 0,
+        mime: "image/png",
+        extension: ".png",
+      },
+      error: "Missing or invalid field: declared_size",
+    },
+    {
+      name: "non-string path prefix",
+      body: {
+        bucket: "party-assets",
+        path_prefix: 42,
+        declared_size: 1024,
+        mime: "image/png",
+        extension: ".png",
+      },
+      error: "Invalid field: path_prefix",
+    },
+    {
+      name: "empty path prefix",
+      body: {
+        bucket: "party-assets",
+        path_prefix: " / ",
+        declared_size: 1024,
+        mime: "image/png",
+        extension: ".png",
+      },
+      error: "Invalid field: path_prefix",
+    },
+    {
+      name: "nested separator path prefix",
+      body: {
+        bucket: "party-assets",
+        path_prefix: "partner//hero",
+        declared_size: 1024,
+        mime: "image/png",
+        extension: ".png",
+      },
+      error: "Invalid field: path_prefix",
+    },
+    {
+      name: "unsafe extension",
+      body: {
+        bucket: "party-assets",
+        declared_size: 1024,
+        mime: "image/png",
+        extension: ".png!",
+      },
+      error: "Invalid field: extension",
+    },
+  ];
+
+  for (const testCase of cases) {
+    const { supabase, calls } = makeStorageUploadSupabase({ rpcResults: [] });
+    const response = await runHandler(handler, {
+      method: "POST",
+      body: { action: "presign", ...testCase.body },
+      ctx: makeCtx({ supabase: supabase as never, userId: "user-1" }),
+    });
+
+    assertEquals(response.status, 400, testCase.name);
+    assertEquals((await readPayload(response)).error, testCase.error);
+    assertEquals(calls.length, 0, testCase.name);
+  }
+});
+
+Deno.test("presign returns reservation RPC failures", async () => {
+  const handler = await getHandler();
+  const { supabase } = makeStorageUploadSupabase({
+    rpcResults: [{
+      data: null,
+      error: { message: "daily_quota_exceeded" },
+    }],
+  });
+
+  const response = await runHandler(handler, {
+    method: "POST",
+    body: {
+      action: "presign",
+      bucket: "party-assets",
+      declared_size: 1024,
+      mime: "image/png",
+      extension: ".png",
+    },
+    ctx: makeCtx({ supabase: supabase as never, userId: "user-1" }),
+  });
+
+  assertEquals(response.status, 400);
+  assertEquals((await readPayload(response)).error, "daily_quota_exceeded");
+});
+
+Deno.test("complete returns DB reconcile failures", async () => {
+  const handler = await getHandler();
+  const { supabase } = makeStorageUploadSupabase({
+    rpcResults: [{
+      data: null,
+      error: { message: "storage_upload_not_found" },
+    }],
+  });
+
+  const response = await runHandler(handler, {
+    method: "POST",
+    body: {
+      action: "complete",
+      upload_id: "missing-upload",
+    },
+    ctx: makeCtx({ supabase: supabase as never, userId: "user-1" }),
+  });
+
+  assertEquals(response.status, 400);
+  assertEquals((await readPayload(response)).error, "storage_upload_not_found");
+});
+
+Deno.test("complete validates upload id", async () => {
+  const handler = await getHandler();
+  const { supabase, calls } = makeStorageUploadSupabase({ rpcResults: [] });
+
+  const response = await runHandler(handler, {
+    method: "POST",
+    body: {
+      action: "complete",
+      upload_id: " ",
+    },
+    ctx: makeCtx({ supabase: supabase as never, userId: "user-1" }),
+  });
+
+  assertEquals(response.status, 400);
+  assertEquals(
+    (await readPayload(response)).error,
+    "Missing or invalid field: upload_id",
+  );
+  assertEquals(calls.length, 0);
+});
+
+Deno.test("complete fails when staging download fails", async () => {
+  const handler = await getHandler();
+  const { supabase } = makeStorageUploadSupabase({
+    rpcResults: [{
+      data: completeUploadRow({ status: "publishing" }),
+      error: null,
+    }],
+    downloadError: { message: "download failed" },
+  });
+
+  const response = await runHandler(handler, {
+    method: "POST",
+    body: {
+      action: "complete",
+      upload_id: "upload-1",
+    },
+    ctx: makeCtx({ supabase: supabase as never, userId: "user-1" }),
+  });
+
+  assertEquals(response.status, 500);
+  assertEquals((await readPayload(response)).error, "download failed");
+});
+
+Deno.test("complete fails when public publish upload fails", async () => {
+  const handler = await getHandler();
+  const { supabase } = makeStorageUploadSupabase({
+    rpcResults: [{
+      data: completeUploadRow({ status: "publishing" }),
+      error: null,
+    }],
+    uploadError: { message: "publish failed" },
+  });
+
+  const response = await runHandler(handler, {
+    method: "POST",
+    body: {
+      action: "complete",
+      upload_id: "upload-1",
+    },
+    ctx: makeCtx({ supabase: supabase as never, userId: "user-1" }),
+  });
+
+  assertEquals(response.status, 500);
+  assertEquals((await readPayload(response)).error, "publish failed");
+});
+
+Deno.test("complete removes public object when publish RPC fails", async () => {
+  const handler = await getHandler();
+  const { supabase, calls } = makeStorageUploadSupabase({
+    rpcResults: [
+      {
+        data: completeUploadRow({ status: "publishing" }),
+        error: null,
+      },
+      {
+        data: null,
+        error: { message: "publish rpc failed" },
+      },
+    ],
+  });
+
+  const response = await runHandler(handler, {
+    method: "POST",
+    body: {
+      action: "complete",
+      upload_id: "upload-1",
+    },
+    ctx: makeCtx({ supabase: supabase as never, userId: "user-1" }),
+  });
+
+  assertEquals(response.status, 500);
+  assertEquals((await readPayload(response)).error, "publish rpc failed");
+  assertEquals(
+    calls.some((call) =>
+      call.type === "storage.remove" &&
+      call.bucket === "party-assets" &&
+      call.paths?.[0] === "partner-1/hero.jpg"
+    ),
+    true,
+  );
+});
+
+Deno.test("abort marks upload aborted", async () => {
+  const handler = await getHandler();
+  const { supabase } = makeStorageUploadSupabase({
+    rpcResults: [{
+      data: {
+        upload_id: "upload-1",
+        bucket_id: "partner-proofs",
+        object_path: "user-1/file.jpg",
+        status: "aborted",
+      },
+      error: null,
+    }],
+  });
+
+  const response = await runHandler(handler, {
+    method: "POST",
+    body: {
+      action: "abort",
+      upload_id: "upload-1",
+    },
+    ctx: makeCtx({ supabase: supabase as never, userId: "user-1" }),
+  });
+  const payload = await readPayload(response);
+
+  assertEquals(response.status, 200);
+  assertEquals(payload.upload_id, "upload-1");
+  assertEquals(payload.bucket, "partner-proofs");
+  assertEquals(payload.path, "user-1/file.jpg");
+  assertEquals(payload.status, "aborted");
+});
+
+Deno.test("abort returns DB failures", async () => {
+  const handler = await getHandler();
+  const { supabase } = makeStorageUploadSupabase({
+    rpcResults: [{
+      data: null,
+      error: { message: "storage_upload_not_found" },
+    }],
+  });
+
+  const response = await runHandler(handler, {
+    method: "POST",
+    body: {
+      action: "abort",
+      upload_id: "missing-upload",
+    },
+    ctx: makeCtx({ supabase: supabase as never, userId: "user-1" }),
+  });
+
+  assertEquals(response.status, 400);
+  assertEquals((await readPayload(response)).error, "storage_upload_not_found");
 });
