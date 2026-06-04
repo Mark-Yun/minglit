@@ -47,4 +47,4 @@ npm run tokens:sync && npm run icons:sync && npm run icons:sync-data
 - [`../../../shared/packages/mds/icons/README.md`](../../../shared/packages/mds/icons/README.md) — icon codegen
 - [`../../../scripts/mds_render_coverage.dart`](../../../scripts/mds_render_coverage.dart) — MDS spec ↔ emulator render coverage
 ---
-_Reviewed: 2026-06-04 23:25_
+_Reviewed: 2026-06-05 10:12_
