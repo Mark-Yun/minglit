@@ -47,6 +47,7 @@
 - `close-cut-issue-on-pr-merge` 는 promotion PR body 의 `minglit:cut-issue-number` marker 를 보고 PR merge 시 해당 cut issue 를 닫는다.
 - `dev-deploy` 는 dev push 후 web + mobile dev 배포를 orchestrate 한다.
 - `main-deploy` 는 main push 후 prod 배포를 orchestrate 한다. version bump commit 없이 deploy-time metadata 를 계산하고 `shared-promo-tag` 로 `promo/main-*` marker 를 만든다.
+- `shared-ios-deploy` 는 App Store Connect 업로드 SDK 요구사항 때문에 `macos-26` runner 에 고정한다. 회귀 검사는 `.github/scripts/check-ios-deploy-branch-conditions.sh` 가 담당한다.
 - `shared-promo-tag` 는 `promo/rc-*`, `promo/main-*` tag 생성의 공통 release-bot 구현이다. Concrete workflow 는 target ref, tag name, commit SHA 만 넘긴다.
 - `deploy-dev-event-flow-cron` 은 `dev` push 에서만 dev Supabase `dev-event-flow-simulator` pg_cron 을 설치한다. `monitor-event-flow-distributed` 는 `--ref dev` 수동 smoke 전용이고, hourly/daily 는 legacy manual smoke 다.
 - `deploy-android-*`, `deploy-ios-*`, `deploy-vercel` 은 branch-level deploy 에서 호출하는 concrete adapter 다. 직접 push/schedule 로 실행하지 않는다.
@@ -77,4 +78,4 @@
 - [CLAUDE.md](../../CLAUDE.md) `## PR Conventions` — branch별 required check / auto-merge 흐름
 
 ---
-_Reviewed: 2026-06-03 15:15_
+_Reviewed: 2026-06-04 07:16_

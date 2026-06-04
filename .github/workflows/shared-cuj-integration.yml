@@ -33,7 +33,9 @@ on:
 jobs:
   cuj-integration:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # User CUJ currently runs more files than partner CUJ and each file rebuilds
+    # the dev APK on a cold runner. Keep this above the observed 30m ceiling.
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v6
         with:

@@ -83,6 +83,12 @@ timeout_minutes="$( (grep -nE "^[[:space:]]*timeout-minutes:[[:space:]]*[0-9]+" 
   | head -n1 \
   | sed -E 's/.*timeout-minutes:[[:space:]]*([0-9]+).*/\1/')"
 
+if ! grep -nE "^[[:space:]]*runs-on:[[:space:]]*macos-26([[:space:]]*(#.*)?)?$" "$WORKFLOW_FILE" >/dev/null; then
+  echo "ERROR: shared-ios-deploy must run on macos-26 so App Store Connect uploads are built with iOS 26 SDK"
+  grep -nE "^[[:space:]]*runs-on:" "$WORKFLOW_FILE" || true
+  exit 1
+fi
+
 if [[ -z "$timeout_minutes" ]]; then
   echo "ERROR: Could not detect timeout-minutes in $WORKFLOW_FILE"
   exit 1
@@ -124,4 +130,4 @@ for pubspec in "${APP_PUBSPECS[@]}"; do
   assert_flutter_spm_disabled "$pubspec"
 done
 
-echo "OK: iOS deploy workflow contract validated (branch, timeout, heartbeat, exit-code, SPM disabled)"
+echo "OK: iOS deploy workflow contract validated (branch, runner SDK, timeout, heartbeat, exit-code, SPM disabled)"
