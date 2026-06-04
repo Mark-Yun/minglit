@@ -1,0 +1,9 @@
+[
+  {
+    "name": "auth_leaked_password_protection",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 2756,
+    "reason": "Minglit production auth does not support email/password signup or login. Password-backed accounts are limited to dev/test seed and simulator flows, so Supabase Auth leaked-password protection is not an applicable production control."
+  }
+]

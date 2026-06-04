@@ -10,6 +10,7 @@ GitHub 통합 폴더 — CI/CD 워크플로우, composite actions, shell scripts
 | [`actions/`](./actions/BLUEDOC.md) | 워크플로우가 `uses:` 로 호출하는 composite actions (deploy-flutter-app, deploy-nextjs-app, ios-deploy) |
 | [`scripts/`](./scripts/BLUEDOC.md) | 워크플로우가 `bash` 로 실행하는 shell 헬퍼 (env 파일 생성, CUJ 실행 등) |
 | [`dependabot.yml`](./dependabot.yml) | dependabot 의존성 자동 업데이트 설정 (npm + GitHub Actions 그룹화, weekly) |
+| [`advisor-accepted-findings.json`](./advisor-accepted-findings.json) | monitor-security-advisor 가 이슈화하지 않을 Supabase advisor accepted finding 목록 |
 | [`release.yml`](./release.yml) | GitHub Release notes 자동 생성 카테고리 (Features/Bug Fixes/Refactor/Docs) |
 
 ## 핵심 컨벤션
@@ -24,4 +25,4 @@ GitHub 통합 폴더 — CI/CD 워크플로우, composite actions, shell scripts
 - [BLUEDOC 컨벤션](../docs/infra/bluedoc/BLUEDOC.md)
 
 ---
-_Reviewed: 2026-05-23 16:18_
+_Reviewed: 2026-06-04 19:37_
