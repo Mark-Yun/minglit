@@ -66,55 +66,68 @@ function authRoute() {
 
 function guardrailRoutes(opts: {
   rateAllowed?: boolean;
+  rateRpcStatus?: number;
+  rateRpcBody?: unknown;
   idempotencyDecision?: "started" | "replay" | "in_progress" | "conflict";
+  beginRpcStatus?: number;
+  beginRpcBody?: unknown;
   replayBody?: Record<string, unknown>;
+  completeRpcStatus?: number;
+  failRpcStatus?: number;
+  onFailRpc?: () => void;
 } = {}) {
   const rateAllowed = opts.rateAllowed ?? true;
   const decision = opts.idempotencyDecision ?? "started";
+  const rateRpcBody = "rateRpcBody" in opts ? opts.rateRpcBody : [
+    {
+      allowed: rateAllowed,
+      remaining: rateAllowed ? 4 : 0,
+      retry_after_seconds: rateAllowed ? 0 : 30,
+    },
+  ];
+  const beginRpcBody = "beginRpcBody" in opts ? opts.beginRpcBody : [
+    {
+      decision,
+      response_status: decision === "replay" ? 200 : null,
+      response_body: decision === "replay"
+        ? (opts.replayBody ?? {
+          type: "free",
+          application_id: "cached-application-id",
+        })
+        : null,
+      retry_after_seconds: decision === "in_progress" ? 30 : 0,
+    },
+  ];
   return [
     {
       matcher: (req: Request) =>
         req.url.includes("/rest/v1/rpc/consume_edge_rate_limit") &&
         req.method === "POST",
       handler: () =>
-        jsonResponse([
-          {
-            allowed: rateAllowed,
-            remaining: rateAllowed ? 4 : 0,
-            retry_after_seconds: rateAllowed ? 0 : 30,
-          },
-        ]),
+        jsonResponse(rateRpcBody, { status: opts.rateRpcStatus ?? 200 }),
     },
     {
       matcher: (req: Request) =>
         req.url.includes("/rest/v1/rpc/begin_edge_idempotency") &&
         req.method === "POST",
       handler: () =>
-        jsonResponse([
-          {
-            decision,
-            response_status: decision === "replay" ? 200 : null,
-            response_body: decision === "replay"
-              ? (opts.replayBody ?? {
-                type: "free",
-                application_id: "cached-application-id",
-              })
-              : null,
-            retry_after_seconds: decision === "in_progress" ? 30 : 0,
-          },
-        ]),
+        jsonResponse(beginRpcBody, { status: opts.beginRpcStatus ?? 200 }),
     },
     {
       matcher: (req: Request) =>
         req.url.includes("/rest/v1/rpc/complete_edge_idempotency") &&
         req.method === "POST",
-      handler: () => jsonResponse(true),
+      handler: () =>
+        jsonResponse(true, { status: opts.completeRpcStatus ?? 200 }),
     },
     {
       matcher: (req: Request) =>
         req.url.includes("/rest/v1/rpc/fail_edge_idempotency") &&
         req.method === "POST",
-      handler: () => jsonResponse(true),
+      handler: () => {
+        opts.onFailRpc?.();
+        return jsonResponse(true, { status: opts.failRpcStatus ?? 200 });
+      },
     },
   ];
 }
@@ -130,6 +143,43 @@ function applyEventRequest(body: Record<string, unknown>): Request {
       },
     },
   );
+}
+
+async function captureSyntheticGuardrailHandler(
+  mode: "text" | "invalid-json" | "throw",
+) {
+  const edgeFunctionModule = new URL(
+    "../_shared/edge_function.ts",
+    import.meta.url,
+  ).href;
+  const source = `
+import { minglitEdgeFunction, type EFContext } from ${
+    JSON.stringify(edgeFunctionModule)
+  };
+
+export const handler = async (
+  _req: Request,
+  _ctx: EFContext,
+): Promise<Response> => {
+  const mode = ${JSON.stringify(mode)};
+  if (mode === "throw") throw new Error("synthetic handler failure");
+  if (mode === "text") return new Response("ok", { status: 200 });
+  return new Response("{broken", {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
+};
+
+minglitEdgeFunction(handler);
+`;
+  const path = await Deno.makeTempFile({
+    prefix: "minglit-edge-guardrail-",
+    suffix: ".ts",
+  });
+  await Deno.writeTextFile(path, source);
+  // Keep the temporary module on disk until the test process exits; Deno
+  // coverage resolves imported source files after test execution.
+  return await captureServeHandler(new URL(`file://${path}`));
 }
 
 // ──────────────────────────────────────────────
@@ -460,6 +510,89 @@ Deno.test("apply-event - Idempotency-Key 누락 시 400 반환", async () => {
   });
 });
 
+Deno.test("apply-event - Idempotency-Key가 너무 길면 400 반환", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    const { fetchMock } = createFetchMock([authRoute()]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const request = jsonRequest(
+          "http://localhost",
+          { event_id: "event-free-1", ticket_id: "ticket-free-1" },
+          {
+            headers: {
+              Authorization: "Bearer test-token",
+              "Idempotency-Key": "x".repeat(256),
+            },
+          },
+        );
+        const response = await handler(request);
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 400);
+        assertEquals(payload.error, "Invalid Idempotency-Key");
+      });
+    });
+  });
+});
+
+Deno.test("apply-event - verification_data 형식이 object가 아니면 400 반환", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    const { fetchMock } = createFetchMock([]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const request = jsonRequest(
+          "http://localhost",
+          {
+            event_id: "event-free-1",
+            ticket_id: "ticket-free-1",
+            verification_data: ["not", "an", "object"],
+          },
+        );
+        const response = await handler(request);
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 400);
+        assertEquals(payload.error, "Invalid field: verification_data");
+      });
+    });
+  });
+});
+
+Deno.test("apply-event - malformed JSON은 schema 단계에서 400 반환", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    const { fetchMock } = createFetchMock([]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const request = new Request("http://localhost", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{",
+        });
+        const response = await handler(request);
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 400);
+        assertEquals(typeof payload.error, "string");
+      });
+    });
+  });
+});
+
 Deno.test("apply-event - rate limit exceeded 시 429 반환", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(
@@ -484,6 +617,65 @@ Deno.test("apply-event - rate limit exceeded 시 429 반환", async () => {
         assertEquals(response.status, 429);
         assertEquals(payload.error, "Rate limit exceeded");
         assertEquals(response.headers.get("Retry-After"), "30");
+      });
+    });
+  });
+});
+
+Deno.test("apply-event - rate limit RPC 오류 시 500 반환", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      ...guardrailRoutes({
+        rateRpcStatus: 500,
+        rateRpcBody: { message: "rate limiter unavailable" },
+      }),
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const response = await handler(
+          applyEventRequest({
+            event_id: "event-free-1",
+            ticket_id: "ticket-free-1",
+          }),
+        );
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 500);
+        assertEquals(payload.error, "Rate limit unavailable");
+      });
+    });
+  });
+});
+
+Deno.test("apply-event - rate limit RPC 결과가 비어 있으면 500 반환", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      ...guardrailRoutes({ rateRpcBody: null }),
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const response = await handler(
+          applyEventRequest({
+            event_id: "event-free-1",
+            ticket_id: "ticket-free-1",
+          }),
+        );
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 500);
+        assertEquals(payload.error, "Rate limit unavailable");
       });
     });
   });
@@ -516,6 +708,323 @@ Deno.test("apply-event - duplicate idempotency key replays cached response", asy
         assertEquals(response.status, 200);
         assertEquals(response.headers.get("Idempotency-Replayed"), "true");
         assertEquals(payload.application_id, "cached-app-1");
+      });
+    });
+  });
+});
+
+Deno.test("apply-event - idempotency begin RPC 오류 시 500 반환", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      ...guardrailRoutes({
+        beginRpcStatus: 500,
+        beginRpcBody: { message: "idempotency storage unavailable" },
+      }),
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const response = await handler(
+          applyEventRequest({
+            event_id: "event-free-1",
+            ticket_id: "ticket-free-1",
+          }),
+        );
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 500);
+        assertEquals(payload.error, "Idempotency check failed");
+      });
+    });
+  });
+});
+
+Deno.test("apply-event - idempotency begin RPC 결과가 비어 있으면 500 반환", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      ...guardrailRoutes({ beginRpcBody: null }),
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const response = await handler(
+          applyEventRequest({
+            event_id: "event-free-1",
+            ticket_id: "ticket-free-1",
+          }),
+        );
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 500);
+        assertEquals(payload.error, "Idempotency check failed");
+      });
+    });
+  });
+});
+
+Deno.test("apply-event - idempotency conflict 시 409와 Retry-After 반환", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      ...guardrailRoutes({ idempotencyDecision: "conflict" }),
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const response = await handler(
+          applyEventRequest({
+            event_id: "event-free-1",
+            ticket_id: "ticket-free-1",
+          }),
+        );
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 409);
+        assertEquals(
+          payload.error,
+          "Idempotency key reused with a different request",
+        );
+        assertEquals(response.headers.get("Retry-After"), "1");
+      });
+    });
+  });
+});
+
+Deno.test("apply-event - rate limit 거부 후 idempotency fail RPC 오류도 429 유지", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      ...guardrailRoutes({ rateAllowed: false, failRpcStatus: 500 }),
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const response = await handler(
+          applyEventRequest({
+            event_id: "event-free-1",
+            ticket_id: "ticket-free-1",
+          }),
+        );
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 429);
+        assertEquals(payload.error, "Rate limit exceeded");
+      });
+    });
+  });
+});
+
+Deno.test("apply-event - handler 500이면 idempotency를 failed로 표시", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    let failRpcCalled = false;
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      ...guardrailRoutes({
+        onFailRpc: () => {
+          failRpcCalled = true;
+        },
+      }),
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/events") && req.method === "GET",
+        handler: () => jsonResponse(PAID_EVENT),
+      },
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/tickets") && req.method === "GET",
+        handler: () => jsonResponse(PAID_TICKET),
+      },
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/event_applications") &&
+          req.method === "GET",
+        handler: () => jsonResponse(null),
+      },
+      {
+        matcher: (req) => req.url.includes("/rest/v1/rpc/check_party_balance"),
+        handler: () =>
+          jsonResponse({ message: "balance check failed" }, { status: 500 }),
+      },
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const response = await handler(
+          applyEventRequest({
+            event_id: "event-paid-1",
+            ticket_id: "ticket-paid-1",
+          }),
+        );
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 500);
+        assertEquals(payload.error, "Failed to check balance");
+        assertEquals(failRpcCalled, true);
+      });
+    });
+  });
+});
+
+Deno.test("apply-event - complete idempotency RPC 오류가 응답을 바꾸지 않음", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      ...guardrailRoutes({ completeRpcStatus: 500 }),
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/events") && req.method === "GET",
+        handler: () => jsonResponse(FREE_EVENT),
+      },
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/tickets") && req.method === "GET",
+        handler: () => jsonResponse(FREE_TICKET),
+      },
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/event_applications") &&
+          req.method === "GET",
+        handler: () => jsonResponse(null),
+      },
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/rpc/apply_event") && req.method === "POST",
+        handler: () => jsonResponse("application-free-uuid-1"),
+      },
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const response = await handler(
+          applyEventRequest({
+            event_id: "event-free-1",
+            ticket_id: "ticket-free-1",
+          }),
+        );
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 200);
+        assertEquals(payload.application_id, "application-free-uuid-1");
+      });
+    });
+  });
+});
+
+Deno.test("minglitEdgeFunction - idempotent text 응답은 cache 저장 대신 failed 처리", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureSyntheticGuardrailHandler("text");
+
+    let failRpcCalled = false;
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      ...guardrailRoutes({
+        onFailRpc: () => {
+          failRpcCalled = true;
+        },
+      }),
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const response = await handler(
+          applyEventRequest({
+            event_id: "event-free-1",
+            ticket_id: "ticket-free-1",
+          }),
+        );
+
+        assertEquals(response.status, 200);
+        assertEquals(await response.text(), "ok");
+        assertEquals(failRpcCalled, true);
+      });
+    });
+  });
+});
+
+Deno.test("minglitEdgeFunction - idempotent JSON parse 실패 응답은 failed 처리", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureSyntheticGuardrailHandler("invalid-json");
+
+    let failRpcCalled = false;
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      ...guardrailRoutes({
+        onFailRpc: () => {
+          failRpcCalled = true;
+        },
+      }),
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const response = await handler(
+          applyEventRequest({
+            event_id: "event-free-1",
+            ticket_id: "ticket-free-1",
+          }),
+        );
+
+        assertEquals(response.status, 200);
+        assertEquals(await response.text(), "{broken");
+        assertEquals(failRpcCalled, true);
+      });
+    });
+  });
+});
+
+Deno.test("minglitEdgeFunction - handler throw 시 active idempotency를 failed 처리", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureSyntheticGuardrailHandler("throw");
+
+    let failRpcCalled = false;
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      ...guardrailRoutes({
+        onFailRpc: () => {
+          failRpcCalled = true;
+        },
+      }),
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const response = await handler(
+          applyEventRequest({
+            event_id: "event-free-1",
+            ticket_id: "ticket-free-1",
+          }),
+        );
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 500);
+        assertEquals(payload.error, "Internal error");
+        assertEquals(failRpcCalled, true);
       });
     });
   });

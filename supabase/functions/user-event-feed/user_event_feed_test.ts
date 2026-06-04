@@ -138,7 +138,11 @@ Deno.test({
       await withMockedFetch(fetchMock, async () => {
         // No Authorization header
         const response = await handler(
-          jsonRequest(BASE_URL, { sort_by: "recommended" }),
+          jsonRequest(
+            BASE_URL,
+            { sort_by: "recommended" },
+            { headers: { "x-forwarded-for": "203.0.113.10, 198.51.100.20" } },
+          ),
         );
         assertEquals(response.status, 200);
 
