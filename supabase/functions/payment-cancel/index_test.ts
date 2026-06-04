@@ -78,6 +78,18 @@ function makeApp(
 
 // ── Test cases ────────────────────────────────────────────────────────────────
 
+Deno.test("payment-cancel :: unexpected auth type → 500", async () => {
+  const handler = await getHandler();
+  const sb = fakeSupabase({ strict: false });
+  const res = await runHandler(handler, {
+    body: { payment_id: "imp_123" },
+    ctx: makeCtx({ supabase: sb, auth: { type: "public" } }),
+  });
+  assertEquals(res.status, 500);
+  const body = await readJson<{ error: string }>(res);
+  assertEquals(body.error, "Unexpected auth type");
+});
+
 // 1. Missing payment_id → 400
 Deno.test("payment-cancel :: missing payment_id → 400", async () => {
   const handler = await getHandler();
@@ -140,6 +152,30 @@ Deno.test("payment-cancel :: system caller requires rejected application → 403
   assertEquals(res.status, 403);
   const body = await readJson<{ error: string }>(res);
   assertEquals(body.error, "system_refund_requires_rejected_application");
+});
+
+Deno.test("payment-cancel :: system caller already refunded → 400", async () => {
+  const handler = await getHandler();
+  const sb = fakeSupabase().on("event_applications", "select", {
+    data: makeApp({
+      status: "rejected",
+      refund_status: "completed",
+      user_id: "other-user",
+    }),
+  });
+  const res = await runHandler(handler, {
+    body: { payment_id: "imp_123" },
+    ctx: makeCtx({
+      supabase: sb,
+      auth: { type: "system", keyFormat: "secret" },
+    }),
+  });
+  assertEquals(res.status, 400);
+  const body = await readJson<{ error: string; details?: { reason?: string } }>(
+    res,
+  );
+  assertEquals(body.error, "already_refunded");
+  assertEquals(body.details?.reason, "Refund already processed");
 });
 
 // 4. Already refunded (refund_status ≠ "none") → 400
