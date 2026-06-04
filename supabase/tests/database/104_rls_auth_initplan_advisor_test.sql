@@ -1,5 +1,7 @@
--- Issue #2797: Supabase Performance Advisor auth_rls_initplan regression.
--- The affected policies should use scalar subqueries around auth helpers.
+-- Issue #2797 / #2934: Supabase Performance Advisor auth_rls_initplan
+-- regression. Policies that use auth helpers should wrap them in scalar
+-- subqueries, and service-role-only policies should avoid redundant auth
+-- helper predicates entirely.
 BEGIN;
 
 SELECT plan(2);
@@ -45,6 +47,7 @@ VALUES
   ('public', 'tag_usage_monthly', 'tag_usage_monthly_service'),
   ('public', 'user_consents', 'user_read_own_consents'),
   ('public', 'user_interest_tags', 'user_interest_tags_read_own'),
+  ('public', 'user_notifications', 'Service role can insert notifications'),
   ('public', 'user_notifications', 'Users can view their own notifications'),
   ('public', 'user_profiles', 'Users can read own profile'),
   ('public', 'user_settings', 'Users can view their own settings'),
