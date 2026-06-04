@@ -18,6 +18,11 @@ type BankOption = {
   readonly name: string;
 };
 
+type ResolvedBank = {
+  readonly code: string | null;
+  readonly name: string;
+};
+
 const BANK_CATALOG: readonly BankOption[] = [
   { code: "kb", name: "KB국민은행" },
   { code: "shinhan", name: "신한은행" },
@@ -40,17 +45,25 @@ const BANK_BY_NAME = new Map<string, BankOption>(
 // Issue #3047: BankAccountPage spec keeps the 10-16 digit client contract.
 const ACCOUNT_NUMBER_RE = /^[0-9]{10,16}$/;
 
-function resolveBank(body: Record<string, unknown>) {
+function resolveBank(body: Record<string, unknown>): ResolvedBank | undefined {
   const bankCode = typeof body.bank_code === "string"
     ? body.bank_code.trim()
     : "";
-  if (bankCode) return BANK_BY_CODE.get(bankCode);
+  if (bankCode) {
+    const bank = BANK_BY_CODE.get(bankCode);
+    return bank ? { code: bank.code, name: bank.name } : undefined;
+  }
 
   // Backward-compatible fallback for clients still sending only bank_name.
   const bankName = typeof body.bank_name === "string"
     ? body.bank_name.trim()
     : "";
-  return BANK_BY_NAME.get(bankName);
+  if (!bankName) return undefined;
+
+  const bank = BANK_BY_NAME.get(bankName);
+  if (bank) return { code: bank.code, name: bank.name };
+
+  return { code: null, name: bankName };
 }
 
 export const handler = async (
