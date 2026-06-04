@@ -1,141 +1,109 @@
-# PRD: Admin Dashboard
+# PRD: Admin Console Dashboard
 
 ## Summary
 
-운영팀이 유저·파트너·이벤트·결제·정산을 하나의 웹 대시보드에서 관리할 수 있게 하는 신규 admin 콘솔. 기존 DB 직접 쿼리 / 수동 EF 호출 / Metabase(조회 전용) 의존을 제거하고, 모든 운영 액션을 감사 로그로 추적 가능한 단일 운영 도구를 제공.
+Minglit 내부 운영자가 Supabase Google 로그인으로 본인 확인을 마친 뒤, 서버에서 검증된 admin 권한에 따라 관리자 메뉴를 사용하는 웹 기반 admin console. 현재 출시 범위는 admin 로그인, 권한 확인, 확장 가능한 shell/menu 구조까지다. 기능 dashboard 는 후속 메뉴로 분리하고, 이번 범위에서는 별도 board/spec 를 만들지 않는다.
 
 ## Motivation / Problem to Solve
 
-- 파트너 입점 심사 / 유저 정지 / 환불 처리 등 운영 액션이 DB 직접 접근 또는 수동 EF 호출에 의존
-- Metabase 는 조회 전용 — 운영 "액션" 수행 불가
-- 운영자 액션 감사 로그 부재 — "누가 언제 무엇을 했는지" 추적 불가
-- 출시 전 운영 체계 미비 시 유저 CS 대응 불가 — 출시 필수 인프라
-- 신뢰(Trust) 가치는 운영 효율 향상으로 강화됨 — 빠른 심사 = 파트너 신뢰, 신속한 환불 = 유저 신뢰
+- admin 기능을 메뉴별로 추가할 기준 shell 이 없어, 기능이 늘수록 인증/권한/네비게이션/에러 UX 가 중복될 위험이 있다.
+- admin 접근은 일반 앱 로그인과 분리하지 않되, Supabase Auth 세션과 서버 admin 권한 확인을 모두 통과해야 한다.
+- 첫 메뉴가 무엇이든 동일한 shell contract, route guard, empty/403/session-expired state 를 재사용할 수 있어야 한다.
 
 ## Goals
 
 ### Target Users
 
-- **Super Admin (운영 관리자)**: 서비스 전체 관리. 유저 CS / 파트너 심사 / 결제·정산 / KPI 모니터링.
-- **Moderator (콘텐츠 모더레이터)**: 파트너 심사 + 유저 신고 처리. 결제·정산·시스템 설정 접근 불가.
-- **Finance Admin (재무 담당자, P1)**: 정산·환불 전담. P1 단계에서 역할 분리.
+- **Super Admin**: 모든 admin 메뉴 접근 가능. 향후 유저/파트너/정산/시스템 메뉴까지 관리.
+- **Read-only Admin**: 부여된 메뉴를 조회하지만 destructive action 은 수행하지 않음.
+- **Ops Admin**: 향후 운영 현황, 배포, 심사, 정산 같은 메뉴를 필요 권한에 따라 사용.
 
 ### Key Goals
 
-- **P0**: 로그인 + MFA (TOTP) + 역할 기반 사이드바 렌더링
-- **P0**: 대시보드 홈 — KPI 카드 4개 + 차트 2개 + 액션 큐 2개
-- **P0**: 유저 관리 — 목록 / 검색 / 필터 + 상세 드로어 + 정지 / 해제 액션
-- **P0**: 파트너 심사 — 심사 큐 + 서류 뷰어 + 승인 / 거절 / 보완 요청
-- **P0**: 이벤트 관리 — 목록 / 검색 / 필터 + 강제 취소 / 숨김
-- **P0**: 결제·환불 — 거래 내역 + 수동 환불 (PortOne 연동)
-- **P0**: 정산 관리 — 상태 조회 / 전환 + 지급 처리
-- **P0**: 감사 로그 — 모든 관리 액션 불변 기록 + 조회 UI
-- **P1**: 신고 처리 / 시스템 설정 (정책·약관) / 인증 서류 미리보기 / 일괄 처리 / IP 화이트리스트
+- **P0**: Supabase Auth Google OAuth 로그인 후 admin 권한 확인. 비로그인 / 비관리자는 admin shell 진입 차단.
+- **P0**: 확장 가능한 admin shell. 사이드바 메뉴는 registry 기반으로 추가 가능하고, 각 메뉴는 role / capability 로 노출 여부를 결정한다.
+- **P0**: admin shell 은 메뉴 추가 시 인증/권한/레이아웃/로딩/빈 상태/에러 패턴을 재사용한다.
+- **P0**: 아직 활성 메뉴가 없거나 사용자가 접근 가능한 메뉴가 없을 때 명확한 empty / no-menu 상태를 제공한다.
+- **P1**: 운영 메뉴 추가: 유저 관리, 파트너 심사, 환불/정산, 감사 로그, 시스템 설정.
 
 ### Non-Goals
 
-- **Metabase 대체**: Admin 은 운영 "액션" 도구. 분석 / BI 는 Metabase 유지.
-- **유저·파트너 앱 기능 복제**: 앱에서 가능한 것은 앱에서. Admin 은 운영자 전용 액션만.
-- **자동 심사**: AI 기반 자동 승인 / 거절은 범위 밖. 사람이 판단하고 도구가 실행.
-- **모바일 최적화**: Admin 은 데스크톱 웹 전용. 태블릿은 반응형으로 최소 지원.
-- **다국어**: 초기 버전은 한국어 단일.
+- P0 에서 기능별 운영 dashboard 를 구현하지 않는다.
+- P0 에서 GitHub Actions UI, Vercel UI, Supabase console 을 대체하지 않는다.
+- Supabase service_role key 를 클라이언트에 노출하지 않는다. admin 권한 확인과 외부 API proxy 는 서버에서만 수행한다.
+- 모바일 admin 앱을 만들지 않는다. 데스크톱 웹 우선, 태블릿은 최소 반응형만 지원한다.
 
 ## Product Principles
 
-1. **운영 액션 single source**: 모든 운영 액션은 Admin 을 통해서만 실행. DB 직접 접근 / EF 수동 호출 deprecated.
-2. **모든 액션은 감사 로그**: 누가 / 언제 / 무엇을 / 어떻게 했는지 불변 기록. UPDATE / DELETE 불가.
-3. **역할 분리 (least privilege)**: super_admin / moderator / (P1) finance_admin 별로 가시성 + 액션 권한 분리.
-4. **목록 → 상세 드로어 패턴**: 목록 컨텍스트를 유지한 채 사이드 드로어로 상세 진입. 풀스크린 라우트 이동 최소화.
-5. **확인 다이얼로그 + 감사 코멘트**: 파괴적 액션(정지 / 환불 / 강제 취소 / 정산 지급)은 확인 다이얼로그 필수 + 코멘트 권장.
+1. **Auth first**: 모든 `/admin` route 는 Supabase 세션 확인 후 admin 권한 확인을 통과해야 한다.
+2. **Extensible shell**: 새 기능은 메뉴 모듈로 추가한다. shell 은 nav, page header, permission guard, loading/error, empty state 를 공통 제공한다.
+3. **Server-verified admin**: 클라이언트 role 문자열만으로 admin 권한을 신뢰하지 않는다.
+4. **No leaked menu data**: 권한이 없는 사용자는 메뉴명, route detail, 내부 데이터, 원본 토큰을 보지 못한다.
+5. **Deferred feature screens**: 기능 화면은 별도 screen/spec 로 정의되는 시점에 shell outlet 에 연결한다.
 
 ## Technical Approach
 
-- **신규 웹앱**: Next.js + Shadcn/UI + TanStack Table + Recharts + Supabase Auth (TOTP MFA) + Vercel 배포
-- **데이터 (기존 재사용)**: 유저 프로필 / 파트너 신청 / 파트너 / 파티 / 이벤트 / 이벤트 신청 / 티켓 / 정산 항목 / 지급 / 정산 이력 / 조정 항목 / 일일 대사 / 시스템 설정 / 정책·약관 / 인증 제출 / 시스템 알람 / analytics 일별 집계 테이블
-- **데이터 (신규 1개)**: 관리 액션 감사 로그 테이블 (불변 — UPDATE / DELETE 차단, RLS super_admin SELECT only)
-- **외부 의존성**: PortOne (환불 처리), Supabase Auth Admin (MFA / 세션 관리)
-- **가드 / 정책**: 역할 기반 RLS 정책 + 미들웨어. 세션 타임아웃 유휴 30분 / 절대 8시간
+- **앱**: 별도 Next.js admin app (`apps/admin` 예정). desktop-first admin UI.
+- **인증**: Supabase Auth Google OAuth 로그인. 서버에서 현재 세션의 user 를 확인하고 admin membership / role claim 을 조회한다.
+- **인가**: 메뉴 및 route 는 capability 기반으로 가드한다. 예: `admin.users.read`, `admin.partners.review`, `admin.system.read`.
+- **메뉴 registry**: 각 메뉴는 `id`, `label`, `route`, `requiredCapability`, `status`, `loader/error/empty` contract 를 가진다.
+- **보안 정책**: 클라이언트는 publishable anon key 와 session 만 사용. service_role, GitHub, Vercel token 은 서버 런타임에서만 사용한다.
+- **후속 데이터 소스**: user management, partner review, system operations 등 feature menu 가 확정될 때 각 메뉴의 server loader 에서 별도 정의한다.
 
 ## User Journey
 
-### Scenario 1: 파트너 입점 심사 (CUJ 1-x)
+### Scenario 1: Admin 로그인과 권한 확인 (CUJ 1-x)
 
-운영자가 admin 로그인 후 심사 큐 → 대기 중 신청 진입 → 서류 검토 → 코멘트 입력 → 승인 / 거절 / 보완 요청 처리. 파트너에게 결과 통보.
+운영자가 `/admin` 접속 → Supabase Google 로그인 → 서버가 admin 권한 확인 → 권한 있으면 admin shell 진입, 권한 없으면 403 화면.
 
-### Scenario 2: 유저 정지 / 해제 (CUJ 2-x)
+### Scenario 2: Admin shell 과 메뉴 확장 구조 확인 (CUJ 2-x)
 
-운영자가 유저 관리 → 신고 / 정지 탭에서 대상 유저 검색 → 상세 드로어 → 활동 로그 / 신고 이력 확인 → 정지 / 해제 처리.
+운영자가 admin shell 에 진입 → 서버가 capability set 생성 → 사이드바는 권한 있는 메뉴만 표시 → 아직 활성 메뉴가 없으면 shell empty state 를 표시 → 향후 메뉴가 같은 레이아웃과 route guard 로 추가됨.
 
-### Scenario 3: 결제 / 환불 처리 (CUJ 3-x)
+### Scenario 3: 권한 없는 메뉴 접근 차단 (CUJ 3-x)
 
-운영자가 결제 / 환불 → 환불 요청 큐 진입 → 원결제 정보 / 환불 사유 확인 → 환불 금액 입력 → PortOne 으로 환불 처리.
-
-### Scenario 4: 정산 관리 (CUJ 4-x)
-
-운영자가 정산 관리 → 미정산 건 필터링 → 일괄 선택 → 일괄 확정 / 지급 처리 → 정산 이력 확인.
-
-### Scenario 5: 대시보드 홈 + KPI 모니터링 (CUJ 5-x)
-
-운영자가 로그인 직후 대시보드 홈 진입 → KPI 카드 (활성 유저 / 대기 심사 / 오늘 매출 / 미정산) 확인 → 액션 큐에서 최신 대기 건 진입.
-
-### Scenario 6: 감사 로그 검수 (CUJ 6-x)
-
-운영자 / 감사 담당자가 시스템 → 감사 로그 → 관리자 / 액션 유형 / 대상 / 날짜 범위 필터 → 변경 전·후 값 확인.
+운영자가 직접 route 로 접근하거나 메뉴 권한이 변경됨 → 서버가 route capability 를 재검증 → 권한 없으면 403 또는 접근 가능한 기본 메뉴/no-menu 상태로 전환.
 
 ## Data Flow
 
 ### Scenario 1
 
-대시보드 액션 큐 또는 사이드바 "입점 심사" → 심사 큐 → 신청 카드 탭 → 심사 상세 (서류 뷰어 + 코멘트 + 액션 버튼) → 액션 확정 → 서버에서 신청 상태 변경 + 감사 로그 insert + 파트너 푸시 / 이메일 통보
+`/admin` 진입 → Supabase session 확인 → 없으면 login → Google OAuth callback → 서버에서 admin membership / role 조회 → capability set 생성 → shell 렌더링 또는 403.
 
 ### Scenario 2
 
-유저 관리 → 검색 / 필터 → 유저 row 탭 → 상세 드로어 (프로필 / 이벤트 / 결제 / 인증 / 활동 / 액션) → "정지" 버튼 → 확인 다이얼로그 + 코멘트 → 서버에서 유저 상태 변경 + 감사 로그 insert
+Shell bootstrap → menu registry 로드 → 현재 admin capability 와 매칭 → 노출 가능한 메뉴만 sidebar 에 렌더링 → 활성 메뉴가 없으면 no-menu empty state 표시.
 
 ### Scenario 3
 
-결제·환불 → 환불 처리 → 대기 큐 → 환불 row 탭 → 처리 뷰 (원결제 / 사유 / 환불 금액) → "환불 실행" → PortOne 환불 API 호출 → 성공 시 환불 완료 상태 + 감사 로그 insert
-
-### Scenario 4
-
-정산 관리 → 상태 필터 → 체크박스 선택 → "일괄 확정" 또는 "일괄 지급 처리" → 확인 다이얼로그 → 서버 일괄 처리 + 감사 로그 insert (건별)
-
-### Scenario 5
-
-로그인 → MFA → 홈 진입 → KPI 카드는 analytics 집계 테이블에서 fetch, 액션 큐는 신청 / 신고 최신 5건 fetch
-
-### Scenario 6
-
-시스템 → 감사 로그 → 필터 적용 → 페이지네이션 조회. 모든 행은 read-only.
+Deep-link 또는 메뉴 이동 → route capability 서버 재검증 → 허용 시 해당 menu outlet 렌더링 → 거부 시 민감 데이터 fetch 없이 403/no-menu 처리.
 
 ## KPIs / Success Metrics
 
-- **파트너 심사 완료 시간**: 신청 접수 → 승인 / 거절까지 평균 24시간 이내 (현재: 수일)
-- **환불 처리 시간**: 요청 접수 → 처리 완료까지 평균 1시간 이내
-- **운영자 실수율**: 잘못된 승인 / 거절 / 환불 / 정지 비율 — baseline 측정 후 감시
-- **Admin 페이지 로딩 시간**: 3초 이내 유지 (가드레일)
-- **감사 로그 누락률**: 0% 유지 (가드레일)
+- **권한 차단 정확성**: 비관리자 admin shell 접근 0건.
+- **메뉴 추가 비용**: 새 read-only admin 메뉴 추가 시 shell/auth/permission 코드 재작성 없음.
+- **로그인 성공률**: Google OAuth callback 이후 admin 권한 확인 성공/실패 상태가 100% 명확히 분기.
+- **민감 데이터 노출**: 인증/인가 실패 경로에서 내부 메뉴 데이터 및 server token 노출 0건.
 
 ## Launch Strategy
 
-P0 8개 화면을 단계별 ship — (1) 로그인·MFA·감사로그 인프라 → (2) 대시보드 홈 + 유저 관리 → (3) 파트너 심사 → (4) 이벤트 / 결제·환불 / 정산 → (5) P1 신고 / 시스템 설정 / 일괄 처리. 출시일 2026년 6월 (가상 보도자료 기준).
+1. **P0-A**: admin shell + Supabase Google login/admin guard + 403/expired-session/no-menu state.
+2. **P0-B**: menu registry + capability 기반 sidebar/outlet contract.
+3. **P1**: 첫 후속 운영 메뉴를 별도 spec/board 로 작성.
+4. **P1+**: 유저 관리, 파트너 심사, 환불/정산, 시스템 설정, 감사 로그를 메뉴 모듈로 순차 추가.
 
-## Legal Basis
+## Legal / Security Basis
 
 | 근거 | 내용 |
 |------|------|
-| 개인정보보호법 제29조 | 안전성 확보 조치 — 접근 제어 / 로그 관리 / MFA |
-| 개인정보보호법 제30조 | 처리방침 — 운영자 접근 / 감사 로그 정책 공개 |
-| 전자상거래법 제18조 | 환불 처리 의무 — 자동·수동 환불 모두 영업일 3일 |
-| 정보통신망법 제48조 | 침해 사고 대응 — 감사 로그를 통한 사후 추적 |
+| 개인정보보호법 제29조 | 관리자 접근 제어, 권한 분리, 접속 기록 관리 |
+| 내부 운영 보안 | Supabase Auth 세션 + admin membership 확인 없이는 admin route 접근 금지 |
+| 최소 권한 원칙 | read-only / write capability 분리, 메뉴별 접근 제한 |
+| 감사 가능성 | 후속 write action 부터 수행자 / 시각 / 대상 / 결과 기록 |
 
 ## References
 
-- **Stripe Dashboard**: KPI 카드 + 스파크라인 / 사이드 드로어 상세 / shimmer 로딩
-- **Shopify Admin (Polaris)**: 축소형 사이드바 / 7-item 제한 / 명사형 네비게이션
-- **Linear**: 상태 파이프라인 / 키보드 퍼스트 / 최소 UI — 심사 큐 워크플로우
-- **Retool / Appsmith**: 서버사이드 필터 / 정렬 / 페이지네이션 + 일괄 액션
-- **Airbnb Host Dashboard**: 파트너 퍼포먼스 뷰 + 심사 워크플로우
-- Working Backwards (Ian McAllister / Amazon) — PR/FAQ 프로세스
-- Inspired (Marty Cagan / SVPG)
-- Minglit Architecture — Section 5 (Trust & Verification)
+- `apps/mds/docs/public/specs/admin_console_dashboard/` — admin login + shell MDS spec
+- Supabase Auth Google OAuth docs — admin login provider
+- Supabase Auth MFA docs — 후속 보안 강화 후보
+- `docs/features/admin/statistics-tools/` — 기존 analytics / alert 도구와 후속 연계
