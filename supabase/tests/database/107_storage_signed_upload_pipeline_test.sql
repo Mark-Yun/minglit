@@ -1,6 +1,6 @@
 -- Fix #2993: signed Storage upload guardrails.
 BEGIN;
-SELECT plan(25);
+SELECT plan(32);
 
 SET search_path TO public, storage, extensions;
 SELECT tests.authenticate_as_service_role();
@@ -27,6 +27,22 @@ SELECT is(
   (SELECT file_size_limit FROM storage.buckets WHERE id = 'party-assets'),
   52428800::bigint,
   '#2993: party-assets has a 50MiB hard bucket limit'
+);
+
+SELECT is(
+  (SELECT public FROM storage.buckets WHERE id = 'party-assets-pending'),
+  false,
+  '#2993: party-assets pending uploads use a private staging bucket'
+);
+
+SELECT is(
+  (
+    SELECT upload_bucket_id
+    FROM public.storage_upload_bucket_policies
+    WHERE bucket_id = 'party-assets'
+  ),
+  'party-assets-pending',
+  '#2993: party-assets policy presigns the private staging bucket'
 );
 
 SELECT ok(
@@ -191,13 +207,93 @@ SELECT throws_ok(
   '#2993: user-owned buckets require the user id path prefix'
 );
 
-SELECT lives_ok(
-  format(
-    $$SELECT * FROM public.reserve_storage_upload(%L::uuid, 'party-assets', %L, 1024, 'image/jpeg')$$,
-    current_setting('tests.storage_user_id'),
-    current_setting('tests.storage_partner_id') || '/hero.jpg'
-  ),
+CREATE TEMP TABLE t_party_upload AS
+SELECT *
+FROM public.reserve_storage_upload(
+  current_setting('tests.storage_user_id')::uuid,
+  'party-assets',
+  current_setting('tests.storage_partner_id') || '/hero.jpg',
+  1024,
+  'image/jpeg'
+);
+
+SELECT ok(
+  (SELECT upload_id IS NOT NULL FROM t_party_upload),
   '#2993: party-assets reserve allows partner members with PARTY_MANAGE'
+);
+
+SELECT is(
+  (SELECT upload_bucket_id FROM t_party_upload),
+  'party-assets-pending',
+  '#2993: party-assets reserve returns the private staging bucket'
+);
+
+INSERT INTO storage.objects (id, bucket_id, name, owner, owner_id, metadata)
+VALUES (
+  gen_random_uuid(),
+  'party-assets-pending',
+  (SELECT upload_object_path FROM t_party_upload),
+  NULL,
+  NULL,
+  '{"size": 1024}'::jsonb
+);
+
+CREATE TEMP TABLE t_party_complete AS
+SELECT *
+FROM public.complete_storage_upload(
+  (SELECT upload_id FROM t_party_upload),
+  current_setting('tests.storage_user_id')::uuid
+);
+
+SELECT is(
+  (SELECT status FROM t_party_complete),
+  'publishing',
+  '#2993: public bucket reconcile validates staging object before publish'
+);
+
+SELECT is(
+  (
+    SELECT count(*)::int
+    FROM public.minglit_files
+    WHERE bucket_id = 'party-assets-pending'
+      AND file_path = (SELECT upload_object_path FROM t_party_upload)
+  ),
+  0,
+  '#2993: private staging objects are not exposed as product files'
+);
+
+INSERT INTO storage.objects (id, bucket_id, name, owner, owner_id, metadata)
+VALUES (
+  gen_random_uuid(),
+  'party-assets',
+  (SELECT object_path FROM t_party_upload),
+  NULL,
+  NULL,
+  '{"size": 1024}'::jsonb
+);
+
+CREATE TEMP TABLE t_party_publish AS
+SELECT *
+FROM public.publish_storage_upload(
+  (SELECT upload_id FROM t_party_upload),
+  current_setting('tests.storage_user_id')::uuid
+);
+
+SELECT is(
+  (SELECT status FROM t_party_publish),
+  'completed',
+  '#2993: publish_storage_upload completes public assets after final object exists'
+);
+
+SELECT is(
+  (
+    SELECT owner_id
+    FROM public.minglit_files
+    WHERE bucket_id = 'party-assets'
+      AND file_path = (SELECT object_path FROM t_party_upload)
+  ),
+  current_setting('tests.storage_user_id')::uuid,
+  '#2993: published public asset is registered only after publish'
 );
 
 SELECT throws_ok(

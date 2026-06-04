@@ -23,9 +23,18 @@ type RpcResult = {
   error: { message?: string } | null;
 };
 
+type JsonRecord = Record<string, unknown>;
+
+async function readPayload(response: Response): Promise<JsonRecord> {
+  return await readJson(response) as JsonRecord;
+}
+
 function makeStorageUploadSupabase(opts: {
   rpcResults: RpcResult[];
   signedError?: { message: string } | null;
+  removeError?: { message: string } | null;
+  downloadError?: { message: string } | null;
+  uploadError?: { message: string } | null;
 }) {
   const calls: Array<{
     type: string;
@@ -80,8 +89,34 @@ function makeStorageUploadSupabase(opts: {
               },
             };
           },
+          download(path: string) {
+            calls.push({ type: "storage.download", bucket, args: { path } });
+            if (opts.downloadError) {
+              return Promise.resolve({ data: null, error: opts.downloadError });
+            }
+            return Promise.resolve({
+              data: new Blob([new Uint8Array([1, 2, 3])], {
+                type: "image/jpeg",
+              }),
+              error: null,
+            });
+          },
+          upload(path: string, _body: Blob, options: Record<string, unknown>) {
+            calls.push({
+              type: "storage.upload",
+              bucket,
+              args: { path, options },
+            });
+            if (opts.uploadError) {
+              return Promise.resolve({ data: null, error: opts.uploadError });
+            }
+            return Promise.resolve({ data: { path }, error: null });
+          },
           remove(paths: string[]) {
             calls.push({ type: "storage.remove", bucket, paths });
+            if (opts.removeError) {
+              return Promise.resolve({ data: null, error: opts.removeError });
+            }
             return Promise.resolve({ data: paths, error: null });
           },
         };
@@ -98,7 +133,10 @@ Deno.test("presign creates reservation and signed upload token", async () => {
     rpcResults: [{
       data: {
         upload_id: "upload-1",
+        bucket_id: "party-assets",
         object_path: "partner-1/generated.jpg",
+        upload_bucket_id: "party-assets-pending",
+        upload_object_path: "partner-1/generated.jpg",
         max_file_size_bytes: 52428800,
         public_bucket: true,
       },
@@ -118,15 +156,21 @@ Deno.test("presign creates reservation and signed upload token", async () => {
     },
     ctx: makeCtx({ supabase: supabase as never, userId: "user-1" }),
   });
-  const payload = await readJson(response);
+  const payload = await readPayload(response);
 
   assertEquals(response.status, 200);
   assertEquals(payload.upload_id, "upload-1");
   assertEquals(payload.path, "partner-1/generated.jpg");
+  assertEquals(payload.upload_bucket, "party-assets-pending");
+  assertEquals(payload.final_path, "partner-1/generated.jpg");
   assertEquals(payload.token, "signed-token");
+  assertEquals(payload.public_url, null);
   assertEquals(
-    payload.public_url,
-    "https://storage.test/object/public/party-assets/partner-1/generated.jpg",
+    calls.some((call) =>
+      call.type === "storage.createSignedUploadUrl" &&
+      call.bucket === "party-assets-pending"
+    ),
+    true,
   );
 
   const reserve = calls.find((call) => call.name === "reserve_storage_upload");
@@ -154,7 +198,7 @@ Deno.test("presign rejects unsupported buckets before RPC", async () => {
     },
     ctx: makeCtx({ supabase: supabase as never, userId: "user-1" }),
   });
-  const payload = await readJson(response);
+  const payload = await readPayload(response);
 
   assertEquals(response.status, 400);
   assertEquals(payload.error, "unsupported_storage_bucket");
@@ -169,9 +213,12 @@ Deno.test("complete removes object when DB reconcile rejects it", async () => {
         upload_id: "upload-1",
         bucket_id: "partner-proofs",
         object_path: "user-1/mismatch.jpg",
+        upload_bucket_id: "partner-proofs",
+        upload_object_path: "user-1/mismatch.jpg",
         status: "rejected",
         actual_size: 2000,
         rejection_reason: "actual_size_exceeds_declared_size",
+        mime_type: "image/jpeg",
         public_bucket: false,
       },
       error: null,
@@ -186,7 +233,7 @@ Deno.test("complete removes object when DB reconcile rejects it", async () => {
     },
     ctx: makeCtx({ supabase: supabase as never, userId: "user-1" }),
   });
-  const payload = await readJson(response);
+  const payload = await readPayload(response);
 
   assertEquals(response.status, 200);
   assertEquals(payload.status, "rejected");
@@ -201,6 +248,114 @@ Deno.test("complete removes object when DB reconcile rejects it", async () => {
   );
 });
 
+Deno.test("complete publishes public uploads only after DB reconcile", async () => {
+  const handler = await getHandler();
+  const { supabase, calls } = makeStorageUploadSupabase({
+    rpcResults: [
+      {
+        data: {
+          upload_id: "upload-1",
+          bucket_id: "party-assets",
+          object_path: "partner-1/hero.jpg",
+          upload_bucket_id: "party-assets-pending",
+          upload_object_path: "partner-1/hero.jpg",
+          status: "publishing",
+          actual_size: 1024,
+          rejection_reason: null,
+          mime_type: "image/jpeg",
+          public_bucket: true,
+        },
+        error: null,
+      },
+      {
+        data: {
+          upload_id: "upload-1",
+          bucket_id: "party-assets",
+          object_path: "partner-1/hero.jpg",
+          upload_bucket_id: "party-assets-pending",
+          upload_object_path: "partner-1/hero.jpg",
+          status: "completed",
+          actual_size: 1024,
+          rejection_reason: null,
+          mime_type: "image/jpeg",
+          public_bucket: true,
+        },
+        error: null,
+      },
+    ],
+  });
+
+  const response = await runHandler(handler, {
+    method: "POST",
+    body: {
+      action: "complete",
+      upload_id: "upload-1",
+    },
+    ctx: makeCtx({ supabase: supabase as never, userId: "user-1" }),
+  });
+  const payload = await readPayload(response);
+
+  assertEquals(response.status, 200);
+  assertEquals(payload.status, "completed");
+  assertEquals(
+    payload.public_url,
+    "https://storage.test/object/public/party-assets/partner-1/hero.jpg",
+  );
+  assertEquals(
+    calls.some((call) =>
+      call.type === "storage.download" &&
+      call.bucket === "party-assets-pending"
+    ),
+    true,
+  );
+  assertEquals(
+    calls.some((call) =>
+      call.type === "storage.upload" &&
+      call.bucket === "party-assets"
+    ),
+    true,
+  );
+  assertEquals(
+    calls.some((call) => call.name === "publish_storage_upload"),
+    true,
+  );
+});
+
+Deno.test("complete fails when rejected object cleanup fails", async () => {
+  const handler = await getHandler();
+  const { supabase } = makeStorageUploadSupabase({
+    rpcResults: [{
+      data: {
+        upload_id: "upload-1",
+        bucket_id: "party-assets",
+        object_path: "partner-1/mismatch.jpg",
+        upload_bucket_id: "party-assets-pending",
+        upload_object_path: "partner-1/mismatch.jpg",
+        status: "rejected",
+        actual_size: 2000,
+        rejection_reason: "actual_size_exceeds_declared_size",
+        mime_type: "image/jpeg",
+        public_bucket: true,
+      },
+      error: null,
+    }],
+    removeError: { message: "remove failed" },
+  });
+
+  const response = await runHandler(handler, {
+    method: "POST",
+    body: {
+      action: "complete",
+      upload_id: "upload-1",
+    },
+    ctx: makeCtx({ supabase: supabase as never, userId: "user-1" }),
+  });
+  const payload = await readPayload(response);
+
+  assertEquals(response.status, 500);
+  assertEquals(payload.error, "remove failed");
+});
+
 Deno.test("presign aborts reservation when signed URL creation fails", async () => {
   const handler = await getHandler();
   const { supabase, calls } = makeStorageUploadSupabase({
@@ -208,7 +363,10 @@ Deno.test("presign aborts reservation when signed URL creation fails", async () 
       {
         data: {
           upload_id: "upload-1",
+          bucket_id: "partner-proofs",
           object_path: "user-1/file.jpg",
+          upload_bucket_id: "partner-proofs",
+          upload_object_path: "user-1/file.jpg",
           max_file_size_bytes: 10485760,
           public_bucket: false,
         },
@@ -239,7 +397,7 @@ Deno.test("presign aborts reservation when signed URL creation fails", async () 
     },
     ctx: makeCtx({ supabase: supabase as never, userId: "user-1" }),
   });
-  const payload = await readJson(response);
+  const payload = await readPayload(response);
 
   assertEquals(response.status, 500);
   assertEquals(payload.error, "storage unavailable");

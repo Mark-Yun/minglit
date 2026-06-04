@@ -389,7 +389,8 @@ protect_user_profile_fields() → trigger
 | Bucket | Public | Upload Policy | View Policy | Hard Limit |
 |--------|--------|---------------|-------------|------------|
 | `verification-proofs` | No | `storage-upload` EF signed upload; user-id path prefix | 본인 + 파일 접근 권한 + 파트너/관리자 | 10MiB, image/PDF allowlist |
-| `party-assets` | Yes | `storage-upload` EF signed upload; partner-id path prefix + `PARTY_MANAGE` | 알려진 public object URL | 50MiB, image allowlist |
+| `party-assets` | Yes | `storage-upload` EF publishes only after private staging reconcile; partner-id path prefix + `PARTY_MANAGE` | 알려진 public object URL | 50MiB, image allowlist |
+| `party-assets-pending` | No | `storage-upload` EF signed upload staging only | service_role only | 50MiB, image allowlist |
 | `partner-proofs` | No | `storage-upload` EF signed upload; user-id path prefix | 본인 + 관리자 | 10MiB, image/PDF allowlist |
 
 Covered product uploads use the `storage-upload` Edge Function:
@@ -397,7 +398,8 @@ Covered product uploads use the `storage-upload` Edge Function:
 1. Client sends `{bucket, path_prefix, declared_size, mime, extension}` to `action=presign`.
 2. EF calls `reserve_storage_upload()` to enforce bucket policy, path scope, byte-rate, total quota, and active upload concurrency.
 3. EF returns Supabase `createSignedUploadUrl()` token; client uploads via `uploadBinaryToSignedUrl()`.
-4. Client calls `action=complete`; `complete_storage_upload()` reconciles declared vs actual metadata and closes `active_storage_uploads`.
+4. Client calls `action=complete`; `complete_storage_upload()` reconciles declared vs actual metadata.
+5. Public buckets (`party-assets`) are uploaded to private staging first; EF publishes to the public bucket only after reconcile passes.
 
 Direct authenticated `storage.objects INSERT` policies are removed for the three covered buckets. `bug-report-attachments` is intentionally separate QA/reporting infrastructure with its own 5MiB policy and retention lifecycle. TUS/resumable upload support is deferred; current covered flows are small image/document uploads under bucket hard limits.
 
@@ -522,7 +524,7 @@ User B ──vote──> User A
 1. **Storage Layer**: Supabase Storage → `storage.objects` (RLS로 업로드/조회 제어)
 2. **Application Layer**: `minglit_files` + `file_access_grants` (세밀한 접근 권한)
 
-파일 업로드 시 `on_storage_object_created` 트리거가 `minglit_files`에 메타데이터를 동기화한다. `storage-upload` signed upload 경로는 `active_storage_uploads` 예약을 사용해 Storage token 업로드의 소유자를 보정하고, complete 단계에서 실제 size를 reconcile한다.
+파일 업로드 시 `on_storage_object_created` 트리거가 `minglit_files`에 메타데이터를 동기화한다. `storage-upload` signed upload 경로는 `active_storage_uploads` 예약을 사용해 Storage token 업로드의 소유자를 보정하고, complete 단계에서 실제 size를 reconcile한다. Public asset은 private staging object를 먼저 검증한 뒤 publish 단계에서만 `party-assets`와 `minglit_files`에 노출한다.
 이벤트 신청 시 `on_application_created` 트리거가 파트너 오너에게 자동으로 `file_access_grants`를 생성하며, 이벤트 종료 후 30일에 만료된다.
 
 ---

@@ -25,8 +25,27 @@ SET
   ]
 WHERE id = 'party-assets';
 
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'party-assets-pending',
+  'party-assets-pending',
+  false,
+  52428800,
+  ARRAY[
+    'image/jpeg',
+    'image/png',
+    'image/webp'
+  ]
+)
+ON CONFLICT (id) DO UPDATE
+SET
+  public = false,
+  file_size_limit = EXCLUDED.file_size_limit,
+  allowed_mime_types = EXCLUDED.allowed_mime_types;
+
 CREATE TABLE IF NOT EXISTS public.storage_upload_bucket_policies (
   bucket_id text PRIMARY KEY REFERENCES storage.buckets(id) ON DELETE CASCADE,
+  upload_bucket_id text NOT NULL REFERENCES storage.buckets(id) ON DELETE CASCADE,
   public_bucket boolean NOT NULL DEFAULT false,
   max_file_size_bytes bigint NOT NULL CHECK (max_file_size_bytes > 0),
   allowed_mime_types text[] NOT NULL CHECK (array_length(allowed_mime_types, 1) > 0),
@@ -36,7 +55,8 @@ CREATE TABLE IF NOT EXISTS public.storage_upload_bucket_policies (
   max_concurrent_uploads integer NOT NULL CHECK (max_concurrent_uploads > 0),
   upload_ttl interval NOT NULL DEFAULT interval '2 hours',
   is_enabled boolean NOT NULL DEFAULT true,
-  updated_at timestamptz NOT NULL DEFAULT now()
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  CHECK (public_bucket = false OR upload_bucket_id <> bucket_id)
 );
 
 ALTER TABLE public.storage_upload_bucket_policies ENABLE ROW LEVEL SECURITY;
@@ -45,6 +65,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.storage_upload_bucket_policies TO
 
 INSERT INTO public.storage_upload_bucket_policies (
   bucket_id,
+  upload_bucket_id,
   public_bucket,
   max_file_size_bytes,
   allowed_mime_types,
@@ -56,6 +77,7 @@ INSERT INTO public.storage_upload_bucket_policies (
 VALUES
   (
     'verification-proofs',
+    'verification-proofs',
     false,
     10485760,
     ARRAY['image/jpeg', 'image/png', 'image/webp', 'application/pdf'],
@@ -65,6 +87,7 @@ VALUES
     5
   ),
   (
+    'partner-proofs',
     'partner-proofs',
     false,
     10485760,
@@ -76,6 +99,7 @@ VALUES
   ),
   (
     'party-assets',
+    'party-assets-pending',
     true,
     52428800,
     ARRAY['image/jpeg', 'image/png', 'image/webp'],
@@ -86,6 +110,7 @@ VALUES
   )
 ON CONFLICT (bucket_id) DO UPDATE
 SET
+  upload_bucket_id = EXCLUDED.upload_bucket_id,
   public_bucket = EXCLUDED.public_bucket,
   max_file_size_bytes = EXCLUDED.max_file_size_bytes,
   allowed_mime_types = EXCLUDED.allowed_mime_types,
@@ -101,17 +126,20 @@ CREATE TABLE IF NOT EXISTS public.active_storage_uploads (
   user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   bucket_id text NOT NULL REFERENCES storage.buckets(id) ON DELETE CASCADE,
   object_path text NOT NULL,
+  upload_bucket_id text NOT NULL REFERENCES storage.buckets(id) ON DELETE CASCADE,
+  upload_object_path text NOT NULL,
   declared_size bigint NOT NULL CHECK (declared_size > 0),
   mime_type text NOT NULL,
   status text NOT NULL DEFAULT 'pending'
-    CHECK (status IN ('pending', 'completed', 'aborted', 'rejected', 'expired')),
+    CHECK (status IN ('pending', 'publishing', 'completed', 'aborted', 'rejected', 'expired')),
   actual_size bigint CHECK (actual_size IS NULL OR actual_size >= 0),
   rejection_reason text,
   created_at timestamptz NOT NULL DEFAULT now(),
   expires_at timestamptz NOT NULL DEFAULT (now() + interval '2 hours'),
   completed_at timestamptz,
   updated_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE (bucket_id, object_path)
+  UNIQUE (bucket_id, object_path),
+  UNIQUE (upload_bucket_id, upload_object_path)
 );
 
 ALTER TABLE public.active_storage_uploads ENABLE ROW LEVEL SECURITY;
@@ -123,7 +151,7 @@ CREATE INDEX IF NOT EXISTS idx_active_storage_uploads_user_status
 
 CREATE INDEX IF NOT EXISTS idx_active_storage_uploads_pending_expiry
   ON public.active_storage_uploads(expires_at)
-  WHERE status = 'pending';
+  WHERE status IN ('pending', 'publishing');
 
 CREATE OR REPLACE FUNCTION public.storage_object_metadata_size(p_metadata jsonb)
 RETURNS bigint
@@ -157,7 +185,7 @@ BEGIN
       status = 'expired',
       updated_at = p_now,
       rejection_reason = 'upload_token_expired'
-    WHERE status = 'pending'
+    WHERE status IN ('pending', 'publishing')
       AND expires_at < p_now
     RETURNING 1
   )
@@ -176,7 +204,10 @@ CREATE OR REPLACE FUNCTION public.reserve_storage_upload(
 )
 RETURNS TABLE (
   upload_id uuid,
+  bucket_id text,
   object_path text,
+  upload_bucket_id text,
+  upload_object_path text,
   max_file_size_bytes bigint,
   public_bucket boolean
 )
@@ -199,7 +230,7 @@ BEGIN
   SELECT *
   INTO v_policy
   FROM public.storage_upload_bucket_policies
-  WHERE bucket_id = p_bucket_id
+  WHERE storage_upload_bucket_policies.bucket_id = p_bucket_id
     AND is_enabled = true;
 
   IF NOT FOUND THEN
@@ -256,7 +287,7 @@ BEGIN
   INTO v_pending_count
   FROM public.active_storage_uploads
   WHERE user_id = p_user_id
-    AND status = 'pending'
+    AND status IN ('pending', 'publishing')
     AND expires_at > now();
 
   IF v_pending_count >= v_policy.max_concurrent_uploads THEN
@@ -286,7 +317,7 @@ BEGIN
   INTO v_pending_bytes
   FROM public.active_storage_uploads
   WHERE user_id = p_user_id
-    AND status = 'pending'
+    AND status IN ('pending', 'publishing')
     AND expires_at > now();
 
   IF v_current_bytes + v_pending_bytes + p_declared_size > v_policy.quota_bytes THEN
@@ -297,6 +328,8 @@ BEGIN
     user_id,
     bucket_id,
     object_path,
+    upload_bucket_id,
+    upload_object_path,
     declared_size,
     mime_type,
     expires_at
@@ -304,6 +337,8 @@ BEGIN
   VALUES (
     p_user_id,
     p_bucket_id,
+    p_object_path,
+    v_policy.upload_bucket_id,
     p_object_path,
     p_declared_size,
     p_mime_type,
@@ -313,6 +348,9 @@ BEGIN
 
   RETURN QUERY SELECT
     v_upload_id,
+    p_bucket_id,
+    p_object_path,
+    v_policy.upload_bucket_id,
     p_object_path,
     v_policy.max_file_size_bytes,
     v_policy.public_bucket;
@@ -327,9 +365,12 @@ RETURNS TABLE (
   upload_id uuid,
   bucket_id text,
   object_path text,
+  upload_bucket_id text,
+  upload_object_path text,
   status text,
   actual_size bigint,
   rejection_reason text,
+  mime_type text,
   public_bucket boolean
 )
 LANGUAGE plpgsql
@@ -357,7 +398,7 @@ BEGIN
   SELECT *
   INTO v_policy
   FROM public.storage_upload_bucket_policies
-  WHERE bucket_id = v_upload.bucket_id;
+  WHERE storage_upload_bucket_policies.bucket_id = v_upload.bucket_id;
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'storage_upload_policy_missing';
@@ -368,9 +409,12 @@ BEGIN
       v_upload.id,
       v_upload.bucket_id,
       v_upload.object_path,
+      v_upload.upload_bucket_id,
+      v_upload.upload_object_path,
       v_upload.status,
       v_upload.actual_size,
       v_upload.rejection_reason,
+      v_upload.mime_type,
       v_policy.public_bucket;
     RETURN;
   END IF;
@@ -378,8 +422,8 @@ BEGIN
   SELECT *
   INTO v_object
   FROM storage.objects
-  WHERE bucket_id = v_upload.bucket_id
-    AND name = v_upload.object_path;
+  WHERE storage.objects.bucket_id = v_upload.upload_bucket_id
+    AND storage.objects.name = v_upload.upload_object_path;
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'storage_object_not_found';
@@ -410,9 +454,35 @@ BEGIN
       v_upload.id,
       v_upload.bucket_id,
       v_upload.object_path,
+      v_upload.upload_bucket_id,
+      v_upload.upload_object_path,
       v_upload.status,
       v_upload.actual_size,
       v_upload.rejection_reason,
+      v_upload.mime_type,
+      v_policy.public_bucket;
+    RETURN;
+  END IF;
+
+  IF v_policy.public_bucket THEN
+    UPDATE public.active_storage_uploads
+    SET
+      status = 'publishing',
+      actual_size = v_actual_size,
+      updated_at = now()
+    WHERE id = v_upload.id
+    RETURNING * INTO v_upload;
+
+    RETURN QUERY SELECT
+      v_upload.id,
+      v_upload.bucket_id,
+      v_upload.object_path,
+      v_upload.upload_bucket_id,
+      v_upload.upload_object_path,
+      v_upload.status,
+      v_upload.actual_size,
+      v_upload.rejection_reason,
+      v_upload.mime_type,
       v_policy.public_bucket;
     RETURN;
   END IF;
@@ -428,16 +498,138 @@ BEGIN
 
   UPDATE public.minglit_files
   SET owner_id = p_user_id
-  WHERE bucket_id = v_upload.bucket_id
-    AND file_path = v_upload.object_path;
+  WHERE public.minglit_files.bucket_id = v_upload.bucket_id
+    AND public.minglit_files.file_path = v_upload.object_path;
 
   RETURN QUERY SELECT
     v_upload.id,
     v_upload.bucket_id,
     v_upload.object_path,
+    v_upload.upload_bucket_id,
+    v_upload.upload_object_path,
     v_upload.status,
     v_upload.actual_size,
     v_upload.rejection_reason,
+    v_upload.mime_type,
+    v_policy.public_bucket;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.publish_storage_upload(
+  p_upload_id uuid,
+  p_user_id uuid
+)
+RETURNS TABLE (
+  upload_id uuid,
+  bucket_id text,
+  object_path text,
+  upload_bucket_id text,
+  upload_object_path text,
+  status text,
+  actual_size bigint,
+  rejection_reason text,
+  mime_type text,
+  public_bucket boolean
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, storage, auth, extensions
+AS $$
+DECLARE
+  v_upload public.active_storage_uploads%ROWTYPE;
+  v_policy public.storage_upload_bucket_policies%ROWTYPE;
+  v_object storage.objects%ROWTYPE;
+BEGIN
+  SELECT *
+  INTO v_upload
+  FROM public.active_storage_uploads
+  WHERE id = p_upload_id
+    AND user_id = p_user_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'active_upload_not_found';
+  END IF;
+
+  SELECT *
+  INTO v_policy
+  FROM public.storage_upload_bucket_policies
+  WHERE storage_upload_bucket_policies.bucket_id = v_upload.bucket_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'storage_upload_policy_missing';
+  END IF;
+
+  IF NOT v_policy.public_bucket THEN
+    RAISE EXCEPTION 'storage_upload_publish_not_required';
+  END IF;
+
+  IF v_upload.status = 'completed' THEN
+    RETURN QUERY SELECT
+      v_upload.id,
+      v_upload.bucket_id,
+      v_upload.object_path,
+      v_upload.upload_bucket_id,
+      v_upload.upload_object_path,
+      v_upload.status,
+      v_upload.actual_size,
+      v_upload.rejection_reason,
+      v_upload.mime_type,
+      v_policy.public_bucket;
+    RETURN;
+  END IF;
+
+  IF v_upload.status <> 'publishing' THEN
+    RAISE EXCEPTION 'storage_upload_not_ready_to_publish';
+  END IF;
+
+  SELECT *
+  INTO v_object
+  FROM storage.objects
+  WHERE storage.objects.bucket_id = v_upload.bucket_id
+    AND storage.objects.name = v_upload.object_path;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'storage_published_object_not_found';
+  END IF;
+
+  UPDATE public.minglit_files
+  SET owner_id = p_user_id
+  WHERE storage_object_id = v_object.id;
+
+  IF NOT FOUND THEN
+    INSERT INTO public.minglit_files (
+      storage_object_id,
+      bucket_id,
+      file_path,
+      owner_id
+    )
+    VALUES (
+      v_object.id,
+      v_upload.bucket_id,
+      v_upload.object_path,
+      p_user_id
+    );
+  END IF;
+
+  UPDATE public.active_storage_uploads
+  SET
+    status = 'completed',
+    completed_at = now(),
+    updated_at = now()
+  WHERE id = v_upload.id
+  RETURNING * INTO v_upload;
+
+  RETURN QUERY SELECT
+    v_upload.id,
+    v_upload.bucket_id,
+    v_upload.object_path,
+    v_upload.upload_bucket_id,
+    v_upload.upload_object_path,
+    v_upload.status,
+    v_upload.actual_size,
+    v_upload.rejection_reason,
+    v_upload.mime_type,
     v_policy.public_bucket;
 END;
 $$;
@@ -494,7 +686,7 @@ CREATE OR REPLACE FUNCTION public.handle_storage_object_created()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, storage, auth, extensions
+SET search_path = public
 AS $$
 DECLARE
   v_owner_id uuid;
@@ -505,8 +697,10 @@ BEGIN
     SELECT user_id
     INTO v_owner_id
     FROM public.active_storage_uploads
-    WHERE bucket_id = new.bucket_id
-      AND object_path = new.name
+    WHERE upload_bucket_id = new.bucket_id
+      AND upload_object_path = new.name
+      AND active_storage_uploads.bucket_id = new.bucket_id
+      AND active_storage_uploads.object_path = new.name
       AND status = 'pending'
     ORDER BY created_at DESC
     LIMIT 1;
@@ -525,12 +719,14 @@ REVOKE ALL ON FUNCTION public.storage_object_metadata_size(jsonb) FROM PUBLIC, a
 REVOKE ALL ON FUNCTION public.cleanup_stale_storage_uploads(timestamptz) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.reserve_storage_upload(uuid, text, text, bigint, text) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.complete_storage_upload(uuid, uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.publish_storage_upload(uuid, uuid) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.abort_storage_upload(uuid, uuid) FROM PUBLIC, anon, authenticated;
 
 GRANT EXECUTE ON FUNCTION public.storage_object_metadata_size(jsonb) TO service_role;
 GRANT EXECUTE ON FUNCTION public.cleanup_stale_storage_uploads(timestamptz) TO service_role;
 GRANT EXECUTE ON FUNCTION public.reserve_storage_upload(uuid, text, text, bigint, text) TO service_role;
 GRANT EXECUTE ON FUNCTION public.complete_storage_upload(uuid, uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION public.publish_storage_upload(uuid, uuid) TO service_role;
 GRANT EXECUTE ON FUNCTION public.abort_storage_upload(uuid, uuid) TO service_role;
 
 COMMENT ON TABLE public.active_storage_uploads IS
@@ -539,3 +735,5 @@ COMMENT ON FUNCTION public.reserve_storage_upload(uuid, text, text, bigint, text
   'Fix #2993: service_role-only presign guard for Storage uploads. Enforces bucket policy, user/partner path scope, byte-rate, quota, and concurrency.';
 COMMENT ON FUNCTION public.complete_storage_upload(uuid, uuid) IS
   'Fix #2993: service_role-only post-upload reconcile. Closes active upload and rejects declared/actual size mismatches.';
+COMMENT ON FUNCTION public.publish_storage_upload(uuid, uuid) IS
+  'Fix #2993: service_role-only public bucket publish step after private staging upload is reconciled.';

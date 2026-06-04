@@ -29,9 +29,17 @@ type RpcSingleResult<T> = {
   error: { message?: string } | null;
 };
 
+type StorageResult<T> = {
+  data: T | null;
+  error: { message?: string } | null;
+};
+
 type ReserveUploadRow = {
   upload_id: string;
+  bucket_id: string;
   object_path: string;
+  upload_bucket_id: string;
+  upload_object_path: string;
   max_file_size_bytes: number;
   public_bucket: boolean;
 };
@@ -40,9 +48,12 @@ type CompleteUploadRow = {
   upload_id: string;
   bucket_id: string;
   object_path: string;
+  upload_bucket_id: string;
+  upload_object_path: string;
   status: string;
   actual_size: number | null;
   rejection_reason: string | null;
+  mime_type: string;
   public_bucket: boolean;
 };
 
@@ -123,8 +134,8 @@ async function presignUpload(
   }
 
   const signed = await ctx.supabase.storage
-    .from(bucket)
-    .createSignedUploadUrl(reserve.data.object_path);
+    .from(reserve.data.upload_bucket_id)
+    .createSignedUploadUrl(reserve.data.upload_object_path);
 
   if (signed.error || !signed.data) {
     await abortUploadId(ctx, reserve.data.upload_id);
@@ -134,18 +145,16 @@ async function presignUpload(
     );
   }
 
-  const publicUrl = reserve.data.public_bucket
-    ? ctx.supabase.storage.from(bucket).getPublicUrl(reserve.data.object_path)
-      .data.publicUrl
-    : null;
-
   return successResponse({
     upload_id: reserve.data.upload_id,
-    bucket,
-    path: reserve.data.object_path,
+    bucket: reserve.data.bucket_id,
+    path: reserve.data.upload_object_path,
+    upload_bucket: reserve.data.upload_bucket_id,
+    upload_path: reserve.data.upload_object_path,
+    final_path: reserve.data.object_path,
     token: signed.data.token,
     signed_url: signed.data.signedUrl,
-    public_url: publicUrl,
+    public_url: null,
     max_file_size_bytes: reserve.data.max_file_size_bytes,
   });
 }
@@ -171,26 +180,25 @@ async function completeUpload(
     );
   }
 
-  if (result.data.status === "rejected") {
-    await ctx.supabase.storage
-      .from(result.data.bucket_id)
-      .remove([result.data.object_path]);
+  let upload = result.data;
+
+  if (upload.status === "rejected") {
+    const cleanup = await removeStorageObject(
+      ctx,
+      upload.upload_bucket_id,
+      upload.upload_object_path,
+      "storage_rejected_object_cleanup_failed",
+    );
+    if (cleanup) return cleanup;
   }
 
-  const publicUrl = result.data.public_bucket
-    ? ctx.supabase.storage.from(result.data.bucket_id)
-      .getPublicUrl(result.data.object_path).data.publicUrl
-    : null;
+  if (upload.status === "publishing") {
+    const published = await publishPublicUpload(ctx, upload);
+    if (published instanceof Response) return published;
+    upload = published;
+  }
 
-  return successResponse({
-    upload_id: result.data.upload_id,
-    bucket: result.data.bucket_id,
-    path: result.data.object_path,
-    status: result.data.status,
-    actual_size: result.data.actual_size,
-    rejection_reason: result.data.rejection_reason,
-    public_url: publicUrl,
-  });
+  return uploadResponse(ctx, upload);
 }
 
 async function abortUpload(
@@ -226,6 +234,91 @@ function abortUploadId(
       p_user_id: ctx.auth.type === "user" ? ctx.auth.userId : "",
     })
     .single() as Promise<RpcSingleResult<AbortUploadRow>>;
+}
+
+async function publishPublicUpload(
+  ctx: EFContext,
+  upload: CompleteUploadRow,
+): Promise<CompleteUploadRow | Response> {
+  const downloaded = await ctx.supabase.storage
+    .from(upload.upload_bucket_id)
+    .download(upload.upload_object_path) as StorageResult<Blob>;
+  if (downloaded.error || !downloaded.data) {
+    return errorResponse(
+      downloaded.error?.message ?? "storage_staging_download_failed",
+      500,
+    );
+  }
+
+  const publishedObject = await ctx.supabase.storage
+    .from(upload.bucket_id)
+    .upload(upload.object_path, downloaded.data, {
+      contentType: upload.mime_type,
+      upsert: false,
+    }) as StorageResult<unknown>;
+  if (publishedObject.error) {
+    return errorResponse(
+      publishedObject.error.message ?? "storage_public_publish_failed",
+      500,
+    );
+  }
+
+  const published = await ctx.supabase
+    .rpc("publish_storage_upload", {
+      p_upload_id: upload.upload_id,
+      p_user_id: ctx.auth.type === "user" ? ctx.auth.userId : "",
+    })
+    .single() as RpcSingleResult<CompleteUploadRow>;
+
+  if (published.error || !published.data) {
+    await ctx.supabase.storage
+      .from(upload.bucket_id)
+      .remove([upload.object_path]);
+    return errorResponse(
+      published.error?.message ?? "storage_upload_publish_failed",
+      500,
+    );
+  }
+
+  await ctx.supabase.storage
+    .from(upload.upload_bucket_id)
+    .remove([upload.upload_object_path]);
+
+  return published.data;
+}
+
+async function removeStorageObject(
+  ctx: EFContext,
+  bucket: string,
+  path: string,
+  errorCode: string,
+): Promise<Response | null> {
+  const removed = await ctx.supabase.storage
+    .from(bucket)
+    .remove([path]) as StorageResult<unknown>;
+  if (removed.error) {
+    return errorResponse(removed.error.message ?? errorCode, 500);
+  }
+  return null;
+}
+
+function uploadResponse(ctx: EFContext, upload: CompleteUploadRow): Response {
+  const publicUrl = upload.public_bucket && upload.status === "completed"
+    ? ctx.supabase.storage.from(upload.bucket_id)
+      .getPublicUrl(upload.object_path).data.publicUrl
+    : null;
+
+  return successResponse({
+    upload_id: upload.upload_id,
+    bucket: upload.bucket_id,
+    path: upload.object_path,
+    upload_bucket: upload.upload_bucket_id,
+    upload_path: upload.upload_object_path,
+    status: upload.status,
+    actual_size: upload.actual_size,
+    rejection_reason: upload.rejection_reason,
+    public_url: publicUrl,
+  });
 }
 
 function readString(

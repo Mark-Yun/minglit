@@ -174,13 +174,15 @@ class StorageRepository {
     final presignData = (presign.data as Map).cast<String, dynamic>();
     final uploadId = presignData['upload_id'] as String;
     final path = presignData['path'] as String;
+    final uploadBucket = presignData['upload_bucket'] as String? ?? bucket;
+    final uploadPath = presignData['upload_path'] as String? ?? path;
     final token = presignData['token'] as String;
 
     try {
       await _supabase.storage
-          .from(bucket)
+          .from(uploadBucket)
           .uploadBinaryToSignedUrl(
-            path,
+            uploadPath,
             token,
             bytes,
             FileOptions(contentType: contentType),
@@ -209,7 +211,7 @@ class StorageRepository {
     }
 
     final publicUrl = completeData['public_url'] as String?;
-    return publicUrl ?? (completeData['path'] as String? ?? path);
+    return publicUrl ?? (completeData['path'] as String? ?? uploadPath);
   }
 
   Future<void> _abortSignedUpload(String uploadId) async {
