@@ -34,6 +34,22 @@ void main() {
           isTrue,
         );
       });
+
+      test('package-local app lib path', () {
+        expect(
+          NoServiceRoleInClientRule.shouldLintPath('lib/main.dart'),
+          isTrue,
+        );
+      });
+
+      test('package URI app path', () {
+        expect(
+          NoServiceRoleInClientRule.shouldLintPath(
+            'package:app_user/main.dart',
+          ),
+          isTrue,
+        );
+      });
     });
 
     group('server-only and non-client paths: warning disabled', () {
@@ -68,6 +84,15 @@ void main() {
         expect(
           NoServiceRoleInClientRule.shouldLintPath(
             '/repo/apps/app_user/test/src/config/env_keystore_test.dart',
+          ),
+          isFalse,
+        );
+      });
+
+      test('package-local app test path', () {
+        expect(
+          NoServiceRoleInClientRule.shouldLintPath(
+            'test/src/config/env_keystore_test.dart',
           ),
           isFalse,
         );

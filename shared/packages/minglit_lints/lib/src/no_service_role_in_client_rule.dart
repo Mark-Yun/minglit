@@ -49,7 +49,11 @@ class NoServiceRoleInClientRule extends DartLintRule {
   /// Exposed as static for unit testing.
   static bool isClientPath(String filePath) {
     final path = _normalizePath(filePath);
-    return path.contains('apps/app_user/lib/') ||
+    return path.startsWith('lib/') ||
+        path.startsWith('package:app_user/') ||
+        path.startsWith('package:app_partner/') ||
+        path.startsWith('package:minglit_kit/') ||
+        path.contains('apps/app_user/lib/') ||
         path.contains('apps/app_partner/lib/') ||
         path.contains('shared/packages/minglit_kit/lib/');
   }
@@ -59,7 +63,10 @@ class NoServiceRoleInClientRule extends DartLintRule {
   /// Exposed as static for unit testing.
   static bool isExemptPath(String filePath) {
     final path = _normalizePath(filePath);
-    return path.contains('/test/') ||
+    return path.startsWith('test/') ||
+        path.startsWith('integration_test/') ||
+        path.startsWith('patrol_test/') ||
+        path.contains('/test/') ||
         path.contains('/integration_test/') ||
         path.contains('/patrol_test/') ||
         path.contains('supabase/functions/') ||
