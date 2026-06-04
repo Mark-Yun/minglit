@@ -1,7 +1,8 @@
 // Critical-path tests for EventCreateController.submit with recurrence enabled.
 //
 // When recurrenceSettingsControllerProvider.isEnabled is true, submit must call
-// recurrenceRuleRepository.create() in addition to partyRepository.createEvent().
+// recurrenceRuleRepository.create() in addition to
+// partyRepository.createEvent().
 // A regression here would create an event without its recurrence rule — partner
 // thinks recurrence is set up, but it silently never generates future events.
 //
@@ -11,6 +12,7 @@
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/party/event/create/event_create_controller.dart';
 import 'package:app_partner/src/features/party/logic/recurrence_settings_controller.dart';
+import 'package:app_partner/src/logic/event_create_draft_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -24,6 +26,22 @@ import '../../../../../utils/test_utils.dart';
 
 class _MockRecurrenceRuleRepository extends Mock
     implements RecurrenceRuleRepository {}
+
+class _FakeEventCreateDraftRepository implements EventCreateDraftRepository {
+  const _FakeEventCreateDraftRepository();
+
+  @override
+  Future<void> deleteDraft(String partyId) async {}
+
+  @override
+  Future<EventCreateDraft?> getDraft(String partyId) async => null;
+
+  @override
+  Future<List<EventCreateDraft>> getDrafts() async => const [];
+
+  @override
+  Future<void> saveDraft(EventCreateDraft draft) async {}
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -124,6 +142,9 @@ void main() {
             recurrenceRuleRepositoryProvider.overrideWithValue(
               mockRecurrenceRepo,
             ),
+            eventCreateDraftRepositoryProvider.overrideWithValue(
+              const _FakeEventCreateDraftRepository(),
+            ),
             partyDetailProvider('party-rec-1').overrideWith(
               (ref) async => party,
             ),
@@ -149,18 +170,17 @@ void main() {
         final notifier = container.read(
           eventCreateControllerProvider('party-rec-1').notifier,
         );
-        notifier.updateLocation(
-          Location(
-            id: 'loc-1',
-            partnerId: 'partner-1',
-            name: 'Venue',
-            address: '서울시',
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          ),
-        );
-
-        await notifier.submit();
+        await (notifier..updateLocation(
+              Location(
+                id: 'loc-1',
+                partnerId: 'partner-1',
+                name: 'Venue',
+                address: '서울시',
+                createdAt: DateTime.now(),
+                updatedAt: DateTime.now(),
+              ),
+            ))
+            .submit();
 
         final state = container.read(
           eventCreateControllerProvider('party-rec-1'),
@@ -213,6 +233,9 @@ void main() {
             recurrenceRuleRepositoryProvider.overrideWithValue(
               mockRecurrenceRepo,
             ),
+            eventCreateDraftRepositoryProvider.overrideWithValue(
+              const _FakeEventCreateDraftRepository(),
+            ),
             partyDetailProvider('party-rec-1').overrideWith(
               (ref) async => party,
             ),
@@ -226,20 +249,20 @@ void main() {
         final notifier = container.read(
           eventCreateControllerProvider('party-rec-1').notifier,
         );
-        notifier.updateStartTime(startTime);
-        notifier.updateEndTime(endTime);
-        notifier.updateLocation(
-          Location(
-            id: 'loc-1',
-            partnerId: 'partner-1',
-            name: 'Venue',
-            address: '서울시',
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          ),
-        );
-
-        await notifier.submit();
+        await (notifier
+              ..updateStartTime(startTime)
+              ..updateEndTime(endTime)
+              ..updateLocation(
+                Location(
+                  id: 'loc-1',
+                  partnerId: 'partner-1',
+                  name: 'Venue',
+                  address: '서울시',
+                  createdAt: DateTime.now(),
+                  updatedAt: DateTime.now(),
+                ),
+              ))
+            .submit();
 
         // Capture the create() call arguments
         final createCall = verify(
@@ -254,9 +277,10 @@ void main() {
           ),
         )..called(1);
 
-        // captureAny with named returns a list of [partyId, pattern, daysOfWeek, startTime, endTime, ...]
+        // captureAny with named returns:
+        // [partyId, pattern, daysOfWeek, startTime, endTime, ...]
         final captured = createCall.captured;
-        // The captured values for named params come in the order they appear in verify()
+        // Captured named params follow the order they appear in verify().
         final capturedStartTime = captured[3] as String; // 'startTime' index
         final capturedEndTime = captured[4] as String; // 'endTime' index
 
@@ -284,6 +308,9 @@ void main() {
             recurrenceRuleRepositoryProvider.overrideWithValue(
               mockRecurrenceRepo,
             ),
+            eventCreateDraftRepositoryProvider.overrideWithValue(
+              const _FakeEventCreateDraftRepository(),
+            ),
             partyDetailProvider('party-rec-1').overrideWith(
               (ref) async => party,
             ),
@@ -294,18 +321,17 @@ void main() {
         final notifier = container.read(
           eventCreateControllerProvider('party-rec-1').notifier,
         );
-        notifier.updateLocation(
-          Location(
-            id: 'loc-1',
-            partnerId: 'partner-1',
-            name: 'Venue',
-            address: '서울시',
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          ),
-        );
-
-        await notifier.submit();
+        await (notifier..updateLocation(
+              Location(
+                id: 'loc-1',
+                partnerId: 'partner-1',
+                name: 'Venue',
+                address: '서울시',
+                createdAt: DateTime.now(),
+                updatedAt: DateTime.now(),
+              ),
+            ))
+            .submit();
 
         final state = container.read(
           eventCreateControllerProvider('party-rec-1'),
@@ -354,6 +380,9 @@ void main() {
             recurrenceRuleRepositoryProvider.overrideWithValue(
               mockRecurrenceRepo,
             ),
+            eventCreateDraftRepositoryProvider.overrideWithValue(
+              const _FakeEventCreateDraftRepository(),
+            ),
             partyDetailProvider('party-rec-1').overrideWith(
               (ref) async => party,
             ),
@@ -365,18 +394,17 @@ void main() {
         final notifier = container.read(
           eventCreateControllerProvider('party-rec-1').notifier,
         );
-        notifier.updateLocation(
-          Location(
-            id: 'loc-1',
-            partnerId: 'partner-1',
-            name: 'Venue',
-            address: '서울시',
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          ),
-        );
-
-        await notifier.submit();
+        await (notifier..updateLocation(
+              Location(
+                id: 'loc-1',
+                partnerId: 'partner-1',
+                name: 'Venue',
+                address: '서울시',
+                createdAt: DateTime.now(),
+                updatedAt: DateTime.now(),
+              ),
+            ))
+            .submit();
 
         final state = container.read(
           eventCreateControllerProvider('party-rec-1'),

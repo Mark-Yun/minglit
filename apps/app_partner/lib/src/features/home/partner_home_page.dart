@@ -3,6 +3,7 @@ import 'dart:async' show unawaited;
 import 'package:app_partner/src/features/home/partner_dashboard_controller.dart';
 import 'package:app_partner/src/features/home/partner_home_coordinator.dart';
 import 'package:app_partner/src/features/home/widgets/home_approval_pending_card.dart';
+import 'package:app_partner/src/features/home/widgets/home_draft_event_card.dart';
 import 'package:app_partner/src/features/home/widgets/home_draft_party_card.dart';
 import 'package:app_partner/src/features/home/widgets/home_live_event_card.dart';
 import 'package:app_partner/src/features/home/widgets/home_overview_block.dart';
@@ -41,6 +42,28 @@ class PartnerHomePage extends ConsumerWidget {
     final state = ref.watch(partnerDashboardControllerProvider);
     final partner = ref.watch(currentPartnerInfoProvider).asData?.value;
     final coordinator = ref.read(partnerHomeCoordinatorProvider);
+    String? partyNameFor(String partyId) {
+      for (final party in state.activeParties) {
+        if (party.id == partyId) return party.title;
+      }
+      return null;
+    }
+
+    Future<void> openFirstEventCreate() async {
+      if (state.activeParties.length == 1) {
+        coordinator.pushEventCreate(state.activeParties.first.id);
+        return;
+      }
+      final selected = await showMinglitBottomSheet<Party>(
+        context: context,
+        title: '이벤트를 만들 파티를 선택하세요',
+        child: _PartySelectionSheet(parties: state.activeParties),
+      );
+      if (selected != null) {
+        coordinator.pushEventCreate(selected.id);
+      }
+    }
+
     final unreadCount = ref
         .watch(notificationListProvider)
         .maybeWhen(
@@ -133,23 +156,18 @@ class PartnerHomePage extends ConsumerWidget {
                       hasParty: state.activeParties.isNotEmpty,
                       partyName: state.activeParties.firstOrNull?.title,
                       onCreateParty: coordinator.pushPartyCreate,
-                      onCreateEvent: () async {
-                        if (state.activeParties.length == 1) {
-                          coordinator.pushEventCreate(
-                            state.activeParties.first.id,
-                          );
-                          return;
-                        }
-                        final selected = await showModalBottomSheet<Party>(
-                          context: context,
-                          builder: (bottomSheetContext) => _PartySelectionSheet(
-                            parties: state.activeParties,
-                          ),
-                        );
-                        if (selected != null) {
-                          coordinator.pushEventCreate(selected.id);
-                        }
-                      },
+                      onCreateEvent: openFirstEventCreate,
+                      draftEventCard: state.draftEvents.isEmpty
+                          ? null
+                          : HomeDraftEventCard(
+                              draft: state.draftEvents.first,
+                              partyName: partyNameFor(
+                                state.draftEvents.first.partyId,
+                              ),
+                              onResume: () => coordinator.pushEventCreate(
+                                state.draftEvents.first.partyId,
+                              ),
+                            ),
                       onOpenGuide: coordinator.pushPartnerGuide,
                     ),
                   ] else ...[
@@ -262,6 +280,24 @@ class PartnerHomePage extends ConsumerWidget {
                         ),
                       ),
                     ],
+                    if (state.draftEvents.isNotEmpty) ...[
+                      const SizedBox(height: MinglitSpacing.large),
+                      const HomeSectionHeader(title: '작성 중'),
+                      const SizedBox(height: MinglitSpacing.small),
+                      ...state.draftEvents.map(
+                        (draft) => Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: MinglitSpacing.small,
+                          ),
+                          child: HomeDraftEventCard(
+                            draft: draft,
+                            partyName: partyNameFor(draft.partyId),
+                            onResume: () =>
+                                coordinator.pushEventCreate(draft.partyId),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ],
               ),
@@ -319,31 +355,18 @@ class _PartySelectionSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: MinglitSpacing.medium),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(MinglitSpacing.large),
-              child: Text(
-                '이벤트를 만들 파티를 선택하세요',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            ...parties.map(
-              (party) => ListTile(
-                leading: const Icon(Icons.storefront_outlined),
-                title: Text(party.title),
-                onTap: () => Navigator.of(context).pop(party),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return ListView.separated(
+      shrinkWrap: true,
+      itemCount: parties.length,
+      separatorBuilder: (_, _) => const Divider(height: 1),
+      itemBuilder: (context, index) {
+        final party = parties[index];
+        return MinglitListTile(
+          leading: const Icon(Icons.storefront_outlined),
+          title: party.title,
+          onTap: () => Navigator.of(context).pop(party),
+        );
+      },
     );
   }
 }

@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/party/logic/recurrence_settings_controller.dart';
 import 'package:app_partner/src/logic/dashboard_refresh_notifier.dart';
+import 'package:app_partner/src/logic/event_create_draft_repository.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -14,6 +17,8 @@ abstract class EventCreateState with _$EventCreateState {
     required String partyId,
     required DateTime startTime,
     required DateTime endTime,
+    String? draftId,
+    @Default(0) int checkpointTabIndex,
     @Default(20) int maxParticipants,
     @Default('') String title,
     @Default({}) Map<String, dynamic> description,
@@ -26,14 +31,18 @@ abstract class EventCreateState with _$EventCreateState {
     @Default([]) List<EntryGroup> entryGroups,
     @Default([]) List<Ticket> tickets,
     String? visibility,
+    DateTime? draftUpdatedAt,
     @Default(AsyncValue.data(null)) AsyncValue<void> status,
   }) = _EventCreateState;
 }
 
 @riverpod
 class EventCreateController extends _$EventCreateController {
+  Timer? _draftSaveDebounce;
+
   @override
   EventCreateState build(String partyId) {
+    ref.onDispose(() => _draftSaveDebounce?.cancel());
     final now = DateTime.now();
     final nextWeek = DateTime(now.year, now.month, now.day + 7, 19);
 
@@ -44,11 +53,21 @@ class EventCreateController extends _$EventCreateController {
     );
   }
 
-  void initWithParty({
+  Future<void> initWithParty({
     required Party party,
     required List<TicketTemplate> templates,
     Location? location,
-  }) {
+  }) async {
+    final savedDraft = await ref
+        .read(eventCreateDraftRepositoryProvider)
+        .getDraft(party.id);
+    if (savedDraft != null) {
+      state = savedDraft.toState();
+      ref.read(recurrenceSettingsControllerProvider.notifier).snapshot =
+          savedDraft.recurrence;
+      return;
+    }
+
     // 1. Create a base event from party template using the standardized factory
     final baseEvent = Event.createFromParty(
       party,
@@ -84,61 +103,78 @@ class EventCreateController extends _$EventCreateController {
   }
 
   void updateStartTime(DateTime dateTime) {
-    state = state.copyWith(startTime: dateTime);
-    if (state.endTime.isBefore(dateTime)) {
-      state = state.copyWith(endTime: dateTime.add(const Duration(hours: 3)));
+    var nextState = state.copyWith(startTime: dateTime);
+    if (nextState.endTime.isBefore(dateTime)) {
+      nextState = nextState.copyWith(
+        endTime: dateTime.add(const Duration(hours: 3)),
+      );
     }
+    _setDraftableState(nextState);
   }
 
   void updateEndTime(DateTime dateTime) {
-    state = state.copyWith(endTime: dateTime);
+    _setDraftableState(state.copyWith(endTime: dateTime));
   }
 
   void updateMaxParticipants(int count) {
-    state = state.copyWith(maxParticipants: count);
+    _setDraftableState(state.copyWith(maxParticipants: count));
   }
 
   void updateTitle(String? value) {
-    state = state.copyWith(title: value ?? '');
+    _setDraftableState(state.copyWith(title: value ?? ''));
   }
 
   void updateDescription(Map<String, dynamic> value) {
-    state = state.copyWith(description: value);
+    _setDraftableState(state.copyWith(description: value));
   }
 
   void updateImageUrl(String? value) {
-    state = state.copyWith(imageUrl: value);
+    _setDraftableState(state.copyWith(imageUrl: value));
   }
 
   void updateContactOptions(Map<String, dynamic> options) {
-    state = state.copyWith(contactOptions: options);
+    _setDraftableState(state.copyWith(contactOptions: options));
   }
 
   void updateLocation(Location? location) {
-    state = state.copyWith(
-      selectedLocation: location,
-      locationId: location?.id,
+    _setDraftableState(
+      state.copyWith(
+        selectedLocation: location,
+        locationId: location?.id,
+      ),
     );
   }
 
   void updateAddressDetail(String? value) {
-    state = state.copyWith(addressDetail: value);
+    _setDraftableState(state.copyWith(addressDetail: value));
   }
 
   void updateDirections(String? value) {
-    state = state.copyWith(directionsGuide: value);
+    _setDraftableState(state.copyWith(directionsGuide: value));
   }
 
   void setVisibility(String? value) {
-    state = state.copyWith(visibility: value);
+    _setDraftableState(state.copyWith(visibility: value));
+  }
+
+  void updateCheckpointTab(int index) {
+    if (state.checkpointTabIndex == index) return;
+    _setDraftableState(state.copyWith(checkpointTabIndex: index));
+  }
+
+  void saveDraftSoon() {
+    _scheduleDraftSave();
   }
 
   Future<void> submit() async {
+    _draftSaveDebounce?.cancel();
     state = state.copyWith(status: const AsyncValue<void>.loading());
 
     // Fix #1037: snapshot recurrence state before any await to avoid race
     // conditions.
     final recurrenceSnapshot = ref.read(recurrenceSettingsControllerProvider);
+    final draftRepo = ref.read(eventCreateDraftRepositoryProvider);
+    final draftPartyId = state.partyId;
 
     final result = await AsyncValue.guard(() async {
       final repo = ref.read(partyRepositoryProvider);
@@ -204,6 +240,39 @@ class EventCreateController extends _$EventCreateController {
       ref.read(dashboardRefreshProvider.notifier).bump();
     });
 
-    state = state.copyWith(status: result);
+    if (result.hasValue) {
+      await draftRepo.deleteDraft(draftPartyId);
+    }
+    if (!ref.mounted) return;
+    state = state.copyWith(
+      draftId: result.hasValue ? null : state.draftId,
+      draftUpdatedAt: result.hasValue ? null : state.draftUpdatedAt,
+      status: result,
+    );
+  }
+
+  void _setDraftableState(EventCreateState nextState) {
+    state = nextState;
+    _scheduleDraftSave();
+  }
+
+  void _scheduleDraftSave() {
+    _draftSaveDebounce?.cancel();
+    _draftSaveDebounce = Timer(const Duration(milliseconds: 500), () {
+      unawaited(saveDraftNow());
+    });
+  }
+
+  Future<void> saveDraftNow() async {
+    _draftSaveDebounce?.cancel();
+    final updatedAt = DateTime.now();
+    final recurrence = ref.read(recurrenceSettingsControllerProvider);
+    final draft = EventCreateDraft.fromState(
+      state: state,
+      recurrence: recurrence,
+      updatedAt: updatedAt,
+    );
+    await ref.read(eventCreateDraftRepositoryProvider).saveDraft(draft);
+    state = state.copyWith(draftId: draft.id, draftUpdatedAt: updatedAt);
   }
 }

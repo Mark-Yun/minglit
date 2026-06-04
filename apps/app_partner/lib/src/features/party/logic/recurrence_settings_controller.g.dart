@@ -10,9 +10,9 @@ part of 'recurrence_settings_controller.dart';
 // ignore_for_file: type=lint, type=warning
 /// Manages the recurrence settings UI state for the event creation flow.
 ///
-/// The controller is scoped to the event-create screen via [ProviderScope.overrides]
-/// or via its auto-dispose lifetime. It computes preview dates without any
-/// repository calls — submission is handled by EventCreateController.submit.
+/// The controller is scoped to the event-create screen via
+/// [ProviderScope.overrides] or via its auto-dispose lifetime.
+/// It computes preview dates without repository calls.
 
 @ProviderFor(RecurrenceSettingsController)
 const recurrenceSettingsControllerProvider =
@@ -20,9 +20,9 @@ const recurrenceSettingsControllerProvider =
 
 /// Manages the recurrence settings UI state for the event creation flow.
 ///
-/// The controller is scoped to the event-create screen via [ProviderScope.overrides]
-/// or via its auto-dispose lifetime. It computes preview dates without any
-/// repository calls — submission is handled by EventCreateController.submit.
+/// The controller is scoped to the event-create screen via
+/// [ProviderScope.overrides] or via its auto-dispose lifetime.
+/// It computes preview dates without repository calls.
 final class RecurrenceSettingsControllerProvider
     extends
         $NotifierProvider<
@@ -31,9 +31,9 @@ final class RecurrenceSettingsControllerProvider
         > {
   /// Manages the recurrence settings UI state for the event creation flow.
   ///
-  /// The controller is scoped to the event-create screen via [ProviderScope.overrides]
-  /// or via its auto-dispose lifetime. It computes preview dates without any
-  /// repository calls — submission is handled by EventCreateController.submit.
+  /// The controller is scoped to the event-create screen via
+  /// [ProviderScope.overrides] or via its auto-dispose lifetime.
+  /// It computes preview dates without repository calls.
   const RecurrenceSettingsControllerProvider._()
     : super(
         from: null,
@@ -62,13 +62,13 @@ final class RecurrenceSettingsControllerProvider
 }
 
 String _$recurrenceSettingsControllerHash() =>
-    r'a5eebab1bdcdbdc9b821114f1677237e89c71239';
+    r'a6662b339468cfb12b5327f6d10898a9935a8edc';
 
 /// Manages the recurrence settings UI state for the event creation flow.
 ///
-/// The controller is scoped to the event-create screen via [ProviderScope.overrides]
-/// or via its auto-dispose lifetime. It computes preview dates without any
-/// repository calls — submission is handled by EventCreateController.submit.
+/// The controller is scoped to the event-create screen via
+/// [ProviderScope.overrides] or via its auto-dispose lifetime.
+/// It computes preview dates without repository calls.
 
 abstract class _$RecurrenceSettingsController
     extends $Notifier<RecurrenceSettingsState> {

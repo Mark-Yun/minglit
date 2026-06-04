@@ -4,6 +4,7 @@ import 'package:app_partner/src/features/party/detail/party_detail_controller.da
 import 'package:app_partner/src/features/party/event/create/event_create_controller.dart';
 import 'package:app_partner/src/features/party/event/create/tabs/event_create_info_tab.dart';
 import 'package:app_partner/src/features/party/event/create/tabs/event_create_operation_tab.dart';
+import 'package:app_partner/src/features/party/logic/recurrence_settings_controller.dart';
 import 'package:app_partner/src/utils/l10n_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -18,10 +19,16 @@ class EventCreatePage extends ConsumerStatefulWidget {
   ConsumerState<EventCreatePage> createState() => _EventCreatePageState();
 }
 
-class _EventCreatePageState extends ConsumerState<EventCreatePage> {
+class _EventCreatePageState extends ConsumerState<EventCreatePage>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+  bool _appliedDraftCheckpoint = false;
+
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this)
+      ..addListener(_handleTabChanged);
 
     // Initialize controller state from Party data
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -37,7 +44,7 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
       }
 
       if (mounted) {
-        ref
+        await ref
             .read(eventCreateControllerProvider(widget.partyId).notifier)
             .initWithParty(
               party: party,
@@ -46,6 +53,21 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
             );
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _tabController
+      ..removeListener(_handleTabChanged)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _handleTabChanged() {
+    if (_tabController.indexIsChanging) return;
+    ref
+        .read(eventCreateControllerProvider(widget.partyId).notifier)
+        .updateCheckpointTab(_tabController.index);
   }
 
   Future<void> _submit() async {
@@ -72,63 +94,75 @@ class _EventCreatePageState extends ConsumerState<EventCreatePage> {
       eventCreateControllerProvider(widget.partyId).notifier,
     );
     final theme = Theme.of(context);
+    ref.listen(recurrenceSettingsControllerProvider, (_, _) {
+      notifier.saveDraftSoon();
+    });
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(context.l10n.eventCreate_title),
-          bottom: TabBar(
-            tabs: [
-              const Tab(text: '운영 및 티켓'),
-              Tab(text: context.l10n.partyDetail_tab_info),
-            ],
-          ),
-        ),
-        body: Column(
-          children: [
-            Expanded(
-              child: TabBarView(
-                children: [
-                  // Tab 1: Schedule & Tickets
-                  EventCreateOperationTab(state: state, notifier: notifier),
+    if (!_appliedDraftCheckpoint && state.draftId != null) {
+      _appliedDraftCheckpoint = true;
+      final index = state.checkpointTabIndex.clamp(0, 1);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _tabController.index != index) {
+          _tabController.index = index;
+        }
+      });
+    }
 
-                  // Tab 2: Event Details (Summary Based)
-                  EventCreateInfoTab(
-                    state: state,
-                    notifier: notifier,
-                    partyId: widget.partyId,
-                  ),
-                ],
-              ),
-            ),
-
-            // Submit Button
-            Container(
-              padding: const EdgeInsets.all(MinglitSpacing.medium),
-              decoration: BoxDecoration(
-                color: theme.scaffoldBackgroundColor,
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.shadowColor.withValues(
-                      alpha: MinglitOpacity.tintFill,
-                    ),
-                    blurRadius: 10,
-                    offset: const Offset(0, -4),
-                  ),
-                ],
-              ),
-              child: SafeArea(
-                child: ElevatedButton(
-                  onPressed: state.status.isLoading ? null : _submit,
-                  child: state.status.isLoading
-                      ? const Text('회차 생성 중...')
-                      : const Text('회차 생성 완료'),
-                ),
-              ),
-            ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(context.l10n.eventCreate_title),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: [
+            const Tab(text: '운영 및 티켓'),
+            Tab(text: context.l10n.partyDetail_tab_info),
           ],
         ),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                // Tab 1: Schedule & Tickets
+                EventCreateOperationTab(state: state, notifier: notifier),
+
+                // Tab 2: Event Details (Summary Based)
+                EventCreateInfoTab(
+                  state: state,
+                  notifier: notifier,
+                  partyId: widget.partyId,
+                ),
+              ],
+            ),
+          ),
+
+          // Submit Button
+          Container(
+            padding: const EdgeInsets.all(MinglitSpacing.medium),
+            decoration: BoxDecoration(
+              color: theme.scaffoldBackgroundColor,
+              boxShadow: [
+                BoxShadow(
+                  color: theme.shadowColor.withValues(
+                    alpha: MinglitOpacity.tintFill,
+                  ),
+                  blurRadius: 10,
+                  offset: const Offset(0, -4),
+                ),
+              ],
+            ),
+            child: SafeArea(
+              child: ElevatedButton(
+                onPressed: state.status.isLoading ? null : _submit,
+                child: state.status.isLoading
+                    ? const Text('회차 생성 중...')
+                    : const Text('회차 생성 완료'),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,10 +1,13 @@
 import 'package:app_partner/src/features/home/partner_dashboard_controller.dart';
 import 'package:app_partner/src/features/party/detail/party_detail_controller.dart';
 import 'package:app_partner/src/features/party/event/create/event_create_controller.dart';
+import 'package:app_partner/src/logic/event_create_draft_repository.dart';
+import 'package:app_partner/src/features/party/logic/recurrence_settings_controller.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../../utils/mocks.dart';
 import '../../../../../utils/test_utils.dart';
@@ -55,12 +58,33 @@ TicketTemplate _makeTemplate({String id = 'tmpl-1'}) {
   );
 }
 
+class _FakeEventCreateDraftRepository implements EventCreateDraftRepository {
+  final _drafts = <String, EventCreateDraft>{};
+
+  @override
+  Future<void> deleteDraft(String partyId) async {
+    _drafts.remove(partyId);
+  }
+
+  @override
+  Future<EventCreateDraft?> getDraft(String partyId) async => _drafts[partyId];
+
+  @override
+  Future<List<EventCreateDraft>> getDrafts() async => _drafts.values.toList();
+
+  @override
+  Future<void> saveDraft(EventCreateDraft draft) async {
+    _drafts[draft.partyId] = draft;
+  }
+}
+
 void main() {
   late MockPartyRepository mockPartyRepo;
   late MockLocationRepository mockLocationRepo;
   late MockEventRepository mockEventRepo;
 
   setUp(() {
+    SharedPreferences.setMockInitialValues({});
     mockPartyRepo = MockPartyRepository();
     mockLocationRepo = MockLocationRepository();
     mockEventRepo = MockEventRepository();
@@ -110,7 +134,7 @@ void main() {
     });
 
     group('initWithParty', () {
-      test('populates state from party template', () {
+      test('populates state from party template', () async {
         final container = createContainer(
           overrides: [
             partyRepositoryProvider.overrideWithValue(mockPartyRepo),
@@ -125,7 +149,7 @@ void main() {
         final templates = [_makeTemplate()];
         final location = _makeLocation();
 
-        notifier.initWithParty(
+        await notifier.initWithParty(
           party: party,
           templates: templates,
           location: location,
@@ -146,7 +170,7 @@ void main() {
         expect(state.directionsGuide, '엘리베이터 이용');
       });
 
-      test('handles party without location', () {
+      test('handles party without location', () async {
         final container = createContainer(
           overrides: [
             partyRepositoryProvider.overrideWithValue(mockPartyRepo),
@@ -157,7 +181,7 @@ void main() {
           eventCreateControllerProvider('party-1').notifier,
         );
 
-        notifier.initWithParty(
+        await notifier.initWithParty(
           party: _makeParty(),
           templates: <TicketTemplate>[],
         );
@@ -171,7 +195,7 @@ void main() {
         expect(state.tickets, isEmpty);
       });
 
-      test('maps entry group templates to instances', () {
+      test('maps entry group templates to instances', () async {
         final container = createContainer(
           overrides: [
             partyRepositoryProvider.overrideWithValue(mockPartyRepo),
@@ -191,7 +215,7 @@ void main() {
           ),
         ];
 
-        notifier.initWithParty(
+        await notifier.initWithParty(
           party: _makeParty(entryGroups: entryGroupTemplates),
           templates: <TicketTemplate>[],
         );
@@ -204,6 +228,64 @@ void main() {
         expect(state.entryGroups.first.label, 'Male');
         expect(state.entryGroups.first.gender, 'male');
       });
+
+      test(
+        'restores saved draft instead of overwriting from party template',
+        () async {
+          final draftRepo = _FakeEventCreateDraftRepository();
+          final draft = EventCreateDraft(
+            id: 'draft-1',
+            partyId: 'party-1',
+            checkpointTabIndex: 1,
+            startTime: DateTime(2030, 1, 1, 19),
+            endTime: DateTime(2030, 1, 1, 22),
+            maxParticipants: 42,
+            title: 'Saved Draft Event',
+            description: const {'ops': <dynamic>[]},
+            contactOptions: const {'kakao': 'draft-chat'},
+            entryGroups: const [],
+            tickets: const [],
+            recurrence: const RecurrenceSettingsState(
+              isEnabled: true,
+              pattern: RecurrencePattern.biweekly,
+              daysOfWeek: [2, 4],
+            ),
+            updatedAt: DateTime(2030, 1, 1, 18),
+          );
+          await draftRepo.saveDraft(draft);
+
+          final container = createContainer(
+            overrides: [
+              partyRepositoryProvider.overrideWithValue(mockPartyRepo),
+              eventCreateDraftRepositoryProvider.overrideWithValue(draftRepo),
+            ],
+          );
+
+          final notifier = container.read(
+            eventCreateControllerProvider('party-1').notifier,
+          );
+
+          await notifier.initWithParty(
+            party: _makeParty(),
+            templates: [_makeTemplate()],
+          );
+
+          final state = container.read(
+            eventCreateControllerProvider('party-1'),
+          );
+          final recurrence = container.read(
+            recurrenceSettingsControllerProvider,
+          );
+
+          expect(state.draftId, 'draft-1');
+          expect(state.title, 'Saved Draft Event');
+          expect(state.checkpointTabIndex, 1);
+          expect(state.maxParticipants, 42);
+          expect(recurrence.isEnabled, isTrue);
+          expect(recurrence.pattern, RecurrencePattern.biweekly);
+          expect(recurrence.daysOfWeek, [2, 4]);
+        },
+      );
     });
 
     group('update methods', () {
@@ -473,6 +555,35 @@ void main() {
           'private',
         );
       });
+
+      test('auto-saves dirty form state after debounce', () async {
+        final draftRepo = _FakeEventCreateDraftRepository();
+        final container = createContainer(
+          overrides: [
+            partyRepositoryProvider.overrideWithValue(mockPartyRepo),
+            eventCreateDraftRepositoryProvider.overrideWithValue(draftRepo),
+          ],
+        );
+
+        final notifier = container.read(
+          eventCreateControllerProvider('party-1').notifier,
+        );
+        final sub = container.listen(
+          eventCreateControllerProvider('party-1'),
+          (_, _) {},
+        );
+        addTearDown(sub.close);
+        notifier
+          ..updateTitle('Auto Saved Event')
+          ..updateCheckpointTab(1);
+
+        await Future<void>.delayed(const Duration(milliseconds: 650));
+
+        final draft = await draftRepo.getDraft('party-1');
+        expect(draft, isNotNull);
+        expect(draft!.title, 'Auto Saved Event');
+        expect(draft.checkpointTabIndex, 1);
+      });
     });
 
     group('submit', () {
@@ -521,6 +632,53 @@ void main() {
           verifyNever(() => mockLocationRepo.createLocation(any()));
         },
       );
+
+      test('deletes saved draft after successful publish', () async {
+        final draftRepo = _FakeEventCreateDraftRepository();
+        await draftRepo.saveDraft(
+          EventCreateDraft.fromState(
+            state: EventCreateState(
+              partyId: 'party-1',
+              startTime: DateTime(2030, 1, 1, 19),
+              endTime: DateTime(2030, 1, 1, 22),
+              title: 'Saved Draft Event',
+            ),
+            recurrence: const RecurrenceSettingsState(),
+            updatedAt: DateTime(2030, 1, 1, 18),
+          ),
+        );
+
+        when(() => mockPartyRepo.createEvent(any())).thenAnswer(
+          (_) async => Event(
+            id: 'new-event',
+            partyId: 'party-1',
+            startTime: DateTime.now(),
+            endTime: DateTime.now(),
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+
+        final container = createContainer(
+          overrides: [
+            partyRepositoryProvider.overrideWithValue(mockPartyRepo),
+            locationRepositoryProvider.overrideWithValue(mockLocationRepo),
+            eventCreateDraftRepositoryProvider.overrideWithValue(draftRepo),
+            partyDetailProvider('party-1').overrideWith(
+              (ref) async => _makeParty(locationId: 'loc-1'),
+            ),
+          ],
+        );
+
+        final notifier = container.read(
+          eventCreateControllerProvider('party-1').notifier,
+        );
+        notifier.updateLocation(_makeLocation());
+
+        await notifier.submit();
+
+        expect(await draftRepo.getDraft('party-1'), isNull);
+      });
 
       test('creates location first when selectedLocation has no id', () async {
         final party = _makeParty();

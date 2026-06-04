@@ -16,7 +16,9 @@ mixin _$RecurrenceSettingsState {
 
 /// Whether recurrence is enabled for the event being created.
  bool get isEnabled;/// Repeat pattern (weekly / biweekly / monthly).
- RecurrencePattern get pattern;/// Days of week to generate events on (0=Sun … 6=Sat, JavaScript convention).
+ RecurrencePattern get pattern;/// Days of week to generate events on.
+///
+/// Uses JavaScript convention: 0=Sun … 6=Sat.
 /// Used for weekly and biweekly patterns.
  List<int> get daysOfWeek;/// Day of month (1–31) for monthly pattern.
  int? get monthDay;/// Optional rule end date in YYYY-MM-DD format.
@@ -223,10 +225,14 @@ class _RecurrenceSettingsState implements RecurrenceSettingsState {
 @override@JsonKey() final  bool isEnabled;
 /// Repeat pattern (weekly / biweekly / monthly).
 @override@JsonKey() final  RecurrencePattern pattern;
-/// Days of week to generate events on (0=Sun … 6=Sat, JavaScript convention).
+/// Days of week to generate events on.
+///
+/// Uses JavaScript convention: 0=Sun … 6=Sat.
 /// Used for weekly and biweekly patterns.
  final  List<int> _daysOfWeek;
-/// Days of week to generate events on (0=Sun … 6=Sat, JavaScript convention).
+/// Days of week to generate events on.
+///
+/// Uses JavaScript convention: 0=Sun … 6=Sat.
 /// Used for weekly and biweekly patterns.
 @override@JsonKey() List<int> get daysOfWeek {
   if (_daysOfWeek is EqualUnmodifiableListView) return _daysOfWeek;
