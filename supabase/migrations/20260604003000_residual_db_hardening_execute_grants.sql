@@ -86,16 +86,18 @@ REVOKE EXECUTE ON FUNCTION public.get_event_participants_for_checkin(uuid)
 GRANT EXECUTE ON FUNCTION public.get_event_participants_for_checkin(uuid)
   TO authenticated, service_role;
 
--- Write-capable RPCs are EF-owned under the publishable write lockdown.
+-- Write-capable direct-client RPCs. These still have active publishable-client
+-- callers; keep authenticated EXECUTE until the EF wrapper/client migration
+-- lands, while removing the default PUBLIC/anon execute surface.
 REVOKE EXECUTE ON FUNCTION public.process_manual_checkin(uuid, uuid)
-  FROM PUBLIC, anon, authenticated;
+  FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.process_manual_checkin(uuid, uuid)
-  TO service_role;
+  TO authenticated, service_role;
 
 REVOKE EXECUTE ON FUNCTION public.process_qr_checkin(uuid, uuid, uuid)
-  FROM PUBLIC, anon, authenticated;
+  FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.process_qr_checkin(uuid, uuid, uuid)
-  TO service_role;
+  TO authenticated, service_role;
 
 REVOKE EXECUTE ON FUNCTION public.get_ticket_public_key()
   FROM PUBLIC, anon;
@@ -103,19 +105,19 @@ GRANT EXECUTE ON FUNCTION public.get_ticket_public_key()
   TO authenticated, service_role;
 
 REVOKE EXECUTE ON FUNCTION public.request_retry_payout(uuid, uuid)
-  FROM PUBLIC, anon, authenticated;
+  FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.request_retry_payout(uuid, uuid)
-  TO service_role;
+  TO authenticated, service_role;
 
 REVOKE EXECUTE ON FUNCTION public.save_user_consents(uuid, jsonb)
-  FROM PUBLIC, anon, authenticated;
+  FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.save_user_consents(uuid, jsonb)
-  TO service_role;
+  TO authenticated, service_role;
 
 REVOKE EXECUTE ON FUNCTION public.set_social_interaction(text, text, text, boolean)
-  FROM PUBLIC, anon, authenticated;
+  FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.set_social_interaction(text, text, text, boolean)
-  TO service_role;
+  TO authenticated, service_role;
 
 -- Edge Function, cron, and trigger internals. Trigger execution does not depend
 -- on client-role EXECUTE privileges; direct RPC access should stay closed.

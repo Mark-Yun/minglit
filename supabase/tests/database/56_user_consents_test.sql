@@ -70,8 +70,8 @@ SELECT tests.create_supabase_user('consent_user_b', 'consent_b@test.com');
 
 SELECT results_eq(
   $$SELECT has_function_privilege('authenticated', 'public.save_user_consents(uuid, jsonb)', 'EXECUTE')::text$$,
-  $$VALUES ('false')$$,
-  'authenticated cannot execute save_user_consents directly'
+  $$VALUES ('true')$$,
+  'authenticated can execute save_user_consents until EF wrapper migration'
 );
 
 SELECT results_eq(
@@ -80,7 +80,7 @@ SELECT results_eq(
   'service_role can execute save_user_consents for Edge Function writes'
 );
 
-SELECT tests.authenticate_as_service_role_user('consent_user_a');
+SELECT tests.authenticate_as('consent_user_a');
 
 SELECT lives_ok(
   format(
@@ -94,7 +94,7 @@ SELECT lives_ok(
     )$$,
     tests.get_supabase_uid('consent_user_a')
   ),
-  'service_role user context can save own consents via RPC'
+  'authenticated user context can save own consents via RPC'
 );
 
 -- ============================================================
@@ -127,7 +127,7 @@ ROLLBACK TO SAVEPOINT before_direct_insert;
 -- ============================================================
 -- 8. RPC — user cannot save consents for another user
 -- ============================================================
-SELECT tests.authenticate_as_service_role_user('consent_user_a');
+SELECT tests.authenticate_as('consent_user_a');
 
 SAVEPOINT before_cross_save;
 SELECT throws_ok(
@@ -184,7 +184,7 @@ ROLLBACK TO SAVEPOINT before_direct_delete;
 -- ============================================================
 -- 11. RPC — user can update own consent state
 -- ============================================================
-SELECT tests.authenticate_as_service_role_user('consent_user_a');
+SELECT tests.authenticate_as('consent_user_a');
 
 SELECT lives_ok(
   format(
@@ -225,7 +225,7 @@ SELECT results_eq(
 );
 
 -- Restore terms_of_service
-SELECT tests.authenticate_as_service_role_user('consent_user_a');
+SELECT tests.authenticate_as('consent_user_a');
 
 SELECT lives_ok(
   format(
@@ -300,7 +300,7 @@ SELECT lives_ok(
 -- ============================================================
 -- 18. Fix #2054: server timestamp 강제 — client-supplied consented_at 무시
 -- ============================================================
-SELECT tests.authenticate_as_service_role_user('consent_user_a');
+SELECT tests.authenticate_as('consent_user_a');
 
 SELECT lives_ok(
   format(
