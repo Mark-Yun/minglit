@@ -110,6 +110,37 @@ class _DelayedEventCreateDraftRepository
   }
 }
 
+class _DraftSaveCall {
+  _DraftSaveCall(this.draft);
+
+  final EventCreateDraft draft;
+  final allow = Completer<void>();
+}
+
+class _SequencedEventCreateDraftRepository
+    extends _FakeEventCreateDraftRepository {
+  final calls = <_DraftSaveCall>[];
+  final _callAdded = StreamController<void>.broadcast();
+
+  bool hasSavedDraft(String partyId) => _drafts.containsKey(partyId);
+
+  Future<_DraftSaveCall> waitForCall(int count) async {
+    while (calls.length < count) {
+      await _callAdded.stream.first;
+    }
+    return calls[count - 1];
+  }
+
+  @override
+  Future<void> saveDraft(EventCreateDraft draft) async {
+    final call = _DraftSaveCall(draft);
+    calls.add(call);
+    _callAdded.add(null);
+    await call.allow.future;
+    await super.saveDraft(draft);
+  }
+}
+
 void main() {
   late MockPartyRepository mockPartyRepo;
   late MockLocationRepository mockLocationRepo;
@@ -704,6 +735,44 @@ void main() {
           expect(draftRepo.hasSavedDraft('party-1'), isTrue);
         },
       );
+
+      test('serializes overlapping explicit draft saves', () async {
+        final draftRepo = _SequencedEventCreateDraftRepository();
+        final container = createContainer(
+          overrides: [
+            partyRepositoryProvider.overrideWithValue(mockPartyRepo),
+            eventCreateDraftRepositoryProvider.overrideWithValue(draftRepo),
+          ],
+        );
+        final provider = eventCreateControllerProvider('party-1');
+        final sub = container.listen(provider, (_, _) {});
+        addTearDown(sub.close);
+        final notifier = container.read(provider.notifier);
+
+        notifier.updateTitle('Older Draft');
+        final firstSave = notifier.saveDraftNow();
+        final firstCall = await draftRepo.waitForCall(1);
+
+        notifier.updateTitle('Latest Draft');
+        final secondSave = notifier.saveDraftNow();
+        await Future<void>.delayed(Duration.zero);
+
+        expect(
+          draftRepo.calls,
+          hasLength(1),
+          reason: 'The second save must wait for the first repository write',
+        );
+
+        firstCall.allow.complete();
+        final secondCall = await draftRepo.waitForCall(2);
+        expect(secondCall.draft.title, 'Latest Draft');
+        secondCall.allow.complete();
+
+        await Future.wait([firstSave, secondSave]);
+
+        final savedDraft = await draftRepo.getDraft('party-1');
+        expect(savedDraft?.title, 'Latest Draft');
+      });
     });
 
     group('submit', () {

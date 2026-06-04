@@ -279,7 +279,18 @@ class EventCreateController extends _$EventCreateController {
 
   Future<void> saveDraftNow() async {
     if (_isSubmitting) return;
-    final save = _saveDraftNow();
+    final previousSave = _draftSaveInFlight;
+    final save = () async {
+      if (previousSave != null) {
+        try {
+          await previousSave;
+        } on Object {
+          // A later explicit save should still try to persist the latest state.
+        }
+      }
+      if (_isSubmitting || !ref.mounted) return;
+      await _saveDraftNow();
+    }();
     _draftSaveInFlight = save;
     try {
       await save;
