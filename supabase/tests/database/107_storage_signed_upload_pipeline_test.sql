@@ -1,6 +1,6 @@
 -- Fix #2993: signed Storage upload guardrails.
 BEGIN;
-SELECT plan(32);
+SELECT plan(33);
 
 SET search_path TO public, storage, extensions;
 SELECT tests.authenticate_as_service_role();
@@ -69,6 +69,18 @@ SELECT results_eq(
   '#2993: covered buckets no longer expose direct authenticated INSERT policies'
 );
 
+SELECT set_config(
+  'tests.storage_advisory_lock_count_before',
+  (
+    SELECT count(*)::int
+    FROM pg_locks
+    WHERE locktype = 'advisory'
+      AND pid = pg_backend_pid()
+      AND granted
+  )::text,
+  true
+);
+
 CREATE TEMP TABLE t_upload AS
 SELECT *
 FROM public.reserve_storage_upload(
@@ -82,6 +94,18 @@ FROM public.reserve_storage_upload(
 SELECT ok(
   (SELECT upload_id IS NOT NULL FROM t_upload),
   '#2993: reserve_storage_upload creates an active upload'
+);
+
+SELECT is(
+  (
+    SELECT count(*)::int
+    FROM pg_locks
+    WHERE locktype = 'advisory'
+      AND pid = pg_backend_pid()
+      AND granted
+  ),
+  current_setting('tests.storage_advisory_lock_count_before')::int + 1,
+  '#2993: reserve serializes user-scoped quota checks with a transaction advisory lock'
 );
 
 SELECT is(

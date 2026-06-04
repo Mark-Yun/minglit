@@ -283,6 +283,13 @@ BEGIN
     END IF;
   END IF;
 
+  -- Serialize all reservation accounting for a user. Concurrency, hourly byte
+  -- rate, and quota checks are user-scoped, so the lock must be user-scoped too.
+  PERFORM pg_advisory_xact_lock(
+    hashtext('storage_upload_reserve'),
+    hashtext(p_user_id::text)
+  );
+
   SELECT count(*)::integer
   INTO v_pending_count
   FROM public.active_storage_uploads
