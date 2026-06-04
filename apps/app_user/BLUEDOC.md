@@ -32,7 +32,6 @@ Minglit 의 **일반 사용자 Flutter 앱**. 파티 탐색·참여 신청·결�
 | `account_deletion/` | 회원 탈퇴 플로우 |
 | `consent/` | 이용약관 동의 |
 | `dev/` | 개발 유틸리티 (DevMap 화면 등) |
-| `admin/` | 운영/통계 계약 하네스 UI (CUJ contract test 지원) |
 
 ## 핵심 컨벤션
 
@@ -47,6 +46,5 @@ Minglit 의 **일반 사용자 Flutter 앱**. 파티 탐색·참여 신청·결�
 - [apps/architecture.md](../architecture.md) — Flutter 공통 아키텍처
 - [minglit_kit/BLUEDOC.md](../../shared/packages/minglit_kit/BLUEDOC.md) — 공용 패키지
 - [README.md](./README.md) — 빌드·실행 / [integration_test](./integration_test/BLUEDOC.md) — 통합 테스트
-
 ---
-_Reviewed: 2026-06-04 22:19_
+_Reviewed: 2026-06-04 22:35_
