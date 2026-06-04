@@ -115,9 +115,9 @@ DECLARE
 BEGIN
   v_party_id := (SELECT party_id FROM state_machine_setup);
 
-  -- Test 7 setup: scheduled → active (start_time within 30-min window, not yet started)
+  -- Test 7 setup: scheduled → active (start_time within T-2 window, not yet started)
   INSERT INTO public.events (party_id, start_time, end_time, min_confirmed_count, max_participants, status)
-  VALUES (v_party_id, now() + interval '10 minutes', now() + interval '2 hours', 0, 10, 'scheduled')
+  VALUES (v_party_id, now() + interval '90 minutes', now() + interval '3 hours', 0, 10, 'scheduled')
   RETURNING id INTO v_sched_to_active;
 
   -- Test 8 setup: active → ongoing (start_time in the past, event has started)
@@ -130,18 +130,18 @@ BEGIN
   VALUES (v_party_id, now() - interval '3 hours', now() - interval '1 minute', 0, 10, 'ongoing')
   RETURNING id INTO v_ongoing_to_comp;
 
-  -- Test 10 setup: no premature transition (start_time far in the future, outside 30-min window)
+  -- Test 10 setup: no premature transition (start_time far in the future, outside T-2 window)
   INSERT INTO public.events (party_id, start_time, end_time, min_confirmed_count, max_participants, status)
-  VALUES (v_party_id, now() + interval '2 hours', now() + interval '4 hours', 0, 10, 'scheduled')
+  VALUES (v_party_id, now() + interval '3 hours', now() + interval '5 hours', 0, 10, 'scheduled')
   RETURNING id INTO v_no_premature;
 
-  -- Run cron SQL: scheduled → active (start_time - 30 min reached, not yet started)
+  -- Run cron SQL: scheduled → active (start_time - 2 hours reached, not yet started)
   -- Fix #998: added AND start_time > now() upper bound to prevent already-started events
   -- from being set to active (they should go to ongoing instead)
   UPDATE public.events
   SET status = 'active'
   WHERE status = 'scheduled'
-    AND start_time - interval '30 minutes' <= now()
+    AND start_time - interval '2 hours' <= now()
     AND start_time > now()
     AND id = v_sched_to_active;
 
@@ -164,7 +164,7 @@ BEGIN
   UPDATE public.events
   SET status = 'active'
   WHERE status = 'scheduled'
-    AND start_time - interval '30 minutes' <= now()
+    AND start_time - interval '2 hours' <= now()
     AND start_time > now()
     AND id = v_no_premature;
 
@@ -185,7 +185,7 @@ END $$;
 SELECT is(
   (SELECT status FROM cron_transition_results WHERE label = 'sched_to_active'),
   'active',
-  '크론 전환: scheduled → active (start_time - 30min <= now())'
+  '크론 전환: scheduled → active (start_time - 2h <= now())'
 );
 
 -- Test 8: active → ongoing
@@ -206,7 +206,7 @@ SELECT is(
 SELECT is(
   (SELECT status FROM cron_transition_results WHERE label = 'no_premature'),
   'scheduled',
-  '크론 전환 없음: start_time이 30분 이상 남은 scheduled 이벤트는 active로 전환되지 않음'
+  '크론 전환 없음: start_time이 2시간 초과 남은 scheduled 이벤트는 active로 전환되지 않음'
 );
 
 -- ============================================================

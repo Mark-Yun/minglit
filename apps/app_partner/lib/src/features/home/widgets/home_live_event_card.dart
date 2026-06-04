@@ -41,7 +41,7 @@ class HomeLiveEventCard extends StatelessWidget {
             ),
             const SizedBox(width: MinglitSpacing.small),
             MinglitButton(
-              label: '체크인',
+              label: '참가자 체크인',
               size: MinglitButtonSize.small,
               expand: false,
               onPressed: onCheckin,

@@ -17,12 +17,16 @@ Event _makeEvent({
   final DateTime endTime;
   switch (phase) {
     case 'recruiting':
-      // > 3 hours until start
-      startTime = now.add(const Duration(days: 5));
-      endTime = now.add(const Duration(days: 5, hours: 2));
-    case 'preparing':
-      // <= 3 hours until start
-      startTime = now.add(const Duration(hours: 1));
+      // > 7 days until start
+      startTime = now.add(const Duration(days: 8));
+      endTime = now.add(const Duration(days: 8, hours: 2));
+    case 'preStart':
+      // T-7 through T-2h
+      startTime = now.add(const Duration(days: 3));
+      endTime = now.add(const Duration(days: 3, hours: 2));
+    case 'checkinReady':
+      // T-2h through start
+      startTime = now.add(const Duration(minutes: 90));
       endTime = now.add(const Duration(hours: 3));
     case 'live':
       // started but not ended
@@ -33,7 +37,7 @@ Event _makeEvent({
       startTime = now.subtract(const Duration(hours: 3));
       endTime = now.subtract(const Duration(hours: 1));
     default:
-      startTime = now.add(const Duration(hours: 1));
+      startTime = now.add(const Duration(minutes: 90));
       endTime = now.add(const Duration(hours: 3));
   }
 
@@ -73,13 +77,13 @@ void main() {
     );
 
     testWidgets(
-      'preparing phase shows "준비 중" badge and "체크인 준비" CTA',
+      'pre-start phase shows "체크인 대기" badge and "참가자 리스트" CTA',
       (tester) async {
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
               body: EventActionCard(
-                event: _makeEvent(phase: 'preparing'),
+                event: _makeEvent(phase: 'preStart'),
                 onMainAction: () {},
                 onSecondaryAction1: () {},
                 onSecondaryAction2: () {},
@@ -87,13 +91,33 @@ void main() {
             ),
           ),
         );
-        expect(find.textContaining('준비 중'), findsOneWidget);
-        expect(find.text('체크인 준비'), findsOneWidget);
+        expect(find.textContaining('체크인 대기'), findsOneWidget);
+        expect(find.text('참가자 리스트'), findsOneWidget);
       },
     );
 
     testWidgets(
-      'live phase shows "LIVE" badge and "체크인 계속하기" CTA',
+      'checkin-ready phase shows "체크인 가능" badge and "참가자 체크인" CTA',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: EventActionCard(
+                event: _makeEvent(phase: 'checkinReady'),
+                onMainAction: () {},
+                onSecondaryAction1: () {},
+                onSecondaryAction2: null,
+              ),
+            ),
+          ),
+        );
+        expect(find.textContaining('체크인 가능'), findsOneWidget);
+        expect(find.text('참가자 체크인'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'live phase shows "LIVE" badge and "참가자 체크인" CTA',
       (tester) async {
         await tester.pumpWidget(
           MaterialApp(
@@ -108,7 +132,7 @@ void main() {
           ),
         );
         expect(find.textContaining('LIVE'), findsOneWidget);
-        expect(find.text('체크인 계속하기'), findsOneWidget);
+        expect(find.text('참가자 체크인'), findsOneWidget);
       },
     );
 
