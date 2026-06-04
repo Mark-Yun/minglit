@@ -95,6 +95,8 @@ SELECT throws_like(
 -- Test 3: 엔트리 그룹 없는 이벤트 → 빈 배열 반환
 -- ============================================================
 
+SELECT tests.authenticate_as_service_role();
+
 DO $$
 DECLARE
   v_partner_id uuid;

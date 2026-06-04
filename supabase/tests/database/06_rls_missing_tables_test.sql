@@ -55,6 +55,19 @@ INSERT INTO public.partner_applications (
   '/path/a_biz_reg', '/path/a_bankbook'
 );
 
+-- partner_application for user_b created through the service_role path so the
+-- read policy can still be asserted after publishable writes are revoked.
+INSERT INTO public.partner_applications (
+  user_id, brand_name, biz_type, biz_name, biz_number,
+  representative_name, bank_name, account_number, account_holder,
+  biz_registration_path, bankbook_path
+) VALUES (
+  tests.get_supabase_uid('user_b'),
+  'B Brand Seed', 'individual', 'B Biz Seed', '222-22-22222',
+  'B Rep', 'B Bank', '2222222222', 'B Holder',
+  '/path/b_biz_reg_seed', '/path/b_bankbook_seed'
+);
+
 -- Verification chain for verification_comments tests
 WITH v AS (
   INSERT INTO public.verifications (partner_id, category, internal_name, display_name)
@@ -101,13 +114,15 @@ SELECT tests.authenticate_as('user_a');
 SELECT results_eq(
   $$SELECT count(*)::int FROM public.app_roles
     WHERE user_id = tests.get_supabase_uid('user_a')$$,
-  $$VALUES (1)$$,
-  'super_admin can read own app_roles entry'
+  $$VALUES (0)$$,
+  'super_admin cannot directly read app_roles'
 );
-SELECT lives_ok(
+SELECT throws_ok(
   $$INSERT INTO public.app_roles (user_id, role)
     VALUES (tests.get_supabase_uid('user_b'), 'moderator')$$,
-  'super_admin can insert app_roles'
+  '42501',
+  null,
+  'super_admin cannot directly insert app_roles'
 );
 
 -- ===========================================================================
@@ -239,7 +254,7 @@ SELECT throws_ok(
 );
 
 SELECT tests.authenticate_as('user_b');
-SELECT lives_ok(
+SELECT throws_ok(
   $$INSERT INTO public.partner_applications (
       user_id, brand_name, biz_type, biz_name, biz_number,
       representative_name, bank_name, account_number, account_holder,
@@ -250,7 +265,9 @@ SELECT lives_ok(
       'B Rep', 'B Bank', '2222222222', 'B Holder',
       '/path/b_biz_reg', '/path/b_bankbook'
     )$$,
-  'authenticated user can insert own partner_application'
+  '42501',
+  null,
+  'authenticated user cannot directly insert own partner_application'
 );
 SELECT results_eq(
   $$SELECT count(*)::int FROM public.partner_applications

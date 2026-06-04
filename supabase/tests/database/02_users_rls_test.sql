@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(7);
+SELECT plan(6);
 
 SELECT tests.create_supabase_user('user_a', 'a@test.com');
 SELECT tests.create_supabase_user('user_b', 'b@test.com');
@@ -13,11 +13,12 @@ UPDATE public.user_profiles
   WHERE id = tests.get_supabase_uid('user_b');
 
 SELECT tests.clear_authentication();
-SELECT is_empty(
+SELECT throws_ok(
   $$UPDATE public.user_profiles
       SET name = 'Anon Update'
-      WHERE id = tests.get_supabase_uid('user_a')
-      RETURNING id$$,
+      WHERE id = tests.get_supabase_uid('user_a')$$,
+  '42501',
+  NULL,
   'anon cannot update user profiles'
 );
 
@@ -35,27 +36,23 @@ SELECT is_empty(
   'users cannot read other profiles'
 );
 
-SELECT lives_ok(
+SELECT throws_ok(
   $$UPDATE public.user_profiles
       SET name = 'Updated User A'
       WHERE id = tests.get_supabase_uid('user_a')$$,
-  'user can update own profile'
-);
-SELECT results_eq(
-  $$SELECT name
-    FROM public.user_profiles
-    WHERE id = tests.get_supabase_uid('user_a')$$,
-  $$VALUES ('Updated User A')$$,
-  'own profile update persists'
+  '42501',
+  NULL,
+  'users cannot directly update own profile'
 );
 
 SELECT tests.authenticate_as('user_b');
-SELECT is_empty(
+SELECT throws_ok(
   $$UPDATE public.user_profiles
       SET name = 'Hacked'
-      WHERE id = tests.get_supabase_uid('user_a')
-      RETURNING id$$,
-  'users cannot update other profiles'
+      WHERE id = tests.get_supabase_uid('user_a')$$,
+  '42501',
+  NULL,
+  'users cannot directly update other profiles'
 );
 SELECT is_empty(
   $$SELECT id FROM public.user_profiles

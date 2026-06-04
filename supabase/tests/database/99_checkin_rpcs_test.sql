@@ -56,7 +56,7 @@ END $$;
 -- Test 1: process_qr_checkin — PARTY_MANAGE 없는 유저 → permission denied
 -- ============================================================
 
-SELECT tests.authenticate_as('checkin_no_perm');
+SELECT tests.authenticate_as_service_role_user('checkin_no_perm');
 
 SELECT throws_like(
   format(
@@ -73,7 +73,7 @@ SELECT throws_like(
 -- Test 2: process_qr_checkin — 존재하지 않는 ticket_id → not_found
 -- ============================================================
 
-SELECT tests.authenticate_as('checkin_staff');
+SELECT tests.authenticate_as_service_role_user('checkin_staff');
 
 SELECT is(
   public.process_qr_checkin(

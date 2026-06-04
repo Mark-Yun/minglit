@@ -35,7 +35,7 @@ SELECT has_function(
 -- ============================================================
 -- 3. 정상 태그 허용 — 민감 키워드 미포함 태그는 INSERT 성공
 -- ============================================================
-SELECT tests.authenticate_as('sf_admin');
+SELECT tests.authenticate_as_service_role();
 
 SAVEPOINT before_safe_inserts;
 

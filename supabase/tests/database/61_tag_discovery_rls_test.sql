@@ -105,9 +105,15 @@ SELECT throws_ok(
 );
 ROLLBACK TO SAVEPOINT before_user_tag_insert;
 
--- RLS silently excludes rows for UPDATE/DELETE (0 rows affected, no exception)
--- Verify the data is unchanged after attempted UPDATE
-UPDATE public.tags SET is_featured = false WHERE id = current_setting('tests.td_tag_id')::uuid;
+SELECT throws_ok(
+  format(
+    $$UPDATE public.tags SET is_featured = false WHERE id = '%s'$$,
+    current_setting('tests.td_tag_id')
+  ),
+  '42501',
+  NULL,
+  'non-admin user cannot directly UPDATE tags'
+);
 
 SELECT results_eq(
   format(
@@ -115,11 +121,18 @@ SELECT results_eq(
     current_setting('tests.td_tag_id')
   ),
   $$VALUES (true)$$,
-  'non-admin user cannot UPDATE tags'
+  'non-admin direct UPDATE leaves tags unchanged'
 );
 
--- Verify DELETE has no effect
-DELETE FROM public.tags WHERE id = current_setting('tests.td_tag_id')::uuid;
+SELECT throws_ok(
+  format(
+    $$DELETE FROM public.tags WHERE id = '%s'$$,
+    current_setting('tests.td_tag_id')
+  ),
+  '42501',
+  NULL,
+  'non-admin user cannot directly DELETE tags'
+);
 
 SELECT results_eq(
   $$SELECT count(*)::int FROM public.tags WHERE name = 'td_tag_test'$$,
@@ -128,22 +141,29 @@ SELECT results_eq(
 );
 
 -- ============================================================
--- 3. tags — super_admin: 읽기 + 쓰기 가능
+-- 3. tags — super_admin: 읽기 가능, 직접 쓰기 불가
 -- ============================================================
 SELECT tests.authenticate_as('td_admin');
 
-SELECT lives_ok(
+SELECT throws_ok(
   $$INSERT INTO public.tags (name) VALUES ('admin_created_tag')$$,
-  'super_admin can INSERT tags'
+  '42501',
+  NULL,
+  'super_admin cannot directly INSERT tags'
 );
 
-SELECT lives_ok(
+SELECT throws_ok(
   format(
     $$UPDATE public.tags SET is_featured = false WHERE id = '%s'$$,
     current_setting('tests.td_tag_id')
   ),
-  'super_admin can UPDATE tags'
+  '42501',
+  NULL,
+  'super_admin cannot directly UPDATE tags'
 );
+
+SELECT tests.authenticate_as_service_role();
+INSERT INTO public.tags (name) VALUES ('admin_created_tag');
 
 -- ============================================================
 -- 4. party_tags — anon: 직접 읽기 불가 (Fix #1149)

@@ -6,11 +6,8 @@ SELECT plan(12);
 -- normalize_for_filter() + 트리거 적용 후 우회 벡터 차단 검증
 -- ============================================================
 
-SELECT tests.create_supabase_user('unicode_admin', 'unicode_admin@test.com');
-SELECT tests.authenticate_as_service_role();
-
-INSERT INTO public.app_roles (user_id, role)
-VALUES (tests.get_supabase_uid('unicode_admin'), 'super_admin');
+-- Trigger behavior is role-independent; run as the migration/test owner so
+-- pgTAP plan state is not split across SET ROLE boundaries.
 
 -- ============================================================
 -- 1. normalize_for_filter() 함수 존재 확인
@@ -75,45 +72,35 @@ SELECT results_eq(
 -- 4. 트리거 차단 — Zero-width 우회 시도 차단
 --    U+200B 삽입으로 ILIKE 우회 시도 → 정규화 후 차단
 -- ============================================================
-SELECT tests.authenticate_as('unicode_admin');
-
-SAVEPOINT before_zw_racial;
 SELECT throws_ok(
   $$INSERT INTO public.tags (name) VALUES ('흑' || chr(8203) || '인모임')$$,
   'P0001',
   'Tag name contains sensitive content (category: racial_ethnic)',
   'zero-width space bypass of racial_ethnic keyword "흑인" is blocked'
 );
-ROLLBACK TO SAVEPOINT before_zw_racial;
 
 -- U+200D (zero-width joiner)
-SAVEPOINT before_zw_joiner;
 SELECT throws_ok(
   $$INSERT INTO public.tags (name) VALUES ('동성' || chr(8205) || '애클럽')$$,
   'P0001',
   'Tag name contains sensitive content (category: sexual_orientation)',
   'zero-width joiner bypass of sexual_orientation keyword "동성애" is blocked'
 );
-ROLLBACK TO SAVEPOINT before_zw_joiner;
 
 -- ============================================================
 -- 5. 트리거 차단 — Fullwidth Latin 우회 시도 차단
 --    ＨＩＶ (Fullwidth) → NFKC 정규화 후 HIV로 변환 → 차단
 -- ============================================================
-SAVEPOINT before_fullwidth_hiv;
 SELECT throws_ok(
   $$INSERT INTO public.tags (name) VALUES (chr(65320) || chr(65321) || chr(65334) || '양성')$$,
   'P0001',
   'Tag name contains sensitive content (category: health_medical)',
   'Fullwidth Latin ＨＩＶ bypass of health_medical keyword "HIV" is blocked'
 );
-ROLLBACK TO SAVEPOINT before_fullwidth_hiv;
 
 -- ============================================================
 -- 6. 정상 태그 무영향 — 관련 없는 유사 문자열은 허용
 -- ============================================================
-SAVEPOINT before_safe_unicode;
-
 -- '복인' — 흑인과 유사하지만 다른 단어
 SELECT lives_ok(
   $$INSERT INTO public.tags (name) VALUES ('복인파티')$$,
@@ -125,8 +112,6 @@ SELECT lives_ok(
   $$INSERT INTO public.tags (name) VALUES ('소셜다이닝')$$,
   'safe tag "소셜다이닝" INSERT succeeds'
 );
-
-ROLLBACK TO SAVEPOINT before_safe_unicode;
 
 SELECT * FROM finish();
 ROLLBACK;

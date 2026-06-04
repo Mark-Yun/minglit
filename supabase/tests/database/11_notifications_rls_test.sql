@@ -101,26 +101,29 @@ SELECT is_empty(
 );
 
 SELECT tests.authenticate_as('user_a');
-SELECT lives_ok(
+SELECT throws_ok(
   $$UPDATE public.user_notifications
       SET is_read = true
       WHERE id = current_setting('tests.notif_a')::uuid$$,
-  'users can update their own notifications'
+  '42501',
+  null,
+  'users cannot directly update their own notifications'
 );
 SELECT results_eq(
   $$SELECT is_read
     FROM public.user_notifications
     WHERE id = current_setting('tests.notif_a')::uuid$$,
-  $$VALUES (true)$$,
-  'notification updates persist'
+  $$VALUES (false)$$,
+  'direct notification update does not persist'
 );
 
 SELECT tests.authenticate_as('user_b');
-SELECT is_empty(
+SELECT throws_ok(
   $$UPDATE public.user_notifications
       SET is_read = false
-      WHERE id = current_setting('tests.notif_a')::uuid
-      RETURNING id$$,
+      WHERE id = current_setting('tests.notif_a')::uuid$$,
+  '42501',
+  null,
   'users cannot update others notifications'
 );
 
