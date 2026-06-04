@@ -351,7 +351,7 @@ body.dark-mode .viewport {
       <tr>
         <th>Hierarchy</th>
         <td>
-          <strong>Parent</strong>: <a href="/specs/event_application_manage_page/index.html"><code>EventApplicationManagePage</code></a> (탭 목록에서 행 탭으로 진입)<br>
+          <strong>Parent</strong>: <a href="/specs/event_application_manage_page/index.html"><code>EventApplicationManagePage</code></a> (top-level 승인됨/거절됨/결제완료 이력 row) 또는 <a href="/specs/event_application_list_page/index.html"><code>EventApplicationListPage</code></a> (단일 이벤트 처리 완료 row)<br>
           <strong>Children</strong>: <em>— (거절 사유 다이얼로그는 state 5로 이 spec 안에서 다룸)</em>
         </td>
       </tr>
@@ -365,7 +365,7 @@ body.dark-mode .viewport {
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: <a href="/specs/event_application_manage_page/index.html">신청 관리</a>의 "승인됨"/"거절됨" 탭에서 신청 행 탭.<br>
+          <strong>Entry points</strong>: <a href="/specs/event_application_manage_page/index.html">신청관리</a>의 "승인됨"/"거절됨" 탭에서 신청 행 탭, 또는 <a href="/specs/event_application_list_page/index.html">단일 이벤트 참가 현황</a>의 처리 완료 카드 탭.<br>
           <strong>Exit points</strong>: 승인/거절 처리 성공 → "처리가 완료되었습니다." 안내와 함께 자동으로 목록으로 복귀. 뒤로 가기 → 신청 목록. 처리 실패 시 에러 다이얼로그 (화면은 유지).
         </td>
       </tr>
@@ -398,6 +398,12 @@ body.dark-mode .viewport {
       </tr>
     </thead>
     <tbody>
+      <tr>
+        <td>2026-06-04</td>
+        <td>1.1</td>
+        <td>codex</td>
+        <td>#3000: parent/entry relation을 top-level cross-event <code>EventApplicationManagePage</code>와 단일 이벤트 <code>EventApplicationListPage</code> 양쪽에서 진입 가능한 read-only detail로 정리.</td>
+      </tr>
       <tr>
         <td>2026-05-01</td>
         <td>1.0</td>
@@ -1223,7 +1229,11 @@ body.dark-mode .viewport {
       <tbody>
         <tr>
           <td><a href="/specs/event_application_manage_page/index.html"><code>EventApplicationManagePage</code></a></td>
-          <td>부모 화면. "승인됨" / "거절됨" 탭의 신청 행 탭으로 이 detail 진입 (Fix #1860).</td>
+          <td>Top-level cross-event 신청관리 owner. "승인됨" / "거절됨" / "결제완료" 이력 row 탭으로 이 detail 진입 (Fix #1860).</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_application_list_page/index.html"><code>EventApplicationListPage</code></a></td>
+          <td>단일 이벤트 참가 현황 owner. 처리 완료 카드 탭 시 이 detail로 진입하며, 입장그룹/refund tab 자체는 list spec이 소유한다.</td>
         </tr>
         <tr>
           <td><a href="/specs/partner_home_page/index.html"><code>PartnerHomePage</code></a></td>

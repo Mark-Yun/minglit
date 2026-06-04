@@ -637,7 +637,7 @@ body.dark-mode .viewport {
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: 이벤트 상세(<a href="/specs/partner_event_detail_page/index.html">EventDetailPage</a>)의 "참가 현황" 섹션 탭. 또는 파트너 메인 nav의 <a href="/specs/event_application_manage_page/index.html">EventApplicationManagePage</a>(전체 이벤트 across)에서 특정 이벤트로 좁혀 진입(향후 — 본 spec 범위 밖).<br>
+          <strong>Entry points</strong>: 이벤트 상세(<a href="/specs/partner_event_detail_page/index.html">EventDetailPage</a>)의 "참가 현황" 섹션 탭. Top-level <a href="/specs/event_application_manage_page/index.html">EventApplicationManagePage</a>는 cross-event hub라 본 화면으로 자동 narrowing하지 않는다.<br>
           <strong>Exit points</strong>: AppBar back → EventDetailPage 복귀 / 심사 대기 카드 탭 → carousel push / 처리 완료 카드 탭 → detail page push / bottom CTA → carousel push (큐 처음부터).<br>
           carousel / confirm 화면에서 최종 확정 후 본 화면으로 복귀하면 리스트가 자동 invalidate되어 카드가 적절한 그룹으로 재배치된다.
         </td>
@@ -671,6 +671,11 @@ body.dark-mode .viewport {
       </tr>
     </thead>
     <tbody>
+      <tr>
+        <td>2026-06-04</td>
+        <td>v2.1</td>
+        <td>#3000: 본 화면을 단일 이벤트 참가 현황 owner로 명시. top-level <code>EventApplicationManagePage</code>는 cross-event hub이고, 입장그룹 sub-section / paid-only 확정 참가자 / rejected·refund tab은 본 spec이 소유하도록 경계 정리.</td>
+      </tr>
       <tr>
         <td>2026-05-03</td>
         <td>v2 (redesign)</td>
@@ -1810,8 +1815,17 @@ body.dark-mode .viewport {
     <h2>카드 탭 라우팅 분기</h2>
     <ul>
       <li><strong>심사 대기 카드</strong> → <a href="/specs/event_application_review_carousel_page/index.html"><code>EventApplicationReviewCarouselRoute</code></a> (그 사용자부터 배치 심사).</li>
-      <li><strong>처리 완료 카드</strong> → <a href="/specs/event_application_detail_page/index.html"><code>EventApplicationDetailRoute</code></a> (read-only 회고 + 환불 / 노트 등 후속 액션).</li>
+      <li><strong>처리 완료 카드</strong> → <a href="/specs/event_application_detail_page/index.html"><code>EventApplicationDetailRoute</code></a> (read-only 회고). refund/cancelled tab 자체는 본 리스트 surface가 owner.</li>
       <li>같은 카드 컴포넌트지만 출처 그룹에 따라 도착지가 다르다는 점이 핵심.</li>
+    </ul>
+  </section>
+
+  <section class="doc">
+    <h2>Top-level 신청관리와의 경계</h2>
+    <ul>
+      <li><a href="/specs/event_application_manage_page/index.html"><code>EventApplicationManagePage</code></a>는 partner shell의 cross-event 신청관리 탭이다. 여러 이벤트를 한 화면에서 훑고 pending을 빠르게 승인/거절하는 것이 목적이다.</li>
+      <li>본 화면은 <strong>한 이벤트</strong>에 좁혀진 참가 현황 surface다. 입장그룹 조건, capacity bar, paid-only 확정 참가자, rejected reason inline, refund/cancelled tab은 본 화면 owner다.</li>
+      <li>Top-level 신청관리에서 특정 이벤트로 "drill down"하는 별도 route는 현재 canonical entry가 아니다. 단일 이벤트 검토는 <code>PartnerEventDetailPage</code>의 "참가 현황"에서 진입한다.</li>
     </ul>
   </section>
 
@@ -1864,8 +1878,8 @@ body.dark-mode .viewport {
         <tr><td><a href="/specs/partner_event_detail_page/index.html"><code>EventDetailPage</code></a></td><td>Parent — 참가 현황 섹션 탭에서 진입.</td></tr>
         <tr><td><a href="/specs/event_application_review_carousel_page/index.html"><code>EventApplicationReviewCarouselPage</code></a></td><td>Child (primary) — 심사 대기 카드 탭 / sticky CTA 탭 시 push되는 배치 심사 carousel.</td></tr>
         <tr><td><a href="/specs/event_application_review_confirm_page/index.html"><code>EventApplicationReviewConfirmPage</code></a></td><td>Grandchild — carousel 큐가 끝나면 push되는 최종 확인 화면(리스트에서 직접 진입은 없음).</td></tr>
-        <tr><td><a href="/specs/event_application_detail_page/index.html"><code>EventApplicationDetailPage</code></a></td><td>Child (secondary) — 처리 완료 카드 탭 시 push. read-only 회고 + 환불 / 노트.</td></tr>
-        <tr><td><a href="/specs/event_application_manage_page/index.html"><code>EventApplicationManagePage</code></a></td><td>Sibling — 파트너 메인 nav의 cross-event 신청 리스트. 본 화면은 <em>단일 이벤트</em>로 좁힌 버전.</td></tr>
+        <tr><td><a href="/specs/event_application_detail_page/index.html"><code>EventApplicationDetailPage</code></a></td><td>Child (secondary) — 처리 완료 카드 탭 시 push. read-only 회고; refund/cancelled grouping은 본 리스트 surface가 유지.</td></tr>
+        <tr><td><a href="/specs/event_application_manage_page/index.html"><code>EventApplicationManagePage</code></a></td><td>Sibling — 파트너 메인 nav의 cross-event 신청관리 hub. 본 화면은 <em>단일 이벤트</em> 참가 현황 owner라 refund/cancelled tab과 입장그룹 review를 이쪽에서 다룬다.</td></tr>
       </tbody>
     </table>
   </section>

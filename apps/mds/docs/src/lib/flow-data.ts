@@ -117,9 +117,8 @@ const APP_PARTNER_MAIN_FLOW = `flowchart TB
   HomeRoute -->|"view guide hub"| PartnerGuideRoute
   HomeRoute -->|"view location guide"| LocationGuideRoute
   HomeRoute -->|"tap notifications"| NotificationCenterRoute
-  HomeRoute -->|"bottom nav"| ApplicationListRoute
-  ApplicationListRoute -->|"tap event application"| EventApplicationDetailRoute
-  ApplicationListRoute -->|"tap partner application"| ApplicationDetailRoute
+  HomeRoute -->|"bottom nav 신청관리 / overview 참가예정 고객"| ApplicationListRoute
+  ApplicationListRoute -->|"tap approved/rejected/paid row"| EventApplicationDetailRoute
   HomeRoute -->|"bottom nav"| CheckinRoute
   HomeRoute -->|"bottom nav (SETTLEMENT_VIEW role required)"| SettlementRoute
   SettlementRoute -->|"tap settlement item"| SettlementDetailRoute
@@ -134,8 +133,8 @@ const APP_PARTNER_MAIN_FLOW = `flowchart TB
   PartyDetailRoute -->|"create event"| EventCreateRoute
   PartyDetailRoute -->|"tap event"| EventDetailRoute
   EventDetailRoute -->|"tap hero (일정)"| EventEditRoute
-  EventDetailRoute -->|"tap 참가 현황"| EventApplicationListRoute
-  EventApplicationListRoute -->|"tap application card"| EventApplicationDetailRoute
+  EventDetailRoute -->|"tap 참가 현황 (single event)"| EventApplicationListRoute
+  EventApplicationListRoute -->|"tap completed/rejected/refund card"| EventApplicationDetailRoute
   EventApplicationListRoute -->|"tap pending review card"| EventApplicationReviewCarouselRoute
   EventApplicationReviewCarouselRoute -->|"complete review queue"| EventApplicationReviewConfirmRoute
   EventDetailRoute -->|"create ticket"| TicketCreateRoute

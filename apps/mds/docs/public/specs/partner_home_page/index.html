@@ -969,6 +969,12 @@ body.dark-mode .viewport {
     <tbody>
       <tr>
         <td>2026-06-04</td>
+        <td>2.4</td>
+        <td>codex</td>
+        <td>#3000: 신청관리 탭과 오버뷰 "참가예정 고객" destination을 <code>EventApplicationManagePage</code> cross-event hub로 확정. 단일 이벤트 참가 현황은 <code>EventApplicationListPage</code> owner로 분리.</td>
+      </tr>
+      <tr>
+        <td>2026-06-04</td>
         <td>2.3</td>
         <td>codex</td>
         <td>#3004: Subpages map의 남은 TBD를 실제 spec link / follow-up issue / intentional deferred로 분류. 신청관리·계좌·첫 이벤트·정산은 기존 partner spec으로 연결하고, partner 활성 이벤트 리스트는 app_user <code>PartnerEventsPage</code> 오용을 피하기 위해 #3040으로 분리.</td>
@@ -3423,7 +3429,7 @@ body.dark-mode .viewport {
           <td>운영 현황 — "참가예정 고객"</td>
           <td><a href="/specs/event_application_manage_page/index.html"><code>EventApplicationManagePage</code></a></td>
           <td>✅</td>
-          <td>하단 nav 신청관리와 동일 <code>ApplicationListRoute</code> · cross-event 신청관리 boundary 강화는 #3000</td>
+          <td>하단 nav 신청관리와 동일 <code>ApplicationListRoute</code> · canonical cross-event 신청관리 hub (#3000)</td>
         </tr>
         <tr>
           <td>Welcome 카드 "도움말 보기"</td>
@@ -3501,7 +3507,7 @@ body.dark-mode .viewport {
           <td>하단 nav — 신청관리</td>
           <td><a href="/specs/event_application_manage_page/index.html"><code>EventApplicationManagePage</code></a></td>
           <td>✅</td>
-          <td>모든 이벤트의 신청 통합 리스트 · canonical boundary follow-up #3000</td>
+          <td>모든 이벤트의 신청 통합 리스트 · 단일 이벤트 참가 현황은 <code>EventApplicationListPage</code> owner (#3000)</td>
         </tr>
         <tr>
           <td>하단 nav — 체크인</td>
@@ -3558,7 +3564,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td><a href="/specs/event_application_manage_page/index.html"><code>EventApplicationManagePage</code></a></td>
-          <td>오버뷰 "참가예정 고객" stat 및 하단 nav 신청관리의 공통 도착지.</td>
+          <td>오버뷰 "참가예정 고객" stat 및 하단 nav 신청관리의 공통 도착지. 여러 이벤트를 묶어 보여주는 cross-event hub.</td>
         </tr>
         <tr>
           <td><a href="/specs/event_application_list_page/index.html"><code>EventApplicationListPage</code></a></td>
