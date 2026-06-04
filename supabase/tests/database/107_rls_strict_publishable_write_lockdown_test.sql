@@ -64,6 +64,14 @@ SELECT is_empty(
           ')'
         )
     ),
+    direct_client_write_rpc_exceptions(function_oid) AS (
+      VALUES
+        ('public.process_manual_checkin(uuid, uuid)'::regprocedure),
+        ('public.process_qr_checkin(uuid, uuid, uuid)'::regprocedure),
+        ('public.request_retry_payout(uuid, uuid)'::regprocedure),
+        ('public.save_user_consents(uuid, jsonb)'::regprocedure),
+        ('public.set_social_interaction(text, text, text, boolean)'::regprocedure)
+    ),
     publishable_roles AS (
       SELECT unnest(ARRAY['anon', 'authenticated']) AS role_name
     )
@@ -77,10 +85,13 @@ SELECT is_empty(
       ) AS function_signature
     FROM write_security_definer_functions wsdf
     CROSS JOIN publishable_roles pr
+    LEFT JOIN direct_client_write_rpc_exceptions allowed
+      ON allowed.function_oid = wsdf.oid
     WHERE has_function_privilege(pr.role_name, wsdf.oid, 'EXECUTE')
+      AND allowed.function_oid IS NULL
     ORDER BY pr.role_name, function_signature
   $$,
-  'anon/authenticated cannot execute write-capable SECURITY DEFINER RPCs'
+  'anon/authenticated cannot execute write-capable SECURITY DEFINER RPCs outside reviewed direct-client exceptions'
 );
 
 SELECT is_empty(
@@ -90,6 +101,8 @@ SELECT is_empty(
         ('public.save_user_consents(uuid, jsonb)'),
         ('public.process_qr_checkin(uuid, uuid, uuid)'),
         ('public.process_manual_checkin(uuid, uuid)'),
+        ('public.request_retry_payout(uuid, uuid)'),
+        ('public.set_social_interaction(text, text, text, boolean)'),
         ('public.create_party_with_tags(jsonb, uuid[])'),
         ('public.update_party_tags(uuid, uuid[])'),
         ('public.upsert_user_interest_tags(uuid[])')
