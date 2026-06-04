@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:isolate';
 
 import 'package:minglit_lints/src/no_service_role_in_client_rule.dart';
 import 'package:test/test.dart';
@@ -367,11 +366,18 @@ void acceptsSecret(String sbSecret) {}
 }
 
 Future<Directory> _minglitLintsPackageRoot() async {
-  final libUri = await Isolate.resolvePackageUri(
-    Uri.parse('package:minglit_lints/minglit_lints.dart'),
-  );
-  if (libUri == null) {
-    throw StateError('Unable to resolve package:minglit_lints');
+  final candidates = [
+    Directory.current,
+    Directory('${Directory.current.path}/shared/packages/minglit_lints'),
+    File.fromUri(Platform.script).parent.parent,
+  ];
+
+  for (final candidate in candidates) {
+    final pubspec = File('${candidate.path}/pubspec.yaml');
+    if (!pubspec.existsSync()) continue;
+    if (!pubspec.readAsStringSync().contains('name: minglit_lints')) continue;
+    return candidate;
   }
-  return File.fromUri(libUri).parent.parent;
+
+  throw StateError('Unable to resolve minglit_lints package root');
 }
