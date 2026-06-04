@@ -227,9 +227,9 @@
       "description": "반복 이벤트 규칙 생성/수정/일시정지/재개/취소"
     },
     "payment-cancel": {
-      "callers": ["user"],
+      "callers": ["user", "system"],
       "envs": ["dev", "production"],
-      "description": "결제 취소 및 환불 처리"
+      "description": "결제 취소 및 환불 처리 (user 직접 요청 + DB rejection trigger)"
     },
     "identity-verify": {
       "callers": ["user"],

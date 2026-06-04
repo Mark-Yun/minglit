@@ -43,6 +43,20 @@ Postgres RPC owns atomic writes for inventory, application/order creation,
 payment verification, approval, refund, settlement, and other state transitions
 that must not partially succeed.
 
+## Route Naming
+
+Function route names are stable public API. New user- or partner-specific
+routes should prefer an actor prefix (`user-*`, `partner-*`) when the actor is
+part of the contract. System workers may use domain nouns such as
+`notification-worker`, and external callbacks may use domain suffixes such as
+`payment-webhook`.
+
+Existing unprefixed domain routes remain canonical unless a versioned alias and
+manifest deprecation plan are added in the same rollout. This includes
+`payment-verify`, `payment-cancel`, `event-checkin`, `apply-event`,
+`commit-match-likes`, and `recurrence-rules`. Every manifest entry must have a
+matching `supabase/config.toml` section before deploy.
+
 ## Extraction Signals
 
 - Two or more request fields with validation rules: add `input.ts`.
