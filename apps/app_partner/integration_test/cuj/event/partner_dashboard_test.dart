@@ -223,6 +223,11 @@ Future<void> _pumpUntilFound(
     if (finder.evaluate().isNotEmpty) return;
     await tester.pump(step);
   }
+  expect(
+    finder,
+    findsWidgets,
+    reason: 'Timed out waiting for $finder after $timeout',
+  );
 }
 
 /// 이벤트가 있는 홈 기본 상태.
@@ -799,6 +804,7 @@ void main() {
       ],
       afterPump: const Duration(seconds: 2),
       body: (t) async {
+        await _pumpUntilFound(t, find.byType(OngoingEventListPage));
         expect(find.byType(OngoingEventListPage), findsOneWidget);
         await _pumpUntilFound(t, find.byType(QRScannerScreen));
         expect(find.byType(QRScannerScreen), findsOneWidget);
