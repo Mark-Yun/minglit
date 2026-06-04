@@ -110,11 +110,11 @@ class SettlementRepository {
           await _supabase
                   .from('settlement_histories')
                   .select(
-                    // Fix #1566: settlement_histories has event_at, not created_at
+                    // Fix #1566: use event_at, not created_at.
                     'event_type, from_status, to_status, details, event_at',
                   )
                   .eq('settlement_item_id', itemId)
-                  // Fix #1566: order by event_at (not created_at — that column doesn't exist)
+                  // Fix #1566: order by event_at; created_at does not exist.
                   .order('event_at', ascending: false)
               as List;
 
@@ -129,7 +129,7 @@ class SettlementRepository {
                   .select(
                     'id, adjustment_type, amount_signed, reason_code, status',
                   )
-                  // Fix #1739: adjustment_items FK 컬럼명은 related_settlement_item_id
+                  // Fix #1739: adjustment_items FK name.
                   .eq('related_settlement_item_id', itemId)
               as List;
 
@@ -218,7 +218,7 @@ class SettlementRepository {
     try {
       final data = await _supabase
           .from('events')
-          // Fix #1937: 'date' column does not exist; actual column is start_time
+          // Fix #1937: date does not exist; actual column is start_time.
           .select('id, title, start_time, parties(name)')
           .eq('id', eventId)
           .maybeSingle();
@@ -244,7 +244,11 @@ class SettlementRepository {
     try {
       final data = await _supabase
           .from('partner_settlements')
-          .select('bank_name, account_holder, account_number')
+          .select(
+            'bank_code, bank_name, account_holder, account_number, '
+            'bank_verification_status, bank_verification_reason, '
+            'bank_verification_requested_at, bank_verified_at',
+          )
           .eq('partner_id', partnerId)
           .maybeSingle();
 
@@ -266,6 +270,7 @@ class SettlementRepository {
   /// Creates or updates the bank account record in partner_settlements table.
   Future<void> upsertBankAccount({
     required String partnerId,
+    required String bankCode,
     required String bankName,
     required String accountHolder,
     required String accountNumber,
@@ -279,6 +284,7 @@ class SettlementRepository {
         body: {
           'action': 'upsert_bank_account',
           'partner_id': partnerId,
+          'bank_code': bankCode,
           'bank_name': bankName,
           'account_holder': accountHolder,
           'account_number': accountNumber,
@@ -294,6 +300,38 @@ class SettlementRepository {
       Log.d('upsertBankAccount success | partnerId: $partnerId');
     } catch (e, st) {
       Log.e('❌ [SettlementRepo] upsertBankAccount Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// Requests manual review for a failed or uncertain bank account.
+  Future<void> requestManualBankAccountReview({
+    required String partnerId,
+  }) async {
+    Log.d('requestManualBankAccountReview called | partnerId: $partnerId');
+    try {
+      final response = await _supabase.functions.invoke(
+        'partner-manage-settlement',
+        body: {
+          'action': 'request_manual_bank_account_review',
+          'partner_id': partnerId,
+        },
+      );
+      if (response.status != 200) {
+        final error = response.data is Map
+            ? (response.data as Map)['error'] ??
+                  'Failed to request manual bank account review'
+            : 'Failed to request manual bank account review';
+        throw Exception(error);
+      }
+
+      Log.d('requestManualBankAccountReview success | partnerId: $partnerId');
+    } catch (e, st) {
+      Log.e(
+        '❌ [SettlementRepo] requestManualBankAccountReview Error',
+        e,
+        st,
+      );
       rethrow;
     }
   }

@@ -64,10 +64,12 @@ class _FakeEventCreateDraftRepository implements EventCreateDraftRepository {
 void main() {
   late MockEventRepository mockEventRepo;
   late MockPartyRepository mockPartyRepo;
+  late MockSettlementRepository mockSettlementRepo;
 
   setUp(() {
     mockEventRepo = MockEventRepository();
     mockPartyRepo = MockPartyRepository();
+    mockSettlementRepo = MockSettlementRepository();
 
     when(
       () => mockEventRepo.getPendingApplicationCount(any()),
@@ -87,6 +89,15 @@ void main() {
     when(
       () => mockPartyRepo.getPartiesByPartnerId(any()),
     ).thenAnswer((_) async => [_testParty]);
+    when(() => mockSettlementRepo.getBankAccount(any())).thenAnswer(
+      (_) async => {
+        'bank_code': 'kakao',
+        'bank_name': '카카오뱅크',
+        'account_holder': '테스트 파트너',
+        'account_number': '3333011234567',
+        'bank_verification_status': 'manual_review_approved',
+      },
+    );
   });
 
   /// Creates container, subscribes to the dashboard provider, and pumps
@@ -102,6 +113,7 @@ void main() {
         eventCreateDraftRepositoryProvider.overrideWithValue(
           const _FakeEventCreateDraftRepository(),
         ),
+        settlementRepositoryProvider.overrideWithValue(mockSettlementRepo),
       ],
     );
 
@@ -131,6 +143,7 @@ void main() {
           eventCreateDraftRepositoryProvider.overrideWithValue(
             const _FakeEventCreateDraftRepository(),
           ),
+          settlementRepositoryProvider.overrideWithValue(mockSettlementRepo),
         ],
       );
 
@@ -158,6 +171,26 @@ void main() {
       expect(state.upcomingEvents, contains(_testEvent));
       expect(state.activeParties, contains(_testParty));
       expect(state.hasAnyEvents, isTrue);
+      expect(state.bankAccountReady, isTrue);
+      expect(state.bankVerificationStatus, 'manual_review_approved');
+    });
+
+    test('bankAccountReady is false while verification is pending', () async {
+      when(() => mockSettlementRepo.getBankAccount(any())).thenAnswer(
+        (_) async => {
+          'bank_code': 'kakao',
+          'bank_name': '카카오뱅크',
+          'account_holder': '테스트 파트너',
+          'account_number': '3333011234567',
+          'bank_verification_status': 'manual_review_pending',
+        },
+      );
+
+      final container = await buildAndPump();
+      final state = container.read(partnerDashboardControllerProvider);
+
+      expect(state.bankAccountReady, isFalse);
+      expect(state.bankVerificationStatus, 'manual_review_pending');
     });
 
     // Regression test for #1215: partner with past events (no upcoming events)
@@ -256,6 +289,7 @@ void main() {
           eventCreateDraftRepositoryProvider.overrideWithValue(
             const _FakeEventCreateDraftRepository(),
           ),
+          settlementRepositoryProvider.overrideWithValue(mockSettlementRepo),
         ],
       );
       final sub = container.listen(

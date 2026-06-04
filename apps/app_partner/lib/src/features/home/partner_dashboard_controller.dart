@@ -11,6 +11,22 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'partner_dashboard_controller.freezed.dart';
 part 'partner_dashboard_controller.g.dart';
 
+const bankVerificationStatusNotStarted = 'not_started';
+const bankVerificationStatusFailed = 'verification_failed';
+const bankVerificationStatusPending = 'manual_review_pending';
+const bankVerificationStatusManualApproved = 'manual_review_approved';
+const bankVerificationStatusVerified = 'verified';
+
+bool isBankVerificationReady(String status) {
+  return status == bankVerificationStatusVerified ||
+      status == bankVerificationStatusManualApproved;
+}
+
+String bankVerificationStatusFromAccount(Map<String, dynamic>? accountData) {
+  return accountData?['bank_verification_status'] as String? ??
+      bankVerificationStatusNotStarted;
+}
+
 @freezed
 abstract class PartnerDashboardState with _$PartnerDashboardState {
   const factory PartnerDashboardState({
@@ -28,6 +44,8 @@ abstract class PartnerDashboardState with _$PartnerDashboardState {
     // Using upcomingEvents for onboarding check caused the guide to reappear
     // after all events ended or were more than 7 days away.
     @Default(false) bool hasAnyEvents,
+    @Default(false) bool bankAccountReady,
+    @Default(bankVerificationStatusNotStarted) String bankVerificationStatus,
     @Default(AsyncValue<void>.loading()) AsyncValue<void> status,
   }) = _PartnerDashboardState;
 }
@@ -68,12 +86,15 @@ class PartnerDashboardController extends _$PartnerDashboardController {
           totalPartyCount: 0,
           totalAttendees: 0,
           hasAnyEvents: false,
+          bankAccountReady: false,
+          bankVerificationStatus: bankVerificationStatusNotStarted,
         );
         return;
       }
       final eventRepo = ref.read(eventRepositoryProvider);
       final partyRepo = ref.read(partyRepositoryProvider);
       final draftRepo = ref.read(eventCreateDraftRepositoryProvider);
+      final settlementRepo = ref.read(settlementRepositoryProvider);
       // 1. Pending Count
       final pendingCount = await eventRepo.getPendingApplicationCount(
         partner.id,
@@ -92,6 +113,10 @@ class PartnerDashboardController extends _$PartnerDashboardController {
       // Fix #1215: onboarding must not reappear once partner has ever created
       // an event — getUpcomingEvents only covers next 7 days.
       final hasAnyEvents = await eventRepo.getHasAnyEvents(partner.id);
+      final bankAccount = await settlementRepo.getBankAccount(partner.id);
+      final bankVerificationStatus = bankVerificationStatusFromAccount(
+        bankAccount,
+      );
 
       final liveEvents = upcomingEvents
           .where((event) => getEventPhase(event) == EventPhase.live)
@@ -137,6 +162,8 @@ class PartnerDashboardController extends _$PartnerDashboardController {
         totalPartyCount: activeParties.length,
         totalAttendees: totalAttendees,
         hasAnyEvents: hasAnyEvents,
+        bankAccountReady: isBankVerificationReady(bankVerificationStatus),
+        bankVerificationStatus: bankVerificationStatus,
       );
     } on Exception catch (e, st) {
       if (!ref.mounted) return;

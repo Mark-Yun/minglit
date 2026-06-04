@@ -47,4 +47,4 @@ Minglit 의 **파트너 사장님 Flutter 앱**. 매장 관리·멤버 초대·�
 - [README.md](./README.md) — 빌드·실행 / [integration_test/cuj](./integration_test/cuj/BLUEDOC.md) — CUJ
 
 ---
-_Reviewed: 2026-06-04 23:56_
+_Reviewed: 2026-06-05 01:53_

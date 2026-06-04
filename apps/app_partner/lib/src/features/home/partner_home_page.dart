@@ -148,13 +148,23 @@ class PartnerHomePage extends ConsumerWidget {
                     totalPartyCount: state.totalPartyCount,
                     pendingApplications: state.pendingReviewCount,
                   ),
+                  if (state.hasAnyEvents && !state.bankAccountReady) ...[
+                    const SizedBox(height: MinglitSpacing.medium),
+                    _BankAccountTodoCard(
+                      verificationStatus: state.bankVerificationStatus,
+                      onTap: coordinator.pushBankAccount,
+                    ),
+                  ],
                   const SizedBox(height: MinglitSpacing.medium),
                   if (!state.hasAnyEvents) ...[
                     LocationGuideBanner(onTap: coordinator.pushLocationGuide),
                     const SizedBox(height: MinglitSpacing.medium),
                     OnboardingStepGuide(
                       hasParty: state.activeParties.isNotEmpty,
+                      bankAccountReady: state.bankAccountReady,
+                      bankVerificationStatus: state.bankVerificationStatus,
                       partyName: state.activeParties.firstOrNull?.title,
+                      onOpenBankAccount: coordinator.pushBankAccount,
                       onCreateParty: coordinator.pushPartyCreate,
                       onCreateEvent: openFirstEventCreate,
                       draftEventCard: state.draftEvents.isEmpty
@@ -304,6 +314,59 @@ class PartnerHomePage extends ConsumerWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _BankAccountTodoCard extends StatelessWidget {
+  const _BankAccountTodoCard({
+    required this.verificationStatus,
+    required this.onTap,
+  });
+
+  final String verificationStatus;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final title = verificationStatus == bankVerificationStatusPending
+        ? '계좌 확인 중'
+        : '계좌 등록';
+    final subtitle = verificationStatus == bankVerificationStatusFailed
+        ? '계좌 정보를 다시 확인해주세요'
+        : verificationStatus == bankVerificationStatusPending
+        ? '운영 확인이 완료되면 사라져요'
+        : '정산 받을 계좌를 등록해주세요';
+
+    return Card(
+      child: ListTile(
+        onTap: onTap,
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: colorScheme.tertiary.withValues(
+              alpha: MinglitOpacity.highlight,
+            ),
+            borderRadius: BorderRadius.circular(MinglitRadius.input),
+          ),
+          child: Icon(
+            Icons.account_balance_wallet_outlined,
+            color: colorScheme.tertiary,
+            size: MinglitIconSize.small,
+          ),
+        ),
+        title: Text(
+          title,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        subtitle: Text(subtitle),
+        trailing: const Icon(Icons.chevron_right),
       ),
     );
   }
