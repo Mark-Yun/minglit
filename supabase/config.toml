@@ -734,3 +734,9 @@ enabled = true
 verify_jwt = false  # JWT verification handled in function code
 import_map = "./deno.json"
 entrypoint = "./functions/commit-match-likes/index.ts"
+
+[functions.storage-upload]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/storage-upload/index.ts"

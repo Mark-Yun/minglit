@@ -68,22 +68,25 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
 
   Future<String> _uploadFile(String userId, XFile file, String type) async {
     Log.d('_uploadFile called | type: $type, file: ${file.name}');
-    final extension = p.extension(file.name);
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final path = '$userId/${type}_$timestamp$extension';
+    final extension = p.extension(file.name).isEmpty
+        ? '.jpg'
+        : p.extension(file.name);
     final rawBytes = await file.readAsBytes();
     // Fix #1230: GPS/EXIF 메타데이터 유출 방지 — 업로드 전 재인코딩으로 완전 제거
     final bytes = stripExifAndReencode(rawBytes, filename: file.name);
 
-    await supabaseClient.storage
-        .from('partner-proofs')
-        .uploadBinary(
-          path,
-          bytes,
-          fileOptions: FileOptions(contentType: file.mimeType),
+    final uploadedPath =
+        await StorageRepository(
+          supabase: supabaseClient,
+        ).uploadBytes(
+          bytes: bytes,
+          bucket: 'partner-proofs',
+          pathPrefix: userId,
+          contentType: file.mimeType ?? _contentTypeForExtension(extension),
+          extension: extension,
         );
-    Log.d('_uploadFile success | path: $path');
-    return path;
+    Log.d('_uploadFile success | path: $uploadedPath');
+    return uploadedPath;
   }
 
   /// Fetches the most recent application for the current user.
@@ -165,7 +168,7 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
           'action': 'review',
           'application_id': applicationId,
           'status': status,
-          if (adminComment != null) 'admin_comment': adminComment,
+          'admin_comment': ?adminComment,
         },
       );
       if (response.status != 200) {
@@ -399,5 +402,21 @@ mixin _PartnerApplicationRepository on _SupabasePartnerContext {
       return MinglitUserException(errorMsg, details: details);
     }
     return MinglitUserException(fallback);
+  }
+
+  String _contentTypeForExtension(String extension) {
+    switch (extension.toLowerCase()) {
+      case '.jpg':
+      case '.jpeg':
+        return 'image/jpeg';
+      case '.png':
+        return 'image/png';
+      case '.webp':
+        return 'image/webp';
+      case '.pdf':
+        return 'application/pdf';
+      default:
+        return 'application/octet-stream';
+    }
   }
 }
