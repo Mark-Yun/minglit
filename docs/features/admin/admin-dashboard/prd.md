@@ -10,7 +10,6 @@ Minglit 내부 운영자가 Supabase Google 로그인으로 본인 확인을 마
 
 - 전용 Next.js admin dashboard 앱은 아직 모노레포에 없다. `apps/admin_web/` 이 canonical target 이지만 scaffold 전 상태다.
 - `apps/app_partner/lib/src/features/admin/` 은 파트너 앱 내부의 입점 신청 심사 보조 화면이다. 이 PRD 의 Next.js admin console 구현으로 간주하지 않는다.
-- `apps/app_user/lib/src/features/admin/` 은 운영/통계 계약 하네스 성격이며, admin-dashboard 제품 구현 대상이 아니다.
 - 따라서 이 PRD 의 구현 상태는 **planned / unscaffolded** 이다. 구현 착수 PR 은 `apps/admin_web/` scaffold, `apps/BLUEDOC.md` 갱신, 배포/CI 엔트리 정의를 함께 포함해야 한다.
 
 ## Motivation / Problem to Solve
