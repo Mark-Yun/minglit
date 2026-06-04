@@ -27,9 +27,15 @@ class _FakeSettlementRepository implements SettlementRepository {
   @override
   Future<void> upsertBankAccount({
     required String partnerId,
+    required String bankCode,
     required String bankName,
     required String accountHolder,
     required String accountNumber,
+  }) async {}
+
+  @override
+  Future<void> requestManualBankAccountReview({
+    required String partnerId,
   }) async {}
 
   @override

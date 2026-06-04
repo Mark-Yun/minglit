@@ -1,4 +1,4 @@
-import 'package:app_partner/src/features/home/home_event_phase.dart';
+import 'package:app_partner/src/logic/event_operation_phase.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -59,18 +59,31 @@ class EventActionCard extends StatelessWidget {
         '공유/홍보',
         Icons.share_outlined,
       ),
-      EventPhase.preparing => (
-        _preparingLabel(event),
+      EventPhase.preStart => (
+        _preStartLabel(event),
         colorScheme.error,
         colorScheme.error.withValues(alpha: MinglitOpacity.highlight),
         colorScheme.outlineVariant,
         colorScheme.surfaceContainerLowest,
-        '체크인 준비',
-        Icons.qr_code_scanner,
+        '참가자 리스트',
+        Icons.list_alt_outlined,
         '참석자 명단',
         Icons.people_outlined,
         '안내 발송',
         Icons.message_outlined,
+      ),
+      EventPhase.checkinReady => (
+        _checkinReadyLabel(event),
+        colorScheme.primary,
+        colorScheme.primary.withValues(alpha: MinglitOpacity.highlight),
+        colorScheme.primary,
+        colorScheme.surfaceContainerLowest,
+        '참가자 체크인',
+        Icons.qr_code_scanner,
+        '참석 현황',
+        Icons.people_outlined,
+        null,
+        null,
       ),
       EventPhase.live => (
         _liveLabel(event),
@@ -78,7 +91,7 @@ class EventActionCard extends StatelessWidget {
         colorScheme.primary.withValues(alpha: MinglitOpacity.highlight),
         colorScheme.primary,
         colorScheme.surfaceContainerLowest,
-        '체크인 계속하기',
+        '참가자 체크인',
         Icons.qr_code_scanner,
         '참석 현황',
         Icons.people_outlined,
@@ -310,12 +323,19 @@ class EventActionCard extends StatelessWidget {
     return '모집 중 · D-$days';
   }
 
-  static String _preparingLabel(Event event) {
+  static String _preStartLabel(Event event) {
     final diff = event.startTime.difference(DateTime.now());
     final hours = diff.inHours;
     final mins = diff.inMinutes % 60;
-    if (hours > 0) return '준비 중 · $hours시간 $mins분 후';
-    return '준비 중 · $mins분 후';
+    if (hours > 0) return '체크인 대기 · $hours시간 $mins분 후';
+    return '체크인 대기 · $mins분 후';
+  }
+
+  static String _checkinReadyLabel(Event event) {
+    final diff = event.startTime.difference(DateTime.now());
+    final mins = diff.inMinutes;
+    if (mins > 0) return '체크인 가능 · $mins분 후 시작';
+    return '체크인 가능';
   }
 
   static String _liveLabel(Event event) {

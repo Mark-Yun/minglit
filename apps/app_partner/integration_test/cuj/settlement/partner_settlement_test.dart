@@ -178,6 +178,7 @@ void main() {
     when(
       () => repo.upsertBankAccount(
         partnerId: any(named: 'partnerId'),
+        bankCode: any(named: 'bankCode'),
         bankName: any(named: 'bankName'),
         accountHolder: any(named: 'accountHolder'),
         accountNumber: any(named: 'accountNumber'),
@@ -424,19 +425,23 @@ void main() {
         coordinator: coordinator,
       ),
       body: (t) async {
-        await t.enterText(find.widgetWithText(TextFormField, '은행명'), '국민은행');
+        await t.tap(find.widgetWithText(TextFormField, '은행 선택'));
+        await t.pumpAndSettle();
+        await t.tap(find.text('KB국민은행').last);
+        await t.pumpAndSettle();
         await t.enterText(find.widgetWithText(TextFormField, '예금주'), '홍길동');
         await t.enterText(
           find.widgetWithText(TextFormField, '계좌번호'),
           '1234567890',
         );
-        await t.tap(find.text('저장'));
+        await t.tap(find.text('저장하고 확인 요청'));
         await t.pumpAndSettle();
 
         verify(
           () => repo.upsertBankAccount(
             partnerId: 'partner-1',
-            bankName: '국민은행',
+            bankCode: 'kb',
+            bankName: 'KB국민은행',
             accountHolder: '홍길동',
             accountNumber: '1234567890',
           ),
@@ -452,26 +457,37 @@ void main() {
       overrides: () {
         when(() => repo.getBankAccount(any())).thenAnswer(
           (_) async => {
+            'bank_code': 'shinhan',
             'bank_name': '신한은행',
             'account_holder': '기존예금주',
             'account_number': '111122223333',
+            'bank_verification_status': 'manual_review_approved',
           },
         );
         return _baseOverrides(repo: repo, coordinator: coordinator);
       },
       body: (t) async {
-        await t.enterText(find.widgetWithText(TextFormField, '은행명'), '카카오뱅크');
+        await t.tap(find.widgetWithText(TextFormField, '은행 선택'));
+        await t.pumpAndSettle();
+        await t.drag(
+          find.byType(SingleChildScrollView).last,
+          const Offset(0, -240),
+        );
+        await t.pumpAndSettle();
+        await t.tap(find.text('카카오뱅크').last);
+        await t.pumpAndSettle();
         await t.enterText(find.widgetWithText(TextFormField, '예금주'), '변경예금주');
         await t.enterText(
           find.widgetWithText(TextFormField, '계좌번호'),
           '444455556666',
         );
-        await t.tap(find.text('저장'));
+        await t.tap(find.text('저장하고 확인 요청'));
         await t.pumpAndSettle();
 
         verify(
           () => repo.upsertBankAccount(
             partnerId: 'partner-1',
+            bankCode: 'kakao',
             bankName: '카카오뱅크',
             accountHolder: '변경예금주',
             accountNumber: '444455556666',

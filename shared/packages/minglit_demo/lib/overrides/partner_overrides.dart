@@ -39,15 +39,16 @@ class _DemoPartnerRepository extends PartnerRepository {
   @override
   Future<Map<String, dynamic>?> getMyMemberRole(String partnerId) async {
     if (partnerId == DemoWorld.selfPartnerId) {
-      return {'role': 'owner', 'permissions': ['ALL']};
+      return {
+        'role': 'owner',
+        'permissions': ['ALL'],
+      };
     }
     return null;
   }
 
   @override
-  Future<Map<String, dynamic>> getPartnerRevenueStats(
-    String partnerId,
-  ) async {
+  Future<Map<String, dynamic>> getPartnerRevenueStats(String partnerId) async {
     if (partnerId != DemoWorld.selfPartnerId) {
       return {
         'partner_id': partnerId,
@@ -60,10 +61,8 @@ class _DemoPartnerRepository extends PartnerRepository {
     final completed = demoSettlementItems
         .where((s) => s.status == 'COMPLETED')
         .toList();
-    final totalGross =
-        completed.fold<int>(0, (sum, s) => sum + s.grossAmount);
-    final totalNet =
-        completed.fold<int>(0, (sum, s) => sum + s.netAmount);
+    final totalGross = completed.fold<int>(0, (sum, s) => sum + s.grossAmount);
+    final totalNet = completed.fold<int>(0, (sum, s) => sum + s.netAmount);
     return {
       'partner_id': partnerId,
       'total_sales': totalGross,
@@ -99,9 +98,7 @@ class _DemoPartnerRepository extends PartnerRepository {
   // ── Member management (mixin forwarded) ──────────────────────────────────
 
   @override
-  Future<List<Map<String, dynamic>>> getPartnerMembers(
-    String partnerId,
-  ) async {
+  Future<List<Map<String, dynamic>>> getPartnerMembers(String partnerId) async {
     if (partnerId != DemoWorld.selfPartnerId) return [];
     return List<Map<String, dynamic>>.from(demoPartnerMembers);
   }
@@ -186,21 +183,17 @@ class _DemoSettlementRepository extends SettlementRepository {
       items = items.where((s) => s.status == status).toList();
     }
     if (dateStart != null) {
-      items =
-          items.where((s) => !s.createdAt.isBefore(dateStart)).toList();
+      items = items.where((s) => !s.createdAt.isBefore(dateStart)).toList();
     }
     if (dateEnd != null) {
-      items =
-          items.where((s) => !s.createdAt.isAfter(dateEnd)).toList();
+      items = items.where((s) => !s.createdAt.isAfter(dateEnd)).toList();
     }
     final end = (offset + limit).clamp(0, items.length);
     return offset >= items.length ? [] : items.sublist(offset, end);
   }
 
   @override
-  Future<SettlementItemDetail?> getSettlementItemDetail(
-    String itemId,
-  ) async {
+  Future<SettlementItemDetail?> getSettlementItemDetail(String itemId) async {
     try {
       return demoSettlementItems.firstWhere((s) => s.id == itemId);
     } on StateError {
@@ -250,18 +243,28 @@ class _DemoSettlementRepository extends SettlementRepository {
   Future<Map<String, dynamic>?> getBankAccount(String partnerId) async {
     if (partnerId != DemoWorld.selfPartnerId) return null;
     return {
+      'bank_code': 'kakao',
       'bank_name': demoBankAccount['bank_name'],
       'account_holder': demoBankAccount['account_holder'],
       'account_number': demoBankAccount['account_number'],
+      'bank_verification_status': 'manual_review_approved',
     };
   }
 
   @override
   Future<void> upsertBankAccount({
     required String partnerId,
+    required String bankCode,
     required String bankName,
     required String accountHolder,
     required String accountNumber,
+  }) async {
+    // Demo: accept silently.
+  }
+
+  @override
+  Future<void> requestManualBankAccountReview({
+    required String partnerId,
   }) async {
     // Demo: accept silently.
   }
@@ -278,8 +281,7 @@ class _DemoSettlementRepository extends SettlementRepository {
   Future<Map<String, dynamic>> retryPayout({
     required String payoutId,
     required String partnerId,
-  }) async =>
-      {'status': 'queued', 'payout_id': payoutId};
+  }) async => {'status': 'queued', 'payout_id': payoutId};
 }
 
 // ── Staff Repository ──────────────────────────────────────────────────────────
@@ -305,10 +307,7 @@ class _DemoStaffRepository extends StaffRepository {
 
 class _DemoCheckinRepository extends CheckinRepository {
   _DemoCheckinRepository()
-    : super(
-        crypto: TicketCrypto(),
-        supabase: const PoisonSupabaseClient(),
-      );
+    : super(crypto: TicketCrypto(), supabase: const PoisonSupabaseClient());
 
   @override
   Future<bool> verifyAndCheckin({
@@ -321,9 +320,7 @@ class _DemoCheckinRepository extends CheckinRepository {
 
 List<Override> partnerDomainOverrides() => [
   partnerRepositoryProvider.overrideWith((_) => _DemoPartnerRepository()),
-  settlementRepositoryProvider.overrideWith(
-    (_) => _DemoSettlementRepository(),
-  ),
+  settlementRepositoryProvider.overrideWith((_) => _DemoSettlementRepository()),
   staffRepositoryProvider.overrideWith((_) => _DemoStaffRepository()),
   checkinRepositoryProvider.overrideWith((_) => _DemoCheckinRepository()),
 ];

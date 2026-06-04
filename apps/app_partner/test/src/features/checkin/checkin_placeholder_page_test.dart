@@ -5,10 +5,14 @@ import 'package:app_partner/src/features/checkin/qr_scanner_screen.dart';
 import 'package:app_partner/src/features/checkin/stats/checkin_stats_controller.dart'
     show CheckinStats, CheckinStatsController, checkinStatsControllerProvider;
 import 'package:app_partner/src/logic/current_partner_provider.dart';
+import 'package:app_partner/src/ui/screens/ongoing_event_list_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:mocktail/mocktail.dart';
+
+import '../../../utils/mocks.dart';
 
 /// Fake platform implementation for MobileScanner.
 ///
@@ -77,8 +81,7 @@ class _FakeMobileScannerPlatform extends MobileScannerPlatform {
 // 실제 Supabase 연결을 시도하지 않도록 한다.
 class _FakeCheckinStatsController extends CheckinStatsController {
   @override
-  Future<CheckinStats> build(String eventId) async =>
-      const CheckinStats(total: 0, checkedIn: 0);
+  Future<CheckinStats> build(String eventId) async => CheckinStats.empty;
 }
 
 void main() {
@@ -117,6 +120,115 @@ void main() {
         child: const MaterialApp(home: CheckinPlaceholderPage()),
       );
     }
+
+    test(
+      'todayEventsProvider keeps live and ended-window events from repository',
+      () async {
+        final mockRepo = MockEventRepository();
+        final liveEvent = Event(
+          id: 'live-event',
+          partyId: 'party-1',
+          startTime: now.subtract(const Duration(hours: 1)),
+          endTime: now.add(const Duration(hours: 2)),
+          createdAt: now,
+          updatedAt: now,
+          title: 'Live Event',
+        );
+        final endedWindowEvent = Event(
+          id: 'ended-window-event',
+          partyId: 'party-1',
+          startTime: now.subtract(const Duration(hours: 5)),
+          endTime: now.subtract(const Duration(hours: 2)),
+          createdAt: now,
+          updatedAt: now,
+          title: 'Ended Window Event',
+        );
+        final oldEndedEvent = Event(
+          id: 'old-ended-event',
+          partyId: 'party-1',
+          startTime: now.subtract(const Duration(hours: 30)),
+          endTime: now.subtract(const Duration(hours: 25)),
+          createdAt: now,
+          updatedAt: now,
+          title: 'Old Ended Event',
+        );
+
+        when(
+          () => mockRepo.getPartnerOperationWindowEvents('partner-1'),
+        ).thenAnswer(
+          (_) async => [liveEvent, endedWindowEvent, oldEndedEvent],
+        );
+
+        final container = ProviderContainer(
+          overrides: [eventRepositoryProvider.overrideWithValue(mockRepo)],
+        );
+        addTearDown(container.dispose);
+
+        final events = await container.read(
+          todayEventsProvider('partner-1').future,
+        );
+
+        expect(events.map((event) => event.id), [
+          'live-event',
+          'ended-window-event',
+        ]);
+        verify(
+          () => mockRepo.getPartnerOperationWindowEvents('partner-1'),
+        ).called(1);
+        verifyNever(() => mockRepo.getUpcomingEvents(any()));
+      },
+    );
+
+    testWidgets(
+      'OngoingEventListPage shows readiness list before backend active window',
+      (tester) async {
+        final waitingEvent = Event(
+          id: 'waiting-event',
+          partyId: 'party-1',
+          startTime: now.add(const Duration(hours: 3)),
+          endTime: now.add(const Duration(hours: 5)),
+          createdAt: now,
+          updatedAt: now,
+          title: 'Waiting Event',
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(home: OngoingEventListPage(event: waitingEvent)),
+        );
+
+        expect(find.byType(QRScannerScreen), findsNothing);
+        expect(find.text('참가자 리스트'), findsOneWidget);
+        expect(find.textContaining('시작 2시간 전까지'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'OngoingEventListPage renders ended-window event as read-only',
+      (tester) async {
+        final endedEvent = Event(
+          id: 'ended-event',
+          partyId: 'party-1',
+          startTime: now.subtract(const Duration(hours: 5)),
+          endTime: now.subtract(const Duration(hours: 2)),
+          createdAt: now,
+          updatedAt: now,
+          title: 'Ended Event',
+          currentParticipants: 12,
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(home: OngoingEventListPage(event: endedEvent)),
+        );
+
+        expect(find.byType(QRScannerScreen), findsNothing);
+        expect(find.text('운영 결과'), findsOneWidget);
+        expect(find.textContaining('종료 · 읽기 전용'), findsOneWidget);
+        expect(find.textContaining('이벤트가 종료됐어요'), findsOneWidget);
+        expect(find.text('읽기 전용'), findsOneWidget);
+        expect(find.textContaining('QR/수동 체크인이 비활성화'), findsNothing);
+        expect(find.textContaining('체크인은'), findsNothing);
+      },
+    );
 
     testWidgets('shows loading indicator when partner info is loading', (
       tester,
@@ -183,10 +295,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('오늘 예정된 이벤트가 없습니다'), findsOneWidget);
-      expect(find.byIcon(Icons.qr_code_scanner), findsOneWidget);
+      expect(find.byIcon(Icons.list_alt_outlined), findsOneWidget);
     });
 
-    testWidgets('auto-routes to QRScannerScreen when exactly 1 event today', (
+    testWidgets('auto-routes to OngoingEventListPage when exactly 1 event', (
       tester,
     ) async {
       // Fix #1097: Previously disabled due to mobile_scanner async dispose
@@ -216,6 +328,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
+      expect(find.byType(OngoingEventListPage), findsOneWidget);
       expect(find.byType(QRScannerScreen), findsOneWidget);
     });
 
@@ -246,8 +359,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('이벤트를 선택하세요'), findsOneWidget);
-      expect(find.text('오늘 2개 이벤트가 진행됩니다'), findsOneWidget);
+      expect(find.text('운영할 이벤트를 선택하세요'), findsOneWidget);
+      expect(find.text('진행 임박/진행 중 이벤트 2개'), findsOneWidget);
       expect(find.text('Test Event'), findsOneWidget);
       expect(find.text('Second Event'), findsOneWidget);
     });

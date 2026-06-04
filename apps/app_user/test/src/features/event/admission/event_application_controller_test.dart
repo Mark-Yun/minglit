@@ -292,6 +292,7 @@ void main() {
           eventId: any(named: 'eventId'),
           ticketId: any(named: 'ticketId'),
           verificationData: any(named: 'verificationData'),
+          idempotencyKey: any(named: 'idempotencyKey'),
         ),
       ).thenAnswer(
         (_) async => const FreeApplyEventResult(applicationId: 'app_123'),
@@ -313,12 +314,92 @@ void main() {
       );
     });
 
+    test(
+      'reuses idempotency key while retrying a failed submit attempt',
+      () async {
+        final capturedKeys = <String>[];
+        var applyCalls = 0;
+        when(
+          () => mockEventRepo.applyEvent(
+            eventId: any(named: 'eventId'),
+            ticketId: any(named: 'ticketId'),
+            verificationData: any(named: 'verificationData'),
+            idempotencyKey: any(named: 'idempotencyKey'),
+          ),
+        ).thenAnswer((invocation) async {
+          capturedKeys.add(
+            invocation.namedArguments[const Symbol('idempotencyKey')]!
+                as String,
+          );
+          applyCalls += 1;
+          if (applyCalls == 1) {
+            throw const MinglitUserException('일시적 오류');
+          }
+          return const FreeApplyEventResult(applicationId: 'app_retry');
+        });
+
+        final container = _createContainer();
+        final notifier = container.read(
+          eventApplicationControllerProvider(testEvent).notifier,
+        );
+
+        await notifier.selectTicket(testEvent.tickets!.last);
+        notifier.markIdentityCompleted();
+        notifier.setConsentGranted(true);
+        await notifier.submitApplication(mockContext);
+        notifier.resetStatus();
+        await notifier.submitApplication(mockContext);
+
+        expect(capturedKeys, hasLength(2));
+        expect(capturedKeys.first, startsWith('apply-event:'));
+        expect(capturedKeys.first, capturedKeys.last);
+        expect(
+          container.read(eventApplicationControllerProvider(testEvent)).status,
+          EventApplicationStatus.success,
+        );
+      },
+    );
+
+    test('uses a new idempotency key after a successful submit', () async {
+      final capturedKeys = <String>[];
+      when(
+        () => mockEventRepo.applyEvent(
+          eventId: any(named: 'eventId'),
+          ticketId: any(named: 'ticketId'),
+          verificationData: any(named: 'verificationData'),
+          idempotencyKey: any(named: 'idempotencyKey'),
+        ),
+      ).thenAnswer((invocation) async {
+        capturedKeys.add(
+          invocation.namedArguments[const Symbol('idempotencyKey')]! as String,
+        );
+        return const FreeApplyEventResult(applicationId: 'app_free_1');
+      });
+
+      final container = _createContainer();
+      final notifier = container.read(
+        eventApplicationControllerProvider(testEvent).notifier,
+      );
+
+      await notifier.selectTicket(testEvent.tickets!.last);
+      notifier.markIdentityCompleted();
+      notifier.setConsentGranted(true);
+      await notifier.submitApplication(mockContext);
+      notifier.resetStatus();
+      await notifier.submitApplication(mockContext);
+
+      expect(capturedKeys, hasLength(2));
+      expect(capturedKeys.first, startsWith('apply-event:'));
+      expect(capturedKeys.first, isNot(capturedKeys.last));
+    });
+
     test('resetStatus preserves current step and data', () async {
       when(
         () => mockEventRepo.applyEvent(
           eventId: any(named: 'eventId'),
           ticketId: any(named: 'ticketId'),
           verificationData: any(named: 'verificationData'),
+          idempotencyKey: any(named: 'idempotencyKey'),
         ),
       ).thenThrow(const MinglitUserException('실패'));
 
@@ -343,6 +424,58 @@ void main() {
       expect(state.selectedTicket?.id, 'ticket_free');
     });
 
+    test(
+      'reuses apply-event idempotency key across retry after apply failure',
+      () async {
+        var callCount = 0;
+        final idempotencyKeys = <String?>[];
+        when(
+          () => mockEventRepo.applyEvent(
+            eventId: any(named: 'eventId'),
+            ticketId: any(named: 'ticketId'),
+            verificationData: any(named: 'verificationData'),
+            idempotencyKey: any(named: 'idempotencyKey'),
+          ),
+        ).thenAnswer((invocation) async {
+          idempotencyKeys.add(
+            invocation.namedArguments[const Symbol('idempotencyKey')]
+                as String?,
+          );
+          callCount += 1;
+          if (callCount == 1) {
+            throw const MinglitUserException('응답을 받지 못했습니다.');
+          }
+          return const FreeApplyEventResult(applicationId: 'app_retry');
+        });
+
+        final container = _createContainer();
+        final notifier = container.read(
+          eventApplicationControllerProvider(testEvent).notifier,
+        );
+
+        await notifier.selectTicket(testEvent.tickets!.last);
+        notifier.markIdentityCompleted();
+        notifier.setConsentGranted(true);
+        await notifier.submitApplication(mockContext);
+
+        expect(
+          container.read(eventApplicationControllerProvider(testEvent)).status,
+          EventApplicationStatus.error,
+        );
+
+        notifier.resetStatus();
+        await notifier.submitApplication(mockContext);
+
+        expect(
+          container.read(eventApplicationControllerProvider(testEvent)).status,
+          EventApplicationStatus.success,
+        );
+        expect(idempotencyKeys, hasLength(2));
+        expect(idempotencyKeys.first, isNotNull);
+        expect(idempotencyKeys.first, idempotencyKeys.last);
+      },
+    );
+
     // Regression test for Fix #1924: buyer_tel must not use fake phone numbers.
     // Iamport records buyer_tel in PG records; a fake number corrupts prod data.
     test(
@@ -355,6 +488,7 @@ void main() {
             eventId: any(named: 'eventId'),
             ticketId: any(named: 'ticketId'),
             verificationData: any(named: 'verificationData'),
+            idempotencyKey: any(named: 'idempotencyKey'),
           ),
         ).thenAnswer(
           (_) async => const PaidApplyEventResult(
@@ -421,6 +555,7 @@ void main() {
             eventId: any(named: 'eventId'),
             ticketId: any(named: 'ticketId'),
             verificationData: any(named: 'verificationData'),
+            idempotencyKey: any(named: 'idempotencyKey'),
           ),
         ).thenAnswer((invocation) async {
           capturedVerifData =
@@ -480,6 +615,7 @@ void main() {
             eventId: any(named: 'eventId'),
             ticketId: any(named: 'ticketId'),
             verificationData: any(named: 'verificationData'),
+            idempotencyKey: any(named: 'idempotencyKey'),
           ),
         ).thenAnswer((invocation) async {
           capturedVerifData =
@@ -516,19 +652,24 @@ void main() {
     );
 
     test('payment cancellation sets error status', () async {
+      final idempotencyKeys = <String?>[];
       when(
         () => mockEventRepo.applyEvent(
           eventId: any(named: 'eventId'),
           ticketId: any(named: 'ticketId'),
           verificationData: any(named: 'verificationData'),
+          idempotencyKey: any(named: 'idempotencyKey'),
         ),
-      ).thenAnswer(
-        (_) async => const PaidApplyEventResult(
+      ).thenAnswer((invocation) async {
+        idempotencyKeys.add(
+          invocation.namedArguments[const Symbol('idempotencyKey')] as String?,
+        );
+        return const PaidApplyEventResult(
           applicationId: 'app_paid',
           orderId: 'order_1',
           paymentAmount: 10000,
-        ),
-      );
+        );
+      });
 
       final container = createContainer(
         overrides: [
@@ -559,6 +700,14 @@ void main() {
       );
       expect(state.status, EventApplicationStatus.error);
       expect(state.errorMessage, '결제가 취소되었습니다.');
+
+      notifier.resetStatus();
+      await notifier.submitApplication(mockContext);
+
+      expect(idempotencyKeys, hasLength(2));
+      expect(idempotencyKeys.first, isNotNull);
+      expect(idempotencyKeys.last, isNotNull);
+      expect(idempotencyKeys.first, isNot(idempotencyKeys.last));
     });
   });
 }

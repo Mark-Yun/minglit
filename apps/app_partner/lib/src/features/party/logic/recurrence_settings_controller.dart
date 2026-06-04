@@ -14,7 +14,9 @@ abstract class RecurrenceSettingsState with _$RecurrenceSettingsState {
     /// Repeat pattern (weekly / biweekly / monthly).
     @Default(RecurrencePattern.weekly) RecurrencePattern pattern,
 
-    /// Days of week to generate events on (0=Sun … 6=Sat, JavaScript convention).
+    /// Days of week to generate events on.
+    ///
+    /// Uses JavaScript convention: 0=Sun … 6=Sat.
     /// Used for weekly and biweekly patterns.
     @Default([1]) List<int> daysOfWeek,
 
@@ -28,9 +30,9 @@ abstract class RecurrenceSettingsState with _$RecurrenceSettingsState {
 
 /// Manages the recurrence settings UI state for the event creation flow.
 ///
-/// The controller is scoped to the event-create screen via [ProviderScope.overrides]
-/// or via its auto-dispose lifetime. It computes preview dates without any
-/// repository calls — submission is handled by EventCreateController.submit.
+/// The controller is scoped to the event-create screen via
+/// [ProviderScope.overrides] or via its auto-dispose lifetime.
+/// It computes preview dates without repository calls.
 @riverpod
 class RecurrenceSettingsController extends _$RecurrenceSettingsController {
   @override
@@ -38,6 +40,12 @@ class RecurrenceSettingsController extends _$RecurrenceSettingsController {
 
   /// Toggles recurrence on or off.
   void toggle() => state = state.copyWith(isEnabled: !state.isEnabled);
+
+  /// Restores a saved draft recurrence snapshot.
+  RecurrenceSettingsState get snapshot => state;
+
+  /// Restores a saved draft recurrence snapshot.
+  set snapshot(RecurrenceSettingsState snapshot) => state = snapshot;
 
   /// Changes the repeat pattern. Resets conflicting fields.
   void setPattern(RecurrencePattern pattern) {
@@ -67,12 +75,14 @@ class RecurrenceSettingsController extends _$RecurrenceSettingsController {
   /// Sets the day-of-month for monthly pattern (1–31).
   void setMonthDay(int day) => state = state.copyWith(monthDay: day);
 
-  /// Sets the optional rule end date in YYYY-MM-DD format. Pass `null` to clear.
+  /// Sets the optional rule end date in YYYY-MM-DD format.
+  ///
+  /// Pass `null` to clear.
   void setEndDate(String? date) => state = state.copyWith(endDate: date);
 
-  /// Returns the next [count] dates (from today) that match the current settings.
+  /// Returns next [count] dates that match the current settings.
   ///
-  /// Respects [RecurrenceSettingsState.endDate] — no dates after it are returned.
+  /// Respects [RecurrenceSettingsState.endDate].
   /// Returns an empty list when recurrence is disabled or settings are invalid.
   List<DateTime> previewDates({int count = 5}) {
     if (!state.isEnabled) return [];
@@ -87,7 +97,7 @@ class RecurrenceSettingsController extends _$RecurrenceSettingsController {
     final today = DateTime.now();
     final refDay = DateTime(today.year, today.month, today.day);
 
-    // Parse optional end date so the preview matches what will actually be saved.
+    // Parse optional end date so preview matches the saved rule.
     final endDateDay = state.endDate != null
         ? DateTime.tryParse(state.endDate!)
         : null;

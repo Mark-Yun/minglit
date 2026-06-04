@@ -30,6 +30,7 @@ import 'package:app_partner/src/features/home/partner_home_page.dart';
 import 'package:app_partner/src/features/home/widgets/event_action_card.dart';
 import 'package:app_partner/src/features/home/widgets/todo_summary_chips.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
+import 'package:app_partner/src/ui/screens/ongoing_event_list_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -476,9 +477,9 @@ void main() {
   // -------------------------------------------------------------------------
 
   cujGroup('2-1', '다가오는 이벤트가 모집 중 phase', () {
-    // 모집 중 = 시작까지 3시간 초과
+    // 모집 중 = T-7보다 이후에 시작
     final recruitingEvent = _makeEvent(
-      startTime: _now.add(const Duration(hours: 5)),
+      startTime: _now.add(const Duration(days: 8)),
     );
 
     cujCase(
@@ -499,7 +500,7 @@ void main() {
       'edge: 100% 마감 — 프로그레스 바 가득',
       app: EventActionCard(
         event: _makeEvent(
-          startTime: _now.add(const Duration(hours: 5)),
+          startTime: _now.add(const Duration(days: 8)),
           currentParticipants: 20,
         ),
         onMainAction: () {},
@@ -513,23 +514,22 @@ void main() {
     );
   });
 
-  cujGroup('2-2', '이벤트가 준비 중 phase (3h 이내)', () {
-    // 준비 중 = 시작까지 3시간 이하
-    final preparingEvent = _makeEvent(
-      startTime: _now.add(const Duration(hours: 1)),
+  cujGroup('2-2', '이벤트가 pre_start phase (T-7~T-2)', () {
+    final preStartEvent = _makeEvent(
+      startTime: _now.add(const Duration(days: 3)),
     );
 
     cujCase(
-      'happy: "준비 중" 배지 + "체크인 준비" CTA',
+      'happy: "체크인 대기" 배지 + "참가자 리스트" CTA',
       app: EventActionCard(
-        event: preparingEvent,
+        event: preStartEvent,
         onMainAction: () {},
         onSecondaryAction1: () {},
         onSecondaryAction2: () {},
       ),
       body: (t) async {
-        expect(find.textContaining('준비 중'), findsOneWidget);
-        expect(find.text('체크인 준비'), findsOneWidget);
+        expect(find.textContaining('체크인 대기'), findsOneWidget);
+        expect(find.text('참가자 리스트'), findsOneWidget);
       },
     );
   });
@@ -542,7 +542,7 @@ void main() {
     );
 
     cujCase(
-      'happy: "LIVE" 배지 + "체크인 계속하기" CTA',
+      'happy: "LIVE" 배지 + "참가자 체크인" CTA',
       app: EventActionCard(
         event: liveEvent,
         onMainAction: () {},
@@ -551,7 +551,7 @@ void main() {
       ),
       body: (t) async {
         expect(find.textContaining('LIVE'), findsOneWidget);
-        expect(find.text('체크인 계속하기'), findsOneWidget);
+        expect(find.text('참가자 체크인'), findsOneWidget);
       },
     );
   });
@@ -779,7 +779,7 @@ void main() {
   // CUJ 4: 체크인 탭 (카메라 불필요 시나리오만)
   // -------------------------------------------------------------------------
 
-  cujGroup('4-1', '체크인 탭 진입 — 오늘 이벤트 1개면 즉시 스캐너', () {
+  cujGroup('4-1', '체크인 탭 진입 — 운영 이벤트 1개면 OngoingEventListPage', () {
     final oneEvent = _makeEvent(
       title: '오늘의 이벤트',
       startTime: _now.subtract(const Duration(minutes: 30)),
@@ -787,7 +787,7 @@ void main() {
     );
 
     cujCase(
-      'happy: 오늘 이벤트 1건 — 선택 화면 없이 스캐너 타이틀 노출',
+      'happy: 운영 이벤트 1건 — 선택 화면 없이 OngoingEventListPage 진입',
       app: const CheckinPlaceholderPage(),
       overrides: () => [
         currentPartnerInfoProvider.overrideWith(
@@ -799,10 +799,11 @@ void main() {
       ],
       afterPump: const Duration(seconds: 2),
       body: (t) async {
+        expect(find.byType(OngoingEventListPage), findsOneWidget);
         await _pumpUntilFound(t, find.byType(QRScannerScreen));
         expect(find.byType(QRScannerScreen), findsOneWidget);
         expect(find.text('티켓 스캔'), findsOneWidget);
-        expect(find.textContaining('이벤트를 선택하세요'), findsNothing);
+        expect(find.textContaining('운영할 이벤트를 선택하세요'), findsNothing);
       },
     );
   });
@@ -834,8 +835,8 @@ void main() {
         ),
       ],
       body: (t) async {
-        expect(find.textContaining('이벤트를 선택하세요'), findsOneWidget);
-        expect(find.textContaining('2개 이벤트'), findsOneWidget);
+        expect(find.textContaining('운영할 이벤트를 선택하세요'), findsOneWidget);
+        expect(find.textContaining('진행 임박/진행 중 이벤트 2개'), findsOneWidget);
       },
     );
 
@@ -861,7 +862,7 @@ void main() {
         ),
       ],
       body: (t) async {
-        expect(find.textContaining('4개 이벤트'), findsOneWidget);
+        expect(find.textContaining('이벤트 4개'), findsOneWidget);
       },
     );
   });
@@ -942,7 +943,7 @@ void main() {
         ),
       ],
       body: (t) async {
-        expect(find.text('이벤트를 선택하세요'), findsOneWidget);
+        expect(find.text('운영할 이벤트를 선택하세요'), findsOneWidget);
 
         final rootBefore = t.widget<MaterialApp>(
           find.byType(MaterialApp).first,
@@ -951,6 +952,7 @@ void main() {
 
         await t.tap(find.byType(Card).first);
         await t.pump(const Duration(seconds: 2));
+        await _pumpUntilFound(t, find.byType(OngoingEventListPage));
         await _pumpUntilFound(t, find.byType(QRScannerScreen));
 
         final hasDarkThemeOnScanner = t
@@ -961,9 +963,9 @@ void main() {
         expect(find.byType(CloseButton), findsOneWidget);
         await t.tap(find.byType(CloseButton));
         await t.pump(const Duration(milliseconds: 600));
-        await _pumpUntilFound(t, find.text('이벤트를 선택하세요'));
+        await _pumpUntilFound(t, find.text('운영할 이벤트를 선택하세요'));
 
-        expect(find.text('이벤트를 선택하세요'), findsOneWidget);
+        expect(find.text('운영할 이벤트를 선택하세요'), findsOneWidget);
         final rootAfter = t.widget<MaterialApp>(find.byType(MaterialApp).first);
         expect(rootAfter.theme?.brightness, Brightness.light);
         final hasDarkThemeAfterBack = t

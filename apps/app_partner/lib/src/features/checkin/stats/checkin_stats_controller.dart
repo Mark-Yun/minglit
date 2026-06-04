@@ -35,6 +35,8 @@ class CheckinStatsController extends _$CheckinStatsController {
 
   @override
   Future<CheckinStats> build(String eventId) async {
+    if (EnvKeyStore.isDemo) return CheckinStats.empty;
+
     final supabase = ref.watch(supabaseClientProvider);
     final stats = await _fetchStats(supabase, eventId);
 
@@ -64,6 +66,8 @@ class CheckinStatsController extends _$CheckinStatsController {
   // Extracted for testability — called by realtime callback and polling.
   // Subclasses (fakes) can override to supply test data without real Supabase.
   Future<void> applyFetchedStats(String eventId) async {
+    if (EnvKeyStore.isDemo) return;
+
     final supabase = ref.read(supabaseClientProvider);
     try {
       final newStats = await _fetchStats(supabase, eventId);

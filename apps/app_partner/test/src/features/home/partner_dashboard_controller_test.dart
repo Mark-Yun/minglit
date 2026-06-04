@@ -1,5 +1,6 @@
 import 'package:app_partner/src/features/home/partner_dashboard_controller.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
+import 'package:app_partner/src/logic/event_create_draft_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -44,19 +45,38 @@ const _testPartner = Partner(
   contactEmail: 'test@partner.com',
 );
 
+class _FakeEventCreateDraftRepository implements EventCreateDraftRepository {
+  const _FakeEventCreateDraftRepository();
+
+  @override
+  Future<void> deleteDraft(String partyId) async {}
+
+  @override
+  Future<EventCreateDraft?> getDraft(String partyId) async => null;
+
+  @override
+  Future<List<EventCreateDraft>> getDrafts() async => const [];
+
+  @override
+  Future<void> saveDraft(EventCreateDraft draft) async {}
+}
+
 void main() {
   late MockEventRepository mockEventRepo;
   late MockPartyRepository mockPartyRepo;
+  late MockSettlementRepository mockSettlementRepo;
 
   setUp(() {
     mockEventRepo = MockEventRepository();
     mockPartyRepo = MockPartyRepository();
+    mockSettlementRepo = MockSettlementRepository();
 
     when(
       () => mockEventRepo.getPendingApplicationCount(any()),
     ).thenAnswer((_) async => 3);
-    // Fix #2219: controller now uses getEventsByPartnerId (gt end_time) to include
-    // live events. getUpcomingEvents (gte start_time) excluded started events.
+    // Fix #2219: controller now uses getEventsByPartnerId (gt end_time)
+    // to include live events. getUpcomingEvents (gte start_time) excluded
+    // started events.
     when(
       () => mockEventRepo.getEventsByPartnerId(any()),
     ).thenAnswer((_) async => [_testEvent]);
@@ -69,6 +89,15 @@ void main() {
     when(
       () => mockPartyRepo.getPartiesByPartnerId(any()),
     ).thenAnswer((_) async => [_testParty]);
+    when(() => mockSettlementRepo.getBankAccount(any())).thenAnswer(
+      (_) async => {
+        'bank_code': 'kakao',
+        'bank_name': '카카오뱅크',
+        'account_holder': '테스트 파트너',
+        'account_number': '3333011234567',
+        'bank_verification_status': 'manual_review_approved',
+      },
+    );
   });
 
   /// Creates container, subscribes to the dashboard provider, and pumps
@@ -81,6 +110,10 @@ void main() {
         currentPartnerInfoProvider.overrideWith((_) async => partner),
         eventRepositoryProvider.overrideWithValue(mockEventRepo),
         partyRepositoryProvider.overrideWithValue(mockPartyRepo),
+        eventCreateDraftRepositoryProvider.overrideWithValue(
+          const _FakeEventCreateDraftRepository(),
+        ),
+        settlementRepositoryProvider.overrideWithValue(mockSettlementRepo),
       ],
     );
 
@@ -107,6 +140,10 @@ void main() {
           currentPartnerInfoProvider.overrideWith((_) async => _testPartner),
           eventRepositoryProvider.overrideWithValue(mockEventRepo),
           partyRepositoryProvider.overrideWithValue(mockPartyRepo),
+          eventCreateDraftRepositoryProvider.overrideWithValue(
+            const _FakeEventCreateDraftRepository(),
+          ),
+          settlementRepositoryProvider.overrideWithValue(mockSettlementRepo),
         ],
       );
 
@@ -134,6 +171,26 @@ void main() {
       expect(state.upcomingEvents, contains(_testEvent));
       expect(state.activeParties, contains(_testParty));
       expect(state.hasAnyEvents, isTrue);
+      expect(state.bankAccountReady, isTrue);
+      expect(state.bankVerificationStatus, 'manual_review_approved');
+    });
+
+    test('bankAccountReady is false while verification is pending', () async {
+      when(() => mockSettlementRepo.getBankAccount(any())).thenAnswer(
+        (_) async => {
+          'bank_code': 'kakao',
+          'bank_name': '카카오뱅크',
+          'account_holder': '테스트 파트너',
+          'account_number': '3333011234567',
+          'bank_verification_status': 'manual_review_pending',
+        },
+      );
+
+      final container = await buildAndPump();
+      final state = container.read(partnerDashboardControllerProvider);
+
+      expect(state.bankAccountReady, isFalse);
+      expect(state.bankVerificationStatus, 'manual_review_pending');
     });
 
     // Regression test for #1215: partner with past events (no upcoming events)
@@ -179,9 +236,9 @@ void main() {
       },
     );
 
-    // Fix #2219: regression guard — liveEvents must be populated when an active
-    // event has started. This was broken when getUpcomingEvents (gte start_time)
-    // was used; getEventsByPartnerId (gt end_time) fixes it.
+    // Fix #2219: regression guard. liveEvents must be populated when an
+    // active event has started. This was broken when getUpcomingEvents
+    // (gte start_time) was used; getEventsByPartnerId (gt end_time) fixes it.
     test(
       'liveEvents is populated from active events that have started',
       () async {
@@ -217,7 +274,8 @@ void main() {
           state.totalAttendees,
           5,
           reason:
-              'Live event participants must count toward overview total (#2219)',
+              'Live event participants must count toward overview total '
+              '(#2219)',
         );
       },
     );
@@ -228,6 +286,10 @@ void main() {
           currentPartnerInfoProvider.overrideWith((_) async => null),
           eventRepositoryProvider.overrideWithValue(mockEventRepo),
           partyRepositoryProvider.overrideWithValue(mockPartyRepo),
+          eventCreateDraftRepositoryProvider.overrideWithValue(
+            const _FakeEventCreateDraftRepository(),
+          ),
+          settlementRepositoryProvider.overrideWithValue(mockSettlementRepo),
         ],
       );
       final sub = container.listen(

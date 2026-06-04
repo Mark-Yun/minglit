@@ -246,6 +246,95 @@ Deno.test("apply-event :: free ticket, new application → 200 type=free via RPC
   assertEquals(sb.callsFor("apply_event", "rpc").length, 1);
 });
 
+Deno.test("apply-event :: non-user auth context → 500", async () => {
+  const handler = await getHandler();
+  const sb = fakeSupabase({ strict: false });
+  const res = await runHandler(handler, {
+    body: BASE_BODY,
+    ctx: makeCtx({ supabase: sb, auth: { type: "public" } }),
+  });
+  assertEquals(res.status, 500);
+  const body = await readJson<{ error: string }>(res);
+  assertEquals(body.error, "Unexpected auth type");
+});
+
+Deno.test("apply-event :: free ticket verification array → RPC first item and upsert extras", async () => {
+  const handler = await getHandler();
+  const sb = fakeSupabase()
+    .on("events", "select", { data: buildEvent() })
+    .on("tickets", "select", { data: buildTicket({ price: 0 }) })
+    .on("event_applications", "select", { data: null })
+    .on("apply_event", "rpc", { data: "app-new-verify" })
+    .on("user_verifications", "upsert", { error: null })
+    .on("verification_submissions", "insert", { error: null });
+  const res = await runHandler(handler, {
+    body: {
+      ...BASE_BODY,
+      verification_data: {
+        partner_id: "partner-1",
+        verifications: [
+          { verification_id: 123, data: { ignored: true } },
+          { verification_id: "verif-A", data: "not-an-object" },
+          { verification_id: "verif-B", data: { level: "vip" } },
+        ],
+      },
+    },
+    ctx: makeCtx({ supabase: sb, userId: "u-1" }),
+  });
+
+  assertEquals(res.status, 200);
+  const body = await readJson<{ application_id: string }>(res);
+  assertEquals(body.application_id, "app-new-verify");
+
+  const [rpcCall] = sb.callsFor("apply_event", "rpc");
+  assertEquals(rpcCall.rpcArgs?.p_verification_data, {
+    partner_id: "partner-1",
+    verification_id: "verif-A",
+    data: {},
+  });
+
+  const [upsertCall] = sb.callsFor("user_verifications", "upsert");
+  assertEquals(upsertCall.payload, {
+    user_id: "u-1",
+    verification_id: "verif-B",
+    data: { level: "vip" },
+  });
+
+  const [submissionCall] = sb.callsFor("verification_submissions", "insert");
+  assertEquals(submissionCall.payload, {
+    partner_id: "partner-1",
+    user_id: "u-1",
+    verification_id: "verif-B",
+    application_id: "app-new-verify",
+    status: "pending",
+    snapshot_data: { level: "vip" },
+  });
+});
+
+Deno.test("apply-event :: paid verification items without partner_id → 400", async () => {
+  const handler = await getHandler();
+  const sb = fakeSupabase()
+    .on("events", "select", { data: buildEvent() })
+    .on("tickets", "select", { data: buildTicket({ price: 15000 }) })
+    .on("event_applications", "select", { data: null })
+    .on("check_party_balance", "rpc", { data: { allowed: true, reason: null } })
+    .on("event_applications", "insert", { error: null });
+  const res = await runHandler(handler, {
+    body: {
+      ...BASE_BODY,
+      verification_data: {
+        verifications: [{ verification_id: "verif-A", data: { ok: true } }],
+      },
+    },
+    ctx: makeCtx({ supabase: sb, userId: "u-1" }),
+  });
+
+  assertEquals(res.status, 400);
+  const body = await readJson<{ error: string }>(res);
+  assertEquals(body.error, "Invalid verification payload: missing partner_id");
+  assertEquals(sb.callsFor("user_verifications", "upsert").length, 0);
+});
+
 // ─── 12. paid ticket — happy path (new application via insert) → 200 ─────────
 
 Deno.test("apply-event :: paid ticket, new application → 200 type=paid", async () => {

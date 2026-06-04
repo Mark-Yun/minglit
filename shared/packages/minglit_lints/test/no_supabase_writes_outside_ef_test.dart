@@ -7,20 +7,86 @@ void main() {
   // ---------------------------------------------------------------------------
   group('NoSupabaseWritesOutsideEfRule.isWriteMethodName', () {
     group('positive: write method names', () {
-      test('insert', () => expect(NoSupabaseWritesOutsideEfRule.isWriteMethodName('insert'), isTrue));
-      test('update', () => expect(NoSupabaseWritesOutsideEfRule.isWriteMethodName('update'), isTrue));
-      test('delete', () => expect(NoSupabaseWritesOutsideEfRule.isWriteMethodName('delete'), isTrue));
-      test('upsert', () => expect(NoSupabaseWritesOutsideEfRule.isWriteMethodName('upsert'), isTrue));
+      test(
+        'insert',
+        () => expect(
+          NoSupabaseWritesOutsideEfRule.isWriteMethodName('insert'),
+          isTrue,
+        ),
+      );
+      test(
+        'update',
+        () => expect(
+          NoSupabaseWritesOutsideEfRule.isWriteMethodName('update'),
+          isTrue,
+        ),
+      );
+      test(
+        'delete',
+        () => expect(
+          NoSupabaseWritesOutsideEfRule.isWriteMethodName('delete'),
+          isTrue,
+        ),
+      );
+      test(
+        'upsert',
+        () => expect(
+          NoSupabaseWritesOutsideEfRule.isWriteMethodName('upsert'),
+          isTrue,
+        ),
+      );
     });
 
     group('negative: non-write method names', () {
-      test('select', () => expect(NoSupabaseWritesOutsideEfRule.isWriteMethodName('select'), isFalse));
-      test('from', () => expect(NoSupabaseWritesOutsideEfRule.isWriteMethodName('from'), isFalse));
-      test('invoke', () => expect(NoSupabaseWritesOutsideEfRule.isWriteMethodName('invoke'), isFalse));
-      test('eq', () => expect(NoSupabaseWritesOutsideEfRule.isWriteMethodName('eq'), isFalse));
-      test('filter', () => expect(NoSupabaseWritesOutsideEfRule.isWriteMethodName('filter'), isFalse));
-      test('rpc', () => expect(NoSupabaseWritesOutsideEfRule.isWriteMethodName('rpc'), isFalse));
-      test('empty string', () => expect(NoSupabaseWritesOutsideEfRule.isWriteMethodName(''), isFalse));
+      test(
+        'select',
+        () => expect(
+          NoSupabaseWritesOutsideEfRule.isWriteMethodName('select'),
+          isFalse,
+        ),
+      );
+      test(
+        'from',
+        () => expect(
+          NoSupabaseWritesOutsideEfRule.isWriteMethodName('from'),
+          isFalse,
+        ),
+      );
+      test(
+        'invoke',
+        () => expect(
+          NoSupabaseWritesOutsideEfRule.isWriteMethodName('invoke'),
+          isFalse,
+        ),
+      );
+      test(
+        'eq',
+        () => expect(
+          NoSupabaseWritesOutsideEfRule.isWriteMethodName('eq'),
+          isFalse,
+        ),
+      );
+      test(
+        'filter',
+        () => expect(
+          NoSupabaseWritesOutsideEfRule.isWriteMethodName('filter'),
+          isFalse,
+        ),
+      );
+      test(
+        'rpc',
+        () => expect(
+          NoSupabaseWritesOutsideEfRule.isWriteMethodName('rpc'),
+          isFalse,
+        ),
+      );
+      test(
+        'empty string',
+        () => expect(
+          NoSupabaseWritesOutsideEfRule.isWriteMethodName(''),
+          isFalse,
+        ),
+      );
     });
   });
 

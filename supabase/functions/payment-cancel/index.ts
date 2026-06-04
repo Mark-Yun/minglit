@@ -1,11 +1,11 @@
 // Fix #179: esm.sh 직접 URL → deno.json import map 기반으로 통일
 // Fix #2185 (Batch 7): migrate to minglitEdgeFunction wrapper — auth via manifest (user caller)
-import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
-import { nowISO } from "../_shared/temporal_utils.ts";
 import {
-  errorResponse,
-  successResponse,
-} from "../_shared/response_utils.ts";
+  type EFContext,
+  minglitEdgeFunction,
+} from "../_shared/edge_function.ts";
+import { nowISO } from "../_shared/temporal_utils.ts";
+import { errorResponse, successResponse } from "../_shared/response_utils.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
 import { log } from "../_shared/logger.ts";
 // Fix #299: 환불 로직을 shared 모듈로 추출 — user-cancel-order와 공유
@@ -17,10 +17,14 @@ import {
 
 const FN = "payment-cancel";
 
-export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
+export const handler = async (
+  req: Request,
+  ctx: EFContext,
+): Promise<Response> => {
   const { supabase } = ctx;
-  if (ctx.auth.type !== "user") return errorResponse("Unexpected auth type", 500);
-  const userId = ctx.auth.userId;
+  if (ctx.auth.type !== "user" && ctx.auth.type !== "system") {
+    return errorResponse("Unexpected auth type", 500);
+  }
 
   try {
     // 1. Parse Request
@@ -40,7 +44,7 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
     // 1.5a Fetch application for eligibility check
     const { data: application, error: appError } = await supabase
       .from("event_applications")
-      .select("paid_at, event_id, refund_status, user_id")
+      .select("paid_at, event_id, refund_status, user_id, status")
       .eq("payment_id", payment_id)
       .single();
 
@@ -48,61 +52,82 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
       return errorResponse("Application not found", 404);
     }
 
-    // Fix #133: 호출자가 신청자 본인인지 검증 — service role은 RLS를 우회하므로 명시적 확인 필요
-    if (application.user_id !== userId) {
-      return errorResponse("Forbidden", 403);
+    if (ctx.auth.type === "user") {
+      // Fix #133: 호출자가 신청자 본인인지 검증 — service role은 RLS를 우회하므로 명시적 확인 필요
+      if (application.user_id !== ctx.auth.userId) {
+        return errorResponse("Forbidden", 403);
+      }
+
+      // 1.5b Prevent double refund for direct user calls.
+      if (application.refund_status !== "none") {
+        return errorResponse("already_refunded", 400, {
+          reason: "Refund already processed",
+        });
+      }
+    } else {
+      // DB-trigger automatic refunds are system-only and only valid after partner rejection.
+      // The trigger sets refund_status=requested before the async pg_net call lands.
+      if (application.status !== "rejected") {
+        return errorResponse(
+          "system_refund_requires_rejected_application",
+          403,
+        );
+      }
+      if (
+        application.refund_status !== "none" &&
+        application.refund_status !== "requested"
+      ) {
+        return errorResponse("already_refunded", 400, {
+          reason: "Refund already processed",
+        });
+      }
     }
 
-    // 1.5b Prevent double refund
-    if (application.refund_status !== "none") {
-      return errorResponse("already_refunded", 400, {
-        reason: "Refund already processed",
+    if (ctx.auth.type === "user") {
+      // 1.5c Verify direct user cancellations against the refund policy.
+      const [eventResult, policyResult] = await Promise.all([
+        supabase
+          .from("events")
+          .select("start_time")
+          .eq("id", application.event_id)
+          .single(),
+        supabase.rpc("get_current_policy", { p_key: "refund" }),
+      ]);
+
+      // Fix #133: 이벤트/정책 조회 실패 시 적격성 검사를 건너뛰지 않고 명시적으로 에러 반환
+      if (eventResult.error || !eventResult.data) {
+        log({
+          function: FN,
+          level: "error",
+          message: "Failed to fetch event",
+          metadata: { detail: eventResult.error },
+        });
+        return errorResponse("Failed to verify refund eligibility", 500);
+      }
+
+      if (policyResult.error || !policyResult.data) {
+        log({
+          function: FN,
+          level: "error",
+          message: "Failed to fetch policy",
+          metadata: { detail: policyResult.error },
+        });
+        return errorResponse("Failed to verify refund eligibility", 500);
+      }
+
+      // Fix #299: 환불 적격성 검증을 shared 모듈로 위임
+      const policy = parseRefundPolicy(policyResult.data);
+      const eligibility = verifyRefundEligibility({
+        paidAt: application.paid_at as string | null,
+        eventStartTime: eventResult.data.start_time,
+        ...policy,
       });
-    }
 
-    // 1.5c Verify refund eligibility against policy
-    const [eventResult, policyResult] = await Promise.all([
-      supabase
-        .from("events")
-        .select("start_time")
-        .eq("id", application.event_id)
-        .single(),
-      supabase.rpc("get_current_policy", { p_key: "refund" }),
-    ]);
-
-    // Fix #133: 이벤트/정책 조회 실패 시 적격성 검사를 건너뛰지 않고 명시적으로 에러 반환
-    if (eventResult.error || !eventResult.data) {
-      log({
-        function: FN,
-        level: "error",
-        message: "Failed to fetch event",
-        metadata: { detail: eventResult.error },
-      });
-      return errorResponse("Failed to verify refund eligibility", 500);
-    }
-
-    if (policyResult.error || !policyResult.data) {
-      log({
-        function: FN,
-        level: "error",
-        message: "Failed to fetch policy",
-        metadata: { detail: policyResult.error },
-      });
-      return errorResponse("Failed to verify refund eligibility", 500);
-    }
-
-    // Fix #299: 환불 적격성 검증을 shared 모듈로 위임
-    const policy = parseRefundPolicy(policyResult.data);
-    const eligibility = verifyRefundEligibility({
-      paidAt: application.paid_at as string | null,
-      eventStartTime: eventResult.data.start_time,
-      ...policy,
-    });
-
-    if (!eligibility.eligible) {
-      return errorResponse("refund_not_eligible", 400, {
-        reason: eligibility.reason,
-      });
+      if (!eligibility.eligible) {
+        return errorResponse("refund_not_eligible", 400, {
+          reason: eligibility.reason,
+        });
+      }
     }
 
     // Fix #299: PortOne 환불 실행을 shared 모듈로 위임

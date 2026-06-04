@@ -167,16 +167,21 @@ mixin _EventRepositoryCommands on _SupabaseEventContext {
     required String eventId,
     required String ticketId,
     Map<String, dynamic>? verificationData,
+    String? idempotencyKey,
   }) async {
     Log.d('applyEvent called | event: $eventId, ticket: $ticketId');
     try {
+      final body = <String, dynamic>{
+        'event_id': eventId,
+        'ticket_id': ticketId,
+        'verification_data': ?verificationData,
+      };
       final response = await supabaseClient.functions.invoke(
         'apply-event',
-        body: {
-          'event_id': eventId,
-          'ticket_id': ticketId,
-          'verification_data': ?verificationData,
+        headers: {
+          'Idempotency-Key': idempotencyKey ?? newApplyEventIdempotencyKey(),
         },
+        body: body,
       );
 
       // Fix #1409: 비-200 응답 시 response.data가 null이어서 캐스트 크래시 발생.

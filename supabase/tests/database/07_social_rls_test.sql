@@ -43,9 +43,9 @@ SELECT is_empty(
   'user cannot read other users social interactions'
 );
 
--- Test 5: user_a can insert own interaction
+-- Test 5: user_a cannot directly insert own interaction
 SELECT tests.authenticate_as('user_a');
-SELECT lives_ok(
+SELECT throws_ok(
   $$INSERT INTO public.social_interactions (user_id, target_id, target_type, interaction_type)
     VALUES (
       tests.get_supabase_uid('user_a'),
@@ -53,7 +53,9 @@ SELECT lives_ok(
       'party',
       'bookmark'
     )$$,
-  'user can insert own social interaction'
+  '42501',
+  null,
+  'user cannot directly insert own social interaction'
 );
 
 -- Test 6: anon cannot insert interaction (throws permission denied)

@@ -118,8 +118,8 @@ WITH tag AS (
 )
 SELECT set_config('tests.select_rls_tag_id', id::text, true) FROM tag;
 
--- Public-read + admin/owner write split: public read remains, partner owner
--- can still update rows guarded by the former FOR ALL predicate.
+-- Public-read + strict write lockdown: public read remains, but partner owner
+-- direct table writes must now go through Edge Functions.
 SELECT tests.clear_authentication();
 SELECT results_eq(
   $$SELECT count(*)::int FROM public.parties
@@ -129,13 +129,13 @@ SELECT results_eq(
 );
 
 SELECT tests.authenticate_as('select_rls_owner');
-SELECT results_eq(
+SELECT throws_ok(
   $$UPDATE public.parties
       SET title = 'Select RLS Party Updated'
-    WHERE id = current_setting('tests.select_rls_party_id')::uuid
-    RETURNING title$$,
-  $$VALUES ('Select RLS Party Updated'::text)$$,
-  'partner owner can still update own party after all-policy split'
+    WHERE id = current_setting('tests.select_rls_party_id')::uuid$$,
+  '42501',
+  NULL,
+  'partner owner cannot directly update own party after strict write lockdown'
 );
 
 -- Self-read + partner-staff SELECT merge: one policy preserves both access

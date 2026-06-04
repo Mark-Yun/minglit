@@ -306,7 +306,7 @@ body.dark-mode .viewport {
     <tbody>
       <tr>
         <th style="width: 140px;">Status</th>
-        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 5 state · 파트너 신청관리 entry hub</em></td>
+        <td><strong>✅ 디자인완료</strong> <em style="color: var(--color-text-secondary);">— 5 state · canonical top-level 신청관리 hub</em></td>
       </tr>
       <tr>
         <th>App</th>
@@ -329,7 +329,7 @@ body.dark-mode .viewport {
         <td>
           <strong>Parent</strong>: <em>— (top-level partner shell screen — bottom-nav 신청관리 탭)</em><br>
           <strong>Children</strong>:
-          <code>EventApplicationDetailRoute</code> (승인됨/거절됨 항목 탭 시 push) · <code>_EventGroupSection</code> · <code>_ApplicationItem</code> · <code>_StatusBadge</code> · <code>_RejectDialog</code> <em>(internal widgets — no separate spec)</em>
+          <code>EventApplicationDetailRoute</code> (승인됨/거절됨/결제완료 항목 탭 시 read-only push) · <code>_EventGroupSection</code> · <code>_ApplicationItem</code> · <code>_StatusBadge</code> · <code>_RejectDialog</code> <em>(internal widgets — no separate spec)</em>
         </td>
       </tr>
       <tr>
@@ -343,7 +343,7 @@ body.dark-mode .viewport {
       <tr>
         <th>User journey</th>
         <td>
-          <strong>Entry points</strong>: 하단 NavigationBar "신청관리" 탭 / PartnerHomePage TodoSummaryChips "승인 대기" chip 탭 / 푸시 알림(신청 도착) 탭.<br>
+          <strong>Entry points</strong>: 하단 NavigationBar "신청관리" 탭 / PartnerHomePage 오버뷰 "참가예정 고객" stat / 푸시 알림(신청 도착) 탭.<br>
           <strong>Exit points</strong>: 승인/거절 인라인 액션 후 같은 화면 stay (snackbar) · "전체 승인" CTA · 승인됨/거절됨 항목 row 탭 → <code>EventApplicationDetailRoute</code> push · 다른 bottom-nav 탭으로 전환.
         </td>
       </tr>
@@ -358,6 +358,60 @@ body.dark-mode .viewport {
       <tr>
         <th>Frequency</th>
         <td>활성 파트너는 매일 1~수회. 푸시 알림이 trigger인 경우 즉시 진입.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="doc">
+  <h2>Canonical ownership boundary</h2>
+  <p class="intro">
+    #3000 기준 신청 관련 화면의 책임 경계. 이 화면은 <strong>파트너 shell의 top-level cross-event 신청관리</strong>만 소유하고,
+    단일 이벤트 참가 현황/입장그룹 심사/환불 내역은 이벤트 상세 하위 surface가 소유한다.
+  </p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 220px;">Concern</th>
+        <th style="width: 260px;">Canonical owner</th>
+        <th>Rule</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>하단 nav "신청관리" / 홈 "참가예정 고객"</td>
+        <td><code>EventApplicationManagePage</code></td>
+        <td><code>ApplicationListRoute</code>의 단일 owner. 여러 이벤트의 신청을 이벤트별 group으로 묶어 빠르게 처리하는 cross-event hub.</td>
+      </tr>
+      <tr>
+        <td>단일 이벤트 참가 현황</td>
+        <td><a href="/specs/event_application_list_page/index.html"><code>EventApplicationListPage</code></a></td>
+        <td><code>PartnerEventDetailPage</code>의 "참가 현황"에서 진입. 입장그룹 sub-section, 이벤트 capacity, paid-only 확정 참가자, rejected/refund tab은 이쪽 owner.</td>
+      </tr>
+      <tr>
+        <td>대기중 신청 quick 처리</td>
+        <td><code>EventApplicationManagePage</code></td>
+        <td>Top-level에서는 pending/pending_review를 인라인 승인/거절하고, 이벤트별 <code>bulkApproveApplications</code>로 "전체 승인"만 제공한다. pending row 자체는 상세로 push하지 않는다.</td>
+      </tr>
+      <tr>
+        <td>입장그룹 기반 batch review</td>
+        <td><a href="/specs/event_application_review_carousel_page/index.html"><code>EventApplicationReviewCarouselPage</code></a> → <a href="/specs/event_application_review_confirm_page/index.html"><code>EventApplicationReviewConfirmPage</code></a></td>
+        <td>단일 이벤트 안에서 사용자별 제출 정보/입장그룹 조건을 보며 승인·거절을 deferred marking 후 최종 확정한다. preset reject reason chip taxonomy도 이 흐름의 owner다.</td>
+      </tr>
+      <tr>
+        <td>승인/거절/결제완료 이력</td>
+        <td><code>EventApplicationManagePage</code> + <a href="/specs/event_application_detail_page/index.html"><code>EventApplicationDetailPage</code></a></td>
+        <td>Cross-event 탭은 approved/paid를 "승인됨" 이력으로, rejected를 "거절됨" 이력으로 보여준다. 행 탭 후 단일 신청 read-only detail로 진입한다.</td>
+      </tr>
+      <tr>
+        <td>환불/취소 내역</td>
+        <td><a href="/specs/event_application_list_page/index.html"><code>EventApplicationListPage</code></a></td>
+        <td>Top-level 신청관리 탭에는 노출하지 않는다. 단일 이벤트 참가 현황의 refund/cancelled tab과 정산/환불 플로우에서 처리한다.</td>
+      </tr>
+      <tr>
+        <td>거절 사유 입력 방식</td>
+        <td><code>EventApplicationManagePage</code> / <a href="/specs/event_application_detail_page/index.html"><code>EventApplicationDetailPage</code></a> / carousel flow</td>
+        <td>Top-level quick reject와 detail reject는 free-text dialog. preset chip + 자유 입력 조합은 batch carousel reject sheet에서만 정의한다.</td>
       </tr>
     </tbody>
   </table>
@@ -379,6 +433,12 @@ body.dark-mode .viewport {
       </tr>
     </thead>
     <tbody>
+      <tr>
+        <td>2026-06-04</td>
+        <td>1.1</td>
+        <td>codex</td>
+        <td>#3000: 이 화면을 partner shell의 canonical cross-event 신청관리 surface로 확정. 단일 이벤트 참가 현황, 입장그룹 batch review, refund/cancelled tab, preset reject reason의 owner를 분리해 문서화.</td>
+      </tr>
       <tr>
         <td>2026-05-01</td>
         <td>1.0</td>
@@ -1210,7 +1270,7 @@ body.dark-mode .viewport {
         <tr><th>Provider</th><td><code>eventApplicationsGroupedProvider</code> (FutureProvider.family.autoDispose · key = (partnerId, statusFilter)) · <code>currentPartnerInfoProvider</code> · <code>eventRepositoryProvider</code></td></tr>
         <tr><th>Repository methods</th><td><code>EventRepository.getPartnerFutureEvents</code> · <code>getApplicationsByEventId</code> · <code>approveApplication</code> · <code>bulkApproveApplications</code> · <code>rejectApplication</code></td></tr>
         <tr><th>Theme</th><td><code>MinglitTheme.partnerTheme</code> — primary <code>MinglitPartnerColors.primary</code>(<code>#6c3ce1</code>). user app(<code>#9900ff</code>)과 다름.</td></tr>
-        <tr><th>Status enum drift</th><td>Pending 탭은 <code>['pending','pending_review']</code>, 승인됨 탭은 <code>['approved','paid']</code>를 합쳐 표시(visual에서는 동일 '승인' badge), 거절됨 탭은 <code>['rejected']</code>만. <em>refunded / canceled 등은 이 화면에서 노출되지 않음 — 정산/환불 플로우에서 처리.</em></td></tr>
+        <tr><th>Status owner boundary</th><td>Pending 탭은 <code>['pending','pending_review']</code>, 승인됨 탭은 <code>['approved','paid']</code>를 합쳐 표시(visual에서는 동일 '승인' badge), 거절됨 탭은 <code>['rejected']</code>만. <em>cancelled/refund 내역은 top-level 신청관리 owner가 아니며, 단일 이벤트 <a href="/specs/event_application_list_page/index.html"><code>EventApplicationListPage</code></a>와 정산/환불 플로우에서 처리한다.</em></td></tr>
         <tr><th>⚠️ 알려진 drift</th><td>Empty/Loading/Error state에서는 RefreshIndicator가 미동작 — 빈 상태에서 새로고침하려면 탭을 다시 선택. chunk fetch가 직렬이라 large partner는 시간 큼. row 탭 onTap은 showActions에 따라 분기되는데, 이게 Approved 탭에서 한 차례 사라졌다가 #1860에서 복구된 regression 사례 — 변경 시 주의.</td></tr>
       </tbody>
     </table>
@@ -1223,11 +1283,23 @@ body.dark-mode .viewport {
       <tbody>
         <tr>
           <td><a href="/specs/partner_home_page/index.html"><code>PartnerHomePage</code></a></td>
-          <td>홈 TodoSummaryChips "승인 대기" chip이 이 화면 대기중 탭으로 진입하는 가장 일반적 entry. <code>pendingReviewCount</code>는 같은 데이터의 카운트.</td>
+          <td>오버뷰 "참가예정 고객" stat 및 하단 nav "신청관리"가 이 화면으로 진입한다. <code>pendingReviewCount</code>는 같은 cross-event 데이터의 카운트.</td>
         </tr>
         <tr>
-          <td><a href="/specs/event_detail_page/index.html"><code>EventDetailPage</code></a></td>
-          <td>이벤트별 그룹 헤더에 노출되는 이벤트는 EventDetail에서 정의된 동일 이벤트 객체. detail에서 capacity / 시작 시간 변경 시 본 화면 group sub("N건 · A/B명")도 영향.</td>
+          <td><a href="/specs/event_application_list_page/index.html"><code>EventApplicationListPage</code></a></td>
+          <td>Sibling — 단일 이벤트 참가 현황. 입장그룹 sub-section, paid-only 확정 참가자, rejected/refund tab은 이쪽 owner다.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_application_detail_page/index.html"><code>EventApplicationDetailPage</code></a></td>
+          <td>Child — 승인됨/거절됨/결제완료 이력 row 탭 시 read-only detail로 push. 대기중 row는 top-level에서 inline 처리하고 detail로 push하지 않는다.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_application_review_carousel_page/index.html"><code>EventApplicationReviewCarouselPage</code></a></td>
+          <td>Batch review sibling. 단일 이벤트 안에서 입장그룹 조건과 제출 정보를 보며 preset reject reason + deferred marking을 처리한다.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/partner_event_detail_page/index.html"><code>EventDetailPage</code> (partner)</a></td>
+          <td>단일 이벤트 참가 현황의 parent. 이벤트별 group header에 노출되는 이벤트 객체와 capacity/source data를 공유한다.</td>
         </tr>
         <tr>
           <td><a href="/specs/party_detail_page/index.html"><code>PartyDetailPage</code></a></td>

@@ -24,42 +24,46 @@ SELECT results_eq(
   $$VALUES (1)$$,
   'partners are publicly readable'
 );
-SELECT is_empty(
+SELECT throws_ok(
   $$UPDATE public.partners
       SET introduction = 'Anon Update'
-      WHERE id = current_setting('tests.partner_id')::uuid
-      RETURNING id$$,
+      WHERE id = current_setting('tests.partner_id')::uuid$$,
+  '42501',
+  NULL,
   'anon cannot update partner data'
 );
 
 SELECT tests.authenticate_as('user_a');
-SELECT lives_ok(
+SELECT throws_ok(
   $$UPDATE public.partners
       SET introduction = 'Owner Update'
       WHERE id = current_setting('tests.partner_id')::uuid$$,
-  'owner can update partner data'
+  '42501',
+  NULL,
+  'owner cannot directly update partner data'
 );
 SELECT results_eq(
   $$SELECT introduction
     FROM public.partners
     WHERE id = current_setting('tests.partner_id')::uuid$$,
-  $$VALUES ('Owner Update')$$,
-  'owner update persists'
+  $$VALUES ('Intro A')$$,
+  'direct owner update does not persist'
 );
 
 SELECT tests.authenticate_as('user_b');
-SELECT is_empty(
+SELECT throws_ok(
   $$UPDATE public.partners
       SET introduction = 'Hacked'
-      WHERE id = current_setting('tests.partner_id')::uuid
-      RETURNING id$$,
+      WHERE id = current_setting('tests.partner_id')::uuid$$,
+  '42501',
+  NULL,
   'other users cannot update partner data'
 );
 SELECT results_eq(
   $$SELECT introduction
     FROM public.partners
     WHERE id = current_setting('tests.partner_id')::uuid$$,
-  $$VALUES ('Owner Update')$$,
+  $$VALUES ('Intro A')$$,
   'cross-user updates are blocked'
 );
 

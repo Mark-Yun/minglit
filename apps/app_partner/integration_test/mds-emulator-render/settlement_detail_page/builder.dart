@@ -128,9 +128,15 @@ class _FakeSettlementRepository implements SettlementRepository {
   @override
   Future<void> upsertBankAccount({
     required String partnerId,
+    required String bankCode,
     required String bankName,
     required String accountHolder,
     required String accountNumber,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<void> requestManualBankAccountReview({
+    required String partnerId,
   }) => throw UnimplementedError();
 
   @override

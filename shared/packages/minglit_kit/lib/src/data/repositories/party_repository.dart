@@ -4,6 +4,7 @@ import 'package:minglit_kit/src/data/models/party.dart';
 import 'package:minglit_kit/src/data/models/party_entry_group.dart';
 import 'package:minglit_kit/src/data/models/ticket.dart';
 import 'package:minglit_kit/src/data/models/ticket_template.dart';
+import 'package:minglit_kit/src/data/repositories/storage_repository.dart';
 import 'package:minglit_kit/src/logic/providers/supabase_provider.dart'
     show supabaseClientProvider;
 import 'package:minglit_kit/src/utils/image_utils.dart';
@@ -74,32 +75,22 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
       'file: ${file.name}',
     );
     try {
-      final extension = p.extension(file.name);
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      // Structure: partner_id/timestamp_filename
-      // Using a random part to avoid collision if multiple files have
-      // same timestamp
-      final random = DateTime.now().microsecond;
-      final path = '$partnerId/${timestamp}_$random$extension';
+      final sourceExtension = p.extension(file.name).toLowerCase();
+      final extension = sourceExtension == '.png' ? '.png' : '.jpg';
+      final contentType = sourceExtension == '.png'
+          ? 'image/png'
+          : 'image/jpeg';
       final rawBytes = await file.readAsBytes();
       // Fix #1230: GPS/EXIF 메타데이터 유출 방지 — 업로드 전 재인코딩으로 완전 제거
       final bytes = stripExifAndReencode(rawBytes, filename: file.name);
 
-      await supabaseClient.storage
-          .from('party-assets')
-          .uploadBinary(
-            path,
-            bytes,
-            fileOptions: const FileOptions(
-              contentType: 'image/jpeg',
-              upsert: true,
-            ),
-          );
-
-      final url = supabaseClient.storage
-          .from('party-assets')
-          .getPublicUrl(path);
-      return url;
+      return await StorageRepository(supabase: supabaseClient).uploadBytes(
+        bytes: bytes,
+        bucket: 'party-assets',
+        pathPrefix: partnerId,
+        contentType: contentType,
+        extension: extension,
+      );
     } catch (e, st) {
       Log.e('❌ [PartyRepo] uploadPartyImage Error', e, st);
       rethrow;
@@ -222,12 +213,13 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
   Future<Party> updateParty(Party party, {List<String>? tagIds}) async {
     Log.d('updateParty called | id: ${party.id}');
     try {
-      final partyJson = party.toDbJson();
-      partyJson.remove('partner_id');
-      partyJson.remove('location');
-      partyJson.remove('location_id');
+      final partyJson = party.toDbJson()
+        ..remove('partner_id')
+        ..remove('location')
+        ..remove('location_id');
 
-      // Fix #1733: entry_group_templates는 @JsonKey(includeToJson: false)로 toDbJson에서 제외 —
+      // Fix #1733: entry_group_templates는
+      // @JsonKey(includeToJson: false)로 toDbJson에서 제외 —
       // update 요청에도 명시적으로 포함해야 EF가 entry_group_templates를 교체할 수 있음
       final entryGroups = party.entryGroups;
 
@@ -238,13 +230,12 @@ abstract class _SupabasePartyContextBase implements _SupabasePartyContext {
         // Fix #1136: tag_ids는 null일 때 키 자체를 제외 — undefined와 null 구분을 위해
         'tag_ids': ?tagIds,
         if (entryGroups != null)
-          'entry_group_templates': entryGroups
-              .map(
-                (g) => g.toJson()
-                  ..remove('created_at')
-                  ..remove('updated_at'),
-              )
-              .toList(),
+          'entry_group_templates': entryGroups.map((g) {
+            final json = g.toJson()
+              ..remove('created_at')
+              ..remove('updated_at');
+            return json;
+          }).toList(),
       };
 
       final response = await supabaseClient.functions.invoke(

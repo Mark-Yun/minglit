@@ -3,6 +3,7 @@ import 'dart:async' show unawaited;
 import 'package:app_partner/src/features/home/partner_dashboard_controller.dart';
 import 'package:app_partner/src/features/home/partner_home_coordinator.dart';
 import 'package:app_partner/src/features/home/widgets/home_approval_pending_card.dart';
+import 'package:app_partner/src/features/home/widgets/home_draft_event_card.dart';
 import 'package:app_partner/src/features/home/widgets/home_draft_party_card.dart';
 import 'package:app_partner/src/features/home/widgets/home_live_event_card.dart';
 import 'package:app_partner/src/features/home/widgets/home_overview_block.dart';
@@ -13,6 +14,7 @@ import 'package:app_partner/src/features/home/widgets/location_guide_banner.dart
 import 'package:app_partner/src/features/home/widgets/onboarding_step_guide.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:app_partner/src/routing/app_routes.dart';
+import 'package:app_partner/src/ui/screens/ongoing_event_list_page.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
@@ -40,6 +42,28 @@ class PartnerHomePage extends ConsumerWidget {
     final state = ref.watch(partnerDashboardControllerProvider);
     final partner = ref.watch(currentPartnerInfoProvider).asData?.value;
     final coordinator = ref.read(partnerHomeCoordinatorProvider);
+    String? partyNameFor(String partyId) {
+      for (final party in state.activeParties) {
+        if (party.id == partyId) return party.title;
+      }
+      return null;
+    }
+
+    Future<void> openFirstEventCreate() async {
+      if (state.activeParties.length == 1) {
+        coordinator.pushEventCreate(state.activeParties.first.id);
+        return;
+      }
+      final selected = await showMinglitBottomSheet<Party>(
+        context: context,
+        title: '이벤트를 만들 파티를 선택하세요',
+        child: _PartySelectionSheet(parties: state.activeParties),
+      );
+      if (selected != null) {
+        coordinator.pushEventCreate(selected.id);
+      }
+    }
+
     final unreadCount = ref
         .watch(notificationListProvider)
         .maybeWhen(
@@ -124,31 +148,36 @@ class PartnerHomePage extends ConsumerWidget {
                     totalPartyCount: state.totalPartyCount,
                     pendingApplications: state.pendingReviewCount,
                   ),
+                  if (state.hasAnyEvents && !state.bankAccountReady) ...[
+                    const SizedBox(height: MinglitSpacing.medium),
+                    _BankAccountTodoCard(
+                      verificationStatus: state.bankVerificationStatus,
+                      onTap: coordinator.pushBankAccount,
+                    ),
+                  ],
                   const SizedBox(height: MinglitSpacing.medium),
                   if (!state.hasAnyEvents) ...[
                     LocationGuideBanner(onTap: coordinator.pushLocationGuide),
                     const SizedBox(height: MinglitSpacing.medium),
                     OnboardingStepGuide(
                       hasParty: state.activeParties.isNotEmpty,
+                      bankAccountReady: state.bankAccountReady,
+                      bankVerificationStatus: state.bankVerificationStatus,
                       partyName: state.activeParties.firstOrNull?.title,
+                      onOpenBankAccount: coordinator.pushBankAccount,
                       onCreateParty: coordinator.pushPartyCreate,
-                      onCreateEvent: () async {
-                        if (state.activeParties.length == 1) {
-                          coordinator.pushEventCreate(
-                            state.activeParties.first.id,
-                          );
-                          return;
-                        }
-                        final selected = await showModalBottomSheet<Party>(
-                          context: context,
-                          builder: (bottomSheetContext) => _PartySelectionSheet(
-                            parties: state.activeParties,
-                          ),
-                        );
-                        if (selected != null) {
-                          coordinator.pushEventCreate(selected.id);
-                        }
-                      },
+                      onCreateEvent: openFirstEventCreate,
+                      draftEventCard: state.draftEvents.isEmpty
+                          ? null
+                          : HomeDraftEventCard(
+                              draft: state.draftEvents.first,
+                              partyName: partyNameFor(
+                                state.draftEvents.first.partyId,
+                              ),
+                              onResume: () => coordinator.pushEventCreate(
+                                state.draftEvents.first.partyId,
+                              ),
+                            ),
                       onOpenGuide: coordinator.pushPartnerGuide,
                     ),
                   ] else ...[
@@ -176,7 +205,16 @@ class PartnerHomePage extends ConsumerWidget {
                           ),
                           child: HomeLiveEventCard(
                             event: event,
-                            onCheckin: coordinator.goToCheckin,
+                            onCheckin: () {
+                              unawaited(
+                                Navigator.of(context).push<void>(
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        OngoingEventListPage(event: event),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ),
@@ -212,7 +250,7 @@ class PartnerHomePage extends ConsumerWidget {
                     ],
                     if (state.preparingEvents.isNotEmpty) ...[
                       const SizedBox(height: MinglitSpacing.large),
-                      const HomeSectionHeader(title: '준비 중인 이벤트'),
+                      const HomeSectionHeader(title: '진행 임박'),
                       const SizedBox(height: MinglitSpacing.small),
                       ...state.preparingEvents.map(
                         (event) => Padding(
@@ -221,10 +259,16 @@ class PartnerHomePage extends ConsumerWidget {
                           ),
                           child: HomeUpcomingEventCard(
                             event: event,
-                            onTap: () => coordinator.pushEventDetail(
-                              partyId: event.partyId,
-                              eventId: event.id,
-                            ),
+                            onTap: () {
+                              unawaited(
+                                Navigator.of(context).push<void>(
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        OngoingEventListPage(event: event),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ),
@@ -246,12 +290,83 @@ class PartnerHomePage extends ConsumerWidget {
                         ),
                       ),
                     ],
+                    if (state.draftEvents.isNotEmpty) ...[
+                      const SizedBox(height: MinglitSpacing.large),
+                      const HomeSectionHeader(title: '작성 중'),
+                      const SizedBox(height: MinglitSpacing.small),
+                      ...state.draftEvents.map(
+                        (draft) => Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: MinglitSpacing.small,
+                          ),
+                          child: HomeDraftEventCard(
+                            draft: draft,
+                            partyName: partyNameFor(draft.partyId),
+                            onResume: () =>
+                                coordinator.pushEventCreate(draft.partyId),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ],
               ),
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _BankAccountTodoCard extends StatelessWidget {
+  const _BankAccountTodoCard({
+    required this.verificationStatus,
+    required this.onTap,
+  });
+
+  final String verificationStatus;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final title = verificationStatus == bankVerificationStatusPending
+        ? '계좌 확인 중'
+        : '계좌 등록';
+    final subtitle = verificationStatus == bankVerificationStatusFailed
+        ? '계좌 정보를 다시 확인해주세요'
+        : verificationStatus == bankVerificationStatusPending
+        ? '운영 확인이 완료되면 사라져요'
+        : '정산 받을 계좌를 등록해주세요';
+
+    return Card(
+      child: ListTile(
+        onTap: onTap,
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: colorScheme.tertiary.withValues(
+              alpha: MinglitOpacity.highlight,
+            ),
+            borderRadius: BorderRadius.circular(MinglitRadius.input),
+          ),
+          child: Icon(
+            Icons.account_balance_wallet_outlined,
+            color: colorScheme.tertiary,
+            size: MinglitIconSize.small,
+          ),
+        ),
+        title: Text(
+          title,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        subtitle: Text(subtitle),
+        trailing: const Icon(Icons.chevron_right),
       ),
     );
   }
@@ -303,31 +418,18 @@ class _PartySelectionSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: MinglitSpacing.medium),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(MinglitSpacing.large),
-              child: Text(
-                '이벤트를 만들 파티를 선택하세요',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            ...parties.map(
-              (party) => ListTile(
-                leading: const Icon(Icons.storefront_outlined),
-                title: Text(party.title),
-                onTap: () => Navigator.of(context).pop(party),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return ListView.separated(
+      shrinkWrap: true,
+      itemCount: parties.length,
+      separatorBuilder: (_, _) => const Divider(height: 1),
+      itemBuilder: (context, index) {
+        final party = parties[index];
+        return MinglitListTile(
+          leading: const Icon(Icons.storefront_outlined),
+          title: party.title,
+          onTap: () => Navigator.of(context).pop(party),
+        );
+      },
     );
   }
 }

@@ -43,6 +43,8 @@ class EntryGroupCheckinStatsController
 
   @override
   Future<List<EntryGroupCheckinStats>> build(String eventId) async {
+    if (EnvKeyStore.isDemo) return const [];
+
     final supabase = ref.watch(supabaseClientProvider);
     final groups = await _fetchGroupStats(supabase, eventId);
 

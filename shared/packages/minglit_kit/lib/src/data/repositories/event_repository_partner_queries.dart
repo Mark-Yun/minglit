@@ -6,12 +6,14 @@ mixin _EventRepositoryPartnerQueries on _SupabaseEventContext {
   Future<int> getPendingApplicationCount(String partnerId) async {
     try {
       // Fix #1597: 2-step query to guarantee partner scoping.
-      // Single-level join filter (party.partner_id) is unambiguous in PostgREST;
-      // 2-level nesting (event.party.partner_id) can be silently ignored on some versions.
+      // Single-level join filter (party.partner_id) is unambiguous in
+      // PostgREST; 2-level nesting (event.party.partner_id) can be silently
+      // ignored on some versions.
       final nowStr = DateTime.now().toIso8601String();
 
-      // Step 1: get future event IDs for this partner (same limit as getPartnerFutureEvents
-      // to guarantee count and tab share identical event scope).
+      // Step 1: get future event IDs for this partner (same limit as
+      // getPartnerFutureEvents to guarantee count and tab share identical
+      // event scope).
       final eventsData = await supabaseClient
           .from('events')
           .select('id, party:parties!inner(partner_id)')
@@ -71,8 +73,9 @@ mixin _EventRepositoryPartnerQueries on _SupabaseEventContext {
           )
           .eq('party.partner_id', partnerId)
           // Fix #1941: include active/ongoing so in-flight events stay visible.
-          // Fix #1941 v2: use gt('end_time') — ongoing events have start_time <= now
-          // so gte('start_time') incorrectly excludes them (end_time NOT NULL per schema).
+          // Fix #1941 v2: use gt('end_time') — ongoing events have
+          // start_time <= now so gte('start_time') incorrectly excludes them
+          // (end_time NOT NULL per schema).
           .inFilter('status', ['scheduled', 'active', 'ongoing'])
           .gt('end_time', DateTime.now().toIso8601String())
           .order('start_time');
@@ -191,6 +194,35 @@ mixin _EventRepositoryPartnerQueries on _SupabaseEventContext {
       }).toList();
     } catch (e, st) {
       Log.e('❌ [EventRepo] getUpcomingEvents Error', e, st);
+      rethrow;
+    }
+  }
+
+  /// [Partner Check-in]
+  /// Fetches events in the operation window: T-7 through end + 24h.
+  Future<List<Event>> getPartnerOperationWindowEvents(String partnerId) async {
+    try {
+      final now = DateTime.now();
+      final earliestEnd = now
+          .subtract(const Duration(hours: 24))
+          .toIso8601String();
+      final latestStart = now.add(const Duration(days: 7)).toIso8601String();
+
+      final data = await supabaseClient
+          .from('events')
+          .select('*, party:parties!inner(*)')
+          .eq('party.partner_id', partnerId)
+          .not('status', 'eq', 'cancelled')
+          .gt('end_time', earliestEnd)
+          .lte('start_time', latestStart)
+          .order('start_time');
+      return data.map(Event.fromJson).toList();
+    } catch (e, st) {
+      Log.e(
+        '❌ [EventRepo] getPartnerOperationWindowEvents Error',
+        e,
+        st,
+      );
       rethrow;
     }
   }

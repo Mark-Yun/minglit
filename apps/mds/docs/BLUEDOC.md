@@ -8,6 +8,7 @@ Minglit Design System 의 **시각 SSOT + 문서 사이트**. 화면 spec, 컴�
 |---|---|
 | [`src/app/`](./src/app/) | Next.js route pages (`/`, `/tokens`, `/components`, `/screens`, `/icons`, `/flows`) |
 | [`src/lib/components.ts`](./src/lib/components.ts) | MDS 컴포넌트 manifest SSOT |
+| [`src/lib/screen-definitions.ts`](./src/lib/screen-definitions.ts) | `/screens` surface별 screen registry (`app_user`, `app_partner`, `web_admin`) |
 | [`src/components/specs/`](./src/components/specs/) | 컴포넌트별 inline visual playground |
 | [`public/specs/BLUEDOC.md`](./public/specs/BLUEDOC.md) | 화면 spec source HTML + generated MD/PNG |
 | [`reports/BLUEDOC.md`](./reports/BLUEDOC.md) | MDS 정합성 audit report + weekly FRESH_DOC job |
@@ -45,6 +46,5 @@ npm run tokens:sync && npm run icons:sync && npm run icons:sync-data
 - [`../../../shared/packages/mds/tokens/README.md`](../../../shared/packages/mds/tokens/README.md) — token codegen
 - [`../../../shared/packages/mds/icons/README.md`](../../../shared/packages/mds/icons/README.md) — icon codegen
 - [`../../../scripts/mds_render_coverage.dart`](../../../scripts/mds_render_coverage.dart) — MDS spec ↔ emulator render coverage
-
 ---
-_Reviewed: 2026-06-03 12:18_
+_Reviewed: 2026-06-04 23:25_

@@ -1,239 +1,135 @@
-# Spec: Admin Dashboard
+# Spec: Admin Console Dashboard
 
 > **참조**
-> - PRD: [prd.md](./prd.md)
+> - PRD: `docs/features/admin/admin-dashboard/prd.md`
 > - MDS specs:
->   - Admin 콘솔 화면 — 디자인 TODO (MDS spec 미생성, Stripe / Shopify / Linear 패턴 준용 — Shadcn/UI 라이브러리 컴포넌트로 구성)
+>   - `apps/mds/docs/public/specs/admin_console_dashboard/` — Supabase Google OAuth login, admin guard, extensible admin shell
+> - Apps:
+>   - 계획: `apps/admin_web/` — Next.js admin console
+> - Backend EFs:
+>   - P0: 해당 없음 — 서버 route/API 에서 Supabase 세션과 admin membership/capability 검증
+> - CUJ tests:
+>   - 계획: `apps/admin_web/e2e/cuj/admin_dashboard.spec.ts`
+
+## Implementation Status
+
+Issue #2559 확인 결과, 이 spec 의 Next.js admin dashboard 는 아직 구현되지 않았다.
+
+| 항목 | 상태 |
+|------|------|
+| Canonical app path | `apps/admin_web/` |
+| Current repo status | 디렉터리/Next.js app 미존재 |
+| Existing Flutter admin screens | `apps/app_partner/lib/src/features/admin/` 의 파트너 신청 심사 보조 화면. 이 spec 구현으로 보지 않음 |
+| Next implementation step | `apps/admin_web/` scaffold + auth/MFA skeleton + CI/deploy entry 정의 |
 
 ## CUJs
 
-> CUJ ID 컨벤션: `<scenario>-<cuj>` (예: `1-1` = PRD Scenario 1 의 첫 CUJ). 새 CUJ 추가 시 본 테이블 row 추가 + 통합 테스트 cujGroup 블록 추가.
-
 | ID  | Priority | CUJ Name | Details | FR | NFR |
 |-----|----------|----------|---------|----|----|
-| 1-1 | P0 | 운영자가 심사 큐에서 신청 진입 | • 사이드바 "입점 심사" 탭<br>• 심사 큐(대기 / 승인 / 거절 / 보완) summary bar 노출<br>• "대기" 클릭 → 카드 목록 (우선순위 / 업체명 / 사업자번호 / 제출일 / 카테고리) | FR-1, FR-7 | NFR-1, NFR-2 |
-| 1-2 | P0 | 심사 상세에서 서류 검토 + 승인 | • 카드 탭 → 심사 상세 (좌측 서류 뷰어 / 우측 액션)<br>• 사업자등록증 / 신분증 미리보기<br>• 코멘트 입력 → "승인" 탭 → 확인 다이얼로그 → 신청 상태 변경 + 감사 로그 + 파트너 통보 | FR-7, FR-8, FR-9 | NFR-3 |
-| 1-3 | P0 | 거절 / 보완 요청 처리 | • 거절 사유 선택 (드롭다운) + 코멘트<br>• 보완 요청 시 어떤 서류 / 항목 필요한지 명시<br>• 확인 다이얼로그 → 신청 상태 변경 + 파트너 통보 | FR-7, FR-8, FR-9 | NFR-3 |
-| 2-1 | P0 | 유저 검색 + 상세 드로어 진입 | • 사이드바 "유저 관리"<br>• username / phone / email 통합 검색<br>• row 클릭 → 사이드 드로어 (프로필 / 이벤트 / 결제 / 인증 / 활동 로그 / 액션 탭) | FR-10, FR-11 | NFR-1 |
-| 2-2 | P0 | 유저 정지 처리 | • 액션 탭 → "정지" 버튼<br>• 정지 사유 선택 + 코멘트 + 기간(영구 / N일) 입력<br>• 확인 다이얼로그 → 상태 변경 + 감사 로그 + 유저 통보 | FR-12, FR-9 | NFR-3 |
-| 2-3 | P0 | 유저 정지 해제 | • 정지 유저 상세 → "정지 해제"<br>• 해제 사유 + 확인 → 상태 변경 + 감사 로그 | FR-12, FR-9 | NFR-3 |
-| 3-1 | P0 | 환불 요청 큐 진입 + 처리 | • 사이드바 "환불 처리"<br>• 대기 큐 (요청자 / 이벤트 / 금액 / 사유)<br>• row 탭 → 처리 뷰 (원결제 정보 / 사유 / 환불 금액 입력) | FR-13, FR-14 | NFR-1, NFR-4 |
-| 3-2 | P0 | 환불 실행 (PortOne 호출) | • "환불 실행" → 확인 다이얼로그 → PortOne 환불 API 호출<br>• 성공 시 상태 = 환불 완료 + 감사 로그 + 유저 푸시<br>• 실패 시 토스트 + 재시도 가능 | FR-14, FR-15, FR-9 | NFR-4 |
-| 3-3 | P1 | 부분 환불 처리 | • 환불 금액을 결제 금액보다 작게 입력<br>• 사유 필수 입력<br>• PortOne 부분 환불 호출 | FR-14 | NFR-4 |
-| 4-1 | P0 | 미정산 건 일괄 확정 | • 사이드바 "정산 관리"<br>• 상태 필터 = 대기, 정산 기간 필터<br>• 체크박스 다중 선택 → "일괄 확정" | FR-16, FR-17 | NFR-3 |
-| 4-2 | P0 | 일괄 지급 처리 | • 확정 상태 선택 → "일괄 지급 처리"<br>• 확인 다이얼로그 (총 건수 / 총 금액) → 지급 정보 검증 → 일괄 처리<br>• 건별 감사 로그 | FR-17, FR-9 | NFR-3, NFR-5 |
-| 5-1 | P0 | 로그인 + MFA 후 홈 진입 | • 로그인 화면 → 이메일 / 비밀번호 + TOTP 코드<br>• 역할 기반 사이드바 렌더링<br>• 홈에 KPI 카드 4종 + 차트 2종 + 액션 큐 2종 노출 | FR-2, FR-3, FR-18 | NFR-1, NFR-6 |
-| 5-2 | P0 | 액션 큐에서 최신 대기 건 진입 | • 홈 액션 큐 (모더레이션 / 파트너 입점 최신 5건)<br>• row 탭 → 해당 상세 화면 이동 | FR-18 | NFR-1 |
-| 5-3 | P1 | KPI 카드 → 상세 페이지 이동 | • "대기 중 심사 12건" 카드 → 심사 큐 프리필터 진입<br>• "미정산 N건" → 정산 관리 프리필터 진입 | FR-18 | NFR-1 |
-| 6-1 | P0 | 감사 로그 필터 조회 | • 사이드바 "감사 로그"<br>• 관리자 / 액션 유형 / 대상 / 날짜 범위 필터<br>• 페이지네이션으로 조회 (모든 행 read-only) | FR-19, FR-20 | NFR-1, NFR-6 |
-| 6-2 | P0 | 감사 로그 행 상세 — 변경 전/후 값 | • 로그 row 탭 → 사이드 드로어<br>• 변경 전 / 후 값 diff 표시<br>• IP / User-Agent / 시각 정보 | FR-19 | NFR-1 |
-| 7-1 | P0 | 이벤트 강제 취소 | • 이벤트 관리 → 상세 → "강제 취소" 버튼<br>• 사유 입력 + 확인 다이얼로그<br>• 신청자 전원 환불 트리거 + 감사 로그 | FR-21, FR-15, FR-9 | NFR-4 |
-| 7-2 | P1 | 이벤트 숨김 처리 | • 신고 또는 정책 위반 시 "숨김 처리"<br>• 검색 / 추천에서 제외, 기존 신청자에게는 노출 유지 | FR-21 | NFR-3 |
+| 1-1 | P0 | 비로그인 사용자는 admin 로그인으로 이동 | • `/admin` 직접 접근<br>• Supabase session 없음<br>• admin login 화면 표시<br>• shell/menu/data fetch 미실행 | FR-1, FR-2 | NFR-1, NFR-5 |
+| 1-2 | P0 | Supabase Google 로그인 후 admin shell 진입 | • "Google로 로그인" 탭<br>• Supabase OAuth redirect 완료<br>• 서버가 현재 Supabase user 의 admin 권한 확인<br>• 권한 있으면 `/admin` shell 표시 | FR-1, FR-2, FR-3 | NFR-1, NFR-5 |
+| 1-3 | P0 | 로그인했지만 admin 이 아닌 사용자는 403 | • Supabase session 은 있음<br>• admin 권한 없음<br>• 403 화면 노출<br>• sidebar/menu/internal data 미노출 | FR-3, FR-4 | NFR-5 |
+| 1-4 | P0 | 세션 만료 시 재로그인 요구 | • shell 사용 중 session 만료<br>• 다음 fetch 에서 auth error<br>• admin 데이터를 숨기고 재로그인 안내<br>• 재로그인 후 원래 route 복귀 시도 | FR-5 | NFR-1, NFR-5 |
+| 2-1 | P0 | 권한 기반 메뉴 렌더링 | • shell bootstrap<br>• menu registry 와 admin capability 비교<br>• 권한 있는 메뉴만 sidebar 노출<br>• active/coming_soon/hidden 상태 구분 | FR-6, FR-7 | NFR-1, NFR-2 |
+| 2-2 | P0 | 사용 가능한 메뉴가 없으면 no-menu 상태 표시 | • admin 권한은 있음<br>• 현재 capability 에 매칭되는 active 메뉴 없음<br>• shell 은 유지하고 content outlet 에 no-menu empty state 표시 | FR-7, FR-8 | NFR-1 |
+| 2-3 | P0 | 후속 메뉴 placeholder 는 shell 재작성 없이 연결 가능 | • 새 menu item 정의<br>• route/page/outlet 연결<br>• 공통 page header/loading/error/empty 패턴 재사용 | FR-6, FR-8 | NFR-2 |
+| 3-1 | P0 | 권한 없는 메뉴 deep-link 차단 | • `/admin/users` 같은 권한 외 route 직접 접근<br>• capability 재검증<br>• 민감 데이터 fetch 없이 403 또는 no-menu/default 처리 | FR-4, FR-6 | NFR-5 |
+| 3-2 | P0 | 권한 변경 후 메뉴/route 갱신 | • 사용 중 admin capability 회수<br>• 다음 route transition 또는 refresh 시 서버 재검증<br>• 기존 menu data 숨김<br>• 403 또는 no-menu 상태 표시 | FR-4, FR-5, FR-6 | NFR-5 |
 
 ## Functional Requirements
 
-> 제품 행동 정의 — DB schema / 컴포넌트 이름 같은 dev detail 은 제외 (코드가 SSoT).
-
-- **FR-1**: 사이드바는 역할(super_admin / moderator)에 따라 항목 가시성을 제어. moderator 는 결제 / 정산 / 시스템 설정 / 감사 로그 항목 비노출.
-- **FR-2**: 로그인은 이메일 / 비밀번호 + TOTP MFA 필수. TOTP 미설정 사용자는 첫 로그인 시 등록 단계 강제.
-- **FR-3**: 세션은 유휴 30분 / 절대 8시간 후 만료. 만료 시 재로그인.
-- **FR-7**: 심사 큐는 4개 상태(대기 / 승인 / 거절 / 보완 요청)로 분리. summary bar 에 각 상태 건수 노출, 클릭 시 프리필터 적용.
-- **FR-8**: 심사 상세는 좌측 서류 뷰어(이미지 / PDF 인라인 미리보기) + 우측 액션 영역(관리자 코멘트 + 승인 / 거절 드롭다운 / 보완 요청 버튼) 2분할 레이아웃.
-- **FR-9**: 모든 관리 액션(승인 / 거절 / 보완 / 정지 / 해제 / 환불 / 정산 확정 / 지급 / 이벤트 강제 취소 / 시스템 설정 변경)은 감사 로그에 불변 기록 — 관리자 / 액션 유형 / 대상 / 변경 전·후 값 / IP / 시각.
-- **FR-10**: 유저 목록은 username / phone / email 통합 검색 + 인증 상태 / 활성 상태 / 성별 / 가입일 범위 필터 + 서버사이드 페이지네이션(25건) + 모든 컬럼 정렬 토글.
-- **FR-11**: 유저 상세는 사이드 드로어 패턴 — 목록 컨텍스트 유지. 프로필 / 이벤트 / 결제 / 인증 / 활동 로그 / 관리 액션 6개 탭.
-- **FR-12**: 유저 정지는 사유(드롭다운) + 코멘트 + 기간(영구 / N일) 입력. 정지 해제는 사유 + 코멘트.
-- **FR-13**: 환불 처리 화면은 대기 큐 + 처리 뷰 2단계. 대기 큐는 요청 일자 / 금액 / 사유 정렬.
-- **FR-14**: 환불 실행 시 PortOne 환불 API 호출. 부분 환불 지원 (결제 금액 이하 입력 시).
-- **FR-15**: 환불 실패 시 토스트 + 재시도 버튼 + 실패 사유 표시. 실패도 감사 로그 기록.
-- **FR-16**: 정산 관리는 상태(대기 / 확정 / 지급 / 취소) / 정산 기간 / 파트너 필터 + 체크박스 다중 선택.
-- **FR-17**: 일괄 처리(확정 / 지급)는 확인 다이얼로그에 총 건수 + 총 금액 표시. 건별 감사 로그 기록. 부분 실패 시 성공 / 실패 건 분리 표시.
-- **FR-18**: 대시보드 홈은 KPI 카드 4종(활성 유저 7일 / 대기 중 심사 / 오늘 매출 / 미정산 건) + 차트 2종(이벤트 신청 stacked bar 30일 / 매출 line 30일) + 액션 큐 2종(모더레이션 최신 5건 / 입점 심사 최신 5건). 각 카드 / 큐는 클릭 시 해당 상세 화면 이동.
-- **FR-19**: 감사 로그는 관리자 / 액션 유형 / 대상 / 날짜 범위 필터 + 페이지네이션. 모든 행 read-only. 행 탭 시 사이드 드로어로 변경 전 / 후 값 diff + 메타 정보 표시.
-- **FR-20**: 감사 로그는 super_admin 만 SELECT 가능. moderator 등 다른 역할은 접근 불가.
-- **FR-21**: 이벤트 관리는 검색(이벤트명 / 파트너명) + 필터(상태 / 날짜 범위 / 파트너 / 카테고리). 액션은 "강제 취소" / "숨김 처리" 2종 — 모두 확인 다이얼로그 필수.
+- **FR-1**: Admin console 은 Supabase Auth Google OAuth 로그인을 허용한다.
+- **FR-2**: `/admin` 진입 시 Supabase session 이 없으면 login 화면을 표시한다. 이 상태에서는 admin shell, menu registry, 내부 메뉴 데이터 요청이 발생하지 않는다.
+- **FR-3**: 로그인 후 서버가 현재 사용자의 admin membership / role claim 을 확인한다. 클라이언트가 들고 있는 role 문자열만으로 admin 권한을 신뢰하지 않는다.
+- **FR-4**: admin 권한이 없거나 route capability 가 부족하면 403 화면을 표시한다. 권한 없는 메뉴명, 내부 데이터, 원본 토큰은 노출하지 않는다.
+- **FR-5**: 세션 만료 또는 refresh 실패 시 현재 admin 데이터를 숨기고 재로그인을 요구한다. 재로그인 성공 시 원래 route 로 복귀를 시도한다.
+- **FR-6**: 각 admin menu 는 `id`, `label`, `route`, `requiredCapability`, `status`(active / coming_soon / hidden)를 가진다. sidebar 는 capability 와 status 기준으로 렌더링한다.
+- **FR-7**: P0 는 특정 기능 board 를 활성 메뉴로 고정하지 않는다. 사용 가능한 active 메뉴가 없으면 no-menu empty state 를 표시한다.
+- **FR-8**: Shell 은 공통 AppBar, Sidebar, Breadcrumb, PageHeader, Loading, Empty, Error, 403, SessionExpired state 를 제공한다.
 
 ## Non-Functional Requirements
 
-> 측정 가능해야 함 — "빨라야 함" 금지. 환경 + 분위수 명시.
-
-- **NFR-1**: Admin 페이지 first contentful paint 3s 이내 (프로덕션 CDN, p75, 데스크톱 + 광대역). 목록 데이터 fetch 포함.
-- **NFR-2**: 심사 큐 25건 fetch + 렌더링 1.5s 이내 (p95).
-- **NFR-3**: 관리 액션(승인 / 정지 / 환불 / 정산 등) 응답 1.5s 이내 (p95). 응답 후 감사 로그 insert 누락률 0%.
-- **NFR-4**: PortOne 환불 API 성공률 99% 이상 (월간 baseline). 실패 시 재시도 로직 + 운영팀 알림.
-- **NFR-5**: 일괄 처리는 1회 최대 100건. 100건 초과 시 페이지 분할 안내. 처리 시간은 100건 기준 10s 이내 (p95).
-- **NFR-6**: 인증·인가 — 비로그인 사용자가 /admin 경로 접근 시 로그인 화면 redirect. 권한 없는 사용자가 권한 외 라우트 접근 시 403 페이지. 모든 API 호출은 세션 검증.
-- **NFR-7**: 접근성 — 키보드 내비게이션 (탭 순서 / 모달 포커스 트랩) + 색상 대비 4.5:1 이상 + ARIA 라벨.
+- **NFR-1**: Admin shell first contentful paint 2.5s 이내 (프로덕션 CDN, desktop broadband, p75). Supabase session 확인 포함.
+- **NFR-2**: 새 read-only 메뉴 추가 시 shell/auth/permission/layout 공통 코드를 수정하지 않고 menu registry + route/page 추가만으로 연결 가능해야 한다.
+- **NFR-3**: Desktop-first layout 은 1280px 이상에서 sidebar + topbar + content outlet 을 한 화면에 유지하고, tablet width 에서는 sidebar collapse 또는 compact state 를 제공한다.
+- **NFR-4**: 접근성 — sidebar/menu/dialog/empty/403 state 는 키보드 탐색 가능, 포커스 순서 준수, 색상 대비 4.5:1 이상.
+- **NFR-5**: 인증/인가 실패 시 민감 데이터 노출 0건. 서버 API 는 매 요청마다 Supabase session 과 capability 를 검증한다.
 
 ## Edge Cases
 
 | CUJ ID | 케이스 | 기대 동작 |
 |--------|--------|----------|
-| 1-1 | 심사 큐가 0건 | "처리할 심사 건이 없습니다" 빈 상태 메시지 |
-| 1-2 | 승인 도중 다른 운영자가 동일 신청 처리 | 서버에서 충돌 감지 → "이미 처리된 신청입니다" 토스트 + 큐 재조회 |
-| 1-2 | 서류 파일 로딩 실패 | "서류를 불러올 수 없습니다" + 다운로드 링크 fallback |
-| 1-3 | 거절 사유 미선택 시 제출 | 제출 버튼 비활성 |
-| 2-1 | 검색 결과 0건 | 빈 상태 + 필터 초기화 버튼 |
-| 2-2 | 정지 도중 유저가 동시에 결제 시도 | 정지 처리 우선 — 결제는 차단 |
-| 2-2 | 영구 정지 후 해제 | 해제 후 다시 활성 상태로 복귀. 정지 이력은 감사 로그에 영구 보존 |
-| 3-1 | 대기 환불 0건 | 빈 상태 |
-| 3-2 | PortOne 호출 실패 (PG 에러) | 재시도 + 실패 사유 표시. 실패 감사 로그 기록 |
-| 3-2 | 환불 실행 도중 운영자 세션 만료 | 재로그인 후 큐 재진입. 환불 상태는 서버에서 판별 |
-| 3-3 | 부분 환불 금액이 원결제 금액 초과 | 입력 검증 → 제출 차단 |
-| 4-1 | 일괄 선택 100건 초과 | 선택 시점에 경고 + 100건 이하로 자동 잘림 안내 |
-| 4-2 | 지급 정보 검증 실패 (계좌 오류) | 해당 건만 실패 표시. 나머지는 정상 처리 |
-| 5-1 | 처음 로그인 + TOTP 미설정 | TOTP 등록 화면 강제 진입 → QR 스캔 → 코드 검증 후 홈 진입 |
-| 5-2 | 액션 큐 데이터 fetch 실패 | 카드별 에러 표시 + 재시도 버튼 |
-| 6-1 | 필터 조합으로 결과 0건 | 빈 상태 + "조건에 맞는 로그가 없습니다" |
-| 6-1 | 30일 초과 기간 필터 | 성능 보호 — 최대 30일 안내 + 자동 조정 |
-| 7-1 | 강제 취소 도중 일부 환불 PortOne 실패 | 실패 건은 재시도 큐 + 운영팀 알림. 이벤트 상태는 취소로 확정 |
+| 1-1 | `/admin` deep-link 로 비로그인 접근 | login 화면 표시, OAuth 성공 후 원래 route 복귀 시도 |
+| 1-2 | Google OAuth redirect 실패 | login 화면 유지 + "Google 로그인을 완료하지 못했습니다" 에러 |
+| 1-3 | 일반 유저가 로그인한 상태로 `/admin` 접근 | 403 화면. sidebar/menu/internal data 미노출 |
+| 1-4 | shell outlet 사용 중 세션 만료 | outlet 데이터 숨김, 재로그인 요구 |
+| 2-1 | capability 가 하나도 없는 admin role | 403 대신 "사용 가능한 관리자 메뉴가 없습니다" 상태 표시 |
+| 2-2 | coming soon 메뉴 클릭 | "준비 중인 메뉴입니다" empty state, route 는 유지 가능 |
+| 2-3 | 후속 메뉴 route 는 있으나 page module 이 아직 없음 | shell 은 유지하고 해당 menu 의 unavailable/coming soon state 표시 |
+| 3-1 | 숨겨진 route 직접 접근 | 서버 capability 재검증 후 403 |
+| 3-2 | 메뉴를 보는 중 권한이 회수됨 | 다음 fetch/transition 에서 데이터 숨김 + 403/no-menu 처리 |
 
 ## Open Questions
 
-> 결정 못한 항목 — 1주 이상 방치 시 명시적으로 결정 또는 Non-Goal 로 이동.
-
-- [ ] **Finance Admin 역할 분리 시점** — P1 vs P2 (정산 일 + 환불 일이 super_admin 1인에 집중되면 부담)
-- [ ] **IP 화이트리스트 적용 범위** — P1 모든 사용자 강제 vs 선택적
-- [ ] **TOTP 외 백업 코드 발급** — 디바이스 분실 시 복구 절차
-- [ ] **부분 환불 정책** — 금액 자유 입력 vs 결제액의 N% 단위 선택
-- [ ] **일괄 처리 최대 건수** — 100건 적정 vs 200 / 500
-- [ ] **moderator 역할의 환불 / 정산 가시성** — 읽기 권한도 제외 vs 읽기는 허용
-- [ ] **감사 로그 보존 기간** — 영구 vs 5년 (저장 비용 vs 감사 요건)
-- [ ] **세션 타임아웃 30분 적정성** — 운영 현장 패턴 baseline 수집 후 조정
+- [x] Admin app 위치는 `apps/admin_web/` 으로 확정. 아직 scaffold 전 상태.
+- [ ] Supabase admin membership source: JWT custom claim, `admin_members` 테이블, 또는 둘의 조합 중 선택.
+- [ ] P1 보안 강화에서 Supabase MFA(TOTP / phone factor)를 언제 켤지 결정.
+- [ ] 첫 후속 운영 메뉴를 무엇으로 둘지 결정.
+- [ ] Admin MDS spec 작성 시 web Shadcn 스타일을 MDS 토큰으로 감쌀지, 별도 admin design token 을 둘지 결정.
 
 ---
 
 ## 화면 구성 (참고)
 
-> dev 가 아닌 product/UX detail 만. Stripe / Shopify / Linear 패턴 준용.
+### 정보 구조
 
-### 정보 구조 (사이드바)
-
-```
-Admin Dashboard
-├── 대시보드 (홈)           ← 모든 역할
-├── 유저 관리               ← super_admin
-│   ├── 전체 유저
-│   ├── 인증 완료 유저
-│   └── 신고/정지 유저
-├── 파트너 관리             ← super_admin, moderator
-│   ├── 활성 파트너
-│   ├── 입점 심사            ← 심사 큐
-│   └── 정산 관리            ← super_admin only
-├── 이벤트 관리             ← super_admin
-├── 결제/환불               ← super_admin
-├── 모더레이션              ← super_admin, moderator
-├── 시스템                  ← super_admin only
-│   ├── 감사 로그
-│   ├── 시스템 설정
-│   └── 알림/알람
-└── 설정                    ← super_admin only
-    └── 관리자 계정/역할
+```text
+Admin Console
+├── Login / Admin Guard            P0
+├── Shell                          P0
+│   ├── Sidebar(menu registry)
+│   ├── Topbar(account/sign out)
+│   ├── Page header
+│   ├── Content outlet
+│   └── Shared states
+│       ├── Loading
+│       ├── Empty / no-menu
+│       ├── Error
+│       ├── 403
+│       └── Session expired
+├── Users                          P1 candidate
+├── Partners                       P1 candidate
+├── Payments / Refunds             P1 candidate
+├── Settlements                    P1 candidate
+├── System                         P1 candidate
+└── Audit Logs                     P1 candidate
 ```
 
-> Stripe 3-tier + Shopify 7-item 제한. 역할별 가시성 제어.
+### 화면 1: Login / Admin Guard
 
-### 화면 1: 대시보드 홈
+| State | 조건 | 표시 |
+|-------|------|------|
+| Login | Supabase session 없음 | "Google로 로그인" button |
+| OAuth callback | Google OAuth redirect 완료 | session exchange + redirect |
+| Checking role | session 확보, admin 권한 조회 중 | centered progress + "권한을 확인하고 있습니다" |
+| 403 | session 있음, admin 권한 없음 | 권한 없음 설명 + sign out |
+| Expired | 사용 중 session 만료 | 재로그인 CTA |
 
-| Row | 컨텐츠 |
-|-----|--------|
-| Row 1 (KPI 4 카드) | 활성 유저 7일 + 스파크라인 / 대기 중 심사 + 큐 링크 / 오늘 매출 + 전일 대비 % / 미정산 건 + 총 금액 |
-| Row 2 (차트 2) | 이벤트 신청 stacked bar (승인 / 대기 / 거절) 30일 / 매출 line 30일 |
-| Row 3 (액션 큐 2) | 모더레이션 큐 최신 5건 / 파트너 입점 심사 최신 5건 |
+### 화면 2: Admin Shell
 
-### 화면 2: 유저 관리
+| 영역 | 표시 |
+|------|------|
+| Sidebar | 권한 있는 메뉴만 표시. active/coming soon/hidden 상태 구분 |
+| Top bar | admin account, sign out, global action slot |
+| Page header | title, subtitle, last updated/action slot |
+| Content | 활성 메뉴 page 또는 no-menu empty state |
+| Shared states | loading, empty, error, 403, session expired |
 
-**목록**: 통합 검색 + 필터 바 + 테이블 (프로필 / username / 성별 / 나이 / 인증 뱃지 / 가입일 / 최근 활동 / 이벤트 참여 수) + 서버사이드 페이지네이션.
+### Data Definitions
 
-**상세 (사이드 드로어)**:
-
-| 탭 | 내용 |
-|----|------|
-| 프로필 | 기본 정보, CI/DI 인증 상태, 가입일 |
-| 이벤트 | 참여한 이벤트 목록 |
-| 결제 | 거래 내역, 환불 이력 |
-| 인증 | 파트너별 인증 제출 내역 |
-| 활동 로그 | 조회 / 좋아요 / 구매 등 주요 활동 |
-| 관리 액션 | [정지] [정지 해제] [인증 초기화] — super_admin only |
-
-### 화면 3: 파트너 심사
-
-**심사 큐 (Linear 워크플로우 패턴)**: 상태 파이프라인 (대기 → 승인 / 거절 / 보완) + summary bar ("12건 대기 / 340건 승인 / 5건 거절") + 카드 뷰 (우선순위 / 업체명 / 사업자번호 / 제출일 / 카테고리).
-
-**심사 상세**:
-
-```
-┌─────────────────────────────────────────────────┐
-│ [상태 뱃지: PENDING]  서울라운지                  │
-│ 사업자번호: 123-45-67890 | 제출일: 2026-04-14    │
-├─────────────────────────────────────────────────┤
-│ 좌측: 제출 서류 뷰어                              │
-│ - 사업자등록증 (이미지/PDF 미리보기)               │
-│ - 대표자 신분증                                   │
-│ - 기타 첨부 서류                                  │
-├─────────────────────────────────────────────────┤
-│ 우측: 심사 액션                                   │
-│ - 관리자 코멘트 (텍스트 입력)                      │
-│ - [승인] [거절 ▾ (사유 선택)] [보완 요청]          │
-└─────────────────────────────────────────────────┘
-```
-
-### 화면 4: 이벤트 관리
-
-목록: 검색(이벤트명 / 파트너명) + 필터(상태 / 날짜 / 파트너 / 카테고리) + 테이블 (이벤트명 / 파트너 / 상태 / 날짜 / 신청 수 / 매출).
-액션: [강제 취소] [숨김 처리] — 확인 다이얼로그 필수.
-
-### 화면 5: 결제 / 환불
-
-**거래 내역**: 필터 (상태 / 결제일 범위 / 금액 범위 / 파트너) + 상세 (PortOne 결제 정보 + 환불 이력).
-
-**환불 처리**:
-- 대기 큐: 환불 요청 건 목록
-- 처리 뷰: 원결제 정보 / 환불 사유 / 환불 금액 (부분 환불 지원) / [환불 실행]
-
-### 화면 6: 정산 관리
-
-**목록**: 상태 / 정산 기간 / 파트너 필터 + 테이블 (정산 ID / 파트너 / 총 매출 / 수수료 / 정산액 / 상태 / 정산일) + 체크박스 선택 → [일괄 확정] [일괄 지급 처리].
-
-**상세**: 정산 항목별 거래 내역 / 조정 항목 / 정산 이력 타임라인 / 지급 정보.
-
-### 화면 7: 감사 로그
-
-테이블: 시각 / 관리자 / 액션 유형 / 대상 / 변경 전·후 / IP. 필터: 관리자 / 액션 유형 / 대상 / 날짜 범위.
-
-### 도메인 이벤트 (참고)
-
-| 이벤트 | 설명 |
-|--------|------|
-| `admin.login` | 관리자 로그인 (MFA 포함) |
-| `admin.partner_application.reviewed` | 파트너 심사 완료 (approve / reject) |
-| `admin.user.suspended` | 유저 정지 처리 |
-| `admin.user.unsuspended` | 유저 정지 해제 |
-| `admin.refund.processed` | 환불 처리 완료 |
-| `admin.settlement.status_changed` | 정산 상태 변경 |
-| `admin.system_setting.updated` | 시스템 설정 변경 |
-| `admin.event.force_cancelled` | 이벤트 강제 취소 |
-
-### 에러 / 로딩 상태 (참고)
-
-| 섹션 | 로딩 | 빈 상태 | 에러 |
-|------|------|---------|------|
-| 대시보드 KPI | Shimmer 카드 (Stripe 패턴) | N/A | "데이터를 불러올 수 없습니다. 새로고침해주세요." |
-| 데이터 테이블 | Skeleton rows (5행) | "조건에 맞는 데이터가 없습니다." + 필터 초기화 | "데이터 로딩 실패. 잠시 후 다시 시도해주세요." |
-| 심사 큐 | Skeleton cards | "처리할 심사 건이 없습니다." | 재시도 안내 |
-| 서류 뷰어 | Spinner | "첨부된 서류가 없습니다." | "서류를 불러올 수 없습니다." + 다운로드 링크 |
-| 차트 | Shimmer chart area | "아직 데이터가 충분하지 않습니다." | 차트 영역에 에러 텍스트 |
-| 환불 실행 | 버튼 로딩 스피너 | N/A | Toast: "환불 처리에 실패했습니다. Portone 상태를 확인해주세요." |
-
-### 데이터 정의 (참고)
-
-| 항목 | 키 / 출처 | 설명 |
-|------|----------|------|
-| 관리자 역할 | `app_roles` | super_admin / moderator (P1: finance_admin) |
-| 파트너 신청 | `partner_applications` | 입점 심사 큐 source |
-| 정산 항목 | `settlement_items` | 정산 단위 |
-| 지급 | `payouts` | 정산 지급 |
-| 정책 / 약관 | `policies` | 버전 관리 |
-| 시스템 설정 | `system_settings` | KV |
-| 감사 로그 | 신규 `admin_audit_logs` 테이블 | 관리자 / 액션 / 대상 / 변경 전·후 / IP / UA / 시각 (UPDATE / DELETE 불가, super_admin SELECT only) |
-| analytics 일별 집계 | `analytics.daily_active_users` / `daily_revenue` / `daily_events` / `funnel_daily` | KPI 카드 source |
+| 항목 | 설명 |
+|------|------|
+| Admin identity | Supabase Auth user + server-verified admin membership |
+| Capability | 메뉴/route/action 접근 권한. 예: `admin.users.read`, `admin.system.read` |
+| Menu registry | Admin menu metadata 와 route/page contract 의 source |
+| No-menu state | admin 권한은 있으나 접근 가능한 active 메뉴가 없는 shell empty state |

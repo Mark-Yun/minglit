@@ -1,14 +1,31 @@
 import 'dart:async';
 
-import 'package:app_partner/src/features/home/home_event_phase.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:app_partner/src/logic/dashboard_refresh_notifier.dart';
+import 'package:app_partner/src/logic/event_create_draft_repository.dart';
+import 'package:app_partner/src/logic/event_operation_phase.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'partner_dashboard_controller.freezed.dart';
 part 'partner_dashboard_controller.g.dart';
+
+const bankVerificationStatusNotStarted = 'not_started';
+const bankVerificationStatusFailed = 'verification_failed';
+const bankVerificationStatusPending = 'manual_review_pending';
+const bankVerificationStatusManualApproved = 'manual_review_approved';
+const bankVerificationStatusVerified = 'verified';
+
+bool isBankVerificationReady(String status) {
+  return status == bankVerificationStatusVerified ||
+      status == bankVerificationStatusManualApproved;
+}
+
+String bankVerificationStatusFromAccount(Map<String, dynamic>? accountData) {
+  return accountData?['bank_verification_status'] as String? ??
+      bankVerificationStatusNotStarted;
+}
 
 @freezed
 abstract class PartnerDashboardState with _$PartnerDashboardState {
@@ -20,12 +37,15 @@ abstract class PartnerDashboardState with _$PartnerDashboardState {
     @Default([]) List<Event> preparingEvents,
     @Default([]) List<Party> activeParties,
     @Default([]) List<Party> draftParties,
+    @Default([]) List<EventCreateDraft> draftEvents,
     @Default(0) int totalPartyCount,
     @Default(0) int totalAttendees,
     // Fix #1215: tracks ALL events ever created, not just upcoming ones.
     // Using upcomingEvents for onboarding check caused the guide to reappear
     // after all events ended or were more than 7 days away.
     @Default(false) bool hasAnyEvents,
+    @Default(false) bool bankAccountReady,
+    @Default(bankVerificationStatusNotStarted) String bankVerificationStatus,
     @Default(AsyncValue<void>.loading()) AsyncValue<void> status,
   }) = _PartnerDashboardState;
 }
@@ -62,22 +82,26 @@ class PartnerDashboardController extends _$PartnerDashboardController {
           preparingEvents: [],
           activeParties: [],
           draftParties: [],
+          draftEvents: [],
           totalPartyCount: 0,
           totalAttendees: 0,
           hasAnyEvents: false,
+          bankAccountReady: false,
+          bankVerificationStatus: bankVerificationStatusNotStarted,
         );
         return;
       }
       final eventRepo = ref.read(eventRepositoryProvider);
       final partyRepo = ref.read(partyRepositoryProvider);
+      final draftRepo = ref.read(eventCreateDraftRepositoryProvider);
+      final settlementRepo = ref.read(settlementRepositoryProvider);
       // 1. Pending Count
       final pendingCount = await eventRepo.getPendingApplicationCount(
         partner.id,
       );
 
-      // Fix #2219: use getEventsByPartnerId (gt end_time) so liveEvents is populated.
-      // getUpcomingEvents (gte start_time, 7-day window) excludes started events,
-      // making liveEvents always empty and overview counts too low.
+      // Fix #2219: getUpcomingEvents excludes started events, making
+      // liveEvents always empty and overview counts too low.
       final upcomingEvents = await eventRepo.getEventsByPartnerId(partner.id);
 
       // 3. Active Parties
@@ -89,6 +113,10 @@ class PartnerDashboardController extends _$PartnerDashboardController {
       // Fix #1215: onboarding must not reappear once partner has ever created
       // an event — getUpcomingEvents only covers next 7 days.
       final hasAnyEvents = await eventRepo.getHasAnyEvents(partner.id);
+      final bankAccount = await settlementRepo.getBankAccount(partner.id);
+      final bankVerificationStatus = bankVerificationStatusFromAccount(
+        bankAccount,
+      );
 
       final liveEvents = upcomingEvents
           .where((event) => getEventPhase(event) == EventPhase.live)
@@ -96,14 +124,21 @@ class PartnerDashboardController extends _$PartnerDashboardController {
       final recruitingEvents = upcomingEvents
           .where((event) => getEventPhase(event) == EventPhase.recruiting)
           .toList();
-      // Fix #2219: preparing events derived from upcomingEvents (start <3h),
-      // not from closingSoonEvents (next 3 days) — keeps derived state in controller.
-      final preparingEvents = upcomingEvents
-          .where((event) => getEventPhase(event) == EventPhase.preparing)
+      // MDS #3014: preparingEvents keeps the existing state field name, but now
+      // means T-7~start operation-window events shown as participant list/checkin.
+      final preparingEvents = upcomingEvents.where((event) {
+        final phase = getEventPhase(event);
+        return phase == EventPhase.preStart || phase == EventPhase.checkinReady;
+      }).toList();
+      final activePartyIds = activeParties.map((party) => party.id).toSet();
+      final draftEvents = (await draftRepo.getDrafts())
+          .where((draft) => activePartyIds.contains(draft.partyId))
           .toList();
+      final draftEventPartyIds = draftEvents.map((draft) => draft.partyId);
       final draftParties = activeParties
           .where(
             (party) =>
+                !draftEventPartyIds.contains(party.id) &&
                 upcomingEvents.every((event) => event.partyId != party.id),
           )
           .toList();
@@ -123,9 +158,12 @@ class PartnerDashboardController extends _$PartnerDashboardController {
         preparingEvents: preparingEvents,
         activeParties: activeParties,
         draftParties: draftParties,
+        draftEvents: draftEvents,
         totalPartyCount: activeParties.length,
         totalAttendees: totalAttendees,
         hasAnyEvents: hasAnyEvents,
+        bankAccountReady: isBankVerificationReady(bankVerificationStatus),
+        bankVerificationStatus: bankVerificationStatus,
       );
     } on Exception catch (e, st) {
       if (!ref.mounted) return;

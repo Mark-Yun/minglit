@@ -36,6 +36,10 @@ class PartnerHomeCoordinator {
     _router.go(const SettlementRoute().location);
   }
 
+  void pushBankAccount() {
+    unawaited(_router.push(const BankAccountRoute().location));
+  }
+
   // Fix #845: ApplicationList/Checkin 탭 전환을 coordinator를 통해 위임
   void goToApplicationList() {
     _router.go(const ApplicationListRoute().location);

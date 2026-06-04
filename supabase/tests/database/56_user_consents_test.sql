@@ -68,6 +68,18 @@ SELECT is_empty(
 SELECT tests.create_supabase_user('consent_user_a', 'consent_a@test.com');
 SELECT tests.create_supabase_user('consent_user_b', 'consent_b@test.com');
 
+SELECT results_eq(
+  $$SELECT has_function_privilege('authenticated', 'public.save_user_consents(uuid, jsonb)', 'EXECUTE')::text$$,
+  $$VALUES ('true')$$,
+  'authenticated can execute save_user_consents until EF wrapper migration'
+);
+
+SELECT results_eq(
+  $$SELECT has_function_privilege('service_role', 'public.save_user_consents(uuid, jsonb)', 'EXECUTE')::text$$,
+  $$VALUES ('true')$$,
+  'service_role can execute save_user_consents for Edge Function writes'
+);
+
 SELECT tests.authenticate_as('consent_user_a');
 
 SELECT lives_ok(
@@ -82,12 +94,14 @@ SELECT lives_ok(
     )$$,
     tests.get_supabase_uid('consent_user_a')
   ),
-  'authenticated user can save own consents via RPC'
+  'authenticated user context can save own consents via RPC'
 );
 
 -- ============================================================
 -- 6. RLS — user can SELECT only own consents
 -- ============================================================
+SELECT tests.authenticate_as('consent_user_a');
+
 SELECT results_eq(
   $$SELECT count(*)::int FROM public.user_consents$$,
   $$VALUES (3)$$,
@@ -113,6 +127,8 @@ ROLLBACK TO SAVEPOINT before_direct_insert;
 -- ============================================================
 -- 8. RPC — user cannot save consents for another user
 -- ============================================================
+SELECT tests.authenticate_as('consent_user_a');
+
 SAVEPOINT before_cross_save;
 SELECT throws_ok(
   format(
@@ -131,8 +147,10 @@ ROLLBACK TO SAVEPOINT before_cross_save;
 -- ============================================================
 -- 9. RLS — authenticated user cannot UPDATE directly
 -- ============================================================
+SELECT tests.authenticate_as('consent_user_a');
+
 SAVEPOINT before_direct_update;
-SELECT is_empty(
+SELECT throws_ok(
   format(
     $$UPDATE public.user_consents
       SET consented = false, withdrawn_at = now()
@@ -140,6 +158,8 @@ SELECT is_empty(
       RETURNING id$$,
     tests.get_supabase_uid('consent_user_a')
   ),
+  '42501',
+  NULL,
   'authenticated user cannot UPDATE consents directly'
 );
 ROLLBACK TO SAVEPOINT before_direct_update;
@@ -148,13 +168,15 @@ ROLLBACK TO SAVEPOINT before_direct_update;
 -- 10. RLS — authenticated user cannot DELETE directly
 -- ============================================================
 SAVEPOINT before_direct_delete;
-SELECT is_empty(
+SELECT throws_ok(
   format(
     $$DELETE FROM public.user_consents
       WHERE user_id = '%s' AND consent_key = 'terms_of_service'
       RETURNING id$$,
     tests.get_supabase_uid('consent_user_a')
   ),
+  '42501',
+  NULL,
   'authenticated user cannot DELETE consents directly'
 );
 ROLLBACK TO SAVEPOINT before_direct_delete;
@@ -162,6 +184,8 @@ ROLLBACK TO SAVEPOINT before_direct_delete;
 -- ============================================================
 -- 11. RPC — user can update own consent state
 -- ============================================================
+SELECT tests.authenticate_as('consent_user_a');
+
 SELECT lives_ok(
   format(
     $$SELECT public.save_user_consents(
@@ -201,6 +225,8 @@ SELECT results_eq(
 );
 
 -- Restore terms_of_service
+SELECT tests.authenticate_as('consent_user_a');
+
 SELECT lives_ok(
   format(
     $$SELECT public.save_user_consents(
@@ -211,6 +237,8 @@ SELECT lives_ok(
   ),
   'restore terms_of_service consent'
 );
+
+SELECT tests.authenticate_as('consent_user_a');
 
 -- ============================================================
 -- 14. has_required_consents() — returns true when all 3 required

@@ -147,7 +147,7 @@ SELECT results_eq(
 );
 
 -- ============================================================
--- 3. user_a — 자기 파티에 규칙 INSERT 가능
+-- 3. user_a — 자기 파티에 규칙 직접 INSERT 불가
 -- (현재 active 규칙이 있으므로 먼저 취소 후 추가)
 -- ============================================================
 SELECT tests.authenticate_as_service_role();
@@ -157,7 +157,7 @@ WHERE id = current_setting('tests.rr_rule_a_id')::uuid;
 
 SELECT tests.authenticate_as('rr_user_a');
 
-SELECT lives_ok(
+SELECT throws_ok(
   format(
     $$
       INSERT INTO public.recurrence_rules (
@@ -166,13 +166,15 @@ SELECT lives_ok(
     $$,
     current_setting('tests.rr_party_a_id')
   ),
-  'user_a can INSERT rule for own party'
+  '42501',
+  NULL,
+  'user_a cannot directly INSERT rule for own party'
 );
 
 -- ============================================================
--- 4. user_a — 자기 파티의 규칙 UPDATE (status 변경) 가능
+-- 4. user_a — 자기 파티의 규칙 직접 UPDATE 불가
 -- ============================================================
-SELECT lives_ok(
+SELECT throws_ok(
   format(
     $$
       UPDATE public.recurrence_rules
@@ -181,7 +183,9 @@ SELECT lives_ok(
     $$,
     current_setting('tests.rr_party_a_id')
   ),
-  'user_a can UPDATE own rule status'
+  '42501',
+  NULL,
+  'user_a cannot directly UPDATE own rule status'
 );
 
 -- ============================================================
@@ -223,8 +227,8 @@ SELECT is_empty(
   'user_c (different partner) cannot see partner_a rules'
 );
 
--- user_c는 자기 파티에 규칙 INSERT 가능 (monthly 패턴은 month_day 필수)
-SELECT lives_ok(
+-- user_c도 자기 파티에 직접 INSERT 불가 (monthly 패턴은 month_day 필수)
+SELECT throws_ok(
   format(
     $$
       INSERT INTO public.recurrence_rules (
@@ -233,7 +237,9 @@ SELECT lives_ok(
     $$,
     current_setting('tests.rr_party_b_id')
   ),
-  'user_c can INSERT rule for own party_b'
+  '42501',
+  NULL,
+  'user_c cannot directly INSERT rule for own party_b'
 );
 
 -- ============================================================
@@ -243,8 +249,8 @@ SELECT tests.authenticate_as_service_role();
 
 SELECT results_eq(
   $$SELECT count(*)::int FROM public.recurrence_rules$$,
-  $$VALUES (3)$$,
-  'service_role sees all 3 recurrence_rules'
+  $$VALUES (1)$$,
+  'service_role sees the service-created recurrence_rule'
 );
 
 SELECT lives_ok(

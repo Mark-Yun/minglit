@@ -23,6 +23,7 @@ void main() {
       when(
         () => mockFunctions.invoke(
           'apply-event',
+          headers: any(named: 'headers'),
           body: any(named: 'body'),
         ),
       ).thenAnswer(
@@ -42,12 +43,128 @@ void main() {
 
       expect(result, isA<FreeApplyEventResult>());
       expect(result.applicationId, 'app_free_1');
+
+      final capturedHeaders =
+          verify(
+                () => mockFunctions.invoke(
+                  'apply-event',
+                  headers: captureAny(named: 'headers'),
+                  body: any(named: 'body'),
+                ),
+              ).captured.single
+              as Map<String, String>;
+      expect(
+        capturedHeaders['Idempotency-Key'],
+        startsWith('apply-event:'),
+      );
+    });
+
+    test(
+      'generates a fresh default idempotency key for each repository call',
+      () async {
+        when(
+          () => mockFunctions.invoke(
+            'apply-event',
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {
+              'type': 'paid',
+              'application_id': 'app_paid_1',
+              'order_id': 'order_123',
+              'payment_amount': 30000,
+            },
+          ),
+        );
+
+        await repository.applyEvent(
+          eventId: 'event_1',
+          ticketId: 'ticket_paid_1',
+          verificationData: {
+            'verification_id': 'verif_career',
+            'data': {'career': 'developer', 'years': 5},
+            'partner_id': 'partner_1',
+          },
+        );
+        await repository.applyEvent(
+          eventId: 'event_1',
+          ticketId: 'ticket_paid_1',
+          verificationData: {
+            'partner_id': 'partner_1',
+            'data': {'years': 5, 'career': 'developer'},
+            'verification_id': 'verif_career',
+          },
+        );
+
+        final capturedHeaders = verify(
+          () => mockFunctions.invoke(
+            'apply-event',
+            headers: captureAny(named: 'headers'),
+            body: any(named: 'body'),
+          ),
+        ).captured.cast<Map<String, String>>();
+        expect(capturedHeaders, hasLength(2));
+        expect(
+          capturedHeaders.first['Idempotency-Key'],
+          startsWith('apply-event:'),
+        );
+        expect(
+          capturedHeaders.last['Idempotency-Key'],
+          startsWith('apply-event:'),
+        );
+        expect(
+          capturedHeaders.first['Idempotency-Key'],
+          isNot(capturedHeaders.last['Idempotency-Key']),
+        );
+      },
+    );
+
+    test('uses caller-provided idempotency key when supplied', () async {
+      when(
+        () => mockFunctions.invoke(
+          'apply-event',
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer(
+        (_) async => FunctionResponse(
+          status: 200,
+          data: {
+            'type': 'free',
+            'application_id': 'app_free_1',
+          },
+        ),
+      );
+
+      await repository.applyEvent(
+        eventId: 'event_1',
+        ticketId: 'ticket_1',
+        idempotencyKey: 'apply-event:kept-by-controller',
+      );
+
+      final capturedHeaders =
+          verify(
+                () => mockFunctions.invoke(
+                  'apply-event',
+                  headers: captureAny(named: 'headers'),
+                  body: any(named: 'body'),
+                ),
+              ).captured.single
+              as Map<String, String>;
+      expect(
+        capturedHeaders['Idempotency-Key'],
+        'apply-event:kept-by-controller',
+      );
     });
 
     test('returns PaidApplyEventResult for paid ticket response', () async {
       when(
         () => mockFunctions.invoke(
           'apply-event',
+          headers: any(named: 'headers'),
           body: any(named: 'body'),
         ),
       ).thenAnswer(
@@ -84,6 +201,7 @@ void main() {
       when(
         () => mockFunctions.invoke(
           'apply-event',
+          headers: any(named: 'headers'),
           body: any(named: 'body'),
         ),
       ).thenAnswer(
@@ -108,6 +226,7 @@ void main() {
           verify(
                 () => mockFunctions.invoke(
                   'apply-event',
+                  headers: any(named: 'headers'),
                   body: captureAny(named: 'body'),
                 ),
               ).captured.single
@@ -119,6 +238,7 @@ void main() {
       when(
         () => mockFunctions.invoke(
           'apply-event',
+          headers: any(named: 'headers'),
           body: any(named: 'body'),
         ),
       ).thenAnswer(
@@ -140,6 +260,7 @@ void main() {
           verify(
                 () => mockFunctions.invoke(
                   'apply-event',
+                  headers: any(named: 'headers'),
                   body: captureAny(named: 'body'),
                 ),
               ).captured.single
@@ -151,6 +272,7 @@ void main() {
       when(
         () => mockFunctions.invoke(
           'apply-event',
+          headers: any(named: 'headers'),
           body: any(named: 'body'),
         ),
       ).thenThrow(Exception('EF error'));
@@ -171,6 +293,7 @@ void main() {
         when(
           () => mockFunctions.invoke(
             'apply-event',
+            headers: any(named: 'headers'),
             body: any(named: 'body'),
           ),
         ).thenAnswer(
@@ -190,6 +313,7 @@ void main() {
         when(
           () => mockFunctions.invoke(
             'apply-event',
+            headers: any(named: 'headers'),
             body: any(named: 'body'),
           ),
         ).thenAnswer(

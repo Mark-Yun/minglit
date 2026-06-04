@@ -22,32 +22,34 @@ final activeEventBannersProvider = FutureProvider<List<ActiveEventBannerItem>>((
   // Fix #2123: Realtime subscription for event_participants changes (check-in,
   // no-show) so lifecycle cards update without user interaction.
   // Mirrors EventRealtime in event_now_bar_controller.dart.
-  final supabase = ref.watch(supabaseClientProvider);
   Timer? pollingTimer;
-  final channel = supabase.channel('active-banners-${user.id}')
-    ..onPostgresChanges(
-      event: PostgresChangeEvent.all,
-      schema: 'public',
-      table: 'event_participants',
-      filter: PostgresChangeFilter(
-        type: PostgresChangeFilterType.eq,
-        column: 'user_id',
-        value: user.id,
-      ),
-      callback: (_) => ref.invalidateSelf(),
-    )
-    ..subscribe((status, [error]) {
-      if (status == RealtimeSubscribeStatus.closed) {
-        pollingTimer = Timer.periodic(
-          const Duration(seconds: 30),
-          (_) => ref.invalidateSelf(),
-        );
-      }
+  if (!EnvKeyStore.isDemo) {
+    final supabase = ref.watch(supabaseClientProvider);
+    final channel = supabase.channel('active-banners-${user.id}')
+      ..onPostgresChanges(
+        event: PostgresChangeEvent.all,
+        schema: 'public',
+        table: 'event_participants',
+        filter: PostgresChangeFilter(
+          type: PostgresChangeFilterType.eq,
+          column: 'user_id',
+          value: user.id,
+        ),
+        callback: (_) => ref.invalidateSelf(),
+      )
+      ..subscribe((status, [error]) {
+        if (status == RealtimeSubscribeStatus.closed) {
+          pollingTimer = Timer.periodic(
+            const Duration(seconds: 30),
+            (_) => ref.invalidateSelf(),
+          );
+        }
+      });
+    ref.onDispose(() {
+      pollingTimer?.cancel();
+      unawaited(channel.unsubscribe());
     });
-  ref.onDispose(() {
-    pollingTimer?.cancel();
-    unawaited(channel.unsubscribe());
-  });
+  }
 
   final eventRepository = ref.watch(eventRepositoryProvider);
   final matchingRepository = ref.watch(matchingRepositoryProvider);
@@ -66,10 +68,7 @@ final activeEventBannersProvider = FutureProvider<List<ActiveEventBannerItem>>((
     applications.map((application) async {
       final event = application.event;
       if (event == null) {
-        return (
-          application: application,
-          phase: EventLifecyclePhase.ended,
-        );
+        return (application: application, phase: EventLifecyclePhase.ended);
       }
 
       final participantStatus = participantStatusByEventId[event.id];
@@ -83,7 +82,8 @@ final activeEventBannersProvider = FutureProvider<List<ActiveEventBannerItem>>((
       final matches = await matchingRepository.getMyMatches(event.id);
       hasMatchResults = matches.isNotEmpty;
       // Only fetch matching state when checked-in to avoid unnecessary calls.
-      // Fix #2123: matchingReady → matching requires at least one submitted vote.
+      // Fix #2123: matchingReady → matching requires at least one submitted
+      // vote.
       if (isCheckedIn) {
         try {
           final (candidates, voteCount) = await (
@@ -94,7 +94,8 @@ final activeEventBannersProvider = FutureProvider<List<ActiveEventBannerItem>>((
           hasSubmittedVotes = voteCount > 0;
         } on Object catch (e) {
           Log.w(
-            '⚠️ [ActiveBanners] matching state fetch failed for ${event.id}: $e',
+            '⚠️ [ActiveBanners] matching state fetch failed '
+            'for ${event.id}: $e',
           );
         }
       }
@@ -162,8 +163,8 @@ EventLifecyclePhase resolveEventLifecyclePhase({
   }
 
   if (isCheckedIn && event.status == 'ongoing') {
-    // Fix #2123: matchingReady → matching only after user submits at least one
-    // vote. Candidate availability alone does not indicate the user took action.
+    // Fix #2123: matchingReady → matching only after the user submits at least
+    // one vote. Candidate availability alone does not indicate action.
     if (hasSubmittedVotes) return EventLifecyclePhase.matching;
     if (hasMatchingCandidates) return EventLifecyclePhase.matchingReady;
   }

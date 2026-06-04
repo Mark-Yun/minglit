@@ -3,11 +3,11 @@ import {
   authenticatedJsonRequest,
   captureServeHandler,
   createFetchMock,
+  type FetchRoute,
   jsonResponse,
   readJson,
   withEnv,
   withMockedFetch,
-  type FetchRoute,
 } from "../_test_utils/mock_http.ts";
 
 const TEST_USER_ID = "user-partner-owner";
@@ -23,7 +23,8 @@ const ENV = {
 function authRoute(): FetchRoute {
   return {
     matcher: "/auth/v1/user",
-    handler: () => jsonResponse({ id: TEST_USER_ID, email: "partner@test.com" }),
+    handler: () =>
+      jsonResponse({ id: TEST_USER_ID, email: "partner@test.com" }),
   };
 }
 
@@ -40,7 +41,9 @@ function permRoute(hasPermission = true): FetchRoute {
     handler: () =>
       jsonResponse(
         hasPermission
-          ? { permissions: ["PARTNER_EDIT", "SETTLEMENT_EDIT", "SETTLEMENT_VIEW"] }
+          ? {
+            permissions: ["PARTNER_EDIT", "SETTLEMENT_EDIT", "SETTLEMENT_VIEW"],
+          }
           : null,
       ),
   };
@@ -70,11 +73,22 @@ function upsertErrorRoute(): FetchRoute {
   };
 }
 
+function manualReviewRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/partner_settlements") &&
+      req.method === "PATCH",
+    handler: () => new Response(null, { status: 200 }),
+  };
+}
+
 // ─── CORS preflight ───
 Deno.test({
   name: "handles OPTIONS preflight request",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([]);
 
     await withEnv(ENV, async () => {
@@ -92,7 +106,9 @@ Deno.test({
 Deno.test({
   name: "returns 401 without authorization",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authFailRoute()]);
 
     await withEnv(ENV, async () => {
@@ -113,7 +129,9 @@ Deno.test({
 Deno.test({
   name: "returns 400 for missing action",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -123,7 +141,7 @@ Deno.test({
         );
         assertEquals(res.status, 400);
         const body = await readJson(res);
-        assertEquals(body.error, "Missing or invalid \"action\" field");
+        assertEquals(body.error, 'Missing or invalid "action" field');
       });
     });
   },
@@ -133,7 +151,9 @@ Deno.test({
 Deno.test({
   name: "returns 400 for unknown action",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -153,7 +173,9 @@ Deno.test({
 Deno.test({
   name: "upsert_bank_account: upserts bank account successfully",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       permRoute(),
@@ -166,7 +188,7 @@ Deno.test({
           authenticatedJsonRequest("http://localhost", {
             action: "upsert_bank_account",
             partner_id: TEST_PARTNER_ID,
-            bank_name: "카카오뱅크",
+            bank_code: "kakao",
             account_holder: "홍길동",
             account_number: "3333-01-1234567",
           }),
@@ -183,7 +205,9 @@ Deno.test({
 Deno.test({
   name: "upsert_bank_account: sends correct payload to DB",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     let upsertBody: string | null = null;
 
     const { fetchMock } = createFetchMock([
@@ -191,7 +215,8 @@ Deno.test({
       permRoute(),
       {
         matcher: (req) =>
-          req.url.includes("/rest/v1/partner_settlements") && req.method === "POST",
+          req.url.includes("/rest/v1/partner_settlements") &&
+          req.method === "POST",
         handler: async (req) => {
           upsertBody = await req.clone().text();
           return new Response(null, { status: 200 });
@@ -205,7 +230,7 @@ Deno.test({
           authenticatedJsonRequest("http://localhost", {
             action: "upsert_bank_account",
             partner_id: TEST_PARTNER_ID,
-            bank_name: "카카오뱅크",
+            bank_code: "kakao",
             account_holder: "홍길동",
             account_number: "3333-01-1234567",
           }),
@@ -213,10 +238,64 @@ Deno.test({
         assertEquals(res.status, 200);
         const parsed = JSON.parse(upsertBody!);
         assertEquals(parsed.partner_id, TEST_PARTNER_ID);
+        assertEquals(parsed.bank_code, "kakao");
         assertEquals(parsed.bank_name, "카카오뱅크");
         assertEquals(parsed.account_holder, "홍길동");
         // account_number is normalized: hyphens stripped
         assertEquals(parsed.account_number, "3333011234567");
+        assertEquals(parsed.bank_verification_status, "manual_review_pending");
+        assertEquals(
+          parsed.bank_verification_reason,
+          "partner_submitted_bank_account",
+        );
+        assertEquals(parsed.bank_verified_at, null);
+      });
+    });
+  },
+});
+
+// ─── UPSERT: legacy bank_name-only clients ───
+Deno.test({
+  name: "upsert_bank_account: accepts legacy bank_name-only requests",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    let upsertBody: string | null = null;
+
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      permRoute(),
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/partner_settlements") &&
+          req.method === "POST",
+        handler: async (req) => {
+          upsertBody = await req.clone().text();
+          return new Response(null, { status: 200 });
+        },
+      },
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "upsert_bank_account",
+            partner_id: TEST_PARTNER_ID,
+            bank_name: "국민은행",
+            account_holder: "홍길동",
+            account_number: "3333-01-1234567",
+          }),
+        );
+        assertEquals(res.status, 200);
+        const parsed = JSON.parse(upsertBody!);
+        assertEquals(parsed.partner_id, TEST_PARTNER_ID);
+        assertEquals(parsed.bank_code, null);
+        assertEquals(parsed.bank_name, "국민은행");
+        assertEquals(parsed.account_holder, "홍길동");
+        assertEquals(parsed.account_number, "3333011234567");
+        assertEquals(parsed.bank_verification_status, "manual_review_pending");
       });
     });
   },
@@ -226,7 +305,9 @@ Deno.test({
 Deno.test({
   name: "upsert_bank_account: ignores non-whitelisted fields",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     let upsertBody: string | null = null;
 
     const { fetchMock } = createFetchMock([
@@ -234,7 +315,8 @@ Deno.test({
       permRoute(),
       {
         matcher: (req) =>
-          req.url.includes("/rest/v1/partner_settlements") && req.method === "POST",
+          req.url.includes("/rest/v1/partner_settlements") &&
+          req.method === "POST",
         handler: async (req) => {
           upsertBody = await req.clone().text();
           return new Response(null, { status: 200 });
@@ -248,7 +330,7 @@ Deno.test({
           authenticatedJsonRequest("http://localhost", {
             action: "upsert_bank_account",
             partner_id: TEST_PARTNER_ID,
-            bank_name: "카카오뱅크",
+            bank_code: "kakao",
             account_holder: "홍길동",
             account_number: "3333-01-1234567",
             biz_name: "해킹시도",
@@ -260,8 +342,8 @@ Deno.test({
         // Non-whitelisted fields should NOT be in the payload
         assertEquals(parsed.biz_name, undefined);
         assertEquals(parsed.tax_email, undefined);
-        // Only partner_id + 3 bank fields
-        assertEquals(Object.keys(parsed).length, 4);
+        assertEquals(parsed.bank_code, "kakao");
+        assertEquals(parsed.bank_verification_status, "manual_review_pending");
       });
     });
   },
@@ -271,7 +353,9 @@ Deno.test({
 Deno.test({
   name: "upsert_bank_account: returns 400 for missing partner_id",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -294,9 +378,11 @@ Deno.test({
 
 // ─── UPSERT: missing bank_name → 400 ───
 Deno.test({
-  name: "upsert_bank_account: returns 400 for missing bank_name",
+  name: "upsert_bank_account: returns 400 for missing bank_code",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -311,7 +397,7 @@ Deno.test({
         );
         assertEquals(res.status, 400);
         const body = await readJson(res);
-        assertEquals(body.error, "Missing bank_name");
+        assertEquals(body.error, "Missing or unsupported bank_code");
       });
     });
   },
@@ -321,7 +407,9 @@ Deno.test({
 Deno.test({
   name: "upsert_bank_account: returns 400 for missing account_holder",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -346,7 +434,9 @@ Deno.test({
 Deno.test({
   name: "upsert_bank_account: returns 400 for missing account_number",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -369,9 +459,12 @@ Deno.test({
 
 // ─── UPSERT: 403 no permission ───
 Deno.test({
-  name: "upsert_bank_account: returns 403 when user lacks SETTLEMENT_EDIT permission",
+  name:
+    "upsert_bank_account: returns 403 when user lacks SETTLEMENT_EDIT permission",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       permRoute(false),
@@ -383,7 +476,7 @@ Deno.test({
           authenticatedJsonRequest("http://localhost", {
             action: "upsert_bank_account",
             partner_id: TEST_PARTNER_ID,
-            bank_name: "카카오뱅크",
+            bank_code: "kakao",
             account_holder: "홍길동",
             account_number: "3333-01-1234567",
           }),
@@ -398,7 +491,9 @@ Deno.test({
 Deno.test({
   name: "upsert_bank_account: returns 500 when permission query fails",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       permErrorRoute(),
@@ -410,7 +505,7 @@ Deno.test({
           authenticatedJsonRequest("http://localhost", {
             action: "upsert_bank_account",
             partner_id: TEST_PARTNER_ID,
-            bank_name: "카카오뱅크",
+            bank_code: "kakao",
             account_holder: "홍길동",
             account_number: "3333-01-1234567",
           }),
@@ -423,11 +518,13 @@ Deno.test({
   },
 });
 
-// ─── UPSERT: whitespace-only bank_name → 400 ───
+// ─── UPSERT: whitespace-only bank_code → 400 ───
 Deno.test({
-  name: "upsert_bank_account: returns 400 for whitespace-only bank_name",
+  name: "upsert_bank_account: returns 400 for whitespace-only bank_code",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -436,14 +533,14 @@ Deno.test({
           authenticatedJsonRequest("http://localhost", {
             action: "upsert_bank_account",
             partner_id: TEST_PARTNER_ID,
-            bank_name: "   ",
+            bank_code: "   ",
             account_holder: "홍길동",
             account_number: "3333011234567",
           }),
         );
         assertEquals(res.status, 400);
         const body = await readJson(res);
-        assertEquals(body.error, "Missing bank_name");
+        assertEquals(body.error, "Missing or unsupported bank_code");
       });
     });
   },
@@ -453,7 +550,9 @@ Deno.test({
 Deno.test({
   name: "upsert_bank_account: returns 400 for invalid account_number format",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -462,7 +561,7 @@ Deno.test({
           authenticatedJsonRequest("http://localhost", {
             action: "upsert_bank_account",
             partner_id: TEST_PARTNER_ID,
-            bank_name: "카카오뱅크",
+            bank_code: "kakao",
             account_holder: "홍길동",
             account_number: "abc",
           }),
@@ -479,7 +578,9 @@ Deno.test({
 Deno.test({
   name: "upsert_bank_account: normalizes account_number by stripping hyphens",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     let upsertBody: string | null = null;
 
     const { fetchMock } = createFetchMock([
@@ -487,7 +588,8 @@ Deno.test({
       permRoute(),
       {
         matcher: (req) =>
-          req.url.includes("/rest/v1/partner_settlements") && req.method === "POST",
+          req.url.includes("/rest/v1/partner_settlements") &&
+          req.method === "POST",
         handler: async (req) => {
           upsertBody = await req.clone().text();
           return new Response(null, { status: 200 });
@@ -501,7 +603,7 @@ Deno.test({
           authenticatedJsonRequest("http://localhost", {
             action: "upsert_bank_account",
             partner_id: TEST_PARTNER_ID,
-            bank_name: "카카오뱅크",
+            bank_code: "kakao",
             account_holder: "홍길동",
             account_number: "3333-01-1234567",
           }),
@@ -518,7 +620,9 @@ Deno.test({
 Deno.test({
   name: "upsert_bank_account: returns 500 when upsert fails",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       permRoute(),
@@ -531,12 +635,89 @@ Deno.test({
           authenticatedJsonRequest("http://localhost", {
             action: "upsert_bank_account",
             partner_id: TEST_PARTNER_ID,
-            bank_name: "카카오뱅크",
+            bank_code: "kakao",
             account_holder: "홍길동",
             account_number: "3333-01-1234567",
           }),
         );
         assertEquals(res.status, 500);
+      });
+    });
+  },
+});
+
+// ─── MANUAL REVIEW: success ───
+Deno.test({
+  name:
+    "request_manual_bank_account_review: moves account to manual_review_pending",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    let updateBody: string | null = null;
+
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      permRoute(),
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/partner_settlements") &&
+          req.method === "PATCH",
+        handler: async (req) => {
+          updateBody = await req.clone().text();
+          return new Response(null, { status: 200 });
+        },
+      },
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "request_manual_bank_account_review",
+            partner_id: TEST_PARTNER_ID,
+          }),
+        );
+        assertEquals(res.status, 200);
+        const body = await readJson(res);
+        assertEquals(body.success, true);
+        assertEquals(body.bank_verification_status, "manual_review_pending");
+
+        const parsed = JSON.parse(updateBody!);
+        assertEquals(parsed.bank_verification_status, "manual_review_pending");
+        assertEquals(
+          parsed.bank_verification_reason,
+          "partner_requested_manual_review",
+        );
+        assertEquals(parsed.bank_verified_at, null);
+      });
+    });
+  },
+});
+
+// ─── MANUAL REVIEW: 403 no permission ───
+Deno.test({
+  name:
+    "request_manual_bank_account_review: returns 403 without SETTLEMENT_EDIT",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      permRoute(false),
+      manualReviewRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "request_manual_bank_account_review",
+            partner_id: TEST_PARTNER_ID,
+          }),
+        );
+        assertEquals(res.status, 403);
       });
     });
   },

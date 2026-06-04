@@ -968,6 +968,30 @@ body.dark-mode .viewport {
     </thead>
     <tbody>
       <tr>
+        <td>2026-06-04</td>
+        <td>2.6</td>
+        <td>codex</td>
+        <td>#3002: Todo "첫 이벤트 만들기" destination을 <code>EventCreatePage</code>로 확정. 파티 1개 auto-select, 2개 이상 <code>MinglitBottomSheet</code> party selector, 작성 중 이벤트 resume card, 게시 완료 후 Home todo 소멸 조건을 명시.</td>
+      </tr>
+      <tr>
+        <td>2026-06-04</td>
+        <td>2.5</td>
+        <td>codex</td>
+        <td>#3001: Todo "계좌 등록" destination을 <code>BankAccountPage</code> onboarding owner로 확정. verified/manual approved 때 todo가 사라지고 failed/manual review pending은 todo가 유지되는 state transition을 명시.</td>
+      </tr>
+      <tr>
+        <td>2026-06-04</td>
+        <td>2.4</td>
+        <td>codex</td>
+        <td>#3000: 신청관리 탭과 오버뷰 "참가예정 고객" destination을 <code>EventApplicationManagePage</code> cross-event hub로 확정. 단일 이벤트 참가 현황은 <code>EventApplicationListPage</code> owner로 분리.</td>
+      </tr>
+      <tr>
+        <td>2026-06-04</td>
+        <td>2.3</td>
+        <td>codex</td>
+        <td>#3004: Subpages map의 남은 TBD를 실제 spec link / follow-up issue / intentional deferred로 분류. 신청관리·계좌·첫 이벤트·정산은 기존 partner spec으로 연결하고, partner 활성 이벤트 리스트는 app_user <code>PartnerEventsPage</code> 오용을 피하기 위해 #3040으로 분리.</td>
+      </tr>
+      <tr>
         <td>2026-06-03</td>
         <td>2.2</td>
         <td>codex</td>
@@ -1787,7 +1811,7 @@ body.dark-mode .viewport {
     <!-- State 4: Onboarding · 계좌 등록 필요 -->
     <table class="ref state-mini">
       <thead>
-        <tr><th colspan="3"><strong>Onboarding · 계좌 등록 필요</strong> <small>!hasBankAccount — 정산 계좌 미등록</small></th></tr>
+        <tr><th colspan="3"><strong>Onboarding · 계좌 등록/확인 필요</strong> <small>bankAccountReady == false — 미등록/검증 실패/수동 확인 중</small></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -1897,14 +1921,14 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>파트너 가입 승인 직후 첫 진입 또는 계좌 등록을 미루고 있는 상태. <code>!hasBankAccount</code>. 계좌 등록은 정산의 prerequisite (게시 등 기타 액션은 가능). 계좌 + 파티가 동시에 미충족이라 두 todo가 함께 노출.</td>
+          <td>파트너 가입 승인 직후 첫 진입 또는 계좌 등록/확인이 끝나지 않은 상태. <code>bankAccountReady == false</code>. 계좌 등록은 정산의 prerequisite (게시 등 기타 액션은 가능). 계좌 + 파티가 동시에 미충족이라 두 todo가 함께 노출. 단순 저장 여부(<code>hasBankAccount</code>)와 완료 여부(<code>bankAccountReady</code>)는 분리한다.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
             ① <strong>"도움말 보기" CTA</strong> (welcome 카드) → 플랫폼 사용법 가이드 시트 (좌르륵 설명 — 파티 vs 이벤트, 신청·승인·체크인·정산 흐름 등 첫 사용자가 알아야 할 핵심을 감성 톤으로).<br>
             ② <strong>"다시 보지 않음"</strong> (welcome 카드 secondary 버튼) → 확인 dialog "도움말은 마이페이지에서 보실 수 있어요" → 확인 시 welcome 카드 영구 dismiss.<br>
-            ③ <strong>"계좌 등록" todo 탭</strong> → 계좌 등록 화면.<br>
+            ③ <strong>"계좌 등록" todo 탭</strong> → <a href="/specs/bank_account_page/index.html"><code>BankAccountPage</code></a> (<code>BankAccountRoute</code>) onboarding form.<br>
             ④ <strong>"첫 파티 만들기" todo 탭</strong> → 파티 생성 위저드 (계좌 미등록이어도 파티 작성 가능 — 게시 시점에 계좌 필요).<br>
             ⑤ 운영 현황 stat 탭 → 빈 리스트 화면.<br>
             ⑥ ⓘ 도움말 (각 섹션) → 해당 섹션별 도움말 시트.<br>
@@ -1917,9 +1941,10 @@ body.dark-mode .viewport {
             · welcome 카드는 명시적으로 dismiss(다시 보지 않음)할 때까지 노출. "도움말 보기" 탭만으로는 dismiss되지 않음 — 사용자가 계속 보고 싶을 수 있음.<br>
             · 다시 보지 않음 dialog: <strong>타이틀 "도움말을 띄우지 않습니다" + 본문 "도움말은 마이페이지에서 계속 보실 수 있어요." + 확인/취소 CTA</strong>. 확인 → welcome 카드 영구 dismiss · 취소 → 카드 유지.<br>
             · 마이페이지에서 도움말 항상 접근 가능 (더보기 → 마이페이지 → 도움말 메뉴).<br>
-            · 계좌 인증 실패 → 재입력 화면. todo 카드 라벨 동일 유지.<br>
+            · 계좌 검증 실패 → <code>BankAccountPage</code> failed state로 재진입. todo 카드 라벨은 유지하고 subcopy를 "계좌 정보를 다시 확인해주세요"로 바꿀 수 있음.<br>
+            · 수동 검증 요청 후 pending → todo row는 "계좌 확인 중" subcopy로 유지. 운영 승인 완료 또는 <code>verified</code> 후에만 소멸.<br>
             · 계좌 등록 미룸 일정 기간 (예: 7일) → 푸시 / 이메일 리마인더.<br>
-            · 계좌 등록 완료 → 자동으로 State 5 (첫 파티 만들기 필요)로 전환.
+            · 계좌 등록 + 검증 완료 → 자동으로 State 5 (첫 파티 만들기 필요) 또는 남은 todo 없는 홈 state로 전환.
           </td>
         </tr>
         <tr>
@@ -2161,12 +2186,12 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>파티 1+ (게시 완료) + <code>publishedEventCount === 0 &amp;&amp; draftEventCount === 0</code> — 파티는 만들었지만 첫 회차(이벤트)를 아직 안 만든 상태. 운영 현황 "등록된 파티" = 1. <strong>계좌 등록과 독립</strong> — 계좌 미등록이어도 이벤트 작성 가능 (게시 시점에 계좌 필요할 수 있음).</td>
+          <td>게시 완료 파티 1+ + <code>publishedEventCount === 0 &amp;&amp; draftEventCount === 0</code> — 파티는 만들었지만 첫 회차(이벤트)를 아직 안 만든 상태. 운영 현황 "등록된 파티" = published party count. <strong>계좌 등록과 독립</strong> — 계좌 미등록이어도 이벤트 작성 가능 (게시 시점에 계좌 필요할 수 있음). 도착지는 <a href="/specs/event_create_page/index.html"><code>EventCreatePage</code></a>.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>"첫 이벤트 만들기" todo 탭</strong> → 이벤트 생성 위저드 (날짜 / 시간 / 정원 / 가격 / 장소 등). 파티가 1개면 자동 선택 — 2개 이상이면 파티 선택 시트 먼저.<br>
+            ① <strong>"첫 이벤트 만들기" todo 탭</strong> → 파티가 1개면 즉시 <code>EventCreateRoute(partyId)</code>. 2개 이상이면 <code>MinglitBottomSheet</code> party selector를 먼저 띄우고 선택 후 <code>EventCreatePage</code>로 진입.<br>
             ② 운영 현황 "등록된 파티" 1 탭 → 파티 리스트 (자기 파티 1개).<br>
             ③ ⓘ 도움말 → 첫 이벤트 만들기 가이드 시트 (날짜 / 정원 정하는 팁).
           </td>
@@ -2174,9 +2199,9 @@ body.dark-mode .viewport {
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 이벤트 위저드 도중 "임시저장" 시 → todo 카드가 <strong>"작성 중인 이벤트" 카드</strong>로 교체 (sub = "임시저장 · 마지막 수정일", 아이콘 = 펜).<br>
-            · 이벤트 게시 완료 시 자동으로 일반 dashboard (State 1 또는 한가한 날 State 3)로 전환.<br>
-            · 다중 파티 보유 시: todo 카드 sub에 "어떤 파티의 이벤트인지" 명시 또는 위저드 진입 시 파티 선택 시트.<br>
+            · 이벤트 위저드 도중 "임시저장" 시 → todo 카드가 <strong>"작성 중인 이벤트" 카드</strong>로 교체 (sub = "임시저장 · 마지막 수정일", 아이콘 = 펜)되고, 탭 시 같은 <code>EventCreateRoute</code>를 draft payload로 restore.<br>
+            · 이벤트 게시 완료 시 <code>hasAnyEvents</code>/<code>publishedEventCount</code>가 갱신되어 자동으로 일반 dashboard (State 1 또는 한가한 날 State 3)로 전환.<br>
+            · 다중 파티 보유 시: Home 카드 자체에는 파티명을 고정하지 않고 selector에서 파티를 결정. selector dismiss는 아무 상태 변화 없음.<br>
             · 파티가 임시저장 (작성 중)이고 게시 안 됐다면 State 5(첫 파티)로 다시 분기.
           </td>
         </tr>
@@ -2185,6 +2210,7 @@ body.dark-mode .viewport {
           <td>
             · 운영 현황 (1/0/0) — 파티만 1개<br>
             · "지금 할 일" 섹션 + 첫 이벤트 만들기 todo 카드 (mint 아이콘 박스 + 달력 아이콘)<br>
+            · 파티 2개 이상일 때 <code>MinglitBottomSheet</code> party selector (title + single-select ListTile row)<br>
             · 작성 중 이벤트 있을 시 → todo 카드 자리에 작성 중 카드 sub-state
           </td>
         </tr>
@@ -2194,7 +2220,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 파티는 만들었지만 첫 이벤트 없으면 사용자에게 노출되지 않음 — 첫 이벤트 게시가 모집 시작 트리거. ⓘ 도움말에서 "이벤트 = 회차" 개념 + 날짜/정원 설정 팁 안내.</td>
+          <td>📝 파티는 만들었지만 첫 이벤트 없으면 사용자에게 노출되지 않음 — 첫 이벤트 게시가 모집 시작 트리거. Home은 party selection까지만 담당하고, 날짜/시간/정원/가격/장소/티켓/검토는 <code>EventCreatePage</code>가 담당.</td>
         </tr>
       </tbody>
     </table>
@@ -2431,7 +2457,7 @@ body.dark-mode .viewport {
           <td>Todo 카드 × 미충족 prerequisite (compact mint 아이콘)</td>
           <td>🟣 primary blink</td>
           <td>
-            · <code>!hasBankAccount</code> → 💳 계좌 등록 todo<br>
+            · <code>bankAccountReady == false</code> → 💳 계좌 등록/확인 todo (미등록, 검증 실패, 수동 검증 pending 포함)<br>
             · <code>publishedParty 0 &amp;&amp; draftParty 0</code> → 🎉 첫 파티 만들기 todo<br>
             · <code>publishedEvent 0 &amp;&amp; draftEvent 0 &amp;&amp; publishedParty &gt;= 1</code> → 📅 첫 이벤트 만들기 todo<br>
             · drafts 있으면 todo 자리에 작성 중 카드로 sub-state 교체
@@ -3190,11 +3216,12 @@ body.dark-mode .viewport {
             · 🎉 첫 파티 (폭죽 아이콘)<br>
             · 📅 첫 이벤트 (달력 아이콘)<br><br>
             <strong>노출 조건</strong> (독립적 — 미충족 항목만 각각 노출):<br>
-            · <code>!hasBankAccount</code> → 계좌 등록 row<br>
+            · <code>bankAccountReady == false</code> → 계좌 등록/확인 row (<code>bankVerificationStatus in [not_started, failed, manual_review_pending]</code>)<br>
             · <code>publishedParty 0 &amp;&amp; draftParty 0</code> → 첫 파티 만들기 row<br>
             · <code>publishedEvent 0 &amp;&amp; draftEvent 0 &amp;&amp; publishedParty &gt;= 1</code> → 첫 이벤트 만들기 row<br><br>
-            <strong>Drafts 변형</strong>: 작성 중 파티/이벤트 있으면 todo 자리에 작성 중 카드 (회색 펜 아이콘)로 sub-state 교체 → 카드별 명세 ⑦ 참고<br><br>
-            <strong>완료 시 자동 소멸</strong>: prerequisite 충족 시 row 사라짐. 모두 충족 시 "지금 할 일" 섹션 자체 hide.
+            <strong>Tap destinations</strong>: 계좌 row → <code>BankAccountPage</code>, 파티 row → <code>PartyCreateWizardPage</code>, 이벤트 row → <code>EventCreatePage</code>. 이벤트 row는 published party 1개면 auto-select, 2개 이상이면 <code>MinglitBottomSheet</code> party selector 후 이동.<br><br>
+            <strong>Drafts 변형</strong>: 작성 중 파티/이벤트 있으면 todo 자리에 작성 중 카드 (회색 펜 아이콘)로 sub-state 교체 → 카드별 명세 ⑦ 참고. 작성 중 이벤트는 같은 <code>EventCreateRoute</code>를 draft payload로 restore.<br><br>
+            <strong>완료 시 자동 소멸</strong>: prerequisite 충족 시 row 사라짐. 계좌 row는 <code>verified</code> 또는 운영 승인 완료 때만 사라지고, failed/manual review pending은 유지. 모두 충족 시 "지금 할 일" 섹션 자체 hide.
           </td>
         </tr>
       </tbody>
@@ -3377,29 +3404,29 @@ body.dark-mode .viewport {
   <section class="doc">
     <h2>진입 가능한 서브 페이지 (Subpages map)</h2>
     <p class="intro">
-      홈에서 도달할 수 있는 모든 화면 / 라우트. status: ✅ spec 있음 · 🚧 작성 중 · 📝 TBD (미작성).
+      홈에서 도달할 수 있는 모든 화면 / 라우트. status: ✅ spec 있음 · 🚧 작성 중 · 📝 follow-up 분리 · — route 없음/현재 페이지.
     </p>
     <table class="ref">
       <thead>
         <tr>
           <th style="width: 200px;">진입점</th>
           <th style="width: 220px;">도착 화면</th>
-          <th style="width: 60px;">Status</th>
+          <th style="width: 90px;">Status</th>
           <th>비고</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td>AppBar 알림 아이콘</td>
-          <td>알림 센터</td>
-          <td>📝 TBD</td>
-          <td>shell push · 미읽음 99+ 캡 처리</td>
+          <td><a href="/specs/notification_list_screen/index.html"><code>NotificationListScreen</code></a> (partner variant)</td>
+          <td>📝 #3003</td>
+          <td>shared notification center spec은 있음 · partner 신청/체크인/정산 grouping과 미읽음 99+ cap은 #3003에서 확정</td>
         </tr>
         <tr>
           <td>AppBar 버그 리포트 (dev)</td>
-          <td>버그 리포트 화면</td>
-          <td>📝 TBD</td>
-          <td>개발 빌드 한정 · 운영 빌드 미노출</td>
+          <td><code>BugReportAction</code> (dev-only component)</td>
+          <td>—</td>
+          <td>개발 빌드 한정 action · production route 없음 · 별도 MDS 화면 spec 의도 없음</td>
         </tr>
         <tr>
           <td>운영 현황 — "등록된 파티"</td>
@@ -3409,15 +3436,15 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td>운영 현황 — "모집 중인 이벤트"</td>
-          <td>이벤트 리스트</td>
-          <td>📝 TBD</td>
-          <td>모집/임박/진행 중 활성 이벤트 모두</td>
+          <td>Partner active event list surface</td>
+          <td>📝 #3040</td>
+          <td>모집/임박/진행 중 활성 이벤트 모두 · app_user <code>PartnerEventsPage</code>로 연결하지 않음</td>
         </tr>
         <tr>
           <td>운영 현황 — "참가예정 고객"</td>
-          <td>신청관리 탭</td>
-          <td>📝 TBD</td>
-          <td>하단 nav 신청관리와 동일 surface</td>
+          <td><a href="/specs/event_application_manage_page/index.html"><code>EventApplicationManagePage</code></a></td>
+          <td>✅</td>
+          <td>하단 nav 신청관리와 동일 <code>ApplicationListRoute</code> · canonical cross-event 신청관리 hub (#3000)</td>
         </tr>
         <tr>
           <td>Welcome 카드 "도움말 보기"</td>
@@ -3469,9 +3496,9 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td>Todo "계좌 등록"</td>
-          <td>계좌 등록 화면</td>
-          <td>📝 TBD</td>
-          <td>은행 / 계좌번호 / 인증 흐름</td>
+          <td><a href="/specs/bank_account_page/index.html"><code>BankAccountPage</code></a></td>
+          <td>✅</td>
+          <td>PartnerHome onboarding owner · 은행 선택 / 계좌번호 / 검증 실패 / 수동 검증 pending state</td>
         </tr>
         <tr>
           <td>Todo "첫 파티 만들기"</td>
@@ -3481,9 +3508,9 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td>Todo "첫 이벤트 만들기"</td>
-          <td>이벤트 생성 위저드</td>
-          <td>📝 TBD</td>
-          <td>날짜 / 시간 / 정원 / 가격 / 장소</td>
+          <td><a href="/specs/event_create_page/index.html"><code>EventCreatePage</code></a></td>
+          <td>✅</td>
+          <td>날짜 / 시간 / 정원 / 가격 / 장소 / 티켓 / 검토. 파티 1개 auto-select, 2개 이상 party selector, 작성 중 이벤트 resume contract 포함 (#3002)</td>
         </tr>
         <tr>
           <td>지금 할 일 — 작성 중 파티 카드</td>
@@ -3492,10 +3519,16 @@ body.dark-mode .viewport {
           <td>저장 시점에서 이어서 작성</td>
         </tr>
         <tr>
+          <td>지금 할 일 — 작성 중 이벤트 카드</td>
+          <td><a href="/specs/event_create_page/index.html"><code>EventCreatePage</code></a> (resume)</td>
+          <td>✅</td>
+          <td>저장된 partyId/draft payload로 이어 작성. 게시 완료 시 첫 이벤트 todo 소멸 (#3002)</td>
+        </tr>
+        <tr>
           <td>하단 nav — 신청관리</td>
-          <td>신청관리 탭</td>
-          <td>📝 TBD</td>
-          <td>모든 이벤트의 신청 통합 리스트</td>
+          <td><a href="/specs/event_application_manage_page/index.html"><code>EventApplicationManagePage</code></a></td>
+          <td>✅</td>
+          <td>모든 이벤트의 신청 통합 리스트 · 단일 이벤트 참가 현황은 <code>EventApplicationListPage</code> owner (#3000)</td>
         </tr>
         <tr>
           <td>하단 nav — 체크인</td>
@@ -3505,9 +3538,9 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td>하단 nav — 정산</td>
-          <td><a href="/specs/settlement_detail_page/index.html"><code>SettlementDetailPage</code></a> (탭 내 항목)</td>
-          <td>📝 TBD</td>
-          <td>SETTLEMENT_VIEW 권한 보유 시만 노출</td>
+          <td><a href="/specs/settlement_page/index.html"><code>SettlementPage</code></a></td>
+          <td>✅</td>
+          <td><code>SettlementRoute</code> top-level tab · <code>SettlementDetailPage</code>는 월별 tile child · SETTLEMENT_VIEW 권한 보유 시만 노출</td>
         </tr>
         <tr>
           <td>하단 nav — 더보기 → 마이페이지 → 도움말</td>
@@ -3543,6 +3576,18 @@ body.dark-mode .viewport {
           <td>Onboarding 상태에서 "첫 파티 만들기" CTA의 도착지.</td>
         </tr>
         <tr>
+          <td><a href="/specs/event_create_page/index.html"><code>EventCreatePage</code></a></td>
+          <td>Onboarding 상태에서 "첫 이벤트 만들기" CTA의 canonical destination. Home은 party selection만 담당하고, 작성/검토/게시/resume 계약은 <code>EventCreatePage</code>가 담당.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/bank_account_page/index.html"><code>BankAccountPage</code></a></td>
+          <td>Todo "계좌 등록"의 canonical 도착지. 계좌 verified/manual approved면 todo가 사라지고 failed/manual review pending이면 유지된다.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_application_manage_page/index.html"><code>EventApplicationManagePage</code></a></td>
+          <td>오버뷰 "참가예정 고객" stat 및 하단 nav 신청관리의 공통 도착지. 여러 이벤트를 묶어 보여주는 cross-event hub.</td>
+        </tr>
+        <tr>
           <td><a href="/specs/event_application_list_page/index.html"><code>EventApplicationListPage</code></a></td>
           <td>처리 필요 카드 탭 시 도착지 (해당 이벤트의 신청 검토 화면).</td>
         </tr>
@@ -3551,8 +3596,16 @@ body.dark-mode .viewport {
           <td>모집 중 / 진행 임박 / 진행 중 / 종료 직후 카드 영역 탭 시 도착지. 같은 partner-side detail이 phase별 운영 모드로 변한다.</td>
         </tr>
         <tr>
-          <td><a href="/specs/settlement_detail_page/index.html"><code>SettlementDetailPage</code></a></td>
-          <td>하단 정산 탭 진입 후 항목 탭으로 진입하는 detail (SETTLEMENT_VIEW 권한 보유 시).</td>
+          <td><a href="/specs/settlement_page/index.html"><code>SettlementPage</code></a></td>
+          <td>하단 nav 정산의 top-level 도착지. 월별 tile 탭 후 <a href="/specs/settlement_detail_page/index.html"><code>SettlementDetailPage</code></a>로 진입.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/notification_list_screen/index.html"><code>NotificationListScreen</code></a></td>
+          <td>AppBar 알림 아이콘의 shared 도착지. partner notification center 강화는 #3003에서 추적.</td>
+        </tr>
+        <tr>
+          <td>Partner active event list surface</td>
+          <td>오버뷰 "모집 중인 이벤트" stat의 미작성 partner-side 도착지. user-side <a href="/specs/partner_events_page/index.html"><code>PartnerEventsPage</code></a>와 분리해서 #3040에서 추적.</td>
         </tr>
         <tr>
           <td><a href="/foundations/layout">Layout foundations</a></td>

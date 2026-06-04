@@ -25,29 +25,57 @@ function rpcFeedResponse(events: unknown[] = [], hasMore = false) {
   return {
     events,
     has_more: hasMore,
-    next_cursor: hasMore ? { sort_key: "2026-03-30T00:00:00Z", id: "evt-1" } : null,
+    next_cursor: hasMore
+      ? { sort_key: "2026-03-30T00:00:00Z", id: "evt-1" }
+      : null,
   };
 }
 
 // Fix #1748: rate limit count HEAD response — PostgREST Content-Range format
 function rateLimitCountResponse(count: number): Response {
   const contentRange = count === 0 ? "*/0" : `0-${count - 1}/${count}`;
-  return new Response(null, { status: 200, headers: { "Content-Range": contentRange } });
+  return new Response(null, {
+    status: 200,
+    headers: { "Content-Range": contentRange },
+  });
 }
 
-function createFeedFetchMock(rpcResult: unknown, authUser?: { id: string } | null) {
+function guardrailRoutes(rateAllowed = true) {
+  return [{
+    matcher: (req: Request) =>
+      req.url.includes("/rest/v1/rpc/consume_edge_rate_limit") &&
+      req.method === "POST",
+    handler: () =>
+      jsonResponse([
+        {
+          allowed: rateAllowed,
+          remaining: rateAllowed ? 119 : 0,
+          retry_after_seconds: rateAllowed ? 0 : 30,
+        },
+      ]),
+  }];
+}
+
+function createFeedFetchMock(
+  rpcResult: unknown,
+  authUser?: { id: string } | null,
+) {
   return createFetchMock([
+    ...guardrailRoutes(),
     // Auth endpoint — for optionalAuth
-    ...(authUser !== undefined ? [{
-      matcher: (req: Request) => req.url.includes("/auth/v1/user"),
-      handler: () =>
-        authUser
-          ? jsonResponse(authUser)
-          : jsonResponse({ error: "invalid" }, { status: 401 }),
-    }] : []),
+    ...(authUser !== undefined
+      ? [{
+        matcher: (req: Request) => req.url.includes("/auth/v1/user"),
+        handler: () =>
+          authUser
+            ? jsonResponse(authUser)
+            : jsonResponse({ error: "invalid" }, { status: 401 }),
+      }]
+      : []),
     // RPC endpoint
     {
-      matcher: (req: Request) => req.url.includes("/rest/v1/rpc/user_event_feed"),
+      matcher: (req: Request) =>
+        req.url.includes("/rest/v1/rpc/user_event_feed"),
       handler: () => jsonResponse(rpcResult),
     },
   ]);
@@ -58,7 +86,9 @@ function createFeedFetchMock(rpcResult: unknown, authUser?: { id: string } | nul
 Deno.test({
   name: "user-event-feed - valid request with recommended sort returns 200",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
 
     const mockEvents = [
       { id: "evt-1", title: "Party A", start_time: "2026-04-01T18:00:00Z" },
@@ -92,7 +122,9 @@ Deno.test({
 Deno.test({
   name: "user-event-feed - anonymous request returns 200 with basic feed",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
 
     const mockEvents = [
       { id: "evt-1", title: "Public Party" },
@@ -106,7 +138,11 @@ Deno.test({
       await withMockedFetch(fetchMock, async () => {
         // No Authorization header
         const response = await handler(
-          jsonRequest(BASE_URL, { sort_by: "recommended" }),
+          jsonRequest(
+            BASE_URL,
+            { sort_by: "recommended" },
+            { headers: { "x-forwarded-for": "203.0.113.10, 198.51.100.20" } },
+          ),
         );
         assertEquals(response.status, 200);
 
@@ -121,9 +157,11 @@ Deno.test({
 Deno.test({
   name: "user-event-feed - invalid sort_by returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
 
-    const { fetchMock } = createFetchMock([]);
+    const { fetchMock } = createFetchMock(guardrailRoutes());
 
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
@@ -142,9 +180,11 @@ Deno.test({
 Deno.test({
   name: "user-event-feed - invalid cursor returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
 
-    const { fetchMock } = createFetchMock([]);
+    const { fetchMock } = createFetchMock(guardrailRoutes());
 
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
@@ -166,7 +206,9 @@ Deno.test({
 Deno.test({
   name: "user-event-feed - pagination with cursor returns next page",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
 
     const mockEvents = [
       { id: "evt-3", title: "Party C" },
@@ -192,7 +234,9 @@ Deno.test({
         assertEquals(body.has_more, false);
 
         // Verify RPC was called with cursor params
-        const rpcCall = calls.find((c) => c.url.includes("/rest/v1/rpc/user_event_feed"));
+        const rpcCall = calls.find((c) =>
+          c.url.includes("/rest/v1/rpc/user_event_feed")
+        );
         const rpcBody = JSON.parse(rpcCall!.body!);
         assertEquals(rpcBody.p_cursor_sort_key, "2026-03-30T00:00:00Z");
         assertEquals(rpcBody.p_cursor_id, "evt-2");
@@ -204,9 +248,12 @@ Deno.test({
 Deno.test({
   name: "user-event-feed - nearby search inserts location_access_log row",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
 
     const { fetchMock, calls } = createFetchMock([
+      ...guardrailRoutes(),
       {
         matcher: (req: Request) => req.url.includes("/auth/v1/user"),
         handler: () => jsonResponse({ id: "user-123" }),
@@ -214,17 +261,20 @@ Deno.test({
       // Fix #1748: HEAD = rate limit count check (0 entries → under limit)
       {
         matcher: (req: Request) =>
-          req.url.includes("/rest/v1/location_access_log") && req.method === "HEAD",
+          req.url.includes("/rest/v1/location_access_log") &&
+          req.method === "HEAD",
         handler: () => rateLimitCountResponse(0),
       },
       // POST = actual INSERT of access log row
       {
         matcher: (req: Request) =>
-          req.url.includes("/rest/v1/location_access_log") && req.method === "POST",
+          req.url.includes("/rest/v1/location_access_log") &&
+          req.method === "POST",
         handler: () => jsonResponse([], { status: 201 }),
       },
       {
-        matcher: (req: Request) => req.url.includes("/rest/v1/rpc/user_event_feed"),
+        matcher: (req: Request) =>
+          req.url.includes("/rest/v1/rpc/user_event_feed"),
         handler: () => jsonResponse(rpcFeedResponse([])),
       },
     ]);
@@ -243,7 +293,11 @@ Deno.test({
         const logCall = calls.find((c) =>
           c.url.includes("/rest/v1/location_access_log") && c.method === "POST"
         );
-        assertEquals(logCall !== undefined, true, "location_access_log INSERT was called");
+        assertEquals(
+          logCall !== undefined,
+          true,
+          "location_access_log INSERT was called",
+        );
 
         const body = JSON.parse(logCall!.body!);
         assertEquals(body.purpose, "nearby_search");
@@ -255,13 +309,18 @@ Deno.test({
 });
 
 Deno.test({
-  name: "user-event-feed - non-nearby request does not insert location_access_log",
+  name:
+    "user-event-feed - non-nearby request does not insert location_access_log",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
 
     const { fetchMock, calls } = createFetchMock([
+      ...guardrailRoutes(),
       {
-        matcher: (req: Request) => req.url.includes("/rest/v1/rpc/user_event_feed"),
+        matcher: (req: Request) =>
+          req.url.includes("/rest/v1/rpc/user_event_feed"),
         handler: () => jsonResponse(rpcFeedResponse([])),
       },
     ]);
@@ -273,8 +332,14 @@ Deno.test({
         );
         assertEquals(response.status, 200);
 
-        const logCall = calls.find((c) => c.url.includes("/rest/v1/location_access_log"));
-        assertEquals(logCall, undefined, "no location_access_log INSERT for non-nearby request");
+        const logCall = calls.find((c) =>
+          c.url.includes("/rest/v1/location_access_log")
+        );
+        assertEquals(
+          logCall,
+          undefined,
+          "no location_access_log INSERT for non-nearby request",
+        );
       });
     });
   },
@@ -283,9 +348,12 @@ Deno.test({
 Deno.test({
   name: "user-event-feed - location_access_log INSERT failure returns 500",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
 
     const { fetchMock } = createFetchMock([
+      ...guardrailRoutes(),
       {
         matcher: (req: Request) => req.url.includes("/auth/v1/user"),
         handler: () => jsonResponse({ id: "user-123" }),
@@ -293,13 +361,15 @@ Deno.test({
       // Fix #1748: HEAD rate limit check fails → fails-open (warn + proceed)
       {
         matcher: (req: Request) =>
-          req.url.includes("/rest/v1/location_access_log") && req.method === "HEAD",
+          req.url.includes("/rest/v1/location_access_log") &&
+          req.method === "HEAD",
         handler: () => new Response(null, { status: 500 }),
       },
       // POST INSERT fails → 500 returned to caller (§16 legal obligation)
       {
         matcher: (req: Request) =>
-          req.url.includes("/rest/v1/location_access_log") && req.method === "POST",
+          req.url.includes("/rest/v1/location_access_log") &&
+          req.method === "POST",
         handler: () => jsonResponse({ message: "DB error" }, { status: 500 }),
       },
     ]);
@@ -312,7 +382,11 @@ Deno.test({
             filters: { nearby: { lat: 37.5, lng: 127.0, radius_km: 5 } },
           }),
         );
-        assertEquals(response.status, 500, "location_access_log INSERT failure returns 500");
+        assertEquals(
+          response.status,
+          500,
+          "location_access_log INSERT failure returns 500",
+        );
       });
     });
   },
@@ -323,12 +397,16 @@ Deno.test({
 Deno.test({
   name: "user-event-feed - anonymous nearby request returns 401",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
 
     const { fetchMock } = createFetchMock([
+      ...guardrailRoutes(),
       {
         matcher: (req: Request) => req.url.includes("/auth/v1/user"),
-        handler: () => jsonResponse({ error: "not authenticated" }, { status: 401 }),
+        handler: () =>
+          jsonResponse({ error: "not authenticated" }, { status: 401 }),
       },
     ]);
 
@@ -341,7 +419,11 @@ Deno.test({
             filters: { nearby: { lat: 37.5, lng: 127.0, radius_km: 5 } },
           }),
         );
-        assertEquals(response.status, 401, "unauthenticated nearby returns 401");
+        assertEquals(
+          response.status,
+          401,
+          "unauthenticated nearby returns 401",
+        );
       });
     });
   },
@@ -350,9 +432,12 @@ Deno.test({
 Deno.test({
   name: "user-event-feed - nearby with invalid shape returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
 
     const { fetchMock } = createFetchMock([
+      ...guardrailRoutes(),
       {
         matcher: (req: Request) => req.url.includes("/auth/v1/user"),
         handler: () => jsonResponse({ id: "user-123" }),
@@ -379,9 +464,12 @@ Deno.test({
 Deno.test({
   name: "user-event-feed - nearby with radius_km > 50 returns 400",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
 
     const { fetchMock } = createFetchMock([
+      ...guardrailRoutes(),
       {
         matcher: (req: Request) => req.url.includes("/auth/v1/user"),
         handler: () => jsonResponse({ id: "user-123" }),
@@ -407,9 +495,12 @@ Deno.test({
 Deno.test({
   name: "user-event-feed - rate limit exceeded returns 429",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
 
     const { fetchMock } = createFetchMock([
+      ...guardrailRoutes(),
       {
         matcher: (req: Request) => req.url.includes("/auth/v1/user"),
         handler: () => jsonResponse({ id: "user-123" }),
@@ -417,7 +508,8 @@ Deno.test({
       // Fix #1748: HEAD returns count=30 (at limit) → 429
       {
         matcher: (req: Request) =>
-          req.url.includes("/rest/v1/location_access_log") && req.method === "HEAD",
+          req.url.includes("/rest/v1/location_access_log") &&
+          req.method === "HEAD",
         handler: () => rateLimitCountResponse(30),
       },
     ]);
@@ -441,10 +533,14 @@ Deno.test({
 Deno.test({
   name: "user-event-feed - OPTIONS returns CORS response",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
 
     await withEnv(ENV, async () => {
-      const response = await handler(new Request(BASE_URL, { method: "OPTIONS" }));
+      const response = await handler(
+        new Request(BASE_URL, { method: "OPTIONS" }),
+      );
       assertEquals(response.status, 200);
     });
   },
@@ -453,7 +549,9 @@ Deno.test({
 Deno.test({
   name: "user-event-feed - GET method returns 405",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
 
     await withEnv(ENV, async () => {
       const response = await handler(new Request(BASE_URL, { method: "GET" }));

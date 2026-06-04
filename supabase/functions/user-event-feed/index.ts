@@ -1,11 +1,11 @@
 // user-event-feed/index.ts — Server-side event feed with sorting, filtering & cursor pagination (#614)
 // Fix #2185 (Batch 5): migrate to minglitEdgeFunction wrapper — auth via manifest (user + public callers)
 
+import { errorResponse, successResponse } from "../_shared/response_utils.ts";
 import {
-  errorResponse,
-  successResponse,
-} from "../_shared/response_utils.ts";
-import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
+  type EFContext,
+  minglitEdgeFunction,
+} from "../_shared/edge_function.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
 import { log } from "../_shared/logger.ts";
 
@@ -17,8 +17,13 @@ type SortBy = typeof VALID_SORT_BY[number];
 // Fix #1748: nearby 분당 최대 요청 수
 const NEARBY_RATE_LIMIT_PER_MINUTE = 30;
 
-export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
-  const userId: string | null = ctx.auth.type === "user" ? ctx.auth.userId : null;
+export const handler = async (
+  req: Request,
+  ctx: EFContext,
+): Promise<Response> => {
+  const userId: string | null = ctx.auth.type === "user"
+    ? ctx.auth.userId
+    : null;
   const { supabase } = ctx;
 
   if (req.method !== "POST") {
@@ -215,4 +220,4 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
   });
 };
 
-minglitEdgeFunction(handler);
+minglitEdgeFunction(handler, { schema: { methods: ["POST"] } });

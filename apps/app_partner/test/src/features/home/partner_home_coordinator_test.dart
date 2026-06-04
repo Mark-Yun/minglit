@@ -79,15 +79,27 @@ void main() {
       verifyNever(() => mockRouter.push(any()));
     });
 
+    test('pushBankAccount pushes bank account route', () {
+      final container = createContainer(
+        overrides: [goRouterProvider.overrideWithValue(mockRouter)],
+      );
+
+      container.read(partnerHomeCoordinatorProvider).pushBankAccount();
+
+      verify(
+        () => mockRouter.push(
+          any(that: equals('/settlement/bank-account')),
+        ),
+      ).called(1);
+    });
+
     test(
       'pushNotificationCenter and pushApplicationList push different routes',
       () {
         final container = createContainer(
           overrides: [goRouterProvider.overrideWithValue(mockRouter)],
         );
-        final coordinator = container.read(partnerHomeCoordinatorProvider);
-
-        coordinator
+        container.read(partnerHomeCoordinatorProvider)
           ..pushNotificationCenter()
           ..pushApplicationList();
 

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="features" content="admin/admin-dashboard">
+<title>Spec — AdminConsoleDashboard (web_admin · /admin)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* Top-level web_admin shell/entry spec. Feature screens are deferred and render
+   inside this shell outlet only after each menu receives its own spec. */
+:root {
+  --spec-viewport-w: 720px;
+  --spec-viewport-h: 420px;
+  --spec-blueprint-rgb: 34, 148, 122;
+}
+.page { max-width: 1120px; }
+.viewport {
+  background: #f5f7fa;
+  color: #202736;
+  border-radius: 0;
+}
+.acs-login {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #f5f7fa;
+}
+.acs-login__panel {
+  width: 340px;
+  background: #fff;
+  border: 1px solid #dce3ed;
+  border-radius: 8px;
+  padding: 26px;
+  box-shadow: 0 18px 36px rgba(23,32,51,.12);
+}
+.acs-brand { font-size: 14px; font-weight: 800; margin-bottom: 18px; }
+.acs-title { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+.acs-copy { font-size: 12px; line-height: 1.55; color: #657084; margin-bottom: 18px; }
+.acs-google {
+  height: 42px;
+  border-radius: 6px;
+  border: 1px solid #dce3ed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 800;
+}
+.acs-shell {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 176px 1fr;
+  background: #f5f7fa;
+}
+.acs-sidebar {
+  background: #172033;
+  color: #fff;
+  padding: 18px 14px;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 18px;
+}
+.acs-menu { display: grid; align-content: start; gap: 6px; }
+.acs-menu__item {
+  height: 34px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255,255,255,.62);
+}
+.acs-menu__item--active {
+  background: rgba(34,148,122,.24);
+  color: #fff;
+}
+.acs-main {
+  display: grid;
+  grid-template-rows: 52px 1fr;
+  min-width: 0;
+}
+.acs-topbar {
+  background: #fff;
+  border-bottom: 1px solid #dce3ed;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  font-size: 12px;
+  color: #657084;
+}
+.acs-outlet {
+  margin: 18px;
+  border: 1px dashed #b8c3d3;
+  border-radius: 8px;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  color: #657084;
+  font-size: 13px;
+  text-align: center;
+  padding: 24px;
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+  <header>
+    <h1>Admin Console Dashboard</h1>
+  </header>
+
+  <section class="doc">
+    <h2>Overview</h2>
+    <table class="ref">
+      <tbody>
+        <tr><th style="width: 140px;">Status</th><td><strong>🚧 정의중</strong> — web_admin entry/shell screen</td></tr>
+        <tr><th>App</th><td><code>web_admin</code></td></tr>
+        <tr><th>Category</th><td>admin · auth · shell</td></tr>
+        <tr><th>Route / Surface</th><td><code>/admin</code> · admin entry route</td></tr>
+        <tr><th>Path</th><td><code>apps/admin_web/</code> planned · implementation root TBD</td></tr>
+        <tr>
+          <th>Hierarchy</th>
+          <td>
+            <strong>Parent</strong>: <em>— (top-level web_admin entry)</em><br>
+            <strong>Children</strong>: future menu screens only. Users, Partners, Payments, System, and operation dashboard specs are deferred.
+          </td>
+        </tr>
+        <tr>
+          <th>Purpose</th>
+          <td>
+            Supabase Google OAuth 로그인, 서버 admin 권한 확인, extensible admin shell 을 소유한다.
+            기능 화면은 별도 screen/spec 가 생긴 뒤 이 shell 의 outlet 에 연결한다.
+          </td>
+        </tr>
+        <tr>
+          <th>User journey</th>
+          <td>
+            <strong>Entry points</strong>: <code>/admin</code> 직접 접근 · 기능 deep-link 진입 전 공통 guard.<br>
+            <strong>Exit points</strong>: 권한 통과 후 admin shell/no-menu state · 비관리자 403 · sign out.
+          </td>
+        </tr>
+        <tr><th>Frequency</th><td>모든 web_admin session 의 첫 진입점. 기능 메뉴보다 더 자주 실행되는 공통 gate.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>History</h2>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 110px;">Date</th><th style="width: 80px;">Version</th><th style="width: 120px;">Author</th><th>Changes</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>2026-06-04</td>
+          <td>1.3</td>
+          <td>Codex</td>
+          <td>기능 board 를 후속 범위로 이동. 현재 spec 은 login, admin guard, shell/no-menu 상태만 유지.</td>
+        </tr>
+        <tr>
+          <td>2026-06-04</td>
+          <td>1.2</td>
+          <td>Codex</td>
+          <td><code>/admin</code> entry/shell 로 재정의. 로그인과 admin guard 를 이 spec 에 포함.</td>
+        </tr>
+        <tr>
+          <td>2026-06-04</td>
+          <td>1.1</td>
+          <td>Codex</td>
+          <td>상세 dashboard mockup 을 제거하고 screen-definition level 로 축소.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <nav class="perspective-nav">
+    <a href="#definition"><span class="glyph">🧭</span> Definition</a>
+    <a href="#states"><span class="glyph">🎨</span> States</a>
+    <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+    <a href="#reference"><span class="glyph">📖</span> Reference</a>
+  </nav>
+
+  <div class="perspective" id="definition">
+    <div class="perspective__header">
+      <span class="glyph">🧭</span>
+      <h2>Definition</h2>
+      <span class="lede">Entry, auth, and shell contract. Feature screens are children.</span>
+    </div>
+    <section class="doc">
+      <h2>Screen contract</h2>
+      <table class="ref">
+        <thead><tr><th style="width: 220px;">Field</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Surface</td><td><code>web_admin</code></td></tr>
+          <tr><td>Screen</td><td><code>AdminConsoleDashboard</code></td></tr>
+          <tr><td>Route</td><td><code>/admin</code></td></tr>
+          <tr><td>Feature</td><td><code>admin/admin-dashboard</code></td></tr>
+          <tr><td>P0 scope</td><td>Google login, session callback handling, server admin check, 403/session-expired/no-menu state, menu registry, shell outlet.</td></tr>
+          <tr><td>Out of this file</td><td>Feature menu screens. Users, Partners, Payments, System, and operation dashboards are deferred until each menu has a separate spec.</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <div class="perspective" id="states">
+    <div class="perspective__header">
+      <span class="glyph">🎨</span>
+      <h2>States</h2>
+      <span class="lede">Only shell-level states. Child menu states are separate specs.</span>
+    </div>
+    <section class="doc">
+      <h2>State summary</h2>
+      <table class="ref">
+        <thead><tr><th style="width: 220px;">State</th><th>Condition</th><th>Next surface</th></tr></thead>
+        <tbody>
+          <tr><td>Login</td><td>No Supabase session</td><td>Google OAuth callback then admin check</td></tr>
+          <tr><td>Checking admin</td><td>Session exists, admin membership/capability loading</td><td>Shell or 403</td></tr>
+          <tr><td>403</td><td>Session exists, no admin capability</td><td>Sign out / other account</td></tr>
+          <tr><td>Shell ready</td><td>Admin capability exists</td><td>First available menu or no-menu empty state</td></tr>
+          <tr><td>Session expired</td><td>Auth error while using shell/child screen</td><td>Hide admin data, return to Login</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <div class="perspective" id="layout">
+    <div class="perspective__header">
+      <span class="glyph">🧱</span>
+      <h2>Layout</h2>
+      <span class="lede">Login panel and shell frame only.</span>
+    </div>
+    <section class="doc">
+      <h2>Login reference</h2>
+      <div class="viewport">
+        <div class="acs-login">
+          <div class="acs-login__panel">
+            <div class="acs-brand">Minglit Admin</div>
+            <div class="acs-title">관리자 로그인</div>
+            <div class="acs-copy">Google 계정으로 로그인한 뒤 서버에서 관리자 권한을 확인합니다.</div>
+            <div class="acs-google">G · Google로 로그인</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="doc">
+      <h2>Shell frame</h2>
+      <div class="layout-grid">
+        <div class="blueprint">
+          <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;bottom:0;width:176px;">
+            <span class="blueprint__region-label">① Sidebar · menu registry</span>
+          </div>
+          <div class="blueprint__region blueprint__region--shaded" style="top:0;left:176px;right:0;height:52px;">
+            <span class="blueprint__region-label">② Topbar · account/refresh slots</span>
+          </div>
+          <div class="blueprint__region blueprint__region--shaded" style="top:70px;left:194px;right:18px;bottom:18px;">
+            <span class="blueprint__region-label">③ Child screen outlet</span>
+          </div>
+        </div>
+        <div class="layout-tree"><b>AdminConsoleDashboard</b>
+├─ AuthGuard(Supabase session)
+├─ AdminCapabilityGuard(server verified)
+├─ Login / Checking / 403 states
+└─ AdminShell
+   ├─ Sidebar(menu registry)
+   ├─ Topbar(account + global filters)
+   └─ Outlet
+      └─ active menu screen or no-menu empty state</div>
+      </div>
+    </section>
+
+    <section class="doc">
+      <h2>Shell reference</h2>
+      <div class="viewport">
+        <div class="acs-shell">
+          <aside class="acs-sidebar">
+            <div class="acs-brand">Minglit Admin</div>
+            <div class="acs-menu">
+              <div class="acs-menu__item acs-menu__item--active">Console shell</div>
+              <div class="acs-menu__item">Users · later</div>
+              <div class="acs-menu__item">Partners · later</div>
+            </div>
+            <div class="acs-menu__item">admin shell</div>
+          </aside>
+          <main class="acs-main">
+            <div class="acs-topbar"><span>Admin</span><span>Google admin · sign out</span></div>
+            <div class="acs-outlet">Menu screen outlet<br>No active child screen yet.</div>
+          </main>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="perspective" id="reference">
+    <div class="perspective__header">
+      <span class="glyph">📖</span>
+      <h2>Reference</h2>
+      <span class="lede">Registry and feature docs.</span>
+    </div>
+    <section class="doc">
+      <h2>Sources</h2>
+      <table class="ref">
+        <tbody>
+          <tr><th style="width: 200px;">Screen registry</th><td><code>apps/mds/docs/src/lib/screen-definitions.ts</code></td></tr>
+          <tr><th>Deferred child screens</th><td>Users, Partners, Payments, System, operation dashboards — separate specs TBD.</td></tr>
+          <tr><th>Feature PRD</th><td><code>docs/features/admin/admin-dashboard/prd.md</code></td></tr>
+          <tr><th>Feature spec</th><td><code>docs/features/admin/admin-dashboard/spec.md</code></td></tr>
+          <tr><th>Planned app</th><td><code>apps/admin_web/</code></td></tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+</div>
+
+<script>
+const specToggle = document.getElementById('spec-toggle');
+const darkToggle = document.getElementById('dark-toggle');
+specToggle.addEventListener('change', () => document.body.classList.toggle('spec-mode', specToggle.checked));
+darkToggle.addEventListener('change', () => document.body.classList.toggle('dark-mode', darkToggle.checked));
+</script>
+</body>
+</html>

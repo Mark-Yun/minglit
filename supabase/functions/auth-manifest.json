@@ -184,6 +184,18 @@
     "apply-event": {
       "callers": ["user"],
       "envs": ["dev", "production"],
+      "rate_limit": {
+        "scope": "user",
+        "bucket": "apply-event-submit",
+        "capacity": 5,
+        "refill_per_second": 0.0833333333
+      },
+      "idempotency": {
+        "scope": "apply-event-submit",
+        "required": true,
+        "ttl_seconds": 86400,
+        "in_progress_ttl_seconds": 60
+      },
       "description": "유저 이벤트 신청 (무료/유료 분기, verification_data 처리)"
     },
     "user-create-order": {
@@ -199,6 +211,12 @@
     "user-event-feed": {
       "callers": ["user", "public"],
       "envs": ["dev", "production"],
+      "rate_limit": {
+        "scope": "auth_or_ip",
+        "bucket": "event-feed",
+        "capacity": 120,
+        "refill_per_second": 2
+      },
       "description": "이벤트 피드 조회 (정렬/필터/커서 페이지네이션, nearby는 user 필수)"
     },
     "user-delete-account": {
@@ -227,9 +245,9 @@
       "description": "반복 이벤트 규칙 생성/수정/일시정지/재개/취소"
     },
     "payment-cancel": {
-      "callers": ["user"],
+      "callers": ["user", "system"],
       "envs": ["dev", "production"],
-      "description": "결제 취소 및 환불 처리"
+      "description": "결제 취소 및 환불 처리 (user 직접 요청 + DB rejection trigger)"
     },
     "identity-verify": {
       "callers": ["user"],
@@ -266,6 +284,11 @@
       "envs": ["dev", "production"],
       "description": "PGMQ q_tags LLM 태그 추출 워커 (Fix #1489: system caller 전용)"
     },
+    "storage-upload": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "Storage signed upload presign/complete/abort — quota, byte-rate, concurrency, reconcile"
+    },
     "event-flow-simulator": {
       "callers": ["system", "public"],
       "envs": ["local", "development", "dev"],
@@ -274,6 +297,12 @@
     "health": {
       "callers": ["system", "public"],
       "envs": ["dev", "production"],
+      "rate_limit": {
+        "scope": "ip",
+        "bucket": "health-public",
+        "capacity": 60,
+        "refill_per_second": 1
+      },
       "description": "인프라 헬스 체크 (DB/Auth/Storage). ?env=true 는 system caller 전용"
     }
   }

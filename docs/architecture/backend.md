@@ -104,6 +104,8 @@ Minglit의 Supabase 기반 백엔드 인프라를 기술한다.
 | `location_access_log` | 위치정보 이용 확인자료 (위치정보법 §16, 6개월 보관) | user_id, accessed_at, purpose (nearby_search), country_code |
 | `ef_auth_manifest` | pg_cron 대상 EF 인증 레벨 선언 (Fix #1760, cron-targeted EF 전용) | ef_name (PK), required_auth (service_role), description |
 | `webhook_imp_uid_log` | PortOne V1 결제 웹훅 idempotency 로그 (Fix #1949, 재처리 방지) | imp_uid (PK), merchant_uid, processed_at |
+| `edge_rate_limit_buckets` | Edge Function token-bucket count rate limit 상태 (#2992) | key (PK), tokens, capacity, refill_per_second, last_refill_at |
+| `edge_idempotency_keys` | Edge Function `Idempotency-Key` response replay/cache (#2992) | scope + requester_key + idempotency_key (PK), request_hash, status, response_body, expires_at |
 
 #### Tags & Discovery (태그/디스커버리)
 
@@ -382,15 +384,26 @@ protect_user_profile_fields() → trigger
 | event_applications | 4 | Self (read, create, update) + Partner staff read |
 | verification_submissions | 4 | Self + Partner staff (read, update) |
 | settlements | 1 | Admin + SETTLEMENT_VIEW |
-| storage.objects | 9 | Bucket-specific (verification-proofs, party-assets, partner-proofs) |
+| storage.objects | 6+ | Covered bucket read policies + public known-object serving; writes via signed upload EF |
 
 ### 5.3 Storage Buckets
 
-| Bucket | Public | Upload Policy | View Policy |
-|--------|--------|---------------|-------------|
-| `verification-proofs` | No | 본인 폴더만 | 본인 + 파일 접근 권한 + 파트너/관리자 |
-| `party-assets` | Yes | Authenticated | 전체 공개 |
-| `partner-proofs` | No | 본인 폴더만 | 본인 + 관리자 |
+| Bucket | Public | Upload Policy | View Policy | Hard Limit |
+|--------|--------|---------------|-------------|------------|
+| `verification-proofs` | No | `storage-upload` EF signed upload; user-id path prefix | 본인 + 파일 접근 권한 + 파트너/관리자 | 10MiB, image/PDF allowlist |
+| `party-assets` | Yes | `storage-upload` EF publishes only after private staging reconcile; partner-id path prefix + `PARTY_MANAGE` | 알려진 public object URL | 50MiB, image allowlist |
+| `party-assets-pending` | No | `storage-upload` EF signed upload staging only | service_role only | 50MiB, image allowlist |
+| `partner-proofs` | No | `storage-upload` EF signed upload; user-id path prefix | 본인 + 관리자 | 10MiB, image/PDF allowlist |
+
+Covered product uploads use the `storage-upload` Edge Function:
+
+1. Client sends `{bucket, path_prefix, declared_size, mime, extension}` to `action=presign`.
+2. EF calls `reserve_storage_upload()` to enforce bucket policy, path scope, byte-rate, total quota, and active upload concurrency.
+3. EF returns Supabase `createSignedUploadUrl()` token; client uploads via `uploadBinaryToSignedUrl()`.
+4. Client calls `action=complete`; `complete_storage_upload()` reconciles declared vs actual metadata.
+5. Public buckets (`party-assets`) are uploaded to private staging first; EF publishes to the public bucket only after reconcile passes.
+
+Direct authenticated `storage.objects INSERT` policies are removed for the three covered buckets. `bug-report-attachments` is intentionally separate QA/reporting infrastructure with its own 5MiB policy and retention lifecycle. TUS/resumable upload support is deferred; current covered flows are small image/document uploads under bucket hard limits.
 
 ### 5.4 Flutter Write Enforcement
 
@@ -402,8 +415,9 @@ Flutter 앱(publishable key = anon/authenticated role)은 **READ 전용**이다.
 | 계층 | 수단 | 상태 |
 |------|------|------|
 | IDE | `no_supabase_writes_outside_ef` custom_lint 룰 | ✅ 운영 중 (`shared/packages/minglit_lints/`) |
+| IDE | `no_service_role_in_client` custom_lint 룰 | ✅ 운영 중 (`shared/packages/minglit_lints/`) |
 | CI | `dart run custom_lint` PR-gate 스텝 | ✅ 운영 중 (`.github/workflows/pr-gate.yml`) |
-| DB | `REVOKE INSERT/UPDATE/DELETE/TRUNCATE FROM anon, authenticated` | 진행 중 (issue #2991 / #2393 Phase 3) |
+| DB | `REVOKE INSERT/UPDATE/DELETE/TRUNCATE FROM anon, authenticated` + write RLS policy gate + write-capable SECURITY DEFINER RPC EXECUTE gate | ✅ 구현 완료 (`20260603215321_rls_strict_revoke_publishable_writes.sql`, `107_rls_strict_publishable_write_lockdown_test.sql`) |
 
 #### lint 룰: `no_supabase_writes_outside_ef`
 
@@ -416,6 +430,20 @@ Flutter 앱(publishable key = anon/authenticated role)은 **READ 전용**이다.
   supabase.from('legacy_table').insert(data);
   ```
   `reason:` 필드 필수. 이유 없는 억제 주석은 lint error.
+
+#### lint 룰: `no_service_role_in_client`
+
+- **위치**: `shared/packages/minglit_lints/lib/src/no_service_role_in_client_rule.dart`
+- **적용 범위**: `apps/app_user/lib`, `apps/app_partner/lib`, `shared/packages/minglit_kit/lib`
+- **차단 패턴**: `service_role` literal, `sb_secret_...`, `SUPABASE_SERVICE_ROLE_KEY`,
+  `SUPABASE_SECRET_KEYS`, `SUPABASE_*_SECRET_KEY`, `serviceRoleKey`/`sbSecret`
+  계열 identifier.
+- **허용 패턴**: `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_URL`,
+  `STATSIG_CLIENT_KEY`, `KAKAO_*`, `JUSO_CONFIRM_KEY` 같은 publishable/public
+  client config.
+- **서버 전용 예외**: Edge Functions, migrations, `.github/`, `docs/`, scripts,
+  tests 는 client Dart lint 범위 밖이다. Elevated key names may be documented
+  there intentionally.
 
 ---
 
@@ -436,7 +464,7 @@ Flutter 앱(publishable key = anon/authenticated role)은 **READ 전용**이다.
 | `on_application_approval` | event_applications | UPDATE/INSERT | approved/paid → event_participants 자동 발권 |
 | `on_application_rejected` | event_applications | UPDATE | 거절 시 pg_net으로 payment-cancel Edge Function 호출 |
 | `on_event_completed` | events | UPDATE | completed 시 settlement 자동 생성 |
-| `on_storage_object_created` | storage.objects | INSERT | minglit_files 메타데이터 동기화 |
+| `on_storage_object_created` | storage.objects | INSERT | minglit_files 메타데이터 동기화; signed upload 예약에서 owner_id 보정 |
 | `on_application_created` | event_applications | INSERT | 파트너 오너에게 file_access_grants 생성 |
 | `on_event_reschedule` | events | UPDATE (end_time) | file_access_grants 만료일 갱신 |
 
@@ -444,24 +472,31 @@ Flutter 앱(publishable key = anon/authenticated role)은 **READ 전용**이다.
 
 | Function | Purpose | Auth |
 |----------|---------|------|
-| `apply_event()` | 이벤트 신청 (성비 체크 → 신청 → 인증 제출) | SECURITY DEFINER |
-| `check_party_balance()` | 성비 균형 체크 | SECURITY DEFINER |
-| `get_event_ticket_balance_status()` | 티켓별 성비 상태 조회 | SECURITY DEFINER |
-| `get_personalized_recommendations()` | pgvector 기반 추천 | SECURITY DEFINER |
-| `get_events_within_radius()` | PostGIS 반경 검색 | SECURITY DEFINER |
-| `get_bulk_eligibility_data()` | 유저 자격 일괄 조회 | SECURITY DEFINER |
-| `get_matched_user_info()` | 매칭 상대 연락처 조회 | SECURITY DEFINER |
-| `get_event_applications_with_user()` | 이벤트 신청 목록 + 유저 정보 | SECURITY DEFINER |
-| `get_partner_members_with_user()` | 파트너 멤버 목록 + 유저 정보 | SECURITY DEFINER |
-| `get_pending_verification_requests_with_user()` | 대기 인증 요청 목록 | SECURITY DEFINER |
-| `get_entry_group_participant_counts()` | 입장 그룹별 참가자 수 조회 | SECURITY DEFINER |
+| `apply_event()` | 이벤트 신청 (성비 체크 → 신청 → 인증 제출) | SECURITY DEFINER, service_role EF only |
+| `check_party_balance()` | 성비 균형 체크 | SECURITY DEFINER, service_role EF/internal only |
+| `get_event_ticket_balance_status()` | 티켓별 성비 상태 조회 | SECURITY DEFINER, public read RPC |
+| `get_personalized_recommendations()` | pgvector 기반 추천 | SECURITY DEFINER, authenticated RPC |
+| `get_events_within_radius()` | PostGIS 반경 검색 | SECURITY DEFINER, public read RPC |
+| `get_bulk_eligibility_data()` | 유저 자격 일괄 조회 | SECURITY DEFINER, authenticated RPC |
+| `get_matched_user_info()` | 매칭 상대 연락처 조회 | SECURITY DEFINER, authenticated RPC |
+| `get_event_applications_with_user()` | 이벤트 신청 목록 + 유저 정보 | SECURITY DEFINER, authenticated RPC |
+| `get_partner_members_with_user()` | 파트너 멤버 목록 + 유저 정보 | SECURITY DEFINER, authenticated RPC |
+| `get_pending_verification_requests_with_user()` | 대기 인증 요청 목록 | SECURITY DEFINER, authenticated RPC |
+| `get_entry_group_participant_counts()` | 입장 그룹별 참가자 수 조회 | SECURITY DEFINER, public read RPC |
 | `search_events_pgroonga()` | 이벤트 전문 검색 | SECURITY INVOKER |
 | `search_parties_pgroonga()` | 파티 전문 검색 | SECURITY INVOKER |
 | `cast_match_vote()` | 매칭 투표 (advisory lock 기반 원자적 투표 + 상호 매칭 감지) | SECURITY DEFINER |
-| `replace_match_rules()` | 매칭 규칙 원자적 교체 (delete + insert) | SECURITY DEFINER |
-| `get_ticket_public_key()` | 티켓 QR 서명 검증용 Ed25519 공개키 조회 | SECURITY DEFINER |
-| `notify_match_results()` | 매칭 결과 알림 발송 (크론 호출) | SECURITY DEFINER |
-| `cleanup_expired_match_votes()` | 만료된 매칭 투표 정리 (크론 호출) | SECURITY DEFINER |
+| `replace_match_rules()` | 매칭 규칙 원자적 교체 (delete + insert) | SECURITY DEFINER, service_role EF only |
+| `get_ticket_public_key()` | 티켓 QR 서명 검증용 Ed25519 공개키 조회 | SECURITY DEFINER, authenticated RPC |
+| `notify_match_results()` | 매칭 결과 알림 발송 (크론 호출) | SECURITY DEFINER, service_role cron only |
+| `cleanup_expired_match_votes()` | 만료된 매칭 투표 정리 (크론 호출) | SECURITY DEFINER, service_role cron only |
+
+### 6.3 DB Security Posture
+
+- SECURITY DEFINER functions must pin `search_path`; pgTAP blocks Minglit-owned functions without function-level `SET search_path`.
+- PUBLIC/anon EXECUTE is not the default for SECURITY DEFINER. Each function is classified as public read RPC, authenticated RPC, service_role Edge Function helper, or trigger/cron internal helper.
+- `fcm_tokens` and `user_settings` are read-only to authenticated clients. Registration, deletion, and settings writes go through `user-manage-settings` with service_role.
+- No Minglit-owned regular `public` table may remain RLS-off; `spatial_ref_sys` is the only public table exception because it is extension-owned metadata.
 
 ---
 
@@ -513,7 +548,7 @@ User B ──vote──> User A
 1. **Storage Layer**: Supabase Storage → `storage.objects` (RLS로 업로드/조회 제어)
 2. **Application Layer**: `minglit_files` + `file_access_grants` (세밀한 접근 권한)
 
-파일 업로드 시 `on_storage_object_created` 트리거가 `minglit_files`에 메타데이터를 동기화한다.
+파일 업로드 시 `on_storage_object_created` 트리거가 `minglit_files`에 메타데이터를 동기화한다. `storage-upload` signed upload 경로는 `active_storage_uploads` 예약을 사용해 Storage token 업로드의 소유자를 보정하고, complete 단계에서 실제 size를 reconcile한다. Public asset은 private staging object를 먼저 검증한 뒤 publish 단계에서만 `party-assets`와 `minglit_files`에 노출한다.
 이벤트 신청 시 `on_application_created` 트리거가 파트너 오너에게 자동으로 `file_access_grants`를 생성하며, 이벤트 종료 후 30일에 만료된다.
 
 ---
