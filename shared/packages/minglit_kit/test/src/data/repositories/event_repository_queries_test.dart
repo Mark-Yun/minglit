@@ -1064,7 +1064,7 @@ void main() {
         expect(result.first.id, 'event_1');
       });
 
-      // Fix #1823: events transition to 'active' 30 min before start_time.
+      // Fix #1823/#3014: events transition to 'active' before start_time.
       // getUpcomingEvents must NOT exclude active events — they are legitimate
       // upcoming events that callers (checkin, dashboard) need to see.
       test('includes active-status events in results', () async {

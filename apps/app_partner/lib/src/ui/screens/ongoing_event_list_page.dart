@@ -26,7 +26,7 @@ class OngoingEventListPage extends StatelessWidget {
 
     final theme = Theme.of(context);
     final timeFmt = DateFormat('HH:mm');
-    final checkinStart = event.startTime.subtract(const Duration(minutes: 30));
+    final checkinStart = event.startTime.subtract(partnerCheckinLeadTime);
     final isEnded = phase == EventPhase.ended;
 
     return Scaffold(
@@ -72,7 +72,7 @@ class OngoingEventListPage extends StatelessWidget {
                     child: Text(
                       isEnded
                           ? '이벤트가 종료됐어요. 체크인 기록은 정산 기준으로 보관돼요.'
-                          : '시작 30분 전까지 QR/수동 체크인이 비활성화됩니다. 명단과 참가 현황을 미리 확인해 주세요.',
+                          : '시작 2시간 전까지 QR/수동 체크인이 비활성화됩니다. 명단과 참가 현황을 미리 확인해 주세요.',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSecondaryContainer,
                       ),

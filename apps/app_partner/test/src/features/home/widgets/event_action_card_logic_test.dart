@@ -34,17 +34,17 @@ void main() {
       expect(getEventPhase(event), EventPhase.recruiting);
     });
 
-    test('returns checkinReady when start is 20 minutes away', () {
+    test('returns checkinReady when start is 90 minutes away', () {
       final now = DateTime.now();
       final event = _makeEvent(
         id: 'e2',
-        startTime: now.add(const Duration(minutes: 20)),
+        startTime: now.add(const Duration(minutes: 90)),
         endTime: now.add(const Duration(hours: 4)),
       );
       expect(getEventPhase(event), EventPhase.checkinReady);
     });
 
-    test('returns preStart when start is inside T-7 but before T-30m', () {
+    test('returns preStart when start is inside T-7 but before T-2h', () {
       final now = DateTime.now();
       final event = _makeEvent(
         id: 'e2b',
@@ -83,7 +83,7 @@ void main() {
         final now = DateTime.now();
         final event = _makeEvent(
           id: 'e5',
-          startTime: now.add(const Duration(minutes: 20)),
+          startTime: now.add(const Duration(minutes: 90)),
           endTime: now.add(const Duration(hours: 5)),
         );
         expect(getEventPhase(event), EventPhase.checkinReady);
@@ -178,18 +178,18 @@ void main() {
       final now = DateTime.now();
       final event = _makeEvent(
         id: 'early',
-        startTime: now.add(const Duration(minutes: 90)),
-        endTime: now.add(const Duration(hours: 3)),
+        startTime: now.add(const Duration(hours: 3)),
+        endTime: now.add(const Duration(hours: 5)),
       );
 
       expect(isCheckinActionEnabled(event), isFalse);
     });
 
-    test('returns true within 30 minutes before start', () {
+    test('returns true within 2 hours before start', () {
       final now = DateTime.now();
       final event = _makeEvent(
         id: 'ready',
-        startTime: now.add(const Duration(minutes: 20)),
+        startTime: now.add(const Duration(minutes: 90)),
         endTime: now.add(const Duration(hours: 3)),
       );
 

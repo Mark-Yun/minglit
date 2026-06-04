@@ -8,12 +8,14 @@ enum EventPhase {
   ended,
 }
 
+const partnerCheckinLeadTime = Duration(hours: 2);
+
 EventPhase getEventPhase(Event event) {
   final now = DateTime.now();
   if (now.isAfter(event.endTime)) return EventPhase.ended;
   if (now.isAfter(event.startTime)) return EventPhase.live;
   final untilStart = event.startTime.difference(now);
-  if (untilStart <= const Duration(minutes: 30)) {
+  if (untilStart <= partnerCheckinLeadTime) {
     return EventPhase.checkinReady;
   }
   if (untilStart <= const Duration(days: 7)) {
@@ -79,6 +81,6 @@ bool isOngoingListWindow(Event event) {
 
 bool isCheckinActionEnabled(Event event) {
   final now = DateTime.now();
-  final backendReadyAt = event.startTime.subtract(const Duration(minutes: 30));
+  final backendReadyAt = event.startTime.subtract(partnerCheckinLeadTime);
   return !now.isBefore(backendReadyAt) && now.isBefore(event.endTime);
 }

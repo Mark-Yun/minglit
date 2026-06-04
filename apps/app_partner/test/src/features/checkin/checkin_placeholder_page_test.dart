@@ -185,8 +185,8 @@ void main() {
         final waitingEvent = Event(
           id: 'waiting-event',
           partyId: 'party-1',
-          startTime: now.add(const Duration(minutes: 90)),
-          endTime: now.add(const Duration(hours: 3)),
+          startTime: now.add(const Duration(hours: 3)),
+          endTime: now.add(const Duration(hours: 5)),
           createdAt: now,
           updatedAt: now,
           title: 'Waiting Event',
@@ -198,7 +198,7 @@ void main() {
 
         expect(find.byType(QRScannerScreen), findsNothing);
         expect(find.text('참가자 리스트'), findsOneWidget);
-        expect(find.textContaining('시작 30분 전까지'), findsOneWidget);
+        expect(find.textContaining('시작 2시간 전까지'), findsOneWidget);
       },
     );
 

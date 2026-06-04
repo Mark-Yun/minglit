@@ -62,7 +62,7 @@
 
 ### Scenario 2: 가장 가까운 이벤트의 phase 별 액션 (CUJ 2-x)
 
-홈 대시보드의 이벤트 액션카드에 다가오는 이벤트가 phase(모집중/pre_start/checkin_ready/LIVE/종료) 별로 자동 분기된 CTA 표시. T-7~T-30m는 `참가자 리스트`, T-30m 이후는 `참가자 체크인`으로 OngoingEventListPage에 진입.
+홈 대시보드의 이벤트 액션카드에 다가오는 이벤트가 phase(모집중/pre_start/checkin_ready/LIVE/종료) 별로 자동 분기된 CTA 표시. T-7~T-2는 `참가자 리스트`, T-2 이후는 `참가자 체크인`으로 OngoingEventListPage에 진입.
 
 ### Scenario 3: 신청관리 탭에서 일괄 처리 (CUJ 3-x)
 
