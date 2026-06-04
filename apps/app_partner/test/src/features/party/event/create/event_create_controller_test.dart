@@ -852,6 +852,59 @@ void main() {
         );
       });
 
+      test('waits for in-flight draft save before publish cleanup', () async {
+        final draftRepo = _DelayedEventCreateDraftRepository();
+        when(() => mockPartyRepo.createEvent(any())).thenAnswer(
+          (_) async => Event(
+            id: 'new-event',
+            partyId: 'party-1',
+            startTime: DateTime.now(),
+            endTime: DateTime.now(),
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        );
+        final container = createContainer(
+          overrides: [
+            partyRepositoryProvider.overrideWithValue(mockPartyRepo),
+            locationRepositoryProvider.overrideWithValue(mockLocationRepo),
+            eventCreateDraftRepositoryProvider.overrideWithValue(draftRepo),
+          ],
+        );
+        final provider = eventCreateControllerProvider('party-1');
+        final sub = container.listen(provider, (_, _) {});
+        addTearDown(sub.close);
+        final notifier = container.read(provider.notifier);
+        notifier
+          ..updateTitle('Saved Draft Event')
+          ..updateLocation(_makeLocation());
+
+        final save = notifier.saveDraftNow();
+        await draftRepo.saveStarted.future;
+        final submit = notifier.submit();
+
+        await Future<void>.delayed(Duration.zero);
+        expect(
+          draftRepo.hasSavedDraft('party-1'),
+          isFalse,
+          reason: 'Submit must wait for in-flight draft save before deleting',
+        );
+
+        draftRepo.allowSave.complete();
+        await save;
+        await submit;
+
+        expect(
+          container.read(provider).status,
+          isA<AsyncData<void>>(),
+        );
+        expect(
+          draftRepo.hasSavedDraft('party-1'),
+          isFalse,
+          reason: 'Publish cleanup must be the final draft write',
+        );
+      });
+
       test('creates location first when selectedLocation has no id', () async {
         final party = _makeParty();
         final newLocation = _makeLocation(id: 'new-loc');

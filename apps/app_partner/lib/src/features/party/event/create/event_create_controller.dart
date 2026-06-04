@@ -39,6 +39,8 @@ abstract class EventCreateState with _$EventCreateState {
 @riverpod
 class EventCreateController extends _$EventCreateController {
   Timer? _draftSaveDebounce;
+  Future<void>? _draftSaveInFlight;
+  bool _isSubmitting = false;
 
   @override
   EventCreateState build(String partyId) {
@@ -168,90 +170,99 @@ class EventCreateController extends _$EventCreateController {
   }
 
   Future<void> submit() async {
-    _draftSaveDebounce?.cancel();
-    state = state.copyWith(status: const AsyncValue<void>.loading());
+    _isSubmitting = true;
+    try {
+      _draftSaveDebounce?.cancel();
+      state = state.copyWith(status: const AsyncValue<void>.loading());
+      await _draftSaveInFlight;
+      if (!ref.mounted) return;
 
-    // Fix #1037: snapshot recurrence state before any await to avoid race
-    // conditions.
-    final recurrenceSnapshot = ref.read(recurrenceSettingsControllerProvider);
-    final draftRepo = ref.read(eventCreateDraftRepositoryProvider);
-    final dashboardRefresh = ref.read(dashboardRefreshProvider.notifier);
-    final draftPartyId = state.partyId;
+      // Fix #1037: snapshot recurrence state before any await to avoid race
+      // conditions.
+      final recurrenceSnapshot = ref.read(recurrenceSettingsControllerProvider);
+      final draftRepo = ref.read(eventCreateDraftRepositoryProvider);
+      final dashboardRefresh = ref.read(dashboardRefreshProvider.notifier);
+      final draftPartyId = state.partyId;
 
-    final result = await AsyncValue.guard(() async {
-      final repo = ref.read(partyRepositoryProvider);
-      final locationRepo = ref.read(locationRepositoryProvider);
+      final result = await AsyncValue.guard(() async {
+        final repo = ref.read(partyRepositoryProvider);
+        final locationRepo = ref.read(locationRepositoryProvider);
 
-      var finalLocationId = state.locationId;
+        var finalLocationId = state.locationId;
 
-      if (state.selectedLocation != null &&
-          (state.locationId == null || state.locationId!.isEmpty)) {
-        // Fetch current party to get partnerId
-        final party = await ref.read(partyDetailProvider(state.partyId).future);
-        final newLoc = await locationRepo.createLocation(
-          state.selectedLocation!.copyWith(
-            partnerId: party.partnerId,
-            addressDetail: state.addressDetail,
-            directionsGuide: state.directionsGuide,
-          ),
-        );
-        finalLocationId = newLoc.id;
-      }
+        if (state.selectedLocation != null &&
+            (state.locationId == null || state.locationId!.isEmpty)) {
+          // Fetch current party to get partnerId
+          final party = await ref.read(
+            partyDetailProvider(state.partyId).future,
+          );
+          final newLoc = await locationRepo.createLocation(
+            state.selectedLocation!.copyWith(
+              partnerId: party.partnerId,
+              addressDetail: state.addressDetail,
+              directionsGuide: state.directionsGuide,
+            ),
+          );
+          finalLocationId = newLoc.id;
+        }
 
-      final event = Event(
-        id: '',
-        partyId: state.partyId,
-        startTime: state.startTime,
-        endTime: state.endTime,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        maxParticipants: state.maxParticipants,
-        locationId: finalLocationId,
-        title: state.title,
-        description: state.description.isEmpty ? null : state.description,
-        contactOptions: state.contactOptions,
-        entryGroups: state.entryGroups,
-        tickets: state.tickets, // Pass the tickets to repository
-        visibility: state.visibility,
-      );
-
-      await repo.createEvent(event);
-
-      // Fix #1037: 반복 설정이 활성화된 경우 recurrence rule 생성 (invalidate는 이후)
-      if (recurrenceSnapshot.isEnabled) {
-        final recurrenceRepo = ref.read(recurrenceRuleRepositoryProvider);
-        String pad2(int n) => n.toString().padLeft(2, '0');
-        final startTimeStr =
-            '${pad2(state.startTime.hour)}:${pad2(state.startTime.minute)}';
-        final endTimeStr =
-            '${pad2(state.endTime.hour)}:${pad2(state.endTime.minute)}';
-        await recurrenceRepo.create(
+        final event = Event(
+          id: '',
           partyId: state.partyId,
-          pattern: recurrenceSnapshot.pattern,
-          daysOfWeek: recurrenceSnapshot.daysOfWeek,
-          monthDay: recurrenceSnapshot.monthDay,
-          startTime: startTimeStr,
-          endTime: endTimeStr,
-          endDate: recurrenceSnapshot.endDate,
+          startTime: state.startTime,
+          endTime: state.endTime,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          maxParticipants: state.maxParticipants,
+          locationId: finalLocationId,
+          title: state.title,
+          description: state.description.isEmpty ? null : state.description,
+          contactOptions: state.contactOptions,
+          entryGroups: state.entryGroups,
+          tickets: state.tickets, // Pass the tickets to repository
+          visibility: state.visibility,
         );
+
+        await repo.createEvent(event);
+
+        // Fix #1037: 반복 설정이 활성화된 경우 recurrence rule 생성 (invalidate는 이후)
+        if (recurrenceSnapshot.isEnabled) {
+          final recurrenceRepo = ref.read(recurrenceRuleRepositoryProvider);
+          String pad2(int n) => n.toString().padLeft(2, '0');
+          final startTimeStr =
+              '${pad2(state.startTime.hour)}:${pad2(state.startTime.minute)}';
+          final endTimeStr =
+              '${pad2(state.endTime.hour)}:${pad2(state.endTime.minute)}';
+          await recurrenceRepo.create(
+            partyId: state.partyId,
+            pattern: recurrenceSnapshot.pattern,
+            daysOfWeek: recurrenceSnapshot.daysOfWeek,
+            monthDay: recurrenceSnapshot.monthDay,
+            startTime: startTimeStr,
+            endTime: endTimeStr,
+            endDate: recurrenceSnapshot.endDate,
+          );
+        }
+
+        ref.invalidate(partyEventsProvider(state.partyId));
+        // Fix #1943: bump shared signal so dashboard refreshes without
+        // cross-feature import.
+        dashboardRefresh.bump();
+      });
+
+      if (result.hasValue) {
+        await draftRepo.deleteDraft(draftPartyId);
+        dashboardRefresh.bump();
       }
-
-      ref.invalidate(partyEventsProvider(state.partyId));
-      // Fix #1943: bump shared signal so dashboard refreshes without
-      // cross-feature import.
-      dashboardRefresh.bump();
-    });
-
-    if (result.hasValue) {
-      await draftRepo.deleteDraft(draftPartyId);
-      dashboardRefresh.bump();
+      if (!ref.mounted) return;
+      state = state.copyWith(
+        draftId: result.hasValue ? null : state.draftId,
+        draftUpdatedAt: result.hasValue ? null : state.draftUpdatedAt,
+        status: result,
+      );
+    } finally {
+      _isSubmitting = false;
     }
-    if (!ref.mounted) return;
-    state = state.copyWith(
-      draftId: result.hasValue ? null : state.draftId,
-      draftUpdatedAt: result.hasValue ? null : state.draftUpdatedAt,
-      status: result,
-    );
   }
 
   void _setDraftableState(EventCreateState nextState) {
@@ -267,6 +278,19 @@ class EventCreateController extends _$EventCreateController {
   }
 
   Future<void> saveDraftNow() async {
+    if (_isSubmitting) return;
+    final save = _saveDraftNow();
+    _draftSaveInFlight = save;
+    try {
+      await save;
+    } finally {
+      if (identical(_draftSaveInFlight, save)) {
+        _draftSaveInFlight = null;
+      }
+    }
+  }
+
+  Future<void> _saveDraftNow() async {
     _draftSaveDebounce?.cancel();
     final updatedAt = DateTime.now();
     final recurrence = ref.read(recurrenceSettingsControllerProvider);
