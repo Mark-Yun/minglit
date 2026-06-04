@@ -12,6 +12,7 @@ MDS 화면 spec 의 **source HTML + 자동 산출물 디렉터리**. Flutter 화
 | [`<screen>/index.html`](./event_detail_page/index.html) | 화면별 spec source. 직접 수정 대상 |
 | [`ticket_selection_sheet/index.html`](./ticket_selection_sheet/index.html) | 이벤트 상세 하단 티켓 선택 시트 화면 spec |
 | [`ongoing_event_list_page/index.html`](./ongoing_event_list_page/index.html) | 파트너 LIVE 이벤트 참가자 명단/운영 dashboard spec |
+| [`admin_console_dashboard/index.html`](./admin_console_dashboard/index.html) | web_admin 로그인 / admin guard / shell screen spec |
 | [`<screen>/index.md`](./event_detail_page/index.md) | HTML 에서 생성되는 markdown 산출물 |
 | [`<screen>/state_*.png`](./event_detail_page/state_1.png) | HTML 에서 생성되는 state screenshot 산출물 |
 | [`<screen>/blueprint*.png`](./event_detail_page/blueprint_1.png) | HTML 에서 생성되는 blueprint screenshot 산출물 |
@@ -40,4 +41,4 @@ MDS 화면 spec 의 **source HTML + 자동 산출물 디렉터리**. Flutter 화
 - [`../../src/lib/flow-data.ts`](../../src/lib/flow-data.ts) — route/spec 매핑
 
 ---
-_Reviewed: 2026-06-04 21:20_
+_Reviewed: 2026-06-04 22:31_

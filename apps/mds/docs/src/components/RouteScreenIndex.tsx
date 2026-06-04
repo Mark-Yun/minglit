@@ -1,102 +1,151 @@
-import { Fragment } from 'react';
-import {
-  getRoutesByApp,
-  widgetNameFor,
-  screenSourceFor,
-  hasDesignFor,
-  designUrlFor,
-  subComponentsFor,
-  standaloneSpecsFor,
-  type SubComponentSpec,
-  type StandaloneSpec,
-} from '@/lib/flow-data';
+import { getScreenGroups, type ScreenDefinition, type ScreenKind } from '@/lib/screen-definitions';
 
-const APP_LABELS = { user: 'app_user', partner: 'app_partner' } as const;
+const KIND_LABELS: Record<ScreenKind, string> = {
+  route: 'route',
+  'sub-component': 'sub',
+  'spec-only': 'spec',
+  'web-route': 'web',
+};
 
-function SubComponentRow({ sub, parentRoute }: { sub: SubComponentSpec; parentRoute: string }) {
-  const sourceUrl = `https://github.com/Mark-Yun/minglit/blob/dev/${sub.filePath}`;
-  const specUrl = `/specs/${sub.specBasename}/index.html`;
+const KIND_CLASS: Record<ScreenKind, string> = {
+  route: 'bg-[var(--color-surface)] text-[var(--color-text-secondary)]',
+  'sub-component': 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]',
+  'spec-only': 'bg-amber-50 text-amber-700',
+  'web-route': 'bg-emerald-50 text-emerald-700',
+};
+
+function githubUrl(path: string): string {
+  return `https://github.com/Mark-Yun/minglit/blob/dev/${path}`;
+}
+
+function KindBadge({ kind }: { kind: ScreenKind }) {
   return (
-    <tr className="hover:bg-[var(--color-surface)] bg-[var(--color-surface)]/30">
-      <td className="px-4 py-2 pl-10">
-        <span className="text-[var(--color-text-secondary)] mr-1">↳</span>
-        <a
-          href={specUrl}
-          className="font-mono text-xs text-[var(--color-primary)] hover:underline"
-          title="Open sub-component spec"
-        >
-          {sub.widget}
-        </a>
-      </td>
-      <td className="px-4 py-2">
-        <span className="font-mono text-xs text-[var(--color-text-secondary)] italic">
-          (sub of {parentRoute})
-        </span>
-      </td>
-      <td className="px-4 py-2">
-        <a
-          href={sourceUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs font-mono text-[var(--color-primary)] hover:underline"
-          title={sub.filePath}
-        >
-          code ↗
-        </a>
-      </td>
-    </tr>
+    <span
+      className={`inline-flex h-5 items-center rounded-full px-2 text-[10px] font-bold uppercase ${KIND_CLASS[kind]}`}
+    >
+      {KIND_LABELS[kind]}
+    </span>
   );
 }
 
-function StandaloneSpecRow({ spec }: { spec: StandaloneSpec }) {
-  const specUrl = `/specs/${spec.specBasename}/index.html`;
+function ScreenNameCell({ screen }: { screen: ScreenDefinition }) {
+  const specUrl = screen.specBasename ? `/specs/${screen.specBasename}/index.html` : null;
+  const name = screen.screen ?? '—';
+
   return (
-    <tr className="hover:bg-[var(--color-surface)] bg-[var(--color-surface)]/30">
-      <td className="px-4 py-2">
+    <div className={screen.kind === 'sub-component' ? 'pl-6' : undefined}>
+      {screen.kind === 'sub-component' ? (
+        <span className="mr-1 text-[var(--color-text-secondary)]">↳</span>
+      ) : null}
+      {specUrl ? (
         <a
           href={specUrl}
           className="font-mono text-xs text-[var(--color-primary)] hover:underline"
-          title="Open spec"
+          title="Open MDS spec"
         >
-          {spec.widget}
+          {name}
         </a>
+      ) : (
+        <span className="font-mono text-xs text-[var(--color-text-secondary)]">{name}</span>
+      )}
+      {screen.note ? (
+        <div className="mt-1 text-xs text-[var(--color-text-secondary)]">{screen.note}</div>
+      ) : null}
+    </div>
+  );
+}
+
+function RouteCell({ screen }: { screen: ScreenDefinition }) {
+  if (screen.routeSourcePath) {
+    return (
+      <a
+        href={githubUrl(screen.routeSourcePath)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-mono text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] hover:underline"
+        title={screen.routeSourcePath}
+      >
+        {screen.route} ↗
+      </a>
+    );
+  }
+
+  return <span className="font-mono text-xs text-[var(--color-text-secondary)]">{screen.route}</span>;
+}
+
+function CodeCell({ screen }: { screen: ScreenDefinition }) {
+  if (!screen.codeSourcePath) {
+    return <span className="text-xs text-[var(--color-divider)]">—</span>;
+  }
+
+  if (screen.codeSourceExists) {
+    return (
+      <a
+        href={githubUrl(screen.codeSourcePath)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-xs font-mono text-[var(--color-primary)] hover:underline"
+        title={screen.codeSourcePath}
+      >
+        code ↗
+      </a>
+    );
+  }
+
+  return (
+    <span className="font-mono text-xs text-[var(--color-text-secondary)]">
+      planned: {screen.codeSourcePath}
+    </span>
+  );
+}
+
+function ScreenRow({ screen }: { screen: ScreenDefinition }) {
+  const isSecondary = screen.kind === 'sub-component' || screen.kind === 'spec-only';
+
+  return (
+    <tr className={isSecondary ? 'bg-[var(--color-surface)]/30 hover:bg-[var(--color-surface)]' : 'hover:bg-[var(--color-surface)]'}>
+      <td className="px-4 py-2">
+        <ScreenNameCell screen={screen} />
       </td>
       <td className="px-4 py-2">
-        <span className="font-mono text-xs text-[var(--color-text-secondary)] italic">
-          {spec.note}
-        </span>
+        <RouteCell screen={screen} />
       </td>
       <td className="px-4 py-2">
-        <span className="text-xs text-[var(--color-divider)]">—</span>
+        <KindBadge kind={screen.kind} />
+      </td>
+      <td className="px-4 py-2">
+        <CodeCell screen={screen} />
       </td>
     </tr>
   );
 }
 
 export default function RouteScreenIndex() {
-  const routesByApp = getRoutesByApp();
+  const groups = getScreenGroups();
 
   return (
     <div className="space-y-8">
-      {(['user', 'partner'] as const).map((app) => (
-        <div key={app} className="space-y-3" data-app={app}>
-          <div className="flex items-baseline gap-2">
-            <h3 className="text-lg font-bold text-[var(--color-text-primary)]">
-              {APP_LABELS[app]}
-            </h3>
-            <span className="text-xs text-[var(--color-text-secondary)]">
-              {routesByApp[app].length} routes
+      {groups.map(({ surface, screens }) => (
+        <div key={surface.id} className="space-y-3" data-app={surface.id}>
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <h3 className="text-lg font-bold text-[var(--color-text-primary)]">{surface.label}</h3>
+            <span className="text-xs text-[var(--color-text-secondary)]">{screens.length} screens</span>
+            <span className="basis-full text-xs text-[var(--color-text-secondary)]">
+              {surface.description}
             </span>
           </div>
-          <div className="bg-white rounded-xl border border-[var(--color-divider)] overflow-hidden">
+          <div className="overflow-hidden rounded-xl border border-[var(--color-divider)] bg-white">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[var(--color-divider)] bg-[var(--color-surface)]">
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-text-primary)]">
-                    Screen Widget
+                    Screen
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-text-primary)]">
-                    Route
+                    Route / Surface
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-text-primary)]">
+                    Kind
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-text-primary)]">
                     Code
@@ -104,68 +153,8 @@ export default function RouteScreenIndex() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--color-divider)]">
-                {routesByApp[app].map((route) => {
-                  const widget = widgetNameFor(app, route);
-                  const screen = screenSourceFor(app, route);
-                  const routesPath = `apps/app_${app}/lib/src/routing/app_routes.dart`;
-                  const routesUrl = `https://github.com/Mark-Yun/minglit/blob/dev/${routesPath}`;
-                  const designUrl = designUrlFor(app, route);
-                  // Sub-components nested under this route — rendered as
-                  // indented rows immediately after the parent row.
-                  const subs = subComponentsFor(app).filter((s) => s.parentRoute === route);
-                  return (
-                    <Fragment key={route}>
-                      <tr className="hover:bg-[var(--color-surface)]">
-                        <td className="px-4 py-2">
-                          {widget && hasDesignFor(app, route) && designUrl ? (
-                            <a
-                              href={designUrl}
-                              className="font-mono text-xs text-[var(--color-primary)] hover:underline"
-                              title="Open design spec"
-                            >
-                              {widget}
-                            </a>
-                          ) : (
-                            <span className="font-mono text-xs text-[var(--color-text-secondary)]">
-                              {widget ?? '—'}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-2">
-                          <a
-                            href={routesUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-mono text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] hover:underline"
-                            title={routesPath}
-                          >
-                            {route} ↗
-                          </a>
-                        </td>
-                        <td className="px-4 py-2">
-                          {screen.isWidget ? (
-                            <a
-                              href={screen.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs font-mono text-[var(--color-primary)] hover:underline"
-                              title={screen.filePath}
-                            >
-                              code ↗
-                            </a>
-                          ) : (
-                            <span className="text-xs text-[var(--color-divider)]">—</span>
-                          )}
-                        </td>
-                      </tr>
-                      {subs.map((sub) => (
-                        <SubComponentRow key={sub.widget} sub={sub} parentRoute={route} />
-                      ))}
-                    </Fragment>
-                  );
-                })}
-                {standaloneSpecsFor(app).map((spec) => (
-                  <StandaloneSpecRow key={spec.specBasename} spec={spec} />
+                {screens.map((screen) => (
+                  <ScreenRow key={screen.id} screen={screen} />
                 ))}
               </tbody>
             </table>
