@@ -969,6 +969,12 @@ body.dark-mode .viewport {
     <tbody>
       <tr>
         <td>2026-06-04</td>
+        <td>2.6</td>
+        <td>codex</td>
+        <td>#3002: Todo "첫 이벤트 만들기" destination을 <code>EventCreatePage</code>로 확정. 파티 1개 auto-select, 2개 이상 <code>MinglitBottomSheet</code> party selector, 작성 중 이벤트 resume card, 게시 완료 후 Home todo 소멸 조건을 명시.</td>
+      </tr>
+      <tr>
+        <td>2026-06-04</td>
         <td>2.5</td>
         <td>codex</td>
         <td>#3001: Todo "계좌 등록" destination을 <code>BankAccountPage</code> onboarding owner로 확정. verified/manual approved 때 todo가 사라지고 failed/manual review pending은 todo가 유지되는 state transition을 명시.</td>
@@ -2180,12 +2186,12 @@ body.dark-mode .viewport {
             </div>
           </td>
           <td class="state-mini__aspect">조건</td>
-          <td>파티 1+ (게시 완료) + <code>publishedEventCount === 0 &amp;&amp; draftEventCount === 0</code> — 파티는 만들었지만 첫 회차(이벤트)를 아직 안 만든 상태. 운영 현황 "등록된 파티" = 1. <strong>계좌 등록과 독립</strong> — 계좌 미등록이어도 이벤트 작성 가능 (게시 시점에 계좌 필요할 수 있음).</td>
+          <td>게시 완료 파티 1+ + <code>publishedEventCount === 0 &amp;&amp; draftEventCount === 0</code> — 파티는 만들었지만 첫 회차(이벤트)를 아직 안 만든 상태. 운영 현황 "등록된 파티" = published party count. <strong>계좌 등록과 독립</strong> — 계좌 미등록이어도 이벤트 작성 가능 (게시 시점에 계좌 필요할 수 있음). 도착지는 <a href="/specs/event_create_page/index.html"><code>EventCreatePage</code></a>.</td>
         </tr>
         <tr>
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
-            ① <strong>"첫 이벤트 만들기" todo 탭</strong> → 이벤트 생성 위저드 (날짜 / 시간 / 정원 / 가격 / 장소 등). 파티가 1개면 자동 선택 — 2개 이상이면 파티 선택 시트 먼저.<br>
+            ① <strong>"첫 이벤트 만들기" todo 탭</strong> → 파티가 1개면 즉시 <code>EventCreateRoute(partyId)</code>. 2개 이상이면 <code>MinglitBottomSheet</code> party selector를 먼저 띄우고 선택 후 <code>EventCreatePage</code>로 진입.<br>
             ② 운영 현황 "등록된 파티" 1 탭 → 파티 리스트 (자기 파티 1개).<br>
             ③ ⓘ 도움말 → 첫 이벤트 만들기 가이드 시트 (날짜 / 정원 정하는 팁).
           </td>
@@ -2193,9 +2199,9 @@ body.dark-mode .viewport {
         <tr>
           <td class="state-mini__aspect">에지케이스</td>
           <td>
-            · 이벤트 위저드 도중 "임시저장" 시 → todo 카드가 <strong>"작성 중인 이벤트" 카드</strong>로 교체 (sub = "임시저장 · 마지막 수정일", 아이콘 = 펜).<br>
-            · 이벤트 게시 완료 시 자동으로 일반 dashboard (State 1 또는 한가한 날 State 3)로 전환.<br>
-            · 다중 파티 보유 시: todo 카드 sub에 "어떤 파티의 이벤트인지" 명시 또는 위저드 진입 시 파티 선택 시트.<br>
+            · 이벤트 위저드 도중 "임시저장" 시 → todo 카드가 <strong>"작성 중인 이벤트" 카드</strong>로 교체 (sub = "임시저장 · 마지막 수정일", 아이콘 = 펜)되고, 탭 시 같은 <code>EventCreateRoute</code>를 draft payload로 restore.<br>
+            · 이벤트 게시 완료 시 <code>hasAnyEvents</code>/<code>publishedEventCount</code>가 갱신되어 자동으로 일반 dashboard (State 1 또는 한가한 날 State 3)로 전환.<br>
+            · 다중 파티 보유 시: Home 카드 자체에는 파티명을 고정하지 않고 selector에서 파티를 결정. selector dismiss는 아무 상태 변화 없음.<br>
             · 파티가 임시저장 (작성 중)이고 게시 안 됐다면 State 5(첫 파티)로 다시 분기.
           </td>
         </tr>
@@ -2204,6 +2210,7 @@ body.dark-mode .viewport {
           <td>
             · 운영 현황 (1/0/0) — 파티만 1개<br>
             · "지금 할 일" 섹션 + 첫 이벤트 만들기 todo 카드 (mint 아이콘 박스 + 달력 아이콘)<br>
+            · 파티 2개 이상일 때 <code>MinglitBottomSheet</code> party selector (title + single-select ListTile row)<br>
             · 작성 중 이벤트 있을 시 → todo 카드 자리에 작성 중 카드 sub-state
           </td>
         </tr>
@@ -2213,7 +2220,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td class="state-mini__aspect">노트</td>
-          <td>📝 파티는 만들었지만 첫 이벤트 없으면 사용자에게 노출되지 않음 — 첫 이벤트 게시가 모집 시작 트리거. ⓘ 도움말에서 "이벤트 = 회차" 개념 + 날짜/정원 설정 팁 안내.</td>
+          <td>📝 파티는 만들었지만 첫 이벤트 없으면 사용자에게 노출되지 않음 — 첫 이벤트 게시가 모집 시작 트리거. Home은 party selection까지만 담당하고, 날짜/시간/정원/가격/장소/티켓/검토는 <code>EventCreatePage</code>가 담당.</td>
         </tr>
       </tbody>
     </table>
@@ -3212,7 +3219,8 @@ body.dark-mode .viewport {
             · <code>bankAccountReady == false</code> → 계좌 등록/확인 row (<code>bankVerificationStatus in [not_started, failed, manual_review_pending]</code>)<br>
             · <code>publishedParty 0 &amp;&amp; draftParty 0</code> → 첫 파티 만들기 row<br>
             · <code>publishedEvent 0 &amp;&amp; draftEvent 0 &amp;&amp; publishedParty &gt;= 1</code> → 첫 이벤트 만들기 row<br><br>
-            <strong>Drafts 변형</strong>: 작성 중 파티/이벤트 있으면 todo 자리에 작성 중 카드 (회색 펜 아이콘)로 sub-state 교체 → 카드별 명세 ⑦ 참고<br><br>
+            <strong>Tap destinations</strong>: 계좌 row → <code>BankAccountPage</code>, 파티 row → <code>PartyCreateWizardPage</code>, 이벤트 row → <code>EventCreatePage</code>. 이벤트 row는 published party 1개면 auto-select, 2개 이상이면 <code>MinglitBottomSheet</code> party selector 후 이동.<br><br>
+            <strong>Drafts 변형</strong>: 작성 중 파티/이벤트 있으면 todo 자리에 작성 중 카드 (회색 펜 아이콘)로 sub-state 교체 → 카드별 명세 ⑦ 참고. 작성 중 이벤트는 같은 <code>EventCreateRoute</code>를 draft payload로 restore.<br><br>
             <strong>완료 시 자동 소멸</strong>: prerequisite 충족 시 row 사라짐. 계좌 row는 <code>verified</code> 또는 운영 승인 완료 때만 사라지고, failed/manual review pending은 유지. 모두 충족 시 "지금 할 일" 섹션 자체 hide.
           </td>
         </tr>
@@ -3502,13 +3510,19 @@ body.dark-mode .viewport {
           <td>Todo "첫 이벤트 만들기"</td>
           <td><a href="/specs/event_create_page/index.html"><code>EventCreatePage</code></a></td>
           <td>✅</td>
-          <td>날짜 / 시간 / 정원 / 가격 / 장소 · 첫 이벤트 wizard/파티 선택·resume 강화는 #3002</td>
+          <td>날짜 / 시간 / 정원 / 가격 / 장소 / 티켓 / 검토. 파티 1개 auto-select, 2개 이상 party selector, 작성 중 이벤트 resume contract 포함 (#3002)</td>
         </tr>
         <tr>
           <td>지금 할 일 — 작성 중 파티 카드</td>
           <td><a href="/specs/party_create_wizard_page/index.html"><code>PartyCreateWizardPage</code></a> (resume)</td>
           <td>✅</td>
           <td>저장 시점에서 이어서 작성</td>
+        </tr>
+        <tr>
+          <td>지금 할 일 — 작성 중 이벤트 카드</td>
+          <td><a href="/specs/event_create_page/index.html"><code>EventCreatePage</code></a> (resume)</td>
+          <td>✅</td>
+          <td>저장된 partyId/draft payload로 이어 작성. 게시 완료 시 첫 이벤트 todo 소멸 (#3002)</td>
         </tr>
         <tr>
           <td>하단 nav — 신청관리</td>
@@ -3563,7 +3577,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td><a href="/specs/event_create_page/index.html"><code>EventCreatePage</code></a></td>
-          <td>Onboarding 상태에서 "첫 이벤트 만들기" CTA의 도착지. 첫 이벤트 wizard 강화는 #3002에서 추적.</td>
+          <td>Onboarding 상태에서 "첫 이벤트 만들기" CTA의 canonical destination. Home은 party selection만 담당하고, 작성/검토/게시/resume 계약은 <code>EventCreatePage</code>가 담당.</td>
         </tr>
         <tr>
           <td><a href="/specs/bank_account_page/index.html"><code>BankAccountPage</code></a></td>

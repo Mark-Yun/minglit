@@ -121,6 +121,7 @@ const APP_PARTNER_MAIN_FLOW = `flowchart TB
   ApplicationListRoute -->|"tap approved/rejected/paid row"| EventApplicationDetailRoute
   HomeRoute -->|"bottom nav"| CheckinRoute
   HomeRoute -->|"todo 계좌 등록 / 계좌 확인 중"| BankAccountRoute
+  HomeRoute -->|"todo 첫 이벤트 만들기 / 작성 중 이벤트 resume"| EventCreateRoute
   HomeRoute -->|"bottom nav (SETTLEMENT_VIEW role required)"| SettlementRoute
   SettlementRoute -->|"tap settlement item"| SettlementDetailRoute
   SettlementRoute -->|"manage bank account"| BankAccountRoute

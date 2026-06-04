@@ -48,4 +48,4 @@ npm run tokens:sync && npm run icons:sync && npm run icons:sync-data
 - [`../../../scripts/mds_render_coverage.dart`](../../../scripts/mds_render_coverage.dart) — MDS spec ↔ emulator render coverage
 
 ---
-_Reviewed: 2026-06-04 23:11_
+_Reviewed: 2026-06-04 23:25_
