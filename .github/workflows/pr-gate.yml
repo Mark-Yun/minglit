@@ -123,6 +123,10 @@ jobs:
         if: ${{ !cancelled() }}
         run: python3 .github/scripts/check-dev-cut-workflow-contract.py
 
+      - name: Check residual DB hardening guards
+        if: ${{ !cancelled() }}
+        run: python3 .github/scripts/check-residual-db-hardening-guards.py
+
       - name: Check iOS deploy workflow contract
         if: ${{ !cancelled() }}
         run: bash .github/scripts/check-ios-deploy-branch-conditions.sh
