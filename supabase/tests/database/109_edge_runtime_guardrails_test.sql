@@ -1,6 +1,6 @@
 BEGIN;
 
-SELECT plan(25);
+SELECT plan(28);
 
 SELECT has_table('edge_rate_limit_buckets');
 SELECT has_table('edge_idempotency_keys');
@@ -228,6 +228,47 @@ SELECT results_eq(
   $$,
   $$ VALUES ('started'::text, 0) $$,
   'same request hash can retry after a failed attempt'
+);
+
+SELECT results_eq(
+  $$
+  SELECT decision, retry_after_seconds
+  FROM public.begin_edge_idempotency(
+    'apply-event',
+    'user:user-1',
+    'idem-rate-limited',
+    'hash-rate-limit',
+    60,
+    10,
+    '2026-01-01T00:00:03Z'::timestamptz
+  )
+  $$,
+  $$ VALUES ('started'::text, 0) $$,
+  'rate-limited idempotency fixture begins in-progress'
+);
+
+SELECT is(
+  public.fail_edge_idempotency(
+    'apply-event',
+    'user:user-1',
+    'idem-rate-limited',
+    'hash-rate-limit',
+    0,
+    '2026-01-01T00:00:03Z'::timestamptz
+  ),
+  true,
+  'zero TTL releases a rate-limited idempotency record immediately'
+);
+
+SELECT is_empty(
+  $$
+  SELECT 1
+  FROM public.edge_idempotency_keys
+  WHERE scope = 'apply-event'
+    AND requester_key = 'user:user-1'
+    AND idempotency_key = 'idem-rate-limited'
+  $$,
+  'rate-limited idempotency record does not remain for cleanup'
 );
 
 SELECT is(

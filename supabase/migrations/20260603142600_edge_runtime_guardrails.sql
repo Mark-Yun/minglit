@@ -350,6 +350,18 @@ AS $$
 DECLARE
   v_updated boolean;
 BEGIN
+  IF p_ttl_seconds <= 0 THEN
+    DELETE FROM public.edge_idempotency_keys
+    WHERE scope = p_scope
+      AND requester_key = p_requester_key
+      AND idempotency_key = p_idempotency_key
+      AND request_hash = p_request_hash
+      AND status = 'in_progress'
+    RETURNING true INTO v_updated;
+
+    RETURN coalesce(v_updated, false);
+  END IF;
+
   UPDATE public.edge_idempotency_keys
   SET status = 'failed',
       response_status = NULL,

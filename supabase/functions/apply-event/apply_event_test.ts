@@ -804,13 +804,13 @@ Deno.test("apply-event - idempotency conflict 시 409와 Retry-After 반환", as
   });
 });
 
-Deno.test("apply-event - rate limit 거부 후 idempotency fail RPC 오류도 429 유지", async () => {
+Deno.test("apply-event - rate limit 거부는 idempotency row를 즉시 release", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(
       new URL("./index.ts", import.meta.url),
     );
 
-    const { fetchMock } = createFetchMock([
+    const { fetchMock, calls } = createFetchMock([
       authRoute(),
       ...guardrailRoutes({ rateAllowed: false, failRpcStatus: 500 }),
     ]);
@@ -827,6 +827,12 @@ Deno.test("apply-event - rate limit 거부 후 idempotency fail RPC 오류도 42
 
         assertEquals(response.status, 429);
         assertEquals(payload.error, "Rate limit exceeded");
+
+        const failCall = calls.find((call) =>
+          call.url.includes("/rest/v1/rpc/fail_edge_idempotency")
+        );
+        assertEquals(Boolean(failCall), true);
+        assertEquals(JSON.parse(failCall?.body ?? "{}").p_ttl_seconds, 0);
       });
     });
   });

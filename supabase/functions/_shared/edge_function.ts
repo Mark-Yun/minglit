@@ -674,15 +674,21 @@ async function beginIdempotency(
 async function failIdempotency(
   ctx: EFContext,
   active: ActiveIdempotency,
+  ttlSeconds?: number,
 ): Promise<void> {
+  const params: Record<string, unknown> = {
+    p_scope: active.scope,
+    p_requester_key: active.requesterKey,
+    p_idempotency_key: active.key,
+    p_request_hash: active.requestHash,
+  };
+  if (ttlSeconds !== undefined) {
+    params.p_ttl_seconds = ttlSeconds;
+  }
+
   const { error } = await ctx.supabase.rpc(
     "fail_edge_idempotency",
-    {
-      p_scope: active.scope,
-      p_requester_key: active.requesterKey,
-      p_idempotency_key: active.key,
-      p_request_hash: active.requestHash,
-    },
+    params,
   );
   if (error) {
     axiomLog({
@@ -828,7 +834,7 @@ export function minglitEdgeFunction(
 
       const rateLimitError = await enforceRateLimits(req, ctx, policy);
       if (rateLimitError) {
-        if (activeIdempotency) await failIdempotency(ctx, activeIdempotency);
+        if (activeIdempotency) await failIdempotency(ctx, activeIdempotency, 0);
         return rateLimitError;
       }
 
