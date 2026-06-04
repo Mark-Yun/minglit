@@ -99,6 +99,7 @@ SELECT is_empty(
       ('public.trigger_produce_event_verification()'::regprocedure),
       ('public.trigger_settlement_notification()'::regprocedure),
       ('public.update_event_participation_stats()'::regprocedure),
+      ('public.upsert_user_settings_with_consent(uuid, boolean, boolean)'::regprocedure),
       ('public.user_event_feed(uuid, text, boolean, boolean, double precision, double precision, double precision, integer, text, uuid)'::regprocedure)
   )
   SELECT function_oid::regprocedure::text
@@ -148,6 +149,7 @@ SELECT is_empty(
       ('public.trigger_produce_event_verification()'::regprocedure),
       ('public.trigger_settlement_notification()'::regprocedure),
       ('public.update_event_participation_stats()'::regprocedure),
+      ('public.upsert_user_settings_with_consent(uuid, boolean, boolean)'::regprocedure),
       ('public.user_event_feed(uuid, text, boolean, boolean, double precision, double precision, double precision, integer, text, uuid)'::regprocedure)
   )
   SELECT function_oid::regprocedure::text

@@ -26,6 +26,14 @@ CREATE POLICY "Users can view their own settings"
   TO authenticated
   USING ((SELECT auth.uid()) = user_id);
 
+-- user-manage-settings EF helper. It accepts p_user_id and writes
+-- user_settings/user_consents, so publishable roles must never call it
+-- directly.
+REVOKE EXECUTE ON FUNCTION public.upsert_user_settings_with_consent(uuid, boolean, boolean)
+  FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.upsert_user_settings_with_consent(uuid, boolean, boolean)
+  TO service_role;
+
 -- Authenticated client RPCs. Revoke the default PUBLIC/anon execute surface and
 -- re-grant only the roles that actually call them.
 REVOKE EXECUTE ON FUNCTION public.get_bulk_eligibility_data(uuid)
