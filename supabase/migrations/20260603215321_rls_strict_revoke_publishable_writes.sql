@@ -47,6 +47,48 @@ REVOKE INSERT, UPDATE, DELETE, TRUNCATE
   ON ALL TABLES IN SCHEMA public
   FROM anon, authenticated;
 
+-- SECURITY DEFINER write RPCs bypass table-level GRANT/RLS, so they must not
+-- remain directly executable through publishable-key roles.
+DO $$
+DECLARE
+  target_function record;
+BEGIN
+  FOR target_function IN
+    SELECT
+      n.nspname AS schema_name,
+      p.proname AS function_name,
+      pg_get_function_identity_arguments(p.oid) AS identity_arguments
+    FROM pg_proc p
+    JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public'
+      AND p.prokind = 'f'
+      AND p.prosecdef
+      AND p.prosrc ~* (
+        '(^|[^[:alnum:]_])(' ||
+        'insert[[:space:]]+into|' ||
+        'update[[:space:]]+[[:alnum:]_".]+[[:space:]]+set|' ||
+        'delete[[:space:]]+from|' ||
+        'truncate[[:space:]]+table|' ||
+        'merge[[:space:]]+into' ||
+        ')'
+      )
+  LOOP
+    EXECUTE format(
+      'REVOKE EXECUTE ON FUNCTION %I.%I(%s) FROM PUBLIC, anon, authenticated',
+      target_function.schema_name,
+      target_function.function_name,
+      target_function.identity_arguments
+    );
+
+    EXECUTE format(
+      'GRANT EXECUTE ON FUNCTION %I.%I(%s) TO service_role',
+      target_function.schema_name,
+      target_function.function_name,
+      target_function.identity_arguments
+    );
+  END LOOP;
+END $$;
+
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
   REVOKE INSERT, UPDATE, DELETE, TRUNCATE
   ON TABLES
@@ -56,3 +98,23 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
   REVOKE INSERT, UPDATE, DELETE, TRUNCATE
   ON TABLES
   FROM anon, authenticated;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  REVOKE EXECUTE
+  ON FUNCTIONS
+  FROM PUBLIC, anon, authenticated;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT EXECUTE
+  ON FUNCTIONS
+  TO service_role;
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
+  REVOKE EXECUTE
+  ON FUNCTIONS
+  FROM PUBLIC, anon, authenticated;
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
+  GRANT EXECUTE
+  ON FUNCTIONS
+  TO service_role;

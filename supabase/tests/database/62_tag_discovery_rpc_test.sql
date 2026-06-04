@@ -310,7 +310,7 @@ SELECT lives_ok(
 -- ============================================================
 -- 6. upsert_user_interest_tags(p_tag_ids) — 관심 태그 교체
 -- ============================================================
-SELECT tests.authenticate_as('rpc_user_b');
+SELECT tests.authenticate_as_service_role_user('rpc_user_b');
 
 -- 초기: user_b 관심 태그 없음
 SELECT results_eq(

@@ -129,6 +129,33 @@ begin
 end
 $$ language plpgsql;
 
+create or replace function tests.authenticate_as_service_role_user(identifier text)
+returns void
+as $$
+declare
+    user_data json;
+begin
+    user_data := tests.get_supabase_user(identifier);
+
+    if user_data is null or user_data ->> 'id' is null then
+        raise exception 'User with identifier % not found', identifier;
+    end if;
+
+    perform set_config('role', 'service_role', true);
+    perform set_config(
+        'request.jwt.claims',
+        json_build_object(
+            'sub', user_data ->> 'id',
+            'email', user_data ->> 'email',
+            'phone', user_data ->> 'phone',
+            'user_metadata', user_data -> 'raw_user_meta_data',
+            'app_metadata', user_data -> 'raw_app_meta_data'
+        )::text,
+        true
+    );
+end
+$$ language plpgsql;
+
 create or replace function tests.clear_authentication()
 returns void
 as $$

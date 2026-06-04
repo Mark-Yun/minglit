@@ -93,6 +93,18 @@ SELECT results_eq(
   'anon does not have EXECUTE on upsert_user_interest_tags'
 );
 
+SELECT results_eq(
+  $$SELECT has_function_privilege('authenticated', 'public.upsert_user_interest_tags(uuid[])', 'EXECUTE')::text$$,
+  $$VALUES ('false')$$,
+  'authenticated does not have EXECUTE on upsert_user_interest_tags'
+);
+
+SELECT results_eq(
+  $$SELECT has_function_privilege('service_role', 'public.upsert_user_interest_tags(uuid[])', 'EXECUTE')::text$$,
+  $$VALUES ('true')$$,
+  'service_role has EXECUTE on upsert_user_interest_tags'
+);
+
 -- ============================================================
 -- 2. authenticated 허용 — 정상 호출 가능 확인
 -- ============================================================
@@ -124,10 +136,12 @@ SELECT lives_ok(
   'authenticated can call get_tag_recommendations'
 );
 
+SELECT tests.authenticate_as_service_role_user('perm_user_a');
+
 SELECT lives_ok(
   format($$SELECT upsert_user_interest_tags(ARRAY['%s']::uuid[])$$,
     current_setting('tests.perm_tag_id')),
-  'authenticated can call upsert_user_interest_tags'
+  'service_role user context can call upsert_user_interest_tags'
 );
 
 -- ============================================================
@@ -247,25 +261,13 @@ SELECT cmp_ok(
 );
 
 -- ============================================================
--- 4. upsert_user_interest_tags 인증 가드
---    auth.uid() IS NULL 인 authenticated 컨텍스트에서 명시적 42501 에러
+-- 4. upsert_user_interest_tags publishable EXECUTE 차단
 -- ============================================================
-SELECT set_config('role', 'authenticated', true);
-SELECT set_config('request.jwt.claims', '{}'::text, true);
-
-SELECT throws_ok(
-  format($$SELECT upsert_user_interest_tags(ARRAY['%s']::uuid[])$$,
-    current_setting('tests.perm_tag_id')),
-  '42501',
-  'Authentication required',
-  'upsert_user_interest_tags rejects authenticated sessions without sub claim'
-);
-
-SELECT tests.authenticate_as('perm_user_a');
+SELECT tests.authenticate_as_service_role_user('perm_user_a');
 
 SELECT lives_ok(
   $$SELECT upsert_user_interest_tags(ARRAY[]::uuid[])$$,
-  'upsert_user_interest_tags with empty array succeeds for authenticated user'
+  'upsert_user_interest_tags with empty array succeeds for service_role user context'
 );
 
 SELECT * FROM finish();

@@ -126,6 +126,7 @@ rg -n "\.(insert|update|upsert|delete)\s*\(" \
 
 -- service_role 전용 write policy는 TO service_role로 한정.
 -- 남는 public/anon/authenticated write policy는 catalog loop로 제거.
+-- write-capable SECURITY DEFINER RPC는 service_role 전용 EXECUTE로 한정.
 
 -- 기존 앱 테이블 GRANT 회수
 REVOKE INSERT, UPDATE, DELETE, TRUNCATE
@@ -137,6 +138,11 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public
   REVOKE INSERT, UPDATE, DELETE, TRUNCATE
   ON TABLES
   FROM anon, authenticated;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  REVOKE EXECUTE
+  ON FUNCTIONS
+  FROM PUBLIC, anon, authenticated;
 ```
 
 PostGIS extension 객체(`spatial_ref_sys`, `geometry_columns`, `geography_columns`)는 `supabase_admin` 소유라 앱 write surface gate에서 제외한다.
@@ -151,6 +157,10 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public
   GRANT INSERT, UPDATE, DELETE, TRUNCATE
   ON TABLES
   TO anon, authenticated;
+
+-- 필요한 write RPC 예외가 있다면 함수별로만 복원한다.
+GRANT EXECUTE ON FUNCTION public.<function_signature>
+  TO authenticated;
 ```
 
 ---
@@ -160,6 +170,7 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public
 - pgTAP: `107_rls_strict_publishable_write_lockdown_test.sql`
   - 앱 public relation에서 `anon/authenticated` write GRANT 0건
   - `pg_policies`에서 public/anon/authenticated write policy 0건
+  - write-capable SECURITY DEFINER RPC에서 `anon/authenticated` EXECUTE 0건
   - `SET ROLE authenticated/anon; INSERT INTO public.tags ...` → `42501`
   - `SET ROLE service_role; INSERT INTO public.tags ...` → success
 - 기존 RLS pgTAP: self/partner direct write 성공 기대값을 permission denied 기대값으로 전환.

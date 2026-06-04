@@ -139,7 +139,7 @@ SELECT is(
 -- Test 5: PARTY_MANAGE 없는 유저 → process_manual_checkin permission denied
 -- ============================================================
 
-SELECT tests.authenticate_as('mc_no_perm');
+SELECT tests.authenticate_as_service_role_user('mc_no_perm');
 
 SELECT throws_like(
   format(
@@ -155,7 +155,7 @@ SELECT throws_like(
 -- Test 6: 존재하지 않는 ticket_id → not_found
 -- ============================================================
 
-SELECT tests.authenticate_as('mc_staff');
+SELECT tests.authenticate_as_service_role_user('mc_staff');
 
 SELECT is(
   public.process_manual_checkin(
@@ -207,7 +207,7 @@ SELECT is(
 -- Test 10: no_show 참가자 → not_found (ticket_issued 외 상태 차단)
 -- ============================================================
 
-SELECT tests.authenticate_as('mc_staff');
+SELECT tests.authenticate_as_service_role_user('mc_staff');
 
 SELECT is(
   public.process_manual_checkin(
