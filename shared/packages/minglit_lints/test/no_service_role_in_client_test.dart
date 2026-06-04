@@ -127,6 +127,24 @@ void main() {
         );
       });
 
+      test('SUPABASE_PROD_SECRET_KEY', () {
+        expect(
+          NoServiceRoleInClientRule.isDangerousIdentifier(
+            'SUPABASE_PROD_SECRET_KEY',
+          ),
+          isTrue,
+        );
+      });
+
+      test('supabaseProdSecretKey', () {
+        expect(
+          NoServiceRoleInClientRule.isDangerousIdentifier(
+            'supabaseProdSecretKey',
+          ),
+          isTrue,
+        );
+      });
+
       test('supabaseSecretKeys', () {
         expect(
           NoServiceRoleInClientRule.isDangerousIdentifier('supabaseSecretKeys'),
@@ -185,6 +203,15 @@ void main() {
         expect(
           NoServiceRoleInClientRule.isDangerousStringValue(
             'SUPABASE_DEV_SECRET_KEY',
+          ),
+          isTrue,
+        );
+      });
+
+      test('staged secret key env name', () {
+        expect(
+          NoServiceRoleInClientRule.isDangerousStringValue(
+            'SUPABASE_PROD_SECRET_KEY',
           ),
           isTrue,
         );
@@ -282,10 +309,13 @@ analyzer:
 
         await File('${appDir.path}/lib/main.dart').writeAsString('''
 const reviewCodexServiceRoleKey = 'x';
+const supabaseProdSecretKey = 'x';
 const reviewCodexPublicKey =
     String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
 const reviewCodexLeak =
     String.fromEnvironment('SUPABASE_SERVICE_ROLE_KEY');
+const reviewCodexProdLeak =
+    String.fromEnvironment('SUPABASE_PROD_SECRET_KEY');
 
 void acceptsSecret(String sbSecret) {}
 ''');
@@ -322,7 +352,7 @@ void acceptsSecret(String sbSecret) {}
             )
             .toList();
 
-        expect(serviceRoleDiagnostics, hasLength(greaterThanOrEqualTo(3)));
+        expect(serviceRoleDiagnostics, hasLength(greaterThanOrEqualTo(5)));
         expect(
           serviceRoleDiagnostics.map((diagnostic) {
             final location = diagnostic['location'] as Map;

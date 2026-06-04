@@ -44,6 +44,14 @@ class NoServiceRoleInClientRule extends DartLintRule {
     'MOBILE_REDIRECT_SCHEME',
   };
 
+  static final _supabaseSecretEnvPattern = RegExp(
+    r'^SUPABASE_[A-Z0-9_]+_SECRET_KEY$',
+  );
+
+  static final _supabaseSecretIdentifierPattern = RegExp(
+    'supabase[a-z0-9]*secretkeys?',
+  );
+
   /// Returns true when [filePath] is a Flutter/client source location.
   ///
   /// Exposed as static for unit testing.
@@ -88,14 +96,14 @@ class NoServiceRoleInClientRule extends DartLintRule {
   static bool isDangerousIdentifier(String name) {
     final upper = name.toUpperCase();
     if (_dangerousEnvNames.contains(upper)) return true;
+    if (_supabaseSecretEnvPattern.hasMatch(upper)) return true;
 
     final compact = name.replaceAll(RegExp('[^A-Za-z0-9]'), '').toLowerCase();
 
     return compact == 'servicerole' ||
         compact.contains('servicerolekey') ||
         compact.contains('supabaseservicerole') ||
-        compact.contains('supabasesecretkey') ||
-        compact.contains('supabasesecretkeys') ||
+        _supabaseSecretIdentifierPattern.hasMatch(compact) ||
         compact.contains('sbsecret');
   }
 
@@ -107,6 +115,7 @@ class NoServiceRoleInClientRule extends DartLintRule {
     final upper = trimmed.toUpperCase();
     if (_safePublicEnvNames.contains(upper)) return false;
     if (_dangerousEnvNames.contains(upper)) return true;
+    if (_supabaseSecretEnvPattern.hasMatch(upper)) return true;
 
     final lower = trimmed.toLowerCase();
     return lower.contains('sb_secret_') || lower.contains('service_role');
