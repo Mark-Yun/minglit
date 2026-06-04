@@ -70,6 +70,7 @@ function makeApp(
     paid_at: ELIGIBLE_PAID_AT,
     event_id: "ev-1",
     refund_status: "none",
+    status: "paid",
     user_id: "u-1",
     ...overrides,
   };
@@ -118,6 +119,27 @@ Deno.test("payment-cancel :: wrong user → 403", async () => {
   assertEquals(res.status, 403);
   const body = await readJson<{ error: string }>(res);
   assertEquals(body.error, "Forbidden");
+});
+
+Deno.test("payment-cancel :: system caller requires rejected application → 403", async () => {
+  const handler = await getHandler();
+  const sb = fakeSupabase().on("event_applications", "select", {
+    data: makeApp({
+      status: "paid",
+      refund_status: "requested",
+      user_id: "other-user",
+    }),
+  });
+  const res = await runHandler(handler, {
+    body: { payment_id: "imp_123" },
+    ctx: makeCtx({
+      supabase: sb,
+      auth: { type: "system", keyFormat: "secret" },
+    }),
+  });
+  assertEquals(res.status, 403);
+  const body = await readJson<{ error: string }>(res);
+  assertEquals(body.error, "system_refund_requires_rejected_application");
 });
 
 // 4. Already refunded (refund_status ≠ "none") → 400
@@ -275,6 +297,47 @@ Deno.test("payment-cancel :: happy path (within grace) → 200 + refund_status=c
       assertEquals(typeof patch.refunded_at, "string");
       // Fix #2099: refund_amount set from PortOne response when not passed
       assertEquals(patch.refund_amount, 15000);
+    });
+  });
+});
+
+Deno.test("payment-cancel :: system rejected requested refund → 200", async () => {
+  const handler = await getHandler();
+  const sb = fakeSupabase()
+    .on("event_applications", "select", {
+      data: makeApp({
+        status: "rejected",
+        refund_status: "requested",
+        user_id: "other-user",
+      }),
+    })
+    .on("events", "select", { data: { start_time: FAR_FUTURE_EVENT } })
+    .on("get_current_policy", "rpc", {
+      data: { grace_period_hours: 2, cutoff_days: 7 },
+    })
+    .on("event_applications", "update", { error: null });
+
+  const { fetchMock } = createFetchMock([
+    portoneTokenRoute,
+    portoneCancelRoute,
+  ]);
+
+  await withEnv(PORTONE_ENV, async () => {
+    await withMockedFetch(fetchMock, async () => {
+      const res = await runHandler(handler, {
+        body: { payment_id: "imp_123", reason: "partner rejected" },
+        ctx: makeCtx({
+          supabase: sb,
+          auth: { type: "system", keyFormat: "secret" },
+        }),
+      });
+      assertEquals(res.status, 200);
+      const body = await readJson<{ success: boolean }>(res);
+      assertEquals(body.success, true);
+
+      const [updateCall] = sb.callsFor("event_applications", "update");
+      const patch = updateCall.payload as Record<string, unknown>;
+      assertEquals(patch.refund_status, "completed");
     });
   });
 });
