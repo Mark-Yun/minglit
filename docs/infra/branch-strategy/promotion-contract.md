@@ -13,6 +13,8 @@
 
 승격 PR 은 source ancestry 보존을 위해 merge commit 을 사용한다. 일반 작업 PR 은 `dev-staging` 에서 squash merge 한다. `dev`, `rc/*`, `main` 직접 PR 은 promotion 또는 승인된 hotfix 만 허용한다.
 
+MDS render PNG 는 source branch 에 커밋하지 않는다. 영구 보존이 필요한 visual evidence 는 전용 branch `artifacts/mds-render` 에 SHA-bound path 로 저장하고, 해당 source SHA 의 commit status 가 그 위치를 가리킨다.
+
 ## Promotion Edges
 
 | Edge | Entry workflow | Source | Target | Merge / mutation |
@@ -30,11 +32,13 @@
 |--------|------|--------|----------|---------|
 | `vYY.MM.DD+YYMMDDNN-dev-staging` | git tag | `dev-staging-dev-cut` | dev promotion, deploy metadata | coherent dev-staging snapshot |
 | `dev-staging-health/*` | commit status | `monitor-dev-staging-health` | human/AI triage only | early regression signal, not a promotion gate |
+| `artifacts/mds-render` | git branch | `sync-mds-render-snapshot` | AI visual review, human audit, `triage-mds-render-snapshot-diff` | source branch 밖의 MDS render PNG archive |
+| `mds-render/snapshot` | commit status | `sync-mds-render-snapshot` | AI visual review, `dev-rc-cut-gate` when visual review is required | dev SHA 의 render snapshot 저장/조회 가능 여부 |
 | `dev-soak/backend-simulator` | commit status | `deploy-dev-event-flow-cron`, simulator reporter, `dev-rc-cut-gate` | `dev-rc-cut-gate` | legacy-named dev health signal |
 | `dev-soak/cuj-user` | commit status | `set-dev-soak-status` (manual; `monitor-dev-cuj` 동결) | `dev-rc-cut-gate` | manual block lever — failure 만 소비, success 는 required evidence 아님 |
 | `dev-soak/cuj-partner` | commit status | `set-dev-soak-status` (manual; `monitor-dev-cuj` 동결) | `dev-rc-cut-gate` | manual block lever — failure 만 소비, success 는 required evidence 아님 |
 | `dev-soak/real-device` | commit status | real-device workflow / AI agent | `dev-rc-cut-gate` | device smoke signal |
-| `dev-soak/app-ai-review` | commit status | AI agent / human-assisted review | `dev-rc-cut-gate` | app UX/blocker review signal |
+| `dev-soak/app-ai-review` | commit status | AI agent / human-assisted review | `dev-rc-cut-gate` | confirmed visual blocker/pass signal, normally consuming `artifacts/mds-render` snapshots |
 | `dev-rc-cut-pass` | commit status | `dev-rc-cut-gate` | `dev-rc-cut`, `main-pr-gate` | RC cut source marker |
 | `promo/rc-YYYY-Wxx` | git tag | `dev-rc-cut` | release audit/deploy metadata | RC branch creation marker |
 | `rc-soak/*` | commit status | RC monitor/dogfooding workflows | `rc-main-cut-gate` | RC soak/pre-main signal |
@@ -52,7 +56,7 @@ Release gate 는 true evidence 기반이다. 실패 이슈가 없다는 사실�
 | Gate | Required success evidence | Blocking evidence |
 |------|---------------------------|-------------------|
 | `dev-pr-gate` | reusable `pr-gate` success + source guard success | source guard failure, PR gate failure |
-| `dev-rc-cut-gate` | same-SHA `deploy-dev-event-flow-cron` success, no required `dev-soak/*` failure status (Flutter CUJ run 요구는 web-mvp pivot 으로 제거) | any required `dev-soak/*=failure`, missing required success evidence, infra failure |
+| `dev-rc-cut-gate` | same-SHA `deploy-dev-event-flow-cron` success, required real-device/app AI review evidence, no required `dev-soak/*` failure status (Flutter CUJ run 요구는 web-mvp pivot 으로 제거) | any required `dev-soak/*=failure`, `mds-render/snapshot=failure` when visual review is required, missing required success evidence, infra failure |
 | `rc-pr-gate` | reusable `pr-gate` success + source guard success | RC-only unapproved source, PR gate failure |
 | `rc-main-cut-gate` | RC age >= 5 days since last RC commit, required `rc-soak/*` success, pre-main validation success, dev-staging-first hotfix lineage | `rc-soak/*=failure`, hotfix lineage violation, missing evidence, age not met |
 | `main-pr-gate` | reusable `pr-gate` success, RC lineage contains `dev-rc-cut-pass=success`, RC HEAD has `rc-main-cut-pass=success` and PR label | missing lineage marker, missing RC marker, PR gate failure |
@@ -65,6 +69,8 @@ Release gate 는 true evidence 기반이다. 실패 이슈가 없다는 사실�
 | `monitor-dev-staging-health` fails | set `dev-staging-health/*=failure`, create/update issue | AI fix PR to `dev-staging` | does not directly block promotion |
 | `dev-pr-gate` fails on promotion PR | promotion PR stays open/failed | fix in `dev-staging`, rerun or regenerate cut | dev does not advance |
 | `dev-soak/cuj-*=failure` set manually (`set-dev-soak-status`; `monitor-dev-cuj` 는 동결) | create/update issue | fix PR to `dev-staging`, next `dev-staging-dev-cut` creates new dev commit | `dev-rc-cut-gate` must not write `dev-rc-cut-pass` |
+| `sync-mds-render-snapshot` fails on dev push | set `mds-render/snapshot=failure`, create/update infra issue | fix workflow/render infra or app render issue via `dev-staging` | visual review cannot pass; `dev-rc-cut-gate` blocks if app AI review is required |
+| AI visual review finds blocker | set `dev-soak/app-ai-review=failure`, create one fix issue per confirmed finding | AI fix PR to `dev-staging`, next `dev-staging-dev-cut` creates new dev commit | `dev-rc-cut-gate` must not write `dev-rc-cut-pass` |
 | `deploy-dev-event-flow-cron` or simulator fails | set `dev-soak/backend-simulator=failure`, create/update issue | AI fix PR to `dev-staging` | `dev-rc-cut-gate` blocks RC eligibility |
 | `dev-rc-cut-gate` missing evidence | no pass marker; cut issue stays waiting | required monitor/status writer reruns or fix PR lands | `dev-rc-cut` skips this commit |
 | `dev-rc-cut` cannot find pass commit | skip and alert if prolonged | run/fix `dev-rc-cut-gate` evidence | no RC branch cut |
@@ -87,6 +93,34 @@ No automatic revert is part of the normal contract. Broken `dev` keeps moving th
 |----------|---------|--------|
 | `monitor-dev-cuj` (disabled) | ~~`push` to `dev`~~, manual dispatch | `dev-soak/cuj-user`, `dev-soak/cuj-partner`, CI issue with failed CUJ file list |
 
+## MDS Render Snapshot Contract
+
+MDS render snapshots are dev health evidence, not source code. The promoted `dev` SHA is the canonical visual candidate.
+
+| Item | Contract |
+|------|----------|
+| Source | latest promoted `dev` commit SHA |
+| Storage branch | `artifacts/mds-render` |
+| Storage path | `snapshots/dev/<dev-sha>/<screen>/state-*.png` |
+| Status | `mds-render/snapshot` on the same `dev` SHA |
+| Consumer | AI visual review / human audit |
+| Fix path | fix PR to `dev-staging`; never commit PNG or fixes directly to `dev` |
+
+Workflow:
+
+1. `dev-staging-dev-cut` promotes a source snapshot to `dev`.
+2. `push` to `dev` triggers the MDS render snapshot writer.
+3. The writer renders emulator PNGs for the promoted `dev` SHA and commits them only to `artifacts/mds-render`.
+4. The writer sets `mds-render/snapshot=success` with a target URL/path to `snapshots/dev/<dev-sha>/`; on failure it sets `failure` and files an issue.
+5. If the artifact commit changed PNGs, the writer dispatches `mds_render_snapshot_archived`; `triage-mds-render-snapshot-diff` runs from the default branch and files a visual review issue when PNG diffs are present.
+6. The AI visual review agent fetches `artifacts/mds-render`, compares `snapshots/dev/<dev-sha>/` against MDS spec assets, and triages findings.
+7. The review issue is not the fix tracker. Each confirmed visual blocker gets a separate fix issue with enough screen/state/snapshot/spec detail for an AI worker to fix it.
+8. If at least one blocker is confirmed, the agent writes `dev-soak/app-ai-review=failure` on the source dev SHA, using the review or representative finding issue as `target_url`.
+9. If no blocker is found, the agent writes `dev-soak/app-ai-review=success` on the same SHA and closes the review issue with evidence.
+10. Visual blockers are fixed through normal `dev-staging` PR flow and reach `dev` in the next promotion.
+
+`artifacts/mds-render` is not a promotion source and is not merged into `dev`, `rc`, or `main`. It is an archive branch and does not carry source workflow files; dispatch from `sync-mds-render-snapshot` is the trigger contract for triage. `latest` pointers may exist for convenience, but gate logic must use SHA-bound paths and commit statuses.
+
 ## Query Examples
 
 ```bash
@@ -97,7 +131,7 @@ git tag -l 'promo/main-*'
 
 ```bash
 gh api repos/<owner>/<repo>/commits/<sha>/status \
-  --jq '.statuses[] | select(.context == "dev-rc-cut-pass" or (.context | startswith("dev-soak/")))'
+  --jq '.statuses[] | select(.context == "dev-rc-cut-pass" or .context == "mds-render/snapshot" or (.context | startswith("dev-soak/")))'
 ```
 
 ```bash
@@ -105,4 +139,4 @@ gh workflow list --all --limit 200 | grep -E 'dev-rc-cut|rc-main-cut|monitor-dev
 ```
 
 ---
-_Reviewed: 2026-06-03 15:15_
+_Reviewed: 2026-06-04 22:11_

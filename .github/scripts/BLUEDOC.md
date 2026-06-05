@@ -9,7 +9,9 @@
 | [`create-dev-flutter-env.sh`](./create-dev-flutter-env.sh) | Actions secrets → `minglit_env/dev/flutter.env` 재생성 (CI 가 private submodule `minglit_env/` 를 받지 못해서 필요, Fix #1169) | `shared-cuj-integration`, `monitor-patrol-e2e` |
 | [`run-user-cuj.sh`](./run-user-cuj.sh) | `apps/app_user/integration_test/cuj/` 의 CUJ 테스트 실행. 모든 CUJ 파일을 실행한 뒤 실패 목록 aggregate | `shared-cuj-integration` (app-name=user 일 때), `monitor-dev-cuj` |
 | [`run-partner-cuj.sh`](./run-partner-cuj.sh) | `apps/app_partner/integration_test/cuj/` CUJ 실행. 모든 CUJ 파일을 실행한 뒤 실패 목록 aggregate | `shared-cuj-integration` (app-name=partner 일 때), `monitor-dev-cuj` |
-| [`run-mds-render-shard.sh`](./run-mds-render-shard.sh) | MDS emulator render catalog 를 app/shard 단위로 `flutter drive` 실행하고 PNG artifact 생성 | `monitor-mds-render-coverage` |
+| [`run-mds-render-shard.sh`](./run-mds-render-shard.sh) | MDS emulator render catalog 를 app/shard 단위로 `flutter drive` 실행하고 PNG artifact 생성 | `monitor-mds-render-coverage`, `sync-mds-render-snapshot` |
+| [`archive-mds-render-snapshot.sh`](./archive-mds-render-snapshot.sh) | 병합된 MDS render PNG 를 `artifacts/mds-render/snapshots/dev/<sha>/` 에 commit/push | `sync-mds-render-snapshot` |
+| [`triage-mds-render-snapshot-diff.sh`](./triage-mds-render-snapshot-diff.sh) | `artifacts/mds-render` 의 snapshot PNG diff 를 화면 단위 이슈로 파일링 | `triage-mds-render-snapshot-diff` |
 | [`check-bluedoc-freshness.sh`](./check-bluedoc-freshness.sh) | PR 에서 새/삭제 파일에 대해 가장 가까운 ancestor BLUEDOC.md 갱신 강제. 통과: 이정표 표 갱신 또는 BLUEDOC 의 `_Reviewed_` 날짜 bump. + 모든 BLUEDOC.md 의 Reviewed 형식 검증 | `pr-gate.check-bluedoc-freshness` (required check) |
 | [`check-pr-issue-reference.sh`](./check-pr-issue-reference.sh) | dev-staging PR 본문에 이슈 종료 의도(`Closes/Fixes/Resolves`) 또는 명시적 비종료 사유(`Refs` + 이유 / `No linked issue`)가 있는지 검사 | `pr-gate.static-checks` |
 | [`check-ios-deploy-branch-conditions.sh`](./check-ios-deploy-branch-conditions.sh) | iOS deploy 브랜치·runner SDK·timeout·heartbeat·Flutter SPM off 계약 검증 | 수동 실행 (`bash .github/scripts/check-ios-deploy-branch-conditions.sh`) |
@@ -37,4 +39,4 @@
 - [.github/BLUEDOC.md](../BLUEDOC.md) — 상위 진입점
 
 ---
-_Reviewed: 2026-06-05 07:25_
+_Reviewed: 2026-06-05 14:09_

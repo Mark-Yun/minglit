@@ -67,7 +67,7 @@ GitHub commit status 를 쓰는 low-level reusable workflow. Stage/signal mappin
 | Trigger | `workflow_call` |
 | Inputs | `sha`, `context`, `state`: failure\|success\|pending, `target_url`, `description` |
 | Outputs | GitHub commit status |
-| Called by | `set-dev-soak-status`, `set-rc-soak-status`, cut-gate evaluators |
+| Called by | `set-dev-soak-status`, `set-rc-soak-status`, `sync-mds-render-snapshot`, cut-gate evaluators |
 
 외부 workflow/AI agent 는 직접 호출하지 않는다. Public API 는 stage별 `set-*-soak-status` entry workflow 다.
 
@@ -199,7 +199,7 @@ Cross-branch cherry-pick PR 자동 생성.
 | Trigger | `schedule` (cut 직전, TBD) + `workflow_dispatch` |
 | Inputs | optional `candidate_sha` (default: latest `origin/dev` HEAD) |
 | Outputs | commit status `dev-rc-cut-pass` (success only) + `dev-soak/*` success confirmations + cut issue `gate/dev-rc` |
-| Steps | calls `shared-soak-gate` with candidate=`origin/dev`, min_soak_hours=0, required runs=`deploy-dev-event-flow-cron>=1` on matching SHA (`monitor-dev-cuj` run 요구는 web-mvp pivot 으로 제거), failure contexts=`dev-soak/backend-simulator` + `dev-soak/cuj-*` (수동 블락 레버), success contexts=required `dev-soak/*` (cuj-* 제외), pass context=`dev-rc-cut-pass`; then upserts cut issue as `status/waiting` or `status/ready` |
+| Steps | calls `shared-soak-gate` with candidate=`origin/dev`, min_soak_hours=0, required runs=`deploy-dev-event-flow-cron>=1` and required visual evidence on matching SHA (`monitor-dev-cuj` run 요구는 web-mvp pivot 으로 제거), failure contexts=`dev-soak/backend-simulator` + `dev-soak/cuj-*` (수동 블락 레버) + required visual contexts, success contexts=required `dev-soak/*` (cuj-* 제외), pass context=`dev-rc-cut-pass`; then upserts cut issue as `status/waiting` or `status/ready` |
 | Failure path | 조건 미충족 또는 required success evidence 누락이면 `dev-rc-cut-pass` 를 쓰지 않는다. 실패를 발견한 monitor/AI agent 가 이미 `dev-soak/*` failure 를 쓴다 |
 
 > **No auto-revert** — snapshot 모델: 실패 = no `dev-rc-cut-pass`, dev keeps moving, 새 fix 가 자연스럽게 다음 dev-staging-dev-cut 후 새 candidate 로 검증됨.
@@ -233,6 +233,26 @@ Cross-branch cherry-pick PR 자동 생성.
 | Branch/env | latest dev commit. User/partner app CUJ 를 각각 실행 |
 | Outputs | `set-dev-soak-status(signal=cuj-user|cuj-partner,state=success|failure)`, issue/alert with failed CUJ files |
 | Note | CUJ runner 는 첫 실패에서 중단하지 않고 모든 CUJ file 을 실행한 뒤 실패 목록을 aggregate 한다 |
+
+#### `sync-mds-render-snapshot`
+
+| 항목 | 값 |
+|------|----|
+| Trigger | `push` to `dev` + `workflow_dispatch` |
+| Branch/env | latest promoted dev commit |
+| Outputs | `artifacts/mds-render` branch commit under `snapshots/dev/<dev-sha>/`, commit status `mds-render/snapshot`, repository dispatch on PNG changes, issue/alert on failure |
+| Steps | (1) resolve dev SHA (2) run MDS emulator render capture (3) commit PNG only to `artifacts/mds-render` using SHA-bound path (4) set `mds-render/snapshot=success` with target URL/path, or `failure` if render/archive write fails (5) dispatch `mds_render_snapshot_archived` when the artifact commit changed PNGs |
+| Note | source branches never receive PNG snapshot commits. `triage-mds-render-snapshot-diff` creates review issues from dispatched artifact branch diffs |
+
+#### `triage-mds-render-snapshot-diff`
+
+| 항목 | 값 |
+|------|----|
+| Trigger | `repository_dispatch: mds_render_snapshot_archived` from `sync-mds-render-snapshot` + `workflow_dispatch` |
+| Branch/env | artifact branch checkout for diff, default branch checkout for workflow/script source |
+| Outputs | GitHub issue with `needs-arch`, `automated`, `P1-high` labels |
+| Steps | (1) diff previous artifact commit vs pushed commit (2) group changed `state-*.png` by source dev SHA (3) create/update visual review issue with snapshot path, compare URL, changed screens, and agent contract |
+| Note | no commit/status mutation. AI agent consumes the issue, creates one fix issue per confirmed visual blocker, and writes `dev-soak/app-ai-review=failure` when at least one blocker is confirmed or `success` when review passes |
 
 ### rc
 
@@ -381,6 +401,8 @@ Promotion/deploy entry workflows support `workflow_dispatch` dry-run where mutat
 | Workflow | Dry-run behavior |
 |----------|------------------|
 | `dev-staging-dev-cut` | computes/reuses dev-staging snapshot tag, computes cut branch, skips version bump/tag/branch push/PR/auto-merge |
+| `sync-mds-render-snapshot` | resolves target SHA and planned artifact path, skips emulator render, artifact branch push, and `mds-render/snapshot` status write |
+| `triage-mds-render-snapshot-diff` | computes diff and issue body, skips issue creation/update |
 | `dev-rc-cut-gate` | evaluates dev health run/status inputs, skips `dev-soak/*` and `dev-rc-cut-pass` status writes |
 | `dev-rc-cut` | selects source SHA/RC week, skips RC branch push/promo tag |
 | `rc-main-cut-gate` | selects RC branch and evaluates soak, skips `rc-main-cut-pass` status write |
@@ -395,6 +417,7 @@ Use dry-run before connecting new deploy backends or changing branch rulesets. D
 - `pr-gate-core` 의 stage 별 `extra_steps` 명세
 - `set-dev-soak-status` / `set-rc-soak-status` 의 signal set 확정
 - real-device / app AI review 가 어떤 workflow 또는 agent 에서 pass/failure status 를 쓸지 확정
+- `sync-mds-render-snapshot` 의 artifact branch push/retry 방식
 - `dev-deploy` 가 실제로 맡을 dev deploy/smoke 범위
 - `rc-deploy` 의 Supabase branch seed data 와 event-flow simulation contract
 - CUJ chaos 시나리오 정의 (현재 미정의)
@@ -415,4 +438,4 @@ Use dry-run before connecting new deploy backends or changing branch rulesets. D
 - `execution-plan.md` (예정) — 기존 workflow refactor + 구현 순서
 
 ---
-_Reviewed: 2026-05-24 16:45_
+_Reviewed: 2026-06-04 22:11_

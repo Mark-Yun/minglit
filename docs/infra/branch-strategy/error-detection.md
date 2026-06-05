@@ -9,8 +9,8 @@
 | 개발자 로컬 | LSP, analyze, unit | 컴파일/타입/단위 | 초~분 |
 | dev-staging PR gate | `dev-staging-pr-gate` (unit, lint, pgTAP, EF, migration, `expand-migrate-contract`, `flag-registration`, gitleaks) | PR 회귀, 보안, migration 충돌, flag 미등록, contract 위반 | < 10분 |
 | dev-staging-dev-cut PR | `dev-pr-gate` (defensive) | 환경 차이 회귀 | < 10분 |
-| dev health | `deploy-dev-event-flow-cron`, real-device workflow, AI app review status writer via `set-dev-soak-status` (`monitor-dev-cuj` 동결 — web-mvp pivot) | backend simulator, 외부 의존, 디바이스, UX/blocker | 즉시~분 |
-| RC cut 직전 | `dev-rc-cut-gate` evaluator | required dev health evidence 미충족, `dev-soak/*` failure status, monitor 미실행 | 분 |
+| dev health | `deploy-dev-event-flow-cron`, `sync-mds-render-snapshot`, real-device workflow, AI app review status writer via `set-dev-soak-status` (`monitor-dev-cuj` 동결 — web-mvp pivot) | backend simulator, visual regression, 외부 의존, 디바이스, UX/blocker | 즉시~분 |
+| RC cut 직전 | `dev-rc-cut-gate` evaluator | required dev health evidence 미충족, `mds-render/snapshot`/`dev-soak/*` failure status, monitor 미실행 | 분 |
 | Backend/Web deploy validation | post-deploy smoke, Sentry release marker | deploy infra 회귀 | 분 |
 | rc soak (5일) | rc 의 nightly 재실행 + 내부 dogfooding | 누적 회귀, real-data 이슈 | 일 단위 |
 | main 머지 후 (auto-deploy) | smoke + Sentry/Crashlytics 알람 임계 | prod 회귀 | 분 |
@@ -55,6 +55,7 @@
 | Detection 신호 | 누가 받음 | 어디서 | Action |
 |---------------|----------|--------|--------|
 | pr-gate 실패 (어느 단계든) | PR 작성자 | GitHub PR | 본인 fix → re-push → auto-merge 재대기 |
+| `mds-render/snapshot` failure status | release manager / AI agent | commit status + GitHub issue | render infra 또는 app render 문제 확인. fix 는 dev-staging PR 로 처리 |
 | `dev-soak/*` failure status | 직전 dev-rc-cut-pass 이후 머지된 PR 작성자들 + AI agent | commit status + GitHub issue + Slack `#nightly` | AI agent fix PR via dev-staging — dev keeps moving ([dev-pipeline.md](./dev-pipeline.md)) |
 | `dev-rc-cut-gate` evaluator 미충족 | release manager / AI agent | GitHub Actions run summary | RC cut 보류. failure status 또는 monitor run history 부족 원인 확인 |
 | Backend/web deploy validation 실패 | on-call | Slack `#release` | retry → P0 이슈, 해당 promotion/deploy 진행 차단 |
@@ -89,4 +90,4 @@
 - [../firebase/BLUEDOC.md](../firebase/BLUEDOC.md), [../statsig/BLUEDOC.md](../statsig/BLUEDOC.md)
 
 ---
-_Reviewed: 2026-05-19 09:47_
+_Reviewed: 2026-06-04 22:11_

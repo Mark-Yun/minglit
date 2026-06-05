@@ -15,9 +15,9 @@
 | `pr-review-setup-` | PR 의 "리뷰 준비" 자동화 — auto-merge enable + 조건 충족 시 `needs-review` 라벨 부여 | `pr-review-setup` |
 | `deploy-` | 사용자·dev 환경에 코드·스키마·시드가 안 갔음 | `dev-deploy`, `main-deploy`, `deploy-vercel`, `deploy-supabase`, `deploy-dev-event-flow-cron`, `deploy-android-user`, `deploy-ios-user`, `deploy-dev-seed` |
 | `monitor-` | 운영·테스트 시스템 헬스 이상 / 스케줄 유지보수 | `monitor-dev-staging-health`, `monitor-dev-cuj`, `monitor-db-invariants`, `monitor-event-flow-distributed`, `monitor-event-flow-hourly`, `monitor-event-flow-daily`, `monitor-mds-render-coverage`, `monitor-patrol-e2e`, `monitor-allure`, `monitor-build-retention`, `monitor-security-advisor`, `monitor-doc-freshness` |
-| `sync-` | repo 에 자동 commit/push 가 실패함 (dev-staging push 또는 merge 기반) | `sync-graphify`, `sync-mds-mockups`, `sync-pr-branches`, `sync-test-coverage` |
+| `sync-` | repo 에 자동 commit/push 가 실패함 (dev-staging push 또는 merge 기반) | `sync-graphify`, `sync-mds-mockups`, `sync-mds-render-snapshot`, `sync-pr-branches`, `sync-test-coverage` |
 | `set-` | GitHub status/metadata 를 쓰는 수동·자동 API entrypoint 실패 | `set-dev-soak-status`, `set-rc-soak-status` |
-| `triage-` | 이슈 생성·슬래시 명령 (commit 없음) | `triage-mds-issue`, `triage-slash` |
+| `triage-` | 이슈 생성·슬래시 명령 (commit 없음) | `triage-mds-issue`, `triage-mds-render-snapshot-diff`, `triage-slash` |
 | `post-merge` | dev-staging push 직후 일반 PR flow follow-up 자동화의 단일 entry point | `post-merge` |
 | `tool-` | (수동으로 부를 때만 도는 도구) | (현재 없음 — 새 수동 도구 추가 시 prefix) |
 | `shared-` | (다른 워크플로우의 부품 — 단독 실행 X) | `shared-notify`, `shared-android-deploy`, `shared-ios-deploy`, `shared-vercel-deploy`, `shared-set-commit-status`, `shared-soak-gate`, `shared-promo-tag`, `shared-pr-source-guard` |
@@ -35,6 +35,8 @@
 - `dev-pr-gate`, `rc-pr-gate`, `main-pr-gate` 는 `shared-pr-source-guard` 로 직접 PR 을 차단한다. 정상 진입점은 `dev-staging` 이고, 예외는 branch별 approved hotfix 뿐이다.
 - `monitor-dev-staging-health` 는 required check 가 아니다. 6시간마다 `dev-staging` HEAD 에서 EF unit/integration 중심으로 nightly 전 회귀를 발견하고, 결과를 `dev-staging-health/*` commit status 로 남긴다.
 - `monitor-dev-cuj` 는 Flutter 모바일 동결(웹 MVP 피벗)로 disable 대상이다. 활성 시절에는 `dev` push 마다 user/partner CUJ 를 실행하고 `dev-soak/cuj-*` status 와 실패 이슈를 남겼다.
+- `sync-mds-render-snapshot` 은 `dev` push 마다 MDS emulator render PNG 를 `artifacts/mds-render/snapshots/dev/<sha>/` 에 commit/push 하고 `mds-render/snapshot` status 를 남긴다. PNG 변경이 있으면 `mds_render_snapshot_archived` repository dispatch 로 triage 를 깨운다. Source branch 에 PNG 를 커밋하지 않는다.
+- `triage-mds-render-snapshot-diff` 는 `mds_render_snapshot_archived` dispatch 의 artifact diff 를 감지해 AI visual review issue 를 만든다. 이 workflow 는 commit 하지 않는다.
 - `dev-staging-dev-cut-gate` 는 수동 candidate inspect 전용이며 per-merge mutation 을 하지 않는다. 날짜 기반 dev-staging version bump/tag 는 하루 1회 `dev-staging-dev-cut` 이 직접 수행한다.
 - `dev-staging-dev-cut` 은 release bot 으로 protected `dev-staging` 에 version bump commit 을 fast-forward push 하고 `vYY.MM.DD+YYMMDDNN-dev-staging` tag 를 만든 뒤, 해당 tag SHA 를 `dev` 로 promote 한다. `dev`/`rc`/`main` promotion 은 source-controlled version 변경 없이 처리한다.
 - `dev-rc-cut-gate` 는 cut 직전 evaluator 다. 내부에서 `shared-soak-gate` 를 호출해 legacy `dev-soak/*` health status 와 `deploy-dev-event-flow-cron` same-SHA run evidence 를 확인하고, 통과한 commit 에만 `dev-rc-cut-pass` status 를 찍는다 (모바일 동결로 CUJ run requirement 는 제거, `dev-soak/cuj-*` failure 는 수동 block lever 로 유지).
@@ -78,4 +80,4 @@
 - [CLAUDE.md](../../CLAUDE.md) `## PR Conventions` — branch별 required check / auto-merge 흐름
 
 ---
-_Reviewed: 2026-06-04 07:16_
+_Reviewed: 2026-06-04 22:11_

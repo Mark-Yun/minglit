@@ -15,6 +15,9 @@ flowchart LR
   npg --> dev[dev]
 
   dev --> dh[dev health / CUJ signals]
+  dev --> mds["MDS render snapshots"]
+  mds --> art["artifacts/mds-render"]
+  mds -. mds-render/snapshot .-> dh
   dh --> rg[dev-rc-cut-gate]
   monitor["monitor-event-flow-* batch"] -. dev-soak/backend-simulator .-> dev
   cuj["monitor-dev-cuj (frozen)"] -. "dev-soak/cuj-* (manual lever)" .-> dev
@@ -51,6 +54,7 @@ flowchart LR
 | dev-staging → dev cut | `dev-staging-dev-cut` + `dev-pr-gate` | daily cut 시점에 coherent snapshot 을 직접 bump/tag 하고 dev PR 로 promote |
 | dev → rc cut gate | `dev-rc-cut-gate` | dev health/CUJ status + dev cron install run 확인 후 `dev-rc-cut-pass` status 부여 |
 | dev deploy/validation | `dev-deploy` | dev 환경 deploy/validation orchestrator. 이벤트 플로우 시뮬레이터는 dev Supabase pg_cron 으로 별도 운영 |
+| dev visual evidence | `sync-mds-render-snapshot` | dev push SHA 기준 MDS PNG 를 `artifacts/mds-render` 에 저장하고 `mds-render/snapshot` status 제공 |
 | dev → rc cut | `dev-rc-cut` | latest `dev-rc-cut-pass` commit 에서 `rc/YYYY-Wxx` 생성 |
 | rc hotfix | dev-staging fix PR + `rc-pr-gate` | dev-staging 에 먼저 반영된 fix commit 을 active RC 로 cherry-pick/promote |
 | rc deploy/validation | `rc-deploy` | Supabase branching 기반 RC 검증 환경 구성 + pre-main validation |
@@ -107,6 +111,7 @@ flowchart LR
 - cut-gate Issue 는 사람이 진행 상태를 추적하기 위한 projection 이다. 생성/갱신/닫기는 `.github/actions/cut-issue` 와 `close-cut-issue-on-pr-merge` 가 담당하며, promotion 판정 SSOT 로 사용하지 않는다
 - 일반 작업 PR 은 dev-staging 에서 squash 로 정리한다. Branch promotion PR 은 source branch ancestry 보존을 위해 merge commit 을 사용하며, dev/rc/main 에 linear history 를 강제하지 않는다
 - Protected branch 직접 push 는 human 금지. dev-staging daily cut version bump, promotion branch/tag, RC cleanup 은 `minglit-release-bot` 전용 token + Ruleset bypass 로만 허용
+- MDS render PNG 는 source branch 에 커밋하지 않는다. dev push SHA 의 visual evidence 는 `artifacts/mds-render/snapshots/dev/<sha>/` 에 저장하고 `mds-render/snapshot` + `dev-soak/app-ai-review` status 로 소비한다
 - `deploy-dev-event-flow-cron` 은 `dev` push 에서만 `dev-event-flow-simulator` pg_cron 을 설치한다. `monitor-event-flow-*` 는 수동 smoke 이며, RC cron 은 RC project 준비 후 별도 설치한다
 - main 머지 = backend + mobile 모두 prod deploy. backend prod deploy 는 `main-deploy` 에서 한 번에 수행한다
 - 소스 파일 version bump 는 `dev-staging-dev-cut` 이 promote 할 dev-staging snapshot 에만 남긴다. release bot 이 protected `dev-staging` 에 직접 bump commit 을 fast-forward push 하고, 날짜 버전(`YY.MM.DD`) + snapshot build number(`YYMMDDNN`) tag 를 붙인다. `dev`/`rc`/`main` 은 branch state 를 바꾸지 않고 deploy workflow 가 metadata 를 build-time 에 주입한다
@@ -132,4 +137,4 @@ Promotion PR 제목은 workflow 이름과 source artifact 를 앞에 둔다. PR 
 RC cut 의 source-of-truth status 이름은 **`dev-rc-cut-pass`** 이다. `rc-eligible` 은 workflow/status 명칭으로 쓰지 않으며, 새 이름으로 바꾸려면 `dev-rc-cut-gate`, `dev-rc-cut`, `main-pr-gate`, 문서 전체를 같은 PR 에서 일괄 변경한다.
 
 ---
-_Reviewed: 2026-06-03 15:15_
+_Reviewed: 2026-06-04 22:11_
