@@ -3,7 +3,7 @@
 // apply.ts 의 apply_test.ts 가 자세한 패턴 모범. 본 파일은 7 액션의 식별자/기본
 // 분기만 검증해서 PR 회귀 가드 역할. 추후 액션별 *_test.ts 분리 가능 (#TBD issue).
 
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertThrows } from "@std/assert";
 import { refundAction } from "./refund.ts";
 import { checkinAction } from "./checkin.ts";
 import { discoverAction } from "./discover.ts";
@@ -230,6 +230,17 @@ Deno.test({
       myEvents: [{ status: "scheduled" }, { status: "scheduled" }],
     };
     assertEquals(partnerCreateEventAction.canExecute(state), false);
+  },
+});
+
+Deno.test({
+  name: "partnerCreateEventAction.buildPayload - throws without an existing party",
+  fn: () => {
+    assertThrows(
+      () => partnerCreateEventAction.buildPayload({ myParties: [] }, rng),
+      Error,
+      "without an existing party",
+    );
   },
 });
 

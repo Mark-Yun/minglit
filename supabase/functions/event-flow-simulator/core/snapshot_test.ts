@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertRejects } from "@std/assert";
 import {
   createMockSupabaseClient,
   type MockRange,
@@ -42,6 +42,13 @@ Deno.test({
     const tickets = [
       { id: "ticket-late", event_id: "event-late", price: 15000 },
     ];
+    const blocks = [
+      {
+        user_id: "user-1",
+        target_id: "partner-1000",
+        target_type: "partner",
+      },
+    ];
 
     const supabase = createMockSupabaseClient({
       tables: {
@@ -73,7 +80,14 @@ Deno.test({
           select: () => ({ data: [], error: null }),
         },
         social_interactions: {
-          select: () => ({ data: [], error: null }),
+          select: ({ filters, range }) => {
+            assertEquals(filters.interaction_type, "block");
+            assertEquals(filters.target_type, "partner");
+            return {
+              data: pageRows(filterIn(blocks, filters, "target_id"), range),
+              error: null,
+            };
+          },
         },
       },
     });
@@ -89,5 +103,32 @@ Deno.test({
     assertEquals(snapshot.events[0].tickets, [
       { id: "ticket-late", price: 15000 },
     ]);
+    assertEquals(snapshot.blocks, blocks);
+  },
+});
+
+Deno.test({
+  name: "buildSnapshot surfaces select errors",
+  fn: async () => {
+    const supabase = createMockSupabaseClient({
+      tables: {
+        parties: {
+          select: () => ({
+            data: null,
+            error: { message: "load failed" },
+          }),
+        },
+      },
+    });
+
+    await assertRejects(
+      () =>
+        buildSnapshot(
+          // deno-lint-ignore no-explicit-any
+          supabase as any,
+        ),
+      Error,
+      "buildSnapshot: failed to load parties: load failed",
+    );
   },
 });

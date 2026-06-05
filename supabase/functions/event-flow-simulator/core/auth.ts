@@ -26,16 +26,9 @@ export async function getSimUserToken(
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error || !data.session?.access_token) {
-    throw new Error(
-      `getSimUserToken: failed to sign in ${email}: ${
-        error?.message ?? "no session"
-      }`,
-    );
+    throw new Error(`getSimUserToken: failed to sign in ${email}: ${error?.message ?? "no session"}`);
   }
 
   const token = data.session.access_token;
@@ -101,16 +94,9 @@ export async function getSimPartnerToken(
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: partnerEmail,
-    password,
-  });
+  const { data, error } = await supabase.auth.signInWithPassword({ email: partnerEmail, password });
   if (error || !data.session?.access_token) {
-    throw new Error(
-      `getSimPartnerToken: failed to sign in ${partnerEmail}: ${
-        error?.message ?? "no session"
-      }`,
-    );
+    throw new Error(`getSimPartnerToken: failed to sign in ${partnerEmail}: ${error?.message ?? "no session"}`);
   }
 
   const token = data.session.access_token;
@@ -137,8 +123,7 @@ export async function getPartnerEmail(
   if (memberErr || !members || members.length === 0) return null;
 
   const userId = (members[0] as { user_id: string }).user_id;
-  const { data: authUser, error: authErr } = await supabase.auth.admin
-    .getUserById(userId);
+  const { data: authUser, error: authErr } = await supabase.auth.admin.getUserById(userId);
   if (authErr || !authUser?.user?.email) return null;
 
   return authUser.user.email;
