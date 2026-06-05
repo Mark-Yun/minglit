@@ -4,6 +4,7 @@
 //   <screen>__<state>
 // driver 의 onScreenshot 콜백이 이 name 을 split 해서 출력 경로 결정.
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -24,6 +25,10 @@ class MdsRenderEngine {
 
     for (final state in catalog.states) {
       testWidgets(state.name, (tester) async {
+        addTearDown(() {
+          debugDefaultTargetPlatformOverride = null;
+        });
+
         final builder = state.setup(catalog.builder());
         await tester.pumpWidget(builder.build());
         // Fix #2590: repeat() 애니메이션은 pumpAndSettle이 timeout — 고정 pump 사용.

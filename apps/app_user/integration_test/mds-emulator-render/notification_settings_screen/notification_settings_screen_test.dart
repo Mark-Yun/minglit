@@ -13,8 +13,18 @@ final catalog = MdsCatalog<NotificationSettingsScreenBuilder>(
   mdsSpec: 'apps/mds/docs/public/specs/notification_settings_screen/',
   builder: NotificationSettingsScreenBuilder.new,
   states: [
-    MdsState('state-loaded', (b) => b, mdsIndex: 1),
-    MdsState('state-dark', (b) => b.dark()),
+    MdsState('state-mixed', (b) => b.mixed(), mdsIndex: 1),
+    MdsState('state-all-off', (b) => b.allOff(), mdsIndex: 2),
+    MdsState('state-all-on', (b) => b.allOn(), mdsIndex: 3),
+    MdsState(
+      'state-loading',
+      (b) => b.loading(),
+      mdsIndex: 4,
+      infiniteAnimation: true,
+    ),
+    MdsState('state-error', (b) => b.error(), mdsIndex: 5),
+    // state_6 permission-denied is documented as a future implementation state.
+    MdsState('state-dark', (b) => b.mixed().dark()),
   ],
 );
 

@@ -11,6 +11,7 @@ import 'package:app_partner/src/features/auth/partner_login_page.dart';
 import 'package:app_partner/src/features/checkin/checkin_placeholder_page.dart';
 import 'package:app_partner/src/features/home/guide/location_guide_page.dart';
 import 'package:app_partner/src/features/home/guide/partner_guide_page.dart';
+import 'package:app_partner/src/features/home/partner_active_event_list_page.dart';
 import 'package:app_partner/src/features/home/partner_home_page.dart';
 import 'package:app_partner/src/features/member/partner_member_list_page.dart';
 import 'package:app_partner/src/features/member/partner_member_permission_page.dart';
@@ -117,6 +118,7 @@ class NotificationCenterRoute extends GoRouteData
           routes: [
             TypedGoRoute<LocationGuideRoute>(path: 'guide/location'),
             TypedGoRoute<PartnerGuideRoute>(path: 'guide'),
+            TypedGoRoute<PartnerActiveEventListRoute>(path: 'events/active'),
           ],
         ),
       ],
@@ -281,6 +283,17 @@ class PartnerGuideRoute extends GoRouteData with $PartnerGuideRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const PartnerGuidePage();
+}
+
+class PartnerActiveEventListRoute extends GoRouteData
+    with $PartnerActiveEventListRoute {
+  const PartnerActiveEventListRoute({this.filter});
+
+  final String? filter;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      PartnerActiveEventListPage(initialFilter: filter);
 }
 
 class ApplicationListRoute extends GoRouteData with $ApplicationListRoute {

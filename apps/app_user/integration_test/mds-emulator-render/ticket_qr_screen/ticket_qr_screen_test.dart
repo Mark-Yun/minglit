@@ -20,9 +20,19 @@ final catalog = MdsCatalog<TicketQRScreenBuilder>(
   mdsSpec: 'apps/mds/docs/public/specs/ticket_qr_screen/',
   builder: TicketQRScreenBuilder.new,
   states: [
-    MdsState('state-with-token', (b) => b, mdsIndex: 1),
-    MdsState('state-not-found', (b) => b.notFound(), mdsIndex: 5),
-    MdsState('state-dark', (b) => b.dark()),
+    MdsState(
+      'state-with-token',
+      (b) => b,
+      mdsIndex: 1,
+      infiniteAnimation: true,
+    ),
+    MdsState(
+      'state-not-found',
+      (b) => b.notFound(),
+      mdsIndex: 5,
+      infiniteAnimation: true,
+    ),
+    MdsState('state-dark', (b) => b.dark(), infiniteAnimation: true),
   ],
 );
 

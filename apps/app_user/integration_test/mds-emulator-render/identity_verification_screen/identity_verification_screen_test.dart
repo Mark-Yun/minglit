@@ -19,7 +19,12 @@ final catalog = MdsCatalog<IdentityVerificationScreenBuilder>(
       mdsIndex: 1,
       infiniteAnimation: true,
     ),
-    MdsState('state-consent-sheet', (b) => b.withConsentSheet(), mdsIndex: 2),
+    MdsState(
+      'state-consent-sheet',
+      (b) => b.withConsentSheet(),
+      mdsIndex: 2,
+      infiniteAnimation: true,
+    ),
     // MDS state_3(WebView) and state_4(Success) are external/transient
     // Iamport surfaces, so this catalog captures only app-owned states.
     MdsState('state-error-retry', (b) => b.errorRetry(), mdsIndex: 5),

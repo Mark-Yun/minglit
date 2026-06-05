@@ -46,4 +46,4 @@ curl -X POST "https://<project>.supabase.co/functions/v1/event-flow-simulator" \
 - 단위 테스트: `cd supabase/functions && deno test event-flow-simulator/`
 
 ---
-_Reviewed: 2026-05-25 16:20_
+_Reviewed: 2026-06-05 10:15_

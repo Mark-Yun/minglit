@@ -23,6 +23,7 @@ final catalog = MdsCatalog<SettlementDetailPageBuilder>(
       mdsIndex: 5,
       infiniteAnimation: true,
     ),
+    MdsState('state-download-sheet', (b) => b.downloadSheet(), mdsIndex: 6),
   ],
 );
 

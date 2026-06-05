@@ -25,8 +25,8 @@ class LoadedConsentController extends ConsentController {
         userId: 'mock-user-1',
         consentKey: type,
         consented: consented,
-        consentedAt: DateTime.utc(2026, 1, 1),
-        createdAt: DateTime.utc(2026, 1, 1),
+        consentedAt: DateTime.utc(2026),
+        createdAt: DateTime.utc(2026),
       );
 }
 
@@ -64,6 +64,20 @@ class EmptyNotificationListNotifier extends NotificationList {
   Future<List<Map<String, dynamic>>> build() async => [];
 }
 
+/// 로딩 유지.
+class LoadingNotificationListNotifier extends NotificationList {
+  @override
+  Future<List<Map<String, dynamic>>> build() =>
+      Completer<List<Map<String, dynamic>>>().future;
+}
+
+/// 오류 상태.
+class ErrorNotificationListNotifier extends NotificationList {
+  @override
+  Future<List<Map<String, dynamic>>> build() async =>
+      throw Exception('notification render error');
+}
+
 /// 정적 알림 목록 (2건).
 class StaticNotificationListNotifier extends NotificationList {
   @override
@@ -87,7 +101,30 @@ class StaticNotificationListNotifier extends NotificationList {
   ];
 }
 
-// ── Notification Settings ─────────────────────────────────────────────────────
+/// 모두 읽음 처리된 정적 알림 목록.
+class AllReadNotificationListNotifier extends NotificationList {
+  @override
+  Future<List<Map<String, dynamic>>> build() async => [
+    {
+      'id': 'notif-read-1',
+      'title': '이벤트 예약 확정',
+      'body': '5월 20일 파티 예약이 확정되었습니다.',
+      'is_read': true,
+      'created_at': '2026-05-17T10:00:00.000Z',
+      'deep_link': null,
+    },
+    {
+      'id': 'notif-read-2',
+      'title': '새 이벤트 추천',
+      'body': '관심사에 맞는 새 이벤트가 등록되었습니다.',
+      'is_read': true,
+      'created_at': '2026-05-16T14:30:00.000Z',
+      'deep_link': null,
+    },
+  ];
+}
+
+// ── Notification Settings ────────────────────────────────────────────────────
 
 /// 알림 설정 로드 완료 (service ON, marketing OFF).
 class LoadedNotificationSettingsNotifier
@@ -96,9 +133,42 @@ class LoadedNotificationSettingsNotifier
   FutureOr<UserSettings?> build() async => UserSettings(
     userId: 'mock-user-1',
     updatedAt: DateTime.utc(2026, 5, 17),
-    serviceNotification: true,
-    marketingConsent: false,
   );
+}
+
+/// 알림 설정 로드 완료 (service OFF, marketing OFF).
+class AllOffNotificationSettingsNotifier
+    extends NotificationSettingsController {
+  @override
+  FutureOr<UserSettings?> build() async => UserSettings(
+    userId: 'mock-user-1',
+    updatedAt: DateTime.utc(2026, 5, 17),
+    serviceNotification: false,
+  );
+}
+
+/// 알림 설정 로드 완료 (service ON, marketing ON).
+class AllOnNotificationSettingsNotifier extends NotificationSettingsController {
+  @override
+  FutureOr<UserSettings?> build() async => UserSettings(
+    userId: 'mock-user-1',
+    updatedAt: DateTime.utc(2026, 5, 17),
+    marketingConsent: true,
+  );
+}
+
+/// 알림 설정 로딩 유지.
+class LoadingNotificationSettingsNotifier
+    extends NotificationSettingsController {
+  @override
+  FutureOr<UserSettings?> build() => Completer<UserSettings?>().future;
+}
+
+/// 알림 설정 오류 상태.
+class ErrorNotificationSettingsNotifier extends NotificationSettingsController {
+  @override
+  FutureOr<UserSettings?> build() async =>
+      throw Exception('notification settings render error');
 }
 
 /// 필터 (location, eligibility) 비활성화.

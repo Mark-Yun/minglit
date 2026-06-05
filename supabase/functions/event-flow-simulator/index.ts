@@ -210,6 +210,13 @@ export const handler = async (
     // 4. invariant 검증
     const violations = await checkAll(supabase);
     const summary = summarizeTrace(cascade.trace);
+    const actionCounts = cascade.trace.reduce<Record<string, number>>(
+      (counts, entry) => {
+        counts[entry.action.type] = (counts[entry.action.type] ?? 0) + 1;
+        return counts;
+      },
+      {},
+    );
     const githubIssueUrl = await reportFailure({
       runId,
       trace: cascade.trace,
@@ -225,8 +232,13 @@ export const handler = async (
       metadata: {
         runId,
         actorsCount: actors.length,
+        actorCounts: {
+          partner: actors.filter((actor) => actor.role === "partner").length,
+          user: actors.filter((actor) => actor.role === "user").length,
+        },
         usersPerTick,
         partnersPerTick,
+        actionCounts,
         traceTotal: summary.total,
         traceOk: summary.ok,
         traceFailed: summary.failed,
