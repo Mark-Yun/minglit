@@ -34,9 +34,7 @@ class _LoadingAuthController extends AuthController {
 
 class _ErrorAuthController extends AuthController {
   @override
-  Future<void> build() async {
-    throw Exception('render: forced auth error');
-  }
+  FutureOr<void> build() {}
 }
 
 class PartnerLoginPageBuilder extends MdsScreenBuilder<PartnerLoginPage> {
