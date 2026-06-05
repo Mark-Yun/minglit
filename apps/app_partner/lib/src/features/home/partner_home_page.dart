@@ -188,10 +188,7 @@ class PartnerHomePage extends ConsumerWidget {
                       onPartiesTap: () {
                         unawaited(const PartyListRoute().push<void>(context));
                       },
-                      // spec: 모집 중인 이벤트 → 이벤트 리스트(파티 리스트 경유)
-                      onEventsTap: () {
-                        unawaited(const PartyListRoute().push<void>(context));
-                      },
+                      onEventsTap: coordinator.pushActiveEventList,
                       onAttendeesTap: coordinator.goToApplicationList,
                     ),
                     if (state.liveEvents.isNotEmpty) ...[

@@ -60,6 +60,7 @@ Widget _buildPage({
   final coord = coordinator ?? _MockPartnerHomeCoordinator();
   when(coord.pushNotificationCenter).thenReturn(null);
   when(coord.pushBankAccount).thenReturn(null);
+  when(coord.pushActiveEventList).thenReturn(null);
   when(() => coord.pushEventCreate(any())).thenReturn(null);
   return ProviderScope(
     overrides: [
@@ -143,6 +144,7 @@ void main() {
         );
         final coord = _MockPartnerHomeCoordinator();
         when(coord.pushNotificationCenter).thenReturn(null);
+        when(coord.pushActiveEventList).thenReturn(null);
         when(() => coord.pushEventCreate(any())).thenReturn(null);
 
         await tester.pumpWidget(
@@ -177,6 +179,7 @@ void main() {
       final coordinator = _MockPartnerHomeCoordinator();
       when(coordinator.pushNotificationCenter).thenReturn(null);
       when(coordinator.pushBankAccount).thenReturn(null);
+      when(coordinator.pushActiveEventList).thenReturn(null);
       when(() => coordinator.pushEventCreate(any())).thenReturn(null);
 
       await tester.pumpWidget(
@@ -195,6 +198,45 @@ void main() {
       await tester.tap(find.text('계좌 확인 중'));
 
       verify(coordinator.pushBankAccount).called(1);
+    });
+
+    testWidgets('overview events stat opens active event list route owner', (
+      tester,
+    ) async {
+      final coordinator = _MockPartnerHomeCoordinator();
+      when(coordinator.pushNotificationCenter).thenReturn(null);
+      when(coordinator.pushBankAccount).thenReturn(null);
+      when(coordinator.pushActiveEventList).thenReturn(null);
+      when(() => coordinator.pushEventCreate(any())).thenReturn(null);
+
+      await tester.pumpWidget(
+        _buildPage(
+          coordinator: coordinator,
+          dashboardState: PartnerDashboardState(
+            status: const AsyncValue.data(null),
+            hasAnyEvents: true,
+            bankAccountReady: true,
+            totalPartyCount: 1,
+            recruitingEvents: [
+              Event(
+                id: 'event-1',
+                partyId: 'party-1',
+                title: '모집 이벤트',
+                startTime: DateTime(2030, 1, 10, 19),
+                endTime: DateTime(2030, 1, 10, 21),
+                createdAt: DateTime(2030),
+                updatedAt: DateTime(2030),
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('모집 중인 이벤트').first);
+      await tester.pump();
+
+      verify(coordinator.pushActiveEventList).called(1);
     });
   });
 }
