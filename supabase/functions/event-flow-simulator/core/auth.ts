@@ -106,7 +106,7 @@ export async function getSimPartnerToken(
 
 /**
  * Look up the email address for a partner's member account.
- * Queries partner_members to find a member for the given partner_id,
+ * Queries partner_member_permissions to find a member for the given partner_id,
  * then fetches the auth user record to retrieve their email.
  * Returns null if no member or auth user is found.
  */
@@ -115,7 +115,7 @@ export async function getPartnerEmail(
   partnerId: string,
 ): Promise<string | null> {
   const { data: members, error: memberErr } = await supabase
-    .from("partner_members")
+    .from("partner_member_permissions")
     .select("user_id")
     .eq("partner_id", partnerId)
     .limit(1);

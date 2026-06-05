@@ -3,7 +3,7 @@
 // apply.ts 의 apply_test.ts 가 자세한 패턴 모범. 본 파일은 7 액션의 식별자/기본
 // 분기만 검증해서 PR 회귀 가드 역할. 추후 액션별 *_test.ts 분리 가능 (#TBD issue).
 
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertThrows } from "@std/assert";
 import { refundAction } from "./refund.ts";
 import { checkinAction } from "./checkin.ts";
 import { discoverAction } from "./discover.ts";
@@ -59,7 +59,7 @@ Deno.test({
 
     assertEquals(partnerCreateEventAction.type, "partner_create_event");
     assertEquals(partnerCreateEventAction.role, "partner");
-    assertEquals(partnerCreateEventAction.ef, "partner-manage-party");
+    assertEquals(partnerCreateEventAction.ef, "partner-manage-event");
   },
 });
 
@@ -70,7 +70,10 @@ Deno.test({
 Deno.test({
   name: "refundAction.canExecute - false when no approved/paid application",
   fn: () => {
-    assertEquals(refundAction.canExecute({ myApplications: [], visibleEvents: [] }), false);
+    assertEquals(
+      refundAction.canExecute({ myApplications: [], visibleEvents: [] }),
+      false,
+    );
   },
 });
 
@@ -87,7 +90,8 @@ Deno.test({
 });
 
 Deno.test({
-  name: "refundAction.canExecute - true when application approved + event ≥7 days away",
+  name:
+    "refundAction.canExecute - true when application approved + event ≥7 days away",
   fn: () => {
     const future = new Date(Date.now() + 10 * 86400_000).toISOString();
     const state = {
@@ -99,7 +103,8 @@ Deno.test({
 });
 
 Deno.test({
-  name: "checkinAction.canExecute - true when ticket_issued participant in active event",
+  name:
+    "checkinAction.canExecute - true when ticket_issued participant in active event",
   fn: () => {
     const state = {
       myParticipations: [{ id: "p1", event_id: "e1", status: "ticket_issued" }],
@@ -121,7 +126,8 @@ Deno.test({
 });
 
 Deno.test({
-  name: "discoverAction.canExecute - always true (read-only, rate-driven sampling)",
+  name:
+    "discoverAction.canExecute - always true (read-only, rate-driven sampling)",
   fn: () => {
     assertEquals(discoverAction.canExecute({}), true);
   },
@@ -139,7 +145,8 @@ Deno.test({
 });
 
 Deno.test({
-  name: "blockAction.canExecute - true when applied event partner not yet blocked",
+  name:
+    "blockAction.canExecute - true when applied event partner not yet blocked",
   fn: () => {
     const state = {
       myApplications: [{ event_id: "e1", status: "approved" }],
@@ -151,7 +158,8 @@ Deno.test({
 });
 
 Deno.test({
-  name: "blockAction.canExecute - false when already blocked all applied partners",
+  name:
+    "blockAction.canExecute - false when already blocked all applied partners",
   fn: () => {
     const state = {
       myApplications: [{ event_id: "e1", status: "approved" }],
@@ -163,44 +171,59 @@ Deno.test({
 });
 
 Deno.test({
-  name: "partnerApproveAction.canExecute - true when pending applications exist",
+  name:
+    "partnerApproveAction.canExecute - true when pending applications exist",
   fn: () => {
-    assertEquals(partnerApproveAction.canExecute({ pendingApplications: [{ id: "a1" }] }), true);
-    assertEquals(partnerApproveAction.canExecute({ pendingApplications: [] }), false);
+    assertEquals(
+      partnerApproveAction.canExecute({ pendingApplications: [{ id: "a1" }] }),
+      true,
+    );
+    assertEquals(
+      partnerApproveAction.canExecute({ pendingApplications: [] }),
+      false,
+    );
   },
 });
 
 Deno.test({
   name: "partnerRejectAction.canExecute - true when pending applications exist",
   fn: () => {
-    assertEquals(partnerRejectAction.canExecute({ pendingApplications: [{ id: "a1" }] }), true);
-    assertEquals(partnerRejectAction.canExecute({ pendingApplications: [] }), false);
-  },
-});
-
-Deno.test({
-  name: "partnerCreateEventAction.canExecute - true when no parties yet",
-  fn: () => {
     assertEquals(
-      partnerCreateEventAction.canExecute({ myParties: [], myEvents: [] }),
+      partnerRejectAction.canExecute({ pendingApplications: [{ id: "a1" }] }),
       true,
+    );
+    assertEquals(
+      partnerRejectAction.canExecute({ pendingApplications: [] }),
+      false,
     );
   },
 });
 
 Deno.test({
-  name: "partnerCreateEventAction.canExecute - true when scheduled events below min(2)",
+  name: "partnerCreateEventAction.canExecute - false when no parties yet",
+  fn: () => {
+    assertEquals(
+      partnerCreateEventAction.canExecute({ myParties: [], myEvents: [] }),
+      false,
+    );
+  },
+});
+
+Deno.test({
+  name:
+    "partnerCreateEventAction.canExecute - true when scheduled events below min(2)",
   fn: () => {
     const state = {
       myParties: [{ id: "p1" }],
-      myEvents: [{ status: "scheduled" }],  // 1 < 2
+      myEvents: [{ status: "scheduled" }], // 1 < 2
     };
     assertEquals(partnerCreateEventAction.canExecute(state), true);
   },
 });
 
 Deno.test({
-  name: "partnerCreateEventAction.canExecute - false when scheduled events ≥ min(2)",
+  name:
+    "partnerCreateEventAction.canExecute - false when scheduled events ≥ min(2)",
   fn: () => {
     const state = {
       myParties: [{ id: "p1" }],
@@ -210,12 +233,24 @@ Deno.test({
   },
 });
 
+Deno.test({
+  name: "partnerCreateEventAction.buildPayload - throws without an existing party",
+  fn: () => {
+    assertThrows(
+      () => partnerCreateEventAction.buildPayload({ myParties: [] }, rng),
+      Error,
+      "without an existing party",
+    );
+  },
+});
+
 // ============================================================
 // buildPayload smoke — happy path 1건씩
 // ============================================================
 
 Deno.test({
-  name: "buildPayload smoke — refund / checkin / vote / block / partner_approve / partner_reject / partner_create",
+  name:
+    "buildPayload smoke — refund / checkin / vote / block / partner_approve / partner_reject / partner_create",
   fn: () => {
     const future = new Date(Date.now() + 10 * 86400_000).toISOString();
 
@@ -254,8 +289,20 @@ Deno.test({
     }, rng);
     assertEquals(rejectPayload, { application_id: "a1" });
 
-    const createPayload = partnerCreateEventAction.buildPayload({}, rng);
+    const createPayload = partnerCreateEventAction.buildPayload({
+      myParties: [{ id: "party1", status: "active" }],
+      myEvents: [],
+    }, rng);
     assertEquals(createPayload.action, "create");
-    assertEquals(Array.isArray((createPayload.party as Record<string, unknown>).description), false);
+    assertEquals(createPayload.party_id, "party1");
+    assertEquals(
+      typeof (createPayload.event as Record<string, unknown>).start_time,
+      "string",
+    );
+    assertEquals(
+      typeof (createPayload.event as Record<string, unknown>).end_time,
+      "string",
+    );
+    assertEquals((createPayload.tickets as Array<unknown>).length, 1);
   },
 });

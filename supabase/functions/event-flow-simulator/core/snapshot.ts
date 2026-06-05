@@ -8,75 +8,140 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { WorldSnapshot } from "./observable.ts";
 
+const PAGE_SIZE = 1000;
+const IN_CHUNK_SIZE = 200;
+
+type SelectError = { message?: string } | null;
+type SelectResult<T> = { data: T[] | null; error: SelectError };
+type SelectBuilder<T> = {
+  eq: (column: string, value: unknown) => SelectBuilder<T>;
+  in: (column: string, values: unknown[]) => SelectBuilder<T>;
+  range: (from: number, to: number) => PromiseLike<SelectResult<T>>;
+};
+
+type PartyRow = {
+  id: string;
+  partner_id: string;
+  status: string;
+};
+
+type EventRow = {
+  id: string;
+  party_id: string;
+  status: string;
+  start_time: string;
+};
+
+type TicketRow = {
+  id: string;
+  event_id: string;
+  price: number;
+};
+
+type ApplicationRow = {
+  id: string;
+  user_id: string;
+  event_id: string;
+  status: string;
+};
+
+type ParticipantRow = {
+  id: string;
+  user_id: string;
+  event_id: string;
+  status: string;
+};
+
+type VoteRow = {
+  event_id: string;
+  voter_id: string;
+  candidate_id: string;
+};
+
+type BlockRow = {
+  user_id: string;
+  target_id: string;
+  target_type: string;
+};
+
 export async function buildSnapshot(
   supabase: SupabaseClient,
 ): Promise<WorldSnapshot> {
-  const { data: partyRows } = await supabase
-    .from("parties")
-    .select("id, partner_id, status");
-  const parties = (partyRows ?? []) as Array<{
-    id: string;
-    partner_id: string;
-    status: string;
-  }>;
+  const parties = await selectAllRows<PartyRow>(
+    supabase,
+    "parties",
+    "id, partner_id, status",
+  );
   const partyIds = parties.map((p) => p.id);
 
   if (partyIds.length === 0) {
     return emptySnapshot();
   }
 
-  const { data: eventRows } = await supabase
-    .from("events")
-    .select("id, party_id, status, start_time")
-    .in("party_id", partyIds);
-  const events = (eventRows ?? []) as Array<{
-    id: string;
-    party_id: string;
-    status: string;
-    start_time: string;
-  }>;
+  const partyIdSet = new Set(partyIds);
+  const events = (await selectAllRows<EventRow>(
+    supabase,
+    "events",
+    "id, party_id, status, start_time",
+  )).filter((e) => partyIdSet.has(e.party_id));
   const eventIds = events.map((e) => e.id);
-  const partnerIds = parties.map((p) => p.partner_id);
+  const partnerIds = uniqueStrings(parties.map((p) => p.partner_id));
 
-  const [ticketRows, appRows, partRows, voteRows, blockRows] = await Promise
+  const [tickets, applications, participants, votes, blocks] = await Promise
     .all(
       [
         eventIds.length > 0
-          ? supabase.from("tickets").select("id, event_id, price").in(
+          ? selectByInChunks<TicketRow>(
+            supabase,
+            "tickets",
+            "id, event_id, price",
             "event_id",
             eventIds,
           )
-          : Promise.resolve({ data: [] }),
+          : Promise.resolve([]),
         eventIds.length > 0
-          ? supabase
-            .from("event_applications")
-            .select("id, user_id, event_id, status")
-            .in("event_id", eventIds)
-          : Promise.resolve({ data: [] }),
+          ? selectByInChunks<ApplicationRow>(
+            supabase,
+            "event_applications",
+            "id, user_id, event_id, status",
+            "event_id",
+            eventIds,
+          )
+          : Promise.resolve([]),
         eventIds.length > 0
-          ? supabase
-            .from("event_participants")
-            .select("id, user_id, event_id, status")
-            .in("event_id", eventIds)
-          : Promise.resolve({ data: [] }),
+          ? selectByInChunks<ParticipantRow>(
+            supabase,
+            "event_participants",
+            "id, user_id, event_id, status",
+            "event_id",
+            eventIds,
+          )
+          : Promise.resolve([]),
         eventIds.length > 0
-          ? supabase
-            .from("match_votes")
-            .select("event_id, voter_id, candidate_id")
-            .in("event_id", eventIds)
-          : Promise.resolve({ data: [] }),
-        supabase
-          .from("social_interactions")
-          .select("user_id, target_id, target_type")
-          .eq("interaction_type", "block")
-          .eq("target_type", "partner")
-          .in("target_id", partnerIds),
+          ? selectByInChunks<VoteRow>(
+            supabase,
+            "match_votes",
+            "event_id, voter_id, candidate_id",
+            "event_id",
+            eventIds,
+          )
+          : Promise.resolve([]),
+        partnerIds.length > 0
+          ? selectByInChunks<BlockRow>(
+            supabase,
+            "social_interactions",
+            "user_id, target_id, target_type",
+            "target_id",
+            partnerIds,
+            (query) =>
+              query.eq("interaction_type", "block").eq(
+                "target_type",
+                "partner",
+              ),
+          )
+          : Promise.resolve([]),
       ],
     );
-
-  const tickets = (ticketRows.data ?? []) as Array<
-    { id: string; event_id: string; price: number }
-  >;
 
   // tickets 를 event 에 attach (observable 모델이 event.tickets 기대)
   const ticketsByEvent = new Map<
@@ -95,28 +160,10 @@ export async function buildSnapshot(
   return {
     parties,
     events: eventsWithTickets,
-    applications: ((appRows.data ?? []) as Array<{
-      id: string;
-      user_id: string;
-      event_id: string;
-      status: string;
-    }>),
-    participants: ((partRows.data ?? []) as Array<{
-      id: string;
-      user_id: string;
-      event_id: string;
-      status: string;
-    }>),
-    votes: ((voteRows.data ?? []) as Array<{
-      event_id: string;
-      voter_id: string;
-      candidate_id: string;
-    }>),
-    blocks: ((blockRows.data ?? []) as Array<{
-      user_id: string;
-      target_id: string;
-      target_type: string;
-    }>),
+    applications,
+    participants,
+    votes,
+    blocks,
   };
 }
 
@@ -129,4 +176,73 @@ export function emptySnapshot(): WorldSnapshot {
     votes: [],
     blocks: [],
   };
+}
+
+function selectBuilder<T>(
+  supabase: SupabaseClient,
+  table: string,
+  columns: string,
+): SelectBuilder<T> {
+  return supabase.from(table).select(columns) as unknown as SelectBuilder<T>;
+}
+
+async function selectAllRows<T>(
+  supabase: SupabaseClient,
+  table: string,
+  columns: string,
+): Promise<T[]> {
+  return await selectPaged(
+    table,
+    () => selectBuilder<T>(supabase, table, columns),
+  );
+}
+
+async function selectByInChunks<T>(
+  supabase: SupabaseClient,
+  table: string,
+  columns: string,
+  column: string,
+  values: string[],
+  filter?: (query: SelectBuilder<T>) => SelectBuilder<T>,
+): Promise<T[]> {
+  const rows: T[] = [];
+  for (const valueChunk of chunks(uniqueStrings(values), IN_CHUNK_SIZE)) {
+    const chunkRows = await selectPaged(table, () => {
+      const query = selectBuilder<T>(supabase, table, columns);
+      return (filter ? filter(query) : query).in(column, valueChunk);
+    });
+    rows.push(...chunkRows);
+  }
+  return rows;
+}
+
+async function selectPaged<T>(
+  table: string,
+  queryFactory: () => SelectBuilder<T>,
+): Promise<T[]> {
+  const rows: T[] = [];
+  for (let from = 0; true; from += PAGE_SIZE) {
+    const to = from + PAGE_SIZE - 1;
+    const { data, error } = await queryFactory().range(from, to);
+    if (error) {
+      const message = error.message ?? String(error);
+      throw new Error(`buildSnapshot: failed to load ${table}: ${message}`);
+    }
+    const page = data ?? [];
+    rows.push(...page);
+    if (page.length < PAGE_SIZE) break;
+  }
+  return rows;
+}
+
+function chunks<T>(values: T[], size: number): T[][] {
+  const result: T[][] = [];
+  for (let i = 0; i < values.length; i += size) {
+    result.push(values.slice(i, i + size));
+  }
+  return result;
+}
+
+function uniqueStrings(values: string[]): string[] {
+  return [...new Set(values)];
 }
