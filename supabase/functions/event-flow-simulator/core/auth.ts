@@ -45,6 +45,7 @@ export async function callEdgeFunction(
   functionName: string,
   payload: unknown,
   userToken: string,
+  extraHeaders: Record<string, string> = {},
 ): Promise<{ status: number; data: unknown }> {
   const url = `${supabaseUrl}/functions/v1/${functionName}`;
   const res = await fetch(url, {
@@ -52,6 +53,7 @@ export async function callEdgeFunction(
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${userToken}`,
+      ...extraHeaders,
     },
     body: JSON.stringify(payload),
   });

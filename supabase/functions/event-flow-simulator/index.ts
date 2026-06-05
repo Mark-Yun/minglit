@@ -195,7 +195,12 @@ export const handler = async (
     }
 
     // 3. cascade 실행
-    const transport = new EFTransport({ supabase, supabaseUrl, tokenByActor });
+    const transport = new EFTransport({
+      supabase,
+      supabaseUrl,
+      tokenByActor,
+      runId,
+    });
     const cascade = await runCascade({
       actors,
       initialSnapshot,
