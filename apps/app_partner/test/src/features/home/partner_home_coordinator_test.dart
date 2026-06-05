@@ -68,6 +68,18 @@ void main() {
       verify(() => mockRouter.push(any(that: equals('/guide')))).called(1);
     });
 
+    test('pushActiveEventList pushes active events route', () {
+      final container = createContainer(
+        overrides: [goRouterProvider.overrideWithValue(mockRouter)],
+      );
+
+      container.read(partnerHomeCoordinatorProvider).pushActiveEventList();
+
+      verify(
+        () => mockRouter.push(any(that: equals('/events/active'))),
+      ).called(1);
+    });
+
     test('goToSettlement calls router.go with settlement route', () {
       final container = createContainer(
         overrides: [goRouterProvider.overrideWithValue(mockRouter)],

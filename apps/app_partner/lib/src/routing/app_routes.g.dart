@@ -184,6 +184,10 @@ RouteBase get $partnerShellRoute => StatefulShellRouteData.$route(
               path: 'guide',
               factory: $PartnerGuideRoute._fromState,
             ),
+            GoRouteData.$route(
+              path: 'events/active',
+              factory: $PartnerActiveEventListRoute._fromState,
+            ),
           ],
         ),
       ],
@@ -408,6 +412,32 @@ mixin $PartnerGuideRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/guide');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $PartnerActiveEventListRoute on GoRouteData {
+  static PartnerActiveEventListRoute _fromState(GoRouterState state) =>
+      PartnerActiveEventListRoute(filter: state.uri.queryParameters['filter']);
+
+  PartnerActiveEventListRoute get _self => this as PartnerActiveEventListRoute;
+
+  @override
+  String get location => GoRouteData.$location(
+    '/events/active',
+    queryParams: {if (_self.filter != null) 'filter': _self.filter},
+  );
 
   @override
   void go(BuildContext context) => context.go(location);

@@ -66,6 +66,9 @@ class _NoOpPartnerHomeCoordinator implements PartnerHomeCoordinator {
   void pushApplicationList() {}
 
   @override
+  void pushActiveEventList() {}
+
+  @override
   void pushBankAccount() {}
 
   @override
