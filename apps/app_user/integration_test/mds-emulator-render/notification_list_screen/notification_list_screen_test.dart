@@ -13,13 +13,24 @@ final catalog = MdsCatalog<NotificationListScreenBuilder>(
   mdsSpec: 'apps/mds/docs/public/specs/notification_list_screen/',
   builder: NotificationListScreenBuilder.new,
   states: [
-    MdsState('state-empty', (b) => b.withEmpty(), mdsIndex: 1),
     MdsState(
-      'state-with-notifications',
+      'state-default',
       (b) => b.withNotifications(),
+      mdsIndex: 1,
+    ),
+    MdsState(
+      'state-all-read',
+      (b) => b.withAllReadNotifications(),
       mdsIndex: 2,
     ),
-    MdsState('state-dark', (b) => b.withEmpty().dark()),
+    MdsState('state-empty', (b) => b.withEmpty(), mdsIndex: 3),
+    MdsState(
+      'state-loading',
+      (b) => b.loading(),
+      mdsIndex: 4,
+      infiniteAnimation: true,
+    ),
+    MdsState('state-error', (b) => b.error(), mdsIndex: 5),
   ],
 );
 

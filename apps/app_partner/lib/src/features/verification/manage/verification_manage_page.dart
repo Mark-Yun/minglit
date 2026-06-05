@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
 
 class VerificationManagePage extends ConsumerWidget {
-  const VerificationManagePage({super.key});
+  const VerificationManagePage({super.key, this.initialTabIndex = 0});
+
+  final int initialTabIndex;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -13,6 +15,7 @@ class VerificationManagePage extends ConsumerWidget {
 
     return DefaultTabController(
       length: 2,
+      initialIndex: initialTabIndex,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('커스텀 인증 관리'),
@@ -41,8 +44,8 @@ class VerificationManagePage extends ConsumerWidget {
               // 1. Active List
               _ActiveList(
                 verifications: state.active,
-                // Fix #2281: use coordinator (goRouterProvider) instead of context.push,
-                // which fails silently inside StatefulShellRoute branch navigators
+                // Fix #2281: use coordinator instead of context.push, which
+                // fails silently inside StatefulShellRoute branch navigators.
                 onCreate: () => ref
                     .read(verificationCoordinatorProvider.notifier)
                     .pushCreateVerification(),
@@ -125,8 +128,8 @@ class _ActiveList extends StatelessWidget {
           AddActionCard(
             title: '새로운 인증 만들기',
             subtitle: '우리 가게만의 특별한 입장 조건을 만들어보세요.',
-            // Fix #2281: use onCreate (coordinator-based) instead of context.push,
-            // which fails silently inside StatefulShellRoute branch navigators
+            // Fix #2281: use coordinator onCreate instead of context.push,
+            // which fails silently inside StatefulShellRoute branch navigators.
             onTap: onCreate,
           ),
           const SizedBox(height: MinglitSpacing.medium),
