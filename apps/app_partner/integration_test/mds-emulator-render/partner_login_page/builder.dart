@@ -37,17 +37,50 @@ class _ErrorAuthController extends AuthController {
   FutureOr<void> build() {}
 }
 
+class _AuthErrorDialogSeed extends StatefulWidget {
+  const _AuthErrorDialogSeed({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_AuthErrorDialogSeed> createState() => _AuthErrorDialogSeedState();
+}
+
+class _AuthErrorDialogSeedState extends State<_AuthErrorDialogSeed> {
+  bool _shown = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_shown) return;
+    _shown = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      handleMinglitError(
+        context,
+        Exception('render: forced auth error'),
+        StackTrace.current,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
 class PartnerLoginPageBuilder extends MdsScreenBuilder<PartnerLoginPage> {
   PartnerLoginPageBuilder() : super(page: const PartnerLoginPage());
 
   bool _isDevEnv = false;
   TargetPlatform _platform = TargetPlatform.iOS;
   AuthController Function() _controllerFactory = _IdleAuthController.new;
+  bool _seedAuthErrorDialog = false;
 
   /// iOS/macOS/Web 대응 상태: Apple 버튼 포함 baseline.
   PartnerLoginPageBuilder iosDefault() {
     _platform = TargetPlatform.iOS;
     _controllerFactory = _IdleAuthController.new;
+    _seedAuthErrorDialog = false;
     // ignore: avoid_returning_this, fluent builder — callers chain methods
     return this;
   }
@@ -56,6 +89,7 @@ class PartnerLoginPageBuilder extends MdsScreenBuilder<PartnerLoginPage> {
   PartnerLoginPageBuilder androidDefault() {
     _platform = TargetPlatform.android;
     _controllerFactory = _IdleAuthController.new;
+    _seedAuthErrorDialog = false;
     // ignore: avoid_returning_this, fluent builder — callers chain methods
     return this;
   }
@@ -64,6 +98,7 @@ class PartnerLoginPageBuilder extends MdsScreenBuilder<PartnerLoginPage> {
   PartnerLoginPageBuilder loading() {
     _platform = TargetPlatform.iOS;
     _controllerFactory = _LoadingAuthController.new;
+    _seedAuthErrorDialog = false;
     // ignore: avoid_returning_this, fluent builder — callers chain methods
     return this;
   }
@@ -72,6 +107,7 @@ class PartnerLoginPageBuilder extends MdsScreenBuilder<PartnerLoginPage> {
   PartnerLoginPageBuilder error() {
     _platform = TargetPlatform.iOS;
     _controllerFactory = _ErrorAuthController.new;
+    _seedAuthErrorDialog = true;
     // ignore: avoid_returning_this, fluent builder — callers chain methods
     return this;
   }
@@ -90,6 +126,8 @@ class PartnerLoginPageBuilder extends MdsScreenBuilder<PartnerLoginPage> {
 
     final controllerFactory = _controllerFactory;
     final isDevEnv = _isDevEnv;
+    final seedAuthErrorDialog = _seedAuthErrorDialog;
+    final page = PartnerLoginPage(isDevEnvOverride: isDevEnv);
 
     return ProviderScope(
       overrides: [
@@ -101,7 +139,7 @@ class PartnerLoginPageBuilder extends MdsScreenBuilder<PartnerLoginPage> {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: MinglitTheme.materialTheme,
-        home: PartnerLoginPage(isDevEnvOverride: isDevEnv),
+        home: seedAuthErrorDialog ? _AuthErrorDialogSeed(child: page) : page,
       ),
     );
   }
