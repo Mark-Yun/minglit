@@ -136,6 +136,41 @@ class LoadedNotificationSettingsNotifier
   );
 }
 
+/// 알림 설정 로드 완료 (service OFF, marketing OFF).
+class AllOffNotificationSettingsNotifier
+    extends NotificationSettingsController {
+  @override
+  FutureOr<UserSettings?> build() async => UserSettings(
+    userId: 'mock-user-1',
+    updatedAt: DateTime.utc(2026, 5, 17),
+    serviceNotification: false,
+  );
+}
+
+/// 알림 설정 로드 완료 (service ON, marketing ON).
+class AllOnNotificationSettingsNotifier extends NotificationSettingsController {
+  @override
+  FutureOr<UserSettings?> build() async => UserSettings(
+    userId: 'mock-user-1',
+    updatedAt: DateTime.utc(2026, 5, 17),
+    marketingConsent: true,
+  );
+}
+
+/// 알림 설정 로딩 유지.
+class LoadingNotificationSettingsNotifier
+    extends NotificationSettingsController {
+  @override
+  FutureOr<UserSettings?> build() => Completer<UserSettings?>().future;
+}
+
+/// 알림 설정 오류 상태.
+class ErrorNotificationSettingsNotifier extends NotificationSettingsController {
+  @override
+  FutureOr<UserSettings?> build() async =>
+      throw Exception('notification settings render error');
+}
+
 /// 필터 (location, eligibility) 비활성화.
 class NoFiltersNotifier extends ActiveFilters {
   @override

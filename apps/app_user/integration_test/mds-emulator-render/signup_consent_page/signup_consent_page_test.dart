@@ -20,6 +20,7 @@ final catalog = MdsCatalog<SignupConsentPageBuilder>(
     MdsState(
       'state-loading',
       (b) => b.loading(),
+      mdsIndex: 6,
       infiniteAnimation: true,
     ),
     // State 1 — Default: 체크박스 없음, CTA 비활성
