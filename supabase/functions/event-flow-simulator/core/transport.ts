@@ -10,13 +10,19 @@ export interface EFTransportConfig {
   supabaseUrl: string;
   /** actorId → JWT 토큰. cascade 실행 전 모든 actor 의 토큰을 미리 채움 */
   tokenByActor: Map<ActorId, string>;
+  /** Current simulator run id, used to avoid idempotency-key reuse across runs. */
+  runId?: string;
 }
+
+const IDEMPOTENCY_REQUIRED_FUNCTIONS = new Set(["apply-event"]);
 
 /**
  * 실 EF 호출 transport. action.ef 가 정의돼 있으면 callEdgeFunction 으로 POST.
  * action.ef 가 undefined 인 경우 (현재: block 액션) supabase client 로 direct DB write.
  */
 export class EFTransport implements Transport {
+  private idempotencySequence = 0;
+
   constructor(private cfg: EFTransportConfig) {}
 
   async execute(action: Action) {
@@ -55,16 +61,30 @@ export class EFTransport implements Transport {
     if (!action.ef) {
       return { ok: false, status: 0, error: `action ${action.type} has no ef` };
     }
+    const extraHeaders = this.headersForAction(action);
     const res = await callEdgeFunction(
       this.cfg.supabaseUrl,
       action.ef,
       action.payload,
       token,
+      extraHeaders,
     );
     return {
       ok: res.status >= 200 && res.status < 300,
       status: res.status,
       data: res.data,
+    };
+  }
+
+  private headersForAction(action: Action): Record<string, string> {
+    if (!action.ef || !IDEMPOTENCY_REQUIRED_FUNCTIONS.has(action.ef)) {
+      return {};
+    }
+    const runId = this.cfg.runId ?? "unknown-run";
+    const sequence = this.idempotencySequence++;
+    return {
+      "Idempotency-Key":
+        `event-flow-simulator:${runId}:${sequence}:${action.type}`,
     };
   }
 }
