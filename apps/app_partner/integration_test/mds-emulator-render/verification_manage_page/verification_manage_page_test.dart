@@ -17,25 +17,38 @@ final catalog = MdsCatalog<VerificationManagePageBuilder>(
     MdsState(
       'state-loading',
       (b) => b.loading(),
-      mdsIndex: 1,
+      mdsIndex: 5,
       infiniteAnimation: true,
     ),
     // Active empty — "생성된 인증이 없습니다" empty state
-    MdsState('state-active-empty', (b) => b.withActiveEmpty(), mdsIndex: 2),
+    MdsState('state-active-empty', (b) => b.withActiveEmpty(), mdsIndex: 3),
     // Active with items — 인증 목록 2개
     MdsState(
       'state-active-with-items',
       (b) => b.withActiveItems(),
-      mdsIndex: 3,
+      mdsIndex: 1,
     ),
     // Archived with items — 보관됨 탭
     MdsState(
       'state-archived-with-items',
       (b) => b.withArchivedItems(),
+      mdsIndex: 2,
+    ),
+    MdsState(
+      'state-archived-empty',
+      (b) => b.withArchivedEmpty(),
       mdsIndex: 4,
     ),
-    // Dark variant
-    MdsState('state-dark', (b) => b.withActiveItems().dark()),
+    MdsState(
+      'state-error',
+      (b) => b.error(),
+      mdsIndex: 6,
+    ),
+    MdsState(
+      'state-archive-dialog',
+      (b) => b.archiveDialog(),
+      mdsIndex: 7,
+    ),
   ],
 );
 

@@ -7,6 +7,7 @@
 import 'dart:async';
 
 import 'package:app_partner/src/features/settlement/settlement_detail_page.dart';
+import 'package:app_partner/src/features/settlement/widgets/download_bottom_sheet.dart';
 import 'package:app_partner/src/logic/current_partner_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:minglit_kit/minglit_kit.dart';
@@ -14,7 +15,13 @@ import 'package:minglit_kit/minglit_kit.dart';
 import '../_engine/builder.dart';
 import '../_mocks/data.dart';
 
-enum _SettlementDetailScenario { completed, pending, failed, hold, loading }
+enum _SettlementDetailScenario {
+  completed,
+  pending,
+  failed,
+  hold,
+  loading,
+}
 
 class _FakeSettlementRepository implements SettlementRepository {
   _FakeSettlementRepository({required this.scenario});
@@ -161,6 +168,7 @@ class SettlementDetailPageBuilder
 
   _SettlementDetailScenario _scenario = _SettlementDetailScenario.completed;
   Brightness _brightness = Brightness.light;
+  bool _showDownloadSheet = false;
 
   SettlementDetailPageBuilder completed() {
     _scenario = _SettlementDetailScenario.completed;
@@ -192,6 +200,13 @@ class SettlementDetailPageBuilder
     return this;
   }
 
+  SettlementDetailPageBuilder downloadSheet() {
+    _scenario = _SettlementDetailScenario.completed;
+    _showDownloadSheet = true;
+    // ignore: avoid_returning_this, fluent builder chain style
+    return this;
+  }
+
   SettlementDetailPageBuilder dark() {
     _brightness = Brightness.dark;
     // ignore: avoid_returning_this, fluent builder chain style
@@ -215,8 +230,48 @@ class SettlementDetailPageBuilder
         theme: _brightness == Brightness.dark
             ? MinglitTheme.materialThemeDark
             : MinglitTheme.materialTheme,
-        home: const SettlementDetailPage(itemId: 'mock-settlement-item-1'),
+        home: _showDownloadSheet
+            ? _DownloadSheetHarness(
+                detail: _FakeSettlementRepository(
+                  scenario: _SettlementDetailScenario.completed,
+                )._detail(status: 'COMPLETED', retryable: false),
+                child: const SettlementDetailPage(
+                  itemId: 'mock-settlement-item-1',
+                ),
+              )
+            : const SettlementDetailPage(itemId: 'mock-settlement-item-1'),
       ),
     );
   }
+}
+
+class _DownloadSheetHarness extends StatefulWidget {
+  const _DownloadSheetHarness({
+    required this.detail,
+    required this.child,
+  });
+
+  final SettlementItemDetail detail;
+  final Widget child;
+
+  @override
+  State<_DownloadSheetHarness> createState() => _DownloadSheetHarnessState();
+}
+
+class _DownloadSheetHarnessState extends State<_DownloadSheetHarness> {
+  bool _shown = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_shown) return;
+    _shown = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(DownloadBottomSheet.show(context, widget.detail));
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

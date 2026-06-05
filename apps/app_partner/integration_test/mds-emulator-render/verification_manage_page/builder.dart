@@ -18,13 +18,20 @@ import '../_mocks/data.dart';
 
 /// 고정 state 를 반환하는 fake controller.
 class _FakeVerificationManageController extends VerificationManageController {
-  _FakeVerificationManageController({this.fixedState});
+  _FakeVerificationManageController({
+    this.fixedState,
+    this.throwError = false,
+  });
 
   // null → AsyncLoading (지연 반환으로 구현)
   final VerificationManageState? fixedState;
+  final bool throwError;
 
   @override
   FutureOr<VerificationManageState> build() {
+    if (throwError) {
+      throw Exception('verification manage render error');
+    }
     final s = fixedState;
     if (s == null) {
       return Future<VerificationManageState>.delayed(
@@ -53,10 +60,14 @@ class VerificationManagePageBuilder
 
   VerificationManageState? _state; // null → loading
   Brightness _brightness = Brightness.light;
+  bool _throwError = false;
+  bool _showArchiveDialog = false;
+  int _initialTabIndex = 0;
 
   /// loading 상태 — MinglitAsyncValueWidget 로딩 스피너.
   VerificationManagePageBuilder loading() {
     _state = null;
+    _throwError = false;
     // ignore: avoid_returning_this, fluent builder — callers chain methods
     return this;
   }
@@ -64,6 +75,7 @@ class VerificationManagePageBuilder
   /// active list 비어 있음.
   VerificationManagePageBuilder withActiveEmpty() {
     _state = const VerificationManageState();
+    _throwError = false;
     // ignore: avoid_returning_this, fluent builder — callers chain methods
     return this;
   }
@@ -80,12 +92,14 @@ class VerificationManagePageBuilder
         ),
       ],
     );
+    _throwError = false;
     // ignore: avoid_returning_this, fluent builder — callers chain methods
     return this;
   }
 
   /// archived list 에 인증 1개 (active 비어있음).
   VerificationManagePageBuilder withArchivedItems() {
+    _initialTabIndex = 1;
     _state = VerificationManageState(
       archived: [
         mockVerification(
@@ -95,6 +109,32 @@ class VerificationManagePageBuilder
         ),
       ],
     );
+    _throwError = false;
+    // ignore: avoid_returning_this, fluent builder — callers chain methods
+    return this;
+  }
+
+  /// archived list 가 비어 있음.
+  VerificationManagePageBuilder withArchivedEmpty() {
+    _initialTabIndex = 1;
+    _state = const VerificationManageState();
+    _throwError = false;
+    // ignore: avoid_returning_this, fluent builder — callers chain methods
+    return this;
+  }
+
+  /// 오류 상태.
+  VerificationManagePageBuilder error() {
+    _throwError = true;
+    // ignore: avoid_returning_this, fluent builder — callers chain methods
+    return this;
+  }
+
+  /// 보관 확인 다이얼로그.
+  VerificationManagePageBuilder archiveDialog() {
+    _state = VerificationManageState(active: [mockVerification()]);
+    _showArchiveDialog = true;
+    _throwError = false;
     // ignore: avoid_returning_this, fluent builder — callers chain methods
     return this;
   }
@@ -116,7 +156,10 @@ class VerificationManagePageBuilder
         authStateChangesProvider.overrideWith((_) => const Stream.empty()),
         notificationInitializerProvider.overrideWith((_) {}),
         verificationManageControllerProvider.overrideWith(
-          () => _FakeVerificationManageController(fixedState: state),
+          () => _FakeVerificationManageController(
+            fixedState: state,
+            throwError: _throwError,
+          ),
         ),
         verificationCoordinatorProvider.overrideWith(
           _NoOpVerificationCoordinator.new,
@@ -127,8 +170,49 @@ class VerificationManagePageBuilder
         theme: _brightness == Brightness.dark
             ? MinglitTheme.materialThemeDark
             : MinglitTheme.materialTheme,
-        home: const VerificationManagePage(),
+        home: _showArchiveDialog
+            ? const _ArchiveDialogHarness(
+                child: VerificationManagePage(),
+              )
+            : VerificationManagePage(initialTabIndex: _initialTabIndex),
       ),
     );
   }
+}
+
+class _ArchiveDialogHarness extends StatefulWidget {
+  const _ArchiveDialogHarness({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_ArchiveDialogHarness> createState() => _ArchiveDialogHarnessState();
+}
+
+class _ArchiveDialogHarnessState extends State<_ArchiveDialogHarness> {
+  bool _shown = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_shown) return;
+    _shown = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(
+        MinglitAlert.showConfirm(
+          context: context,
+          title: '인증 보관',
+          content:
+              "'입장 코드 인증' 인증을 보관함으로 이동하시겠습니까?\n\n"
+              '더 이상 새로운 파티에 이 인증을 사용할 수 없게 됩니다.',
+          confirmText: '보관하기',
+          isDestructive: true,
+        ),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
