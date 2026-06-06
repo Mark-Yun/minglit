@@ -72,10 +72,12 @@ SELECT ok(
   'settlement-alarm-check cron uses service_role_key with apikey + Authorization'
 );
 
--- 6. ai-extract-tags: service_role_key 사용
-SELECT ok(
-  _check_cron_uses_service_role('ai-extract-tags'),
-  'ai-extract-tags cron uses service_role_key with apikey + Authorization'
+-- 6. ai-extract-tags: web-mvp pivot (2026-06-06) 으로 unschedule 됨 — 부재 검증
+-- (20260606054500_web_mvp_disable_ai_pipeline_ingestion.sql)
+SELECT is(
+  (SELECT count(*)::int FROM cron.job WHERE jobname = 'ai-extract-tags'),
+  0,
+  'ai-extract-tags cron is unscheduled (web-mvp pivot)'
 );
 
 -- 7. sync_github_stats: service_role_key 사용

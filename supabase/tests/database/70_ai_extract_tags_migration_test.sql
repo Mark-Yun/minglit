@@ -3,9 +3,11 @@
 -- - event_queue_name enum에 q_tags 값 검증
 -- - event_routes 라우팅 행 검증
 -- - ai-extract-tags cron job 검증
+-- Web MVP pivot (2026-06-06): q_tags 라우트 비활성 + cron 해제가 새 기대 상태
+-- (20260606054500_web_mvp_disable_ai_pipeline_ingestion.sql). plan(10) → plan(7).
 BEGIN;
 
-SELECT plan(10);
+SELECT plan(7);
 
 SET ROLE postgres;
 
@@ -59,44 +61,26 @@ SELECT ok(
 -- 4. event_routes 라우팅 행 검증
 -- ============================================================
 
+-- Web MVP pivot: 라우트 행은 보존하되 비활성 상태여야 한다 (복구 가능성 유지)
 SELECT is(
   (
     SELECT count(*)::int FROM public.event_routes
     WHERE event_type = 'party_created'
       AND target_queue = 'q_tags'
-      AND is_active = true
+      AND is_active = false
   ),
   1,
-  'event_routes has party_created → q_tags active route'
+  'event_routes preserves party_created → q_tags route as inactive (web-mvp pivot)'
 );
 
 -- ============================================================
--- 5. ai-extract-tags cron job 검증
+-- 5. ai-extract-tags cron job 검증 (web-mvp pivot: 해제 상태)
 -- ============================================================
 
 SELECT is(
   (SELECT count(*)::int FROM cron.job WHERE jobname = 'ai-extract-tags'),
-  1,
-  'ai-extract-tags cron job is registered'
-);
-
-SELECT is(
-  (SELECT schedule FROM cron.job WHERE jobname = 'ai-extract-tags'),
-  '* * * * *',
-  'ai-extract-tags cron runs every minute'
-);
-
--- cron SQL이 supabase_url Vault 시크릿을 참조하는지 확인
-SELECT ok(
-  (SELECT command FROM cron.job WHERE jobname = 'ai-extract-tags') LIKE '%supabase_url%',
-  'ai-extract-tags cron uses vault supabase_url (not hardcoded URL)'
-);
-
--- Fix #1758: cron SQL이 service_role_key Vault 시크릿을 참조하는지 확인
--- (이전: publishable_key — requireServiceRole() 가드 추가 후 401 발생, 교체됨)
-SELECT ok(
-  (SELECT command FROM cron.job WHERE jobname = 'ai-extract-tags') LIKE '%service_role_key%',
-  'ai-extract-tags cron uses vault service_role_key (not publishable_key)'
+  0,
+  'ai-extract-tags cron job is unscheduled (web-mvp pivot)'
 );
 
 RESET ROLE;
