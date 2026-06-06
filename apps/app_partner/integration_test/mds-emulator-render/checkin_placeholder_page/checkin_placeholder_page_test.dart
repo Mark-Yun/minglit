@@ -26,6 +26,12 @@ final catalog = MdsCatalog<CheckinPlaceholderPageBuilder>(
     MdsState('state-error', (b) => b.error(), mdsIndex: 2),
     // Empty — 오늘 이벤트 없음
     MdsState('state-empty', (b) => b.withNoEvents(), mdsIndex: 3),
+    // Direct dashboard — 오늘 이벤트 1개면 운영 화면으로 자동 진입
+    MdsState(
+      'state-direct-dashboard',
+      (b) => b.withSingleEvent(),
+      mdsIndex: 4,
+    ),
     // Selection — 오늘 이벤트 2+개 (선택 목록)
     MdsState('state-selection', (b) => b.withMultipleEvents(2), mdsIndex: 5),
     // Dark variant

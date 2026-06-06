@@ -46,6 +46,14 @@ class CheckinPlaceholderPageBuilder
     return this;
   }
 
+  /// partner 정보 있음 + 오늘 이벤트 1개 (direct dashboard).
+  CheckinPlaceholderPageBuilder withSingleEvent() {
+    _partner = mockPartner();
+    _events = mockEvents(count: 1);
+    // ignore: avoid_returning_this, fluent builder — callers chain methods
+    return this;
+  }
+
   /// partner 정보 있음 + 오늘 이벤트 2+개 (선택 목록 표시).
   CheckinPlaceholderPageBuilder withMultipleEvents(int count) {
     _partner = mockPartner();
