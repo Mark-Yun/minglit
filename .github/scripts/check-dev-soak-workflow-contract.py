@@ -309,21 +309,22 @@ def assert_dev_rc_cut_gate_contract() -> None:
         required_runs = json.loads(raw_required_runs)
     except Exception as exc:  # noqa: BLE001 - contract failure should show parse detail.
         fail(f"dev-rc-cut-gate required_runs_json is invalid JSON: {exc}")
-    if not isinstance(required_runs, list) or len(required_runs) != 2:
-        fail("dev-rc-cut-gate must define deploy-dev-event-flow-cron and monitor-dev-cuj required run contracts")
+    # Web MVP pivot (2026-06-06): Flutter CUJ is frozen, so the gate must
+    # require only the backend simulator run. monitor-dev-cuj must NOT be a
+    # required run while the workflow is disabled — a required run on a
+    # disabled workflow would permanently block dev -> rc promotion.
+    if not isinstance(required_runs, list) or len(required_runs) != 1:
+        fail("dev-rc-cut-gate must define exactly the deploy-dev-event-flow-cron required run contract (monitor-dev-cuj is frozen: web-mvp pivot)")
     runs_by_workflow = {
         item.get("workflow"): item
         for item in required_runs
         if isinstance(item, dict)
     }
+    if "monitor-dev-cuj.yml" in runs_by_workflow:
+        fail("dev-rc-cut-gate must not require monitor-dev-cuj runs while Flutter CUJ is frozen (web-mvp pivot)")
 
     expected_runs = {
         "deploy-dev-event-flow-cron.yml": {
-            "branch": "dev",
-            "min_success": 1,
-            "match_head_sha": True,
-        },
-        "monitor-dev-cuj.yml": {
             "branch": "dev",
             "min_success": 1,
             "match_head_sha": True,
@@ -341,16 +342,22 @@ def assert_dev_rc_cut_gate_contract() -> None:
 
     failure_contexts = str(with_config.get("failure_contexts", ""))
     success_contexts = str(with_config.get("success_contexts", ""))
-    required_contexts = [
+    # cuj-* failure contexts stay as the manual block lever
+    # (set-dev-soak-status); their success confirmations are removed with
+    # the frozen CUJ monitor so the gate never writes fake CUJ evidence.
+    required_failure_contexts = [
         "dev-soak/backend-simulator",
         "dev-soak/cuj-user",
         "dev-soak/cuj-partner",
     ]
-    for context in required_contexts:
+    for context in required_failure_contexts:
         if context not in failure_contexts:
             fail(f"dev-rc-cut-gate failure_contexts missing {context}")
-        if context not in success_contexts:
-            fail(f"dev-rc-cut-gate success_contexts missing {context}")
+    if "dev-soak/backend-simulator" not in success_contexts:
+        fail("dev-rc-cut-gate success_contexts missing dev-soak/backend-simulator")
+    for context in ["dev-soak/cuj-user", "dev-soak/cuj-partner"]:
+        if context in success_contexts:
+            fail(f"dev-rc-cut-gate success_contexts must not confirm {context} while Flutter CUJ is frozen (web-mvp pivot)")
 
     if with_config.get("pass_context") != "dev-rc-cut-pass":
         fail("dev-rc-cut-gate pass_context must be dev-rc-cut-pass")
