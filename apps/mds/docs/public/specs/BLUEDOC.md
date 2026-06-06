@@ -20,7 +20,8 @@ MDS 화면 spec 의 **source HTML + 자동 산출물 디렉터리**. Flutter 화
 ## 핵심 컨벤션
 
 - **직접 수정은 `<screen>/index.html` 만** — `index.md`, `state_*.png`, `blueprint*.png` 는 자동 산출물이다.
-- **새 spec / 큰 개편은 `_template.html` 구조를 따른다** — Header → Overview → History → Layout → States → Global Behavior → Reference.
+- **모든 spec `<head>` 에 `<meta name="feature-status">`** — 기존 모바일 spec 은 web-mvp pivot(2026-06-06) 분류 `behavior-reference`(웹 spec 의 behavior 원천) / `on-hold` / `deprecated` 3종, 신규 웹 spec 은 lifecycle `planned` / `in-progress` / `shipped` 3종. deprecated spec 은 `<body>` 최상단에 `.spec-status-banner` 가시 배너를 함께 둔다.
+- **새 spec / 큰 개편은 `_template.html` 구조를 따른다** — Header → Overview → History → Layout → States → Global Behavior → Reference. 웹 화면 spec (`web_user`/`web_partner` surface) 은 [`_template_web.html`](./_template_web.html) + [`web_foundation_responsive/`](./web_foundation_responsive/index.html) breakpoint 규칙을 따른다.
 - **States 는 template mini-table 형식** — `table.ref.state-mini` + `thead` + mockup `rowspan=6` + 조건/사용자 액션/에지케이스/컴포넌트/토큰/노트 6행.
 - **경로는 `<screen>/index.html`** — legacy `<screen>.html` flat path 를 새로 만들지 않는다.
 - **코드와 다르면 먼저 source of truth 를 판정** — 구현이 live 이고 spec 이 stale 이면 HTML spec 을 갱신하고 History row 에 issue/PR 맥락을 남긴다.

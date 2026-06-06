@@ -1,6 +1,6 @@
 # PRD: 티켓 QR Boarding Pass 리디자인 (Ticket QR Improvement)
 
-> **Status: on-hold (mobile frozen, 2026-06-06)** — 모바일 보딩패스 UX 전용. 웹 입장 QR 화면 재설계 대기. 배경: `docs/architecture/web-mvp-pivot.md`
+> **Status: deprecated (web-mvp pivot, 2026-06-06)** — 2차 축소로 QR 티켓 제외. 입장 확인은 참가자 명단 수동 처리. 배경: `docs/architecture/web-mvp-pivot.md`
 
 ## Summary
 

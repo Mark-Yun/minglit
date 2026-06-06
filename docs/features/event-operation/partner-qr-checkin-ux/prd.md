@@ -1,6 +1,6 @@
 # PRD: 파트너 QR 체크인 UX 강화
 
-> **Status: on-hold (mobile frozen, 2026-06-06)** — 체크인 자체는 코어이나 파트너 모바일 앱 UX 전제. 파트너 측 재조정 대기. 배경: `docs/architecture/web-mvp-pivot.md`
+> **Status: deprecated (web-mvp pivot, 2026-06-06)** — 2차 축소로 QR 체크인 제외. 입장 확인은 참가자 명단 수동 처리. 배경: `docs/architecture/web-mvp-pivot.md`
 
 ## Summary
 

@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<!--
+  WEB screen spec template — copy this file as `apps/mds/docs/public/specs/{snake_case_screen}/index.html`.
+
+  Use this template for web surfaces only (web_user · web_partner · web_admin).
+  Mobile Flutter app screens keep using /specs/_template.html.
+
+  Filename = snake_case of the screen name. e.g.
+    WebUserEventDetail   → web_user_event_detail/index.html
+    WebPartnerDashboard  → web_partner_dashboard/index.html
+
+  Differences vs the mobile template (_template.html):
+    · <meta> placeholders in <head> — feature-status / features / surface
+    · Layout perspective → "Responsive Layout" with per-breakpoint variants
+    · Token references are CSS variable / Tailwind oriented (token NAMES stay MDS)
+    · Overview gains a "Behavior Source" row → mobile spec this screen inherits from
+
+  Full authoring guide (status lifecycle, spec types, additive diff syntax,
+  motion tokens, etc.) → /specs/_authoring.html
+  Breakpoint / container / grid / pointer rules SSOT → /specs/web_foundation_responsive/
+-->
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<!-- ── Web spec metadata (machine-readable) ─────────────────────
+     · feature-status — feature lifecycle: planned | in-progress | shipped
+     · features       — docs/features/ slug(s), comma-separated (예: event/event-detail)
+     · surface        — exactly one of: web_user | web_partner (admin specs use web_admin) -->
+<meta name="feature-status" content="[planned|in-progress|shipped]">
+<meta name="features" content="[domain/feature-slug]">
+<meta name="surface" content="[web_user|web_partner]">
+<title>Spec — [SCREEN NAME] ([web_user|web_partner] · [/path])</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   Screen-specific atoms only.
+   Keep this block minimal — most styles come from _spec.css.
+
+   Viewport sizing per breakpoint variant:
+     · default .viewport = 375×812 (mobile) — _spec.css 기본값.
+     · desktop variant mockup은 inline style 또는 아래처럼 모디파이어로
+       폭을 키운다 (스크린샷 캡처가 variant별로 분리되도록):
+         .viewport--desktop { width: 1280px; height: 720px; }
+       (실제 px 는 화면 컨테이너 폭에 맞춰 조정 — web_foundation_responsive 참조)
+   ============================================================ */
+
+/* TODO: layout + custom widgets unique to this screen.
+   Common pattern:
+     .{screen}__container   — outermost grid/flex
+     .{screen}__header      — top region
+     .{screen}__body        — main content
+     .{screen}__cta         — CTA region
+*/
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     Toolbar — universal toggles (do NOT modify)
+     ============================================================ -->
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     📍 HEADER — compact metadata
+     ============================================================ -->
+<header>
+  <!-- TEMPLATE-ONLY banner — delete this <p> block when copying to a real spec. -->
+  <p style="font-size: 12px; color: var(--color-text-secondary); margin-bottom: 8px;">
+    📋 This is the WEB spec template. Authoring guide →
+    <a href="/specs/_authoring.html" style="color: var(--color-primary); font-weight: 600;">/specs/_authoring.html</a> ·
+    Responsive foundation →
+    <a href="/specs/web_foundation_responsive/" style="color: var(--color-primary); font-weight: 600;">/specs/web_foundation_responsive/</a>
+  </p>
+  <!-- short, user-facing screen name (not the component/class name) -->
+  <h1>[Screen Title]</h1>
+  <!-- 모든 메타 (Status · Surface · Category · Path · Purpose 등) → Overview 테이블.
+       Component · file path → Reference > Implementation source. -->
+</header>
+
+<!-- ============================================================
+     🎯 PURPOSE & CONTEXT — why this screen exists
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 160px;">Status</th>
+        <td>
+          <strong>[🚧 디자인중 | ✅ 디자인완료]</strong>
+          <em style="color: var(--color-text-secondary);">— 라이프사이클 phase (구현 추적은 History row로)</em>
+        </td>
+      </tr>
+      <tr>
+        <th>Surface</th>
+        <td><code>web_user</code> · 또는 <code>web_partner</code> — head의 <code>&lt;meta name="surface"&gt;</code>와 일치해야 함</td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>[feature 그룹 — auth · home · event · partner · payment · my · ticket 등]</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>[/path/:param]</code> · Next.js route (landing_user / landing_partner 확장) · 또는 sub-component (route 없음 — parent screen의 일부)</td>
+      </tr>
+      <tr>
+        <th>Behavior Source</th>
+        <td>
+          <!-- 이 웹 화면이 동작(상태 전이 · 비즈니스 규칙 · 에지케이스)을 상속하는 기존 모바일 spec.
+               레이아웃은 웹에서 새로 정의하지만, behavior 는 이 spec 을 SSOT 로 따른다.
+               상속하지 않는 신규 화면이면 "— (web-native, no mobile counterpart)". -->
+          <a href="/specs/[mobile_screen]/index.html"><code>/specs/[mobile_screen]/index.html</code></a>
+          — [무엇을 상속하는가: states · 전이 규칙 · 에지케이스 / 웹에서 달라지는 점 1줄]
+        </td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <em>— (top-level screen)</em> · 또는 <a href="/specs/[parent]/index.html"><code>[ParentScreen]</code></a> (sub-component인 경우)<br>
+          <strong>Children</strong>: <em>—</em> · 또는 별도 spec으로 분리된 sub-component들의 링크
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          [<strong>1-2 sentences</strong>: 이 화면이 무엇을 위한 화면인가. 사용자가 이 화면에서 무엇을 달성하는가.
+          첫 문장은 짧은 tagline 형태로.]
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: [어디서 이 화면으로 오는가 — URL 직접 진입 · 검색/SNS 유입 · 내부 링크 등 웹 진입 경로 포함.]<br>
+          <strong>Exit points</strong>: [어디로 가는가 — 성공 / 취소 / 에러 분기 포함.]
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          [디자인 결정의 배경. 왜 이 흐름인가. 모바일 spec 대비 웹에서 달라진 결정과 이유.]
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>[얼마나 자주 보는가 — 매일 / 1회만 / 특정 트리거 시 등.]</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     🕐 HISTORY — spec change log (right after Overview)
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">
+    이 spec의 주요 변경 이력. 최신 항목 위에 추가 (최신 → 오래된 순).
+    의미 있는 디자인/동작 변경만 — 소소한 typo는 생략. 구현 PR 머지 시에도 row 추가
+    ("Implemented in PR #123 (date)" 형태).
+  </p>
+  <p class="intro" style="font-size: 12px; color: var(--color-text-secondary);">
+    아래는 이 <strong>웹 템플릿 자체</strong>의 이력 — 실제 spec 작성 시 본인 화면의 history로 교체.
+  </p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-06-06</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>Web template published</strong> — forked from <code>_template.html</code> v1.4 for the web MVP pivot.
+          Changes vs mobile template: head <code>&lt;meta&gt;</code> placeholders (feature-status · features · surface) ·
+          Layout → <strong>Responsive Layout</strong> (Mobile &lt;768 / Desktop ≥1280 variants, States 테이블은 공유) ·
+          token references reframed as CSS variables / Tailwind (token 이름은 MDS 체계 유지) ·
+          Overview에 <strong>Behavior Source</strong> 행 신설 (모바일 spec 상속 경로).
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     Anchor nav — keep as-is, 4 perspectives
+     ============================================================ -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Responsive Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#global-behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     🧱 PERSPECTIVE 1 · RESPONSIVE LAYOUT — structural blueprint per breakpoint
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Responsive Layout</h2>
+    <span class="lede">
+      화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.
+      <strong>breakpoint variant 별</strong> top-level blueprint + internal-composition region당 Sub-anatomy (① ② ③ ...).
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Breakpoint variants</h2>
+    <p class="intro">
+      Breakpoint · 컨테이너 · 그리드 정의의 SSOT는
+      <a href="/specs/web_foundation_responsive/"><code>web_foundation_responsive</code></a>.
+      이 spec에는 <strong>이 화면이 breakpoint별로 어떻게 달라지는지만</strong> 기술한다.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 160px;">Variant</th>
+          <th style="width: 180px;">Breakpoint</th>
+          <th>이 화면에서의 차이</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- 룰: 레이아웃이 실제로 달라지는 variant만 blueprint를 추가로 그린다.
+             · Mobile (<768px) — 모든 web spec의 기본 variant. 항상 작성.
+             · Desktop (≥1280px) — Mobile과 구조가 다를 때만 variant 섹션 추가.
+             · Tablet (768–1279px) — 별도 blueprint 없음. 어느 variant를 따르는지만 명시
+               (기본: web_user는 Mobile 레이아웃 유지, web_partner는 Desktop 레이아웃 축소).
+             States 테이블(아래 perspective)은 breakpoint와 무관하게 공유 — variant별로 복제하지 않음. -->
+        <tr><td><strong>Mobile</strong> (기본)</td><td><code>&lt; 768px</code></td><td>[단일 컬럼 등 — 항상 작성]</td></tr>
+        <tr><td><strong>Desktop</strong></td><td><code>≥ 1280px</code></td><td>[2-컬럼 / 사이드 패널 등 — 차이가 있을 때만 variant 섹션 작성. 동일하면 "Mobile과 동일 (max-width 컨테이너 중앙 정렬)"]</td></tr>
+        <tr><td>Tablet</td><td><code>768–1279px</code></td><td>[별도 blueprint 없음 — 어느 variant 기준으로 fluid 하게 따라가는지 1줄]</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree — Mobile (&lt;768px)</h2>
+    <p class="intro">
+      [1-2 sentences explaining the high-level structure. e.g. "Sticky header + scrollable body + fixed bottom CTA."]
+    </p>
+
+    <div class="layout-grid">
+      <!-- ────── Wireframe blueprint ──────
+        Use absolute-positioned .blueprint__region divs to outline
+        each layout region. Number them ①②③... so the tree and the
+        spacing/alignment table can cross-reference.
+      -->
+      <div class="blueprint">
+        <!-- Whole frame outline (always include) -->
+        <div class="blueprint__region" style="top:0; left:0; right:0; bottom:0; border-style:solid; border-color: rgba(var(--spec-blueprint-rgb), 0.18);"></div>
+
+        <!-- ⚠️ TODO: 아래 height/top/bottom 픽셀 값은 EXAMPLE — 실제 화면 비례에
+             맞춰 반드시 변경. 대충 56/80 고정 사용 금지. -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0; left:0; right:0; height:56px;">
+          <span class="blueprint__region-label">① [Region name] · h=[?px]</span>
+        </div>
+        <div class="blueprint__region" style="top:56px; left:0; right:0; bottom:80px;">
+          <span class="blueprint__region-label">② [Region name]</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:0; left:0; right:0; height:80px;">
+          <span class="blueprint__region-label">③ [Region name] · h=[?px]</span>
+        </div>
+
+        <!-- Optional alignment markers -->
+        <div class="blueprint__align-marker" style="top:8px; right:8px;">[align: ...]</div>
+      </div>
+
+      <!-- ────── Tree outline ──────
+        Use <b> for elements/components, <code> for token references, <em> for
+        named region groupings. Mirror the numbered regions with ← ① markers.
+        토큰 표기 통일: <code>spacing-medium (16px)</code> 형태 (이름 + 괄호 픽셀).
+        구현 관점 주석: CSS variable `var(--spacing-medium)` 또는 Tailwind arbitrary
+        value `p-[var(--spacing-medium)]` — Flutter MinglitSpacing 아님.
+      -->
+      <div class="layout-tree"><b>&lt;main&gt;</b> (page container — <code>web_foundation_responsive</code> 컨테이너 규칙)
+├─ <em>[header region]</em>                       ← ①
+│  ├─ <b>[Component]</b>
+│  └─ Gap: <code>spacing-medium (16px)</code>
+│
+├─ <em>[scrollable body]</em>                     ← ②
+│  └─ [child components]
+│
+└─ <em>[bottom region]</em>                       ← ③
+   └─ [child components]</div>
+    </div>
+  </section>
+
+  <!-- ────── Desktop variant — 차이가 있는 화면만 이 섹션 유지 ──────
+       Mobile과 구조가 동일하면 (컨테이너 max-width 중앙 정렬뿐이면) 이 섹션 전체 삭제
+       + 위 Breakpoint variants 표에 "Mobile과 동일" 명시. -->
+  <section class="doc">
+    <h2>Blueprint &amp; tree — Desktop (≥1280px) <small style="font-size:12px;font-weight:400;color:var(--color-text-secondary);">— 차이가 있을 때만</small></h2>
+    <p class="intro">
+      [Mobile 대비 무엇이 달라지는가 — 예: body가 2-컬럼 그리드로, CTA가 우측 패널로 이동.]
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 300px;">
+        <!-- 데스크톱 비례 wireframe — 가로로 넓은 프레임 가정 -->
+        <div class="blueprint__region" style="top:0; left:0; right:0; bottom:0; border-style:solid; border-color: rgba(var(--spec-blueprint-rgb), 0.18);"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:0; left:0; right:0; height:48px;">
+          <span class="blueprint__region-label">① [Region name] · h=[?px]</span>
+        </div>
+        <div class="blueprint__region" style="top:48px; left:0; width:60%; bottom:0;">
+          <span class="blueprint__region-label">② [main column]</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:48px; right:0; width:40%; bottom:0;">
+          <span class="blueprint__region-label">③ [side panel]</span>
+        </div>
+      </div>
+      <div class="layout-tree"><b>&lt;main&gt;</b> (max-width 컨테이너 — <code>web_foundation_responsive</code> 참조)
+├─ <em>[header region]</em>                       ← ①
+└─ <b>grid</b> (2-col: [main / side], gap: <code>spacing-? (?px)</code>)
+   ├─ <em>[main column]</em>                      ← ②
+   └─ <em>[side panel]</em>                       ← ③</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <p class="intro">
+      variant별로 값이 다르면 Mobile / Desktop 컬럼에 각각 기입. 동일하면 Desktop 칸에 "동일".
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 50px;">#</th>
+          <th style="width: 170px;">Region</th>
+          <th style="width: 170px;">Alignment</th>
+          <th>Spacing — Mobile</th>
+          <th>Spacing — Desktop</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- TODO: one row per numbered region. Cite real mds tokens.
+             구현은 CSS variable: var(--spacing-screen-edge) 등. -->
+        <tr><td>—</td><td>Outer page padding</td><td>—</td><td><code>spacing-screen-edge (16px)</code></td><td>[컨테이너 gutter — foundation 참조]</td></tr>
+        <tr><td>①</td><td>[region]</td><td>[justify / align]</td><td><code>spacing-? (?px)</code></td><td>동일</td></tr>
+        <tr><td>②</td><td>[region]</td><td>[align]</td><td><code>...</code></td><td><code>...</code></td></tr>
+        <tr><td>③</td><td>[region]</td><td>[align]</td><td><code>...</code></td><td><code>...</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomies — required per region</h2>
+    <p class="intro">
+      <strong>Top-level blueprint은 화면 골조만 보여줌</strong>. 각 numbered region이 internal
+      composition을 가지면 그 region마다 별도 Sub-anatomy 섹션을 <strong>반드시 작성</strong>.
+      <strong>구조는 평면 PARALLEL</strong> — Sub-anatomy ①, ②, ③ ... 같은 level 나열, 깊이 금지.
+      breakpoint 간 internal composition이 다르면 해당 Sub-anatomy 안에 variant를 함께 기술
+      (별도 Sub-anatomy로 분리하지 않음).
+    </p>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 200px;">Region 형태</th><th>Sub-anatomy 작성</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>자식 element 2개 이상 + 정렬/간격 규칙 있음</td><td><strong>REQUIRED</strong> — blueprint + tree + spacing 표 모두 작성</td></tr>
+        <tr><td>자식 1개 (atom — 예: 버튼 단독)</td><td>생략 가능 — <code>/components/{name}.html</code> 참조로 위임</td></tr>
+        <tr><td>list / grid (반복 element)</td><td>REQUIRED — 1 item의 internal composition + 반복 패턴 (gap, breakpoint별 column 수)</td></tr>
+        <tr><td>scrollable body 내부에 여러 sections</td><td>REQUIRED — 각 section을 별도 Sub-anatomy로 분리</td></tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top: 12px;">
+      <strong>Numbering</strong> — top-level blueprint은 <code>①②③</code>, sub-anatomy 내부는 <code>㉠㉡㉢</code>.
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ① — [Region name]</h2>
+    <p class="intro">
+      [이 region의 internal composition 1-2 sentences. breakpoint별 차이가 있으면 명시.]
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 200px;">
+        <!-- ⚠️ height: 200px도 EXAMPLE — sub-region 비례에 맞춰 변경 -->
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:16px;left:16px;width:100px;height:24px;">
+          <span class="blueprint__region-label">㉠ [child]</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:48px;left:16px;right:16px;height:32px;">
+          <span class="blueprint__region-label">㉡ [child]</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>[Parent element for this region]</b>
+└─ padding: <code>spacing-? (?px)</code> — <code>var(--spacing-?)</code>
+   └─ <b>flex column / grid</b>(align: ...)
+      ├─ <em>[child name]</em>                                ← ㉠
+      │  └─ <b>[Component]</b>(<code>tokens</code>)
+      ├─ Gap: <code>spacing-? (?px)</code>
+      │
+      └─ <em>[child name]</em>                                ← ㉡
+         └─ <b>[Component]</b>(<code>tokens</code>)</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 180px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>[child]</td><td>[align]</td><td><code>spacing-? (?px)</code></td></tr>
+        <tr><td>㉡</td><td>[child]</td><td>[align]</td><td><code>spacing-? (?px)</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- TODO: Sub-anatomy ② ③ ... internal composition을 가진 모든 numbered region당
+       1 섹션씩 평면 추가. 단순 atom region은 생략 가능 (/components/ 참조). -->
+
+</div>
+
+<!-- ============================================================
+     🎨 PERSPECTIVE 2 · STATES — visual states + per-state spec
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">
+      각 state의 시각 mockup + state-specific 사양 — 6 aspect rows (조건 · 사용자 액션 ·
+      에지케이스 · 컴포넌트 · 토큰 · 노트). <strong>States는 breakpoint와 무관하게 공유</strong> —
+      variant별로 복제하지 않음. mockup은 surface의 기본 breakpoint로
+      (web_user → Mobile 375px · web_partner → Desktop).
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>States gallery</h2>
+    <p class="intro">
+      각 state는 <strong>독립된 미니 테이블</strong> — header(state name + tag) → 좌측 mockup(rowspan=6) +
+      우측 6 aspect rows (조건 / 사용자 액션 / 에지케이스 / 컴포넌트 / 토큰 / 노트).
+      cross-cutting 동작은 아래 Global Behavior 섹션에.
+    </p>
+
+    <p class="intro" style="background: var(--color-surface); padding: 12px; border-left: 3px solid var(--color-primary); border-radius: 4px;">
+      <strong>📋 Aspect 행 작성 룰</strong><br>
+      · <strong>조건</strong> — 데이터 로드 상태 / URL param / 로그인·권한 상태 기준을 디자인 언어로 명시 (예: "이벤트 데이터 로드 완료", "비로그인 방문")<br>
+      · <strong>사용자 액션</strong> — 이 state에서 가능한 모든 클릭/탭/입력/호버 (액션 N개면 N행으로 반복). disabled/무반응이면 "클릭 무반응" 한 행<br>
+      · <strong>에지케이스</strong> — 이 state 한정 변형. 없으면 "—". (cross-cutting edge는 Global Behavior로)<br>
+      · <strong>컴포넌트</strong> — 첫 state는 <strong>풀 리스트</strong>. 2번째 state부터 <strong>변경분만</strong>:
+        <code>+ X</code> (추가) · <code>− X</code> (제거) · <code>↔ X → Y</code> (교체) · <code>동일</code> (변경 없음) · <code>—</code> (해당 없음)<br>
+      · <strong>토큰</strong> — 컴포넌트와 동일 룰. 토큰 이름은 MDS 체계 (<code>color-primary</code> · <code>spacing-medium</code> 등) —
+        구현은 CSS variable <code>var(--color-primary)</code> / Tailwind <code>text-[var(--color-primary)]</code> 형태로 소비<br>
+      · <strong>노트</strong> — free-form designer/dev memo. 없으면 "—"<br>
+      <br>
+      <strong>State 종류 식별</strong> — Default/Empty/Loading/Error는 default placeholder. 화면별로 실제
+      데이터 상태 · URL param · 사용자 상태 기준으로 enumerate. Behavior Source 모바일 spec의
+      state enumeration 을 출발점으로 삼되, 웹 전용 state(예: 비로그인 public view)를 추가.
+    </p>
+
+    <!-- ════════════════════════════════════════════════════════════
+         State summary matrix — 선택적 (state 5개 이상일 때 권장)
+         ════════════════════════════════════════════════════════════ -->
+    <h3 style="margin-top: 24px;">State summary <small style="font-size:12px;font-weight:400;color:var(--color-text-secondary);">— state 5개 이상일 때 권장</small></h3>
+    <p class="intro">
+      모든 state를 한 row씩 한눈에 비교. 자세한 사양은 아래 각 state mini-table 참조.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 180px;">State</th>
+          <th style="width: 100px;">Tag</th>
+          <th style="width: 220px;">조건 (요약)</th>
+          <th>Key visual differentiator</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- TODO: 각 state 1행씩. -->
+        <tr><td><strong>Default</strong></td><td>primary</td><td>[데이터 로드 완료]</td><td>모든 컴포넌트 풀 렌더 — 인터랙션 가능</td></tr>
+        <tr><td><strong>Empty</strong></td><td>no data</td><td>[데이터 0건]</td><td>풀-페이지 empty state 단독 표시</td></tr>
+        <tr><td><strong>Loading</strong></td><td>async</td><td>[fetch 중]</td><td>Skeleton으로 컴포넌트 자리 표시</td></tr>
+        <tr><td><strong>Error</strong></td><td>network/server</td><td>[로드 실패]</td><td>에러 메시지 + 다시 시도 CTA</td></tr>
+      </tbody>
+    </table>
+
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- ─── Default (annotated, primary case) ──────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>Default</strong> <span class="tag">primary</span>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="viewport">
+                <!-- TODO: real screen content (real logo / icons / Korean copy)
+                     web_user → 기본 375px viewport (mobile-web-first)
+                     web_partner → .viewport--desktop 등으로 데스크톱 폭 mockup -->
+                [SCREEN CONTENT]
+
+                <!-- ════════════════════════════════════════════════════════
+                     Spec-mode overlays — 첫 state(Default) mockup에서만 사용.
+                     · annotation: 토큰 라벨 (spacing-medium 등)
+                     · callout (ⓐⓑⓒ): 컴포넌트 위치 — 첫 state "컴포넌트" 행 순서와 1:1
+                     · type-spec: 타이포 inline (size/weight/line-height) -->
+                <span class="annotation" style="top:8px;left:8px;">spacing-? — [where]</span>
+                <span class="callout" style="top:?px;right:?px;">ⓐ</span>
+                <span class="callout" style="top:?px;right:?px;">ⓑ</span>
+                <span class="type-spec" style="top:?px;left:?px;">14 / 400 / 1.45</span>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>[이 상태가 보이는 일반적 상황 — 데이터 상태, 사용자 상태, URL param 등]</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>"[액션]" 클릭 → [즉각 피드백 + 상태 전이 + 도착지 URL]</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td><strong>[edge case]</strong> — [user-visible behavior]</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td><code>[Button]</code> · <code>[Chip]</code> · <code>[EventCard]</code> · <code>[+ 이 화면이 사용하는 모든 컴포넌트 — MDS 컴포넌트 spec 이름 기준]</code></td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td><code>color-primary</code> · <code>spacing-medium</code> · <code>radius-card</code> · typography <code>bodyMedium</code> · <code>[+ 사용 토큰 전부 — CSS로는 var(--color-primary) 등]</code></td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 [free-form designer/dev memo — 결정 근거, TODO, 의문점 등]</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ─── Empty ─────────────────────────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>Empty</strong> <span class="tag tag--mute">no data</span>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="viewport">
+                [EMPTY STATE — full-page empty state]
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>[데이터가 0건일 때]</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>"[CTA 버튼]" 클릭 → [빈 상태에서 권장되는 다음 액션 결과]</td>
+          </tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>—</td></tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>+ <code>[EmptyState]</code> (fullPage variant)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>동일 (Default 참조) — Empty 전용 추가 토큰 없음</td>
+          </tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── Loading ───────────────────────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>Loading</strong> <span class="tag tag--mute">async</span>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="viewport">
+                [LOADING — skeleton placeholder]
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>[데이터 fetch 중 — SSR 화면이면 클라이언트 전환/액션 시에만 해당하는지 명시]</td>
+          </tr>
+          <tr><td class="state-mini__aspect">사용자 액션</td><td>클릭 무반응</td></tr>
+          <tr><td class="state-mini__aspect">에지케이스</td><td>—</td></tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>↔ <code>[Default content component]</code> → <code>[Skeleton]</code></td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>동일 (skeleton shimmer는 컴포넌트 자체에 캡슐화 — 추가 토큰 없음)</td>
+          </tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── Error ─────────────────────────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>Error</strong> <span class="tag tag--mute">network/server</span>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="viewport">
+                [ERROR STATE — full-page error with retry]
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>[로드 실패]</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>"다시 시도" 클릭 → 재요청 → loading 재진입</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>네트워크 vs 서버 에러 구분 필요 시 sub-state로 분리 · 404/403 은 별도 페이지인지 명시</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>+ <code>[ErrorState]</code>(fullPage), <code>[TextButton]</code> ("다시 시도")</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>+ <code>color-error</code> · <code>color-errorContainer</code></td>
+          </tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── Add more states as needed ──────────────────── -->
+      <!-- Common web variants: 비로그인 public view · form-filled · validation-error ·
+           wizard-stepN · modal-open · 404/403 등.
+           각 state는 자체 mini-table — mockup(rowspan=N) + N rows. -->
+
+    </div>
+  </section>
+</div>
+
+<!-- ============================================================
+     🔄 PERSPECTIVE 3 · GLOBAL BEHAVIOR — cross-cutting only
+     ============================================================ -->
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">
+      화면 전반에 걸친 cross-cutting 동작만 — motion timing, async lifecycle,
+      screen-wide edge cases. state-specific 동작은 States section의 각 mini-table에.
+      모바일 spec에서 상속한 behavior 는 Behavior Source 기준 — 여기엔 웹에서 달라지는 점만 추가.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <p class="intro">
+      <strong>판단 기준</strong> — 이 액션이 모든 state(또는 다수 state)에서 동일하게 가능하면 cross-cutting.
+      특정 state에서만 가능하면 그 state의 mini-table로.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 220px;">사용자 액션</th>
+          <th>화면에 보이는 결과</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- TODO: 모든/다수 state에 적용되는 패턴만. 웹에서 흔한 예:
+             · 브라우저 back / forward (history 동작 — 모달/시트가 history entry인지)
+             · URL 직접 진입 / 새로고침 (state 복원 — 어떤 state로 착지하는가)
+             · 비로그인 접근 (redirect? public view?)
+             · hover (포인터 디바이스) vs touch — web_foundation_responsive 의 포인터 규칙 따름
+             · 브라우저 탭 비활성 → 복귀 (데이터 stale 처리) -->
+        <tr>
+          <td>브라우저 back</td>
+          <td>[이전 페이지로 — 모달/시트 열림 상태의 history 처리 명시]</td>
+        </tr>
+        <tr>
+          <td>새로고침 / URL 직접 진입</td>
+          <td>[URL만으로 state 복원 — 어떤 state로 착지하는가]</td>
+        </tr>
+        <tr>
+          <td>비로그인 접근</td>
+          <td>[로그인 redirect · 또는 public read-only view]</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion &amp; timing</h2>
+    <p class="intro">
+      <strong>임시값 사용 금지</strong> — duration은 MDS motion 토큰에서 선택.
+      토큰 이름은 모바일과 동일 체계 (<code>micro</code>/<code>fast</code>/<code>medium</code>/<code>slow</code>) —
+      웹 구현은 CSS <code>transition-duration</code> / Tailwind <code>duration-[N]</code> 로 같은 ms 값을 소비
+      (예: <code>fast (200ms)</code> → <code>transition: ... 200ms</code> 또는 <code>duration-200</code>).
+      <code>prefers-reduced-motion</code> 대응은 Global edge cases 에 명시.
+    </p>
+    <table class="ref" style="margin-bottom: 16px;">
+      <thead>
+        <tr><th style="width: 200px;">Token</th><th style="width: 80px;">Value</th><th>Use case</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>motion-micro</code></td><td>100ms</td><td>즉각 피드백 — chip toggle, button press, like 토글</td></tr>
+        <tr><td><code>motion-fast</code></td><td>200ms</td><td>간단 transition — fade, color change, hover</td></tr>
+        <tr><td><code>motion-medium</code></td><td>350ms</td><td>data crossfade, modal/sheet 진입</td></tr>
+        <tr><td><code>motion-slow</code></td><td>500ms</td><td>긴 page transition · 강조 모션</td></tr>
+        <tr><td><em>(unscoped)</em> attention loop</td><td>1.4–1.8s</td><td>blink / pulse / halo (token 미정의 — 직접 ms 명시)</td></tr>
+      </tbody>
+    </table>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 220px;">Transition</th>
+          <th style="width: 140px;">Duration (token)</th>
+          <th>Curve / notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- TODO: list each transition the user perceives. Reference token name + ms. -->
+        <tr>
+          <td>화면 진입 (loading → data)</td>
+          <td><code>medium</code> (350ms)</td>
+          <td>fade / crossfade — CSS transition or framer-motion</td>
+        </tr>
+        <tr>
+          <td>[주요 state 전이]</td>
+          <td><code>?</code> (?ms)</td>
+          <td>[curve + 사용자 인지 포인트]</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <p class="intro">
+      화면 전반에 영향을 주는 edge case만. <strong>모든 항목 의무 아님</strong> — 적용되는 것만 작성.
+      다크 모드는 모든 spec에 작성 권장.
+    </p>
+    <ul class="notes">
+      <!-- TODO: 적용되는 항목만 남기고 나머지 삭제. -->
+      <li><strong>네트워크 끊김</strong> — [어떻게 나타나는가 — error state 진입 등] <em>(데이터 fetch 화면일 때)</em></li>
+      <li><strong>다크 모드</strong> — [우측 상단 Dark 토글로 확인 — 어떤 토큰이 어떻게 변하는가]</li>
+      <li><strong>접근성</strong> — [keyboard navigation / focus ring / screen reader / 큰 글씨 — 영향받는 요소. 웹은 키보드 포커스 순서 필수 검토]</li>
+      <li><strong>reduced motion</strong> — [<code>prefers-reduced-motion</code> 시 어떤 모션이 비활성화되는가]</li>
+      <li><strong>SEO / 공유</strong> — [public 페이지면 title/og 메타 + 공유 프리뷰 — 해당 시]</li>
+      <li><strong>브라우저 호환</strong> — [특이 의존이 있을 때만 — 기본은 evergreen 브라우저 가정]</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     📖 PERSPECTIVE 4 · REFERENCE — related screens only
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">
+      Implementation source + 인접 화면 link만. <strong>Components / Tokens는 States section의 각 mini-table</strong>에
+      분산됨 — 여기에서 중복 명세하지 않음.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <p class="intro">
+      이 spec과 매칭되는 실제 web source 위치. <code>designing</code> status면 미존재 항목은 <code>TBD</code>.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 200px;">항목</th><th>Path / Reference</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Page / Component</strong></td>
+          <td><code>[PageComponentName]</code></td>
+        </tr>
+        <tr>
+          <td><strong>File path</strong></td>
+          <td><a href="https://github.com/Mark-Yun/minglit/blob/dev/apps/landing_user/src/app/[route]/page.tsx"><code>apps/landing_user/src/app/[route]/page.tsx</code></a> · web_partner는 <code>apps/landing_partner/...</code></td>
+        </tr>
+        <tr>
+          <td><strong>Data source</strong></td>
+          <td><code>[Supabase query / RPC / API route]</code> · <a href="..."><code>[file]</code></a></td>
+        </tr>
+        <tr>
+          <td><strong>Route</strong></td>
+          <td><code>[/path/:param]</code> · Next.js app router</td>
+        </tr>
+        <tr>
+          <td><strong>Behavior Source</strong></td>
+          <td><a href="/specs/[mobile_screen]/index.html"><code>/specs/[mobile_screen]/index.html</code></a> — Overview의 Behavior Source 행과 동일 경로</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top: 12px; margin-bottom: 0;">
+      ※ 적용 안 되는 항목은 row 삭제. 항목별 미존재 시 <code>TBD</code>.
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <!-- TODO: neighbor screens — entry sources, exit targets,
+             sibling steps in a wizard, parent/child screens, 그리고
+             behavior source 모바일 spec. -->
+        <tr>
+          <td><a href="/specs/[neighbor]/index.html"><code>[NeighborScreen]</code></a></td>
+          <td>[관계 — 어떤 흐름으로 연결되는가]</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/web_foundation_responsive/"><code>WebFoundationResponsive</code></a></td>
+          <td>breakpoint · 컨테이너 · 그리드 · 포인터 규칙 SSOT</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+</div>
+
+<!-- ============================================================
+     ✅ AUTHORING CHECKLIST — spec 작성 완료 전 self-check
+     ============================================================ -->
+<section class="doc" style="border: 2px solid var(--color-primary); border-radius: var(--radius-card); padding: 16px 24px; margin-top: 32px;">
+  <h2 style="color: var(--color-primary);">✅ Authoring checklist (web)</h2>
+  <p class="intro">
+    spec 작성 완료 전 항목별 self-check. 모든 ✓를 채울 수 있어야 published-ready.
+  </p>
+  <ul class="notes" style="line-height: 1.9;">
+    <li><strong>Head meta</strong> — <code>feature-status</code> · <code>features</code> · <code>surface</code> 3개 meta 채움. surface는 Overview의 Surface 행과 일치</li>
+    <li><strong>Header</strong> — Title (h1)만</li>
+    <li><strong>Overview</strong> — Status · Surface · Category · Route · <strong>Behavior Source</strong> · Hierarchy · Purpose · Entry/Exit · Background · Frequency 모두 채움 (해당 없으면 "—")</li>
+    <li><strong>Behavior Source</strong> — 상속하는 모바일 spec 경로 + 무엇을 상속하고 무엇이 달라지는지 1줄. web-native 화면이면 명시적으로 "—"</li>
+    <li><strong>History</strong> — Initial row + 의미 있는 변경 row (최신 → 오래된 순)</li>
+    <li><strong>Responsive Layout — variants</strong> — Mobile (&lt;768) blueprint 필수. Desktop (≥1280)은 구조가 다를 때만 별도 blueprint, 동일하면 표에 "Mobile과 동일" 명시. Tablet은 따라가는 variant 1줄</li>
+    <li><strong>Layout — Sub-anatomy</strong> — internal composition을 가진 모든 region마다 1 섹션 (평면 나열). breakpoint별 차이는 같은 Sub-anatomy 안에 기술</li>
+    <li><strong>States — breakpoint 공유</strong> — States 테이블은 variant별로 복제하지 않음. mockup은 surface 기본 breakpoint로</li>
+    <li><strong>States — 종류 enumerate</strong> — placeholder 그대로 쓰지 않고 실제 데이터/사용자/URL 상태 기준 enumerate. Behavior Source 의 state 목록과 대조</li>
+    <li><strong>States — mini-table 6 rows</strong> — 모든 state가 (조건 / 사용자 액션 / 에지케이스 / 컴포넌트 / 토큰 / 노트) 6행 채움</li>
+    <li><strong>States — 첫 state 풀 리스트, 2번째+ additive diff</strong> — <code>+ X</code> / <code>− X</code> / <code>↔ X → Y</code> / <code>동일</code> / <code>—</code> 5종 prefix만</li>
+    <li><strong>Global Behavior — 웹 cross-cutting</strong> — 브라우저 back / 새로고침·URL 진입 / 비로그인 접근 검토됨</li>
+    <li><strong>Global Behavior — Motion</strong> — 모든 duration이 motion token 이름 + ms로 표기. 임시값 금지. reduced-motion 검토</li>
+    <li><strong>토큰 표기 통일</strong> — 토큰 이름은 MDS 체계 (<code>spacing-medium (16px)</code> 형태). 구현 참조는 CSS variable / Tailwind 관점 (<code>var(--spacing-medium)</code>)</li>
+    <li><strong>Reference</strong> — Page/Component · File path · Data source · Route · Behavior Source 채움. 미존재 항목 <code>TBD</code></li>
+    <li><strong>Screen registry</strong> — <code>src/lib/screen-definitions.ts</code> 의 해당 surface 배열 (WEB_USER_SCREENS / WEB_PARTNER_SCREENS) 에 등록</li>
+  </ul>
+</section>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>

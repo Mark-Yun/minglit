@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="feature-status" content="in-progress">
+<meta name="features" content="web/foundation-responsive">
+<meta name="surface" content="web_shared">
+<title>Spec — WebFoundationResponsive (web shared · foundation)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* Foundation spec — breakpoint/container/grid/pointer SSOT for all web surfaces.
+   Not a routed screen: no real mockup content, viewports illustrate container behavior. */
+:root {
+  --spec-blueprint-rgb: 34, 102, 204;
+}
+.page { max-width: 1120px; }
+.wfr-canvas {
+  position: absolute;
+  inset: 0;
+  background: #f5f7fa;
+  display: flex;
+  justify-content: center;
+}
+.wfr-container {
+  background: rgba(34, 102, 204, 0.08);
+  border-left: 1px dashed rgba(34, 102, 204, 0.5);
+  border-right: 1px dashed rgba(34, 102, 204, 0.5);
+  display: grid;
+  grid-auto-rows: min-content;
+  gap: 8px;
+  padding: 12px;
+  align-content: start;
+  flex: 1;
+}
+.wfr-container--capped { max-width: 82%; flex: 1; }
+.wfr-cell {
+  height: 56px;
+  background: rgba(34, 102, 204, 0.18);
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  color: #2a4a78;
+  font-weight: 700;
+}
+.wfr-grid-2 { grid-template-columns: repeat(2, 1fr); }
+.wfr-grid-12 { grid-template-columns: repeat(12, 1fr); }
+.wfr-label {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #2a4a78;
+  letter-spacing: 0.04em;
+}
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<header>
+  <h1>Web Responsive Foundation</h1>
+</header>
+
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr><th style="width: 160px;">Status</th><td><strong>🚧 디자인중</strong> — web MVP pivot 의 responsive 기반 규칙</td></tr>
+      <tr><th>Surface</th><td><code>web_shared</code> — <code>web_user</code> · <code>web_partner</code> · <code>web_admin</code> 모든 웹 surface 가 공유</td></tr>
+      <tr><th>Category</th><td>foundation · layout</td></tr>
+      <tr><th>Route / Surface</th><td>— (foundation spec — 라우트 없음)</td></tr>
+      <tr>
+        <th>Behavior Source</th>
+        <td>— (web-native foundation, no mobile counterpart)</td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <em>— (top-level foundation)</em><br>
+          <strong>Children</strong>: 모든 web screen spec — <a href="/specs/_template_web.html"><code>_template_web.html</code></a> 로 작성되는 spec 이 이 문서의 breakpoint/컨테이너/그리드/포인터 규칙을 참조한다.
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          웹 surface 공통 responsive 규칙의 SSOT. breakpoint 경계 · 컨테이너 폭 · 그리드 ·
+          터치/포인터 규칙을 한 곳에 정의해, 각 screen spec 은 "이 화면이 breakpoint 별로
+          어떻게 달라지는지"만 기술하게 한다.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: web screen spec 작성/리뷰 시 참조.<br>
+          <strong>Exit points</strong>: 각 화면의 Responsive Layout 섹션.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          웹 MVP 피벗 — 유저웹/파트너웹은 landing_user/landing_partner 확장으로 구현.
+          기존 70개 모바일 spec 은 behavior source 로 유지하고, 웹 화면 spec 은 신규 작성.
+          <strong>유저웹은 모바일웹 우선</strong> (SNS/검색 유입 = 모바일 브라우저 다수),
+          <strong>파트너웹·admin 은 데스크톱 우선</strong> (운영/관리 작업 환경) 원칙을 여기서 고정한다.
+        </td>
+      </tr>
+      <tr><th>Frequency</th><td>모든 web spec 작성 시 1회 이상 참조되는 공통 기반.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="doc">
+  <h2>History</h2>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-06-06</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>Initial foundation published</strong> — breakpoint 3단 (mobile &lt;768 / tablet 768–1279 / desktop ≥1280),
+          컨테이너 폭, 그리드 규칙, 터치/포인터 규칙, surface 별 우선순위 원칙
+          (유저웹 = 모바일웹 우선 · 파트너웹/admin = 데스크톱 우선) 정의.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Responsive Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#global-behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     🧱 PERSPECTIVE 1 · RESPONSIVE LAYOUT — breakpoint / container / grid SSOT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Responsive Layout</h2>
+    <span class="lede">
+      breakpoint 경계 · 컨테이너 폭 · 그리드 규칙의 정의. 모든 web screen spec 이 이 값을 인용한다.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Breakpoints</h2>
+    <p class="intro">
+      3단 breakpoint. 경계값은 CSS media query / Tailwind 기준으로 min-width 판정
+      (<code>md: 768px</code> · <code>xl: 1280px</code> 와 정렬). screen spec 의 variant 는
+      <strong>Mobile / Desktop 2종만</strong> 작성하고, Tablet 은 어느 variant 를 따르는지 1줄로 명시한다.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 140px;">Tier</th>
+          <th style="width: 180px;">Range</th>
+          <th style="width: 220px;">Media query / Tailwind</th>
+          <th>Spec variant 규칙</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Mobile</strong></td>
+          <td><code>&lt; 768px</code></td>
+          <td>기본 (no prefix) — mobile-first</td>
+          <td>모든 web spec 의 <strong>기본 variant</strong>. 항상 blueprint 작성.</td>
+        </tr>
+        <tr>
+          <td><strong>Tablet</strong></td>
+          <td><code>768 – 1279px</code></td>
+          <td><code>@media (min-width: 768px)</code> · <code>md:</code></td>
+          <td>별도 blueprint 없음 — 기본: web_user 는 Mobile 레이아웃 유지(컨테이너만 fluid), web_partner/web_admin 은 Desktop 레이아웃 축소. 화면별 예외만 spec 에 1줄.</td>
+        </tr>
+        <tr>
+          <td><strong>Desktop</strong></td>
+          <td><code>≥ 1280px</code></td>
+          <td><code>@media (min-width: 1280px)</code> · <code>xl:</code></td>
+          <td>Mobile 과 구조가 다른 화면만 variant blueprint 추가. States 테이블은 공유.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Container widths</h2>
+    <p class="intro">
+      페이지 콘텐츠의 최대 폭과 좌우 gutter. 컨테이너는 항상 중앙 정렬, gutter 는 컨테이너 바깥 패딩.
+      토큰 이름은 MDS 체계 — 구현은 CSS variable / Tailwind arbitrary value 로 소비.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 140px;">Tier</th>
+          <th style="width: 200px;">Content max-width</th>
+          <th style="width: 200px;">Gutter (좌우 패딩)</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Mobile</strong></td>
+          <td>fluid (100%)</td>
+          <td><code>spacing-screen-edge (16px)</code> — <code>var(--spacing-screen-edge)</code></td>
+          <td>모바일 앱과 동일 edge 패딩 감각 유지.</td>
+        </tr>
+        <tr>
+          <td><strong>Tablet</strong></td>
+          <td>fluid (100%) · 단일 컬럼 콘텐츠는 <code>720px</code> 캡 권장</td>
+          <td><code>24px</code></td>
+          <td>긴 글줄 방지 — 읽기 콘텐츠는 폭 캡.</td>
+        </tr>
+        <tr>
+          <td><strong>Desktop</strong></td>
+          <td><code>1200px</code> 캡 (admin console 등 풀-와이드 도구 화면은 <code>1440px</code>까지 허용)</td>
+          <td><code>32px</code></td>
+          <td>중앙 정렬. 캡 초과 영역은 배경(surface)으로 채움.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="layout-grid" style="margin-top: 16px;">
+      <div class="blueprint">
+        <!-- Mobile container: fluid + 16px gutter -->
+        <div class="blueprint__region" style="top:0; left:0; right:0; bottom:0; border-style:solid; border-color: rgba(var(--spec-blueprint-rgb), 0.18);"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:0; left:16px; right:16px; bottom:0;">
+          <span class="blueprint__region-label">① content — fluid · gutter 16px</span>
+        </div>
+        <div class="blueprint__align-marker" style="top:8px; right:24px;">gutter: spacing-screen-edge (16px)</div>
+      </div>
+      <div class="layout-tree"><b>Mobile (&lt;768px)</b>
+<b>&lt;body&gt;</b>
+└─ <b>&lt;main&gt;</b> — width: 100%
+   └─ padding-inline: <code>spacing-screen-edge (16px)</code>
+      └─ <em>content</em>                          ← ①
+
+<b>Desktop (≥1280px)</b>
+<b>&lt;body&gt;</b>
+└─ <b>&lt;main&gt;</b> — max-width: <code>1200px</code> · margin-inline: auto
+   └─ padding-inline: <code>32px</code>
+      └─ <em>content</em> (12-col grid)</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Grid rules</h2>
+    <p class="intro">
+      카드 목록 등 반복 콘텐츠의 컬럼 규칙. 고정 컬럼 수 — 컨테이너 폭 안에서 1fr 균등 분할.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 140px;">Tier</th>
+          <th style="width: 160px;">Columns</th>
+          <th style="width: 160px;">Gap</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Mobile</strong></td><td>1 col (카드 목록) · 최대 2 col (compact 아이템)</td><td><code>spacing-medium (16px)</code></td><td>세로 스크롤 단일 흐름 우선.</td></tr>
+        <tr><td><strong>Tablet</strong></td><td>2 col</td><td><code>spacing-medium (16px)</code></td><td>카드 목록 기본 2열.</td></tr>
+        <tr><td><strong>Desktop</strong></td><td>12-col 레이아웃 그리드 · 카드 목록은 3–4 col</td><td><code>24px</code></td><td>main/side 분할 등 페이지 구조는 12-col 기준으로 명세 (예: 8/4 분할).</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Touch / pointer rules</h2>
+    <p class="intro">
+      입력 수단은 breakpoint 가 아니라 capability 로 판정 — <code>@media (hover: hover) and (pointer: fine)</code>.
+      좁은 창의 데스크톱, 터치 노트북이 있으므로 "좁으면 터치"라고 가정하지 않는다.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 240px;">Rule</th><th>정의</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>최소 터치 타깃</strong></td>
+          <td>44×44px — 터치 가능 모든 인터랙티브 요소. 시각 크기가 작아도 hit area 는 44px 확보.</td>
+        </tr>
+        <tr>
+          <td><strong>Hover 의존 금지</strong></td>
+          <td>hover 로만 노출되는 정보/액션 금지 — hover 는 보조 강조(<code>hover: hover</code> 디바이스에서만), 모든 액션은 클릭/탭으로 도달 가능해야 함.</td>
+        </tr>
+        <tr>
+          <td><strong>포인터 피드백</strong></td>
+          <td>fine pointer: hover 상태 (<code>motion-fast (200ms)</code> transition) + <code>cursor: pointer</code>. coarse pointer: press 상태로 즉각 피드백 (<code>motion-micro (100ms)</code>).</td>
+        </tr>
+        <tr>
+          <td><strong>스와이프 제스처</strong></td>
+          <td>모바일웹에서도 스와이프는 보조 수단 — 동일 기능의 버튼 대안 필수 (캐러셀 화살표 등).</td>
+        </tr>
+        <tr>
+          <td><strong>키보드</strong></td>
+          <td>모든 인터랙티브 요소 tab 도달 가능 + visible focus ring. 데스크톱 우선 surface (web_partner/web_admin) 는 필수 검토.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Surface priority principles</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 160px;">Surface</th>
+          <th style="width: 200px;">우선 breakpoint</th>
+          <th>원칙</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>web_user</code></td>
+          <td><strong>Mobile (모바일웹 우선)</strong></td>
+          <td>SNS/검색 유입 = 모바일 브라우저 다수. Mobile blueprint 가 1차 산출물, Desktop 은 컨테이너 캡 중앙 정렬이 기본값 (구조가 달라질 때만 variant). spec mockup 도 375px viewport 기본.</td>
+        </tr>
+        <tr>
+          <td><code>web_partner</code></td>
+          <td><strong>Desktop (데스크톱 우선)</strong></td>
+          <td>운영/관리 작업 환경. Desktop blueprint 가 1차 산출물, Mobile 은 조회 중심 축소 (핵심 운영 액션은 유지). spec mockup 은 데스크톱 폭 viewport 권장.</td>
+        </tr>
+        <tr>
+          <td><code>web_admin</code></td>
+          <td><strong>Desktop only</strong></td>
+          <td>내부 admin console — 모바일 대응 비목표. <code>admin_console_dashboard</code> spec 패턴 유지.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     🎨 PERSPECTIVE 2 · STATES — breakpoint tier 별 컨테이너 동작
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">
+      foundation 의 "state" = breakpoint tier. 각 tier 에서 컨테이너/그리드가 어떻게 동작하는지를
+      mockup 으로 보여준다. (일반 screen spec 의 데이터 state 와 다름 — foundation 전용 해석.)
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Breakpoint tiers</h2>
+
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- ─── Mobile ──────────────────────────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>Mobile</strong> <span class="tag">&lt; 768px · 기본</span>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="viewport" style="height: 420px;">
+                <div class="wfr-canvas">
+                  <span class="wfr-label">MOBILE · fluid · gutter 16px</span>
+                  <div class="wfr-container" style="margin: 28px 16px 12px;">
+                    <div class="wfr-cell">content 1col</div>
+                    <div class="wfr-cell">content 1col</div>
+                    <div class="wfr-cell">content 1col</div>
+                  </div>
+                </div>
+                <span class="annotation" style="top:8px;left:8px;">gutter: spacing-screen-edge (16px)</span>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>viewport 폭 768px 미만 — 모바일 브라우저 · 좁은 창</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>세로 스크롤 단일 흐름 — 터치 타깃 44px · 스와이프는 보조 수단</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td><strong>초소형 (&lt;360px)</strong> — 별도 분기 없음, fluid 축소로 흡수. 줄바꿈 깨짐만 화면별 검수</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>page container (fluid) · 1-col content grid</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td><code>spacing-screen-edge (16px)</code> · <code>spacing-medium (16px)</code> — CSS: <code>var(--spacing-screen-edge)</code> · <code>var(--spacing-medium)</code></td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 web_user 의 1차 디자인 대상 tier — 모바일 앱 spec 과 같은 시각 감각 유지</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ─── Tablet ──────────────────────────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>Tablet</strong> <span class="tag tag--mute">768 – 1279px</span>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="viewport" style="width: 560px; height: 420px;">
+                <div class="wfr-canvas">
+                  <span class="wfr-label">TABLET · fluid · gutter 24px · 2col</span>
+                  <div class="wfr-container wfr-grid-2" style="margin: 28px 24px 12px;">
+                    <div class="wfr-cell">col 1</div>
+                    <div class="wfr-cell">col 2</div>
+                    <div class="wfr-cell">col 1</div>
+                    <div class="wfr-cell">col 2</div>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>viewport 폭 768–1279px — 태블릿 · 중간 폭 창</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>입력 수단 혼재 — capability query 로 hover/터치 판정 (breakpoint 로 가정 금지)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td><strong>별도 blueprint 없는 tier</strong> — web_user 는 Mobile 레이아웃 유지, web_partner 는 Desktop 레이아웃 축소. 화면별 예외만 해당 spec 에 명시</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>↔ 1-col grid → 2-col grid · 읽기 콘텐츠 720px 캡</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>↔ gutter <code>spacing-screen-edge (16px)</code> → <code>24px</code></td>
+          </tr>
+          <tr><td class="state-mini__aspect">노트</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <!-- ─── Desktop ─────────────────────────────────────── -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>Desktop</strong> <span class="tag tag--mute">≥ 1280px</span>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="viewport" style="width: 720px; height: 420px;">
+                <div class="wfr-canvas">
+                  <span class="wfr-label">DESKTOP · max-width 1200px 캡 · 중앙 정렬 · 12col</span>
+                  <div class="wfr-container wfr-container--capped wfr-grid-12" style="margin: 28px 0 12px;">
+                    <div class="wfr-cell" style="grid-column: span 8;">main · 8col</div>
+                    <div class="wfr-cell" style="grid-column: span 4;">side · 4col</div>
+                    <div class="wfr-cell" style="grid-column: span 4;">card</div>
+                    <div class="wfr-cell" style="grid-column: span 4;">card</div>
+                    <div class="wfr-cell" style="grid-column: span 4;">card</div>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>viewport 폭 1280px 이상 — 데스크톱 브라우저</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>hover 피드백 (<code>motion-fast (200ms)</code>) + cursor pointer · 키보드 tab 네비게이션 필수</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td><strong>초광폭 (≥1920px)</strong> — 1200px 캡 유지, 잉여 폭은 배경으로. 풀-와이드 도구 화면만 1440px 캡 허용</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>+ 12-col 레이아웃 그리드 (main/side 분할) · 카드 3–4 col</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>↔ gutter → <code>32px</code> · grid gap <code>24px</code></td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 web_partner / web_admin 의 1차 디자인 대상 tier</td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </section>
+</div>
+
+<!-- ============================================================
+     🔄 PERSPECTIVE 3 · GLOBAL BEHAVIOR — resize · pointer · motion
+     ============================================================ -->
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">
+      breakpoint 전환 · 입력 capability 전환 등 모든 웹 화면에 공통으로 적용되는 동작.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">사용자 액션</th>
+          <th>화면에 보이는 결과</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>창 리사이즈 (tier 경계 통과)</td>
+          <td>레이아웃 즉시 reflow — 전환 애니메이션 없음. 스크롤 위치·입력값·열린 모달 유지.</td>
+        </tr>
+        <tr>
+          <td>모바일 기기 회전 (portrait ↔ landscape)</td>
+          <td>리사이즈와 동일 처리 — landscape 폭이 768px 을 넘으면 Tablet tier 적용.</td>
+        </tr>
+        <tr>
+          <td>브라우저 줌 (텍스트 확대)</td>
+          <td>200% 줌에서 가로 스크롤 없이 사용 가능해야 함 (effective viewport 가 좁아지면 하위 tier 레이아웃 적용).</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion &amp; timing</h2>
+    <p class="intro">
+      duration 토큰 체계는 모바일 MDS 와 동일 (micro 100 / fast 200 / medium 350 / slow 500).
+      웹 구현은 CSS <code>transition-duration</code> / Tailwind <code>duration-N</code> 으로 같은 ms 값 소비.
+      breakpoint 전환 자체에는 모션을 걸지 않는다.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 220px;">Transition</th>
+          <th style="width: 140px;">Duration (token)</th>
+          <th>Curve / notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>breakpoint reflow</td><td>없음 (0ms)</td><td>즉시 reflow — 중간 폭 애니메이션 금지</td></tr>
+        <tr><td>hover 피드백 (fine pointer)</td><td><code>fast</code> (200ms)</td><td>ease-out — color/elevation 변화</td></tr>
+        <tr><td>press 피드백 (coarse pointer)</td><td><code>micro</code> (100ms)</td><td>즉각 시각 변화</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>다크 모드</strong> — 컨테이너/그리드 규칙은 다크 모드와 무관 (배경 토큰만 전환).</li>
+      <li><strong>접근성</strong> — 200% 줌 + 가로 스크롤 금지 · visible focus ring · 터치 타깃 44px — 본 문서의 규칙이 모든 화면의 baseline.</li>
+      <li><strong>reduced motion</strong> — <code>prefers-reduced-motion</code> 시 hover/press 피드백은 유지하되 transition 을 0ms 로.</li>
+      <li><strong>브라우저 호환</strong> — evergreen 브라우저 기준. <code>hover/pointer</code> media query 미지원 환경은 coarse pointer 로 폴백.</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     📖 PERSPECTIVE 4 · REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">foundation 이므로 implementation source 대신 소비처/관련 문서 링크.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 200px;">항목</th><th>Path / Reference</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Web user app</strong></td>
+          <td><code>apps/landing_user/</code> — 유저웹 (모바일웹 우선) · 구현 시 이 문서의 breakpoint/컨테이너 값 적용 <code>TBD</code></td>
+        </tr>
+        <tr>
+          <td><strong>Web partner app</strong></td>
+          <td><code>apps/landing_partner/</code> — 파트너웹 (데스크톱 우선) <code>TBD</code></td>
+        </tr>
+        <tr>
+          <td><strong>Token SSOT</strong></td>
+          <td><code>shared/packages/mds/tokens/</code> — generated CSS 는 docs 의 <code>public/tokens.css</code> 로 sync</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 280px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/_template_web.html"><code>_template_web.html</code></a></td>
+          <td>web screen spec 템플릿 — Responsive Layout 섹션이 본 문서를 인용</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/admin_console_dashboard/"><code>AdminConsoleDashboard</code></a></td>
+          <td>web_admin desktop-only 패턴의 선례</td>
+        </tr>
+        <tr>
+          <td><a href="/foundations/layout">Layout foundations</a></td>
+          <td>모바일 앱 layout foundation — spacing 토큰 체계 공유</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>
