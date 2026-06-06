@@ -3,7 +3,8 @@
 //
 // 출력: docs/infra/mds-emulator-render/checkin_placeholder_page/state-*.png
 //
-// state_4 (direct-scan 1event) 는 mobile_scanner (카메라) 의존 → 캡처 제외.
+// state_4 는 T-7~T-2 pre-start 이벤트를 사용해 QR/camera 경로를 피하고
+// OngoingEventListPage readiness/list mode 를 캡처한다.
 
 import '../_engine/catalog.dart';
 import '../_engine/runner.dart';
