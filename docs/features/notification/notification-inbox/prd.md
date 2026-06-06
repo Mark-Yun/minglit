@@ -1,5 +1,7 @@
 # PRD: 알림 인박스 (Notification Inbox)
 
+> **Status: on-hold (mobile frozen, 2026-06-06)** — 푸시/FCM + Flutter UI 전제. 웹 알림 재설계 대기. 배경: `docs/architecture/web-mvp-pivot.md`
+
 ## Summary
 
 푸시 알림을 놓친 유저가 앱 안에서 과거 알림을 재확인할 수 있는 인박스 + 미읽음 배지 + 페이지네이션 / 카테고리 / 상대 시간 등 UX 강화. 현재 화면 / API / 라우트는 구현돼 있으나 entry point (app_user 벨 배지) 부재와 UX 완성도가 부족하다.

@@ -8,7 +8,7 @@ Minglit Design System 의 **시각 SSOT + 문서 사이트**. 화면 spec, 컴�
 |---|---|
 | [`src/app/`](./src/app/) | Next.js route pages (`/`, `/tokens`, `/components`, `/screens`, `/icons`, `/flows`) |
 | [`src/lib/components.ts`](./src/lib/components.ts) | MDS 컴포넌트 manifest SSOT |
-| [`src/lib/screen-definitions.ts`](./src/lib/screen-definitions.ts) | `/screens` surface별 screen registry (`app_user`, `app_partner`, `web_admin`) |
+| [`src/lib/screen-definitions.ts`](./src/lib/screen-definitions.ts) | `/screens` surface별 screen registry (`app_user`, `app_partner`, `web_admin`, `web_user`, `web_partner` — 웹 surface 는 정적 목록) |
 | [`src/components/specs/`](./src/components/specs/) | 컴포넌트별 inline visual playground |
 | [`public/specs/BLUEDOC.md`](./public/specs/BLUEDOC.md) | 화면 spec source HTML + generated MD/PNG |
 | [`reports/BLUEDOC.md`](./reports/BLUEDOC.md) | MDS 정합성 audit report + weekly FRESH_DOC job |
@@ -22,7 +22,7 @@ Minglit Design System 의 **시각 SSOT + 문서 사이트**. 화면 spec, 컴�
 - **런타임 검증은 mock app 중심** — emulator render catalog 가 실제 Flutter 화면 캡처를 담당한다.
 - **토큰 SSOT 는 `shared/packages/mds/tokens/`** — docs 는 generated CSS 를 `public/tokens.css` 로 sync 한다.
 - **아이콘 SSOT 는 `shared/packages/mds/icons/`** — docs 의 React icon copy/data 는 sync script 로 갱신한다.
-- **화면 spec source 는 `public/specs/<screen>/index.html`** — screen 변경은 여기만 직접 수정한다.
+- **화면 spec source 는 `public/specs/<screen>/index.html`** — screen 변경은 여기만 직접 수정한다. 웹 화면 spec 은 `_template_web.html` + `web_foundation_responsive` 기반으로 신규 작성한다.
 - **`index.md` / `state_*.png` / `blueprint*.png` 는 자동 산출물** — `render-spec-mockups.js` / `sync-mds-mockups.yml` 이 HTML 에서 재생성한다.
 
 ## 자주 쓰는 명령
@@ -47,4 +47,4 @@ npm run tokens:sync && npm run icons:sync && npm run icons:sync-data
 - [`../../../shared/packages/mds/icons/README.md`](../../../shared/packages/mds/icons/README.md) — icon codegen
 - [`../../../scripts/mds_render_coverage.dart`](../../../scripts/mds_render_coverage.dart) — MDS spec ↔ emulator render coverage
 ---
-_Reviewed: 2026-06-04 23:25_
+_Reviewed: 2026-06-05 10:12_

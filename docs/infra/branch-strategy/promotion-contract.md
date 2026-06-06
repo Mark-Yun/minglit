@@ -7,7 +7,7 @@
 | Stage | 역할 | 승격 원칙 |
 |-------|------|-----------|
 | `dev-staging` | 일반 작업 진입점 | feature/agent/human PR 은 여기로만 들어오고 squash merge 한다 |
-| `dev` | integration health | daily snapshot 을 받고, 새 dev commit 마다 health/CUJ 를 검증한다. Dev 자체 24h soak 는 하지 않는다 |
+| `dev` | integration health | daily snapshot 을 받고, 새 dev commit 마다 health 를 검증한다 (Flutter CUJ 는 [web-mvp pivot](../../architecture/web-mvp-pivot.md) 으로 동결). Dev 자체 24h soak 는 하지 않는다 |
 | `rc/YYYY-Wxx` | release candidate soak | `dev-rc-cut-pass` 가 붙은 dev commit 에서 cut 하고, RC HEAD 기준 5일 soak 한다 |
 | `main` | production snapshot | `rc-main-cut-pass` 가 붙은 RC 를 main 으로 promote 하고, main push 후 prod deploy 한다 |
 
@@ -22,7 +22,7 @@
 | dev -> rc | `dev-rc-cut-gate` + `dev-rc-cut` | latest `dev-rc-cut-pass` dev commit | `rc/YYYY-Wxx` | branch cut + `promo/rc-*` tag |
 | rc hotfix | `rc-pr-gate` | dev-staging-first fix cherry-pick branch | active `rc/YYYY-Wxx` | PR merge, RC soak clock reset |
 | rc -> main | `rc-main-cut-gate` + `rc-main-cut` + `main-pr-gate` | `rc-main-cut-pass` RC HEAD | `main` | promotion PR merge commit |
-| main -> prod | `main-deploy` | main merge commit | prod backend/mobile/web | deploy only, no source version bump |
+| main -> prod | `main-deploy` | main merge commit | prod backend/web (mobile frozen: web-mvp pivot) | deploy only, no source version bump |
 
 ## Concrete Markers
 
@@ -31,8 +31,8 @@
 | `vYY.MM.DD+YYMMDDNN-dev-staging` | git tag | `dev-staging-dev-cut` | dev promotion, deploy metadata | coherent dev-staging snapshot |
 | `dev-staging-health/*` | commit status | `monitor-dev-staging-health` | human/AI triage only | early regression signal, not a promotion gate |
 | `dev-soak/backend-simulator` | commit status | `deploy-dev-event-flow-cron`, simulator reporter, `dev-rc-cut-gate` | `dev-rc-cut-gate` | legacy-named dev health signal |
-| `dev-soak/cuj-user` | commit status | `monitor-dev-cuj` / `set-dev-soak-status` | `dev-rc-cut-gate` | user app CUJ result for the dev commit |
-| `dev-soak/cuj-partner` | commit status | `monitor-dev-cuj` / `set-dev-soak-status` | `dev-rc-cut-gate` | partner app CUJ result for the dev commit |
+| `dev-soak/cuj-user` | commit status | `set-dev-soak-status` (manual; `monitor-dev-cuj` 동결) | `dev-rc-cut-gate` | manual block lever — failure 만 소비, success 는 required evidence 아님 |
+| `dev-soak/cuj-partner` | commit status | `set-dev-soak-status` (manual; `monitor-dev-cuj` 동결) | `dev-rc-cut-gate` | manual block lever — failure 만 소비, success 는 required evidence 아님 |
 | `dev-soak/real-device` | commit status | real-device workflow / AI agent | `dev-rc-cut-gate` | device smoke signal |
 | `dev-soak/app-ai-review` | commit status | AI agent / human-assisted review | `dev-rc-cut-gate` | app UX/blocker review signal |
 | `dev-rc-cut-pass` | commit status | `dev-rc-cut-gate` | `dev-rc-cut`, `main-pr-gate` | RC cut source marker |
@@ -52,7 +52,7 @@ Release gate 는 true evidence 기반이다. 실패 이슈가 없다는 사실�
 | Gate | Required success evidence | Blocking evidence |
 |------|---------------------------|-------------------|
 | `dev-pr-gate` | reusable `pr-gate` success + source guard success | source guard failure, PR gate failure |
-| `dev-rc-cut-gate` | same-SHA `deploy-dev-event-flow-cron` success, same-SHA `monitor-dev-cuj` success, no required `dev-soak/*` failure status | any required `dev-soak/*=failure`, missing required success evidence, infra failure |
+| `dev-rc-cut-gate` | same-SHA `deploy-dev-event-flow-cron` success, no required `dev-soak/*` failure status (Flutter CUJ run 요구는 web-mvp pivot 으로 제거) | any required `dev-soak/*=failure`, missing required success evidence, infra failure |
 | `rc-pr-gate` | reusable `pr-gate` success + source guard success | RC-only unapproved source, PR gate failure |
 | `rc-main-cut-gate` | RC age >= 5 days since last RC commit, required `rc-soak/*` success, pre-main validation success, dev-staging-first hotfix lineage | `rc-soak/*=failure`, hotfix lineage violation, missing evidence, age not met |
 | `main-pr-gate` | reusable `pr-gate` success, RC lineage contains `dev-rc-cut-pass=success`, RC HEAD has `rc-main-cut-pass=success` and PR label | missing lineage marker, missing RC marker, PR gate failure |
@@ -64,7 +64,7 @@ Release gate 는 true evidence 기반이다. 실패 이슈가 없다는 사실�
 | `dev-staging-pr-gate` fails | PR stays unmerged | author/AI fixes same PR | no dev-staging merge |
 | `monitor-dev-staging-health` fails | set `dev-staging-health/*=failure`, create/update issue | AI fix PR to `dev-staging` | does not directly block promotion |
 | `dev-pr-gate` fails on promotion PR | promotion PR stays open/failed | fix in `dev-staging`, rerun or regenerate cut | dev does not advance |
-| `monitor-dev-cuj` user/partner fails on dev push | set `dev-soak/cuj-* = failure`, create/update issue with failed files | AI fix PR to `dev-staging`, next `dev-staging-dev-cut` creates new dev commit | `dev-rc-cut-gate` must not write `dev-rc-cut-pass` |
+| `dev-soak/cuj-*=failure` set manually (`set-dev-soak-status`; `monitor-dev-cuj` 는 동결) | create/update issue | fix PR to `dev-staging`, next `dev-staging-dev-cut` creates new dev commit | `dev-rc-cut-gate` must not write `dev-rc-cut-pass` |
 | `deploy-dev-event-flow-cron` or simulator fails | set `dev-soak/backend-simulator=failure`, create/update issue | AI fix PR to `dev-staging` | `dev-rc-cut-gate` blocks RC eligibility |
 | `dev-rc-cut-gate` missing evidence | no pass marker; cut issue stays waiting | required monitor/status writer reruns or fix PR lands | `dev-rc-cut` skips this commit |
 | `dev-rc-cut` cannot find pass commit | skip and alert if prolonged | run/fix `dev-rc-cut-gate` evidence | no RC branch cut |
@@ -77,15 +77,15 @@ Release gate 는 true evidence 기반이다. 실패 이슈가 없다는 사실�
 
 No automatic revert is part of the normal contract. Broken `dev` keeps moving through the normal dev-staging fix path. Broken RC is fixed by dev-staging-first hotfix and RC cherry-pick. Catastrophic RC can be abandoned by release manager.
 
-## CUJ Contract
+## CUJ Contract (동결 — web-mvp pivot)
 
-CUJ is not a PR gate. Every new `dev` commit must run user and partner CUJ unconditionally. The CUJ runner must execute every CUJ file and aggregate failures before returning non-zero, so one failed CUJ does not hide later failures.
+> **2026-06-06 동결.** Flutter 앱 동결로 `monitor-dev-cuj` 는 disable 되었고 dev commit 의 CUJ 자동 실행 의무는 폐지됐다. `dev-soak/cuj-*` 는 `set-dev-soak-status` 수동 블락 레버로만 남는다. 웹 MVP smoke/CUJ 신호를 required evidence 로 추가하는 것이 후속 과제다. 상세: [web-mvp-pivot.md](../../architecture/web-mvp-pivot.md)
 
-Workflow:
+기존 계약 (모바일 재개 시 참고): CUJ is not a PR gate. Every new `dev` commit must run user and partner CUJ unconditionally; the runner aggregates failures before returning non-zero.
 
 | Workflow | Trigger | Writes |
 |----------|---------|--------|
-| `monitor-dev-cuj` | `push` to `dev`, manual dispatch | `dev-soak/cuj-user`, `dev-soak/cuj-partner`, CI issue with failed CUJ file list |
+| `monitor-dev-cuj` (disabled) | ~~`push` to `dev`~~, manual dispatch | `dev-soak/cuj-user`, `dev-soak/cuj-partner`, CI issue with failed CUJ file list |
 
 ## Query Examples
 

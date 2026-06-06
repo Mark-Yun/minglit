@@ -1,5 +1,7 @@
 # PRD: 티켓 QR Boarding Pass 리디자인 (Ticket QR Improvement)
 
+> **Status: deprecated (web-mvp pivot, 2026-06-06)** — 2차 축소로 QR 티켓 제외. 입장 확인은 참가자 명단 수동 처리. 배경: `docs/architecture/web-mvp-pivot.md`
+
 ## Summary
 
 티켓 QR 화면을 흰 배경 + QR 코드 단일 구성에서 **항공 보딩패스 오마주 카드**로 재설계해, 이벤트 입장 직전의 감성과 맥락 정보(이벤트명/일시/장소/상태)를 함께 제공한다.

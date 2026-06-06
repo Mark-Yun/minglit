@@ -1,5 +1,7 @@
 # Features
 
+> **Web MVP 피벗 (2026-06-06)**: 각 feature 의 `prd.md` 최상단 status 배너 (`web-mvp core` / `on-hold` / `deprecated`) 는 [docs/architecture/web-mvp-pivot.md](../architecture/web-mvp-pivot.md) 기준. CUJ 테스트 인프라는 Flutter integration_test 기반이라 앱과 함께 **동결**됐다.
+
 사용자에게 노출되는 product capability 단위의 spec 모음. 도메인 기준으로 8개 카테고리로 분류한다.
 
 ## 정의
@@ -111,4 +113,4 @@ canonical: [`account/signup-consent/spec.md`](./account/signup-consent/spec.md) 
 - [MDS flow](../../apps/mds/docs/src/lib/flow-data.ts) — 카테고리 매핑 근거
 
 ---
-_Reviewed: 2026-05-23 10:47_
+_Reviewed: 2026-06-06 12:52_

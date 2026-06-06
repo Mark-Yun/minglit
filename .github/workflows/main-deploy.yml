@@ -52,7 +52,7 @@ jobs:
             echo "| dry_run | ${{ inputs.dry_run || false }} |"
             echo "| source_sha | ${source_sha} |"
             echo "| promo_tag | promo/main-${promo_week} |"
-            echo "| deploy | web + android + ios main |"
+            echo "| deploy | web main (mobile frozen: web MVP pivot) |"
           } >> "$GITHUB_STEP_SUMMARY"
 
   tag-promo:
@@ -73,44 +73,12 @@ jobs:
       deploy_branch: main
     secrets: inherit
 
-  android_user:
-    needs: [plan, tag-promo]
-    if: always() && needs.plan.outputs.deploy_required == 'true' && inputs.dry_run != true && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
-    uses: ./.github/workflows/deploy-android-user.yml
-    with:
-      target-ref: main
-      deploy-stage: main
-    secrets: inherit
-
-  android_partner:
-    needs: [plan, tag-promo]
-    if: always() && needs.plan.outputs.deploy_required == 'true' && inputs.dry_run != true && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
-    uses: ./.github/workflows/deploy-android-partner.yml
-    with:
-      target-ref: main
-      deploy-stage: main
-    secrets: inherit
-
-  ios_user:
-    needs: [plan, tag-promo]
-    if: always() && needs.plan.outputs.deploy_required == 'true' && inputs.dry_run != true && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
-    uses: ./.github/workflows/deploy-ios-user.yml
-    with:
-      target-ref: main
-      deploy-stage: main
-    secrets: inherit
-
-  ios_partner:
-    needs: [plan, tag-promo]
-    if: always() && needs.plan.outputs.deploy_required == 'true' && inputs.dry_run != true && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
-    uses: ./.github/workflows/deploy-ios-partner.yml
-    with:
-      target-ref: main
-      deploy-stage: main
-    secrets: inherit
+  # Mobile (android/ios) deploy jobs removed: Flutter mobile apps are frozen
+  # for the web MVP pivot. deploy-android-*/deploy-ios-* workflow_call adapters
+  # are kept in the repo but intentionally not called.
 
   notify-failure:
-    needs: [plan, tag-promo, web, android_user, android_partner, ios_user, ios_partner]
+    needs: [plan, tag-promo, web]
     if: always()
     permissions:
       actions: read
@@ -126,13 +94,9 @@ jobs:
           (
             needs.plan.result != 'success' ||
             needs.tag-promo.result != 'success' ||
-            needs.web.result != 'success' ||
-            needs.android_user.result != 'success' ||
-            needs.android_partner.result != 'success' ||
-            needs.ios_user.result != 'success' ||
-            needs.ios_partner.result != 'success'
+            needs.web.result != 'success'
           )
         }}
       workflow_name: 'Main Deploy'
       severity: 'P0-critical'
-      job_results: '{"plan":"${{ needs.plan.result }}","tag-promo":"${{ needs.tag-promo.result }}","web":"${{ needs.web.result }}","android-user":"${{ needs.android_user.result }}","android-partner":"${{ needs.android_partner.result }}","ios-user":"${{ needs.ios_user.result }}","ios-partner":"${{ needs.ios_partner.result }}"}'
+      job_results: '{"plan":"${{ needs.plan.result }}","tag-promo":"${{ needs.tag-promo.result }}","web":"${{ needs.web.result }}"}'

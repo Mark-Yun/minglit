@@ -1,5 +1,7 @@
 # app_user
 
+> **동결 (2026-06-06)**: 웹 MVP 피벗으로 본 앱은 개발/배포 중단 (코드 보존, `archive/flutter-apps`). 유저 플로우는 웹으로 이전. 배경: [docs/architecture/web-mvp-pivot.md](../../docs/architecture/web-mvp-pivot.md)
+
 Minglit 의 **일반 사용자 Flutter 앱**. 파티 탐색·참여 신청·결제·티켓 관리·인증 제출 등 사용자 측 워크플로우 담당.
 
 ## 이정표
@@ -26,11 +28,8 @@ Minglit 의 **일반 사용자 Flutter 앱**. 파티 탐색·참여 신청·결�
 | `partner/` | 파트너 상세 페이지 |
 | `payment/` | 결제 플로우·결제 완료 |
 | `ticket/` · `tickets/` · `my_tickets/` | 티켓 선택·관리 |
-| `search/` | 이벤트·파티 검색 (PGroonga) |
-| `tag/` | 태그 기반 탐색 |
-| `settings/` | 앱 설정 |
-| `account_deletion/` | 회원 탈퇴 플로우 |
-| `consent/` | 이용약관 동의 |
+| `search/` · `tag/` | 이벤트·파티 검색 (PGroonga) · 태그 기반 탐색 |
+| `settings/` · `consent/` · `account_deletion/` | 앱 설정 · 약관 동의 · 회원 탈퇴 플로우 |
 | `dev/` | 개발 유틸리티 (DevMap 화면 등) |
 
 ## 핵심 컨벤션
@@ -47,4 +46,4 @@ Minglit 의 **일반 사용자 Flutter 앱**. 파티 탐색·참여 신청·결�
 - [minglit_kit/BLUEDOC.md](../../shared/packages/minglit_kit/BLUEDOC.md) — 공용 패키지
 - [README.md](./README.md) — 빌드·실행 / [integration_test](./integration_test/BLUEDOC.md) — 통합 테스트
 ---
-_Reviewed: 2026-06-04 22:35_
+_Reviewed: 2026-06-06 12:52_

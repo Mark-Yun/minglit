@@ -1,5 +1,7 @@
 # PRD: 파트너 QR 체크인 UX 강화
 
+> **Status: deprecated (web-mvp pivot, 2026-06-06)** — 2차 축소로 QR 체크인 제외. 입장 확인은 참가자 명단 수동 처리. 배경: `docs/architecture/web-mvp-pivot.md`
+
 ## Summary
 
 파트너 앱 QR 체크인 화면에 (1) 전체 진행률 요약 카드 (2) 엔트리 그룹별 현황 하단 시트 (3) 수동 체크인 fallback (4) Realtime 자동 동기화를 통합. 파트너가 체크인 중에도 화면 전환 없이 "지금 누가 얼마나 들어왔는가"를 한눈에 파악할 수 있게 한다.

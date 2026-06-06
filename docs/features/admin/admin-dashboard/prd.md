@@ -1,5 +1,7 @@
 # PRD: Admin Console Dashboard
 
+> **Status: web-mvp core (2026-06-06)** — 웹 admin console (`apps/admin_web/`) 은 피벗의 파트너 측 재조정 방향과 정렬. 배경: `docs/architecture/web-mvp-pivot.md`
+
 ## Summary
 
 Minglit 내부 운영자가 Supabase Google 로그인으로 본인 확인을 마친 뒤, 서버에서 검증된 admin 권한에 따라 관리자 메뉴를 사용하는 웹 기반 admin console. 현재 출시 범위는 admin 로그인, 권한 확인, 확장 가능한 shell/menu 구조까지다. 기능 dashboard 는 후속 메뉴로 분리하고, 이번 범위에서는 별도 board/spec 를 만들지 않는다.

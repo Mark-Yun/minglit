@@ -39,10 +39,13 @@ jobs:
       candidate_ref: dev
       candidate_sha: ${{ inputs.candidate_sha || '' }}
       min_soak_hours: ${{ inputs.min_soak_hours || '0' }}
+      # Web MVP pivot: Flutter mobile apps are frozen, monitor-dev-cuj is
+      # disabled, so the same-SHA CUJ run requirement and dev-soak/cuj-*
+      # success confirmations are removed. cuj-* failure contexts are kept
+      # as a manual block lever via set-dev-soak-status (absence != failure).
       required_runs_json: >-
         [
-          {"workflow":"deploy-dev-event-flow-cron.yml","branch":"dev","min_success":1,"run_limit":20,"match_head_sha":true},
-          {"workflow":"monitor-dev-cuj.yml","branch":"dev","min_success":1,"run_limit":20,"match_head_sha":true}
+          {"workflow":"deploy-dev-event-flow-cron.yml","branch":"dev","min_success":1,"run_limit":20,"match_head_sha":true}
         ]
       failure_contexts: |
         dev-soak/backend-simulator
@@ -50,8 +53,6 @@ jobs:
         dev-soak/cuj-partner
       success_contexts: |
         dev-soak/backend-simulator
-        dev-soak/cuj-user
-        dev-soak/cuj-partner
       pass_context: dev-rc-cut-pass
       pass_description: 'dev-rc-cut-gate passed; this dev commit has required dev health evidence'
       dry_run: ${{ inputs.dry_run || false }}

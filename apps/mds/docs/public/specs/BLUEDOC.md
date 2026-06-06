@@ -12,6 +12,7 @@ MDS 화면 spec 의 **source HTML + 자동 산출물 디렉터리**. Flutter 화
 | [`<screen>/index.html`](./event_detail_page/index.html) | 화면별 spec source. 직접 수정 대상 |
 | [`ticket_selection_sheet/index.html`](./ticket_selection_sheet/index.html) | 이벤트 상세 하단 티켓 선택 시트 화면 spec |
 | [`ongoing_event_list_page/index.html`](./ongoing_event_list_page/index.html) | 파트너 LIVE 이벤트 참가자 명단/운영 dashboard spec |
+| [`partner_active_event_list_page/index.html`](./partner_active_event_list_page/index.html) | 파트너 활성 이벤트 목록 hub spec |
 | [`admin_console_dashboard/index.html`](./admin_console_dashboard/index.html) | web_admin 로그인 / admin guard / shell screen spec |
 | [`<screen>/index.md`](./event_detail_page/index.md) | HTML 에서 생성되는 markdown 산출물 |
 | [`<screen>/state_*.png`](./event_detail_page/state_1.png) | HTML 에서 생성되는 state screenshot 산출물 |
@@ -20,7 +21,8 @@ MDS 화면 spec 의 **source HTML + 자동 산출물 디렉터리**. Flutter 화
 ## 핵심 컨벤션
 
 - **직접 수정은 `<screen>/index.html` 만** — `index.md`, `state_*.png`, `blueprint*.png` 는 자동 산출물이다.
-- **새 spec / 큰 개편은 `_template.html` 구조를 따른다** — Header → Overview → History → Layout → States → Global Behavior → Reference.
+- **모든 spec `<head>` 에 `<meta name="feature-status">`** — 동결된 모바일 spec 은 web-mvp pivot(2026-06-06) 분류 `behavior-reference`(웹 spec 의 behavior 원천) / `on-hold` / `deprecated` 3종, 웹 surface spec (web_admin/web_user/web_partner) 은 lifecycle `planned` / `in-progress` / `shipped` 3종. deprecated spec 은 `<body>` 최상단에 `.spec-status-banner` 가시 배너를 함께 둔다.
+- **새 spec / 큰 개편은 `_template.html` 구조를 따른다** — Header → Overview → History → Layout → States → Global Behavior → Reference. 웹 화면 spec (`web_user`/`web_partner` surface) 은 [`_template_web.html`](./_template_web.html) + [`web_foundation_responsive/`](./web_foundation_responsive/index.html) breakpoint 규칙을 따른다.
 - **States 는 template mini-table 형식** — `table.ref.state-mini` + `thead` + mockup `rowspan=6` + 조건/사용자 액션/에지케이스/컴포넌트/토큰/노트 6행.
 - **경로는 `<screen>/index.html`** — legacy `<screen>.html` flat path 를 새로 만들지 않는다.
 - **코드와 다르면 먼저 source of truth 를 판정** — 구현이 live 이고 spec 이 stale 이면 HTML spec 을 갱신하고 History row 에 issue/PR 맥락을 남긴다.
@@ -41,4 +43,4 @@ MDS 화면 spec 의 **source HTML + 자동 산출물 디렉터리**. Flutter 화
 - [`../../src/lib/flow-data.ts`](../../src/lib/flow-data.ts) — route/spec 매핑
 
 ---
-_Reviewed: 2026-06-04 23:25_
+_Reviewed: 2026-06-06 13:22_

@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<meta name="feature-status" content="behavior-reference">
 <title>Spec — PartnerHomePage (app_partner · HomeRoute)</title>
 <link rel="stylesheet" href="/specs/_spec.css">
 <style>
@@ -969,6 +970,18 @@ body.dark-mode .viewport {
     <tbody>
       <tr>
         <td>2026-06-04</td>
+        <td>2.8</td>
+        <td>codex</td>
+        <td>#3040: 오버뷰 "모집 중인 이벤트" stat의 destination을 <a href="/specs/partner_active_event_list_page/index.html"><code>PartnerActiveEventListPage</code></a>로 확정. partner-side 활성 이벤트 목록 hub와 app_user <code>PartnerEventsPage</code> 경계를 분리.</td>
+      </tr>
+      <tr>
+        <td>2026-06-04</td>
+        <td>2.7</td>
+        <td>codex</td>
+        <td>#3003: AppBar 알림 아이콘 destination을 shared <code>NotificationListScreen</code> partner variant로 확정. 미읽음 99+ badge와 partner 신청/체크인/정산/시스템 category taxonomy는 notification spec에서 관리.</td>
+      </tr>
+      <tr>
+        <td>2026-06-04</td>
         <td>2.6</td>
         <td>codex</td>
         <td>#3002: Todo "첫 이벤트 만들기" destination을 <code>EventCreatePage</code>로 확정. 파티 1개 auto-select, 2개 이상 <code>MinglitBottomSheet</code> party selector, 작성 중 이벤트 resume card, 게시 완료 후 Home todo 소멸 조건을 명시.</td>
@@ -1157,7 +1170,7 @@ body.dark-mode .viewport {
         <tr><td>① Brand (leading)</td><td>좌측 정렬</td><td>minglit 로고 + "PARTNER" suffix · 탭 동작 없음 · 홈 식별자 역할.</td></tr>
         <tr><td>② Info action (1st trailing)</td><td>우측 · 40×40 hit-region</td><td>info_outline 22×22 · 탭 시 <strong>도움말 bottom sheet</strong> 진입 (State 8). 현재 적용 화면은 홈·파티 관리·신청관리·정산이며, 신규·리뉴얼 파트너 화면은 같은 패턴을 채택한다.</td></tr>
         <tr><td>③ Bug report (2nd trailing · dev only)</td><td>우측 · 40×40 hit-region</td><td>개발 빌드 한정 — BugReportAction 컴포넌트.</td></tr>
-        <tr><td>④ Notification (3rd trailing)</td><td>우측 · 40×40 hit-region</td><td>notifications_outlined 22×22 · 미읽음 배지(뱃지) 오버레이 가능.</td></tr>
+        <tr><td>④ Notification (3rd trailing)</td><td>우측 · 40×40 hit-region</td><td>notifications_outlined 22×22 · <code>notificationListProvider</code> 미읽음 count badge. 0이면 숨김, 1-99 숫자, 100+는 <code>99+</code>. Badge bg <code>MinglitColors.error</code>, radius <code>MinglitRadius.button</code>, surface border.</td></tr>
         <tr><td>—</td><td>AppBar bg</td><td><code>--color-surface</code> · surfaceTint transparent · border-bottom 없음.</td></tr>
       </tbody>
     </table>
@@ -1448,7 +1461,7 @@ body.dark-mode .viewport {
           <td class="state-mini__aspect">사용자 액션</td>
           <td>
             ① <strong>알림 아이콘 탭</strong> → 알림 센터 화면. 미읽음 99 초과 시 "99+".<br>
-            ② <strong>오버뷰 stat 탭</strong> — "등록된 파티" → 파티 리스트 / "모집 중인 이벤트" → 이벤트 리스트 / "참가예정 고객" → 신청관리.<br>
+            ② <strong>오버뷰 stat 탭</strong> — "등록된 파티" → 파티 리스트 / "모집 중인 이벤트" → 활성 이벤트 목록 / "참가예정 고객" → 신청관리.<br>
             ③ <strong>처리 필요 카드 탭</strong> → 해당 이벤트의 신청 검토 화면.<br>
             ④ <strong>모집 중 카드의 "공유 / 홍보하기"</strong> → 공유 시트. 카드 영역 탭 → 이벤트 상세.<br>
             ⑤ <strong>종료 직후 카드의 "다음 회차 만들기"</strong> → 이벤트 생성 화면. 카드 영역 탭 → 이벤트 상세 (정산/리뷰 진입).<br>
@@ -3263,7 +3276,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td>오버뷰 stat 탭</td>
-          <td>"등록된 파티" → 파티 리스트 / "모집 중인 이벤트" → 이벤트 리스트 (모집/임박/진행 모두 포함) / "참가예정 고객" → 신청관리 탭. 셸 push.</td>
+          <td>"등록된 파티" → 파티 리스트 / "모집 중인 이벤트" → 활성 이벤트 목록 (모집/임박/진행 모두 포함) / "참가예정 고객" → 신청관리 탭. 셸 push.</td>
         </tr>
         <tr>
           <td>피드 카드 액션 완료 (승인 · 체크인 · 다음 회차 생성 · 임시저장 게시)</td>
@@ -3419,8 +3432,8 @@ body.dark-mode .viewport {
         <tr>
           <td>AppBar 알림 아이콘</td>
           <td><a href="/specs/notification_list_screen/index.html"><code>NotificationListScreen</code></a> (partner variant)</td>
-          <td>📝 #3003</td>
-          <td>shared notification center spec은 있음 · partner 신청/체크인/정산 grouping과 미읽음 99+ cap은 #3003에서 확정</td>
+          <td>✅</td>
+          <td>shared kit 화면 재사용. partner 신청/체크인/정산/시스템 taxonomy와 미읽음 99+ badge contract는 notification spec owner (#3003)</td>
         </tr>
         <tr>
           <td>AppBar 버그 리포트 (dev)</td>
@@ -3436,9 +3449,9 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td>운영 현황 — "모집 중인 이벤트"</td>
-          <td>Partner active event list surface</td>
-          <td>📝 #3040</td>
-          <td>모집/임박/진행 중 활성 이벤트 모두 · app_user <code>PartnerEventsPage</code>로 연결하지 않음</td>
+          <td><a href="/specs/partner_active_event_list_page/index.html"><code>PartnerActiveEventListPage</code></a></td>
+          <td>✅</td>
+          <td>모집/임박/진행 중 활성 이벤트 모두 · planned <code>PartnerActiveEventListRoute</code> · app_user <code>PartnerEventsPage</code>로 연결하지 않음 (#3040, Flutter 구현 #3072)</td>
         </tr>
         <tr>
           <td>운영 현황 — "참가예정 고객"</td>
@@ -3601,11 +3614,11 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td><a href="/specs/notification_list_screen/index.html"><code>NotificationListScreen</code></a></td>
-          <td>AppBar 알림 아이콘의 shared 도착지. partner notification center 강화는 #3003에서 추적.</td>
+          <td>AppBar 알림 아이콘의 shared 도착지. Partner variant는 같은 화면을 사용하되 신청/체크인/정산/시스템 category taxonomy를 payload/deep-link contract로 가진다.</td>
         </tr>
         <tr>
-          <td>Partner active event list surface</td>
-          <td>오버뷰 "모집 중인 이벤트" stat의 미작성 partner-side 도착지. user-side <a href="/specs/partner_events_page/index.html"><code>PartnerEventsPage</code></a>와 분리해서 #3040에서 추적.</td>
+          <td><a href="/specs/partner_active_event_list_page/index.html"><code>PartnerActiveEventListPage</code></a></td>
+          <td>오버뷰 "모집 중인 이벤트" stat의 partner-side 도착지. 모집/진행 임박/LIVE 활성 이벤트 목록 hub이며 user-side <a href="/specs/partner_events_page/index.html"><code>PartnerEventsPage</code></a>와 분리한다.</td>
         </tr>
         <tr>
           <td><a href="/foundations/layout">Layout foundations</a></td>

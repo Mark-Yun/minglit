@@ -1,5 +1,7 @@
 # PRD: 회원가입 동의 (Signup Consent)
 
+> **Status: web-mvp core (2026-06-06)** — 회원가입 동의는 법적 필수 코어 (웹으로 재구현). 배경: `docs/architecture/web-mvp-pivot.md`
+
 ## Summary
 
 신규 OAuth 유저에게 명시적 약관 동의 UI 제공 + 동의 이력 DB 기록. 본인인증(CI/DI) 시점 별도 동의. 사후 변경 가능한 선택 동의(마케팅·제3자 제공) 관리 페이지 제공. 법률 감사 [High] 이슈(#747) 해결.

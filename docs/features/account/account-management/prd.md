@@ -1,5 +1,7 @@
 # PRD: 계정 관리 (Account Management)
 
+> **Status: web-mvp core (2026-06-06)** — 계정/동의 코어 영역. Flutter 화면 전제 부분은 웹 IA 로 재구성. 배경: `docs/architecture/web-mvp-pivot.md`
+
 ## Summary
 
 신원·계정에 귀속된 액션(본인인증 · 파트너 프로필 · 로그아웃 · 회원 탈퇴 진입)을 한 곳에 모은 서브-설정 페이지. user `/my/account` + partner `/more/account` 양쪽에서 동일 위젯(kit-shared) 사용. Fix #1213 으로 MyPage / MorePage 에서 흩어져 있던 destructive 액션을 통합했고, Fix #1378 로 로그아웃에 확인 다이얼로그를 추가, Fix #1861 로 본인인증 진입을 이 페이지로 이동.

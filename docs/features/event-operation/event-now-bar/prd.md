@@ -1,5 +1,7 @@
 # PRD: 이벤트 나우바 (Event Now Bar)
 
+> **Status: deprecated (web-mvp pivot, 2026-06-06)** — 체크인/매칭 진행 surface 전체가 2차 축소로 코어 제외. 배경: `docs/architecture/web-mvp-pivot.md`
+
 ## Summary
 
 유저앱 홈 하단에 당일 이벤트의 체크인 → 매칭 → 결과를 실시간 안내하는 퍼시스턴트 미니바. 앱 어디에 있든 현재 이벤트 상태를 즉시 확인할 수 있고, 탭하면 단계별 바텀시트로 상세 진입한다.

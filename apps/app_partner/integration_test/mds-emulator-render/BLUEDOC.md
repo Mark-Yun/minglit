@@ -22,7 +22,7 @@ flutter drive \
 | 화면 | states |
 |------|--------|
 | `bank_account_page` | loading · no-account · with-account · dark |
-| `checkin_placeholder_page` | loading · error · empty · selection · selection-dark |
+| `checkin_placeholder_page` | loading · error · empty · direct-dashboard · selection · selection-dark |
 | `create_verification_page` | empty · with-fields · dark |
 | `event_application_manage_page` | list · loading · empty · error |
 | `event_application_review_carousel_page` | first-page · middle-page · last-page · loading |

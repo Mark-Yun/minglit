@@ -90,13 +90,13 @@ RC soak 는 dev soak 와 signal set 이 달라질 수 있으므로 별도 entry 
 | Context | 작성자 | 실패 시점 | 성공 시점 | 의미 |
 |---------|--------|-----------|-----------|------|
 | `dev-soak/backend-simulator` | `event-flow-simulator` reporter / `dev-rc-cut-gate` | event-flow simulator 실패 즉시 `failure` | `dev-rc-cut-gate` 가 cron install run 을 확인한 뒤 `success` | backend/event-flow health signal |
-| `dev-soak/cuj-user` | `monitor-dev-cuj` / `set-dev-soak-status` | user CUJ 실패 즉시 `failure` | `monitor-dev-cuj` 성공 또는 `dev-rc-cut-gate` 확인 뒤 `success` | user app CUJ signal |
-| `dev-soak/cuj-partner` | `monitor-dev-cuj` / `set-dev-soak-status` | partner CUJ 실패 즉시 `failure` | `monitor-dev-cuj` 성공 또는 `dev-rc-cut-gate` 확인 뒤 `success` | partner app CUJ signal |
+| `dev-soak/cuj-user` | `set-dev-soak-status` (manual; `monitor-dev-cuj` 동결 — web-mvp pivot) | 수동 블락 시 `failure` | required evidence 아님 — gate 는 failure 부재만 확인 | manual block lever (legacy: user app CUJ signal) |
+| `dev-soak/cuj-partner` | `set-dev-soak-status` (manual; `monitor-dev-cuj` 동결 — web-mvp pivot) | 수동 블락 시 `failure` | required evidence 아님 — gate 는 failure 부재만 확인 | manual block lever (legacy: partner app CUJ signal) |
 | `dev-soak/real-device` | `set-dev-soak-status` via real-device workflow / `dev-rc-cut-gate` | Firebase Test Lab 또는 실디바이스 smoke 실패 즉시 `failure` | `dev-rc-cut-gate` 가 required run/signal 을 확인한 뒤 `success` | 실제 디바이스 안정성 signal |
 | `dev-soak/app-ai-review` | `set-dev-soak-status` via AI agent / `dev-rc-cut-gate` | AI/human 앱 review 중 blocker 발견 즉시 `failure` | `dev-rc-cut-gate` 가 AI review pass signal 을 확인한 뒤 `success` | screenshot/UX/manual-ish app review signal |
 | `dev-rc-cut-pass` | `dev-rc-cut-gate` | 작성하지 않음 | 모든 required dev health 조건 통과 시 `success` | RC cut source marker |
 
-실패 status 는 발견 즉시 찍는다. `monitor-dev-cuj` 는 dev commit 의 CUJ 성공/실패 status 를 직접 쓴다. `dev-rc-cut-gate` 는 required run history 와 failure context 부재를 확인한 뒤 필요한 `dev-soak/*` success confirmation 과 `dev-rc-cut-pass` 를 쓴다.
+실패 status 는 발견 즉시 찍는다. `dev-rc-cut-gate` 는 required run history 와 failure context 부재를 확인한 뒤 필요한 `dev-soak/*` success confirmation 과 `dev-rc-cut-pass` 를 쓴다. (`monitor-dev-cuj` 의 CUJ status 자동 기록은 web-mvp pivot 으로 동결 — [web-mvp-pivot.md](../../architecture/web-mvp-pivot.md))
 
 ## Labels
 
@@ -131,7 +131,7 @@ Issue label 은 분류용이다. Gate 판정에는 사용하지 않는다.
 | Signal | 최소 조건 |
 |--------|-----------|
 | `deploy-dev-event-flow-cron` | candidate SHA 에서 `success` run >= 1 |
-| `monitor-dev-cuj` | candidate SHA 에서 user/partner CUJ success >= 1 |
+| ~~`monitor-dev-cuj`~~ (동결) | web-mvp pivot 으로 required run 에서 제외. 웹 MVP smoke/CUJ 신호로 대체 예정 |
 | legacy `monitor-event-flow-hourly/daily` | 수동 smoke 전용. gate run requirement 에서 제외 |
 | real-device smoke | candidate 기준 required run/signal success >= 1 (workflow 이름 TBD) |
 | app AI review | AI agent 가 candidate 기준 pass signal 제공 (workflow/status 입력 방식 TBD) |
@@ -190,7 +190,7 @@ blocks_rc_cut: true
 평가 순서:
 
 1. `candidate_sha = origin/dev HEAD`
-2. required workflow run history 로 candidate SHA 에 dev cron/CUJ monitor 가 성공했는지 확인
+2. required workflow run history 로 candidate SHA 에 dev cron 이 성공했는지 확인 (CUJ monitor 는 동결로 제외)
 3. candidate 의 최신 commit status 중 아래 context 가 `failure` 인지 확인:
    - `dev-soak/backend-simulator`
    - `dev-soak/cuj-user`

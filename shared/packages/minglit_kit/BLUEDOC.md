@@ -1,5 +1,7 @@
 # minglit_kit
 
+> **동결 (2026-06-06)**: Flutter 앱 동결 (웹 MVP 피벗) 에 따라 신규 개발 중단. Repository·EF 호출 계약은 웹 구현 reference 로 활용. 배경: [docs/architecture/web-mvp-pivot.md](../../../docs/architecture/web-mvp-pivot.md)
+
 Minglit 의 **공용 클라이언트 패키지**. `app_user` 와 `app_partner` 가 모두 import 하는 데이터·로직·UI·디자인 시스템의 단일 출처.
 
 ## 이정표
@@ -25,8 +27,7 @@ Minglit 의 **공용 클라이언트 패키지**. `app_user` 와 `app_partner` �
 |---|---|
 | `auth/` · `consent/` · `account_deletion/` | 로그인/OAuth · 약관 동의 · 계정 삭제 (소프트 + 30 일 유예) |
 | `verification/` · `iamport/` | 본인인증 (Identity, Iamport V1 + Portone V2) · 결제 SDK 진입점 |
-| `notification/` · `permission/` | 푸시·FCM·알림 목록/설정 · 앱 권한 설정 화면 |
-| `search/` · `social/` | 전문 검색 (PGroonga) · 좋아요/구독/차단 |
+| `notification/` · `permission/` · `search/` · `social/` | 푸시·FCM·알림 · 앱 권한 · 전문 검색 (PGroonga) · 좋아요/구독/차단 |
 | `theme/` · `loading/` · `dev/` | 테마 컨트롤러 · 글로벌 로딩 오버레이 · 개발 유틸 (세션 스위처) |
 
 ## 핵심 컨벤션
@@ -42,8 +43,7 @@ Minglit 의 **공용 클라이언트 패키지**. `app_user` 와 `app_partner` �
 - [architecture.md](./architecture.md) — Repository · Provider · Design System · Error Handling 상세
 - [apps/architecture.md](../../../apps/architecture.md) — Flutter 공통 아키텍처 (kit 사용 측)
 - [docs/architecture/trust-and-verification.md](../../../docs/architecture/trust-and-verification.md) — 2-layer 신뢰 모델
-- [README.md](./README.md) — 패키지 사용 가이드
-- [BLUEDOC 컨벤션](../../../docs/infra/bluedoc/BLUEDOC.md)
+- [README.md](./README.md) — 패키지 사용 가이드 / [BLUEDOC 컨벤션](../../../docs/infra/bluedoc/BLUEDOC.md)
 
 ---
-_Reviewed: 2026-05-23 00:00_
+_Reviewed: 2026-06-06 12:52_

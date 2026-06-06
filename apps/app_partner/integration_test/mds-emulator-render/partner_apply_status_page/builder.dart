@@ -14,7 +14,13 @@ import 'package:minglit_kit/minglit_kit.dart';
 
 import '../_engine/builder.dart';
 
-enum _Scenario { pending, needsCorrection, needsCorrectionWithComment }
+enum _Scenario {
+  pending,
+  needsCorrection,
+  needsCorrectionWithComment,
+  loading,
+  error,
+}
 
 class _FakePartnerRepository implements PartnerRepository {
   _FakePartnerRepository(this._application);
@@ -52,15 +58,21 @@ class PartnerApplyStatusPageBuilder
     return this;
   }
 
+  PartnerApplyStatusPageBuilder loading() {
+    _scenario = _Scenario.loading;
+    // ignore: avoid_returning_this, fluent builder chain style
+    return this;
+  }
+
+  PartnerApplyStatusPageBuilder error() {
+    _scenario = _Scenario.error;
+    // ignore: avoid_returning_this, fluent builder chain style
+    return this;
+  }
+
   @override
   Widget build() {
     final scenario = _scenario;
-
-    final onboardingState = switch (scenario) {
-      _Scenario.pending => OnboardingState.pendingReview,
-      _Scenario.needsCorrection ||
-      _Scenario.needsCorrectionWithComment => OnboardingState.needsCorrection,
-    };
 
     final application = switch (scenario) {
       _Scenario.pending => const PartnerApplication(
@@ -79,6 +91,7 @@ class PartnerApplyStatusPageBuilder
         status: 'needs_correction',
         adminComment: '사업자등록증 이미지가 흐립니다. 재업로드해주세요.',
       ),
+      _Scenario.loading || _Scenario.error => null,
     };
 
     return ProviderScope(
@@ -86,7 +99,20 @@ class PartnerApplyStatusPageBuilder
         currentUserProvider.overrideWith((_) => null),
         authStateChangesProvider.overrideWith((_) => const Stream.empty()),
         notificationInitializerProvider.overrideWith((_) {}),
-        onboardingStateProvider.overrideWith((_) async => onboardingState),
+        onboardingStateProvider.overrideWith((_) async {
+          switch (scenario) {
+            case _Scenario.pending:
+              return OnboardingState.pendingReview;
+            case _Scenario.needsCorrection:
+            case _Scenario.needsCorrectionWithComment:
+              return OnboardingState.needsCorrection;
+            case _Scenario.loading:
+              await Future<void>.delayed(const Duration(days: 1));
+              return OnboardingState.pendingReview;
+            case _Scenario.error:
+              throw StateError('MDS render forced onboarding status error');
+          }
+        }),
         partnerRepositoryProvider.overrideWith(
           (_) => _FakePartnerRepository(application),
         ),

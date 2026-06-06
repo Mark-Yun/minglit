@@ -46,10 +46,18 @@ class CheckinPlaceholderPageBuilder
     return this;
   }
 
+  /// partner 정보 있음 + 오늘 이벤트 1개 (direct dashboard).
+  CheckinPlaceholderPageBuilder withSingleEvent() {
+    _partner = mockPartner();
+    _events = _mockOperationWindowEvents(count: 1);
+    // ignore: avoid_returning_this, fluent builder — callers chain methods
+    return this;
+  }
+
   /// partner 정보 있음 + 오늘 이벤트 2+개 (선택 목록 표시).
   CheckinPlaceholderPageBuilder withMultipleEvents(int count) {
     _partner = mockPartner();
-    _events = mockEvents(count: count);
+    _events = _mockOperationWindowEvents(count: count);
     // ignore: avoid_returning_this, fluent builder — callers chain methods
     return this;
   }
@@ -95,5 +103,13 @@ class CheckinPlaceholderPageBuilder
         home: const CheckinPlaceholderPage(),
       ),
     );
+  }
+
+  List<Event> _mockOperationWindowEvents({required int count}) {
+    final now = DateTime.now();
+    final base = DateTime(now.year, now.month, now.day, 18, 30).add(
+      const Duration(days: 3),
+    );
+    return mockEvents(count: count, now: base);
   }
 }

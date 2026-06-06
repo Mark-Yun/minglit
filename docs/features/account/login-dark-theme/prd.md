@@ -1,5 +1,7 @@
 # PRD: 로그인 다크 테마 일관성 (Login Dark Theme Consistency)
 
+> **Status: on-hold (mobile frozen, 2026-06-06)** — Flutter 로그인 화면 전용 폴리시. 웹 로그인 재설계 대기. 배경: `docs/architecture/web-mvp-pivot.md`
+
 ## Summary
 
 보호 경로에서 로그인 화면으로 리다이렉트될 때 발생하는 다크→라이트 깜빡임을 제거. Scaffold 배경과 Google·Apple OAuth 버튼 색상을 시스템 테마에 연동, Kakao 는 브랜드 가이드라인에 따라 노랑 고정. 사용자 / 파트너 양 앱이 공유하는 MinglitLoginScreen 위젯에 적용. Fix #1542.

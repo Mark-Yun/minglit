@@ -337,7 +337,7 @@ export const handler = async (_req: Request, ctx: EFContext): Promise<Response> 
           body = b;
           category = 'service';
           deepLink = eventType.startsWith('settlement_') && data.settlement_item_id
-            ? `minglit-partner://settlement/${data.settlement_item_id}`
+            ? `/settlement/${encodeURIComponent(String(data.settlement_item_id))}`
             : undefined;
 
           userId = await getAffectedUserId(supabase, eventType, data);

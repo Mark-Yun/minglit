@@ -1,5 +1,7 @@
 # PRD: 신뢰 배지 (Trust Badge)
 
+> **Status: deprecated (web-mvp pivot, 2026-06-06)** — 매칭 전제의 신뢰 배지 고도화는 코어 외. 배경: `docs/architecture/web-mvp-pivot.md`
+
 ## Summary
 
 플랫폼이 직접 검증한 데이터(본인확인, 자격인증, 활동 출석률)를 3-Layer 아이콘 배지로 시각화하여 유저 간 신뢰를 정량적으로 표현. 정성·상대적 매너온도 대신 Hard Trust 를 디폴트로 제공한다.

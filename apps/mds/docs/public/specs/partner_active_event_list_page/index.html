@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Spec — PartnerActiveEventListPage (app_partner · PartnerActiveEventListRoute)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   PartnerActiveEventListPage-specific atoms.
+
+   Partner-side active event hub:
+   - entry from PartnerHome overview "모집 중인 이벤트"
+   - active lifecycle list: recruiting / upcoming / live
+   - event detail and check-in remain separate owner screens
+   ============================================================ */
+.viewport {
+  --color-primary: var(--color-partner-primary);
+  --spec-blueprint-rgb: 108, 60, 225;
+}
+body.dark-mode .viewport {
+  --color-primary: var(--color-partner-dark-primary);
+}
+
+.pae-appbar {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xsmall);
+  padding: 0 var(--spacing-xsmall);
+  background: var(--color-surface);
+}
+.pae-appbar__back,
+.pae-appbar__action {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-primary);
+  flex-shrink: 0;
+}
+.pae-appbar__title {
+  flex: 1;
+  text-align: center;
+  font-size: var(--typography-font-size-app-bar-title);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  padding-right: 40px;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pae-body {
+  position: absolute;
+  top: 56px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--color-surface);
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding-bottom: 96px;
+}
+.pae-body::-webkit-scrollbar { display: none; }
+
+.pae-summary {
+  padding: var(--spacing-medium) var(--spacing-screen-edge) var(--spacing-small);
+  background: var(--color-surface);
+}
+.pae-summary__title {
+  font-size: 22px;
+  line-height: 1.28;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.pae-summary__meta {
+  margin-top: var(--spacing-xsmall);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+}
+.pae-stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-xsmall);
+  padding: var(--spacing-small) var(--spacing-screen-edge) var(--spacing-medium);
+}
+.pae-stat {
+  min-height: 66px;
+  padding: var(--spacing-small);
+  border-radius: var(--radius-card);
+  background: var(--color-background);
+  border: 1px solid var(--color-divider);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.pae-stat__value {
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 900;
+  color: var(--color-text-primary);
+}
+.pae-stat__label {
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  line-height: 1.25;
+}
+.pae-stat--hot {
+  border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-background));
+}
+.pae-stat--hot .pae-stat__value { color: var(--color-primary); }
+
+.pae-filter {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--color-surface);
+  padding: var(--spacing-small) var(--spacing-screen-edge);
+  display: flex;
+  gap: var(--spacing-xsmall);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.pae-filter::-webkit-scrollbar { display: none; }
+.pae-chip {
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 var(--spacing-small);
+  border-radius: var(--radius-chip);
+  border: 1px solid var(--color-divider);
+  background: var(--color-background);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.pae-chip--selected {
+  color: var(--color-primary);
+  border-color: color-mix(in srgb, var(--color-primary) 42%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-background));
+}
+
+.pae-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-small);
+  padding: 0 var(--spacing-screen-edge) var(--spacing-medium);
+}
+.pae-card {
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-divider);
+  overflow: hidden;
+}
+.pae-card__hero {
+  position: relative;
+  height: 108px;
+  background: linear-gradient(135deg, rgba(108, 60, 225, 0.16), rgba(34, 197, 94, 0.12));
+}
+.pae-card__hero--live {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(108, 60, 225, 0.14));
+}
+.pae-card__hero--upcoming {
+  background: linear-gradient(135deg, rgba(255, 165, 0, 0.18), rgba(108, 60, 225, 0.12));
+}
+.pae-card__hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to bottom, rgba(17, 24, 39, 0), rgba(17, 24, 39, 0.34)),
+    repeating-linear-gradient(135deg, rgba(255,255,255,0.12) 0 8px, transparent 8px 16px);
+}
+.pae-badge-row {
+  position: absolute;
+  left: var(--spacing-small);
+  right: var(--spacing-small);
+  bottom: var(--spacing-small);
+  display: flex;
+  gap: var(--spacing-xsmall);
+  z-index: 1;
+}
+.pae-badge {
+  height: 24px;
+  padding: 0 var(--spacing-small);
+  border-radius: var(--radius-chip);
+  background: rgba(17, 24, 39, 0.58);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.pae-badge--live {
+  background: rgba(239, 68, 68, 0.88);
+}
+.pae-card__body {
+  padding: var(--spacing-medium);
+}
+.pae-card__title {
+  font-size: 16px;
+  line-height: 1.35;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pae-card__meta {
+  margin-top: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+.pae-capacity {
+  margin-top: var(--spacing-small);
+}
+.pae-capacity__line {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-small);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+.pae-capacity__bar {
+  height: 8px;
+  margin-top: 6px;
+  border-radius: var(--radius-chip);
+  overflow: hidden;
+  background: var(--color-divider);
+}
+.pae-capacity__fill {
+  height: 100%;
+  width: 62%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-success));
+}
+.pae-capacity__fill--full { width: 92%; background: linear-gradient(90deg, var(--color-warning), var(--color-error)); }
+.pae-capacity__fill--live { width: 72%; background: var(--color-error); }
+.pae-actions {
+  margin-top: var(--spacing-medium);
+  display: flex;
+  gap: var(--spacing-xsmall);
+}
+.pae-btn {
+  height: 38px;
+  border-radius: var(--radius-button);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 var(--spacing-medium);
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.pae-btn--primary {
+  flex: 1;
+  background: var(--color-primary);
+  color: #fff;
+}
+.pae-btn--outline {
+  background: var(--color-background);
+  color: var(--color-primary);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 46%, transparent);
+}
+.pae-btn--ghost {
+  color: var(--color-text-secondary);
+}
+
+.pae-empty,
+.pae-loading,
+.pae-error {
+  min-height: 450px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-medium);
+  text-align: center;
+  padding: var(--spacing-large);
+  background: var(--color-surface);
+}
+.pae-empty__icon,
+.pae-error__icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-background));
+  color: var(--color-primary);
+}
+.pae-empty__title,
+.pae-error__title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.pae-empty__body,
+.pae-error__body {
+  max-width: 260px;
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+.pae-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--color-divider);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: pae-spin 0.7s linear infinite;
+}
+@keyframes pae-spin { to { transform: rotate(360deg); } }
+
+.pae-bottomnav {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 64px;
+  background: var(--color-background);
+  border-top: 1px solid var(--color-divider);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+}
+.pae-bottomnav__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+.pae-bottomnav__item--active { color: var(--color-primary); }
+.pae-bottomnav svg,
+.pae-appbar svg,
+.pae-empty svg,
+.pae-error svg,
+.pae-btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.pae-appbar svg,
+.pae-bottomnav svg { width: 20px; height: 20px; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header>
+  <h1>Partner Active Event List</h1>
+</header>
+
+<!-- ============================================================
+     OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 140px;">Status</th>
+        <td>
+          <strong>✅ 디자인완료</strong>
+          <em style="color: var(--color-text-secondary);">— #3040 MDS contract. Flutter route/widget는 #3072에서 추가.</em>
+        </td>
+      </tr>
+      <tr><th>App</th><td><code>app_partner</code></td></tr>
+      <tr><th>Category</th><td>home · event operations · active event hub</td></tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>PartnerActiveEventListRoute</code> · widget: <code>PartnerActiveEventListPage</code> <em style="color: var(--color-text-secondary);">(planned)</em></td>
+      </tr>
+      <tr><th>Path</th><td><code>/events/active</code> (planned HomeBranch child route)</td></tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="/specs/partner_home_page/index.html"><code>PartnerHomePage</code></a> overview stat "모집 중인 이벤트"<br>
+          <strong>Children</strong>: event cards only. Detail / check-in / create flows stay in
+          <a href="/specs/partner_event_detail_page/index.html"><code>PartnerEventDetailPage</code></a>,
+          <a href="/specs/ongoing_event_list_page/index.html"><code>OngoingEventListPage</code></a>,
+          <a href="/specs/event_create_page/index.html"><code>EventCreatePage</code></a>.
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          파트너가 현재 운영해야 하는 활성 이벤트를 한 화면에서 필터링하고 다음 action으로 진입한다.
+          홈 피드는 가장 시급한 카드만 요약하고, 이 화면은 모집 중 / 진행 임박 / LIVE 이벤트 전체를 관리하는 목록 hub다.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: PartnerHome overview stat "모집 중인 이벤트" 탭 · 향후 푸시/deep link <code>/events/active?filter=live</code>.<br>
+          <strong>Exit points</strong>: 카드 영역 탭 → PartnerEventDetailPage · LIVE/체크인 CTA → OngoingEventListPage · Empty CTA → EventCreatePage · 뒤로가기 → PartnerHome.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          기존 임시 흐름은 홈의 "모집 중인 이벤트" stat이 <code>PartyListPage</code>를 경유했다.
+          그러나 파티 리스트는 파티 관리 목적이고, app_user <code>PartnerEventsPage</code>는 소비자 탐색 화면이라 파트너 운영 action과 섞이면 안 된다.
+          이 화면은 partner-side 활성 이벤트 전용 surface를 독립시켜 route 확장과 필터 추가를 안전하게 만든다.
+        </td>
+      </tr>
+      <tr><th>Frequency</th><td>이벤트 모집/운영 중 매일. 여러 이벤트를 동시에 운영하는 파트너는 홈에서 가장 자주 진입하는 보조 hub.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">이 spec의 주요 변경 이력. 최신 항목 위.</p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-06-04</td>
+        <td>1.0</td>
+        <td>codex</td>
+        <td>#3040: PartnerHome overview "모집 중인 이벤트" stat의 canonical destination을 신규 partner-side active event list surface로 확정. app_user <code>PartnerEventsPage</code>와 분리하고, 모집/진행 임박/LIVE 필터·상태·route shell 계약을 명시. Flutter 구현은 #3072에서 추적.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Layout</h2>
+    <span class="lede">AppBar + summary/stats + sticky filter + active event cards. Bottom nav shell is retained.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree</h2>
+    <p class="intro">
+      HomeBranch child route로 push되어 하단 NavigationBar는 유지한다.
+      상단 summary는 전체 활성 이벤트 수와 위험 신호를 요약하고, sticky filter는 목록 scroll 중에도 접근 가능해야 한다.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:0;left:0;right:0;height:56px;"><span class="blueprint__region-label">① AppBar — back + title</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:56px;left:0;right:0;height:112px;"><span class="blueprint__region-label">② Summary — title + active count context</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:168px;left:16px;right:16px;height:74px;"><span class="blueprint__region-label">③ Stat row — 모집 / 임박 / LIVE</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:254px;left:0;right:0;height:48px;"><span class="blueprint__region-label">④ Sticky filter chips</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:314px;left:16px;right:16px;height:150px;"><span class="blueprint__region-label">⑤ Active event card list</span></div>
+        <div class="blueprint__region blueprint__region--shaded" style="left:0;right:0;bottom:0;height:64px;"><span class="blueprint__region-label">⑥ Partner bottom NavigationBar</span></div>
+      </div>
+      <div>
+        <h3 style="margin-top:0;">Widget tree</h3>
+        <pre><code>PartnerScaffold / HomeBranch
+└─ PartnerActiveEventListPage
+   ├─ MinglitAppBar(title: "활성 이벤트")
+   ├─ ActiveEventSummaryHeader
+   ├─ ActiveEventStatusStats
+   ├─ ActiveEventFilterChips (sticky)
+   ├─ RefreshIndicator
+   │  └─ ActiveEventCardList
+   │     └─ ActiveEventCard × N
+   └─ Partner bottom NavigationBar (shell)</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Layout anatomy</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 180px;">Region</th><th>Contract</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>① AppBar</td>
+          <td>Back icon + centered title "활성 이벤트". 우측 action 없음. 홈에서 push된 route라 뒤로가기는 PartnerHome으로 복귀.</td>
+        </tr>
+        <tr>
+          <td>② Summary</td>
+          <td>전체 활성 이벤트 수와 목록 범위를 설명. 카운트는 모집 중·진행 임박·진행 중 합계이며 종료/draft/canceled는 제외.</td>
+        </tr>
+        <tr>
+          <td>③ Stat row</td>
+          <td>모집 중 / 진행 임박 / LIVE 3개 고정. LIVE가 1 이상이면 primary tint로 강조. 탭 시 같은 화면 내 filter 변경.</td>
+        </tr>
+        <tr>
+          <td>④ Filter chips</td>
+          <td>전체 · 모집 중 · 진행 임박 · LIVE. sticky 처리. 화면 진입 query <code>?filter=live</code>가 있으면 해당 chip selected.</td>
+        </tr>
+        <tr>
+          <td>⑤ Event cards</td>
+          <td>카드 영역 탭은 상세. CTA는 상태별로 "상세 보기" / "참가자 리스트" / "참가자 체크인"만 사용하고 카드 내부에서 편집/생성 form을 열지 않는다.</td>
+        </tr>
+        <tr>
+          <td>⑥ Bottom nav</td>
+          <td>StatefulShell HomeBranch child route이므로 하단 nav 유지. 다른 탭 전환 후 홈 탭 재선택 시 이 route stack 유지.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">Default baseline plus filtered/empty/loading/error/permission variants.</span>
+  </div>
+
+  <section class="doc">
+    <h2>State summary matrix</h2>
+    <table class="ref">
+      <thead>
+        <tr><th>State</th><th>Condition</th><th>Primary action</th><th>Destination</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Default mixed</td><td>활성 이벤트 1개 이상, filter 전체</td><td>상태별 CTA</td><td>Detail / Ongoing list</td></tr>
+        <tr><td>Recruiting filter</td><td>filter = 모집 중</td><td>상세 보기</td><td>PartnerEventDetailPage</td></tr>
+        <tr><td>Upcoming filter</td><td>filter = 진행 임박</td><td>참가자 리스트 outline</td><td>OngoingEventListPage pre_start</td></tr>
+        <tr><td>Live filter</td><td>filter = LIVE</td><td>참가자 체크인 primary</td><td>OngoingEventListPage live/checkin_ready</td></tr>
+        <tr><td>Empty</td><td>활성 이벤트 0개 또는 selected filter 0개</td><td>이벤트 만들기 / 전체 보기</td><td>EventCreatePage / local filter reset</td></tr>
+        <tr><td>Loading</td><td>initial fetch</td><td>none</td><td>none</td></tr>
+        <tr><td>Error / permission</td><td>network/403/partner role mismatch</td><td>다시 시도 / 홈으로</td><td>retry / HomeRoute</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>State 1 — Default mixed active events</h2>
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Default mixed</strong> <small>전체 filter · recruiting + upcoming + live mixed</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td rowspan="6" class="state-mini__mockup">
+            <div class="viewport">
+              <div class="pae-appbar">
+                <div class="pae-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+                <div class="pae-appbar__title">활성 이벤트</div>
+                <div class="pae-appbar__action"></div>
+              </div>
+              <div class="pae-body">
+                <div class="pae-summary">
+                  <div class="pae-summary__title">운영 중인 이벤트 8개</div>
+                  <div class="pae-summary__meta">모집 중 5 · 진행 임박 2 · LIVE 1</div>
+                </div>
+                <div class="pae-stat-row">
+                  <div class="pae-stat"><div class="pae-stat__value">5</div><div class="pae-stat__label">모집 중</div></div>
+                  <div class="pae-stat"><div class="pae-stat__value">2</div><div class="pae-stat__label">진행 임박</div></div>
+                  <div class="pae-stat pae-stat--hot"><div class="pae-stat__value">1</div><div class="pae-stat__label">LIVE</div></div>
+                </div>
+                <div class="pae-filter">
+                  <div class="pae-chip pae-chip--selected">전체 8</div>
+                  <div class="pae-chip">모집 중 5</div>
+                  <div class="pae-chip">진행 임박 2</div>
+                  <div class="pae-chip">LIVE 1</div>
+                </div>
+                <div class="pae-list">
+                  <div class="pae-card">
+                    <div class="pae-card__hero pae-card__hero--live">
+                      <div class="pae-badge-row"><span class="pae-badge pae-badge--live">LIVE</span><span class="pae-badge">체크인 18/25</span></div>
+                    </div>
+                    <div class="pae-card__body">
+                      <div class="pae-card__title">수요일 와인 페어링 모임</div>
+                      <div class="pae-card__meta">오늘 19:30 · 성수 · 승인 대기 2</div>
+                      <div class="pae-capacity">
+                        <div class="pae-capacity__line"><span>참가 확정 25명</span><span>72%</span></div>
+                        <div class="pae-capacity__bar"><div class="pae-capacity__fill pae-capacity__fill--live"></div></div>
+                      </div>
+                      <div class="pae-actions">
+                        <div class="pae-btn pae-btn--primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h7v7h-7z"/></svg>참가자 체크인</div>
+                        <div class="pae-btn pae-btn--outline">상세</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="pae-card">
+                    <div class="pae-card__hero pae-card__hero--upcoming">
+                      <div class="pae-badge-row"><span class="pae-badge">D-1</span><span class="pae-badge">준비 필요</span></div>
+                    </div>
+                    <div class="pae-card__body">
+                      <div class="pae-card__title">토요일 북클럽 네트워킹</div>
+                      <div class="pae-card__meta">6월 6일 15:00 · 홍대 · 정원 18</div>
+                      <div class="pae-actions">
+                        <div class="pae-btn pae-btn--outline">참가자 리스트</div>
+                        <div class="pae-btn pae-btn--ghost">상세</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="pae-bottomnav">
+                <div class="pae-bottomnav__item pae-bottomnav__item--active"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 8h-3v9h-4v-6h-4v6H6v-9H3z"/></svg>홈</div>
+                <div class="pae-bottomnav__item">신청</div>
+                <div class="pae-bottomnav__item">체크인</div>
+                <div class="pae-bottomnav__item">정산</div>
+                <div class="pae-bottomnav__item">더보기</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>활성 이벤트가 1개 이상이고 filter가 전체. 모집 중, 진행 임박, LIVE를 한 목록에서 시작 시각 빠른 순으로 정렬한다.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>카드 영역 → PartnerEventDetailPage. LIVE CTA → OngoingEventListPage live/checkin_ready. 진행 임박 CTA → OngoingEventListPage pre_start/list. chip 탭 → local filter 변경.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>같은 이벤트에 승인 대기가 있어도 이 목록에서는 이벤트 카드 1장만 유지하고, 승인 심사는 상세 또는 신청관리 owner로 위임. 종료/draft/canceled 이벤트는 제외.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td><code>MinglitAppBar</code> · <code>RefreshIndicator</code> · <code>MinglitButton</code> · active event card atoms · <code>MinglitCircularProgressIndicator</code> for refresh overlay.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td><code>MinglitColors.surface</code>, <code>MinglitPartnerColors.primary</code>, <code>MinglitColors.error</code> for LIVE, <code>MinglitSpacing.screenEdge</code>, <code>MinglitRadius.card</code>, <code>MinglitRadius.button</code>.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>Home feed는 시급도 요약이고 이 화면은 전체 목록 hub다. 홈의 카드 ordering과 같은 lifecycle vocabulary를 사용한다.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>State 2 — Empty active event list</h2>
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Empty</strong> <small>no active events or empty selected filter</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td rowspan="6" class="state-mini__mockup">
+            <div class="viewport">
+              <div class="pae-appbar">
+                <div class="pae-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+                <div class="pae-appbar__title">활성 이벤트</div>
+                <div class="pae-appbar__action"></div>
+              </div>
+              <div class="pae-body">
+                <div class="pae-filter">
+                  <div class="pae-chip pae-chip--selected">전체 0</div>
+                  <div class="pae-chip">모집 중 0</div>
+                  <div class="pae-chip">진행 임박 0</div>
+                  <div class="pae-chip">LIVE 0</div>
+                </div>
+                <div class="pae-empty">
+                  <div class="pae-empty__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7V3m8 4V3M4 11h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1z"/></svg></div>
+                  <div class="pae-empty__title">활성 이벤트가 없어요</div>
+                  <div class="pae-empty__body">새 이벤트를 만들면 모집 중 상태부터 이곳에 표시됩니다.</div>
+                  <div class="pae-btn pae-btn--primary">이벤트 만들기</div>
+                </div>
+              </div>
+              <div class="pae-bottomnav">
+                <div class="pae-bottomnav__item pae-bottomnav__item--active">홈</div>
+                <div class="pae-bottomnav__item">신청</div>
+                <div class="pae-bottomnav__item">체크인</div>
+                <div class="pae-bottomnav__item">정산</div>
+                <div class="pae-bottomnav__item">더보기</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>전체 active count = 0. 또는 특정 filter count = 0이면 같은 empty surface를 쓰되 CTA를 "전체 보기"로 바꾼다.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>전체 count 0 → "이벤트 만들기" CTA가 <code>EventCreatePage</code>로 진입. filter empty → "전체 보기" CTA로 local filter reset.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>활성 파티가 0개이면 CTA는 <code>PartyCreateWizardPage</code> 또는 Home onboarding과 같은 party creation guard를 따라야 한다.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td><code>MinglitEmptyState</code> + primary <code>MinglitButton</code>. 별도 empty card를 중첩하지 않는다.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td><code>MinglitColors.surface</code>, <code>MinglitColors.textSecondary</code>, <code>MinglitPartnerColors.primary</code>, <code>MinglitSpacing.large</code>.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>PartnerHome의 첫 이벤트 todo와 경쟁하지 않는다. 이미 이 화면에 들어온 파트너는 active event hub 맥락이므로 생성 CTA만 제공한다.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>State 3 — Loading / error / permission</h2>
+    <table class="ref state-mini">
+      <thead>
+        <tr><th colspan="3"><strong>Loading and blocking states</strong> <small>initial fetch · recoverable failure · role guard</small></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td rowspan="6" class="state-mini__mockup">
+            <div class="viewport">
+              <div class="pae-appbar">
+                <div class="pae-appbar__back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></div>
+                <div class="pae-appbar__title">활성 이벤트</div>
+                <div class="pae-appbar__action"></div>
+              </div>
+              <div class="pae-body">
+                <div class="pae-error">
+                  <div class="pae-error__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg></div>
+                  <div class="pae-error__title">목록을 불러오지 못했어요</div>
+                  <div class="pae-error__body">잠시 후 다시 시도해 주세요.</div>
+                  <div class="pae-actions">
+                    <div class="pae-btn pae-btn--primary">다시 시도</div>
+                    <div class="pae-btn pae-btn--outline">홈으로</div>
+                  </div>
+                </div>
+              </div>
+              <div class="pae-bottomnav">
+                <div class="pae-bottomnav__item pae-bottomnav__item--active">홈</div>
+                <div class="pae-bottomnav__item">신청</div>
+                <div class="pae-bottomnav__item">체크인</div>
+                <div class="pae-bottomnav__item">정산</div>
+                <div class="pae-bottomnav__item">더보기</div>
+              </div>
+            </div>
+          </td>
+          <td class="state-mini__aspect">조건</td>
+          <td>Initial fetch 중이면 중앙 spinner. 네트워크/서버 오류는 retry 가능한 error. 권한/partnerId mismatch는 permission variant.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">사용자 액션</td>
+          <td>Retry → same filter 유지하고 다시 fetch. 홈으로 → <code>HomeRoute</code>. Permission은 retry 대신 홈으로 단일 CTA.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">에지케이스</td>
+          <td>이미 캐시된 목록이 있으면 full-screen loading으로 되돌리지 않고 pull-to-refresh spinner만 표시한다.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">컴포넌트</td>
+          <td><code>MinglitCircularProgressIndicator</code>, <code>MinglitEmptyState</code> error variant, <code>MinglitButton</code>.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">토큰</td>
+          <td><code>MinglitColors.error</code> for icon when error, primary tint for retry, <code>MinglitAnimation.fast</code> for retry spinner.</td>
+        </tr>
+        <tr>
+          <td class="state-mini__aspect">노트</td>
+          <td>403은 빈 목록처럼 보이면 안 된다. 파트너 권한 문제를 숨기면 운영자가 이벤트가 삭제된 것으로 오해한다.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">Route contract, filtering, sorting, lifecycle ownership.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Route and shell contract</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Item</th><th>Contract</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Route placement</td>
+          <td><code>PartnerActiveEventListRoute</code>는 <code>HomeRoute</code> child로 추가한다. Planned path: <code>/events/active</code>. Bottom nav shell 유지.</td>
+        </tr>
+        <tr>
+          <td>Home stat tap</td>
+          <td><a href="/specs/partner_home_page/index.html"><code>PartnerHomePage</code></a> overview "모집 중인 이벤트" stat은 이 route로 direct push한다. 더 이상 <code>PartyListRoute</code> 경유하지 않는다.</td>
+        </tr>
+        <tr>
+          <td>Filter deep link</td>
+          <td><code>/events/active?filter=recruiting|upcoming|live</code>는 해당 chip selected로 진입. 잘못된 값은 전체 filter로 fallback.</td>
+        </tr>
+        <tr>
+          <td>Back behavior</td>
+          <td>Back은 PartnerHome으로 복귀. 다른 bottom tab으로 이동했다가 Home tab 재선택 시 route stack은 유지한다.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Filtering and lifecycle rules</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 220px;">Rule</th><th>Detail</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Included events</td>
+          <td>모집 중, 진행 임박, 체크인 가능, LIVE. 종료/draft/canceled/private archived는 제외한다.</td>
+        </tr>
+        <tr>
+          <td>Recruiting</td>
+          <td>시작까지 7일 초과 또는 active check-in 전이며 공개/판매 중. CTA는 "상세 보기"; capacity와 승인 대기 count를 표시.</td>
+        </tr>
+        <tr>
+          <td>Upcoming</td>
+          <td>T-7 이내부터 T-2 전까지. CTA는 "참가자 리스트" outline. QR/check-in primary는 아직 쓰지 않는다.</td>
+        </tr>
+        <tr>
+          <td>Live / check-in ready</td>
+          <td>T-2 이후부터 이벤트 종료 전. CTA는 "참가자 체크인" primary. QR은 <code>OngoingEventListPage</code> 내부 mode로 처리.</td>
+        </tr>
+        <tr>
+          <td>Sort</td>
+          <td>기본은 시작 시각 빠른 순. LIVE는 목록 상단 pin 가능하지만 filter 전체에서만 적용한다. 같은 시작 시각이면 승인 대기 많은 순.</td>
+        </tr>
+        <tr>
+          <td>Refresh</td>
+          <td>Pull-to-refresh와 화면 재진입 시 fetch. 시간 경계(T-2, 시작/종료)는 refresh 후 재분류한다.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">Implementation target, boundaries, adjacent specs.</span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <p class="intro">
+      ⚠️ <strong>Flutter 미구현.</strong> 이 spec은 #3040에서 destination contract를 확정하고, #3072에서 route/widget/provider를 추가한다.
+    </p>
+    <table class="ref">
+      <tbody>
+        <tr><th style="width: 220px;">Planned widget</th><td><code>PartnerActiveEventListPage</code> — proposed file <code>apps/app_partner/lib/src/features/events/partner_active_event_list_page.dart</code></td></tr>
+        <tr><th>Planned route</th><td><code>PartnerActiveEventListRoute</code> under <code>HomeRoute</code>, path <code>events/active</code> in <code>apps/app_partner/lib/src/routing/app_routes.dart</code></td></tr>
+        <tr><th>Entry source</th><td><code>PartnerHomePage</code> <code>HomeOverviewBlock.onEventsTap</code>. Current implementation still pushes <code>PartyListRoute</code>; follow-up implementation must replace it.</td></tr>
+        <tr><th>Controller/provider target</th><td>New provider candidate: <code>partnerActiveEventListControllerProvider</code> or extension of <code>partnerDashboardControllerProvider</code> if payload already contains all required lifecycle counts.</td></tr>
+        <tr><th>Known drift</th><td><code>PartyListRoute</code> is currently used as a temporary destination from Home overview "모집 중인 이벤트". This spec supersedes that behavior; implementation is tracked in #3072.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Screen boundaries</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 240px;">Screen</th><th>Boundary</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/partner_home_page/index.html"><code>PartnerHomePage</code></a></td>
+          <td>Shows summary count and most urgent feed cards. It should not become the full active list.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/partner_event_detail_page/index.html"><code>PartnerEventDetailPage</code></a></td>
+          <td>Owns single-event detail, edit entry, tickets, application status, event-level ops.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/ongoing_event_list_page/index.html"><code>OngoingEventListPage</code></a></td>
+          <td>Owns participant roster, QR mode, manual check-in, walk-in, no-show, call actions. This list only routes into it.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/party_list_page/index.html"><code>PartyListPage</code></a></td>
+          <td>Owns party management. It is not the active event destination, although event cards need partyId for detail routing.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_create_page/index.html"><code>EventCreatePage</code></a></td>
+          <td>Owns new event creation and draft/resume. Empty state may route there after party guard.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/partner_events_page/index.html"><code>PartnerEventsPage</code></a></td>
+          <td>app_user consumer browse list. Do not reuse for partner operations or home overview destination.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Authoring checklist</h2>
+    <ul class="notes">
+      <li>✅ Partner-only surface and app_user <code>PartnerEventsPage</code> boundary documented.</li>
+      <li>✅ Home overview stat destination, planned route/path, shell behavior explicit.</li>
+      <li>✅ Recruiting / upcoming / live filters and empty/loading/error/permission states documented.</li>
+      <li>✅ Related destinations point to existing owner specs instead of adding nested workflows here.</li>
+      <li>✅ Flutter implementation drift called out for follow-up issue #3072.</li>
+    </ul>
+  </section>
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+</body>
+</html>

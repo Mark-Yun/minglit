@@ -1,5 +1,7 @@
 # PRD: 참여 현황 UI 재설계
 
+> **Status: on-hold (mobile frozen, 2026-06-06)** — Flutter 이벤트 상세 UI 전제. 참여 현황 표시는 웹 재설계 시 재검토. 배경: `docs/architecture/web-mvp-pivot.md`
+
 ## Summary
 
 이벤트 상세의 참여 현황 섹션을 (1) 전체 합계 Summary Bar (2) 입장그룹 카드 가로 스크롤 + 연속 프로그레스 바 (3) blur 처리된 참여자 정보(나이대·인증뱃지) 3단계로 개편. 유저가 "어떤 사람들이 오는지" 사전 파악 후 참가 결정을 내릴 수 있게 한다.

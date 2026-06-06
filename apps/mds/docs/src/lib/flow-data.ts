@@ -118,6 +118,7 @@ const APP_PARTNER_MAIN_FLOW = `flowchart TB
   HomeRoute -->|"view location guide"| LocationGuideRoute
   HomeRoute -->|"tap notifications"| NotificationCenterRoute
   HomeRoute -->|"bottom nav 신청관리 / overview 참가예정 고객"| ApplicationListRoute
+  HomeRoute -->|"overview 모집 중인 이벤트 (planned)"| PartnerActiveEventList
   ApplicationListRoute -->|"tap approved/rejected/paid row"| EventApplicationDetailRoute
   HomeRoute -->|"bottom nav"| CheckinRoute
   HomeRoute -->|"todo 계좌 등록 / 계좌 확인 중"| BankAccountRoute
@@ -482,6 +483,11 @@ const STANDALONE_SPECS: { user: StandaloneSpec[]; partner: StandaloneSpec[] } = 
     },
   ],
   partner: [
+    {
+      widget: 'PartnerActiveEventListPage',
+      note: 'spec-only · planned PartnerActiveEventListRoute · #3040 Home overview active event hub · implementation #3072',
+      specBasename: 'partner_active_event_list_page',
+    },
     {
       widget: 'OngoingEventListPage',
       note: 'spec-only · route TBD · #2220 LIVE 운영 dashboard',
