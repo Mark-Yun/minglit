@@ -65,7 +65,7 @@
 | Phase | 내용 |
 |-------|------|
 | **Phase 1 (현재)** | 동결/상태 마킹 (본 문서 + BLUEDOC 배너 + feature status 배너), 유저 웹 MVP 설계·구축 착수 (MDS spec 기반) |
-| **Phase 2** | 비-코어 EF/크론 비활성화 (매칭·추천·임베딩 파이프라인), 파트너 측 재조정 (admin console 통합 여부 결정), Flutter 관련 CI 정리 |
+| **Phase 2** | AI 파이프라인 유입 차단만 (event_routes q_vectors/q_tags off + ai-extract-tags cron 해제 — `20260606054500` migration). 매칭/투표 EF 는 EF-gateway 특성상 호출 없으면 idle 이므로 보존 (Mark 결정 2026-06-06) |
 | **Phase 3** | 웹 코어 지표 검증 후 확장 기능 재평가 — 매칭/추천 재도입 여부, 모바일 (앱 또는 PWA) 재개 여부 판단 |
 
 ## 7. 문서 상태 마킹 컨벤션
