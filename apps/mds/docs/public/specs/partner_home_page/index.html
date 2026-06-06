@@ -969,6 +969,12 @@ body.dark-mode .viewport {
     <tbody>
       <tr>
         <td>2026-06-04</td>
+        <td>2.7</td>
+        <td>codex</td>
+        <td>#3003: AppBar 알림 아이콘 destination을 shared <code>NotificationListScreen</code> partner variant로 확정. 미읽음 99+ badge와 partner 신청/체크인/정산/시스템 category taxonomy는 notification spec에서 관리.</td>
+      </tr>
+      <tr>
+        <td>2026-06-04</td>
         <td>2.6</td>
         <td>codex</td>
         <td>#3002: Todo "첫 이벤트 만들기" destination을 <code>EventCreatePage</code>로 확정. 파티 1개 auto-select, 2개 이상 <code>MinglitBottomSheet</code> party selector, 작성 중 이벤트 resume card, 게시 완료 후 Home todo 소멸 조건을 명시.</td>
@@ -1157,7 +1163,7 @@ body.dark-mode .viewport {
         <tr><td>① Brand (leading)</td><td>좌측 정렬</td><td>minglit 로고 + "PARTNER" suffix · 탭 동작 없음 · 홈 식별자 역할.</td></tr>
         <tr><td>② Info action (1st trailing)</td><td>우측 · 40×40 hit-region</td><td>info_outline 22×22 · 탭 시 <strong>도움말 bottom sheet</strong> 진입 (State 8). 현재 적용 화면은 홈·파티 관리·신청관리·정산이며, 신규·리뉴얼 파트너 화면은 같은 패턴을 채택한다.</td></tr>
         <tr><td>③ Bug report (2nd trailing · dev only)</td><td>우측 · 40×40 hit-region</td><td>개발 빌드 한정 — BugReportAction 컴포넌트.</td></tr>
-        <tr><td>④ Notification (3rd trailing)</td><td>우측 · 40×40 hit-region</td><td>notifications_outlined 22×22 · 미읽음 배지(뱃지) 오버레이 가능.</td></tr>
+        <tr><td>④ Notification (3rd trailing)</td><td>우측 · 40×40 hit-region</td><td>notifications_outlined 22×22 · <code>notificationListProvider</code> 미읽음 count badge. 0이면 숨김, 1-99 숫자, 100+는 <code>99+</code>. Badge bg <code>MinglitColors.error</code>, radius <code>MinglitRadius.button</code>, surface border.</td></tr>
         <tr><td>—</td><td>AppBar bg</td><td><code>--color-surface</code> · surfaceTint transparent · border-bottom 없음.</td></tr>
       </tbody>
     </table>
@@ -3419,8 +3425,8 @@ body.dark-mode .viewport {
         <tr>
           <td>AppBar 알림 아이콘</td>
           <td><a href="/specs/notification_list_screen/index.html"><code>NotificationListScreen</code></a> (partner variant)</td>
-          <td>📝 #3003</td>
-          <td>shared notification center spec은 있음 · partner 신청/체크인/정산 grouping과 미읽음 99+ cap은 #3003에서 확정</td>
+          <td>✅</td>
+          <td>shared kit 화면 재사용. partner 신청/체크인/정산/시스템 taxonomy와 미읽음 99+ badge contract는 notification spec owner (#3003)</td>
         </tr>
         <tr>
           <td>AppBar 버그 리포트 (dev)</td>
@@ -3601,7 +3607,7 @@ body.dark-mode .viewport {
         </tr>
         <tr>
           <td><a href="/specs/notification_list_screen/index.html"><code>NotificationListScreen</code></a></td>
-          <td>AppBar 알림 아이콘의 shared 도착지. partner notification center 강화는 #3003에서 추적.</td>
+          <td>AppBar 알림 아이콘의 shared 도착지. Partner variant는 같은 화면을 사용하되 신청/체크인/정산/시스템 category taxonomy를 payload/deep-link contract로 가진다.</td>
         </tr>
         <tr>
           <td>Partner active event list surface</td>
