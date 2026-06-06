@@ -156,6 +156,129 @@ Deno.test({
 });
 
 Deno.test({
+  name: "notification-worker - settlement Schema A deep link uses partner route path",
+  fn: async () => {
+  const handler = await captureServeHandler(
+    new URL("./index.ts", import.meta.url),
+  );
+
+  const settlementItemId = "settlement-item-123";
+  const settlementMessage = {
+    msg_id: 3,
+    read_ct: 0,
+    message: {
+      event_id: "event-settlement-1",
+      schema_version: 1,
+      event_type: "settlement_ready",
+      occurred_at: 1700000000,
+      data: { settlement_item_id: settlementItemId },
+    },
+  };
+
+  const stubs = [
+    stub(WorkerUtils.prototype, "isProcessed", () => Promise.resolve(false)),
+    stub(WorkerUtils.prototype, "markProcessed", () => Promise.resolve()),
+    stub(WorkerUtils.prototype, "moveToDLQ", () => Promise.resolve()),
+    stub(WorkerUtils.prototype, "logTimeLag", () => {}),
+  ];
+
+  let fcmDeepLink: string | undefined;
+  let insertedDeepLink: string | undefined;
+  const { fetchMock } = createFetchMock([
+    {
+      matcher: "https://oauth2.googleapis.com/token",
+      handler: () => jsonResponse({ access_token: "access-token" }),
+    },
+    {
+      matcher: async (req: Request) => {
+        if (
+          req.url.includes(
+            "https://fcm.googleapis.com/v1/projects/minglit-test/messages:send",
+          )
+        ) {
+          const body = await req.clone().json();
+          fcmDeepLink = body.message?.data?.deep_link;
+          return true;
+        }
+        return false;
+      },
+      handler: () => jsonResponse({ name: "projects/minglit-test/messages/1" }),
+    },
+    {
+      matcher: (req) => req.url.includes("/rest/v1/rpc/pgmq_read"),
+      handler: () => jsonResponse([settlementMessage]),
+    },
+    {
+      matcher: (req) => req.url.includes("/rest/v1/settlement_items") && req.method === "GET",
+      handler: () => jsonResponse({ partner_id: "partner-123" }),
+    },
+    {
+      matcher: (req) =>
+        req.url.includes("/rest/v1/partner_member_permissions") &&
+        req.method === "GET",
+      handler: () => jsonResponse({ user_id: "user-123" }),
+    },
+    {
+      matcher: (req) => req.url.includes("/rest/v1/fcm_tokens") && req.method === "GET",
+      handler: () => jsonResponse([{ token: "fcm-token-1" }]),
+    },
+    {
+      matcher: async (req: Request) => {
+        if (
+          req.url.includes("/rest/v1/user_notifications") &&
+          req.method === "POST"
+        ) {
+          const body = await req.clone().json();
+          insertedDeepLink = body.deep_link;
+          return true;
+        }
+        return false;
+      },
+      handler: () => jsonResponse({}),
+    },
+    {
+      matcher: (req) => req.url.includes("/rest/v1/rpc/pgmq_delete"),
+      handler: () => jsonResponse({}),
+    },
+  ]);
+
+  try {
+    await withEnv(
+      {
+        SUPABASE_URL: "https://supabase.test",
+        SUPABASE_SERVICE_ROLE_KEY: "service-key",
+        FIREBASE_SERVICE_ACCOUNT: firebaseServiceAccountJson,
+        ENVIRONMENT: "dev",
+        MINGLIT_EF_TEST_FN_NAME: "notification-worker",
+      },
+      async () => {
+        await withMockedFetch(fetchMock, async () => {
+          await withNoIntervals(async () => {
+            await withFastTimers(async () => {
+              const response = await handler(
+                new Request("http://localhost", {
+                  headers: { "Authorization": "Bearer service-key" },
+                }),
+              );
+              const payload = await readJson(response);
+
+              assertEquals(response.status, 200);
+              assertEquals(payload.status, "done");
+            });
+          });
+        });
+      },
+    );
+  } finally {
+    stubs.forEach((s) => s.restore());
+  }
+
+  assertEquals(fcmDeepLink, `/settlement/${settlementItemId}`);
+  assertEquals(insertedDeepLink, `/settlement/${settlementItemId}`);
+  },
+});
+
+Deno.test({
   name: "notification-worker - FCM invalid token triggers cleanup",
   fn: async () => {
   const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
