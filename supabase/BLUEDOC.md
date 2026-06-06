@@ -18,6 +18,7 @@ Minglit 의 **백엔드 구현 루트**. DB migration, Edge Functions, seed, bac
 
 - **상세 백엔드 설계는 문서로 이동** — DB inventory 와 도메인 관계는 `docs/architecture/backend.md` 가 기준.
 - **쓰기 경로는 Edge Function 중심** — 클라이언트 직접 write 정책을 늘리지 않고 service_role EF 에서 검증한다.
+- **AI 유입 경로는 web-mvp pivot 으로 차단** — `event_routes` q_vectors/q_tags 비활성 + ai-extract-tags cron 해제 ([web-mvp-pivot.md](../docs/architecture/web-mvp-pivot.md)).
 - **dev seed 는 actor/base 만** — user/partner/permission/verification 까지. party/event/ticket state 는 EF 경유로 만든다.
 - **migration 은 append-only** — 기존 migration 수정 대신 새 번호를 추가하고, 생성 전 `migrations/` 최신 번호를 확인한다.
 - **function 은 manifest/wrapper 경유** — `functions/auth-manifest.json` 과 `minglitEdgeFunction` 규칙을 따른다.
@@ -32,4 +33,4 @@ Minglit 의 **백엔드 구현 루트**. DB migration, Edge Functions, seed, bac
 - [docs/infra/bluedoc/BLUEDOC.md](../docs/infra/bluedoc/BLUEDOC.md) — BLUEDOC 컨벤션
 
 ---
-_Reviewed: 2026-06-05 07:21_
+_Reviewed: 2026-06-06 16:49_
