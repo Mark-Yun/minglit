@@ -1,5 +1,7 @@
 # PRD: 통계·분석 도구 (Statistics & Analytics Tools)
 
+> **Status: deprecated (web-mvp pivot, 2026-06-06)** — MVP 에서는 Supabase 대시보드로 충분. Statsig/Metabase/자동 리포트 인프라는 코어에서 제외. 배경: `docs/architecture/web-mvp-pivot.md`
+
 ## Summary
 
 밍글릿의 통계/분석 인프라(Feature Flags, Product Analytics, BI Dashboard, Error Monitoring, Alerts)를 외부 SaaS 비용을 최소화하면서 Phase 1 기준으로 운영팀이 즉시 사용 가능한 형태로 구축한다.

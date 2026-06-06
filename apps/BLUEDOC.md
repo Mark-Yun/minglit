@@ -1,13 +1,15 @@
 # apps/
 
+> **동결 공지 (2026-06-06)**: Flutter 앱 2개 (`app_user`, `app_partner`) 는 웹 MVP 피벗으로 **동결** — 개발/배포 중단, 코드 보존. 랜딩·MDS 는 유지. 배경: [docs/architecture/web-mvp-pivot.md](../docs/architecture/web-mvp-pivot.md)
+
 Minglit 의 **사용자 대면 애플리케이션** 폴더. Flutter 모바일 앱 2 개 + Next.js 랜딩 2 개 + MDS 디자인 시스템 문서.
 
 ## 이정표
 
 | 항목 | 무엇 |
 |---|---|
-| [`app_user/`](./app_user/BLUEDOC.md) | 일반 사용자 Flutter 앱 (파티 탐색·결제·인증 제출) |
-| [`app_partner/`](./app_partner/BLUEDOC.md) | 파트너 사장님 Flutter 앱 (매장 관리·심사·정산) |
+| [`app_user/`](./app_user/BLUEDOC.md) | 일반 사용자 Flutter 앱 (**동결**) — 파티 탐색·결제·인증 제출 |
+| [`app_partner/`](./app_partner/BLUEDOC.md) | 파트너 사장님 Flutter 앱 (**동결**) — 매장 관리·심사·정산 |
 | [`landing_user/`](./landing_user/) | 사용자 랜딩 페이지 (Next.js) |
 | [`landing_partner/`](./landing_partner/) | 파트너 랜딩 페이지 (Next.js) |
 | [`mds/docs/`](./mds/docs/BLUEDOC.md) | Minglit Design System spec/문서 (Next.js) |
@@ -31,4 +33,4 @@ Minglit 의 **사용자 대면 애플리케이션** 폴더. Flutter 모바일 �
 - [CLAUDE.md `## Build Defaults`](../CLAUDE.md) — flutter build 명령 / Java 17 설정
 
 ---
-_Reviewed: 2026-06-04 22:19_
+_Reviewed: 2026-06-06 12:52_

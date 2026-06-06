@@ -9,7 +9,7 @@
 | 개발자 로컬 | LSP, analyze, unit | 컴파일/타입/단위 | 초~분 |
 | dev-staging PR gate | `dev-staging-pr-gate` (unit, lint, pgTAP, EF, migration, `expand-migrate-contract`, `flag-registration`, gitleaks) | PR 회귀, 보안, migration 충돌, flag 미등록, contract 위반 | < 10분 |
 | dev-staging-dev-cut PR | `dev-pr-gate` (defensive) | 환경 차이 회귀 | < 10분 |
-| dev health | `deploy-dev-event-flow-cron`, `monitor-dev-cuj`, real-device workflow, AI app review status writer via `set-dev-soak-status` | backend simulator, CUJ, 외부 의존, 디바이스, UX/blocker | 즉시~분 |
+| dev health | `deploy-dev-event-flow-cron`, real-device workflow, AI app review status writer via `set-dev-soak-status` (`monitor-dev-cuj` 동결 — web-mvp pivot) | backend simulator, 외부 의존, 디바이스, UX/blocker | 즉시~분 |
 | RC cut 직전 | `dev-rc-cut-gate` evaluator | required dev health evidence 미충족, `dev-soak/*` failure status, monitor 미실행 | 분 |
 | Backend/Web deploy validation | post-deploy smoke, Sentry release marker | deploy infra 회귀 | 분 |
 | rc soak (5일) | rc 의 nightly 재실행 + 내부 dogfooding | 누적 회귀, real-data 이슈 | 일 단위 |

@@ -37,5 +37,5 @@ BLUEDOC은 폴더의 진입점과 이정표다. 상세 정책, 아키텍처, 빌
 
 - 버그 수정은 원인 분석을 우선하고, 가능하면 재현 테스트를 추가한다.
 - 새 migration은 `supabase/BLUEDOC.md`와 backend 문서를 따른다. dev/main에 머지된 migration은 수정하지 않고 새 migration으로 보정한다.
-- Flutter 빌드는 명시 요청이 없으면 debug/dev 환경을 기본으로 한다. 상세 명령과 Java 버전은 앱 BLUEDOC과 기존 build 문서를 따른다.
+- Flutter 앱(app_user/app_partner)은 **동결** 상태다 ([web-mvp-pivot](docs/architecture/web-mvp-pivot.md)) — 신규 기능 개발/배포 금지. 예외적으로 빌드가 필요하면 debug/dev 환경을 기본으로 하고, 상세 명령과 Java 버전은 앱 BLUEDOC과 기존 build 문서를 따른다.
 - 변경 후 필요한 테스트는 [docs/qa/automation-test-guide.md](docs/qa/automation-test-guide.md)와 각 영역 BLUEDOC 기준으로 선택한다.

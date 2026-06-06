@@ -1,5 +1,7 @@
 # Minglit
 
+> **Web MVP 피벗 (2026-06-06)**: Flutter 모바일 앱 2개는 **동결** (개발/배포 중단, 코드 보존). 제품 코어는 이벤트→티켓→체크인→정산으로 축소. 배경·범위: [docs/architecture/web-mvp-pivot.md](./docs/architecture/web-mvp-pivot.md)
+
 Minglit 모노레포의 **프로젝트 전체 진입점**. 처음 온 에이전트는 여기서 주요 BLUEDOC 과 큰 설계 문서 위치를 잡고, 상세 정책은 각 문서로 이동한다.
 
 ## 이정표
@@ -10,8 +12,8 @@ Minglit 모노레포의 **프로젝트 전체 진입점**. 처음 온 에이전�
 | [`docs/infra/graphify/BLUEDOC.md`](./docs/infra/graphify/BLUEDOC.md) | 지식 그래프 사용/갱신 방식 (`graphify-out/`) |
 | [`docs/infra/branch-strategy/BLUEDOC.md`](./docs/infra/branch-strategy/BLUEDOC.md) | dev-staging → dev → rc → main 브랜치 전략 |
 | [`.github/BLUEDOC.md`](./.github/BLUEDOC.md) | GitHub Actions, PR gate, review setup, sync/deploy workflow |
-| [`apps/BLUEDOC.md`](./apps/BLUEDOC.md) | Flutter 앱 2 개 + 랜딩 + MDS 진입점 |
-| [`shared/packages/minglit_kit/BLUEDOC.md`](./shared/packages/minglit_kit/BLUEDOC.md) | 앱 공용 클라이언트 패키지 진입점 |
+| [`apps/BLUEDOC.md`](./apps/BLUEDOC.md) | Flutter 앱 2 개 (**동결**) + 랜딩 + MDS 진입점 |
+| [`shared/packages/minglit_kit/BLUEDOC.md`](./shared/packages/minglit_kit/BLUEDOC.md) | 앱 공용 클라이언트 패키지 진입점 (**동결**) |
 | [`supabase/BLUEDOC.md`](./supabase/BLUEDOC.md) | Supabase 백엔드 진입점 |
 | [`docs/features/BLUEDOC.md`](./docs/features/BLUEDOC.md) | 제품 feature PRD/spec/CUJ 문서 |
 
@@ -31,4 +33,4 @@ Minglit 모노레포의 **프로젝트 전체 진입점**. 처음 온 에이전�
 - [docs/operations/edge-functions.md](./docs/operations/edge-functions.md) — Edge Function 디버깅/운영
 
 ---
-_Reviewed: 2026-06-03 12:58_
+_Reviewed: 2026-06-06 12:52_

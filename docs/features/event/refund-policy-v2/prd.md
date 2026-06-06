@@ -1,5 +1,7 @@
 # PRD: 환불 정책 이원화 (Refund Policy v2)
 
+> **Status: web-mvp core (2026-06-06)** — 환불 정책은 법적 필수 코어 (전자상거래법). 배경: `docs/architecture/web-mvp-pivot.md`
+
 ## Summary
 
 환불 규칙을 **플랫폼 자동 환불**(grace period / cutoff / 파트너 귀책)과 **파트너 환불 요청**(자동 범위 밖) 두 트랙으로 이원화하고, 약관·DB·코드의 환불 규칙을 하나의 정책으로 통일한다. 전자상거래법 제17조 7일 청약철회권 준수.

@@ -1,5 +1,7 @@
 # PRD: 개인정보 보호 — 동의·약관·인증 열람 권한 관리 (Privacy Protection)
 
+> **Status: web-mvp core (2026-06-06)** — 동의/열람/철회는 법적 필수 코어 (웹 surface 로 재구현). 배경: `docs/architecture/web-mvp-pivot.md`
+
 ## Summary
 
 사용자가 자신의 개인정보 상태(동의 현황 · 약관 열람 · 본인인증 정보)를 한 곳에서 확인 / 토글 / 열람할 수 있는 settings surface (`/my/privacy`). 추가로 자신의 인증 데이터가 어떤 파트너에게 공유되고 있는지 투명하게 확인하고 열람 권한(`partner_verified_users`) 을 철회할 수 있는 영역을 포함 (Phase 2 — #556 기반). 회원 탈퇴 진입점도 본 페이지에 있다.

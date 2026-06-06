@@ -34,10 +34,10 @@
 - `dev-staging-pr-gate`, `dev-pr-gate`, `rc-pr-gate`, `main-pr-gate` 는 얇은 wrapper 로 시작한다. 내부에서는 `pr-gate.yml` reusable core 를 호출하고, wrapper job 이 최종 required check context 를 제공한다.
 - `dev-pr-gate`, `rc-pr-gate`, `main-pr-gate` 는 `shared-pr-source-guard` 로 직접 PR 을 차단한다. 정상 진입점은 `dev-staging` 이고, 예외는 branch별 approved hotfix 뿐이다.
 - `monitor-dev-staging-health` 는 required check 가 아니다. 6시간마다 `dev-staging` HEAD 에서 EF unit/integration 중심으로 nightly 전 회귀를 발견하고, 결과를 `dev-staging-health/*` commit status 로 남긴다.
-- `monitor-dev-cuj` 는 `dev` push 마다 user/partner CUJ 를 실행하고 `dev-soak/cuj-user`, `dev-soak/cuj-partner` status 와 실패 이슈를 남긴다. CUJ 는 PR gate 가 아니라 새 dev commit 의 health signal 이다.
+- `monitor-dev-cuj` 는 Flutter 모바일 동결(웹 MVP 피벗)로 disable 대상이다. 활성 시절에는 `dev` push 마다 user/partner CUJ 를 실행하고 `dev-soak/cuj-*` status 와 실패 이슈를 남겼다.
 - `dev-staging-dev-cut-gate` 는 수동 candidate inspect 전용이며 per-merge mutation 을 하지 않는다. 날짜 기반 dev-staging version bump/tag 는 하루 1회 `dev-staging-dev-cut` 이 직접 수행한다.
 - `dev-staging-dev-cut` 은 release bot 으로 protected `dev-staging` 에 version bump commit 을 fast-forward push 하고 `vYY.MM.DD+YYMMDDNN-dev-staging` tag 를 만든 뒤, 해당 tag SHA 를 `dev` 로 promote 한다. `dev`/`rc`/`main` promotion 은 source-controlled version 변경 없이 처리한다.
-- `dev-rc-cut-gate` 는 cut 직전 evaluator 다. 내부에서 `shared-soak-gate` 를 호출해 legacy `dev-soak/*` health status, `deploy-dev-event-flow-cron`, `monitor-dev-cuj` same-SHA run evidence 를 확인하고, 통과한 commit 에만 `dev-rc-cut-pass` status 를 찍는다.
+- `dev-rc-cut-gate` 는 cut 직전 evaluator 다. 내부에서 `shared-soak-gate` 를 호출해 legacy `dev-soak/*` health status 와 `deploy-dev-event-flow-cron` same-SHA run evidence 를 확인하고, 통과한 commit 에만 `dev-rc-cut-pass` status 를 찍는다 (모바일 동결로 CUJ run requirement 는 제거, `dev-soak/cuj-*` failure 는 수동 block lever 로 유지).
 - Release gate 는 true evidence 기반이다. required success status/run history/git lineage 가 없으면 `unknown` 이며, failure issue 가 없다는 이유만으로 `dev-rc-cut-pass` 또는 `rc-main-cut-pass` 를 쓰지 않는다.
 - `dev-rc-cut` 은 latest `dev-rc-cut-pass` dev commit 에서 `rc/YYYY-Wxx` branch 를 만들고 `promo/rc-*` tag 를 생성한다. RC branch 에 version bump commit 을 만들지 않는다.
 - `dev-rc-cut` 은 active RC 가 있으면 기본 skip 한다. active RC 는 1개만 유지하고, 예외는 release-manager override 로만 허용한다.
@@ -45,8 +45,8 @@
 - RC hotfix 는 dev-staging-first 다. fix 를 먼저 dev-staging 에 머지하고, active RC 에는 같은 commit/snapshot 을 `rc-hotfix-apply`/cherry-pick PR 로 반영한다. RC-only 선머지는 release-manager override 가 필요한 예외다.
 - `.github/actions/cut-issue` 는 cut-gate tracking issue 를 생성/갱신/닫는 composite action 이다. Issue 는 운영자가 보는 추적 surface 이며 gate 판정 SSOT 는 commit status/workflow result 다.
 - `close-cut-issue-on-pr-merge` 는 promotion PR body 의 `minglit:cut-issue-number` marker 를 보고 PR merge 시 해당 cut issue 를 닫는다.
-- `dev-deploy` 는 dev push 후 web + mobile dev 배포를 orchestrate 한다.
-- `main-deploy` 는 main push 후 prod 배포를 orchestrate 한다. version bump commit 없이 deploy-time metadata 를 계산하고 `shared-promo-tag` 로 `promo/main-*` marker 를 만든다.
+- `dev-deploy` 는 dev push 후 web dev 배포만 orchestrate 한다. 모바일(android/ios) 배포는 웹 MVP 피벗으로 동결 — `deploy-android-*`/`deploy-ios-*` adapter 는 남아 있지만 호출자가 없다.
+- `main-deploy` 는 main push 후 prod web 배포를 orchestrate 한다 (모바일 동결). version bump commit 없이 deploy-time metadata 를 계산하고 `shared-promo-tag` 로 `promo/main-*` marker 를 만든다.
 - `shared-ios-deploy` 는 App Store Connect 업로드 SDK 요구사항 때문에 `macos-26` runner 에 고정한다. 회귀 검사는 `.github/scripts/check-ios-deploy-branch-conditions.sh` 가 담당한다.
 - `shared-promo-tag` 는 `promo/rc-*`, `promo/main-*` tag 생성의 공통 release-bot 구현이다. Concrete workflow 는 target ref, tag name, commit SHA 만 넘긴다.
 - `deploy-dev-event-flow-cron` 은 `dev` push 에서만 dev Supabase `dev-event-flow-simulator` pg_cron 을 설치한다. `monitor-event-flow-distributed` 는 `--ref dev` 수동 smoke 전용이고, hourly/daily 는 legacy manual smoke 다.

@@ -1,5 +1,7 @@
 # PRD: 티켓 QR Boarding Pass 리디자인 (Ticket QR Improvement)
 
+> **Status: on-hold (mobile frozen, 2026-06-06)** — 모바일 보딩패스 UX 전용. 웹 입장 QR 화면 재설계 대기. 배경: `docs/architecture/web-mvp-pivot.md`
+
 ## Summary
 
 티켓 QR 화면을 흰 배경 + QR 코드 단일 구성에서 **항공 보딩패스 오마주 카드**로 재설계해, 이벤트 입장 직전의 감성과 맥락 정보(이벤트명/일시/장소/상태)를 함께 제공한다.

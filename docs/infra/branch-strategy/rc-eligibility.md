@@ -21,8 +21,8 @@ RC eligibility 는 `dev` commit 이 `rc/YYYY-Wxx` branch source 로 사용 가�
 |----------|-------------------------|
 | Backend simulator failure/pass | `dev-soak/backend-simulator` |
 | Dev cron install run | `deploy-dev-event-flow-cron.yml` success on same `headSha` |
-| User CUJ | `monitor-dev-cuj.yml` success on same `headSha` + `dev-soak/cuj-user` not failure |
-| Partner CUJ | `monitor-dev-cuj.yml` success on same `headSha` + `dev-soak/cuj-partner` not failure |
+| User CUJ (동결 — web-mvp pivot) | run 요구 제거. `dev-soak/cuj-user` not failure 만 확인 |
+| Partner CUJ (동결 — web-mvp pivot) | run 요구 제거. `dev-soak/cuj-partner` not failure 만 확인 |
 | Final eligibility marker | `dev-rc-cut-pass` |
 
 따라서 새 dev health writer 를 만들 때도 `dev-rc-cut-pass` 호환을 깨면 안 된다. `dev-health/*` 같은 새 context 를 도입하려면 다음 중 하나를 같은 PR 에서 처리해야 한다.

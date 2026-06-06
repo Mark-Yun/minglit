@@ -1,5 +1,7 @@
 # PRD: 매칭 결과 연락처 공개
 
+> **Status: deprecated (web-mvp pivot, 2026-06-06)** — 매칭/투표/결과 공개는 웹 MVP 코어에서 제외. 배경: `docs/architecture/web-mvp-pivot.md`
+
 ## Summary
 
 이벤트 종료 후 서로 좋아요를 보낸 사용자에게 매칭 상대의 연락처를 전체 공개하고, 한 명씩 연락처를 저장할 수 있게 하는 결과 확인 흐름. 홈의 진행 중 이벤트 결과 surface와 이벤트 상세의 `매칭 결과 보기` 버튼이 같은 결과 바텀시트로 연결된다.

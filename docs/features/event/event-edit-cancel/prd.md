@@ -1,5 +1,7 @@
 # PRD: 이벤트 수정·취소 (Event Edit & Cancel)
 
+> **Status: web-mvp core (2026-06-06)** — 이벤트 수정/취소 + 자동 환불은 코어 플로우. 배경: `docs/architecture/web-mvp-pivot.md`
+
 ## Summary
 
 파트너가 이미 생성한 이벤트의 핵심/부수 정보를 수정하거나, 이벤트를 취소하면서 참가자에게 자동으로 알림 + 전액 환불을 보장하는 기능. 이슈 #1396 (Blocked #1338 통합 테스트) 해결.
