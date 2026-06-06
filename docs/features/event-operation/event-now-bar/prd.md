@@ -1,6 +1,6 @@
 # PRD: 이벤트 나우바 (Event Now Bar)
 
-> **Status: on-hold (mobile frozen, 2026-06-06)** — 모바일 홈 전용 UX. 매칭 단계 surface 는 deprecated 범위에 포함. 배경: `docs/architecture/web-mvp-pivot.md`
+> **Status: deprecated (web-mvp pivot, 2026-06-06)** — 체크인/매칭 진행 surface 전체가 2차 축소로 코어 제외. 배경: `docs/architecture/web-mvp-pivot.md`
 
 ## Summary
 

@@ -7,7 +7,7 @@ import {
   widgetNameFor,
 } from './flow-data';
 
-export type ScreenSurfaceId = 'user' | 'partner' | 'web_admin';
+export type ScreenSurfaceId = 'user' | 'partner' | 'web_admin' | 'web_user' | 'web_partner';
 
 export type ScreenKind = 'route' | 'sub-component' | 'spec-only' | 'web-route';
 
@@ -55,6 +55,18 @@ export const SCREEN_SURFACES: ScreenSurface[] = [
     label: 'web_admin',
     description: 'Desktop web admin console screens. Defined manually until apps/admin_web exists.',
   },
+  {
+    id: 'web_user',
+    label: 'web_user',
+    description:
+      'Consumer web screens (landing_user extension). Mobile-web-first; manual registry, web specs authored from /specs/_template_web.html.',
+  },
+  {
+    id: 'web_partner',
+    label: 'web_partner',
+    description:
+      'Partner web screens (landing_partner extension). Desktop-first; manual registry, web specs authored from /specs/_template_web.html.',
+  },
 ];
 
 const WEB_ADMIN_SCREENS: ScreenDefinition[] = [
@@ -71,6 +83,22 @@ const WEB_ADMIN_SCREENS: ScreenDefinition[] = [
     note: 'P0 shell/entry: Supabase Google OAuth login, admin guard, extensible menu frame.',
   },
 ];
+
+// Web MVP pivot: user/partner web screens are new web specs (mobile app specs
+// remain as behavior sources). Register each authored spec here following the
+// WEB_ADMIN_SCREENS shape — no route-pages.json / flow-data dependency.
+const WEB_USER_SCREENS: ScreenDefinition[] = [];
+
+const WEB_PARTNER_SCREENS: ScreenDefinition[] = [];
+
+const STATIC_WEB_SCREENS: Record<
+  Exclude<ScreenSurfaceId, 'user' | 'partner'>,
+  ScreenDefinition[]
+> = {
+  web_admin: WEB_ADMIN_SCREENS,
+  web_user: WEB_USER_SCREENS,
+  web_partner: WEB_PARTNER_SCREENS,
+};
 
 function appPathSegment(app: 'user' | 'partner'): 'app_user' | 'app_partner' {
   return app === 'user' ? 'app_user' : 'app_partner';
@@ -138,10 +166,10 @@ function flutterRouteScreens(app: 'user' | 'partner'): ScreenDefinition[] {
 
 export function getScreenGroups(): ScreenGroup[] {
   return SCREEN_SURFACES.map((surface) => {
-    if (surface.id === 'web_admin') {
-      return { surface, screens: WEB_ADMIN_SCREENS };
+    if (surface.id === 'user' || surface.id === 'partner') {
+      return { surface, screens: flutterRouteScreens(surface.id) };
     }
 
-    return { surface, screens: flutterRouteScreens(surface.id) };
+    return { surface, screens: STATIC_WEB_SCREENS[surface.id] };
   });
 }

@@ -9,9 +9,10 @@ export default function ScreensPage() {
         </p>
         <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-3">Screens</h1>
         <p className="text-[var(--color-text-secondary)]">
-          Screen definitions grouped by surface: app_user, app_partner, and web_admin.
-          Flutter app rows are derived from GoRouter route maps; web_admin starts as a
-          manual registry until its app root exists. Click a screen name to open its MDS spec; use{' '}
+          Screen definitions grouped by surface: app_user, app_partner, web_admin,
+          web_user, and web_partner. Flutter app rows are derived from GoRouter route
+          maps; web surfaces (admin, user, partner) are manual registries until their
+          app roots exist. Click a screen name to open its MDS spec; use{' '}
           <code className="text-xs bg-[var(--color-surface)] px-1 rounded">code ↗</code>{' '}
           for implementation source when it exists.
         </p>
