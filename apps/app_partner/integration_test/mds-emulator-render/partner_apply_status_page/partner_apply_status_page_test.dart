@@ -20,6 +20,13 @@ final catalog = MdsCatalog<PartnerApplyStatusPageBuilder>(
       (b) => b.needsCorrectionWithComment(),
       mdsIndex: 3,
     ),
+    MdsState(
+      'state-loading',
+      (b) => b.loading(),
+      mdsIndex: 4,
+      infiniteAnimation: true,
+    ),
+    MdsState('state-error', (b) => b.error(), mdsIndex: 5),
   ],
 );
 
