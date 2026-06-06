@@ -18,6 +18,7 @@ GitHub 통합 폴더 — CI/CD 워크플로우, composite actions, shell scripts
 - **entry 워크플로우는 9 prefix 중 하나** (pr-gate / pr-setup / pr-review-setup / deploy / monitor / sync / triage / tool / shared), branch-strategy stage workflow 와 `workflow_call` 전용 reusable 은 domain name 허용 — [`workflows/BLUEDOC.md`](./workflows/BLUEDOC.md) 참고.
 - **재사용 가능한 step 묶음은 `actions/` composite 로 분리**, 단순 명령 묶음은 `scripts/` 로.
 - **dependabot 은 patch/minor 자동 머지** (pr-review-setup 의 dependabot 분기), major 는 수동.
+- **모바일 deploy 동결** — 웹 MVP 피벗으로 dev/main-deploy 는 web 만 배포하고 android/ios deploy 와 Flutter 전용 monitor 는 동결 상태다.
 
 ## 관련
 

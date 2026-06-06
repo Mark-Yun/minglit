@@ -199,7 +199,7 @@ Cross-branch cherry-pick PR 자동 생성.
 | Trigger | `schedule` (cut 직전, TBD) + `workflow_dispatch` |
 | Inputs | optional `candidate_sha` (default: latest `origin/dev` HEAD) |
 | Outputs | commit status `dev-rc-cut-pass` (success only) + `dev-soak/*` success confirmations + cut issue `gate/dev-rc` |
-| Steps | calls `shared-soak-gate` with candidate=`origin/dev`, min_soak_hours=0, required runs=`deploy-dev-event-flow-cron>=1` and `monitor-dev-cuj>=1` on matching SHA, failure contexts=`dev-soak/backend-simulator` + `dev-soak/cuj-*`, success contexts=required `dev-soak/*`, pass context=`dev-rc-cut-pass`; then upserts cut issue as `status/waiting` or `status/ready` |
+| Steps | calls `shared-soak-gate` with candidate=`origin/dev`, min_soak_hours=0, required runs=`deploy-dev-event-flow-cron>=1` on matching SHA (`monitor-dev-cuj` run 요구는 web-mvp pivot 으로 제거), failure contexts=`dev-soak/backend-simulator` + `dev-soak/cuj-*` (수동 블락 레버), success contexts=required `dev-soak/*` (cuj-* 제외), pass context=`dev-rc-cut-pass`; then upserts cut issue as `status/waiting` or `status/ready` |
 | Failure path | 조건 미충족 또는 required success evidence 누락이면 `dev-rc-cut-pass` 를 쓰지 않는다. 실패를 발견한 monitor/AI agent 가 이미 `dev-soak/*` failure 를 쓴다 |
 
 > **No auto-revert** — snapshot 모델: 실패 = no `dev-rc-cut-pass`, dev keeps moving, 새 fix 가 자연스럽게 다음 dev-staging-dev-cut 후 새 candidate 로 검증됨.
@@ -225,11 +225,11 @@ Cross-branch cherry-pick PR 자동 생성.
 | Outputs | event-flow simulation signal, `set-dev-soak-status(signal=backend-simulator,state=failure)`, issue/alert |
 | Note | fixed-time small tick. actor/user/partner/event sampling 만 랜덤화하고, party/event 는 partner EF, 신청 대상은 `user-event-feed` 로 만든다 |
 
-#### `monitor-dev-cuj`
+#### `monitor-dev-cuj` (동결 — web-mvp pivot, disabled)
 
 | 항목 | 값 |
 |------|----|
-| Trigger | `push` to `dev` + `workflow_dispatch` |
+| Trigger | ~~`push` to `dev`~~ + `workflow_dispatch` (workflow disabled — Flutter CUJ 동결) |
 | Branch/env | latest dev commit. User/partner app CUJ 를 각각 실행 |
 | Outputs | `set-dev-soak-status(signal=cuj-user|cuj-partner,state=success|failure)`, issue/alert with failed CUJ files |
 | Note | CUJ runner 는 첫 실패에서 중단하지 않고 모든 CUJ file 을 실행한 뒤 실패 목록을 aggregate 한다 |

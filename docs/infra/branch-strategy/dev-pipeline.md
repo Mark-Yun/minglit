@@ -6,7 +6,7 @@
 
 1. **`dev-staging-dev-cut`** — daily cron, dev-staging tip 을 직접 bump/tag 한 뒤 그 snapshot 으로 PR 생성
 2. **`dev-pr-gate`** — snapshot PR 머지 전 검증 (defensive)
-3. **`monitor-dev-cuj`** — dev push 마다 user/partner CUJ 를 끝까지 실행하고 `dev-soak/cuj-*` status 기록
+3. **`monitor-dev-cuj`** (동결 — web-mvp pivot) — disable 됨. `dev-soak/cuj-*` 는 `set-dev-soak-status` 수동 블락 레버로만 유지
 4. **`dev-rc-cut-gate`** — cut 직전 evaluator. dev health status + cron install run 확인 후 `dev-rc-cut-pass` set
 5. **`dev-deploy` / cron install** — dev 환경 deploy/smoke 가 필요할 때 수행. 이벤트 플로우 시뮬레이터는 dev pg_cron 으로 별도 운영
 
@@ -52,8 +52,8 @@ GitHub Issue 는 source-of-truth 가 아니다. Gate 판정은 commit status con
 | Context | failure 작성자 | success 작성자 |
 |---------|---------------|----------------|
 | `dev-soak/backend-simulator` | `event-flow-simulator` reporter 또는 `deploy-dev-event-flow-cron` 실패 path | `dev-rc-cut-gate` |
-| `dev-soak/cuj-user` | `monitor-dev-cuj` | `monitor-dev-cuj` 또는 `dev-rc-cut-gate` |
-| `dev-soak/cuj-partner` | `monitor-dev-cuj` | `monitor-dev-cuj` 또는 `dev-rc-cut-gate` |
+| `dev-soak/cuj-user` | `set-dev-soak-status` (manual; `monitor-dev-cuj` 동결) | manual |
+| `dev-soak/cuj-partner` | `set-dev-soak-status` (manual; `monitor-dev-cuj` 동결) | manual |
 | `dev-soak/real-device` | real-device/Test Lab workflow 또는 AI agent | `dev-rc-cut-gate` |
 | `dev-soak/app-ai-review` | AI agent | `dev-rc-cut-gate` |
 | `dev-rc-cut-pass` | 없음 | `dev-rc-cut-gate` |
@@ -67,7 +67,7 @@ GitHub Issue 는 source-of-truth 가 아니다. Gate 판정은 commit status con
 | 검증 | 조건 |
 |------|------|
 | Event-flow distributed simulator | candidate SHA 에서 `deploy-dev-event-flow-cron` success >= 1 + `dev-soak/backend-simulator` failure 없음 |
-| CUJ | candidate SHA 에서 `monitor-dev-cuj` success >= 1 + `dev-soak/cuj-user` / `dev-soak/cuj-partner` failure 없음 |
+| CUJ (동결 — web-mvp pivot) | run 요구 제거. `dev-soak/cuj-user` / `dev-soak/cuj-partner` failure 없음만 확인 (수동 블락 레버) |
 | Legacy hourly/daily simulator | 수동 smoke 전용. RC cut gate 조건에서 제외 |
 | Real device | candidate 기준 required real-device signal success >= 1 (workflow TBD) |
 | App AI review | AI agent 가 candidate 기준 app-soak pass signal 제공 (입력 방식 TBD) |

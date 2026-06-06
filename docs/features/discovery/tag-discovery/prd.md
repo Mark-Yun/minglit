@@ -1,5 +1,7 @@
 # PRD: 태그 기반 이벤트 발견 (Tag Discovery)
 
+> **Status: deprecated (web-mvp pivot, 2026-06-06)** — AI 추천·개인화 피드 부분은 코어에서 제외. 기본 태그 탐색은 웹 재설계 시 단순화 재검토. 배경: `docs/architecture/web-mvp-pivot.md`
+
 ## Summary
 
 이벤트 탐색을 하드코딩 피드타입과 제목 검색에서 태그 기반 관심사 탐색으로 확장한다. 인기 태그 칩바·핫 태그·관심사 추천 피드·태그 자동완성 검색을 추가해 cold-start 유저도 자신의 관심사로 이벤트를 찾을 수 있게 한다.

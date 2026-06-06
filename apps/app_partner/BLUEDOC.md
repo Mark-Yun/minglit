@@ -1,5 +1,7 @@
 # app_partner
 
+> **동결 (2026-06-06)**: 웹 MVP 피벗으로 본 앱은 개발/배포 중단 (코드 보존, `archive/flutter-apps`). 파트너 측은 admin console 수준으로 재조정 예정. 배경: [docs/architecture/web-mvp-pivot.md](../../docs/architecture/web-mvp-pivot.md)
+
 Minglit 의 **파트너 사장님 Flutter 앱**. 매장 관리·멤버 초대·유저 인증 심사·이벤트 신청 처리·정산 등 파트너 측 워크플로우 담당.
 
 ## 이정표
@@ -27,10 +29,8 @@ Minglit 의 **파트너 사장님 Flutter 앱**. 매장 관리·멤버 초대·�
 | `member/` | 멤버 관리 (초대·권한) |
 | `party/` | 파티·이벤트 관리 |
 | `application/` | 이벤트 신청 관리 (승인·거절) |
-| `checkin/` | 이벤트 체크인 |
-| `verification/` | 유저 인증 심사 (제출 서류 승인·반려·보완) |
-| `ticket/` | 티켓 관리 |
-| `settlement/` | 정산 관리 |
+| `checkin/` · `verification/` | 이벤트 체크인 · 유저 인증 심사 (승인·반려·보완) |
+| `ticket/` · `settlement/` | 티켓 관리 · 정산 관리 |
 | `more/` · `account_deletion/` | 더보기·파트너 탈퇴 |
 
 ## 핵심 컨벤션
@@ -47,4 +47,4 @@ Minglit 의 **파트너 사장님 Flutter 앱**. 매장 관리·멤버 초대·�
 - [README.md](./README.md) — 빌드·실행 / [integration_test/cuj](./integration_test/cuj/BLUEDOC.md) — CUJ
 
 ---
-_Reviewed: 2026-06-05 10:37_
+_Reviewed: 2026-06-06 12:52_

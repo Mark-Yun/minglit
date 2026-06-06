@@ -97,10 +97,10 @@ monitor-dev-staging-health:
   branch: dev-staging
   purpose: EF unit/integration early regression signal
 
-monitor-dev-cuj:
-  trigger: push to dev
+monitor-dev-cuj:  # disabled (web-mvp pivot — Flutter CUJ 동결)
+  trigger: manual dispatch only
   branch: dev
-  purpose: user/partner CUJ health signal
+  purpose: (legacy) user/partner CUJ health signal
 ```
 
 ### main push → prod deploy chain

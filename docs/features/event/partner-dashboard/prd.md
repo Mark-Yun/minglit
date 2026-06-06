@@ -1,5 +1,7 @@
 # PRD: 파트너 대시보드 리디자인 (Partner Dashboard)
 
+> **Status: on-hold (mobile frozen, 2026-06-06)** — 파트너 앱 홈 재설계. 파트너 측 재조정 (admin console 가능성) 대기. 배경: `docs/architecture/web-mvp-pivot.md`
+
 ## Summary
 
 파트너앱의 홈 화면과 바텀 네비게이션을 "오늘 할 일 먼저, 통계 나중" 원칙으로 재구성한다. 파티 관리 / 통계 중심의 기존 구조를 신청 처리 / 체크인 등 일상 업무 진입점 중심으로 전환.

@@ -1,5 +1,7 @@
 # PRD: 내 티켓 (My Tickets)
 
+> **Status: web-mvp core (2026-06-06)** — 티켓 보유/입장 QR 접근은 코어 플로우 (웹으로 재구현). 배경: `docs/architecture/web-mvp-pivot.md`
+
 ## Summary
 
 다가오는 이벤트 티켓을 시간순으로 확인하고 한 탭으로 입장 QR 에 접근하는 전용 화면을 제공한다. 기존 "구매 내역"과 역할을 분리해 입장 시점의 사용성을 강화한다.

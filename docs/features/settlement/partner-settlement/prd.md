@@ -1,5 +1,7 @@
 # PRD: 파트너 정산 (Partner Settlement)
 
+> **Status: web-mvp core (2026-06-06)** — 정산 파이프라인은 코어 플로우의 종착점. 배경: `docs/architecture/web-mvp-pivot.md`
+
 ## Summary
 
 이벤트가 completed 상태로 전환될 때 정산 레코드를 자동 생성하고, 14일 환불 유예 후 검증을 거쳐 PortOne Payout API를 통해 파트너 계좌로 자동 지급하는 정산 파이프라인. 불변 원장과 7-상태 머신으로 법무/감사 요건을 충족한다.

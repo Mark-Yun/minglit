@@ -17,7 +17,7 @@ flowchart LR
   dev --> dh[dev health / CUJ signals]
   dh --> rg[dev-rc-cut-gate]
   monitor["monitor-event-flow-* batch"] -. dev-soak/backend-simulator .-> dev
-  cuj["monitor-dev-cuj"] -. dev-soak/cuj-* .-> dev
+  cuj["monitor-dev-cuj (frozen)"] -. "dev-soak/cuj-* (manual lever)" .-> dev
   ai["AI app review / real-device"] -. dev-soak/app-ai-review .-> dev
   rg -->|pass| rgp["dev-rc-cut-pass status"]
   rg -->|blocked| issue[status failure + issue/audit]
