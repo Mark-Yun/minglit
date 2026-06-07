@@ -151,6 +151,10 @@ export function shouldOpenCancelDialog(value: string | string[] | undefined): bo
   return firstValue === "1" || firstValue === "true" || firstValue === "yes";
 }
 
+export function isPartnerEventEditable(event: Pick<PartnerEvent, "status" | "start_time">, now = new Date()): boolean {
+  return event.status === "scheduled" && new Date(event.start_time) > now;
+}
+
 export async function fetchPartnerParties(
   supabase: SupabaseClient,
   partnerId: string,
@@ -257,7 +261,10 @@ export function validatePartyForm(values: PartyFormValues): string[] {
   return errors;
 }
 
-export function validateEventForm(values: EventFormValues): string[] {
+export function validateEventForm(
+  values: EventFormValues,
+  context: { currentEvent?: Pick<PartnerEvent, "current_participants"> } = {},
+): string[] {
   const errors: string[] = [];
   if (!values.partyId) errors.push("회차를 열 파티를 선택해 주세요.");
   if (!values.title.trim()) errors.push("회차 제목을 입력해 주세요.");
@@ -270,6 +277,10 @@ export function validateEventForm(values: EventFormValues): string[] {
   }
   if (!Number.isInteger(values.maxParticipants) || values.maxParticipants < 1 || values.maxParticipants > 999) {
     errors.push("정원은 1~999명 사이여야 합니다.");
+  }
+  const currentParticipants = context.currentEvent?.current_participants;
+  if (currentParticipants !== undefined && values.maxParticipants < currentParticipants) {
+    errors.push(`정원은 현재 참가자 수 ${currentParticipants}명보다 낮출 수 없습니다.`);
   }
   if (values.minConfirmedCount < 0 || values.minConfirmedCount > values.maxParticipants) {
     errors.push("최소 확정 인원은 0 이상, 정원 이하로 입력해 주세요.");

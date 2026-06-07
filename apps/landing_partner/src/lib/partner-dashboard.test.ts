@@ -12,6 +12,7 @@ import {
   defaultPartyFormValues,
   eventStatusLabel,
   eventToFormValues,
+  isPartnerEventEditable,
   normalizePartyRow,
   shouldOpenCancelDialog,
   splitEvents,
@@ -217,6 +218,49 @@ test("event form validation requires party, title, and increasing date range", (
   assert.ok(errors.includes("회차를 열 파티를 선택해 주세요."));
   assert.ok(errors.includes("회차 제목을 입력해 주세요."));
   assert.ok(errors.includes("종료 일시는 시작 일시보다 늦어야 합니다."));
+});
+
+test("event form validation rejects capacity below current participants", () => {
+  const errors = validateEventForm(
+    {
+      partyId: "party-1",
+      title: "회차",
+      startLocal: "2026-06-08T20:00",
+      endLocal: "2026-06-08T22:00",
+      maxParticipants: 5,
+      minConfirmedCount: 2,
+      reason: "",
+    },
+    { currentEvent: { current_participants: 8 } },
+  );
+
+  assert.ok(errors.includes("정원은 현재 참가자 수 8명보다 낮출 수 없습니다."));
+});
+
+test("partner event editability requires scheduled future events", () => {
+  const now = new Date("2026-06-08T00:00:00.000Z");
+
+  assert.equal(
+    isPartnerEventEditable({
+      status: "scheduled",
+      start_time: "2026-06-08T01:00:00.000Z",
+    }, now),
+    true,
+  );
+  assert.equal(
+    isPartnerEventEditable({
+      status: "scheduled",
+      start_time: "2026-06-07T23:00:00.000Z",
+    }, now),
+    false,
+  );
+  assert.equal(
+    isPartnerEventEditable({
+      status: "completed",
+      start_time: "2026-06-08T01:00:00.000Z",
+    }, now),
+    false,
+  );
 });
 
 test("event create payload copies ticket template references", () => {

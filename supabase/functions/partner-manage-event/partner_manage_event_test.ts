@@ -117,6 +117,7 @@ function insertEventRoute(id = TEST_EVENT_ID): FetchRoute {
 function selectEventRoute(
   status = "scheduled",
   partnerId = TEST_PARTNER_ID,
+  overrides: { startTime?: string; currentParticipants?: number } = {},
 ): FetchRoute {
   return {
     matcher: (req) =>
@@ -128,6 +129,9 @@ function selectEventRoute(
         id: TEST_EVENT_ID,
         status,
         party_id: TEST_PARTY_ID,
+        start_time: overrides.startTime ?? FUTURE_START,
+        end_time: FUTURE_END,
+        current_participants: overrides.currentParticipants ?? 0,
         parties: { partner_id: partnerId },
       }),
   };
@@ -746,6 +750,90 @@ Deno.test({
         assertEquals(res.status, 200);
         const body = await readJson(res);
         assertEquals(body.success, true);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "update: completed event cannot be edited",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectEventRoute("completed"),
+      permRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update",
+          event_id: TEST_EVENT_ID,
+          event: { start_time: FUTURE_START },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "Event is no longer editable");
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "update: started scheduled event cannot be edited",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectEventRoute("scheduled", TEST_PARTNER_ID, { startTime: PAST_TIME }),
+      permRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update",
+          event_id: TEST_EVENT_ID,
+          event: { start_time: FUTURE_START },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "Event is no longer editable");
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "update: max_participants cannot go below current participants",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectEventRoute("scheduled", TEST_PARTNER_ID, { currentParticipants: 8 }),
+      permRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update",
+          event_id: TEST_EVENT_ID,
+          event: { max_participants: 5 },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "max_participants cannot be lower than current_participants");
       });
     });
   },

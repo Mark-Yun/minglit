@@ -37,6 +37,7 @@ import {
   eventToFormValues,
   fetchPartnerParties,
   formatEventDateRange,
+  isPartnerEventEditable,
   partyToFormValues,
   splitEvents,
   validateEventForm,
@@ -258,9 +259,12 @@ export function PartnerEventFormPage({ mode }: { mode: EventRouteMode }) {
 
   async function submit() {
     if (state.status !== "ready") return;
-    const errors = validateEventForm(values);
+    const errors = validateEventForm(values, mode.type === "edit" && currentEvent ? { currentEvent } : {});
     if (mode.type === "create" && selectedParty && selectedParty.ticketTemplates.length === 0) {
       errors.push("선택한 파티에 티켓 템플릿이 없어 회차를 만들 수 없습니다.");
+    }
+    if (mode.type === "edit" && currentEvent && !isPartnerEventEditable(currentEvent)) {
+      errors.push("이미 시작했거나 종료된 회차는 수정할 수 없습니다.");
     }
     if (errors.length > 0) {
       setFormError(errors.join(" "));
@@ -490,7 +494,7 @@ function EventRows({ active, past, partyTitle }: { active: PartnerEvent[]; past:
       </div>
       {rows.map((event) => {
         const status = eventStatusLabel(event);
-        const isEditable = event.status === "scheduled" && status !== "진행";
+        const isEditable = isPartnerEventEditable(event);
         return (
           <div className="wpe-event-row" role="row" key={event.id}>
             <span className="wpe-event-row__date">{formatEventDateRange(event)}</span>
