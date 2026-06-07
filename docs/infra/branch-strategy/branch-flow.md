@@ -9,7 +9,9 @@
                               │
                               └─daily dev-staging-dev-cut merge-commit snapshot PR──▶ dev
                                                               │
-                                                              ├─▶ dev push health/deploy + daily dev-rc-cut-gate
+                                                              ├─▶ dev push health/deploy + MDS render snapshot + daily dev-rc-cut-gate
+                                                              │      │
+                                                              │      ├─ visual evidence: artifacts/mds-render/snapshots/dev/<sha>/
                                                               │      │
                                                               │      ├─ pass: status dev-rc-cut-pass
                                                               │      │         │
@@ -64,8 +66,23 @@ RC hotfix 는 dev-staging-first 가 기본이다. active RC 에만 먼저 들어
 | `dev` | 금지 | **OFF** | `dev-pr-gate` | merge commit for promotion |
 | `rc/YYYY-Wxx` | 금지 | **OFF** | `rc-pr-gate` | approved hotfix merge |
 | `main` | 금지 (release bot 예외) | **OFF** | `main-pr-gate` | merge commit for promotion |
+| `artifacts/mds-render` | workflow only | n/a | n/a | SHA-bound PNG archive, not a promotion branch |
 
 Global linear history 정책은 폐기한다. 일반 작업 PR 은 `dev-staging` 에서 squash 로 정리하고, branch promotion PR 은 source branch ancestry 를 보존하기 위해 merge commit 을 사용한다. Protected branch 직접 push 는 `minglit-release-bot` 의 dev-staging version bump, promotion branch/tag, RC cleanup 에만 Ruleset bypass 로 허용한다.
+
+## Artifact Branch
+
+`artifacts/mds-render` 는 source branch 가 아니라 Git-backed visual evidence archive 다.
+
+| 규칙 | 내용 |
+|------|------|
+| canonical path | `snapshots/dev/<dev-sha>/<screen>/state-*.png` |
+| writer | dev push 후 MDS render snapshot workflow |
+| consumer | `triage-mds-render-snapshot-diff`, AI visual review / human audit |
+| status | source dev SHA 의 `mds-render/snapshot` |
+| 금지 | `dev-staging`, `dev`, `rc/*`, `main` 에 PNG snapshot 커밋 |
+
+`triage-mds-render-snapshot-diff` 는 snapshot PNG diff 가 생기면 AI visual review issue 를 만든다. AI visual review 가 blocker 를 찾으면 `dev-soak/app-ai-review=failure` 를 쓰고, fix 는 일반 flow 처럼 `dev-staging` PR 로 들어간다.
 
 ## Promotion Tag 컨벤션
 
@@ -101,6 +118,11 @@ monitor-dev-cuj:  # disabled (web-mvp pivot — Flutter CUJ 동결)
   trigger: manual dispatch only
   branch: dev
   purpose: (legacy) user/partner CUJ health signal
+
+sync-mds-render-snapshot:
+  trigger: push to dev
+  branch: dev
+  purpose: MDS render PNG archive + mds-render/snapshot status
 ```
 
 ### main push → prod deploy chain
@@ -121,7 +143,7 @@ main-deploy (on push to main):
 
 상세: [specs/workflow-spec.md](./specs/workflow-spec.md).
 
-Mobile APK/AAB/IPA archive 는 GitHub Release asset 이 canonical 이다. Actions artifact 는 workflow 실패 분석용 테스트 리포트/스크린샷/로그 같은 단기 디버깅 산출물에만 사용한다.
+Mobile APK/AAB/IPA archive 는 GitHub Release asset 이 canonical 이다. Actions artifact 는 workflow 실패 분석용 테스트 리포트/스크린샷/로그 같은 단기 디버깅 산출물에만 사용한다. MDS render PNG 처럼 SHA-bound visual evidence 로 재조회해야 하는 산출물은 `artifacts/mds-render` branch 에 보존한다.
 
 ## Safety Nets 위치
 
@@ -142,4 +164,4 @@ Mobile APK/AAB/IPA archive 는 GitHub Release asset 이 canonical 이다. Action
 - [promotion-contract.md](./promotion-contract.md) — 승격 정책 + concrete marker/failure contract
 
 ---
-_Reviewed: 2026-05-24 10:24_
+_Reviewed: 2026-06-04 22:11_

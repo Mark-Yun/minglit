@@ -51,6 +51,11 @@ jobs:
         dev-soak/backend-simulator
         dev-soak/cuj-user
         dev-soak/cuj-partner
+        dev-soak/app-ai-review
+        mds-render/snapshot
+      required_success_contexts: |
+        mds-render/snapshot
+        dev-soak/app-ai-review
       success_contexts: |
         dev-soak/backend-simulator
       pass_context: dev-rc-cut-pass

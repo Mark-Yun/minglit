@@ -1,0 +1,52 @@
+name: triage-mds-render-snapshot-diff
+
+on:
+  repository_dispatch:
+    types: [mds_render_snapshot_archived]
+  workflow_dispatch:
+    inputs:
+      before_sha:
+        description: Optional archive branch commit to diff from.
+        required: false
+        type: string
+      after_sha:
+        description: Optional archive branch commit to diff to. Defaults to current branch HEAD.
+        required: false
+        type: string
+      dry_run:
+        description: Print issue bodies only; do not create or update issues.
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: triage-mds-render-snapshot-diff-${{ github.sha }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      - uses: actions/checkout@v6
+        with:
+          ref: artifacts/mds-render
+          fetch-depth: 0
+          path: archive
+
+      - name: Triage MDS render snapshot diff
+        working-directory: archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BEFORE_SHA: ${{ inputs.before_sha || github.event.client_payload.before_sha || '' }}
+          AFTER_SHA: ${{ inputs.after_sha || github.event.client_payload.after_sha || '' }}
+          ARCHIVE_BRANCH: artifacts/mds-render
+          DRY_RUN: ${{ inputs.dry_run || false }}
+        run: bash ../.github/scripts/triage-mds-render-snapshot-diff.sh

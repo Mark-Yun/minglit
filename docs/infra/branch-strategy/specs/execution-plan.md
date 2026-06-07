@@ -12,7 +12,7 @@
 | **PR / Review** | `pr-gate`, `pr-review-setup`, `doc-freshness` | spec 의 pr-gate-core 의 base — 추출·일반화 대상 |
 | **Post-merge** | `post-merge` (dev-staging push orchestrator), `sync-pr-branches`, `triage-mds-issue` | 일반 PR flow follow-up 자동화. dev 는 promotion-only 이므로 deploy/health workflow 만 push 에 직접 붙인다 |
 | **Reusable** | `shared-android-deploy`, `shared-cuj-integration`, `shared-notify` | spec 의 reusable 패턴 — 추가 reusable extract 시 참고 |
-| **Monitor** | `monitor-allure`, `monitor-cuj-coverage`, `monitor-db-invariants`, `monitor-deno-coverage`, `monitor-event-flow-*`, `monitor-mds-render-coverage`, `monitor-patrol-e2e` | 본 release pipeline 과 orthogonal — 유지 |
+| **Monitor** | `monitor-allure`, `monitor-cuj-coverage`, `monitor-db-invariants`, `monitor-deno-coverage`, `monitor-event-flow-*`, `monitor-mds-render-coverage`, `monitor-patrol-e2e` | 본 release pipeline 과 orthogonal — 유지. 단, `sync-mds-render-snapshot` 은 dev push health evidence 이므로 dev pipeline 에 속함 |
 | **Triage** | `triage-mds-issue`, `triage-slash` | 동상 — 유지 |
 
 > `post-merge.yml` 은 `dev-staging` push 직후 일반 PR flow follow-up 을 묶는 orchestrator 다. dev push 는 promotion 결과의 deploy/health signal 에만 사용한다.
@@ -25,7 +25,7 @@
 | `version-bump` (reusable) | legacy/building block for source-controlled version file changes. Active daily cut uses direct `scripts/bump-version.sh` inside `dev-staging-dev-cut` | **refactor** |
 | `shared-set-commit-status` | commit status write 공통 reusable | **신규** |
 | `set-dev-soak-status`, `set-rc-soak-status` | stage별 status write API (`workflow_call` + `workflow_dispatch`). `dev-soak/*` 는 dev health legacy prefix | **신규** |
-| dev health monitor/status model | 기존 `monitor-event-flow-*`, `monitor-dev-cuj`, real-device workflow, AI agent signal 을 `dev-soak/*` commit status 로 통합 | **신규 (조합)** |
+| dev health monitor/status model | 기존 `monitor-event-flow-*`, `monitor-dev-cuj`, MDS render snapshot, real-device workflow, AI agent signal 을 `mds-render/snapshot` + `dev-soak/*` commit status 로 통합 | **신규 (조합)** |
 | `auto-issue` (reusable) | (없음) | **신규** |
 | `cherry-pick-pr` (reusable) | (없음) | **신규** |
 | `dev-staging-pr-gate` | `pr-gate` 를 dev-staging base 로 재사용 (stage=dev-staging) | **신규 (얇은 wrapper)** |
@@ -112,6 +112,7 @@
 | 4a | `shared-set-commit-status`, `set-dev-soak-status`, `set-rc-soak-status` 구현 | Phase 2 |
 | 4b | `shared-notify` 가 실패 시 `set-dev-soak-status` 호출 + issue title/body/log tail 개선 | 4a |
 | 4c | `dev-rc-cut-gate` 를 dev health evaluator 로 변경 (run history + `dev-soak/*` status 확인) | 4a, 4b |
+| 4d | `sync-mds-render-snapshot` 추가 (`push: dev` → `artifacts/mds-render/snapshots/dev/<sha>/` + `mds-render/snapshot` + `mds_render_snapshot_archived` dispatch) | 4c |
 | 4d | `main-pr-gate` 에 RC lineage / `rc-main-cut-pass` / contract 재검증 추가 | Phase 2 |
 | 4e | `cherry-pick-pr` reusable, `rc-hotfix-apply` | Phase 2 |
 
@@ -238,6 +239,7 @@ Phase 1 (skeletal) → Phase 2 (CI/PR flow) → Phase 3 (branch CD)
 
 - `auto-issue` 의 P0/P1/P2 라벨 컨벤션 표준 (현재 minglit 의 `P0-critical` 등 따름)
 - real-device/app AI review 의 `set-dev-soak-status` pass/failure 입력 방식
+- `sync-mds-render-snapshot` 의 `artifacts/mds-render` branch write 권한/재시도 방식
 - 4d 의 main protection 적용을 *warn-only* → *enforced* 전환 일자
 - Vercel native build 전환 시점 + Vercel-GitHub 연결 설정 (Vercel-side 작업)
 - Secret 마이그레이션 timing (user 와 함께 — Phase 2/3 와 별도)
@@ -250,4 +252,4 @@ Phase 1 (skeletal) → Phase 2 (CI/PR flow) → Phase 3 (branch CD)
 - 기존 [`.github/workflows/BLUEDOC.md`](../../../../.github/workflows/BLUEDOC.md) — 현재 workflow 의 인벤토리 진입점
 
 ---
-_Reviewed: 2026-05-24 13:05_
+_Reviewed: 2026-06-04 22:11_
