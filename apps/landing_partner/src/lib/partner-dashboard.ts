@@ -29,6 +29,8 @@ export type PartnerDashboardSection = {
   description: string;
 };
 
+export const partnerInquiryHref = "mailto:contact@minglit.com";
+
 type PartnerPermissionRow = {
   partner_id: string;
   role: string;

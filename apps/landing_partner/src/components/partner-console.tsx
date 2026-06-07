@@ -19,6 +19,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   dashboardSections,
   dashboardSnapshot,
+  partnerInquiryHref,
   resolvePartnerDashboardGate,
   resolvePartnerLoginGate,
   type ManagedPartner,
@@ -164,7 +165,7 @@ export function PartnerLoginPage() {
             </div>
 
             <p className="wpl-inquiry">
-              입점을 준비 중인가요? <Link href="/#inquiry">입점 문의</Link>
+              입점을 준비 중인가요? <a href={partnerInquiryHref}>입점 문의</a>
             </p>
           </>
         )}
@@ -505,9 +506,9 @@ function NoAccessCard({ email, onRetry }: { email: string; onRetry: () => void }
         {email}
       </span>
       <div className="wpl-noaccess__actions">
-        <Link className="wpl-btn wpl-btn--primary" href="/#inquiry">
+        <a className="wpl-btn wpl-btn--primary" href={partnerInquiryHref}>
           입점 문의하기
-        </Link>
+        </a>
         <button className="wpl-btn wpl-btn--outline" type="button" onClick={onRetry}>
           <LogOut aria-hidden="true" />
           다른 계정으로 로그인

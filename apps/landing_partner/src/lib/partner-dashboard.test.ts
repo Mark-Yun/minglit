@@ -7,6 +7,7 @@ import {
   dashboardSections,
   fetchCurrentPartner,
   getPartnerDashboardSection,
+  partnerInquiryHref,
   resolvePartnerDashboardGate,
   resolvePartnerLoginGate,
   type ManagedPartner,
@@ -80,6 +81,11 @@ test("dashboard section links used by the shell resolve to known placeholder rou
   }
 
   assert.equal(getPartnerDashboardSection("missing"), null);
+});
+
+test("partner inquiry link leaves the dashboard redirect route", () => {
+  assert.equal(partnerInquiryHref, "mailto:contact@minglit.com");
+  assert.equal(partnerInquiryHref.startsWith("/"), false);
 });
 
 const expectedPartner: ManagedPartner = {
