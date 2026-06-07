@@ -720,7 +720,9 @@ async function handleUpdateStatus(
   // Fetch event → party → partner
   const { data: event, error: fetchError } = await supabase
     .from("events")
-    .select("id, status, start_time, party_id, parties!inner(partner_id)")
+    .select(
+      "id, status, start_time, party_id, metadata, parties!inner(partner_id)",
+    )
     .eq("id", eventId)
     .maybeSingle();
 
@@ -750,9 +752,27 @@ async function handleUpdateStatus(
   );
   if (permCheck) return permCheck;
 
+  if (status === "cancelled") {
+    const block = await assertNoActiveApplicationsForCancellation(
+      supabase,
+      eventId,
+    );
+    if (block) return block;
+  }
+
+  const statusUpdate: Record<string, unknown> = { status };
+  const cancelReason = normalizeCancelReason(body.reason);
+  if (status === "cancelled" && cancelReason) {
+    statusUpdate.metadata = {
+      ...toRecord(event.metadata),
+      cancel_reason: cancelReason.code,
+      cancel_reason_text: cancelReason.text,
+    };
+  }
+
   const { error: updateError } = await supabase
     .from("events")
-    .update({ status })
+    .update(statusUpdate)
     .eq("id", eventId);
 
   if (updateError) {
@@ -763,6 +783,54 @@ async function handleUpdateStatus(
   }
 
   return successResponse({ success: true });
+}
+
+async function assertNoActiveApplicationsForCancellation(
+  supabase: SupabaseClient,
+  eventId: string,
+): Promise<Response | null> {
+  const { data, error } = await supabase
+    .from("event_applications")
+    .select("id, status")
+    .eq("event_id", eventId)
+    .in("status", [
+      "pending",
+      "pending_review",
+      "payment_pending",
+      "approved",
+      "paid",
+    ])
+    .limit(1);
+
+  if (error) return errorResponse("Failed to load event applications", 500);
+  if (Array.isArray(data) && data.length > 0) {
+    return errorResponse(
+      "Cannot cancel events with active applications until refund orchestration is available",
+      409,
+    );
+  }
+  return null;
+}
+
+function normalizeCancelReason(
+  value: unknown,
+): { code: string; text: string } | null {
+  if (typeof value !== "string") return null;
+  const text = value.trim();
+  if (!text) return null;
+  const codeByText: Record<string, string> = {
+    "인원 미달": "insufficient_attendees",
+    "장소 문제": "venue_issue",
+    "기타": "other",
+  };
+  return { code: codeByText[text] ?? "other", text };
+}
+
+function toRecord(value: unknown): Record<string, unknown> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return {};
+  }
+  return value as Record<string, unknown>;
 }
 
 async function handleUpdateTickets(
