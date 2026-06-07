@@ -28,7 +28,13 @@ function snapshotWithOneEvent(): WorldSnapshot {
     party_id: "p1",
     status: "scheduled",
     start_time: new Date(Date.now() + 7 * 86400_000).toISOString(),
-    tickets: [{ id: "t1", price: 0 }],
+    tickets: [{
+      id: "t1",
+      price: 0,
+      status: "on_sale",
+      quantity: 10,
+      sold_count: 0,
+    }],
   });
   return snap;
 }
@@ -73,7 +79,7 @@ Deno.test({
     const { transport, calls } = recordingTransport();
     await runCascade({
       actors: [{ id: "user-1", role: "user" }],
-      initialSnapshot: emptySnapshot(),  // no events → applyAction.canExecute=false
+      initialSnapshot: emptySnapshot(), // no events → applyAction.canExecute=false
       rates: defaultRates,
       transport,
       rng: createPRNG(1),
@@ -130,7 +136,8 @@ Deno.test({
 });
 
 Deno.test({
-  name: "runCascade - refreshSnapshot callback advances world state between ticks",
+  name:
+    "runCascade - refreshSnapshot callback advances world state between ticks",
   fn: async () => {
     clearRegistry();
     registerAction(applyAction);
@@ -148,7 +155,11 @@ Deno.test({
         return cur;
       },
     });
-    assertEquals(refreshCalls, 3, "refreshSnapshot must be invoked after each tick");
+    assertEquals(
+      refreshCalls,
+      3,
+      "refreshSnapshot must be invoked after each tick",
+    );
   },
 });
 
@@ -199,7 +210,11 @@ Deno.test({
     // 3 호출 사이 2 delay × 50ms = 100ms 최소 (모든 actor 가 action 발생 시)
     // policy 가 일부 skip 해도 1 call 발생하면 +50ms 보장. 최소 50ms 확인 (느슨한 lower bound).
     assertEquals(calls.length > 0, true, "at least one EF call expected");
-    assertEquals(elapsed >= 50, true, `elapsed (${elapsed}ms) should be >= 50ms with throttle`);
+    assertEquals(
+      elapsed >= 50,
+      true,
+      `elapsed (${elapsed}ms) should be >= 50ms with throttle`,
+    );
   },
 });
 
@@ -225,6 +240,10 @@ Deno.test({
     });
     const elapsed = performance.now() - start;
     assertEquals(calls.length > 0, true);
-    assertEquals(elapsed < 50, true, `elapsed (${elapsed}ms) should be < 50ms without throttle`);
+    assertEquals(
+      elapsed < 50,
+      true,
+      `elapsed (${elapsed}ms) should be < 50ms without throttle`,
+    );
   },
 });

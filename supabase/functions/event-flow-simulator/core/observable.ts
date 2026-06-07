@@ -12,7 +12,13 @@ export interface WorldSnapshot {
     party_id: string;
     status: string;
     start_time: string;
-    tickets?: Array<{ id: string; price: number }>;
+    tickets?: Array<{
+      id: string;
+      price: number;
+      status: string;
+      quantity: number;
+      sold_count: number;
+    }>;
   }>;
   applications: Array<{
     id: string;
@@ -47,7 +53,10 @@ export interface ObservableState {
   [key: string]: unknown;
 }
 
-export function projectForUser(snapshot: WorldSnapshot, userId: string): ObservableState {
+export function projectForUser(
+  snapshot: WorldSnapshot,
+  userId: string,
+): ObservableState {
   return {
     myApplications: snapshot.applications.filter((a) => a.user_id === userId),
     visibleEvents: snapshot.events.filter((e) =>
@@ -59,7 +68,10 @@ export function projectForUser(snapshot: WorldSnapshot, userId: string): Observa
   };
 }
 
-export function projectForPartner(snapshot: WorldSnapshot, partnerId: string): ObservableState {
+export function projectForPartner(
+  snapshot: WorldSnapshot,
+  partnerId: string,
+): ObservableState {
   const myPartyIds = snapshot.parties
     .filter((p) => p.partner_id === partnerId)
     .map((p) => p.id);

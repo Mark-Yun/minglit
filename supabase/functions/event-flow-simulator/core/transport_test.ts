@@ -74,3 +74,36 @@ Deno.test("EFTransport omits Idempotency-Key for functions without that contract
 
   assertEquals(idempotencyKey, null);
 });
+
+Deno.test("EFTransport includes error body for failed Edge Function calls", async () => {
+  const { fetchMock } = createFetchMock([
+    {
+      matcher: (req) => req.url.endsWith("/functions/v1/apply-event"),
+      handler: () =>
+        Response.json(
+          { error: "Event is not accepting applications" },
+          { status: 409 },
+        ),
+    },
+  ]);
+
+  await withMockedFetch(fetchMock, async () => {
+    const transport = new EFTransport({
+      supabase: {} as SupabaseClient,
+      supabaseUrl: "https://example.supabase.co",
+      tokenByActor: new Map([["user-1", "test-token"]]),
+      runId: "run-1",
+    });
+
+    const result = await transport.execute({
+      type: "user_apply",
+      actorId: "user-1",
+      ef: "apply-event",
+      payload: { event_id: "event-1", ticket_id: "ticket-1" },
+    });
+
+    assertEquals(result.ok, false);
+    assertEquals(result.status, 409);
+    assertEquals(result.error, "Event is not accepting applications");
+  });
+});

@@ -36,6 +36,9 @@ type TicketRow = {
   id: string;
   event_id: string;
   price: number;
+  status: string;
+  quantity: number;
+  sold_count: number;
 };
 
 type ApplicationRow = {
@@ -94,7 +97,7 @@ export async function buildSnapshot(
           ? selectByInChunks<TicketRow>(
             supabase,
             "tickets",
-            "id, event_id, price",
+            "id, event_id, price, status, quantity, sold_count",
             "event_id",
             eventIds,
           )
@@ -146,11 +149,23 @@ export async function buildSnapshot(
   // tickets 를 event 에 attach (observable 모델이 event.tickets 기대)
   const ticketsByEvent = new Map<
     string,
-    Array<{ id: string; price: number }>
+    Array<{
+      id: string;
+      price: number;
+      status: string;
+      quantity: number;
+      sold_count: number;
+    }>
   >();
   for (const t of tickets) {
     if (!ticketsByEvent.has(t.event_id)) ticketsByEvent.set(t.event_id, []);
-    ticketsByEvent.get(t.event_id)!.push({ id: t.id, price: t.price });
+    ticketsByEvent.get(t.event_id)!.push({
+      id: t.id,
+      price: t.price,
+      status: t.status,
+      quantity: t.quantity,
+      sold_count: t.sold_count,
+    });
   }
   const eventsWithTickets = events.map((e) => ({
     ...e,
