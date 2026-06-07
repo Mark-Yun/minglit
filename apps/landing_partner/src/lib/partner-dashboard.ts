@@ -135,7 +135,7 @@ export const dashboardSections: PartnerDashboardSection[] = [
   {
     key: "events",
     href: "/dashboard/events",
-    label: "이벤트",
+    label: "파티·이벤트",
     title: "이벤트 관리",
     description: "이벤트 목록과 상세 운영 도구는 곧 연결됩니다.",
   },

@@ -380,7 +380,7 @@ function DashboardShell({ partner, email }: { partner: ManagedPartner; email: st
   );
 }
 
-function PartnerConsoleShell({
+export function PartnerConsoleShell({
   accountLabel,
   accountSub,
   mobileTitle,
@@ -518,7 +518,7 @@ function NoAccessCard({ email, onRetry }: { email: string; onRetry: () => void }
   );
 }
 
-function DashboardSkeleton() {
+export function DashboardSkeleton() {
   return (
     <>
       <div className="wph-skeleton wph-skeleton--header" />
@@ -533,7 +533,7 @@ function DashboardSkeleton() {
   );
 }
 
-function ConsoleEmptyState({
+export function ConsoleEmptyState({
   icon,
   title,
   description,
