@@ -30,6 +30,8 @@ type EventRow = {
   party_id: string;
   status: string;
   start_time: string;
+  current_participants: number;
+  max_participants: number;
 };
 
 type TicketRow = {
@@ -85,7 +87,7 @@ export async function buildSnapshot(
   const events = (await selectAllRows<EventRow>(
     supabase,
     "events",
-    "id, party_id, status, start_time",
+    "id, party_id, status, start_time, current_participants, max_participants",
   )).filter((e) => partyIdSet.has(e.party_id));
   const eventIds = events.map((e) => e.id);
   const partnerIds = uniqueStrings(parties.map((p) => p.partner_id));

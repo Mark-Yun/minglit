@@ -12,6 +12,8 @@ function stateWith(opts: {
   events?: Array<{
     id: string;
     status?: string;
+    current_participants?: number;
+    max_participants?: number;
     tickets?: Array<{
       id: string;
       status?: string;
@@ -39,12 +41,16 @@ function event(
   ticketId: string,
   overrides: Partial<{
     status: string;
+    current_participants: number;
+    max_participants: number;
     tickets: ReturnType<typeof ticket>[];
   }> = {},
 ) {
   return {
     id,
     status: "scheduled",
+    current_participants: 0,
+    max_participants: 10,
     tickets: [ticket(ticketId)],
     ...overrides,
   };
@@ -129,6 +135,22 @@ Deno.test({
 });
 
 Deno.test({
+  name: "applyAction.canExecute - false when event is at capacity",
+  fn: () => {
+    const state = stateWith({
+      events: [
+        event("e1", "t1", {
+          current_participants: 10,
+          max_participants: 10,
+        }),
+      ],
+      apps: [],
+    });
+    assertEquals(applyAction.canExecute(state), false);
+  },
+});
+
+Deno.test({
   name:
     "applyAction.buildPayload - returns event_id + ticket_id from a candidate",
   fn: () => {
@@ -155,6 +177,24 @@ Deno.test({
         event("e2", "t2"),
       ],
       apps: [{ event_id: "e1" }],
+    });
+    const payload = applyAction.buildPayload(state, rng);
+    assertEquals(payload.event_id, "e2");
+    assertEquals(payload.ticket_id, "t2");
+  },
+});
+
+Deno.test({
+  name: "applyAction.buildPayload - skips full events",
+  fn: () => {
+    const state = stateWith({
+      events: [
+        event("e1", "t1", {
+          current_participants: 10,
+          max_participants: 10,
+        }),
+        event("e2", "t2"),
+      ],
     });
     const payload = applyAction.buildPayload(state, rng);
     assertEquals(payload.event_id, "e2");
