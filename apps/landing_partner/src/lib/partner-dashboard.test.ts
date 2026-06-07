@@ -21,6 +21,9 @@ import {
   type PartnerParty,
 } from "./partner-events";
 import {
+  canEditPartnerSettlements,
+  canManagePartnerApplications,
+  canViewPartnerSettlements,
   dashboardSections,
   fetchCurrentPartner,
   getPartnerDashboardSection,
@@ -29,6 +32,22 @@ import {
   resolvePartnerLoginGate,
   type ManagedPartner,
 } from "./partner-dashboard";
+import {
+  applicationModeQueryValue,
+  applicationReviewResultMessage,
+  applicationTabForStatus,
+  applicationTabQueryValue,
+  bankStatusLabel,
+  filterApplications,
+  isReviewableApplicationStatus,
+  maskAccountNumber,
+  normalizeApplicationModeParam,
+  normalizeApplicationTabParam,
+  normalizeBankAccount,
+  normalizeSettlementRow,
+  validateBankAccountInput,
+  type PartnerApplication,
+} from "./partner-operations";
 
 const testUser = { id: "user-1", email: "owner@example.com" } as User;
 
@@ -103,6 +122,28 @@ test("dashboard section links used by the shell resolve to known placeholder rou
 test("partner inquiry link leaves the dashboard redirect route", () => {
   assert.equal(partnerInquiryHref, "mailto:contact@minglit.com");
   assert.equal(partnerInquiryHref.startsWith("/"), false);
+});
+
+test("settlement visibility requires owner role or settlement view permission", () => {
+  assert.equal(canViewPartnerSettlements({ role: "owner", permissions: [] }), true);
+  assert.equal(canViewPartnerSettlements({ role: "manager", permissions: ["SETTLEMENT_VIEW"] }), true);
+  assert.equal(canViewPartnerSettlements({ role: "manager", permissions: ["PARTNER_EDIT", "PARTY_MANAGE"] }), false);
+  assert.equal(canViewPartnerSettlements({ role: "staff", permissions: ["PARTY_MANAGE"] }), false);
+});
+
+test("settlement editing requires owner role or settlement edit permission", () => {
+  assert.equal(canEditPartnerSettlements({ role: "owner", permissions: [] }), true);
+  assert.equal(canEditPartnerSettlements({ role: "manager", permissions: ["SETTLEMENT_EDIT"] }), true);
+  assert.equal(canEditPartnerSettlements({ role: "manager", permissions: ["SETTLEMENT_VIEW"] }), false);
+  assert.equal(canEditPartnerSettlements({ role: "staff", permissions: ["PARTY_MANAGE"] }), false);
+});
+
+test("application management is independent from settlement visibility", () => {
+  assert.equal(canManagePartnerApplications({ role: "owner", permissions: [] }), true);
+  assert.equal(canManagePartnerApplications({ role: "manager", permissions: ["PARTY_MANAGE"] }), true);
+  assert.equal(canManagePartnerApplications({ role: "staff", permissions: ["APPLICATION_MANAGE"] }), false);
+  assert.equal(canManagePartnerApplications({ role: "staff", permissions: ["EVENT_MANAGE"] }), false);
+  assert.equal(canManagePartnerApplications({ role: "staff", permissions: ["SETTLEMENT_VIEW"] }), false);
 });
 
 test("party form validation rejects missing core fields and impossible capacity", () => {
@@ -447,6 +488,124 @@ test("normalized event rows split active and past events for hub ordering", () =
   assert.equal(eventStatusLabel(active[0], new Date("2026-06-08T00:00:00.000Z")), "모집 중");
 });
 
+test("partner application helpers group statuses by review tab", () => {
+  const applications = [
+    createApplication({ id: "pending", status: "pending" }),
+    createApplication({ id: "paid", status: "paid" }),
+    createApplication({ id: "rejected", status: "rejected" }),
+  ];
+
+  assert.equal(applicationTabForStatus("payment_pending"), "pending");
+  assert.equal(applicationTabForStatus("approved"), "approved");
+  assert.equal(applicationTabForStatus("cancelled"), "rejected");
+  assert.deepEqual(filterApplications(applications, "approved").map((item) => item.id), ["paid"]);
+});
+
+test("partner application review actions match the batch review RPC statuses", () => {
+  assert.equal(isReviewableApplicationStatus("pending"), true);
+  assert.equal(isReviewableApplicationStatus("pending_review"), true);
+  assert.equal(isReviewableApplicationStatus("payment_pending"), false);
+  assert.equal(isReviewableApplicationStatus("approved"), false);
+});
+
+test("partner application query params support deep-linked tab and roster mode", () => {
+  assert.equal(normalizeApplicationTabParam("대기"), "pending");
+  assert.equal(normalizeApplicationTabParam("approved"), "approved");
+  assert.equal(normalizeApplicationTabParam("거절"), "rejected");
+  assert.equal(normalizeApplicationTabParam("unknown"), "pending");
+  assert.equal(applicationTabQueryValue("pending"), "대기");
+  assert.equal(applicationTabQueryValue("approved"), "확정");
+  assert.equal(applicationTabQueryValue("rejected"), "거절");
+  assert.equal(normalizeApplicationModeParam("명단"), "roster");
+  assert.equal(normalizeApplicationModeParam("roster"), "roster");
+  assert.equal(normalizeApplicationModeParam("신청"), "applications");
+  assert.equal(applicationModeQueryValue("roster"), "명단");
+  assert.equal(applicationModeQueryValue("applications"), "신청");
+});
+
+test("partner application review messages surface skipped results", () => {
+  assert.equal(applicationReviewResultMessage("approve", {
+    approved: ["app-1"],
+    rejected: [],
+    skippedDueToCapacity: [],
+    skippedAlreadyProcessed: [],
+    remainingSlotsAfter: 0,
+  }), "신청을 승인했습니다.");
+  assert.equal(applicationReviewResultMessage("approve", {
+    approved: [],
+    rejected: [],
+    skippedDueToCapacity: ["app-1"],
+    skippedAlreadyProcessed: [],
+    remainingSlotsAfter: 0,
+  }), "정원이 가득 차 승인되지 않은 신청이 있습니다. 목록을 다시 확인해 주세요.");
+  assert.equal(applicationReviewResultMessage("reject", {
+    approved: [],
+    rejected: [],
+    skippedDueToCapacity: [],
+    skippedAlreadyProcessed: ["app-1"],
+    remainingSlotsAfter: 0,
+  }), "이미 처리된 신청이라 변경되지 않았습니다. 목록을 다시 확인해 주세요.");
+});
+
+test("partner settlement helpers normalize money rows and mask bank accounts", () => {
+  assert.deepEqual(normalizeSettlementRow({
+    id: "stl-1",
+    partnerId: "partner-1",
+    transferId: "tr-1",
+    amount: 120000,
+    currency: "KRW",
+    settlementDate: "2026-07-01",
+  }), {
+    id: "stl-1",
+    partnerId: "partner-1",
+    transferId: "tr-1",
+    amount: 120000,
+    currency: "KRW",
+    settlementDate: "2026-07-01",
+  });
+  assert.equal(maskAccountNumber("123456789012"), "123-*****-9012");
+  assert.deepEqual(normalizeBankAccount({
+    bank_code: "kb",
+    bank_name: "KB국민은행",
+    account_number: "123456789012",
+    account_holder: "김민글",
+    bank_verification_status: "manual_review_pending",
+  }), {
+    bankCode: "kb",
+    bankName: "KB국민은행",
+    accountNumber: "123-*****-9012",
+    accountHolder: "김민글",
+    verificationStatus: "manual_review_pending",
+  });
+});
+
+test("bank status labels treat manual review approval as verified", () => {
+  assert.equal(bankStatusLabel("verified"), "검증 완료");
+  assert.equal(bankStatusLabel("manual_review_approved"), "검증 완료");
+  assert.equal(bankStatusLabel("manual_review_pending"), "검토 대기");
+  assert.equal(bankStatusLabel("failed"), "검증 실패");
+  assert.equal(bankStatusLabel(null), "검토 필요");
+});
+
+test("bank account input requires bank, holder, and 10-16 digit account number", () => {
+  assert.deepEqual(validateBankAccountInput({
+    partnerId: "partner-1",
+    bankCode: "",
+    accountHolder: "",
+    accountNumber: "123",
+  }), [
+    "은행을 선택해 주세요.",
+    "예금주를 입력해 주세요.",
+    "계좌번호는 숫자 10~16자리로 입력해 주세요.",
+  ]);
+  assert.deepEqual(validateBankAccountInput({
+    partnerId: "partner-1",
+    bankCode: "kb",
+    accountHolder: "김민글",
+    accountNumber: "123-4567-8901",
+  }), []);
+});
+
 const expectedPartner: ManagedPartner = {
   id: "partner-1",
   name: "Minglit Lounge",
@@ -468,6 +627,23 @@ function createParty(overrides: Partial<PartnerParty> = {}): PartnerParty {
     ticketTemplates: [],
     recurrenceRule: null,
     events: [],
+    ...overrides,
+  };
+}
+
+function createApplication(overrides: Partial<PartnerApplication> = {}): PartnerApplication {
+  return {
+    id: "app-1",
+    eventId: "event-1",
+    userId: "user-1",
+    userName: "참가자",
+    ticketName: "일반",
+    amount: 10000,
+    status: "pending",
+    refundStatus: "none",
+    rejectionReason: null,
+    createdAt: "2026-07-01T00:00:00.000Z",
+    paidAt: null,
     ...overrides,
   };
 }
