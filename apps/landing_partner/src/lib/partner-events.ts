@@ -146,6 +146,11 @@ export const defaultEventFormValues: EventFormValues = {
   reason: "",
 };
 
+export function shouldOpenCancelDialog(value: string | string[] | undefined): boolean {
+  const firstValue = Array.isArray(value) ? value[0] : value;
+  return firstValue === "1" || firstValue === "true" || firstValue === "yes";
+}
+
 export async function fetchPartnerParties(
   supabase: SupabaseClient,
   partnerId: string,

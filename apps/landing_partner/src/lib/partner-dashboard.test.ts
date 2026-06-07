@@ -13,6 +13,7 @@ import {
   eventStatusLabel,
   eventToFormValues,
   normalizePartyRow,
+  shouldOpenCancelDialog,
   splitEvents,
   validateEventForm,
   validatePartyForm,
@@ -253,6 +254,15 @@ test("event update payload carries schedule change reason only when present", ()
   assert.equal(payload.action, "update");
   assert.equal(payload.event_id, "event-1");
   assert.equal(payload.reason, "장소 사정");
+});
+
+test("event edit cancel query opens only for explicit cancel intents", () => {
+  assert.equal(shouldOpenCancelDialog("1"), true);
+  assert.equal(shouldOpenCancelDialog("true"), true);
+  assert.equal(shouldOpenCancelDialog(["yes", "0"]), true);
+  assert.equal(shouldOpenCancelDialog(undefined), false);
+  assert.equal(shouldOpenCancelDialog("0"), false);
+  assert.equal(shouldOpenCancelDialog(["0", "yes"]), false);
 });
 
 test("event form values preserve existing minimum confirmed count", () => {

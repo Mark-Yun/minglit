@@ -57,7 +57,7 @@ type PartnerEventsState =
 
 type EventRouteMode =
   | { type: "create"; initialPartyId?: string }
-  | { type: "edit"; eventId: string };
+  | { type: "edit"; eventId: string; initialShowCancel?: boolean };
 
 type PartyRouteMode =
   | { type: "create" }
@@ -230,7 +230,7 @@ export function PartnerEventFormPage({ mode }: { mode: EventRouteMode }) {
   });
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [showCancel, setShowCancel] = useState(false);
+  const [showCancel, setShowCancel] = useState(mode.type === "edit" ? mode.initialShowCancel === true : false);
   const [cancelReason, setCancelReason] = useState("");
 
   const selectedParty = state.status === "ready"
