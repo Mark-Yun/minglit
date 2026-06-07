@@ -28,19 +28,29 @@ function snapshotWithOneEvent(): WorldSnapshot {
     party_id: "p1",
     status: "scheduled",
     start_time: new Date(Date.now() + 7 * 86400_000).toISOString(),
-    tickets: [{ id: "t1", price: 0 }],
+    current_participants: 0,
+    max_participants: 10,
+    tickets: [{
+      id: "t1",
+      price: 0,
+      status: "on_sale",
+      quantity: 10,
+      sold_count: 0,
+    }],
   });
   return snap;
 }
 
 /** Record-only transport — captures actions, always returns 200 OK */
-function recordingTransport(): { transport: Transport; calls: Action[] } {
+function recordingTransport(
+  data?: unknown,
+): { transport: Transport; calls: Action[] } {
   const calls: Action[] = [];
   return {
     transport: {
       execute(action) {
         calls.push(action);
-        return Promise.resolve({ ok: true, status: 200 });
+        return Promise.resolve({ ok: true, status: 200, data });
       },
     },
     calls,
@@ -73,7 +83,7 @@ Deno.test({
     const { transport, calls } = recordingTransport();
     await runCascade({
       actors: [{ id: "user-1", role: "user" }],
-      initialSnapshot: emptySnapshot(),  // no events → applyAction.canExecute=false
+      initialSnapshot: emptySnapshot(), // no events → applyAction.canExecute=false
       rates: defaultRates,
       transport,
       rng: createPRNG(1),
@@ -107,6 +117,133 @@ Deno.test({
 });
 
 Deno.test({
+  name:
+    "runCascade - successful free apply consumes local ticket availability within the same tick",
+  fn: async () => {
+    clearRegistry();
+    registerAction(applyAction);
+    const snap = snapshotWithOneEvent();
+    snap.events[0].tickets![0].quantity = 1;
+    snap.events[0].tickets![0].sold_count = 0;
+    const { transport, calls } = recordingTransport({
+      type: "free",
+      application_id: "app-1",
+    });
+
+    const { finalSnapshot, trace } = await runCascade({
+      actors: [
+        { id: "user-1", role: "user" },
+        { id: "user-2", role: "user" },
+      ],
+      initialSnapshot: snap,
+      rates: defaultRates,
+      transport,
+      rng: createPRNG(1),
+      ticks: 1,
+    });
+
+    assertEquals(calls.length, 1);
+    assertEquals(calls[0].actorId, "user-1");
+    assertEquals(trace.length, 1);
+    assertEquals(finalSnapshot.events[0].current_participants, 1);
+    assertEquals(finalSnapshot.events[0].tickets![0].sold_count, 1);
+    assertEquals(finalSnapshot.applications, [
+      {
+        id: "local:user-1:e1",
+        user_id: "user-1",
+        event_id: "e1",
+        status: "local_applied",
+      },
+    ]);
+  },
+});
+
+Deno.test({
+  name:
+    "runCascade - successful free apply consumes local event capacity within the same tick",
+  fn: async () => {
+    clearRegistry();
+    registerAction(applyAction);
+    const snap = snapshotWithOneEvent();
+    snap.events[0].max_participants = 1;
+    snap.events[0].tickets![0].quantity = 10;
+    snap.events[0].tickets![0].sold_count = 0;
+    const { transport, calls } = recordingTransport({
+      type: "free",
+      application_id: "app-1",
+    });
+
+    const { finalSnapshot, trace } = await runCascade({
+      actors: [
+        { id: "user-1", role: "user" },
+        { id: "user-2", role: "user" },
+      ],
+      initialSnapshot: snap,
+      rates: defaultRates,
+      transport,
+      rng: createPRNG(1),
+      ticks: 1,
+    });
+
+    assertEquals(calls.length, 1);
+    assertEquals(calls[0].actorId, "user-1");
+    assertEquals(trace.length, 1);
+    assertEquals(finalSnapshot.events[0].current_participants, 1);
+    assertEquals(finalSnapshot.events[0].tickets![0].sold_count, 1);
+  },
+});
+
+Deno.test({
+  name:
+    "runCascade - successful paid apply does not consume local ticket availability within the same tick",
+  fn: async () => {
+    clearRegistry();
+    registerAction(applyAction);
+    const snap = snapshotWithOneEvent();
+    snap.events[0].tickets![0].price = 15000;
+    snap.events[0].tickets![0].quantity = 1;
+    snap.events[0].tickets![0].sold_count = 0;
+    const { transport, calls } = recordingTransport({
+      type: "paid",
+      application_id: "app-1",
+      order_id: "order-1",
+      payment_amount: 15000,
+    });
+
+    const { finalSnapshot, trace } = await runCascade({
+      actors: [
+        { id: "user-1", role: "user" },
+        { id: "user-2", role: "user" },
+      ],
+      initialSnapshot: snap,
+      rates: defaultRates,
+      transport,
+      rng: createPRNG(1),
+      ticks: 1,
+    });
+
+    assertEquals(calls.length, 2);
+    assertEquals(calls.map((call) => call.actorId), ["user-1", "user-2"]);
+    assertEquals(trace.length, 2);
+    assertEquals(finalSnapshot.events[0].tickets![0].sold_count, 0);
+    assertEquals(finalSnapshot.applications, [
+      {
+        id: "local:user-1:e1",
+        user_id: "user-1",
+        event_id: "e1",
+        status: "local_applied",
+      },
+      {
+        id: "local:user-2:e1",
+        user_id: "user-2",
+        event_id: "e1",
+        status: "local_applied",
+      },
+    ]);
+  },
+});
+
+Deno.test({
   name: "runCascade - records error in trace when transport fails",
   fn: async () => {
     clearRegistry();
@@ -130,7 +267,8 @@ Deno.test({
 });
 
 Deno.test({
-  name: "runCascade - refreshSnapshot callback advances world state between ticks",
+  name:
+    "runCascade - refreshSnapshot callback advances world state between ticks",
   fn: async () => {
     clearRegistry();
     registerAction(applyAction);
@@ -148,7 +286,11 @@ Deno.test({
         return cur;
       },
     });
-    assertEquals(refreshCalls, 3, "refreshSnapshot must be invoked after each tick");
+    assertEquals(
+      refreshCalls,
+      3,
+      "refreshSnapshot must be invoked after each tick",
+    );
   },
 });
 
@@ -199,7 +341,11 @@ Deno.test({
     // 3 호출 사이 2 delay × 50ms = 100ms 최소 (모든 actor 가 action 발생 시)
     // policy 가 일부 skip 해도 1 call 발생하면 +50ms 보장. 최소 50ms 확인 (느슨한 lower bound).
     assertEquals(calls.length > 0, true, "at least one EF call expected");
-    assertEquals(elapsed >= 50, true, `elapsed (${elapsed}ms) should be >= 50ms with throttle`);
+    assertEquals(
+      elapsed >= 50,
+      true,
+      `elapsed (${elapsed}ms) should be >= 50ms with throttle`,
+    );
   },
 });
 
@@ -225,6 +371,10 @@ Deno.test({
     });
     const elapsed = performance.now() - start;
     assertEquals(calls.length > 0, true);
-    assertEquals(elapsed < 50, true, `elapsed (${elapsed}ms) should be < 50ms without throttle`);
+    assertEquals(
+      elapsed < 50,
+      true,
+      `elapsed (${elapsed}ms) should be < 50ms without throttle`,
+    );
   },
 });

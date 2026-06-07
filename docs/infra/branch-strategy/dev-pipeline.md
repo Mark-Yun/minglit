@@ -1,14 +1,16 @@
 # Dev Pipeline
 
-`dev` 브랜치가 integration-health trunk 역할: dev-staging 의 daily snapshot 을 받고, 새 dev commit 마다 health/CUJ signal 을 기록한다. `dev-rc-cut-gate` 는 commit status 와 dev cron install signal 을 평가해 `dev-rc-cut-pass` 를 쓰고, RC 는 그 status 를 보고 cut 한다. 이벤트 플로우 시뮬레이터는 dev Supabase pg_cron 으로 계속 돌며, backend prod deploy 는 main 머지 후 `main-deploy` 에서 수행한다.
+`dev` 브랜치가 integration-health trunk 역할: dev-staging 의 daily snapshot 을 받고, 새 dev commit 마다 health/MDS visual signal 을 기록한다. Flutter CUJ 는 web-mvp pivot 으로 동결되어 수동 block lever 로만 남는다. `dev-rc-cut-gate` 는 commit status 와 dev cron install signal 을 평가해 `dev-rc-cut-pass` 를 쓰고, RC 는 그 status 를 보고 cut 한다. 이벤트 플로우 시뮬레이터는 dev Supabase pg_cron 으로 계속 돌며, backend prod deploy 는 main 머지 후 `main-deploy` 에서 수행한다.
 
 ## 주요 workflow
 
 1. **`dev-staging-dev-cut`** — daily cron, dev-staging tip 을 직접 bump/tag 한 뒤 그 snapshot 으로 PR 생성
 2. **`dev-pr-gate`** — snapshot PR 머지 전 검증 (defensive)
 3. **`monitor-dev-cuj`** (동결 — web-mvp pivot) — disable 됨. `dev-soak/cuj-*` 는 `set-dev-soak-status` 수동 블락 레버로만 유지
-4. **`dev-rc-cut-gate`** — cut 직전 evaluator. dev health status + cron install run 확인 후 `dev-rc-cut-pass` set
-5. **`dev-deploy` / cron install** — dev 환경 deploy/smoke 가 필요할 때 수행. 이벤트 플로우 시뮬레이터는 dev pg_cron 으로 별도 운영
+4. **`sync-mds-render-snapshot`** — dev push 마다 MDS emulator render PNG 를 `artifacts/mds-render` 에 SHA-bound 저장하고 `mds-render/snapshot` status 기록
+5. **AI visual review** — `artifacts/mds-render` 의 dev SHA snapshot 을 MDS spec 과 비교하고 `dev-soak/app-ai-review` 기록
+6. **`dev-rc-cut-gate`** — cut 직전 evaluator. dev health status + cron install run 확인 후 `dev-rc-cut-pass` set
+7. **`dev-deploy` / cron install** — dev 환경 deploy/smoke 가 필요할 때 수행. 이벤트 플로우 시뮬레이터는 dev pg_cron 으로 별도 운영
 
 ## `dev-staging-dev-cut`
 
@@ -54,6 +56,7 @@ GitHub Issue 는 source-of-truth 가 아니다. Gate 판정은 commit status con
 | `dev-soak/backend-simulator` | `event-flow-simulator` reporter 또는 `deploy-dev-event-flow-cron` 실패 path | `dev-rc-cut-gate` |
 | `dev-soak/cuj-user` | `set-dev-soak-status` (manual; `monitor-dev-cuj` 동결) | manual |
 | `dev-soak/cuj-partner` | `set-dev-soak-status` (manual; `monitor-dev-cuj` 동결) | manual |
+| `mds-render/snapshot` | `sync-mds-render-snapshot` | `sync-mds-render-snapshot` |
 | `dev-soak/real-device` | real-device/Test Lab workflow 또는 AI agent | `dev-rc-cut-gate` |
 | `dev-soak/app-ai-review` | AI agent | `dev-rc-cut-gate` |
 | `dev-rc-cut-pass` | 없음 | `dev-rc-cut-gate` |
@@ -68,9 +71,10 @@ GitHub Issue 는 source-of-truth 가 아니다. Gate 판정은 commit status con
 |------|------|
 | Event-flow distributed simulator | candidate SHA 에서 `deploy-dev-event-flow-cron` success >= 1 + `dev-soak/backend-simulator` failure 없음 |
 | CUJ (동결 — web-mvp pivot) | run 요구 제거. `dev-soak/cuj-user` / `dev-soak/cuj-partner` failure 없음만 확인 (수동 블락 레버) |
+| MDS render snapshot | candidate SHA 에서 `mds-render/snapshot=success` + `artifacts/mds-render/snapshots/dev/<sha>/` 저장 완료 |
 | Legacy hourly/daily simulator | 수동 smoke 전용. RC cut gate 조건에서 제외 |
 | Real device | candidate 기준 required real-device signal success >= 1 (workflow TBD) |
-| App AI review | AI agent 가 candidate 기준 app-soak pass signal 제공 (입력 방식 TBD) |
+| App AI review | AI agent 가 candidate 기준 `artifacts/mds-render` snapshot 을 비교하고 `dev-soak/app-ai-review` pass signal 제공 |
 | Failure status | `dev-soak/*` context 의 최신 state 가 `failure` 가 아니어야 함 |
 | Positive evidence | required run history 와 required signal success 가 모두 존재해야 함. 미존재는 pass 가 아니라 unknown |
 
@@ -91,6 +95,7 @@ Snapshot 모델 — **auto-revert 없음**. dev 가 broken 상태로 잠시 머�
 
 - Status 미부여 (`dev-rc-cut-pass` 없음 → dev-rc-cut 이 이 commit 안 골라잡음)
 - 실패를 발견한 monitor/AI agent 가 `dev-soak/*` failure status 를 즉시 작성
+- MDS render 저장 실패는 `mds-render/snapshot=failure`, visual blocker 는 `dev-soak/app-ai-review=failure`
 - `shared-notify` 가 release-blocker issue 를 생성/갱신하되, issue 상태는 gate 판정 source-of-truth 로 쓰지 않음
 - 자동 이슈 + `P1-high` 라벨 + 직전 `dev-rc-cut-pass` 이후 머지된 PR 작성자들 assignee (AI agent 포함)
 - AI agent 가 fix PR 을 dev-staging 으로 작성 → dev-staging-pr-gate → 다음 dev-staging-dev-cut → 다음 dev-rc-cut-gate 가 검증
@@ -128,16 +133,27 @@ Snapshot 모델 — **auto-revert 없음**. dev 가 broken 상태로 잠시 머�
 - release promotion 과 독립적으로 계속 돈다
 - RC 에서는 main 배포 전 pre-main validation signal 로 사용한다
 
+### `sync-mds-render-snapshot`
+
+- `push` to `dev` 의 promoted SHA 를 기준으로 MDS emulator render 를 실행한다.
+- PNG 는 source branch 에 커밋하지 않고 `artifacts/mds-render` branch 의 `snapshots/dev/<dev-sha>/` 에만 커밋한다.
+- 해당 dev SHA 에 `mds-render/snapshot` status 를 쓴다. `target_url` 은 artifact branch/path 또는 workflow summary 를 가리킨다.
+- PNG diff 가 있으면 `sync-mds-render-snapshot` 이 `mds_render_snapshot_archived` repository dispatch 를 보내고, `triage-mds-render-snapshot-diff` 가 review issue 를 만든다.
+- AI visual review agent 는 이 branch 를 fetch 해 MDS spec PNG 와 비교한다. 확정 blocker 는 finding 당 별도 fix issue 로 만들고 `dev-soak/app-ai-review=failure` 를 기록한다. blocker 가 없으면 `dev-soak/app-ai-review=success` 를 기록한다.
+- 발견된 visual blocker/fix 는 모두 `dev-staging` PR 로 처리한다. `dev` 에 PNG/fix commit 을 직접 만들지 않는다.
+
 ## Artifact / 보존
 
 - 실패한 monitor/soak workflow: 30일 (스크린샷, 로그, APK)
 - 성공한 `dev-rc-cut-gate` evaluator run: 7일
+- MDS render PNG: `artifacts/mds-render` branch 에 SHA-bound path 로 영구 보존. Actions artifact 는 디버깅 보조용
 
 ## 결정해야 할 것
 
 - dev-staging-dev-cut cron 시각
 - backoff 임계 (3회 차단이 적정한가)
 - real-device/app AI review status writer 구현 방식
+- `sync-mds-render-snapshot` branch push/retry 구현 방식
 - `shared-notify` 의 release signal metadata/log tail 확장
 - Supabase RC branch TTL / seed data 정책
 
@@ -150,4 +166,4 @@ Snapshot 모델 — **auto-revert 없음**. dev 가 broken 상태로 잠시 머�
 - [branch-flow.md](./branch-flow.md) — workflow chain 그림
 
 ---
-_Reviewed: 2026-05-24 10:24_
+_Reviewed: 2026-06-04 22:11_

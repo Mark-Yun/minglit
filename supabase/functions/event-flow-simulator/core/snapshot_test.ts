@@ -37,10 +37,19 @@ Deno.test({
         party_id: "party-1000",
         status: "scheduled",
         start_time: new Date(Date.now() + 10 * 86_400_000).toISOString(),
+        current_participants: 3,
+        max_participants: 20,
       },
     ];
     const tickets = [
-      { id: "ticket-late", event_id: "event-late", price: 15000 },
+      {
+        id: "ticket-late",
+        event_id: "event-late",
+        price: 15000,
+        status: "on_sale",
+        quantity: 20,
+        sold_count: 3,
+      },
     ];
     const blocks = [
       {
@@ -100,8 +109,16 @@ Deno.test({
     assertEquals(snapshot.parties.length, 1001);
     assertEquals(snapshot.events.length, 1);
     assertEquals(snapshot.events[0].id, "event-late");
+    assertEquals(snapshot.events[0].current_participants, 3);
+    assertEquals(snapshot.events[0].max_participants, 20);
     assertEquals(snapshot.events[0].tickets, [
-      { id: "ticket-late", price: 15000 },
+      {
+        id: "ticket-late",
+        price: 15000,
+        status: "on_sale",
+        quantity: 20,
+        sold_count: 3,
+      },
     ]);
     assertEquals(snapshot.blocks, blocks);
   },

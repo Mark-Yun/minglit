@@ -22,8 +22,8 @@
 
 ## 알려진 정합성 이슈
 
-- `apply-event/index.ts` 의 status 가드는 `scheduled only` 로 Fix #998 의
-  user-create-order 와 불일치. 별도 이슈로 관리.
+- 없음. `apply-event` / `user-create-order` 모두 `isEventOpenForApplication`
+  (`scheduled` / `active`) 을 따른다.
 
 ## 관련
 
@@ -32,4 +32,4 @@
 
 ---
 
-_Reviewed: 2026-05-24 00:00_
+_Reviewed: 2026-06-07 19:30_

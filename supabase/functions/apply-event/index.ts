@@ -8,6 +8,7 @@ import { parseJsonBody } from "../_shared/request_utils.ts";
 import { isPlainRecord } from "../_shared/input_validation.ts";
 import {
   isEventFull,
+  isEventOpenForApplication,
   isTicketSoldOut,
 } from "../_shared/domains/event/availability.ts";
 import { blocksReapplication } from "../_shared/domains/payment/application_status.ts";
@@ -190,10 +191,8 @@ export const handler = async (
       return errorResponse("Event not found", 404);
     }
 
-    // 2. 이벤트 상태 확인 — scheduled 상태여야 신청 가능
-    // NOTE: user-create-order 는 scheduled OR active 허용 (Fix #998). 이 EF 는 scheduled only —
-    // 정합성 이슈 → `_shared/domains/event/BLUEDOC.md` 의 "알려진 정합성 이슈" 참조.
-    if (event.status !== "scheduled") {
+    // 2. 이벤트 상태 확인 — 도메인 정책상 scheduled / active 는 신청 가능
+    if (!isEventOpenForApplication(event.status)) {
       return errorResponse("Event is not accepting applications", 409, {
         status: event.status,
       });

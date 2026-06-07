@@ -1,0 +1,356 @@
+name: sync-mds-render-snapshot
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+    inputs:
+      target_sha:
+        description: Optional dev commit SHA to render. Defaults to current dev HEAD.
+        required: false
+        type: string
+      dry_run:
+        description: Plan only; do not run emulator, push artifact branch, or write status.
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: sync-mds-render-snapshot-${{ github.event_name == 'workflow_dispatch' && inputs.target_sha || github.sha }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  statuses: write
+  issues: write
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      target_sha: ${{ steps.plan.outputs.target_sha }}
+      dry_run: ${{ steps.plan.outputs.dry_run }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      - name: Resolve target SHA
+        id: plan
+        env:
+          INPUT_TARGET_SHA: ${{ inputs.target_sha || '' }}
+          INPUT_DRY_RUN: ${{ inputs.dry_run || false }}
+        run: |
+          set -euo pipefail
+
+          if [ -n "${INPUT_TARGET_SHA}" ]; then
+            TARGET_SHA="${INPUT_TARGET_SHA}"
+            git fetch origin dev --force
+            if ! git cat-file -e "${TARGET_SHA}^{commit}" 2>/dev/null; then
+              echo "::error::target_sha does not resolve to a commit: ${TARGET_SHA}"
+              exit 1
+            fi
+            if ! git merge-base --is-ancestor "${TARGET_SHA}" origin/dev; then
+              echo "::error::target_sha is not reachable from origin/dev: ${TARGET_SHA}"
+              exit 1
+            fi
+          else
+            TARGET_SHA="$(git rev-parse HEAD)"
+          fi
+
+          if [[ ! "${TARGET_SHA}" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "::error::target SHA must be a full 40-character commit SHA."
+            exit 1
+          fi
+
+          echo "target_sha=${TARGET_SHA}" >> "$GITHUB_OUTPUT"
+          echo "dry_run=${INPUT_DRY_RUN}" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## sync-mds-render-snapshot plan"
+            echo ""
+            echo "| Field | Value |"
+            echo "|---|---|"
+            echo "| target_sha | \`${TARGET_SHA}\` |"
+            echo "| dry_run | ${INPUT_DRY_RUN} |"
+            echo "| artifact_branch | \`artifacts/mds-render\` |"
+            echo "| snapshot_path | \`snapshots/dev/${TARGET_SHA}/\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  render-capture:
+    needs: plan
+    if: needs.plan.outputs.dry_run != 'true'
+    name: render-capture-${{ matrix.app }}-shard-${{ matrix.shard_index }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [user, partner]
+        shard_index: [0, 1, 2, 3]
+
+    env:
+      APP_NAME: ${{ matrix.app }}
+      SHARD_INDEX: ${{ matrix.shard_index }}
+      SHARD_TOTAL: 4
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.plan.outputs.target_sha }}
+          persist-credentials: false
+
+      - name: Create dev Flutter env file
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_DEV_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+          ENVIRONMENT: development
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN_FLUTTER }}
+          STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
+          GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_DEV_WEB_CLIENT_ID }}
+          KAKAO_LOCAL_REST_API_KEY: ${{ secrets.KAKAO_LOCAL_REST_API_KEY }}
+          KAKAO_MAP_JAVASCRIPT_KEY: ${{ secrets.KAKAO_MAP_JAVASCRIPT_KEY }}
+          JUSO_CONFIRM_KEY: ${{ secrets.JUSO_CONFIRM_KEY }}
+          IAMPORT_USER_CODE: ${{ secrets.IAMPORT_USER_CODE }}
+          MOBILE_REDIRECT_SCHEME: ${{ secrets.MOBILE_REDIRECT_SCHEME }}
+        run: bash .github/scripts/create-dev-flutter-env.sh
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9'
+          cache: true
+
+      - name: Allow git access to Flutter SDK dir
+        run: |
+          FLUTTER_SDK="$(dirname "$(dirname "$(command -v flutter)")")"
+          git config --global --add safe.directory "$FLUTTER_SDK"
+
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: apps/app_${{ matrix.app }}
+
+      - name: Enable KVM acceleration
+        if: runner.environment == 'github-hosted'
+        run: |
+          sudo mkdir -p /etc/udev/rules.d
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+
+      - name: Prepare empty render artifact directory
+        run: |
+          rm -rf docs/infra/mds-emulator-render
+          mkdir -p docs/infra/mds-emulator-render
+          touch docs/infra/mds-emulator-render/artifact-root.txt
+
+      - name: Run render shard on Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          profile: pixel_6
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          script: bash .github/scripts/run-mds-render-shard.sh
+
+      - name: Upload render shard artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mds-render-snapshot-${{ matrix.app }}-shard-${{ matrix.shard_index }}
+          path: docs/infra/mds-emulator-render
+          if-no-files-found: warn
+          retention-days: 14
+
+  archive:
+    needs: [plan, render-capture]
+    if: always() && needs.plan.outputs.dry_run != 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      snapshot_url: ${{ steps.archive.outputs.snapshot_url }}
+      snapshot_path: ${{ steps.archive.outputs.snapshot_path }}
+      png_count: ${{ steps.archive.outputs.png_count }}
+      changed: ${{ steps.archive.outputs.changed }}
+      archive_commit: ${{ steps.archive.outputs.archive_commit }}
+      before_commit: ${{ steps.archive.outputs.before_commit }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.plan.outputs.target_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Generate release bot token
+        id: release-bot
+        uses: ./.github/actions/release-bot-token
+        with:
+          fallback-app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
+          fallback-private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
+
+      - name: Mark snapshot pending
+        env:
+          GH_TOKEN: ${{ steps.release-bot.outputs.token }}
+          TARGET_SHA: ${{ needs.plan.outputs.target_sha }}
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${TARGET_SHA}" \
+            --method POST \
+            -f state=pending \
+            -f context=mds-render/snapshot \
+            -f description="MDS render snapshot archiving" \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+      - name: Check render shard result
+        if: needs.render-capture.result != 'success'
+        env:
+          GH_TOKEN: ${{ steps.release-bot.outputs.token }}
+          TARGET_SHA: ${{ needs.plan.outputs.target_sha }}
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${TARGET_SHA}" \
+            --method POST \
+            -f state=failure \
+            -f context=mds-render/snapshot \
+            -f description="MDS render capture failed" \
+            -f target_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          exit 1
+
+      - name: Clean merged render artifact directory
+        run: |
+          rm -rf docs/infra/mds-emulator-render
+          mkdir -p docs/infra/mds-emulator-render
+
+      - name: Download render artifacts
+        uses: actions/download-artifact@v5
+        with:
+          pattern: mds-render-snapshot-*-shard-*
+          merge-multiple: true
+          path: docs/infra/mds-emulator-render
+
+      - name: Archive MDS render snapshot
+        id: archive
+        env:
+          TARGET_SHA: ${{ needs.plan.outputs.target_sha }}
+          RENDER_SOURCE_DIR: docs/infra/mds-emulator-render
+          RELEASE_BOT_TOKEN: ${{ steps.release-bot.outputs.token }}
+          ARCHIVE_BRANCH: artifacts/mds-render
+          SNAPSHOT_CHANNEL: dev
+        run: bash .github/scripts/archive-mds-render-snapshot.sh
+
+      - name: Mark snapshot success
+        id: mark-snapshot-success
+        env:
+          GH_TOKEN: ${{ steps.release-bot.outputs.token }}
+          TARGET_SHA: ${{ needs.plan.outputs.target_sha }}
+          SNAPSHOT_URL: ${{ steps.archive.outputs.snapshot_url }}
+          PNG_COUNT: ${{ steps.archive.outputs.png_count }}
+        run: |
+          set -euo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${TARGET_SHA}" \
+            --method POST \
+            -f state=success \
+            -f context=mds-render/snapshot \
+            -f description="MDS snapshot archived (${PNG_COUNT} PNGs)" \
+            -f target_url="${SNAPSHOT_URL}"
+
+      - name: Mark snapshot failure
+        if: failure() && steps.mark-snapshot-success.outcome != 'success'
+        env:
+          GH_TOKEN: ${{ steps.release-bot.outputs.token }}
+          TARGET_SHA: ${{ needs.plan.outputs.target_sha }}
+        run: |
+          set -euo pipefail
+          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${TARGET_SHA}" \
+            --method POST \
+            -f state=failure \
+            -f context=mds-render/snapshot \
+            -f description="MDS render snapshot archive failed" \
+            -f target_url="${RUN_URL}"
+
+          title="[sync-mds-render-snapshot] archive failed for dev ${TARGET_SHA:0:8}"
+          body_file="$(mktemp)"
+          {
+            echo "Scheduler: sync-mds-render-snapshot"
+            echo ""
+            echo "## MDS render snapshot archive failure"
+            echo ""
+            echo "| Field | Value |"
+            echo "|---|---|"
+            echo "| Source dev SHA | \`${TARGET_SHA}\` |"
+            echo "| Status context | \`mds-render/snapshot=failure\` |"
+            echo "| Workflow run | ${RUN_URL} |"
+            echo ""
+            echo "The render snapshot was not archived, so visual review evidence is unavailable for this dev SHA."
+            echo ""
+            echo "<!-- minglit-mds-render-snapshot-archive-failure"
+            echo "source_sha: ${TARGET_SHA}"
+            echo "run_id: ${GITHUB_RUN_ID}"
+            echo "-->"
+          } > "${body_file}"
+
+          existing="$(
+            gh issue list \
+              --repo "${GITHUB_REPOSITORY}" \
+              --search "\"${title}\" in:title state:open" \
+              --json number \
+              --jq '.[0].number // empty'
+          )"
+          if [ -n "${existing}" ]; then
+            gh issue comment "${existing}" --repo "${GITHUB_REPOSITORY}" --body-file "${body_file}"
+          else
+            gh issue create \
+              --repo "${GITHUB_REPOSITORY}" \
+              --title "${title}" \
+              --body-file "${body_file}" \
+              --label automated \
+              --label P1-high
+          fi
+
+      - name: Dispatch snapshot diff triage
+        if: steps.archive.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ steps.release-bot.outputs.token }}
+          TARGET_SHA: ${{ needs.plan.outputs.target_sha }}
+          BEFORE_SHA: ${{ steps.archive.outputs.before_commit }}
+          AFTER_SHA: ${{ steps.archive.outputs.archive_commit }}
+          SNAPSHOT_PATH: ${{ steps.archive.outputs.snapshot_path }}
+          SNAPSHOT_URL: ${{ steps.archive.outputs.snapshot_url }}
+        run: |
+          set -euo pipefail
+          jq -n \
+            --arg before_sha "${BEFORE_SHA}" \
+            --arg after_sha "${AFTER_SHA}" \
+            --arg source_sha "${TARGET_SHA}" \
+            --arg snapshot_path "${SNAPSHOT_PATH}" \
+            --arg snapshot_url "${SNAPSHOT_URL}" \
+            '{
+              event_type: "mds_render_snapshot_archived",
+              client_payload: {
+                before_sha: $before_sha,
+                after_sha: $after_sha,
+                source_sha: $source_sha,
+                snapshot_path: $snapshot_path,
+                snapshot_url: $snapshot_url
+              }
+            }' \
+            | gh api "repos/${GITHUB_REPOSITORY}/dispatches" \
+                --method POST \
+                --input -
+
+  dry-run:
+    needs: plan
+    if: needs.plan.outputs.dry_run == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Summarize dry run
+        run: |
+          echo "Dry run only. Skipped emulator render, artifact branch push, and mds-render/snapshot status write."

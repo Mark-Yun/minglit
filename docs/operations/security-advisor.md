@@ -21,6 +21,18 @@ Each accepted finding must include:
 | `issue` | GitHub issue that records the decision. |
 | `reason` | Short operational rationale. |
 
+Rules may also include object scope:
+
+| Field | Meaning |
+|---|---|
+| `cache_key` | Exact Supabase Advisor `cache_key` to suppress for this finding name. |
+| `metadata` | Exact metadata key/value constraints, such as `schema`, `name`, and `arguments`. Values are matched against Advisor `metadata` first, then top-level finding fields. |
+
+Use name-only rules only for findings that are intrinsically environment-level.
+For object-level findings such as `extension_in_public`,
+`rls_enabled_no_policy`, or `*_security_definer_function_executable`, include
+`cache_key` or `metadata` so future unreviewed objects remain unsuppressed.
+
 ## Password Auth Posture
 
 Minglit production auth does not support email/password signup or login.

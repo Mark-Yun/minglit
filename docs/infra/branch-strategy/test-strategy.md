@@ -1,6 +1,6 @@
 # Test Strategy
 
-4-stage 모델 (`dev-staging → dev → rc → main`) + flag staged rollout 환경에서, *어떤 테스트가 어느 단계에서 도는가* 의 단일 source. 빠른 검사 = branch별 `*-pr-gate`, dev push health = event-flow/CUJ/real-device/app AI review, RC 후보 판정 = `dev-rc-cut-gate`, RC 5일 soak = `rc-main-cut-gate`, 프로덕션 검증 = `deploy-android-*, deploy-ios-*` smoke + flag staged.
+4-stage 모델 (`dev-staging → dev → rc → main`) + flag staged rollout 환경에서, *어떤 테스트가 어느 단계에서 도는가* 의 단일 source. 빠른 검사 = branch별 `*-pr-gate`, dev push health = event-flow/MDS render/real-device/app AI review (Flutter CUJ 는 web-mvp pivot 으로 동결), RC 후보 판정 = `dev-rc-cut-gate`, RC 5일 soak = `rc-main-cut-gate`, 프로덕션 검증 = `deploy-android-*, deploy-ios-*` smoke + flag staged.
 
 ## 단계별 게이트
 
@@ -9,7 +9,7 @@
 | dev-staging 머지 전 | `dev-staging-pr-gate` (unit · lint · analyze · pgTAP · EF test · migration check · `expand-migrate-contract` · `flag-registration` · gitleaks) | < 10분 | auto-merge 보류 |
 | dev-staging 머지 후 지속 검증 | `monitor-dev-staging-health` (EF unit/integration 중심) | 6시간마다 | 실패 즉시 issue/notify + `dev-staging-health/*` status |
 | dev 머지 전 | `dev-pr-gate` (dev-staging-pr-gate 와 동일 — defensive) | < 10분 | dev-staging-dev-cut PR drop |
-| dev 머지 후 health | `deploy-dev-event-flow-cron` + real-device/app AI review status writer (`monitor-dev-cuj` 는 동결 — web-mvp pivot) | push/monitor cadence | 실패 즉시 `dev-soak/*` failure status + release-blocker issue |
+| dev 머지 후 health | `deploy-dev-event-flow-cron` + MDS render snapshot + real-device/app AI review status writer (`monitor-dev-cuj` 는 동결 — web-mvp pivot) | push/monitor cadence | 실패 즉시 `mds-render/snapshot` 또는 `dev-soak/*` failure status + release-blocker issue |
 | RC cut 직전 | `dev-rc-cut-gate` evaluator (dev run history + `dev-soak/*` status 확인) | 분 | `dev-rc-cut-pass` 미부여 |
 | rc 머지 전 (hotfix) | dev-staging-first fix cherry-pick PR + `rc-pr-gate` (pr-gate + mobile smoke) | < 15분 | hotfix PR drop |
 | main 머지 전 (rc → main) | `main-pr-gate` (pr-gate + `expand-migrate-contract` 재검증 + RC HEAD 의 `dev-rc-cut-pass` 확인 + `rc-main-cut-pass` marker 확인) | 분 | promotion PR 보류 |
@@ -58,8 +58,9 @@ dev 에 들어간 latest HEAD 만 RC candidate 로 평가한다. 새 dev commit 
 | backend simulator | `deploy-dev-event-flow-cron` + pg_cron `dev-event-flow-simulator` | `dev-soak/backend-simulator` failure 즉시 | `dev-rc-cut-gate` 가 cron install + 1회 simulator tick run + failure status 확인 |
 | user CUJ (동결) | `set-dev-soak-status` manual lever | `dev-soak/cuj-user` 수동 failure 시 | required success evidence 아님 |
 | partner CUJ (동결) | `set-dev-soak-status` manual lever | `dev-soak/cuj-partner` 수동 failure 시 | required success evidence 아님 |
+| MDS render snapshot | `sync-mds-render-snapshot` | `mds-render/snapshot` failure 즉시 | same-SHA snapshot 이 `artifacts/mds-render/snapshots/dev/<sha>/` 에 저장되면 success |
 | real device | Test Lab/실디바이스 workflow | `dev-soak/real-device` failure 즉시 | `dev-rc-cut-gate` 가 required signal 확인 후 success |
-| app AI review | AI agent | `dev-soak/app-ai-review` failure 즉시 | `dev-rc-cut-gate` 가 pass signal 확인 후 success |
+| app AI review | AI agent | `dev-soak/app-ai-review` failure 즉시 | AI agent 가 MDS render snapshot 비교 후 pass signal 제공 |
 
 ### dev-rc-cut-gate — Evaluator
 
@@ -68,6 +69,7 @@ cut 직전 schedule/manual 로 실행한다. 통과 시 commit 에 GitHub status
 - candidate SHA 에서 `deploy-dev-event-flow-cron` success >= 1
 - `dev-soak/backend-simulator` failure status 없음
 - `dev-soak/cuj-user`, `dev-soak/cuj-partner` failure status 없음 (`monitor-dev-cuj` run 요구는 동결로 제거)
+- required visual review 사용 시 `mds-render/snapshot=success` + `dev-soak/app-ai-review` failure status 없음
 - legacy hourly/daily 는 수동 smoke 로만 실행
 - candidate 의 최신 `dev-soak/*` status 가 failure 가 아님
 - real-device/app AI review required signal 충족
@@ -106,6 +108,8 @@ RC 의 hotfix 만 받음. 기본은 dev-staging 에 먼저 머지된 fix commit/
 | 결정론적, < 10분 | `dev-staging-pr-gate` | PR 사이클 안 막음 |
 | flaky 또는 느림 (10분+) | dev health monitor / real-device workflow | PR 머지 게이트의 신뢰도 보호 |
 | CUJ (동결 — web-mvp pivot) | ~~`monitor-dev-cuj` on dev push~~ | Flutter CUJ 동결. 웹 MVP smoke/CUJ 로 대체 예정 |
+| MDS visual snapshot | `sync-mds-render-snapshot` on dev push + `artifacts/mds-render` archive | source branch 를 오염시키지 않고 SHA-bound visual evidence 보존 |
+| AI visual review | dev health monitor after MDS snapshot | MDS spec 대비 blocker 를 자동/반자동 검출하고 fix 는 dev-staging 으로 회수 |
 | 10분+ 이지만 nightly 전에 잡아야 하는 EF 회귀 | `monitor-dev-staging-health` | dev-staging 머지는 빠르게 유지하고 최대 6시간 내 발견 |
 | 외부 의존성 (실 결제 등) | dev health + flag canary | 비용·side effect 통제 |
 | 부하/성능 | scheduled monitor or staged rollout 메트릭 | 매일 무거움 |
@@ -119,8 +123,9 @@ RC 의 hotfix 만 받음. 기본은 dev-staging 에 먼저 머지된 fix commit/
 - 부하 테스트 도구 (k6 / Artillery / 자체)
 - mobile smoke 5개 핵심 경로 정의 + `dev-soak/real-device` status writer
 - AI app soak pass/fail status writer 구현
+- `sync-mds-render-snapshot` 구현과 AI visual review 비교 기준
 - 카나리 cohort 정의 (내부 직원 group)
 - `expand-migrate-contract` 구현 디테일 (Option C: DB schema only)
 
 ---
-_Reviewed: 2026-05-19 09:47_
+_Reviewed: 2026-06-04 22:11_

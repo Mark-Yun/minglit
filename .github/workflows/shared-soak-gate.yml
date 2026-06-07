@@ -31,6 +31,11 @@ on:
         required: false
         default: ''
         description: 'Newline-separated commit status contexts to mark success when eligible.'
+      required_success_contexts:
+        type: string
+        required: false
+        default: ''
+        description: 'Newline-separated commit status contexts that must already be success.'
       pass_context:
         type: string
         required: true
@@ -98,6 +103,7 @@ jobs:
           INPUT_REQUIRED_RUNS_JSON: ${{ inputs.required_runs_json }}
           INPUT_FAILURE_CONTEXTS: ${{ inputs.failure_contexts }}
           INPUT_SUCCESS_CONTEXTS: ${{ inputs.success_contexts }}
+          INPUT_REQUIRED_SUCCESS_CONTEXTS: ${{ inputs.required_success_contexts }}
           INPUT_PASS_CONTEXT: ${{ inputs.pass_context }}
           INPUT_PASS_DESCRIPTION: ${{ inputs.pass_description }}
           INPUT_DRY_RUN: ${{ inputs.dry_run }}
@@ -209,6 +215,14 @@ jobs:
               skip "${context} is failure on ${CANDIDATE_SHA}"
             fi
           done <<< "${INPUT_FAILURE_CONTEXTS}"
+
+          while IFS= read -r context; do
+            [ -z "${context}" ] && continue
+            state="$(jq -r --arg context "${context}" '.statuses[]? | select(.context == $context) | .state' <<< "${STATUS_JSON}" | head -n 1)"
+            if [ "${state}" != "success" ]; then
+              skip "${context} is ${state:-missing} on ${CANDIDATE_SHA}"
+            fi
+          done <<< "${INPUT_REQUIRED_SUCCESS_CONTEXTS}"
 
           TARGET_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           write_status() {

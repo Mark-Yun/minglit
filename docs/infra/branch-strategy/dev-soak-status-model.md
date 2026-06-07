@@ -10,6 +10,7 @@
 |--------|------|-----------|
 | Commit status | dev health failure/pass marker. `dev-rc-cut-gate` 가 직접 판정에 사용 | yes |
 | Workflow run history | monitor 가 실제로 돌았는지 확인 | yes |
+| `artifacts/mds-render` branch | dev SHA 별 MDS render PNG 보관 위치. status `target_url`/AI review 입력으로 사용 | no (evidence archive) |
 | GitHub Issue | 로그, 담당, 원인, 후속 조치 기록 | no |
 | GitHub label | 사람이 보는 분류/필터 | no |
 
@@ -38,6 +39,8 @@ Workflow 와 AI agent 는 commit status context 를 직접 하드코딩하지 �
 | `set-rc-soak-status` | public API (`workflow_call` + `workflow_dispatch`) | `signal` 을 `rc-soak/*` context 로 매핑한 뒤 `shared-set-commit-status` 호출 |
 
 외부 consumer 는 `shared-set-commit-status` 를 직접 호출하지 않는다. 공통 writer 는 context 를 검증하지 않는 low-level primitive 이므로, 사람이 직접 쓰면 stage/signal naming 을 우회할 수 있다.
+
+`mds-render/snapshot` 은 `dev-soak/*` signal 이 아니라 render archive availability status 다. writer 는 `sync-mds-render-snapshot` 이며, `target_url` 은 `artifacts/mds-render/snapshots/dev/<sha>/` 또는 workflow summary 를 가리킨다.
 
 ### `set-dev-soak-status`
 
@@ -92,8 +95,9 @@ RC soak 는 dev soak 와 signal set 이 달라질 수 있으므로 별도 entry 
 | `dev-soak/backend-simulator` | `event-flow-simulator` reporter / `dev-rc-cut-gate` | event-flow simulator 실패 즉시 `failure` | `dev-rc-cut-gate` 가 cron install run 을 확인한 뒤 `success` | backend/event-flow health signal |
 | `dev-soak/cuj-user` | `set-dev-soak-status` (manual; `monitor-dev-cuj` 동결 — web-mvp pivot) | 수동 블락 시 `failure` | required evidence 아님 — gate 는 failure 부재만 확인 | manual block lever (legacy: user app CUJ signal) |
 | `dev-soak/cuj-partner` | `set-dev-soak-status` (manual; `monitor-dev-cuj` 동결 — web-mvp pivot) | 수동 블락 시 `failure` | required evidence 아님 — gate 는 failure 부재만 확인 | manual block lever (legacy: partner app CUJ signal) |
+| `mds-render/snapshot` | `sync-mds-render-snapshot` | MDS render 또는 artifact branch 저장 실패 즉시 `failure` | same-SHA PNG 가 `artifacts/mds-render/snapshots/dev/<sha>/` 에 저장되면 `success` | AI visual review 의 screenshot evidence availability |
 | `dev-soak/real-device` | `set-dev-soak-status` via real-device workflow / `dev-rc-cut-gate` | Firebase Test Lab 또는 실디바이스 smoke 실패 즉시 `failure` | `dev-rc-cut-gate` 가 required run/signal 을 확인한 뒤 `success` | 실제 디바이스 안정성 signal |
-| `dev-soak/app-ai-review` | `set-dev-soak-status` via AI agent / `dev-rc-cut-gate` | AI/human 앱 review 중 blocker 발견 즉시 `failure` | `dev-rc-cut-gate` 가 AI review pass signal 을 확인한 뒤 `success` | screenshot/UX/manual-ish app review signal |
+| `dev-soak/app-ai-review` | `set-dev-soak-status` via AI agent / `dev-rc-cut-gate` | confirmed visual blocker 발견 즉시 `failure` | AI review 가 blocker 없음 확인 또는 `dev-rc-cut-gate` 확인 뒤 `success` | `artifacts/mds-render` 기반 screenshot/UX/manual-ish app review signal |
 | `dev-rc-cut-pass` | `dev-rc-cut-gate` | 작성하지 않음 | 모든 required dev health 조건 통과 시 `success` | RC cut source marker |
 
 실패 status 는 발견 즉시 찍는다. `dev-rc-cut-gate` 는 required run history 와 failure context 부재를 확인한 뒤 필요한 `dev-soak/*` success confirmation 과 `dev-rc-cut-pass` 를 쓴다. (`monitor-dev-cuj` 의 CUJ status 자동 기록은 web-mvp pivot 으로 동결 — [web-mvp-pivot.md](../../architecture/web-mvp-pivot.md))
@@ -132,9 +136,10 @@ Issue label 은 분류용이다. Gate 판정에는 사용하지 않는다.
 |--------|-----------|
 | `deploy-dev-event-flow-cron` | candidate SHA 에서 `success` run >= 1 |
 | ~~`monitor-dev-cuj`~~ (동결) | web-mvp pivot 으로 required run 에서 제외. 웹 MVP smoke/CUJ 신호로 대체 예정 |
+| `sync-mds-render-snapshot` | candidate SHA 에서 `mds-render/snapshot=success` + `artifacts/mds-render/snapshots/dev/<sha>/` 존재 |
 | legacy `monitor-event-flow-hourly/daily` | 수동 smoke 전용. gate run requirement 에서 제외 |
 | real-device smoke | candidate 기준 required run/signal success >= 1 (workflow 이름 TBD) |
-| app AI review | AI agent 가 candidate 기준 pass signal 제공 (workflow/status 입력 방식 TBD) |
+| app AI review | AI agent 가 candidate 의 MDS render snapshot 을 비교하고, blocker 없음은 success, confirmed blocker 는 failure 로 status 제공 |
 
 예시 조회:
 
@@ -195,9 +200,11 @@ blocks_rc_cut: true
    - `dev-soak/backend-simulator`
    - `dev-soak/cuj-user`
    - `dev-soak/cuj-partner`
+   - `mds-render/snapshot` (app AI review 가 required 인 경우)
    - `dev-soak/real-device`
    - `dev-soak/app-ai-review`
-4. 모두 통과하면 각 required `dev-soak/*` status 를 `success` 로 찍고 `dev-rc-cut-pass` 를 `success` 로 찍는다
+4. required MDS snapshot/run evidence 가 있으면 AI review 는 해당 snapshot 을 소비한다
+5. 모두 통과하면 각 required `dev-soak/*` status 를 `success` 로 찍고 `dev-rc-cut-pass` 를 `success` 로 찍는다
 
 실패 또는 미충족 시 `dev-rc-cut-pass` 는 쓰지 않는다.
 
@@ -208,10 +215,11 @@ Commit status 를 직접 관리하는 actor 는 GitHub App token 을 사용한�
 | Actor | 필요 권한 |
 |-------|-----------|
 | `shared-notify` / monitor workflows | Commit statuses: read/write, Issues: read/write |
+| `sync-mds-render-snapshot` | Contents: read/write on `artifacts/mds-render`, Commit statuses: read/write, Issues: read/write |
 | AI agent status writer | Commit statuses: read/write, Issues: read/write |
 | `dev-rc-cut-gate` | Commit statuses: read/write, Actions: read, Contents: read |
 
 Human 은 로컬에서 release bot token 을 사용하지 않는다. AI agent 가 app soak failure/pass 를 기록할 때도 같은 status context naming 을 따라야 한다.
 
 ---
-_Reviewed: 2026-05-24 13:05_
+_Reviewed: 2026-06-04 22:11_

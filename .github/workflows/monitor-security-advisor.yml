@@ -99,48 +99,23 @@ jobs:
           echo "$BODY" > advisor-${TYPE}.json
           echo "Wrote advisor-${TYPE}.json ($(echo "$BODY" | wc -c) bytes)"
 
-          # Count by level — support both {lints:[...]} and bare [...] shapes.
-          ITEMS=$(echo "$BODY" | jq -c '
+          ACCEPTED_FILE=".github/advisor-accepted-findings.json"
+          python3 .github/scripts/filter-advisor-findings.py \
+            --input "advisor-${TYPE}.json" \
+            --accepted-file "$ACCEPTED_FILE" \
+            --type "$TYPE" \
+            --env "$ENV" \
+            --accepted-output "advisor-${TYPE}-accepted.json" \
+            --unsuppressed-output "advisor-${TYPE}-unsuppressed.json"
+
+          ITEMS=$(jq -c '
             if type == "array" then .
             elif .lints? then .lints
             elif .data? then .data
             else [] end
-          ')
-          ACCEPTED_FILE=".github/advisor-accepted-findings.json"
-          if [ -f "$ACCEPTED_FILE" ]; then
-            ACCEPTED_ITEMS=$(echo "$ITEMS" | jq -c \
-              --slurpfile accepted "$ACCEPTED_FILE" \
-              --arg type "$TYPE" \
-              --arg env "$ENV" '
-              def finding_name: (.name // .title // .code // "");
-              def accepted:
-                . as $finding
-                | any($accepted[0][]; . as $rule
-                    | ($rule.type == null or $rule.type == $type)
-                    and (($rule.envs // ["dev", "main"]) | index($env))
-                    and ($rule.name == ($finding | finding_name)));
-              [ .[] | select(accepted) ]
-            ')
-            UNSUPPRESSED_ITEMS=$(echo "$ITEMS" | jq -c \
-              --slurpfile accepted "$ACCEPTED_FILE" \
-              --arg type "$TYPE" \
-              --arg env "$ENV" '
-              def finding_name: (.name // .title // .code // "");
-              def accepted:
-                . as $finding
-                | any($accepted[0][]; . as $rule
-                    | ($rule.type == null or $rule.type == $type)
-                    and (($rule.envs // ["dev", "main"]) | index($env))
-                    and ($rule.name == ($finding | finding_name)));
-              [ .[] | select(accepted | not) ]
-            ')
-          else
-            ACCEPTED_ITEMS="[]"
-            UNSUPPRESSED_ITEMS="$ITEMS"
-          fi
-          echo "$ACCEPTED_ITEMS" > "advisor-${TYPE}-accepted.json"
-          echo "$UNSUPPRESSED_ITEMS" > "advisor-${TYPE}-unsuppressed.json"
-
+          ' "advisor-${TYPE}.json")
+          ACCEPTED_ITEMS=$(jq -c '.' "advisor-${TYPE}-accepted.json")
+          UNSUPPRESSED_ITEMS=$(jq -c '.' "advisor-${TYPE}-unsuppressed.json")
           ERRORS=$(echo "$UNSUPPRESSED_ITEMS" | jq '[.[] | select((.level // .severity // "" | ascii_upcase) == "ERROR")] | length')
           WARNS=$(echo "$UNSUPPRESSED_ITEMS" | jq '[.[] | select((.level // .severity // "" | ascii_upcase) == "WARN")] | length')
           TOTAL=$(echo "$UNSUPPRESSED_ITEMS" | jq 'length')
