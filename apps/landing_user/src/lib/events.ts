@@ -226,11 +226,11 @@ async function fetchEventsFromSupabase(id?: string): Promise<FetchEventsResult> 
     };
     const response = await fetch(endpoint, fetchOptions);
 
-    if (!response.ok) return { rows: [], shouldUseDemoFallback: true };
+    if (!response.ok) return { rows: [], shouldUseDemoFallback: false };
 
     return { rows: (await response.json()) as PostgrestEvent[], shouldUseDemoFallback: false };
   } catch {
-    return { rows: [], shouldUseDemoFallback: true };
+    return { rows: [], shouldUseDemoFallback: false };
   }
 }
 

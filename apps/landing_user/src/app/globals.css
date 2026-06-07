@@ -757,6 +757,69 @@ button {
   border-radius: 999px;
 }
 
+.web-login-intent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 32px var(--spacing-screen-edge);
+  background: var(--color-background);
+}
+
+.web-login-intent__panel {
+  width: min(100%, 440px);
+  padding: 32px;
+  text-align: center;
+  background: var(--color-background);
+  border: 1px solid var(--color-divider);
+  border-radius: 8px;
+}
+
+.web-login-intent__logo {
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.web-login-intent h1 {
+  margin: 0 0 10px;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.web-login-intent p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.web-login-intent__actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.web-login-intent__primary,
+.web-login-intent__secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 18px;
+  font-weight: 800;
+  border-radius: 999px;
+}
+
+.web-login-intent__primary {
+  color: #fff;
+  background: var(--color-primary);
+}
+
+.web-login-intent__secondary {
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+}
+
 @media (max-width: 900px) {
   .wuh-header__inner {
     gap: 12px;

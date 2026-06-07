@@ -85,7 +85,7 @@ test("public event list uses demo fallback when local Supabase env is absent", a
   assert.equal(events[0]?.id, "demo-gangnam-social");
 });
 
-test("public event list uses demo fallback when Supabase fetch fails", async () => {
+test("public event list stays empty when configured Supabase fetch fails", async () => {
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "public-key";
   globalThis.fetch = async () => {
@@ -94,8 +94,17 @@ test("public event list uses demo fallback when Supabase fetch fails", async () 
 
   const events = await getPublicEvents();
 
-  assert.equal(events.length, 3);
-  assert.equal(events[0]?.id, "demo-gangnam-social");
+  assert.deepEqual(events, []);
+});
+
+test("public event list stays empty when configured Supabase responds with an error", async () => {
+  process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "public-key";
+  globalThis.fetch = async () => new Response("unauthorized", { status: 401 });
+
+  const events = await getPublicEvents();
+
+  assert.deepEqual(events, []);
 });
 
 async function captureSupabaseRequest(rows: unknown[]) {
