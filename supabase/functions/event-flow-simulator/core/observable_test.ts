@@ -13,12 +13,16 @@ Deno.test("projectForPartner scopes events and pending applications to owned par
         party_id: "party-owned",
         status: "scheduled",
         start_time: "2026-06-07T12:00:00.000Z",
+        current_participants: 0,
+        max_participants: 20,
       },
       {
         id: "event-other",
         party_id: "party-other",
         status: "scheduled",
         start_time: "2026-06-07T12:00:00.000Z",
+        current_participants: 0,
+        max_participants: 20,
       },
     ],
     applications: [

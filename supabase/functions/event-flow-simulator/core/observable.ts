@@ -12,6 +12,8 @@ export interface WorldSnapshot {
     party_id: string;
     status: string;
     start_time: string;
+    current_participants: number;
+    max_participants: number;
     tickets?: Array<{
       id: string;
       price: number;

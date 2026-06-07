@@ -28,6 +28,8 @@ function snapshotWithOneEvent(): WorldSnapshot {
     party_id: "p1",
     status: "scheduled",
     start_time: new Date(Date.now() + 7 * 86400_000).toISOString(),
+    current_participants: 0,
+    max_participants: 10,
     tickets: [{
       id: "t1",
       price: 0,
@@ -143,6 +145,7 @@ Deno.test({
     assertEquals(calls.length, 1);
     assertEquals(calls[0].actorId, "user-1");
     assertEquals(trace.length, 1);
+    assertEquals(finalSnapshot.events[0].current_participants, 1);
     assertEquals(finalSnapshot.events[0].tickets![0].sold_count, 1);
     assertEquals(finalSnapshot.applications, [
       {
@@ -152,6 +155,41 @@ Deno.test({
         status: "local_applied",
       },
     ]);
+  },
+});
+
+Deno.test({
+  name:
+    "runCascade - successful free apply consumes local event capacity within the same tick",
+  fn: async () => {
+    clearRegistry();
+    registerAction(applyAction);
+    const snap = snapshotWithOneEvent();
+    snap.events[0].max_participants = 1;
+    snap.events[0].tickets![0].quantity = 10;
+    snap.events[0].tickets![0].sold_count = 0;
+    const { transport, calls } = recordingTransport({
+      type: "free",
+      application_id: "app-1",
+    });
+
+    const { finalSnapshot, trace } = await runCascade({
+      actors: [
+        { id: "user-1", role: "user" },
+        { id: "user-2", role: "user" },
+      ],
+      initialSnapshot: snap,
+      rates: defaultRates,
+      transport,
+      rng: createPRNG(1),
+      ticks: 1,
+    });
+
+    assertEquals(calls.length, 1);
+    assertEquals(calls[0].actorId, "user-1");
+    assertEquals(trace.length, 1);
+    assertEquals(finalSnapshot.events[0].current_participants, 1);
+    assertEquals(finalSnapshot.events[0].tickets![0].sold_count, 1);
   },
 });
 

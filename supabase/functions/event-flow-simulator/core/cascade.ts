@@ -122,6 +122,10 @@ function applySuccessfulActionToSnapshot(
       if (event.id !== eventId || !event.tickets) return event;
       return {
         ...event,
+        current_participants: Math.min(
+          event.max_participants,
+          event.current_participants + 1,
+        ),
         tickets: event.tickets.map((ticket) =>
           ticket.id === ticketId
             ? {

@@ -11,6 +11,8 @@ const baseRates: Rates = { user: { user_apply: 1.0 }, partner: {} };
 const visibleEvent = {
   id: "e1",
   status: "scheduled",
+  current_participants: 0,
+  max_participants: 10,
   tickets: [{ id: "t1", status: "on_sale", quantity: 10, sold_count: 0 }],
 };
 
