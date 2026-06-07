@@ -17,10 +17,12 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
+  dashboardSections,
   dashboardSnapshot,
   resolvePartnerDashboardGate,
   resolvePartnerLoginGate,
   type ManagedPartner,
+  type PartnerDashboardSection,
 } from "@/lib/partner-dashboard";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
@@ -238,6 +240,83 @@ export function PartnerDashboardPage() {
   );
 }
 
+export function PartnerDashboardSectionPage({ section }: { section: PartnerDashboardSection }) {
+  const router = useRouter();
+  const [authState, setAuthState] = useState<AuthState>({ status: "loading" });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSection() {
+      const supabase = getSupabaseBrowserClient();
+      if (!supabase) {
+        setAuthState({ status: "config-error" });
+        return;
+      }
+
+      const gate = await resolvePartnerDashboardGate(supabase, section.href);
+      if (cancelled) return;
+
+      if (gate.status === "anonymous") {
+        router.replace(gate.loginRedirect);
+        return;
+      }
+
+      setAuthState(gate);
+    }
+
+    void loadSection();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [router, section.href]);
+
+  if (authState.status === "ready") {
+    return (
+      <PartnerConsoleShell accountLabel={authState.partner.name} accountSub={authState.email} mobileTitle={section.label}>
+        <ConsoleEmptyState
+          icon={<ClipboardList aria-hidden="true" />}
+          title={`${section.title} 준비 중입니다`}
+          description={section.description}
+          ctaHref="/dashboard"
+          ctaLabel="홈으로 돌아가기"
+        />
+      </PartnerConsoleShell>
+    );
+  }
+
+  return (
+    <PartnerConsoleShell accountLabel="확인 중" accountSub="Minglit Partner" mobileTitle={section.label}>
+      {authState.status === "loading" ? (
+        <DashboardSkeleton />
+      ) : authState.status === "no-access" ? (
+        <ConsoleEmptyState
+          icon={<ShieldAlert aria-hidden="true" />}
+          title="파트너 권한이 없어요"
+          description={`${authState.email} 계정에 연결된 파트너 멤버 권한을 찾지 못했습니다.`}
+          ctaHref="/login"
+          ctaLabel="다른 계정으로 로그인"
+        />
+      ) : (
+        <ConsoleEmptyState
+          icon={<ShieldAlert aria-hidden="true" />}
+          title="대시보드를 열 수 없어요"
+          description={
+            authState.status === "config-error"
+              ? "Supabase 공개 환경변수가 설정되지 않았습니다."
+              : authState.status === "error"
+                ? authState.message
+                : "다시 시도해 주세요."
+          }
+          ctaHref="/login"
+          ctaLabel="로그인으로 돌아가기"
+        />
+      )}
+    </PartnerConsoleShell>
+  );
+}
+
 function DashboardShell({ partner, email }: { partner: ManagedPartner; email: string }) {
   const greeting = useMemo(() => `${partner.name} 운영을 확인하세요`, [partner.name]);
 
@@ -265,7 +344,7 @@ function DashboardShell({ partner, email }: { partner: ManagedPartner; email: st
       <section className="wph-section" aria-label="오늘과 임박 이벤트">
         <div className="wph-section__title-row">
           <h2 className="wph-section__title">오늘·임박 이벤트</h2>
-          <Link className="wph-section__more" href="/dashboard/events">
+          <Link className="wph-section__more" href={dashboardSections[0].href}>
             전체 보기
           </Link>
         </div>
@@ -289,7 +368,7 @@ function DashboardShell({ partner, email }: { partner: ManagedPartner; email: st
                 <span className="wph-event-row__capacity-label">{event.capacityLabel}</span>
               </div>
               {event.pending > 0 ? <span className="wph-pending-badge">{event.pending} 대기</span> : null}
-              <Link className="wph-row-action" href="/dashboard/applications">
+              <Link className="wph-row-action" href={dashboardSections[1].href}>
                 관리
               </Link>
             </article>
@@ -315,14 +394,14 @@ function PartnerConsoleShell({
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const navItems = [
     { href: "/dashboard", label: "홈", icon: Home },
-    { href: "/dashboard/events", label: "이벤트", icon: CalendarDays },
-    { href: "/dashboard/applications", label: "신청", icon: ClipboardList, badge: "4" },
-    { href: "/dashboard/settlements", label: "정산", icon: Banknote },
+    { href: dashboardSections[0].href, label: dashboardSections[0].label, icon: CalendarDays },
+    { href: dashboardSections[1].href, label: dashboardSections[1].label, icon: ClipboardList, badge: "4" },
+    { href: dashboardSections[2].href, label: dashboardSections[2].label, icon: Banknote },
   ];
   const renderNavItems = (closeOnSelect = false) =>
     navItems.map((item) => {
       const Icon = item.icon;
-      const isActive = pathname === item.href;
+      const isActive = item.href === "/dashboard" ? pathname === item.href : pathname.startsWith(item.href);
 
       return (
         <Link

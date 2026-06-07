@@ -4,7 +4,9 @@ import test from "node:test";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 
 import {
+  dashboardSections,
   fetchCurrentPartner,
+  getPartnerDashboardSection,
   resolvePartnerDashboardGate,
   resolvePartnerLoginGate,
   type ManagedPartner,
@@ -65,6 +67,19 @@ test("login guard redirects authorized users to the sanitized next path", async 
     status: "ready",
     redirectTo: "/dashboard/events",
   });
+});
+
+test("dashboard section links used by the shell resolve to known placeholder routes", () => {
+  assert.deepEqual(
+    dashboardSections.map((section) => section.href),
+    ["/dashboard/events", "/dashboard/applications", "/dashboard/settlements"],
+  );
+
+  for (const section of dashboardSections) {
+    assert.equal(getPartnerDashboardSection(section.key), section);
+  }
+
+  assert.equal(getPartnerDashboardSection("missing"), null);
 });
 
 const expectedPartner: ManagedPartner = {

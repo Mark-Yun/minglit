@@ -21,6 +21,14 @@ export type PartnerLoginGate =
   | { status: "no-access"; email: string }
   | { status: "ready"; redirectTo: string };
 
+export type PartnerDashboardSection = {
+  key: "events" | "applications" | "settlements";
+  href: string;
+  label: string;
+  title: string;
+  description: string;
+};
+
 type PartnerPermissionRow = {
   partner_id: string;
   role: string;
@@ -121,6 +129,34 @@ export async function resolvePartnerLoginGate(
   }
 }
 
+export const dashboardSections: PartnerDashboardSection[] = [
+  {
+    key: "events",
+    href: "/dashboard/events",
+    label: "이벤트",
+    title: "이벤트 관리",
+    description: "이벤트 목록과 상세 운영 도구는 곧 연결됩니다.",
+  },
+  {
+    key: "applications",
+    href: "/dashboard/applications",
+    label: "신청",
+    title: "신청 관리",
+    description: "참가 신청 검토와 승인 도구는 곧 연결됩니다.",
+  },
+  {
+    key: "settlements",
+    href: "/dashboard/settlements",
+    label: "정산",
+    title: "정산 관리",
+    description: "정산 내역 확인과 지급 관리 도구는 곧 연결됩니다.",
+  },
+];
+
+export function getPartnerDashboardSection(section: string): PartnerDashboardSection | null {
+  return dashboardSections.find((item) => item.key === section) ?? null;
+}
+
 export const dashboardSnapshot = {
   todos: [
     {
@@ -128,7 +164,7 @@ export const dashboardSnapshot = {
       label: "승인 대기 신청",
       value: 4,
       description: "오늘 검토하면 게스트 응답 시간이 줄어요.",
-      href: "/dashboard/applications",
+      href: dashboardSections[1].href,
       alert: true,
     },
     {
@@ -136,7 +172,7 @@ export const dashboardSnapshot = {
       label: "임박 이벤트",
       value: 2,
       description: "이번 주 운영 일정과 정원을 확인하세요.",
-      href: "/dashboard/events",
+      href: dashboardSections[0].href,
       alert: false,
     },
     {
@@ -144,7 +180,7 @@ export const dashboardSnapshot = {
       label: "정산 확인",
       value: 1,
       description: "검토 가능한 정산 내역이 있어요.",
-      href: "/dashboard/settlements",
+      href: dashboardSections[2].href,
       alert: false,
     },
   ],
