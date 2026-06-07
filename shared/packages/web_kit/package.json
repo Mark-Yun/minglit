@@ -13,6 +13,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "gen:types": "supabase gen types typescript --local --workdir ../../.. > src/types/db.ts"
   },
   "dependencies": {
@@ -32,6 +33,7 @@
   "devDependencies": {
     "@types/node": "^25",
     "@types/react": "^19",
-    "typescript": "^6"
+    "typescript": "^6",
+    "vitest": "^3.2.4"
   }
 }
