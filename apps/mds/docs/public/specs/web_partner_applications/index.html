@@ -1,0 +1,2561 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<!-- ── Web spec metadata (machine-readable) ───────────────────── -->
+<meta name="feature-status" content="planned">
+<meta name="features" content="event-operation/participation-status-redesign">
+<meta name="surface" content="web_partner">
+<title>Spec — WebPartnerApplications (web_partner · /applications)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   WebPartnerApplications — 파트너웹 신청 관리 + 참가자 명단.
+   웹 MVP 코어 중의 코어 — 유저의 결제·신청이 이 화면에서 승인돼야
+   참가가 확정되고, 거절하면 전액 자동 환불이 시작된다.
+
+   데스크톱 도구형 master-detail: 좌측 신청 목록 + 우측 신청 상세.
+   1280px desktop baseline — mockup은 1280×800 캔버스를 0.5 scale로 렌더.
+   콘솔 셸(사이드바)은 web_partner_home 파일럿과 동일 — active만 신청 관리.
+
+   Partner brand: viewport-scoped --color-partner-primary (#6c3ce1).
+   ============================================================ */
+.viewport {
+  --color-primary: var(--color-partner-primary);   /* #6c3ce1 */
+  --spec-blueprint-rgb: 108, 60, 225;
+}
+body.dark-mode .viewport {
+  --color-primary: var(--color-partner-dark-primary); /* #9b7bec */
+}
+
+/* --- Desktop viewport (1280×800) + 0.5 scale wrapper --- */
+.viewport--desktop {
+  width: 1280px;
+  height: 800px;
+  border-radius: 12px;
+}
+.mock-scale {
+  width: 640px;
+  height: 400px;
+  overflow: hidden;
+  position: relative;
+}
+.mock-scale .viewport--desktop {
+  transform: scale(0.5);
+  transform-origin: top left;
+}
+.state-mini__mock { width: 664px; } /* 640 mock + 12px padding ×2 보정 */
+
+/* --- Desktop blueprint (560×350 = 1280×800 비율) --- */
+.layout-grid--desktop { grid-template-columns: 560px 1fr; }
+.blueprint--desktop {
+  width: 560px;
+  height: 350px;
+  border-radius: 8px;
+}
+
+/* ============================================================
+   Console shell — web_partner_home 파일럿과 토큰/치수 동일 (wpa- prefix)
+   ============================================================ */
+.wpa-shell {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  background: var(--color-surface);
+}
+.wpa-sidebar {
+  background: var(--color-background);
+  border-right: 1px solid var(--color-divider);
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-large) var(--spacing-medium);
+  min-height: 0;
+}
+.wpa-sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 var(--spacing-small) var(--spacing-large);
+}
+.wpa-sidebar__logo-img { height: 26px; width: auto; display: block; }
+.wpa-sidebar__brand-suffix {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--color-text-secondary);
+  opacity: 0.5;
+  letter-spacing: -0.2px;
+}
+.wpa-nav { display: flex; flex-direction: column; gap: 4px; }
+.wpa-nav__item {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 var(--spacing-sm);
+  border-radius: var(--radius-button);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.wpa-nav__item svg { width: 20px; height: 20px; flex-shrink: 0; }
+.wpa-nav__item--active {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+}
+.wpa-nav__badge {
+  margin-left: auto;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-chip);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.wpa-sidebar__footer {
+  margin-top: auto;
+  padding-top: var(--spacing-medium);
+  border-top: 1px solid var(--color-divider);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.wpa-sidebar__avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.wpa-sidebar__account-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.wpa-sidebar__account-sub {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+/* --- Main column --- */
+.wpa-main {
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: var(--spacing-xlarge) 40px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.wpa-main::-webkit-scrollbar { display: none; }
+
+/* --- ② 페이지 헤더 (타이틀 + 모드 세그먼트) --- */
+.wpa-pagehead {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-medium);
+}
+.wpa-pagehead__title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.3px;
+}
+.wpa-segment {
+  margin-left: auto;
+  display: flex;
+  gap: 2px;
+  background: var(--color-background);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-button);
+  padding: 3px;
+}
+.wpa-segment__item {
+  padding: 7px 16px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.wpa-segment__item--active {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+}
+
+/* --- ③ 이벤트 선택 바 --- */
+.wpa-eventbar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  background: var(--color-background);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  padding: 0 var(--spacing-large);
+  height: 60px;
+  flex-shrink: 0;
+  margin-bottom: var(--spacing-medium);
+  cursor: pointer;
+}
+.wpa-dday-chip {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px var(--spacing-small);
+  border-radius: var(--radius-button);
+  font-size: 12px;
+  font-weight: 700;
+}
+.wpa-dday-chip--today { background: var(--color-warning); color: #fff; }
+.wpa-dday-chip--soon { background: var(--color-primary); color: #fff; }
+.wpa-eventbar__text { flex: 1; min-width: 0; }
+.wpa-eventbar__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.wpa-eventbar__meta {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.wpa-pending-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: var(--radius-chip);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 700;
+}
+.wpa-eventbar__caret { width: 20px; height: 20px; color: var(--color-text-secondary); flex-shrink: 0; }
+
+/* --- ④⑤ work 영역 (목록 + 상세 2-col / 명단·empty 1-col) --- */
+.wpa-work {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: var(--spacing-large);
+  align-items: stretch;
+}
+.wpa-work--single { display: block; }
+.wpa-panel {
+  background: var(--color-background);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.wpa-work--single .wpa-panel { height: 100%; }
+
+/* --- ④ 신청 목록 패널 --- */
+.wpa-filters {
+  display: flex;
+  gap: 4px;
+  padding: var(--spacing-sm) var(--spacing-medium);
+  border-bottom: 1px solid var(--color-divider);
+  flex-shrink: 0;
+}
+.wpa-filter {
+  padding: 6px 12px;
+  border-radius: var(--radius-chip);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.wpa-filter--active {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+}
+.wpa-selectall {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+  padding: var(--spacing-small) var(--spacing-medium);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-divider) 60%, transparent);
+  flex-shrink: 0;
+}
+.wpa-rows { flex: 1; min-height: 0; overflow: hidden; }
+.wpa-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-medium);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-divider) 60%, transparent);
+  cursor: pointer;
+}
+.wpa-row--selected {
+  background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  box-shadow: inset 3px 0 0 var(--color-primary);
+}
+.wpa-check {
+  width: 18px; height: 18px;
+  border: 2px solid var(--color-divider);
+  border-radius: 4px;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.wpa-check svg { width: 12px; height: 12px; display: none; }
+.wpa-check--on {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.wpa-check--on svg { display: block; }
+.wpa-row__avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+  font-size: 14px;
+  font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.wpa-row__info { flex: 1; min-width: 0; }
+.wpa-row__name {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.wpa-row__name svg { width: 14px; height: 14px; color: var(--color-success); flex-shrink: 0; }
+.wpa-row__sub {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.wpa-row__right { flex-shrink: 0; text-align: right; }
+.wpa-paychip {
+  display: inline-flex;
+  padding: 3px 8px;
+  border-radius: var(--radius-chip);
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
+  color: var(--color-success);
+  font-size: 11px;
+  font-weight: 700;
+}
+.wpa-row__time {
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+.wpa-selectbar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-medium);
+  border-top: 1px solid var(--color-divider);
+  background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+  flex-shrink: 0;
+}
+.wpa-selectbar__count { font-size: 13px; font-weight: 700; color: var(--color-primary); }
+.wpa-selectbar__clear {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+/* --- ⑤ 신청 상세 패널 --- */
+.wpa-detail { padding: var(--spacing-large); }
+.wpa-detail__profile { display: flex; align-items: center; gap: var(--spacing-medium); }
+.wpa-detail__avatar {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+  font-size: 20px;
+  font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.wpa-detail__name-row { display: flex; align-items: center; gap: var(--spacing-small); }
+.wpa-detail__name { font-size: 18px; font-weight: 700; color: var(--color-text-primary); }
+.wpa-verify-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: var(--radius-chip);
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
+  color: var(--color-success);
+  font-size: 11px;
+  font-weight: 700;
+}
+.wpa-verify-badge svg { width: 12px; height: 12px; }
+.wpa-verify-badge--off {
+  background: color-mix(in srgb, var(--color-divider) 60%, transparent);
+  color: var(--color-text-secondary);
+}
+.wpa-detail__meta { margin-top: 4px; font-size: 13px; color: var(--color-text-secondary); }
+.wpa-info { margin-top: var(--spacing-large); border-top: 1px solid var(--color-divider); }
+.wpa-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-divider) 60%, transparent);
+  font-size: 13px;
+}
+.wpa-info-row__label { color: var(--color-text-secondary); }
+.wpa-info-row__value { color: var(--color-text-primary); font-weight: 600; text-align: right; }
+.wpa-detail__note {
+  margin-top: auto;
+  padding: 10px var(--spacing-sm);
+  background: var(--color-surface);
+  border-radius: var(--radius-small);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+.wpa-detail__actions { margin-top: var(--spacing-sm); display: flex; gap: var(--spacing-small); }
+.wpa-btn {
+  height: 38px;
+  padding: 0 var(--spacing-medium);
+  border-radius: var(--radius-button);
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  border: none;
+}
+.wpa-btn--primary { background: var(--color-primary); color: #fff; }
+.wpa-btn--outline {
+  background: transparent;
+  border: 1px solid var(--color-divider);
+  color: var(--color-text-primary);
+}
+.wpa-btn--danger-outline {
+  background: transparent;
+  border: 1px solid var(--color-error);
+  color: var(--color-error);
+}
+.wpa-btn--error { background: var(--color-error); color: #fff; }
+.wpa-btn--lg { height: 46px; flex: 1; font-size: 14px; font-weight: 700; }
+.wpa-btn svg { width: 16px; height: 16px; }
+
+/* --- 일괄 선택 요약 (우측 패널 교체) --- */
+.wpa-bulk { padding-top: var(--spacing-small); }
+.wpa-bulk__num { font-size: 24px; font-weight: 700; color: var(--color-primary); letter-spacing: -0.3px; }
+.wpa-bulk__names { margin-top: var(--spacing-small); font-size: 14px; font-weight: 600; color: var(--color-text-primary); }
+.wpa-bulk__hint {
+  margin-top: var(--spacing-sm);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+}
+
+/* --- 거절 확인 다이얼로그 --- */
+.wpa-scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--color-scrim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+.wpa-dialog {
+  width: 460px;
+  background: var(--color-background);
+  border-radius: var(--radius-dialog);
+  padding: var(--spacing-large);
+}
+.wpa-dialog__title { font-size: 18px; font-weight: 700; color: var(--color-text-primary); letter-spacing: -0.2px; }
+.wpa-notice {
+  margin-top: var(--spacing-sm);
+  background: color-mix(in srgb, var(--color-warning) 8%, transparent);
+  border-left: 3px solid var(--color-warning);
+  border-radius: var(--radius-small);
+  padding: var(--spacing-sm);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--color-text-primary);
+}
+.wpa-reason-label { margin-top: var(--spacing-medium); font-size: 13px; font-weight: 600; color: var(--color-text-primary); }
+.wpa-reasons { display: flex; flex-wrap: wrap; gap: var(--spacing-small); margin-top: var(--spacing-small); }
+.wpa-reason {
+  padding: 7px 12px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-chip);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+.wpa-reason--on {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+.wpa-reason-help {
+  margin-top: var(--spacing-small);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.wpa-dialog__actions {
+  margin-top: var(--spacing-large);
+  display: flex;
+  gap: var(--spacing-small);
+  justify-content: flex-end;
+}
+
+/* --- 참가자 명단 (roster) --- */
+.wpa-roster-head {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-medium) var(--spacing-large);
+  border-bottom: 1px solid var(--color-divider);
+  flex-shrink: 0;
+}
+.wpa-roster-head__title { font-size: 16px; font-weight: 700; color: var(--color-text-primary); }
+.wpa-roster-head__hint { font-size: 12px; color: var(--color-text-secondary); }
+.wpa-roster-head .wpa-btn { margin-left: auto; }
+.wpa-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.wpa-table th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  padding: 10px var(--spacing-large);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-divider);
+}
+.wpa-table td {
+  padding: var(--spacing-sm) var(--spacing-large);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-divider) 60%, transparent);
+  color: var(--color-text-primary);
+}
+.wpa-table td.muted { color: var(--color-text-secondary); }
+.wpa-table .verify-cell svg { width: 16px; height: 16px; color: var(--color-success); }
+.wpa-entrybox {
+  width: 20px; height: 20px;
+  border: 2px solid var(--color-divider);
+  border-radius: 4px;
+}
+
+/* --- Empty hero --- */
+.wpa-empty {
+  background: var(--color-background);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-xxlarge) var(--spacing-large);
+  text-align: center;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.wpa-empty__emoji { font-size: 44px; }
+.wpa-empty__title {
+  margin-top: var(--spacing-medium);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.wpa-empty__sub {
+  margin-top: var(--spacing-small);
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+}
+
+/* --- Skeleton --- */
+.wpa-skeleton {
+  background: var(--color-divider);
+  border-radius: var(--radius-small);
+  animation: wpa-shimmer 1.5s ease-in-out infinite;
+}
+@keyframes wpa-shimmer {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.95; }
+}
+.wpa-skeleton--title { width: 180px; height: 28px; }
+.wpa-skeleton--bar { height: 60px; border-radius: var(--radius-card); margin-bottom: var(--spacing-medium); }
+.wpa-skeleton--row { height: 60px; margin: var(--spacing-sm) var(--spacing-medium); }
+.wpa-skeleton--block { height: 120px; margin: var(--spacing-large); border-radius: var(--radius-card); }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     Toolbar — universal toggles
+     ============================================================ -->
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     📍 HEADER
+     ============================================================ -->
+<header>
+  <h1>파트너웹 신청 관리 · 참가자 명단</h1>
+</header>
+
+<!-- ============================================================
+     🎯 OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 160px;">Status</th>
+        <td>
+          <strong>🚧 디자인중</strong>
+          <em style="color: var(--color-text-secondary);">— web-mvp pivot Phase 3 · 파트너웹 코어 승인대 (유저 결제가 여기서 승인돼야 확정)</em>
+        </td>
+      </tr>
+      <tr>
+        <th>Surface</th>
+        <td><code>web_partner</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>partner · application · approval workflow · roster</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>/applications</code> · Next.js route (landing_partner 확장 — <a href="/specs/web_partner_home/index.html"><code>web_partner_home</code></a> 콘솔 셸의 "신청 관리" 메뉴). 주소가 이벤트·필터 탭·모드를 기억한다 — <code>/applications?event=…&amp;tab=대기|확정|거절&amp;mode=신청|명단</code> (param 표기는 구현 시 확정).</td>
+      </tr>
+      <tr>
+        <th>Behavior Source</th>
+        <td>
+          <a href="/specs/event_application_manage_page/index.html"><code>/specs/event_application_manage_page/index.html</code></a>
+          — 승인/거절 즉시 처리 · 처리된 행 자연 소멸 · 일괄 승인 + 확인 다이얼로그 · 일부 실패 시 실패분만 안내 · 같은 신청 중복 처리 race("이미 처리됨" 안내) · 탭(상태)별 독립 데이터를 상속.
+          보조: <a href="/specs/event_application_detail_page/index.html"><code>event_application_detail_page</code></a> (신청자 프로필·결제 정보 구성, 심사 대기에서만 액션 노출, 거절 사유 다이얼로그) ·
+          <a href="/specs/event_application_list_page/index.html"><code>event_application_list_page</code></a> (단일 이벤트로 좁힌 참가 현황 · 결제 완료 기준 확정 참가자 · 처리 후 리스트 fresh 정책).
+          <br>웹에서 달라지는 점: <strong>입장그룹 sub-section · 배치 심사 carousel · 커스텀 자격심사(제출물 심사)는 deprecated — 승인/거절만</strong>.
+          모바일 3화면(cross-event hub → 목록 → 상세 push)을 데스크톱 <strong>이벤트 선택 + master-detail 1화면</strong>으로 통합.
+          거절 다이얼로그가 <strong>자동 전액 환불 + 알림 고지</strong>와 <strong>사유 선택(프리셋 칩)</strong>을 포함 (모바일은 자유 입력만).
+          일괄 승인은 "전체 승인" 대신 <strong>체크박스 다중 선택</strong> 기반. 참가자 명단 모드(인쇄 친화)가 추가.
+        </td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <a href="/specs/web_partner_home/index.html"><code>WebPartnerHome</code></a> 콘솔 셸 — 사이드바 "신청 관리" 메뉴 (active).<br>
+          <strong>Children</strong>: 신청 목록 패널 · 신청 상세 패널 · 거절 확인 다이얼로그 · 참가자 명단은 모두 internal — 별도 spec 없음.
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          <strong>유저의 결제·신청이 파트너 승인을 받아 참가로 확정되는 화면.</strong>
+          웹 MVP에서 유저는 결제까지 마친 상태로 대기 목록에 들어오고, 파트너가 승인하면 명단에 오르며
+          거절하면 전액이 자동 환불된다. 같은 화면의 참가자 명단 모드에서 확정자 명단을 보고 인쇄해
+          현장 입장 확인(이름 대조)에 쓴다.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: 사이드바 "신청 관리" (대기 badge) · 홈 대기 카드 / 이벤트 카드의 "대기 N건 검토" (해당 이벤트 + 대기 탭으로 딥링크) · 홈 이벤트 카드의 "참가자 명단" (해당 이벤트 + 명단 모드로 딥링크) · 신청 도착 알림 메일의 링크 · URL 직접 진입/북마크.<br>
+          <strong>Exit points</strong>: 명단 인쇄(브라우저 인쇄) · 이벤트 선택 바 → 다른 이벤트 · 사이드바 → 홈/파티·이벤트/정산 · 비로그인이면 파트너 로그인으로.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          web-mvp pivot(<code>docs/architecture/web-mvp-pivot.md</code>)으로 신청 심사가 <strong>승인/거절만</strong>으로 축소됐다 —
+          커스텀 자격 요구·제출물 심사·입장그룹 배치 심사는 범위 외. 모바일에서 cross-event hub /
+          단일 이벤트 목록 / 신청 상세 3개 화면 + carousel로 나뉘었던 흐름을, 데스크톱 넓은 화면에 맞춰
+          <strong>이벤트 선택 → 좌측 목록 → 우측 상세</strong> master-detail 한 장으로 합쳤다.
+          웹 MVP는 결제 선행 모델 — 대기 신청은 이미 결제가 끝난 상태라 <strong>거절 = 환불 이벤트</strong>다.
+          그래서 승인은 가볍게(원클릭 · 일괄 승인), 거절은 한 박자 무겁게(확인 다이얼로그 + 환불 고지 + 사유)
+          설계했다. QR 체크인이 deprecated되면서 입장 확인은 확정자 명단 인쇄 + 현장 이름 대조로 단순화 — 명단 모드가 그 받침이다.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>모집 중 이벤트가 있는 파트너는 하루 수회 — 알림 메일/홈 대기 카드가 트리거. 이벤트 당일엔 명단 모드로 1회 이상 (인쇄).</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     🕐 HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">
+    이 spec의 주요 변경 이력. 최신 항목 위에 추가 (최신 → 오래된 순).
+  </p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-06-07</td>
+        <td>1.1</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>교차 검증 반영 — 열린 질문 2건 확정</strong> —
+          ① <strong>이벤트 시작 시 미처리 대기 자동 만료</strong>(자동 거절 + 전액 자동 환불 · 백엔드 자동화 책임) 확정:
+          <code>web_user_checkout</code> 동의/완료 문구("파트너가 거절하거나 이벤트 시작까지 승인되지 않으면 전액 자동 환불")와 정합.
+          대기 목록 안내 1줄 + Global Behavior 자동 만료 규칙 행 추가, 미정 표기 제거.
+          ② <strong>거절 사유는 신청자에게 그대로 노출</strong> 확정: <code>web_user_purchases</code>가 신청 상태 타임라인에
+          거절 사유 박스를 표시 (<code>event_application_review_page</code> 상속). 다이얼로그에
+          "선택한 사유는 신청자에게 표시돼요" helper 추가.
+          ③ 정원 초과 승인 "경고 후 허용"은 설계 유지 (Mark 확인 대기 노트만).
+        </td>
+      </tr>
+      <tr>
+        <td>2026-06-07</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>web-mvp pivot Phase 3 초기 설계 (1280 baseline)</strong> —
+          이벤트 선택 + 좌측 신청 목록(대기/확정/거절 필터) + 우측 신청 상세 master-detail.
+          거절 = 확인 다이얼로그(자동 전액 환불 + 알림 고지 · 사유 프리셋 칩). 체크박스 다중 선택 일괄 승인.
+          참가자 명단 모드(확정자 · 인쇄 친화 · QR 없음 — 현장 이름 대조).
+          6 state (대기 목록 기본 · 신청 0건 · 거절 확인 다이얼로그 · 참가자 명단 모드 · 일괄 선택 중 · Loading).
+          입장그룹/배치 심사 carousel/커스텀 자격심사는 deprecated로 제외.
+          Behavior Source: <code>event_application_manage_page</code> v1.1 (+ detail/list 보조).
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     Anchor nav
+     ============================================================ -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Responsive Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#global-behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     🧱 PERSPECTIVE 1 · RESPONSIVE LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Responsive Layout</h2>
+    <span class="lede">
+      화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.
+      <strong>web_partner는 데스크톱 우선</strong> (<code>web_foundation_responsive</code> surface priority) —
+      Desktop(≥1280) blueprint가 1차 산출물.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Breakpoint variants</h2>
+    <p class="intro">
+      Breakpoint · 컨테이너 · 그리드 정의의 SSOT는
+      <a href="/specs/web_foundation_responsive/"><code>web_foundation_responsive</code></a>.
+      운영 도구 화면이므로 콘솔 셸 전체 폭 <code>1440px</code> 캡 (풀-와이드 도구 화면 규칙) —
+      <a href="/specs/web_partner_home/index.html"><code>web_partner_home</code></a> 셸과 동일.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 160px;">Variant</th>
+          <th style="width: 180px;">Breakpoint</th>
+          <th>이 화면에서의 차이</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Desktop</strong> (기본 — 이 surface의 1차 variant)</td><td><code>≥ 1280px</code></td><td>사이드바 240px + 메인. 메인은 페이지 헤더 → 이벤트 선택 바 → <strong>목록 380px 고정 + 상세 fluid 2-col</strong>. 명단 모드에선 2-col이 풀-와이드 명단 패널 1장으로 교체.</td></tr>
+        <tr><td>Tablet</td><td><code>768–1279px</code></td><td>Desktop 레이아웃 축소 — 사이드바 200px, 목록 패널 320px. 명단 표는 가로 스크롤 없이 열 간격만 축소. 별도 blueprint 없음.</td></tr>
+        <tr><td><strong>Mobile</strong></td><td><code>&lt; 768px</code></td><td>상단 바(브랜드 + 메뉴 드로어) + 단일 컬럼: 이벤트 선택 → 모드 세그먼트 → 필터 칩 → 신청 카드 리스트. <strong>상세는 행 탭 시 풀스크린 시트</strong>로 — 승인/거절/일괄 선택은 모바일에서도 가능 (현장에서 폰으로 막판 승인하는 케이스).</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree — Desktop (≥1280px, 기본)</h2>
+    <p class="intro">
+      콘솔 셸(사이드바) + 메인. 메인은 페이지 헤더(타이틀 + 모드 세그먼트) → 이벤트 선택 바 →
+      좌측 신청 목록 패널 + 우측 신청 상세 패널. 두 패널은 화면 높이에 꽉 차고 각자 내부 스크롤 —
+      페이지 전체 스크롤이 아니라 <strong>목록만 스크롤</strong>되는 도구 문법.
+      blueprint는 1280×800 비율(560×350)로 그림.
+    </p>
+
+    <div class="layout-grid layout-grid--desktop">
+      <div class="blueprint blueprint--desktop">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- ① Sidebar: 240/1280 → 105/560 -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0; left:0; bottom:0; width:105px;">
+          <span class="blueprint__region-label">① 사이드바 · w=240px</span>
+        </div>
+        <!-- ② 페이지 헤더: main pad 32/40 → 14/17 -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:14px; left:122px; right:17px; height:17px;">
+          <span class="blueprint__region-label">② 페이지 헤더 (타이틀 + 모드 세그먼트) · h≈40px</span>
+        </div>
+        <!-- ③ 이벤트 선택 바: h=60 → 26 -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:38px; left:122px; right:17px; height:26px;">
+          <span class="blueprint__region-label">③ 이벤트 선택 바 · h=60px</span>
+        </div>
+        <!-- ④ 목록 패널: 380/1280 → 166 -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:71px; left:122px; width:166px; bottom:14px;">
+          <span class="blueprint__region-label">④ 신청 목록 · w=380px</span>
+        </div>
+        <!-- ⑤ 상세 패널 -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:71px; left:298px; right:17px; bottom:14px;">
+          <span class="blueprint__region-label">⑤ 신청 상세</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:4px; right:4px;">main pad: 32 / 40</div>
+      </div>
+
+      <div class="layout-tree"><b>&lt;div&gt;</b> (콘솔 셸 — grid 2-col: 240px / 1fr · max-width 1440px 중앙)
+├─ <em>사이드바</em>                                ← ① (web_partner_home 셸 — active: 신청 관리)
+│
+└─ <b>&lt;main&gt;</b> (padding: <code>spacing-xlarge (32px)</code> / 40px · 세로 flex · 내부 스크롤만)
+   ├─ <em>페이지 헤더</em>                          ← ②
+   │  ├─ 타이틀 "신청 관리" (24 / 700)
+   │  └─ <b>ModeSegment</b> (신청 관리 | 참가자 명단 — 우측 끝)
+   ├─ Gap: <code>spacing-medium (16px)</code>
+   │
+   ├─ <em>이벤트 선택 바</em>                       ← ③
+   │  └─ <b>EventSelect</b> (디데이 칩 + 제목·일시·정원 + 대기 badge + 캐럿)
+   ├─ Gap: <code>spacing-medium (16px)</code>
+   │
+   └─ <b>grid</b> (2-col: 380px / 1fr · gap: <code>spacing-large (24px)</code> · 잔여 높이 채움)
+      ├─ <em>신청 목록 패널</em>                    ← ④ (필터 → 전체 선택 → 행 리스트 → 선택 bar)
+      └─ <em>신청 상세 패널</em>                    ← ⑤ (프로필 → 정보 → 안내 → 액션)
+
+<i>명단 모드 variant — ④+⑤ 자리가 풀-와이드 명단 패널 1장으로 교체 (Sub-anatomy ⑤ 참조)</i></div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree — Mobile (&lt;768px)</h2>
+    <p class="intro">
+      사이드바는 상단 바 + 드로어로 접히고 (web_partner_home Mobile 규칙 동일) 단일 컬럼.
+      master-detail이 불가능하므로 <strong>상세는 행 탭 시 풀스크린 시트</strong>.
+      체크박스 일괄 선택과 승인/거절은 모바일에서도 동작 — 현장 막판 승인 케이스.
+    </p>
+
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:0; left:0; right:0; height:56px;">
+          <span class="blueprint__region-label">① 상단 바 — 브랜드 + 메뉴(드로어) · h=56px</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:72px; left:16px; right:16px; height:96px;">
+          <span class="blueprint__region-label">② 이벤트 선택 바 + 모드 세그먼트</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:184px; left:16px; right:16px; height:40px;">
+          <span class="blueprint__region-label">③ 상태 필터 칩 (대기/확정/거절)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:240px; left:16px; right:16px; bottom:72px;">
+          <span class="blueprint__region-label">④ 신청 카드 리스트 (행 탭 → 상세 풀스크린 시트)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:0; left:0; right:0; height:56px;">
+          <span class="blueprint__region-label">⑤ 선택 bar (체크 1건 이상일 때만)</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>&lt;body&gt;</b> (fluid · gutter <code>spacing-screen-edge (16px)</code>)
+├─ <em>상단 바</em>                                  ← ①
+│
+└─ <b>&lt;main&gt;</b> (세로 스크롤 단일 컬럼)
+   ├─ <em>이벤트 선택 바 + 모드 세그먼트</em>          ← ② (세그먼트가 선택 바 아래로 줄바꿈 · full-width)
+   ├─ <em>상태 필터 칩</em>                           ← ③
+   ├─ <em>신청 카드 리스트</em>                       ← ④
+   │  └─ 행 구성 Desktop과 동일 (체크박스 + 아바타 + 이름·메타 + 결제 칩)
+   │     행 탭 → 신청 상세 <b>풀스크린 시트</b> (프로필/정보/액션 — Desktop ⑤와 동일 구성)
+   └─ <em>선택 bar</em> (하단 고정 · 체크 시에만)       ← ⑤ ("N건 선택 · 일괄 승인" CTA)
+
+<i>명단 모드 — ③④가 명단 표(이름/티켓/입장 체크)로 교체. 인쇄 버튼 유지.</i></div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <p class="intro">
+      variant별로 값이 다르면 Desktop / Mobile 컬럼에 각각 기입.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 50px;">#</th>
+          <th style="width: 190px;">Region</th>
+          <th style="width: 190px;">Alignment</th>
+          <th>Spacing — Desktop</th>
+          <th>Spacing — Mobile</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>콘솔 셸</td><td>grid 2-col (240px / 1fr) · 1440px 캡 중앙</td><td>main padding <code>spacing-xlarge (32px)</code> 상하 / 40px 좌우 · 페이지 스크롤 없음 (패널 내부 스크롤)</td><td>단일 컬럼 · gutter <code>spacing-screen-edge (16px)</code> · 페이지 세로 스크롤</td></tr>
+        <tr><td>①</td><td>사이드바 / 상단 바</td><td>web_partner_home 셸과 동일</td><td>w=240px · inner 규칙은 <a href="/specs/web_partner_home/index.html">셸 spec</a> Sub-anatomy ① SSOT</td><td>상단 바 h=56px · 드로어</td></tr>
+        <tr><td>②</td><td>페이지 헤더</td><td>타이틀 좌 · 모드 세그먼트 우 (space-between)</td><td>헤더↔이벤트 바: <code>spacing-medium (16px)</code> · 세그먼트 item padding 7px / <code>spacing-medium (16px)</code></td><td>타이틀 행 아래 세그먼트 full-width 줄바꿈</td></tr>
+        <tr><td>③</td><td>이벤트 선택 바</td><td>가로 flex 수직 중앙 · 캐럿 우측 끝</td><td>h=60px · inner padding 0 / <code>spacing-large (24px)</code> · 요소 gap <code>spacing-sm (12px)</code> · 바↔패널: <code>spacing-medium (16px)</code></td><td>h=64px · inner padding 0 / <code>spacing-medium (16px)</code></td></tr>
+        <tr><td>④</td><td>신청 목록 패널</td><td>고정 폭 좌측 · 필터 상단 고정 · 행 리스트 내부 스크롤</td><td>w=380px · 패널 gap <code>spacing-large (24px)</code> · 필터 padding <code>spacing-sm (12px)</code>/<code>spacing-medium (16px)</code> · 행 padding <code>spacing-sm (12px)</code>/<code>spacing-medium (16px)</code> · 행 내부 gap <code>spacing-sm (12px)</code></td><td>full-width 카드 리스트 · 행 간 hairline 동일</td></tr>
+        <tr><td>⑤</td><td>신청 상세 패널</td><td>fluid · 액션 row 하단 고정</td><td>inner padding <code>spacing-large (24px)</code> · 프로필↔정보: <code>spacing-large (24px)</code> · 정보 row v-padding <code>spacing-sm (12px)</code> · 액션 버튼 h=46px · gap <code>spacing-small (8px)</code></td><td>풀스크린 시트 · padding <code>spacing-medium (16px)</code> · 액션 하단 고정 (safe-area)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ① — 사이드바 (콘솔 셸)</h2>
+    <p class="intro">
+      콘솔 셸 사이드바의 SSOT는 <a href="/specs/web_partner_home/index.html"><code>web_partner_home</code></a> Sub-anatomy ① —
+      여기서 재정의하지 않는다. 이 화면에서의 차이만: <strong>active 항목이 "신청 관리"</strong>
+      (primary 10% tint + primary text), badge는 <strong>전 이벤트 대기 신청 합계</strong> (이벤트 선택 바의 "대기 N"은 선택한 이벤트만).
+      이 화면 안에서 신청을 처리하면 badge 수가 다음 갱신에서 줄어든다.
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ② — 페이지 헤더 + 모드 세그먼트</h2>
+    <p class="intro">
+      타이틀 좌측, 모드 세그먼트(신청 관리 | 참가자 명단) 우측. 세그먼트는 같은 이벤트를 사이에 두고
+      두 모드를 오가는 토글 — 모드 전환 시 이벤트·필터 선택은 유지된다.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 90px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:28px; left:16px; width:140px; height:32px;">
+          <span class="blueprint__region-label">㉠ 타이틀</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:26px; right:16px; width:220px; height:38px;">
+          <span class="blueprint__region-label">㉡ 모드 세그먼트</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>페이지 헤더</b> (flex row · space-between · 수직 중앙)
+├─ <em>타이틀</em> "신청 관리" (24 / 700)                       ← ㉠
+└─ <b>ModeSegment</b>                                          ← ㉡
+   └─ 컨테이너: 1px divider border · <code>radius-button (12px)</code> · inner pad 3px
+      ├─ item "신청 관리" (13 / 600 · active: primary 10% tint bg + primary text)
+      └─ item "참가자 명단" (비활성: <code>color-text-secondary</code>)</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 180px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>타이틀</td><td>좌측 · baseline</td><td>24/700 · <code>color-text-primary</code></td></tr>
+        <tr><td>㉡</td><td>모드 세그먼트</td><td>우측 끝 · item 중앙</td><td>item padding 7px / <code>spacing-medium (16px)</code> · active bg <code>color-primary</code> 10% · <code>radius-button (12px)</code> 외곽 / 9px item</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ③ — 이벤트 선택 바 (EventSelect)</h2>
+    <p class="intro">
+      어느 이벤트의 신청을 보고 있는지 항상 보이는 컨텍스트 바이자 드롭다운 트리거.
+      클릭하면 <strong>임박순</strong>(오늘 → 가까운 시작일 순) 이벤트 목록이 드롭다운으로 열린다 —
+      각 행: 디데이 칩 · 제목 · 일시 · 대기 N. 지난 이벤트는 드롭다운 하단 "지난 이벤트" 접힘 구역에
+      (명단·이력 회고용). 기본 선택: 딥링크 이벤트 &gt; 대기 신청이 있는 가장 임박한 이벤트 &gt; 가장 임박한 이벤트.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="height: 80px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:26px; left:20px; width:52px; height:26px;">
+          <span class="blueprint__region-label">㉠ 디데이</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:18px; left:86px; width:200px; height:44px;">
+          <span class="blueprint__region-label">㉡ 제목 + 메타</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:26px; right:60px; width:70px; height:26px;">
+          <span class="blueprint__region-label">㉢ 대기 badge</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:28px; right:20px; width:24px; height:24px;">
+          <span class="blueprint__region-label">㉣</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>EventSelect</b> (h=60px · 1px divider border · <code>radius-card (16px)</code> · 전체 클릭 타깃)
+└─ padding: 0 / <code>spacing-large (24px)</code> · <b>flex row</b>(수직 중앙 · gap <code>spacing-sm (12px)</code>)
+   ├─ <em>디데이 칩</em> (오늘=warning · D-1~=primary)           ← ㉠
+   ├─ <em>제목 + 메타</em> (flex 1 · 제목 15/700 · 메타 12/400)  ← ㉡
+   │  └─ 메타: "오늘 19:30 · 확정 14 / 정원 20"
+   ├─ <em>대기 badge</em> "대기 N" (대기 ≥1일 때만)              ← ㉢
+   └─ <em>캐럿</em> (chevron-down 20px secondary)               ← ㉣
+
+<i>드롭다운 (클릭 시): 진행·예정 이벤트 임박순 리스트 + 하단 "지난 이벤트" 접힘.
+각 행 = 디데이 칩 + 제목 + 일시 + 대기 N. 선택 시 목록·상세·명단이 그 이벤트로 교체.</i></div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 180px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>디데이 칩</td><td>좌측 고정 · 수직 중앙</td><td>오늘: <code>color-warning</code> / D-N: <code>color-primary</code> · <code>radius-button (12px)</code> · 12/700 white</td></tr>
+        <tr><td>㉡</td><td>제목 + 메타</td><td>flex 1 · 넘치면 말줄임</td><td>제목 15/700 · 메타 12/400 <code>color-text-secondary</code> · 제목↔메타 2px</td></tr>
+        <tr><td>㉢</td><td>대기 badge</td><td>캐럿 좌측 · 대기 ≥1일 때만</td><td><code>color-primary</code> 12% bg · primary text 12/700 · <code>radius-chip</code></td></tr>
+        <tr><td>㉣</td><td>캐럿</td><td>우측 끝</td><td>20px · <code>color-text-secondary</code> · 드롭다운 열림 시 180° 회전</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ④ — 신청 목록 패널 (ApplicationListPanel)</h2>
+    <p class="intro">
+      상태 필터(대기 기본) → 전체 선택 행(대기 탭만) → 신청 행 리스트(내부 스크롤) → 선택 bar(체크 시만).
+      행 클릭 = 우측 상세 교체, 체크박스 클릭 = 일괄 선택 — 두 타깃은 독립.
+      정렬: 대기 탭은 <strong>오래된 신청 순</strong>(먼저 온 사람 먼저 처리), 확정/거절 탭은 최근 처리 순.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 280px; height: 420px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:12px; left:12px; right:12px; height:34px;">
+          <span class="blueprint__region-label">㉠ 상태 필터 (대기 N / 확정 N / 거절 N)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:54px; left:12px; right:12px; height:26px;">
+          <span class="blueprint__region-label">㉡ 전체 선택 (대기 탭만)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:88px; left:12px; right:12px; height:54px;">
+          <span class="blueprint__region-label">㉢ 신청 행 × N</span>
+        </div>
+        <div class="blueprint__region" style="top:150px; left:12px; right:12px; bottom:64px;">
+          <span class="blueprint__region-label">(내부 스크롤)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:12px; left:12px; right:12px; height:40px;">
+          <span class="blueprint__region-label">㉣ 선택 bar (체크 ≥1일 때만)</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>ApplicationListPanel</b> (w=380px · 1px divider border · <code>radius-card (16px)</code>)
+└─ <b>flex column</b> (필터·선택 bar 고정 · 행 리스트만 스크롤)
+   ├─ <em>상태 필터</em>                                       ← ㉠
+   │  └─ chip 3개: 대기 N (기본 active) · 확정 N · 거절 N
+   │     active: <code>color-primary</code> 10% tint + primary text · <code>radius-chip</code>
+   ├─ <em>전체 선택 행</em> (대기 탭만 · 12/400 secondary)       ← ㉡
+   │  └─ 체크박스 18px + "전체 선택 · 오래된 신청 순"
+   ├─ <em>신청 행 × N</em> (h≈60px · hairline 분리)            ← ㉢
+   │  ├─ 체크박스 18px (대기 탭만)
+   │  ├─ 아바타 36px (이름 첫 글자 · primary 10% tint)
+   │  ├─ 이름 14/600 + 본인인증 아이콘 14px (인증 완료 시 · success)
+   │  ├─ 부제 12/400: "28세 · 여 · 스탠다드" (나이·성별·티켓)
+   │  └─ 우측: 결제 칩 ("결제 완료" success 12% tint) + 시각 11/400
+   │     선택 행: primary 6% bg + 좌측 3px primary 인디케이터
+   └─ <em>선택 bar</em> (체크 ≥1 · primary 5% tint bg)          ← ㉣
+      └─ "N건 선택" 13/700 primary + "선택 해제" 12/600 우측</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 180px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>상태 필터</td><td>row 좌측 · chip 간 4px</td><td>padding <code>spacing-sm (12px)</code>/<code>spacing-medium (16px)</code> · 하단 1px <code>color-divider</code> · chip 13/600</td></tr>
+        <tr><td>㉡</td><td>전체 선택 행</td><td>row 좌측 · 수직 중앙</td><td>padding <code>spacing-small (8px)</code>/<code>spacing-medium (16px)</code> · 체크박스↔라벨 <code>spacing-small (8px)</code></td></tr>
+        <tr><td>㉢</td><td>신청 행</td><td>가로 flex 수직 중앙 · 우측 칸 우정렬</td><td>padding <code>spacing-sm (12px)</code>/<code>spacing-medium (16px)</code> · 내부 gap <code>spacing-sm (12px)</code> · hairline <code>color-divider</code> 60% · 선택 인디케이터 3px <code>color-primary</code></td></tr>
+        <tr><td>㉣</td><td>선택 bar</td><td>패널 하단 고정 · count 좌 / 해제 우</td><td>상단 1px <code>color-divider</code> · bg <code>color-primary</code> 5% tint · padding <code>spacing-sm (12px)</code>/<code>spacing-medium (16px)</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ⑤ — 신청 상세 패널 (ApplicationDetailPanel)</h2>
+    <p class="intro">
+      목록에서 선택한 신청 1건의 상세. 프로필 요약 → 정보 행 → 처리 안내 → 액션(하단 고정).
+      <strong>제출물/자격심사 영역 없음</strong> — 커스텀 자격심사 deprecated, 보이는 정보만으로 승인/거절 판단.
+      확정/거절 탭에서 진입하면 액션 row 없이 read-only (거절 건은 거절 사유 + 환불 상태 행 추가).
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 300px; height: 360px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:20px; left:20px; right:20px; height:64px;">
+          <span class="blueprint__region-label">㉠ 프로필 요약 (아바타 + 이름·인증 + 나이·성별)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:104px; left:20px; right:20px; height:120px;">
+          <span class="blueprint__region-label">㉡ 정보 행 (티켓 / 결제 / 신청 일시)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:76px; left:20px; right:20px; height:40px;">
+          <span class="blueprint__region-label">㉢ 처리 안내</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:16px; left:20px; right:20px; height:46px;">
+          <span class="blueprint__region-label">㉣ 액션 (거절 / 승인하고 확정)</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>ApplicationDetailPanel</b> (1px divider border · <code>radius-card (16px)</code>)
+└─ padding: <code>spacing-large (24px)</code> · <b>flex column</b>
+   ├─ <em>프로필 요약</em>                                     ← ㉠
+   │  ├─ 아바타 56px (이름 첫 글자 · primary 10% tint)
+   │  ├─ 이름 18/700 + <b>본인인증 뱃지</b> ("본인인증 완료" success tint · 미완료 시 "본인인증 전" 회색)
+   │  └─ 나이 · 성별 13/400 secondary ("28세 · 여")
+   ├─ Gap: <code>spacing-large (24px)</code> · 상단 1px divider
+   │
+   ├─ <em>정보 행</em> (라벨 좌 secondary · 값 우 600)           ← ㉡
+   │  ├─ 티켓 — "스탠다드 입장권 · ₩39,000"
+   │  ├─ 결제 상태 — "결제 완료" 칩 (success tint) + 결제 시각
+   │  └─ 신청 일시 — "6월 7일 14:02 (12분 전)"
+   │     (거절 건: + 거절 사유 행 · + 환불 상태 행 — 진행 중/완료/실패)
+   │
+   ├─ <em>처리 안내</em> (12/400 secondary · surface bg)        ← ㉢
+   │  └─ "승인하면 참가가 확정되고 명단에 올라가요 · 거절하면 전액 자동 환불"
+   └─ <em>액션 row</em> (margin-top auto · 대기 신청만)          ← ㉣
+      ├─ [거절 — outline · <code>color-error</code>] (flex 1)
+      └─ [승인하고 확정 — primary filled] (flex 1 · h=46px)</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 180px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>프로필 요약</td><td>row · 아바타↔텍스트 수직 중앙</td><td>아바타 56px · gap <code>spacing-medium (16px)</code> · 인증 뱃지 <code>color-success</code> 12% tint / 미완료 회색 · <code>radius-chip</code></td></tr>
+        <tr><td>㉡</td><td>정보 행</td><td>라벨 좌 / 값 우 (space-between)</td><td>row v-padding <code>spacing-sm (12px)</code> · hairline <code>color-divider</code> 60% · 결제 칩 <code>color-success</code> 12%</td></tr>
+        <tr><td>㉢</td><td>처리 안내</td><td>좌측 정렬 · 1–2줄</td><td>bg <code>color-surface</code> · <code>radius-small (8px)</code> · 12/400 <code>color-text-secondary</code></td></tr>
+        <tr><td>㉣</td><td>액션 row</td><td>하단 고정 · 2버튼 균등 분할</td><td>버튼 h=46px · gap <code>spacing-small (8px)</code> · 거절: 1px <code>color-error</code> border + error text / 승인: <code>color-primary</code> fill · <code>radius-button (12px)</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ⑥ — 참가자 명단 패널 (RosterTable · 명단 모드)</h2>
+    <p class="intro">
+      모드 세그먼트 "참가자 명단" 선택 시 ④+⑤ 자리를 풀-와이드 패널 1장이 대체.
+      <strong>확정자(승인 완료)만</strong> 보여주는 입장 체크용 명단 — QR 없음, 현장에서 이름을 대조한다.
+      "입장 체크" 칸은 인쇄해서 현장 수기 체크하는 용도의 빈 칸 (화면에서는 표시만 — 클릭 무반응).
+      정렬: 이름 가나다 순 (현장에서 이름으로 찾기 최적).
+    </p>
+    <div class="layout-grid layout-grid--desktop">
+      <div class="blueprint" style="width: 560px; height: 240px; border-radius: 16px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:12px; left:14px; right:14px; height:34px;">
+          <span class="blueprint__region-label">㉠ 명단 헤더 (확정 N명 · 안내 · 인쇄 버튼)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:54px; left:14px; right:14px; height:24px;">
+          <span class="blueprint__region-label">㉡ 표 머리행 (# / 이름 / 나이·성별 / 티켓 / 본인인증 / 입장 체크)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:86px; left:14px; right:14px; bottom:14px;">
+          <span class="blueprint__region-label">㉢ 참가자 행 × N (이름 가나다 순)</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>RosterTable</b> (풀-와이드 패널 · 1px divider border · <code>radius-card (16px)</code>)
+├─ <em>명단 헤더</em>                                          ← ㉠
+│  ├─ "확정 참가자 14명" 16/700
+│  ├─ 안내 12/400 secondary: "현장에서 이름을 대조해 입장 체크 — QR 없음"
+│  └─ [명단 인쇄 — outline + 프린터 아이콘] (우측 끝)
+├─ <em>표 머리행</em> (11/700 secondary · surface bg)           ← ㉡
+└─ <em>참가자 행 × N</em> (h≈44px · hairline 분리)              ← ㉢
+   └─ # · 이름 14/600 · 나이·성별 · 티켓 · 본인인증(✓/—) · 입장 체크(빈 네모 20px)
+
+<i>인쇄 레이아웃 (명단 인쇄 클릭 / 명단 모드에서 브라우저 인쇄):
+셸·헤더·버튼 숨김 → A4 세로 · 머리글(이벤트명 · 일시 · 장소 · 확정 N명 · 출력 시각)
++ 표만. 행 높이 ≥40px(펜 체크 여유) · 페이지 넘어가면 머리행 반복 · 행 중간 분할 금지.</i></div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 180px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>명단 헤더</td><td>row · 타이틀+안내 좌 / 인쇄 버튼 우</td><td>padding <code>spacing-medium (16px)</code>/<code>spacing-large (24px)</code> · 하단 1px <code>color-divider</code></td></tr>
+        <tr><td>㉡</td><td>표 머리행</td><td>좌측 정렬 (입장 체크만 중앙)</td><td>bg <code>color-surface</code> · 11/700 <code>color-text-secondary</code> · cell padding 10px/<code>spacing-large (24px)</code></td></tr>
+        <tr><td>㉢</td><td>참가자 행</td><td>좌측 정렬 · 수직 중앙</td><td>cell padding <code>spacing-sm (12px)</code>/<code>spacing-large (24px)</code> · hairline 60% · 인증 ✓ <code>color-success</code> · 입장 체크 빈 네모 20px 2px divider border</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ⑦ — 거절 확인 다이얼로그 (RejectDialog · overlay)</h2>
+    <p class="intro">
+      거절은 결제 취소(전액 자동 환불)를 일으키는 되돌릴 수 없는 처리라, 반드시 이 다이얼로그를 거친다.
+      환불·알림 고지 + 사유 선택(프리셋 칩 단일 선택 · "직접 입력" 시 입력란) → 사유를 골라야 거절 버튼 활성.
+      <strong>선택한 사유는 신청자에게 그대로 노출된다</strong> (유저웹 구매 내역의 신청 상태 타임라인 — 확정 정책) — 칩 아래 helper로 명시.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 280px; height: 300px; border-radius: 24px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:20px; left:20px; right:20px; height:24px;">
+          <span class="blueprint__region-label">㉠ 타이틀</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:56px; left:20px; right:20px; height:56px;">
+          <span class="blueprint__region-label">㉡ 환불·알림 고지</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:128px; left:20px; right:20px; height:90px;">
+          <span class="blueprint__region-label">㉢ 사유 선택 칩 (+ 직접 입력란)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:18px; right:20px; width:200px; height:38px;">
+          <span class="blueprint__region-label">㉣ 취소 / 거절하고 환불</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>RejectDialog</b> (w=460px · <code>radius-dialog (28px)</code> · scrim <code>color-scrim</code>)
+└─ padding: <code>spacing-large (24px)</code>
+   ├─ <em>타이틀</em> "{이름} 님의 신청을 거절할까요?" 18/700     ← ㉠
+   ├─ <em>환불·알림 고지</em> (warning 8% bg + 좌측 3px warning)  ← ㉡
+   │  └─ "거절하면 결제 금액 ₩39,000이 <b>전액 자동 환불</b>되고,
+   │      신청자에게 <b>알림이 발송</b>돼요. 되돌릴 수 없어요."
+   ├─ <em>사유 선택</em> "거절 사유" 13/600                      ← ㉢
+   │  ├─ 칩 (단일 선택): 정원이 가득 찼어요 · 모집 대상과 맞지 않아요
+   │  │   · 이벤트가 변경·취소됐어요 · 직접 입력
+   │  ├─ "직접 입력" 선택 시 한 줄 입력란 (필수)
+   │  └─ helper 12/400 secondary: "선택한 사유는 신청자에게 표시돼요"
+   └─ <em>액션</em> (우측 정렬)                                  ← ㉣
+      ├─ [취소 — outline]
+      └─ [거절하고 환불 — <code>color-error</code> fill · 사유 선택 전 비활성]</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 180px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>타이틀</td><td>좌측</td><td>18/700 · <code>color-text-primary</code></td></tr>
+        <tr><td>㉡</td><td>환불 고지</td><td>좌측 · 2–3줄</td><td><code>color-warning</code> 8% bg + 좌측 3px warning · <code>radius-small (8px)</code> · 13/400 1.55</td></tr>
+        <tr><td>㉢</td><td>사유 칩</td><td>wrap · 칩 간 <code>spacing-small (8px)</code></td><td>1px divider border · 선택: <code>color-primary</code> 8% bg + primary border/text · <code>radius-chip</code></td></tr>
+        <tr><td>㉣</td><td>액션</td><td>우측 정렬 · gap <code>spacing-small (8px)</code></td><td>거절: <code>color-error</code> fill + white · 비활성 시 38% opacity · <code>radius-button (12px)</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     🎨 PERSPECTIVE 2 · STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">
+      각 state의 시각 mockup + 6 aspect rows. States는 breakpoint와 무관하게 공유 —
+      mockup은 web_partner 기본 breakpoint인 <strong>Desktop 1280px</strong> (0.5 scale 렌더).
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>States gallery</h2>
+    <p class="intro">
+      6 state. Behavior Source(<code>event_application_manage_page</code> 등)의 state 중
+      입장그룹 sub-section · 배치 심사 carousel · 도움말 sheet는 웹 MVP에서 제외 (자격심사 deprecated).
+      확정/거절 탭은 별도 state로 분리하지 않고 Default의 필터 전환으로 다룬다 — 구성 차이는
+      Default mini-table의 사용자 액션·에지케이스에 기술.
+    </p>
+
+    <h3 style="margin-top: 24px;">State summary</h3>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 210px;">State</th>
+          <th style="width: 100px;">Tag</th>
+          <th style="width: 260px;">조건 (요약)</th>
+          <th>Key visual differentiator</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="is-baseline-tint"><td><strong>Default · 대기 목록</strong> 🎯</td><td>primary</td><td>대기 신청 1건 이상 · 대기 필터 기본</td><td>좌 목록(체크박스 + 결제 완료 칩) + 우 상세(프로필 · 거절/승인 버튼)</td></tr>
+        <tr><td><strong>신청 0건</strong></td><td>no data</td><td>선택한 이벤트에 신청이 한 건도 없음</td><td>패널 자리가 empty hero 1장 — 필터·체크박스 없음</td></tr>
+        <tr><td><strong>거절 확인 다이얼로그</strong></td><td>modal</td><td>상세에서 "거절" 클릭</td><td>scrim + 환불·알림 고지 + 사유 칩 + "거절하고 환불" error 버튼</td></tr>
+        <tr><td><strong>참가자 명단 모드</strong></td><td>mode</td><td>모드 세그먼트 "참가자 명단"</td><td>풀-와이드 확정자 표 (입장 체크 빈 칸) + 명단 인쇄 버튼</td></tr>
+        <tr><td><strong>일괄 선택 중</strong></td><td>multi-select</td><td>대기 탭에서 체크 1건 이상</td><td>체크된 행 + 선택 bar · 우측 패널이 일괄 승인 요약으로 교체</td></tr>
+        <tr><td><strong>Loading</strong></td><td>async</td><td>이벤트/신청 데이터 불러오는 중</td><td>사이드바·헤더 유지 · 이벤트 바와 패널 자리 skeleton</td></tr>
+      </tbody>
+    </table>
+
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- ════════════════════════════════════════════════════
+           State 1 · Default · 대기 목록 (baseline)
+           ════════════════════════════════════════════════════ -->
+      <table class="ref state-mini is-baseline-tint">
+        <thead>
+          <tr><th colspan="3">
+            <strong>Default · 대기 목록</strong> 🎯 <span class="tag">primary · baseline</span>
+            <small>대기 신청 7건 — 가장 일반적인 진입 (홈 "대기 N건 검토" 딥링크 포함)</small>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <div class="wpa-shell">
+                  <aside class="wpa-sidebar">
+                    <div class="wpa-sidebar__brand">
+                      <img class="wpa-sidebar__logo-img" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                      <span class="wpa-sidebar__brand-suffix">PARTNER</span>
+                    </div>
+                    <nav class="wpa-nav">
+                      <div class="wpa-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                        홈
+                      </div>
+                      <div class="wpa-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        파티·이벤트
+                      </div>
+                      <div class="wpa-nav__item wpa-nav__item--active">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m22 11-3 3-2-2"/></svg>
+                        신청 관리
+                        <span class="wpa-nav__badge">7</span>
+                      </div>
+                      <div class="wpa-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        정산
+                      </div>
+                    </nav>
+                    <div class="wpa-sidebar__footer">
+                      <div class="wpa-sidebar__avatar">박</div>
+                      <div>
+                        <div class="wpa-sidebar__account-name">강남 와인러버스</div>
+                        <div class="wpa-sidebar__account-sub">계정 · 로그아웃</div>
+                      </div>
+                    </div>
+                  </aside>
+                  <main class="wpa-main">
+                    <div class="wpa-pagehead">
+                      <div class="wpa-pagehead__title">신청 관리</div>
+                      <div class="wpa-segment">
+                        <div class="wpa-segment__item wpa-segment__item--active">신청 관리</div>
+                        <div class="wpa-segment__item">참가자 명단</div>
+                      </div>
+                    </div>
+                    <div class="wpa-eventbar">
+                      <span class="wpa-dday-chip wpa-dday-chip--today">오늘</span>
+                      <div class="wpa-eventbar__text">
+                        <div class="wpa-eventbar__title">금요 와인 모임 #12</div>
+                        <div class="wpa-eventbar__meta">오늘 19:30 · 확정 14 / 정원 20</div>
+                      </div>
+                      <span class="wpa-pending-badge">대기 7</span>
+                      <svg class="wpa-eventbar__caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="wpa-work">
+                      <div class="wpa-panel">
+                        <div class="wpa-filters">
+                          <div class="wpa-filter wpa-filter--active">대기 7</div>
+                          <div class="wpa-filter">확정 14</div>
+                          <div class="wpa-filter">거절 2</div>
+                        </div>
+                        <div class="wpa-selectall"><div class="wpa-check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>전체 선택 · 오래된 신청 순</div>
+                        <div class="wpa-rows">
+                          <div class="wpa-row wpa-row--selected">
+                            <div class="wpa-check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                            <div class="wpa-row__avatar">김</div>
+                            <div class="wpa-row__info">
+                              <div class="wpa-row__name">김지연 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
+                              <div class="wpa-row__sub">28세 · 여 · 스탠다드</div>
+                            </div>
+                            <div class="wpa-row__right">
+                              <span class="wpa-paychip">결제 완료</span>
+                              <div class="wpa-row__time">2시간 전</div>
+                            </div>
+                          </div>
+                          <div class="wpa-row">
+                            <div class="wpa-check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                            <div class="wpa-row__avatar">박</div>
+                            <div class="wpa-row__info">
+                              <div class="wpa-row__name">박민수</div>
+                              <div class="wpa-row__sub">31세 · 남 · 커플 (2인)</div>
+                            </div>
+                            <div class="wpa-row__right">
+                              <span class="wpa-paychip">결제 완료</span>
+                              <div class="wpa-row__time">1시간 전</div>
+                            </div>
+                          </div>
+                          <div class="wpa-row">
+                            <div class="wpa-check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                            <div class="wpa-row__avatar">이</div>
+                            <div class="wpa-row__info">
+                              <div class="wpa-row__name">이수진 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
+                              <div class="wpa-row__sub">26세 · 여 · 스탠다드</div>
+                            </div>
+                            <div class="wpa-row__right">
+                              <span class="wpa-paychip">결제 완료</span>
+                              <div class="wpa-row__time">48분 전</div>
+                            </div>
+                          </div>
+                          <div class="wpa-row">
+                            <div class="wpa-check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                            <div class="wpa-row__avatar">정</div>
+                            <div class="wpa-row__info">
+                              <div class="wpa-row__name">정우성 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
+                              <div class="wpa-row__sub">33세 · 남 · 스탠다드</div>
+                            </div>
+                            <div class="wpa-row__right">
+                              <span class="wpa-paychip">결제 완료</span>
+                              <div class="wpa-row__time">31분 전</div>
+                            </div>
+                          </div>
+                          <div class="wpa-row">
+                            <div class="wpa-check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                            <div class="wpa-row__avatar">한</div>
+                            <div class="wpa-row__info">
+                              <div class="wpa-row__name">한소희</div>
+                              <div class="wpa-row__sub">27세 · 여 · 스탠다드</div>
+                            </div>
+                            <div class="wpa-row__right">
+                              <span class="wpa-paychip">결제 완료</span>
+                              <div class="wpa-row__time">25분 전</div>
+                            </div>
+                          </div>
+                          <div class="wpa-row">
+                            <div class="wpa-check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                            <div class="wpa-row__avatar">최</div>
+                            <div class="wpa-row__info">
+                              <div class="wpa-row__name">최유리 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
+                              <div class="wpa-row__sub">29세 · 여 · 스탠다드</div>
+                            </div>
+                            <div class="wpa-row__right">
+                              <span class="wpa-paychip">결제 완료</span>
+                              <div class="wpa-row__time">12분 전</div>
+                            </div>
+                          </div>
+                          <div class="wpa-row">
+                            <div class="wpa-check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                            <div class="wpa-row__avatar">강</div>
+                            <div class="wpa-row__info">
+                              <div class="wpa-row__name">강민재</div>
+                              <div class="wpa-row__sub">30세 · 남 · 스탠다드</div>
+                            </div>
+                            <div class="wpa-row__right">
+                              <span class="wpa-paychip">결제 완료</span>
+                              <div class="wpa-row__time">5분 전</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="wpa-panel wpa-detail">
+                        <div class="wpa-detail__profile">
+                          <div class="wpa-detail__avatar">김</div>
+                          <div>
+                            <div class="wpa-detail__name-row">
+                              <span class="wpa-detail__name">김지연</span>
+                              <span class="wpa-verify-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>본인인증 완료</span>
+                            </div>
+                            <div class="wpa-detail__meta">28세 · 여</div>
+                          </div>
+                        </div>
+                        <div class="wpa-info">
+                          <div class="wpa-info-row">
+                            <span class="wpa-info-row__label">티켓</span>
+                            <span class="wpa-info-row__value">스탠다드 입장권 · ₩39,000</span>
+                          </div>
+                          <div class="wpa-info-row">
+                            <span class="wpa-info-row__label">결제 상태</span>
+                            <span class="wpa-info-row__value"><span class="wpa-paychip">결제 완료</span>&nbsp; 6월 7일 12:02</span>
+                          </div>
+                          <div class="wpa-info-row">
+                            <span class="wpa-info-row__label">신청 일시</span>
+                            <span class="wpa-info-row__value">6월 7일 12:02 (2시간 전)</span>
+                          </div>
+                        </div>
+                        <div class="wpa-detail__note">승인하면 참가가 확정되고 명단에 올라가요 · 거절하면 결제 금액 전액이 자동 환불돼요</div>
+                        <div class="wpa-detail__actions">
+                          <button class="wpa-btn wpa-btn--danger-outline wpa-btn--lg">거절</button>
+                          <button class="wpa-btn wpa-btn--primary wpa-btn--lg">승인하고 확정</button>
+                        </div>
+                      </div>
+                    </div>
+                  </main>
+                </div>
+
+                <!-- Spec-mode overlays (첫 state만) -->
+                <span class="annotation" style="top:8px; left:250px;">main pad: spacing-xlarge (32) / 40</span>
+                <span class="annotation" style="top:380px; left:560px;">패널 gap: spacing-large (24)</span>
+                <span class="annotation" style="bottom:12px; left:300px;">행 padding: spacing-sm (12) / spacing-medium (16)</span>
+                <span class="callout" style="top:120px; left:200px;">ⓐ</span>
+                <span class="callout" style="top:56px; left:980px;">ⓑ</span>
+                <span class="callout" style="top:160px; left:600px;">ⓒ</span>
+                <span class="callout" style="top:240px; left:340px;">ⓓ</span>
+                <span class="callout" style="top:330px; left:620px;">ⓔ</span>
+                <span class="callout" style="top:710px; left:1100px;">ⓕ</span>
+                <span class="type-spec" style="top:74px; left:420px;">24 / 700 / 1.3</span>
+                <span class="type-spec" style="top:300px; left:870px;">18 / 700 / 1.3</span>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>로그인한 파트너 · 이벤트 선택됨 · 선택한 이벤트에 대기 신청 1건 이상 · "대기" 필터 기본 활성 · 목록 첫 건이 상세에 자동 선택.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · 이벤트 선택 바 클릭 → 임박순 드롭다운 → 다른 이벤트 선택 시 목록·상세가 그 이벤트로 교체 (주소에 반영)<br>
+              · 필터 클릭 (대기 / 확정 / 거절) → 목록 교체. <strong>확정·거절 탭은 read-only</strong> — 체크박스·승인/거절 버튼 없음, 행 클릭 시 상세도 read-only (거절 건엔 거절 사유 + 환불 상태 행 추가: 진행 중 / 완료 / 실패)<br>
+              · 목록 행 클릭 → 우측 상세가 그 신청으로 교체 (좌측 인디케이터 이동)<br>
+              · 행 체크박스 / 전체 선택 클릭 → 일괄 선택 중 state로<br>
+              · 상세 "승인하고 확정" 클릭 → 즉시 확정 + "승인했어요 — 명단에 추가됐어요" 안내 + 행이 대기 목록에서 사라지고 <strong>다음 대기 신청이 자동 선택</strong> (연속 처리 흐름)<br>
+              · 상세 "거절" 클릭 → 거절 확인 다이얼로그 (state 3)<br>
+              · 모드 세그먼트 "참가자 명단" 클릭 → 명단 모드 (state 4)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              <strong>본인인증 미완료 신청자</strong> — 행의 인증 아이콘 없음, 상세 뱃지가 회색 "본인인증 전". 승인은 막지 않음 — 판단 재료로만 제공.<br>
+              <strong>결제 확인이 아직 안 끝난 신청</strong> — 결제 칩이 "결제 확인 중" 회색, 승인/거절 버튼 비활성 (확인 완료 후 활성).<br>
+              <strong>정원이 이미 가득 찬 상태에서 승인</strong> — "정원(20명)을 초과해요. 그래도 승인할까요?" 확인 한 번 더 (경고 후 허용 — Mark 확인 대기, 노트 참조).<br>
+              <strong>오늘 시작하는 이벤트의 대기 목록</strong> — 필터 아래에 "이벤트가 시작되면 남은 대기 신청은 자동으로 환불 처리돼요" 안내 1줄 노출 — 시작 시점에 미처리 대기는 자동 만료(자동 거절 + 전액 환불 · 백엔드 자동화, 결제 시 신청자에게 고지된 약속). 이벤트 선택 바의 "대기 N" badge에도 동일 규칙 적용 (시작 후 0으로 수렴).<br>
+              <strong>다른 기기에서 이미 처리된 신청</strong> — 승인/거절 시도 시 "이미 처리된 신청이에요" 안내 + 목록 갱신 (Behavior Source race 규칙 상속).<br>
+              <strong>이름이 긴 신청자 / 이름 비어있음</strong> — 한 줄 말줄임 / 아바타 '?' (상속).<br>
+              <strong>대기 마지막 1건 처리</strong> — 목록이 비면 "대기 신청을 모두 처리했어요" 안내가 목록 자리에, 상세는 placeholder.
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td><code>SidebarNav</code> (ⓐ — 콘솔 셸 · active: 신청 관리 + badge) · <code>ModeSegment</code> (ⓑ) · <code>EventSelect</code> (ⓒ — DdayChip + PendingBadge + 캐럿) · <code>StatusFilterTabs</code> · <code>ApplicationListPanel</code> (ⓓ — Checkbox + ApplicationRow: 아바타 + 이름 + 본인인증 아이콘 + PaymentBadge) · <code>ApplicationDetailPanel</code> (ⓔ — ProfileSummary + VerifiedBadge + InfoRow + 처리 안내) · <code>Button</code> (ⓕ — danger-outline "거절" / primary filled "승인하고 확정")</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td><code>color-partner-primary (#6c3ce1)</code> (viewport 내 <code>color-primary</code>로 매핑 — active 메뉴 · 필터 · 체크박스 · 선택 행 · 승인 버튼) · <code>color-success</code> (본인인증 뱃지 · 결제 완료 칩) · <code>color-error</code> (거절 버튼 외곽) · <code>color-warning</code> (오늘 칩) · <code>color-surface</code> / <code>color-background</code> / <code>color-divider</code> / <code>color-text-primary</code> / <code>color-text-secondary</code> · <code>spacing-xlarge (32px)</code> · <code>spacing-large (24px)</code> · <code>spacing-medium (16px)</code> · <code>spacing-sm (12px)</code> · <code>spacing-small (8px)</code> · <code>radius-card (16px)</code> · <code>radius-button (12px)</code> · <code>radius-chip (100px)</code> · <code>radius-small (8px)</code> — CSS로는 <code>var(--color-partner-primary)</code> 등</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 승인은 가볍게(원클릭 + 처리 후 다음 건 자동 선택), 거절은 무겁게(다이얼로그) — 결제 선행 모델에서 거절 = 환불이기 때문. <strong>제출물/자격심사 UI 의도적으로 없음</strong> (deprecated — 승인/거절만). 정원 초과 승인은 "경고 후 허용"으로 설계 — Mark 확인 대기 항목. 대기 정렬을 오래된 순으로 한 것은 선착순 공정성 — Behavior Source(최신 위)와 다른 웹 결정.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════════════
+           State 2 · 신청 0건 (Empty)
+           ════════════════════════════════════════════════════ -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>신청 0건</strong> <span class="tag tag--mute">no data</span>
+            <small>선택한 이벤트에 신청이 한 건도 없음 (모집 시작 직후)</small>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <div class="wpa-shell">
+                  <aside class="wpa-sidebar">
+                    <div class="wpa-sidebar__brand">
+                      <img class="wpa-sidebar__logo-img" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                      <span class="wpa-sidebar__brand-suffix">PARTNER</span>
+                    </div>
+                    <nav class="wpa-nav">
+                      <div class="wpa-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                        홈
+                      </div>
+                      <div class="wpa-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        파티·이벤트
+                      </div>
+                      <div class="wpa-nav__item wpa-nav__item--active">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m22 11-3 3-2-2"/></svg>
+                        신청 관리
+                      </div>
+                      <div class="wpa-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        정산
+                      </div>
+                    </nav>
+                    <div class="wpa-sidebar__footer">
+                      <div class="wpa-sidebar__avatar">박</div>
+                      <div>
+                        <div class="wpa-sidebar__account-name">강남 와인러버스</div>
+                        <div class="wpa-sidebar__account-sub">계정 · 로그아웃</div>
+                      </div>
+                    </div>
+                  </aside>
+                  <main class="wpa-main">
+                    <div class="wpa-pagehead">
+                      <div class="wpa-pagehead__title">신청 관리</div>
+                      <div class="wpa-segment">
+                        <div class="wpa-segment__item wpa-segment__item--active">신청 관리</div>
+                        <div class="wpa-segment__item">참가자 명단</div>
+                      </div>
+                    </div>
+                    <div class="wpa-eventbar">
+                      <span class="wpa-dday-chip wpa-dday-chip--soon">D-6</span>
+                      <div class="wpa-eventbar__text">
+                        <div class="wpa-eventbar__title">일요 브런치 #2</div>
+                        <div class="wpa-eventbar__meta">6월 13일(일) 11:00 · 확정 0 / 정원 12</div>
+                      </div>
+                      <svg class="wpa-eventbar__caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="wpa-work wpa-work--single">
+                      <div class="wpa-empty">
+                        <div class="wpa-empty__emoji">📭</div>
+                        <div class="wpa-empty__title">아직 들어온 신청이 없어요</div>
+                        <div class="wpa-empty__sub">신청이 들어오면 메일로 알려드리고, 이 화면 대기 목록에 모여요.<br>이벤트 페이지를 공유해 신청을 받아보세요.</div>
+                      </div>
+                    </div>
+                  </main>
+                </div>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>선택한 이벤트에 대기·확정·거절을 통틀어 신청이 0건 — 모집 시작 직후 또는 아직 노출이 적은 이벤트.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · 이벤트 선택 바 → 신청이 있는 다른 이벤트로 전환<br>
+              · 모드 세그먼트 "참가자 명단" → 빈 명단 ("아직 확정된 참가자가 없어요")<br>
+              · 사이드바는 그대로 동작
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              <strong>운영 중인 이벤트가 하나도 없음</strong> — 이벤트 선택 바 자리에 "운영 중인 이벤트가 없어요" + "파티·이벤트 만들러 가기" 링크 (empty hero가 이 문구로 교체).<br>
+              <strong>대기만 0건이고 확정/거절은 있음</strong> — 이 state가 아님: 필터 행은 유지되고 대기 목록 자리에만 "대기 신청을 모두 처리했어요" 안내 (Default의 변형).
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>− <code>ApplicationListPanel</code> · − <code>ApplicationDetailPanel</code> · − <code>StatusFilterTabs</code> · + <code>EmptyState</code> (이모지 + 타이틀 + 설명) — <code>SidebarNav</code> · <code>ModeSegment</code> · <code>EventSelect</code>는 유지 (대기 badge만 없음)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>동일 (Default 참조) — Empty 전용 추가 토큰 없음</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 "이벤트 페이지를 공유해 신청을 받아보세요" 카피는 유저웹 이벤트 상세가 public URL이라는 전제 — 공유 버튼을 여기 직접 둘지는 유저웹 이벤트 상세 spec과 함께 결정.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════════════
+           State 3 · 거절 확인 다이얼로그
+           ════════════════════════════════════════════════════ -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>거절 확인 다이얼로그</strong> <span class="tag">modal</span>
+            <small>상세 "거절" 클릭 — 자동 전액 환불 + 알림 고지 · 사유 선택</small>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <div class="wpa-shell">
+                  <aside class="wpa-sidebar">
+                    <div class="wpa-sidebar__brand">
+                      <img class="wpa-sidebar__logo-img" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                      <span class="wpa-sidebar__brand-suffix">PARTNER</span>
+                    </div>
+                    <nav class="wpa-nav">
+                      <div class="wpa-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                        홈
+                      </div>
+                      <div class="wpa-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        파티·이벤트
+                      </div>
+                      <div class="wpa-nav__item wpa-nav__item--active">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m22 11-3 3-2-2"/></svg>
+                        신청 관리
+                        <span class="wpa-nav__badge">7</span>
+                      </div>
+                      <div class="wpa-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        정산
+                      </div>
+                    </nav>
+                    <div class="wpa-sidebar__footer">
+                      <div class="wpa-sidebar__avatar">박</div>
+                      <div>
+                        <div class="wpa-sidebar__account-name">강남 와인러버스</div>
+                        <div class="wpa-sidebar__account-sub">계정 · 로그아웃</div>
+                      </div>
+                    </div>
+                  </aside>
+                  <main class="wpa-main">
+                    <div class="wpa-pagehead">
+                      <div class="wpa-pagehead__title">신청 관리</div>
+                      <div class="wpa-segment">
+                        <div class="wpa-segment__item wpa-segment__item--active">신청 관리</div>
+                        <div class="wpa-segment__item">참가자 명단</div>
+                      </div>
+                    </div>
+                    <div class="wpa-eventbar">
+                      <span class="wpa-dday-chip wpa-dday-chip--today">오늘</span>
+                      <div class="wpa-eventbar__text">
+                        <div class="wpa-eventbar__title">금요 와인 모임 #12</div>
+                        <div class="wpa-eventbar__meta">오늘 19:30 · 확정 14 / 정원 20</div>
+                      </div>
+                      <span class="wpa-pending-badge">대기 7</span>
+                      <svg class="wpa-eventbar__caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="wpa-work">
+                      <div class="wpa-panel">
+                        <div class="wpa-filters">
+                          <div class="wpa-filter wpa-filter--active">대기 7</div>
+                          <div class="wpa-filter">확정 14</div>
+                          <div class="wpa-filter">거절 2</div>
+                        </div>
+                        <div class="wpa-selectall"><div class="wpa-check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>전체 선택 · 오래된 신청 순</div>
+                        <div class="wpa-rows">
+                          <div class="wpa-row wpa-row--selected">
+                            <div class="wpa-check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                            <div class="wpa-row__avatar">김</div>
+                            <div class="wpa-row__info">
+                              <div class="wpa-row__name">김지연 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
+                              <div class="wpa-row__sub">28세 · 여 · 스탠다드</div>
+                            </div>
+                            <div class="wpa-row__right">
+                              <span class="wpa-paychip">결제 완료</span>
+                              <div class="wpa-row__time">2시간 전</div>
+                            </div>
+                          </div>
+                          <div class="wpa-row">
+                            <div class="wpa-check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                            <div class="wpa-row__avatar">박</div>
+                            <div class="wpa-row__info">
+                              <div class="wpa-row__name">박민수</div>
+                              <div class="wpa-row__sub">31세 · 남 · 커플 (2인)</div>
+                            </div>
+                            <div class="wpa-row__right">
+                              <span class="wpa-paychip">결제 완료</span>
+                              <div class="wpa-row__time">1시간 전</div>
+                            </div>
+                          </div>
+                          <div class="wpa-row">
+                            <div class="wpa-check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                            <div class="wpa-row__avatar">이</div>
+                            <div class="wpa-row__info">
+                              <div class="wpa-row__name">이수진 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
+                              <div class="wpa-row__sub">26세 · 여 · 스탠다드</div>
+                            </div>
+                            <div class="wpa-row__right">
+                              <span class="wpa-paychip">결제 완료</span>
+                              <div class="wpa-row__time">48분 전</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="wpa-panel wpa-detail">
+                        <div class="wpa-detail__profile">
+                          <div class="wpa-detail__avatar">김</div>
+                          <div>
+                            <div class="wpa-detail__name-row">
+                              <span class="wpa-detail__name">김지연</span>
+                              <span class="wpa-verify-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>본인인증 완료</span>
+                            </div>
+                            <div class="wpa-detail__meta">28세 · 여</div>
+                          </div>
+                        </div>
+                        <div class="wpa-info">
+                          <div class="wpa-info-row">
+                            <span class="wpa-info-row__label">티켓</span>
+                            <span class="wpa-info-row__value">스탠다드 입장권 · ₩39,000</span>
+                          </div>
+                          <div class="wpa-info-row">
+                            <span class="wpa-info-row__label">결제 상태</span>
+                            <span class="wpa-info-row__value"><span class="wpa-paychip">결제 완료</span>&nbsp; 6월 7일 12:02</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </main>
+                </div>
+                <div class="wpa-scrim">
+                  <div class="wpa-dialog">
+                    <div class="wpa-dialog__title">김지연 님의 신청을 거절할까요?</div>
+                    <div class="wpa-notice">거절하면 결제 금액 <strong>₩39,000이 전액 자동 환불</strong>되고, 신청자에게 <strong>알림이 발송</strong>돼요. 이 처리는 되돌릴 수 없어요.</div>
+                    <div class="wpa-reason-label">거절 사유</div>
+                    <div class="wpa-reasons">
+                      <div class="wpa-reason">정원이 가득 찼어요</div>
+                      <div class="wpa-reason wpa-reason--on">모집 대상과 맞지 않아요</div>
+                      <div class="wpa-reason">이벤트가 변경·취소됐어요</div>
+                      <div class="wpa-reason">직접 입력</div>
+                    </div>
+                    <div class="wpa-reason-help">선택한 사유는 신청자에게 표시돼요</div>
+                    <div class="wpa-dialog__actions">
+                      <button class="wpa-btn wpa-btn--outline">취소</button>
+                      <button class="wpa-btn wpa-btn--error">거절하고 환불</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>대기 신청 상세에서 "거절" 클릭 — 다이얼로그가 화면 중앙에, 뒤는 scrim으로 덮임.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · 사유 칩 클릭 → 단일 선택 (다시 클릭 시 해제). <strong>사유를 골라야 "거절하고 환불" 활성</strong><br>
+              · "직접 입력" 선택 → 칩 아래 한 줄 입력란 (입력해야 활성)<br>
+              · "거절하고 환불" 클릭 → 처리 중 버튼 비활성 → 성공 시 다이얼로그 닫힘 + "거절했어요 — 환불이 시작됐어요" 안내 + 행이 대기에서 사라지고 거절 탭으로 이동<br>
+              · "취소" / esc / scrim 클릭 → 다이얼로그 닫힘 (아무 처리 없음 — 선택한 사유는 버림)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              <strong>무료 티켓 (결제 금액 0원)</strong> — 환불 문구 대신 "신청자에게 거절 알림이 발송돼요"만.<br>
+              <strong>거절은 됐는데 환불 시작이 늦어짐</strong> — 거절 자체는 접수되고, 거절 탭의 그 건에 환불 상태가 "환불 진행 중"으로 표시. 실패로 끝나면 "환불 실패 — 운영팀이 확인하고 있어요" (환불은 비동기 — 거절 즉시 완료를 보장하지 않음).<br>
+              <strong>처리 중 네트워크 끊김</strong> — "처리하지 못했어요. 다시 시도해주세요" + 다이얼로그 유지 (입력 보존).<br>
+              <strong>사유는 신청자에게 그대로 노출 (확정)</strong> — 거절 알림과 유저웹 구매 내역의 신청 상태 타임라인(거절 사유 박스 — <code>web_user_purchases</code>)에 선택한 문구가 그대로 표시됨. 내부 메모 용도가 아님 — 다이얼로그의 "선택한 사유는 신청자에게 표시돼요" helper가 이를 상기시킴.
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>+ <code>RejectDialog</code> (scrim + 타이틀 + 환불 고지 + 사유 칩 + 액션) · + <code>NoticeBox</code> (warning) · + <code>ReasonChip</code> × 4 · + <code>Button</code> error filled ("거절하고 환불") — 배경 화면은 Default 그대로 (스크롤 잠금)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>+ <code>color-scrim</code> · + <code>color-warning</code> 8% (고지 bg) · + <code>color-error</code> (거절 버튼 fill) · + <code>radius-dialog (28px)</code> — 나머지 동일 (Default 참조)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 환불 고지에 <strong>실제 금액</strong>을 박는 것이 핵심 — "전액"이라는 말보다 ₩39,000이 무게를 만든다. error 색은 이 버튼과 환불 실패 표기에만 — 콘솔 전체에서 아껴 쓰는 색. 일괄 거절이 없는 이유: 환불을 일으키는 처리는 한 건씩만.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════════════
+           State 4 · 참가자 명단 모드
+           ════════════════════════════════════════════════════ -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>참가자 명단 모드</strong> <span class="tag">mode</span>
+            <small>확정자 입장 체크용 명단 — 인쇄 친화 · QR 없음, 현장 이름 대조</small>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <div class="wpa-shell">
+                  <aside class="wpa-sidebar">
+                    <div class="wpa-sidebar__brand">
+                      <img class="wpa-sidebar__logo-img" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                      <span class="wpa-sidebar__brand-suffix">PARTNER</span>
+                    </div>
+                    <nav class="wpa-nav">
+                      <div class="wpa-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                        홈
+                      </div>
+                      <div class="wpa-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        파티·이벤트
+                      </div>
+                      <div class="wpa-nav__item wpa-nav__item--active">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m22 11-3 3-2-2"/></svg>
+                        신청 관리
+                        <span class="wpa-nav__badge">7</span>
+                      </div>
+                      <div class="wpa-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        정산
+                      </div>
+                    </nav>
+                    <div class="wpa-sidebar__footer">
+                      <div class="wpa-sidebar__avatar">박</div>
+                      <div>
+                        <div class="wpa-sidebar__account-name">강남 와인러버스</div>
+                        <div class="wpa-sidebar__account-sub">계정 · 로그아웃</div>
+                      </div>
+                    </div>
+                  </aside>
+                  <main class="wpa-main">
+                    <div class="wpa-pagehead">
+                      <div class="wpa-pagehead__title">신청 관리</div>
+                      <div class="wpa-segment">
+                        <div class="wpa-segment__item">신청 관리</div>
+                        <div class="wpa-segment__item wpa-segment__item--active">참가자 명단</div>
+                      </div>
+                    </div>
+                    <div class="wpa-eventbar">
+                      <span class="wpa-dday-chip wpa-dday-chip--today">오늘</span>
+                      <div class="wpa-eventbar__text">
+                        <div class="wpa-eventbar__title">금요 와인 모임 #12</div>
+                        <div class="wpa-eventbar__meta">오늘 19:30 · 확정 14 / 정원 20</div>
+                      </div>
+                      <span class="wpa-pending-badge">대기 7</span>
+                      <svg class="wpa-eventbar__caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="wpa-work wpa-work--single">
+                      <div class="wpa-panel">
+                        <div class="wpa-roster-head">
+                          <div>
+                            <div class="wpa-roster-head__title">확정 참가자 14명</div>
+                            <div class="wpa-roster-head__hint">현장에서 이름을 대조해 입장 체크 — QR 없음 · 인쇄해서 쓰는 것을 권장해요</div>
+                          </div>
+                          <button class="wpa-btn wpa-btn--outline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>명단 인쇄</button>
+                        </div>
+                        <table class="wpa-table">
+                          <thead>
+                            <tr><th style="width:48px;">#</th><th>이름</th><th style="width:110px;">나이·성별</th><th style="width:150px;">티켓</th><th style="width:90px;">본인인증</th><th style="width:90px;">입장 체크</th></tr>
+                          </thead>
+                          <tbody>
+                            <tr><td class="muted">1</td><td><strong>강다은</strong></td><td class="muted">27세 · 여</td><td class="muted">스탠다드</td><td class="verify-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></td><td><div class="wpa-entrybox"></div></td></tr>
+                            <tr><td class="muted">2</td><td><strong>김서연</strong></td><td class="muted">29세 · 여</td><td class="muted">스탠다드</td><td class="verify-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></td><td><div class="wpa-entrybox"></div></td></tr>
+                            <tr><td class="muted">3</td><td><strong>박지훈</strong></td><td class="muted">32세 · 남</td><td class="muted">커플 (2인)</td><td class="muted">—</td><td><div class="wpa-entrybox"></div></td></tr>
+                            <tr><td class="muted">4</td><td><strong>송민아</strong></td><td class="muted">26세 · 여</td><td class="muted">스탠다드</td><td class="verify-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></td><td><div class="wpa-entrybox"></div></td></tr>
+                            <tr><td class="muted">5</td><td><strong>윤소라</strong></td><td class="muted">28세 · 여</td><td class="muted">스탠다드</td><td class="verify-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></td><td><div class="wpa-entrybox"></div></td></tr>
+                            <tr><td class="muted">6</td><td><strong>이도현</strong></td><td class="muted">31세 · 남</td><td class="muted">스탠다드</td><td class="verify-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></td><td><div class="wpa-entrybox"></div></td></tr>
+                            <tr><td class="muted">7</td><td><strong>임채원</strong></td><td class="muted">27세 · 여</td><td class="muted">스탠다드</td><td class="muted">—</td><td><div class="wpa-entrybox"></div></td></tr>
+                            <tr><td class="muted">8</td><td><strong>정민호</strong></td><td class="muted">33세 · 남</td><td class="muted">스탠다드</td><td class="verify-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></td><td><div class="wpa-entrybox"></div></td></tr>
+                            <tr><td class="muted">9</td><td><strong>최강현</strong></td><td class="muted">30세 · 남</td><td class="muted">스탠다드</td><td class="verify-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></td><td><div class="wpa-entrybox"></div></td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </main>
+                </div>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>모드 세그먼트 "참가자 명단" 활성 — 선택한 이벤트의 <strong>확정자(승인 완료)만</strong> 이름 가나다 순으로. 커플 등 다인 티켓은 1행 = 신청 1건 (동반 인원은 티켓 칸에 "(2인)").</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · "명단 인쇄" 클릭 → 브라우저 인쇄 — 인쇄 전용 레이아웃 (셸·헤더·버튼 숨김 · A4 세로 · 머리글: 이벤트명 + 일시 + 장소 + 확정 N명 + 출력 시각 · 입장 체크 빈 칸)<br>
+              · 모드 세그먼트 "신청 관리" → 신청 관리 모드 복귀 (이벤트·필터 유지)<br>
+              · 이벤트 선택 바 → 다른 이벤트의 명단으로 전환 (지난 이벤트 포함 — 회고용)<br>
+              · 입장 체크 칸은 화면에선 클릭 무반응 — 인쇄물 수기 체크 전용
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              <strong>확정 0명</strong> — 표 대신 "아직 확정된 참가자가 없어요 — 대기 신청을 승인하면 여기 올라와요" 안내, 인쇄 버튼 비활성.<br>
+              <strong>동명이인</strong> — 나이·성별·티켓으로 구분 (행 병합 없음).<br>
+              <strong>인쇄 직전에 명단이 바뀜</strong> — 인쇄물에 출력 시각을 박아 "이 시각 기준"임을 명시. 행사 직전 재인쇄 권장 카피.<br>
+              <strong>확정 60명 이상</strong> — 인쇄가 여러 장으로 — 머리행 반복 + 행이 페이지 중간에서 잘리지 않게.<br>
+              <strong>환불 진행 중/완료된 인원</strong> — 명단에 없음 (확정 목록에서 빠진 상태).
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>↔ <code>ApplicationListPanel</code> + <code>ApplicationDetailPanel</code> → <code>RosterTable</code> (명단 헤더 + 표) · + <code>Button</code> outline ("명단 인쇄" + 프린터 아이콘) — <code>SidebarNav</code> · <code>ModeSegment</code> · <code>EventSelect</code> 유지</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>동일 (Default 참조) — 표 머리행 bg <code>color-surface</code> · 인증 ✓ <code>color-success</code> · 입장 체크 빈 네모 2px <code>color-divider</code> border</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 QR 체크인 deprecated의 받침 화면 — 입장 확인의 SSOT는 종이 명단. 화면 입장 체크 토글(저장형)은 후속 후보로만 — 지금 넣으면 체크인 기능의 부활이라 범위를 지킨다. 연락처 column은 개인정보 최소화 원칙으로 미노출 — 필요 시 열린 질문으로.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════════════
+           State 5 · 일괄 선택 중
+           ════════════════════════════════════════════════════ -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>일괄 선택 중</strong> <span class="tag">multi-select</span>
+            <small>대기 탭에서 체크박스 1건 이상 — 우측 패널이 일괄 승인 요약으로</small>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <div class="wpa-shell">
+                  <aside class="wpa-sidebar">
+                    <div class="wpa-sidebar__brand">
+                      <img class="wpa-sidebar__logo-img" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                      <span class="wpa-sidebar__brand-suffix">PARTNER</span>
+                    </div>
+                    <nav class="wpa-nav">
+                      <div class="wpa-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                        홈
+                      </div>
+                      <div class="wpa-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        파티·이벤트
+                      </div>
+                      <div class="wpa-nav__item wpa-nav__item--active">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m22 11-3 3-2-2"/></svg>
+                        신청 관리
+                        <span class="wpa-nav__badge">7</span>
+                      </div>
+                      <div class="wpa-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        정산
+                      </div>
+                    </nav>
+                    <div class="wpa-sidebar__footer">
+                      <div class="wpa-sidebar__avatar">박</div>
+                      <div>
+                        <div class="wpa-sidebar__account-name">강남 와인러버스</div>
+                        <div class="wpa-sidebar__account-sub">계정 · 로그아웃</div>
+                      </div>
+                    </div>
+                  </aside>
+                  <main class="wpa-main">
+                    <div class="wpa-pagehead">
+                      <div class="wpa-pagehead__title">신청 관리</div>
+                      <div class="wpa-segment">
+                        <div class="wpa-segment__item wpa-segment__item--active">신청 관리</div>
+                        <div class="wpa-segment__item">참가자 명단</div>
+                      </div>
+                    </div>
+                    <div class="wpa-eventbar">
+                      <span class="wpa-dday-chip wpa-dday-chip--today">오늘</span>
+                      <div class="wpa-eventbar__text">
+                        <div class="wpa-eventbar__title">금요 와인 모임 #12</div>
+                        <div class="wpa-eventbar__meta">오늘 19:30 · 확정 14 / 정원 20</div>
+                      </div>
+                      <span class="wpa-pending-badge">대기 7</span>
+                      <svg class="wpa-eventbar__caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="wpa-work">
+                      <div class="wpa-panel">
+                        <div class="wpa-filters">
+                          <div class="wpa-filter wpa-filter--active">대기 7</div>
+                          <div class="wpa-filter">확정 14</div>
+                          <div class="wpa-filter">거절 2</div>
+                        </div>
+                        <div class="wpa-selectall"><div class="wpa-check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>전체 선택 · 오래된 신청 순</div>
+                        <div class="wpa-rows">
+                          <div class="wpa-row">
+                            <div class="wpa-check wpa-check--on"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                            <div class="wpa-row__avatar">김</div>
+                            <div class="wpa-row__info">
+                              <div class="wpa-row__name">김지연 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
+                              <div class="wpa-row__sub">28세 · 여 · 스탠다드</div>
+                            </div>
+                            <div class="wpa-row__right">
+                              <span class="wpa-paychip">결제 완료</span>
+                              <div class="wpa-row__time">2시간 전</div>
+                            </div>
+                          </div>
+                          <div class="wpa-row">
+                            <div class="wpa-check wpa-check--on"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                            <div class="wpa-row__avatar">박</div>
+                            <div class="wpa-row__info">
+                              <div class="wpa-row__name">박민수</div>
+                              <div class="wpa-row__sub">31세 · 남 · 커플 (2인)</div>
+                            </div>
+                            <div class="wpa-row__right">
+                              <span class="wpa-paychip">결제 완료</span>
+                              <div class="wpa-row__time">1시간 전</div>
+                            </div>
+                          </div>
+                          <div class="wpa-row">
+                            <div class="wpa-check wpa-check--on"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                            <div class="wpa-row__avatar">이</div>
+                            <div class="wpa-row__info">
+                              <div class="wpa-row__name">이수진 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
+                              <div class="wpa-row__sub">26세 · 여 · 스탠다드</div>
+                            </div>
+                            <div class="wpa-row__right">
+                              <span class="wpa-paychip">결제 완료</span>
+                              <div class="wpa-row__time">48분 전</div>
+                            </div>
+                          </div>
+                          <div class="wpa-row">
+                            <div class="wpa-check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                            <div class="wpa-row__avatar">정</div>
+                            <div class="wpa-row__info">
+                              <div class="wpa-row__name">정우성 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
+                              <div class="wpa-row__sub">33세 · 남 · 스탠다드</div>
+                            </div>
+                            <div class="wpa-row__right">
+                              <span class="wpa-paychip">결제 완료</span>
+                              <div class="wpa-row__time">31분 전</div>
+                            </div>
+                          </div>
+                          <div class="wpa-row">
+                            <div class="wpa-check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                            <div class="wpa-row__avatar">한</div>
+                            <div class="wpa-row__info">
+                              <div class="wpa-row__name">한소희</div>
+                              <div class="wpa-row__sub">27세 · 여 · 스탠다드</div>
+                            </div>
+                            <div class="wpa-row__right">
+                              <span class="wpa-paychip">결제 완료</span>
+                              <div class="wpa-row__time">25분 전</div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="wpa-selectbar">
+                          <span class="wpa-selectbar__count">3건 선택</span>
+                          <span class="wpa-selectbar__clear">선택 해제</span>
+                        </div>
+                      </div>
+                      <div class="wpa-panel wpa-detail">
+                        <div class="wpa-bulk">
+                          <div class="wpa-bulk__num">3건 선택</div>
+                          <div class="wpa-bulk__names">김지연 · 박민수 · 이수진</div>
+                          <div class="wpa-bulk__hint">일괄 승인하면 선택한 신청이 모두 즉시 확정되고 명단에 올라가요.<br>거절은 환불이 함께 일어나서 한 건씩만 처리할 수 있어요.</div>
+                        </div>
+                        <div class="wpa-detail__note">승인 후 정원: 확정 14 + 4명(커플 2인 포함) = 18 / 20</div>
+                        <div class="wpa-detail__actions">
+                          <button class="wpa-btn wpa-btn--outline wpa-btn--lg">선택 해제</button>
+                          <button class="wpa-btn wpa-btn--primary wpa-btn--lg">3건 일괄 승인</button>
+                        </div>
+                      </div>
+                    </div>
+                  </main>
+                </div>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>대기 탭에서 행 체크박스 또는 전체 선택을 눌러 1건 이상 체크된 상태.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · 체크박스 추가/해제 → 선택 수·요약 즉시 갱신. 마지막 체크 해제 시 Default 복귀<br>
+              · "전체 선택" → 대기 전체 체크<br>
+              · "N건 일괄 승인" 클릭 → 확인 다이얼로그 "선택한 N건을 모두 승인할까요? 모두 즉시 확정돼요" → 확인 시 일괄 처리 → "N건을 승인했어요" 안내 + 행들이 대기에서 사라짐 (Behavior Source 일괄 승인 + 확인 다이얼로그 상속)<br>
+              · "선택 해제" (선택 bar / 우측 패널) → 모두 해제, Default 복귀<br>
+              · 행 본체 클릭 → 선택 유지한 채 그 신청의 상세를 보고 싶은 충돌 — 일괄 선택 중에는 행 클릭도 <strong>체크 토글</strong>로 동작 (모드 단순화)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              <strong>일부만 실패</strong> — 실패한 신청자 이름을 안내에 나열 + 그 행들만 체크 유지 (성공분만 사라짐 — Behavior Source 일부 실패 규칙 상속).<br>
+              <strong>선택 합계가 정원 초과</strong> — 우측 요약의 "승인 후 정원" 줄이 warning 색으로 + 일괄 승인 확인 다이얼로그에 초과 경고 1줄.<br>
+              <strong>선택 중 필터/이벤트 전환</strong> — 선택이 해제됨 (요약 패널에 안내 없이 — 파괴적 동작 아님).<br>
+              <strong>선택한 건이 다른 기기에서 먼저 처리됨</strong> — 일괄 승인 시 그 건만 "이미 처리됨" 실패로 분류.
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>+ <code>SelectionBar</code> (목록 하단 — count + 선택 해제) · ↔ <code>ApplicationDetailPanel</code> → <code>BulkApproveSummary</code> (선택 수 + 이름 나열 + 정원 미리보기 + 액션) · + <code>Checkbox</code> checked 상태 · + 확인 다이얼로그 (일괄 승인) — 나머지 동일</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>+ <code>color-primary</code> (체크박스 fill · 선택 bar 5% tint · 선택 수 텍스트) — 나머지 동일 (Default 참조)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 모바일의 "전체 승인 (N건)" CTA를 체크박스 선택형으로 일반화 — 데스크톱에선 부분 선택이 자연스럽다. <strong>일괄 거절은 의도적으로 없음</strong> — 거절 = 환불이라 한 건씩 다이얼로그를 거치게 강제. 정원 미리보기("승인 후 정원")는 다인 티켓 인원을 합산.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════════════
+           State 6 · Loading
+           ════════════════════════════════════════════════════ -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>Loading</strong> <span class="tag tag--mute">async</span>
+            <small>진입 직후 / 이벤트 전환 직후 — 신청 데이터 불러오는 중</small>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <div class="wpa-shell">
+                  <aside class="wpa-sidebar">
+                    <div class="wpa-sidebar__brand">
+                      <img class="wpa-sidebar__logo-img" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                      <span class="wpa-sidebar__brand-suffix">PARTNER</span>
+                    </div>
+                    <nav class="wpa-nav">
+                      <div class="wpa-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                        홈
+                      </div>
+                      <div class="wpa-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        파티·이벤트
+                      </div>
+                      <div class="wpa-nav__item wpa-nav__item--active">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m22 11-3 3-2-2"/></svg>
+                        신청 관리
+                      </div>
+                      <div class="wpa-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        정산
+                      </div>
+                    </nav>
+                    <div class="wpa-sidebar__footer">
+                      <div class="wpa-sidebar__avatar">박</div>
+                      <div>
+                        <div class="wpa-sidebar__account-name">강남 와인러버스</div>
+                        <div class="wpa-sidebar__account-sub">계정 · 로그아웃</div>
+                      </div>
+                    </div>
+                  </aside>
+                  <main class="wpa-main">
+                    <div class="wpa-pagehead">
+                      <div class="wpa-pagehead__title">신청 관리</div>
+                      <div class="wpa-segment">
+                        <div class="wpa-segment__item wpa-segment__item--active">신청 관리</div>
+                        <div class="wpa-segment__item">참가자 명단</div>
+                      </div>
+                    </div>
+                    <div class="wpa-skeleton wpa-skeleton--bar"></div>
+                    <div class="wpa-work">
+                      <div class="wpa-panel">
+                        <div class="wpa-skeleton wpa-skeleton--row"></div>
+                        <div class="wpa-skeleton wpa-skeleton--row"></div>
+                        <div class="wpa-skeleton wpa-skeleton--row"></div>
+                        <div class="wpa-skeleton wpa-skeleton--row"></div>
+                        <div class="wpa-skeleton wpa-skeleton--row"></div>
+                        <div class="wpa-skeleton wpa-skeleton--row"></div>
+                      </div>
+                      <div class="wpa-panel">
+                        <div class="wpa-skeleton wpa-skeleton--block"></div>
+                        <div class="wpa-skeleton wpa-skeleton--block" style="height: 180px;"></div>
+                      </div>
+                    </div>
+                  </main>
+                </div>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>진입 직후 또는 이벤트 전환 직후 — 이벤트·신청 데이터를 불러오는 중. 서버 렌더로 함께 도착하면 안 보일 수 있고, 클라이언트 전환·재조회 시에 나타난다.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>· 사이드바·모드 세그먼트는 그대로 동작<br>· skeleton 영역은 클릭 무반응</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td><strong>불러오기 실패</strong> — skeleton 자리에 "잠시 후 다시 시도해주세요" + "다시 시도" 버튼 (사이드바·헤더는 유지 — 풀-페이지 에러 없음).<br><strong>필터 전환 재조회</strong> — 패널 전체가 아닌 행 리스트 영역만 skeleton.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>↔ <code>EventSelect</code> · <code>ApplicationListPanel</code> · <code>ApplicationDetailPanel</code> → <code>Skeleton</code> (실제 레이아웃과 같은 영역 점유 — layout shift 없음) — <code>SidebarNav</code> · <code>ModeSegment</code>는 유지</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>동일 — skeleton: <code>color-divider</code> 배경 + shimmer (1.5s ease-in-out · opacity 0.6↔0.95, 컴포넌트에 캡슐화)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 데이터 도착 시 cut 교체 (fade 없음) — Behavior Source의 Loading → 데이터 전환 규칙 상속. web_partner_home과 동일 패턴.</td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </section>
+</div>
+
+<!-- ============================================================
+     🔄 PERSPECTIVE 3 · GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">
+      cross-cutting 동작만. 모바일 spec에서 상속한 behavior는
+      <code>event_application_manage_page</code> 등 Behavior Source 기준 — 여기엔 웹에서 달라지는 점만 추가.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">사용자 액션</th>
+          <th>화면에 보이는 결과</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>브라우저 back</td>
+          <td>콘솔의 이전 화면으로. <strong>거절 다이얼로그·이벤트 드롭다운은 history entry가 아님</strong> — 열린 상태에서 back하면 페이지가 떠난다 (닫기는 esc/취소/scrim). 이벤트·필터·모드 전환은 주소를 바꾸지만 뒤로 가기 더미를 만들지 않는다.</td>
+        </tr>
+        <tr>
+          <td>새로고침 / URL 직접 진입</td>
+          <td>주소의 이벤트·필터 탭·모드로 그대로 복원 — 홈 "대기 N건 검토"(이벤트+대기 탭) · "참가자 명단"(이벤트+명단 모드) 딥링크가 이 규칙 위에 선다. 주소에 이벤트가 없으면 기본 선택 규칙 (Sub-anatomy ③). 일괄 선택 상태는 복원하지 않음.</td>
+        </tr>
+        <tr>
+          <td>비로그인 접근</td>
+          <td>파트너 로그인으로 이동, 로그인 완료 후 원래 주소(딥링크 포함)로 복귀. public view 없음.</td>
+        </tr>
+        <tr>
+          <td>남의 이벤트 주소로 접근 / 파트너 아닌 계정</td>
+          <td>"볼 수 없는 이벤트예요" 안내 + 내 이벤트 기본 선택으로 대체 / "파트너 계정이 아니에요" 안내 (web_partner_home 규칙과 동일).</td>
+        </tr>
+        <tr>
+          <td>브라우저 탭 비활성 → 복귀</td>
+          <td>마지막 갱신 후 일정 시간이 지났으면 자동 재조회 — 대기 수·처리 상태가 오래된 채 보이지 않게. 갱신 중에도 기존 내용 유지 (skeleton 재진입 없음). <strong>일괄 선택 중이면 선택 유지</strong>, 재조회로 사라진 건만 선택에서 제외.</td>
+        </tr>
+        <tr>
+          <td>승인/거절 처리 직후</td>
+          <td>행이 대기 목록에서 즉시 사라지고 (cut — 상속), 대기 카운트·사이드바 badge·이벤트 바 "대기 N"이 함께 줄어든다. 다음 대기 신청 자동 선택.</td>
+        </tr>
+        <tr>
+          <td>이벤트 시작 시점 도달 (미처리 대기 자동 만료)</td>
+          <td>이벤트가 시작되면 남은 대기 신청은 <strong>자동 만료 — 자동 거절 + 전액 자동 환불</strong> (백엔드 자동화 책임 · 파트너 액션 불필요). 결제 시 신청자에게 고지된 약속(<code>web_user_checkout</code> 동의 문구)과 정합. 화면에서는 다음 갱신 때 그 건들이 거절 탭으로 이동하고 환불 상태 칩이 붙는다 — 자동 만료 건은 사유가 "이벤트 시작 전 미승인 (자동 환불)"로 구분 표기.</td>
+        </tr>
+        <tr>
+          <td>hover (fine pointer)</td>
+          <td>행·칩·버튼·이벤트 바에 hover 피드백 (<code>motion-fast (200ms)</code> · 배경/테두리 톤 + <code>cursor: pointer</code>). hover로만 노출되는 정보 없음 — <code>web_foundation_responsive</code> 포인터 규칙.</td>
+        </tr>
+        <tr>
+          <td>브라우저 인쇄 (Cmd/Ctrl+P)</td>
+          <td>명단 모드에서는 "명단 인쇄" 버튼과 동일한 인쇄 전용 레이아웃. 신청 관리 모드에서는 별도 인쇄 최적화 없음 (보장 안 함).</td>
+        </tr>
+        <tr>
+          <td>다크 모드</td>
+          <td>surface/카드 배경이 다크 토큰으로, partner primary는 다크 변형(<code>color-partner-dark-primary</code> #9b7bec)으로. 결제 완료·인증의 success, 환불 실패의 error는 다크에서 채도 보정 (Behavior Source 배지 규칙 상속). 인쇄 레이아웃은 항상 라이트.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion &amp; timing</h2>
+    <p class="intro">
+      duration은 MDS motion 토큰 — 웹 구현은 CSS <code>transition-duration</code> / Tailwind로 같은 ms 값을 소비.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">Transition</th>
+          <th style="width: 160px;">Duration (token)</th>
+          <th>Curve / notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>화면 진입 (사이드바 라우트 전환)</td>
+          <td><code>fast</code> (200ms)</td>
+          <td>메인 영역 fade — 사이드바 고정 (셸 규칙)</td>
+        </tr>
+        <tr>
+          <td>상세 패널 교체 (행 클릭)</td>
+          <td><code>fast</code> (200ms)</td>
+          <td>fade — 목록은 움직이지 않음 (인디케이터만 이동)</td>
+        </tr>
+        <tr>
+          <td>모드 전환 (신청 관리 ↔ 참가자 명단)</td>
+          <td><code>fast</code> (200ms)</td>
+          <td>work 영역 crossfade</td>
+        </tr>
+        <tr>
+          <td>거절 다이얼로그 in/out</td>
+          <td><code>fast</code> (200ms)</td>
+          <td>scale 0.96→1 + fade · scrim fade 동시</td>
+        </tr>
+        <tr>
+          <td>선택 bar 등장/소거</td>
+          <td><code>fast</code> (200ms)</td>
+          <td>slide-up · ease-out</td>
+        </tr>
+        <tr>
+          <td>승인/거절 후 행 제거 · Loading → 데이터</td>
+          <td>cut (0ms)</td>
+          <td>즉시 교체 — Behavior Source 상속 (fade 없음)</td>
+        </tr>
+        <tr>
+          <td>hover 피드백</td>
+          <td><code>fast</code> (200ms)</td>
+          <td>ease-out — 배경/테두리 톤 변화</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>네트워크 끊김</strong> — 패널 영역만 "다시 시도" 안내로 교체 (사이드바·헤더 유지). 승인/거절/일괄 처리 중 끊기면 해당 액션만 실패 안내 + 입력 보존.</li>
+      <li><strong>처리 중 화면 이탈</strong> — 승인/거절 요청을 보낸 뒤 다른 화면으로 가도 처리는 계속됨. 돌아오면 재조회로 갱신된 상태가 보인다.</li>
+      <li><strong>환불 비동기</strong> — 거절 직후 환불은 "진행 중"이며 완료까지 시간이 걸릴 수 있음. 거절 탭의 환불 상태 칩(진행 중 / 완료 / <span style="color: var(--color-error);">실패</span>)이 SSOT — 실패 건은 운영자 처리 대상이라는 카피 명시.</li>
+      <li><strong>다크 모드</strong> — 우측 상단 Dark 토글로 확인. primary → <code>color-partner-dark-primary</code> · success/error/warning 칩은 다크 채도 보정.</li>
+      <li><strong>접근성</strong> — tab 순서: 사이드바 → 모드 세그먼트 → 이벤트 선택 바 → 필터 → 목록 (행마다 체크박스 → 행 본체) → 상세 (정보 → 거절 → 승인). 다이얼로그는 포커스 트랩 + esc 닫기 + 첫 포커스는 첫 사유 칩. 체크박스는 신청자 이름과 연결되어 읽힘 ("김지연 선택"). 모든 인터랙티브 요소 visible focus ring (데스크톱 우선 surface 필수 검토).</li>
+      <li><strong>reduced motion</strong> — <code>prefers-reduced-motion</code> 시 shimmer 정지 · 다이얼로그/선택 bar 등장 0ms · hover transition 0ms.</li>
+      <li><strong>SEO / 공유</strong> — 비공개 콘솔 화면. noindex — og 메타 불필요. 신청자 개인정보가 있는 화면이라 외부 공유 진입점 없음.</li>
+      <li><strong>초광폭 (≥1920px)</strong> — 콘솔 셸 1440px 캡 중앙 정렬 (도구 화면 규칙). 목록 380px 고정, 상세만 넓어짐.</li>
+      <li><strong>이벤트 시작 후의 대기 신청</strong> — 없음: 시작 시점에 자동 만료(자동 거절 + 전액 환불)되므로 시작 후 대기 탭은 0건으로 수렴. 만료 처리가 비동기로 늦으면 잠깐 남아 보일 수 있으나 파트너가 처리할 필요 없음 — 갱신 시 거절 탭으로 이동.</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     📖 PERSPECTIVE 4 · REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">
+      Implementation source + 인접 화면 link만. Components / Tokens는 States의 각 mini-table 참조.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <p class="intro">
+      🚧 디자인중 — 웹 구현 미착수. 승인/거절/일괄 승인의 데이터 계약은 모바일 신청관리가 쓰던 백엔드 경로 재사용이 출발점.
+      거절 → 자동 전액 환불은 백엔드가 보장 (<code>docs/architecture/payment-pipeline.md</code> §5.2 — 거절 처리 시 DB 트리거가 결제 취소를 호출) — 프론트는 거절 1회 호출 + 환불 상태 표시만 책임진다.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 200px;">항목</th><th>Path / Reference</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Page / Component</strong></td>
+          <td><code>WebPartnerApplications</code> (+ <code>ApplicationListPanel</code> / <code>ApplicationDetailPanel</code> / <code>RejectDialog</code> / <code>RosterTable</code> / 공용 셸 <code>PartnerConsoleShell</code>) — <code>TBD</code></td>
+        </tr>
+        <tr>
+          <td><strong>File path</strong></td>
+          <td><code>apps/landing_partner/src/app/applications/page.tsx</code> <code>TBD</code> — 콘솔 라우트 그룹 구조는 web_partner_home과 함께 확정</td>
+        </tr>
+        <tr>
+          <td><strong>Data source</strong></td>
+          <td>이벤트별 신청 read (상태별 카운트 포함) · 승인/거절 update · 일괄 승인 — 모바일 신청관리의 Supabase read/update 계약 재사용 <code>TBD</code>. 거절 시 자동 환불·알림은 백엔드 트리거 (<code>payment-pipeline.md</code> §5.2) · 환불 상태는 신청 데이터의 환불 필드 read</td>
+        </tr>
+        <tr>
+          <td><strong>Route</strong></td>
+          <td><code>/applications</code> (+ 이벤트·탭·모드 query param) · Next.js app router (landing_partner 확장) — param 표기 <code>TBD</code></td>
+        </tr>
+        <tr>
+          <td><strong>Behavior Source</strong></td>
+          <td><a href="/specs/event_application_manage_page/index.html"><code>/specs/event_application_manage_page/index.html</code></a> — Overview의 Behavior Source 행과 동일 경로 (+ detail/list 보조)</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 280px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/web_partner_home/index.html"><code>WebPartnerHome</code></a></td>
+          <td>콘솔 셸(사이드바) SSOT + 주 진입점 — 대기 카드 / "대기 N건 검토" / "참가자 명단" 버튼이 이 화면으로 딥링크</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_application_manage_page/index.html"><code>EventApplicationManagePage</code></a></td>
+          <td>Behavior Source (주) — 승인/거절 즉시 처리 · 일괄 승인 · 행 자연 소멸 · race 규칙의 SSOT</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_application_detail_page/index.html"><code>EventApplicationDetailPage</code></a></td>
+          <td>Behavior Source (보조) — 신청자 프로필·결제 정보 구성, 심사 대기에서만 액션 노출, 거절 사유 다이얼로그</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_application_list_page/index.html"><code>EventApplicationListPage</code></a></td>
+          <td>Behavior Source (보조) — 단일 이벤트 참가 현황 · 결제 완료 기준 확정 참가자 · 처리 후 fresh 정책 (입장그룹 sub-section·carousel은 웹에서 deprecated)</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/settlement_page/index.html"><code>SettlementPage</code></a></td>
+          <td>후속 흐름 — 확정·환불 결과가 정산에 반영. 웹 "정산" spec 작성 예정</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/web_foundation_responsive/"><code>WebFoundationResponsive</code></a></td>
+          <td>breakpoint · 컨테이너 · 그리드 · 포인터 규칙 SSOT (도구 화면 1440px 캡 포함)</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     ✅ AUTHORING CHECKLIST
+     ============================================================ -->
+<section class="doc" style="border: 2px solid var(--color-primary); border-radius: var(--radius-card); padding: 16px 24px; margin-top: 32px;">
+  <h2 style="color: var(--color-primary);">✅ Authoring checklist (web)</h2>
+  <ul class="notes" style="line-height: 1.9;">
+    <li>✓ <strong>Head meta</strong> — feature-status=planned · features=event-operation/participation-status-redesign · surface=web_partner (Overview Surface 행과 일치)</li>
+    <li>✓ <strong>Overview</strong> — Status · Surface · Category · Route · Behavior Source · Hierarchy · Purpose · Entry/Exit · Background · Frequency 채움</li>
+    <li>✓ <strong>Behavior Source</strong> — <code>event_application_manage_page</code> (주) + detail/list (보조) 상속 범위 + 웹에서 달라지는 점 (deprecated 3종 · master-detail 통합 · 환불 고지 · 체크박스 일괄 승인 · 명단 모드) 명시</li>
+    <li>✓ <strong>History</strong> — 2026-06-07 v1.0 initial + v1.1 교차 검증 반영 (자동 만료 · 사유 노출 확정)</li>
+    <li>✓ <strong>Responsive Layout</strong> — Desktop(≥1280) 1차 blueprint + Mobile(&lt;768) blueprint + Tablet 1줄 (web_partner 데스크톱 우선)</li>
+    <li>✓ <strong>Sub-anatomy</strong> — ① 사이드바(셸 spec 위임) · ② 헤더+세그먼트 · ③ 이벤트 선택 바 · ④ 목록 패널 · ⑤ 상세 패널 · ⑥ 명단 패널 · ⑦ 거절 다이얼로그 (평면 나열)</li>
+    <li>✓ <strong>States</strong> — 6 state enumerate (대기 목록 기본 / 신청 0건 / 거절 확인 다이얼로그 / 명단 모드 / 일괄 선택 중 / Loading) · 첫 state 풀 리스트 · 2번째+ additive diff · 6 aspect rows · mockup은 Desktop 1280 (0.5 scale)</li>
+    <li>✓ <strong>Global Behavior</strong> — 브라우저 back(모달 history 처리) / 새로고침·URL 딥링크 / 비로그인·권한 / 탭 복귀 / 인쇄 / motion 토큰 + reduced-motion</li>
+    <li>✓ <strong>토큰 표기</strong> — MDS 이름 + 괄호 px · 구현은 CSS variable 관점</li>
+    <li>✓ <strong>Reference</strong> — TBD 명시 + payment-pipeline §5.2 (거절 → 자동 전액 환불 트리거) 링크</li>
+    <li>⏳ <strong>Screen registry</strong> — <code>src/lib/screen-definitions.ts</code>의 <code>WEB_PARTNER_SCREENS</code> 등록은 별도 작업 (이 PR 범위 외 — surface 등록은 메인 작업 담당)</li>
+  </ul>
+</section>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>

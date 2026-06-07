@@ -1,0 +1,1883 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<!-- ── Web spec metadata ─────────────────────────────────────── -->
+<meta name="feature-status" content="planned">
+<meta name="features" content="event/refund-policy-v2">
+<meta name="surface" content="web_user">
+<title>Spec — WebUserCheckout (web_user · /events/:id/checkout)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   WebUserCheckout-specific atoms.
+
+   Desktop-first mockup (Mark 지시 2026-06-07 — web MVP 유저웹은
+   1280px baseline 으로 설계. 모바일 variant 는 후속 pass — History 참조).
+
+   Mockup canvas = 실제 1280×760 캔버스를 0.5 스케일로 표시.
+   스크린샷은 .mock-scale 단위로 캡처.
+   ============================================================ */
+
+/* --- Desktop viewport frame (1280 canvas @ 0.5 display scale) --- */
+.viewport--desktop {
+  width: 1280px;
+  height: 760px;
+  border-radius: 12px;
+}
+.mock-scale {
+  width: 640px;
+  height: 380px;
+  overflow: hidden;
+  border-radius: 8px;
+}
+.mock-scale > .viewport--desktop {
+  transform: scale(0.5);
+  transform-origin: top left;
+}
+.state-mini__mock { width: 664px; }
+.layout-grid--desktop { grid-template-columns: 640px 1fr; }
+@media (max-width: 1100px) { .layout-grid--desktop { grid-template-columns: 1fr; } }
+.blueprint--desktop {
+  width: 640px;
+  height: 380px;
+  border-radius: 12px;
+}
+
+/* --- ① Global header (checkout 축약형 — 검색 필드 없음) --- */
+.wuc-header {
+  height: 64px;
+  background: var(--color-background);
+  border-bottom: 1px solid var(--color-divider);
+}
+.wuc-header__inner {
+  max-width: 1200px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.wuc-logo { height: 40px; width: auto; flex: 0 0 auto; display: block; cursor: pointer; }
+.wuc-header__spacer { flex: 1; }
+.wuc-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  cursor: pointer;
+}
+.wuc-avatar svg { width: 18px; height: 18px; }
+
+/* --- Main 2-col grid (좌 본문 / 우 sticky 주문 요약) --- */
+.wuc-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 32px 32px;
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 24px;
+  align-items: start;
+}
+.wuc-col {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.wuc-page-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+/* --- ② Approval notice banner (승인 대기 모델 고지) --- */
+.wuc-banner {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-primary) 6%, var(--color-background));
+  border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
+}
+.wuc-banner svg { width: 20px; height: 20px; flex: 0 0 auto; color: var(--color-primary); margin-top: 1px; }
+.wuc-banner__title { font-size: 14px; font-weight: 700; color: var(--color-text-primary); }
+.wuc-banner__sub { font-size: 13px; color: var(--color-text-secondary); line-height: 1.5; margin-top: 2px; }
+
+/* --- Generic card --- */
+.wuc-card {
+  background: var(--color-background);
+  border: 1px solid var(--color-divider);
+  border-radius: 16px;
+  padding: 20px;
+}
+.wuc-card__title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin-bottom: 14px;
+}
+
+/* --- ③ Order info --- */
+.wuc-event { display: flex; gap: 14px; align-items: center; }
+.wuc-event__thumb {
+  width: 120px; height: 60px;
+  border-radius: 8px;
+  flex: 0 0 auto;
+  position: relative;
+  overflow: hidden;
+  background: var(--color-surface);
+}
+.wuc-event__thumb span {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: var(--color-text-secondary); opacity: 0.6;
+}
+.wuc-event__name {
+  font-size: 15px; font-weight: 700; color: var(--color-text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.wuc-event__meta {
+  display: flex; align-items: center; gap: 4px;
+  margin-top: 4px;
+  font-size: 13px; color: var(--color-text-secondary);
+}
+.wuc-event__meta svg { width: 13px; height: 13px; color: var(--color-primary); flex: 0 0 auto; }
+.wuc-ticket-row {
+  display: flex; align-items: center; gap: 12px;
+  margin-top: 14px; padding-top: 14px;
+  border-top: 1px dashed var(--color-divider);
+}
+.wuc-ticket-row__name { font-size: 14px; font-weight: 600; color: var(--color-text-primary); }
+.wuc-ticket-row__qty { font-size: 13px; color: var(--color-text-secondary); }
+.wuc-ticket-row__price { margin-left: auto; font-size: 14px; font-weight: 700; color: var(--color-text-primary); }
+.wuc-link { font-size: 13px; font-weight: 600; color: var(--color-primary); cursor: pointer; white-space: nowrap; }
+
+/* --- ④ Identity verification card (조건부) --- */
+.wuc-identity {
+  display: flex; align-items: center; gap: 12px;
+  background: color-mix(in srgb, var(--color-warning) 8%, var(--color-background));
+  border: 1px solid color-mix(in srgb, var(--color-warning) 35%, transparent);
+  border-radius: 16px;
+  padding: 16px 20px;
+}
+.wuc-identity__icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: color-mix(in srgb, var(--color-warning) 18%, transparent);
+  color: var(--color-warning);
+  display: flex; align-items: center; justify-content: center;
+  flex: 0 0 auto;
+}
+.wuc-identity__icon svg { width: 18px; height: 18px; }
+.wuc-identity__title { font-size: 14px; font-weight: 700; color: var(--color-text-primary); }
+.wuc-identity__sub { font-size: 13px; color: var(--color-text-secondary); margin-top: 2px; line-height: 1.45; }
+.wuc-identity__btn {
+  margin-left: auto;
+  height: 36px; padding: 0 16px;
+  display: inline-flex; align-items: center;
+  border-radius: 8px;
+  background: var(--color-primary);
+  color: #ffffff;
+  font-size: 13px; font-weight: 700;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+/* --- ⑤ Consent section --- */
+.wuc-check {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 14px; color: var(--color-text-primary);
+  cursor: pointer;
+}
+.wuc-check__box {
+  width: 20px; height: 20px;
+  border-radius: 4px;
+  border: 1.5px solid var(--color-divider);
+  background: var(--color-background);
+  display: flex; align-items: center; justify-content: center;
+  flex: 0 0 auto;
+  color: #ffffff;
+}
+.wuc-check__box svg { width: 12px; height: 12px; }
+.wuc-check--checked .wuc-check__box {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.wuc-check--all { font-size: 15px; font-weight: 700; }
+.wuc-check__req { font-size: 12px; font-weight: 700; color: var(--color-primary); }
+.wuc-check__view {
+  margin-left: auto;
+  font-size: 13px; color: var(--color-text-secondary);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.wuc-consent__divider { height: 1px; background: var(--color-divider); margin: 14px 0; }
+.wuc-consent__items { display: flex; flex-direction: column; gap: 12px; }
+.wuc-refund-box {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: var(--color-surface);
+  font-size: 12px;
+  line-height: 1.65;
+  color: var(--color-text-secondary);
+}
+.wuc-refund-box__head {
+  display: block;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 10px 0 2px;
+}
+.wuc-refund-box__head:first-child { margin-top: 0; }
+
+/* --- ⑥ Order summary (sticky right) --- */
+.wuc-summary {
+  background: var(--color-background);
+  border: 1px solid var(--color-divider);
+  border-radius: 16px;
+  padding: 20px;
+}
+.wuc-summary__title { font-size: 15px; font-weight: 800; color: var(--color-text-primary); margin-bottom: 12px; }
+.wuc-sum-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 4px 0;
+  font-size: 14px; color: var(--color-text-secondary);
+}
+.wuc-sum-row b { font-weight: 600; color: var(--color-text-primary); }
+.wuc-sum-total {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-top: 12px; padding-top: 12px;
+  border-top: 1px solid var(--color-divider);
+  font-size: 15px; font-weight: 800; color: var(--color-text-primary);
+}
+.wuc-sum-total b { font-size: 18px; font-weight: 800; color: var(--color-primary); }
+.wuc-sum-note {
+  margin-top: 14px;
+  display: flex; gap: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-success) 8%, var(--color-background));
+  font-size: 12px; line-height: 1.5; color: var(--color-text-primary);
+}
+.wuc-sum-note svg { width: 14px; height: 14px; flex: 0 0 auto; color: var(--color-success); margin-top: 1px; }
+.wuc-cta {
+  margin-top: 14px;
+  height: 48px;
+  border-radius: 10px;
+  background: var(--color-primary);
+  color: #ffffff;
+  font-size: 15px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.wuc-cta--disabled {
+  background: var(--color-divider);
+  color: var(--color-text-secondary);
+  cursor: default;
+}
+.wuc-cta-helper {
+  margin-top: 8px;
+  font-size: 12px; color: var(--color-text-secondary);
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* --- 결제 진행 중 overlay (외부 결제창 시뮬레이션) --- */
+.wuc-dim {
+  position: absolute; inset: 0;
+  background: rgba(17, 24, 39, 0.45);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 16px;
+  z-index: 5;
+}
+.wuc-paywin {
+  width: 420px;
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.28);
+}
+.wuc-paywin__bar {
+  height: 36px;
+  background: #f3f4f6;
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 14px;
+  font-size: 12px; color: #6b7280;
+}
+.wuc-paywin__body { padding: 28px 24px 32px; text-align: center; }
+.wuc-paywin__title { font-size: 15px; font-weight: 700; color: #111827; }
+.wuc-paywin__sub { font-size: 13px; color: #6b7280; line-height: 1.6; margin-top: 8px; }
+.wuc-paywin__sim { font-size: 12px; font-style: italic; color: #9ca3af; margin-top: 20px; }
+.wuc-dim__hint { font-size: 13px; color: #ffffff; text-align: center; line-height: 1.6; }
+.wuc-dim__hint u { cursor: pointer; }
+
+/* --- 완료 (승인 대기) full-page --- */
+.wuc-done {
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center;
+  padding-top: 120px;
+  gap: 14px;
+}
+.wuc-done__icon {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: var(--color-success);
+  color: #ffffff;
+  display: flex; align-items: center; justify-content: center;
+}
+.wuc-done__icon svg { width: 36px; height: 36px; }
+.wuc-done__title { font-size: 22px; font-weight: 800; color: var(--color-text-primary); }
+.wuc-done__chip {
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-warning) 14%, var(--color-background));
+  color: var(--color-warning);
+  font-size: 13px; font-weight: 700;
+}
+.wuc-done__desc { font-size: 14px; color: var(--color-text-secondary); line-height: 1.65; }
+.wuc-done__ctas { display: flex; gap: 12px; margin-top: 10px; }
+.wuc-done__btn {
+  height: 44px; padding: 0 24px;
+  display: inline-flex; align-items: center;
+  border-radius: 10px;
+  background: var(--color-primary);
+  color: #ffffff;
+  font-size: 14px; font-weight: 700;
+  cursor: pointer;
+}
+.wuc-done__btn--ghost {
+  background: var(--color-background);
+  border: 1px solid var(--color-divider);
+  color: var(--color-text-primary);
+}
+
+/* --- 결제 실패 snackbar --- */
+.wuc-snackbar {
+  position: absolute;
+  left: 50%; transform: translateX(-50%);
+  bottom: 28px;
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 18px;
+  border-radius: 8px;
+  background: #323232;
+  color: #ffffff;
+  font-size: 13px;
+  white-space: nowrap;
+  z-index: 6;
+}
+.wuc-snackbar svg { width: 16px; height: 16px; color: var(--color-warning); flex: 0 0 auto; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     Toolbar — universal toggles
+     ============================================================ -->
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     📍 HEADER
+     ============================================================ -->
+<header>
+  <h1>유저웹 신청 · 결제 (Checkout)</h1>
+</header>
+
+<!-- ============================================================
+     🎯 OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 160px;">Status</th>
+        <td>
+          <strong>🚧 디자인중</strong>
+          <em style="color: var(--color-text-secondary);">— web-mvp pivot Phase 3 초기 설계 (Desktop 1280 baseline)</em>
+        </td>
+      </tr>
+      <tr>
+        <th>Surface</th>
+        <td><code>web_user</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>event · payment · checkout (신청/결제)</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>/events/:id/checkout?ticket=:ticketId</code> · Next.js route (landing_user 확장) — 이벤트 상세에서 티켓 선택 후 진입하는 보호 페이지 (로그인 필요)</td>
+      </tr>
+      <tr>
+        <th>Behavior Source</th>
+        <td>
+          <a href="/specs/event_application_wizard_page/index.html"><code>/specs/event_application_wizard_page/index.html</code></a>
+          — 결제 단계 behavior 상속: 결제 금액 카드 구성 · 환불 정책 3그룹 고지 · 결제 실패 snackbar(즉시 재시도) · 성공 culmination 화면 · 중복 신청 거부 규칙<br>
+          <a href="/specs/ticket_selection_sheet/index.html"><code>/specs/ticket_selection_sheet/index.html</code></a>
+          — 진입 전제 상속: 티켓 1종 확정(ticketId)이 이 화면 진입의 게이트 — 티켓 추천/잠금 규칙은 이벤트 상세 쪽 책임<br>
+          <a href="/specs/identity_verification_screen/index.html"><code>/specs/identity_verification_screen/index.html</code></a>
+          — 본인인증 behavior 상속: 동의 → 인증 창 → 성공/실패 retry · 팝업 차단 시 즉시 실패 · 최초 1회 영구 저장<br>
+          <strong>웹에서 달라지는 점</strong>: ① 4-step <strong>위저드 → 단일 페이지</strong> (step indicator 없음) ·
+          ② <strong>파트너 커스텀 자격심사(파트너 인증 step) 제외</strong> — web MVP deprecated, 파트너는 승인/거절만 ·
+          ③ 개인 정보 동의 step → 약관 동의 항목 1줄로 흡수 ·
+          ④ 결제/본인인증 모두 <strong>Portone V2 웹 창</strong> (모바일의 Iamport V1 WebView / NICE 네이티브 창 대체).
+        </td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <em>— (top-level screen — 이벤트 상세에서 진입)</em> · 진입원 <code>WebUserEventDetail</code> spec 은 별도 작성 예정 (TBD)<br>
+          <strong>Children</strong>: <em>—</em> · 완료(승인 대기) 화면은 이 spec 의 state 로 포함 (별도 spec 아님)
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          <strong>티켓을 결제하고 참여 신청을 제출하는 화면.</strong> 주문 내용(이벤트·티켓·금액)을 확인하고,
+          약관·환불 정책에 동의한 뒤 외부 결제창으로 결제를 마친다.
+          핵심 메시지는 <strong>승인 대기 모델</strong> — 결제는 참여 확정이 아니라 신청의 시작이며,
+          파트너 승인 시 확정 · 거절 시 전액 자동 환불임을 결제 전·후 모두에서 명확히 전달한다.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: 이벤트 상세(<code>/events/:id</code>)에서 티켓 선택 후 "신청하기" · URL 직접 진입은 티켓 파라미터가 유효할 때만 (없으면 이벤트 상세로 돌려보냄) · 비로그인 진입은 로그인 후 복귀.<br>
+          <strong>Exit points</strong>: ① 결제 완료 → 완료 화면(승인 대기) → "구매내역 보기" (<code>/my/purchases</code> — TBD) ·
+          ② 로고/브라우저 back → 이벤트 상세 복귀 (결제 취소로 간주) ·
+          ③ 결제 실패 → 이 화면 유지 (재시도).
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          web-mvp pivot — "이벤트 탐색 → 상세 → 구매·신청" 퍼널의 마지막 화면.
+          모바일의 4-step 위저드는 파트너 커스텀 자격심사(파트너 인증)가 deprecated 되면서 step 가치가 사라져,
+          웹은 <strong>단일 페이지 + 우측 sticky 주문 요약</strong>의 데스크톱 커머스 관례로 재설계.
+          본인인증 미완 사용자만 결제 전 본인인증 카드가 인라인으로 삽입된다 (별도 step 아님).
+          환불 정책 고지는 전자상거래법(제15조·제17조)상 결제 전 의무 노출 —
+          <a href="/specs/event_application_wizard_page/index.html">wizard</a> 의 3그룹 구조와
+          refund-policy-v2 정책(파트너 귀책 100% / grace / cutoff)을 그대로 따른다.
+          1280px 데스크톱 주 캔버스 (Mark 지시 2026-06-07) — 모바일 variant 는 후속 pass.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>구매 의도 발생 시 1회 — 트래픽은 낮지만 매출이 발생하는 결정 화면.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     🕐 HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">
+    이 spec의 주요 변경 이력. 최신 항목 위에 추가 (최신 → 오래된 순).
+  </p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-06-07</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>web-mvp pivot Phase 3 초기 설계 (1280 baseline)</strong> —
+          유저웹 신청/결제 신규 spec. Desktop ≥1280 단일 페이지 (좌 본문 + 우 sticky 주문 요약)
+          로 작성, Mobile variant 는 후속 pass (Mark 지시 2026-06-07 — <code>web_user_home</code> 파일럿과 동일 예외).
+          behavior 는 <code>event_application_wizard_page</code>(결제 단계) ·
+          <code>ticket_selection_sheet</code>(진입 게이트) · <code>identity_verification_screen</code>(본인인증) 상속.
+          파트너 커스텀 자격심사 step 은 deprecated 로 제외 (승인/거절만),
+          결제/본인인증은 Portone V2 웹 창 기준. 승인 대기 모델(결제 ≠ 확정 · 거절 시 전액 자동 환불)을
+          배너 + 주문 요약 + 완료 화면 3곳에서 고지.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Anchor nav -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Responsive Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#global-behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     🧱 PERSPECTIVE 1 · RESPONSIVE LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Responsive Layout</h2>
+    <span class="lede">
+      화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.
+      이 화면은 <strong>Desktop (≥1280) variant 가 주 blueprint</strong> — breakpoint variants 표 참조.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Breakpoint variants</h2>
+    <p class="intro">
+      Breakpoint · 컨테이너 · 그리드 정의의 SSOT는
+      <a href="/specs/web_foundation_responsive/"><code>web_foundation_responsive</code></a>.
+      이 화면은 <strong>Desktop-first 예외 화면</strong> — 1280 baseline 으로 먼저 설계하고
+      Mobile blueprint 는 후속 pass 에서 추가한다 (History 참조).
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 160px;">Variant</th>
+          <th style="width: 180px;">Breakpoint</th>
+          <th>이 화면에서의 차이</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Desktop</strong> (주 variant)</td>
+          <td><code>≥ 1280px</code></td>
+          <td>헤더(로고 + 아바타 — 검색 제외) + <strong>2-컬럼</strong>: 좌 본문 컬럼(승인 안내 → 주문 정보 → 본인인증(조건부) → 동의) + 우 <strong>주문 요약 카드 sticky</strong> (360px). 컨테이너 1200px 캡 중앙 정렬 · gutter 32px — 아래 blueprint 가 이 variant.</td>
+        </tr>
+        <tr>
+          <td>Tablet</td>
+          <td><code>768–1279px</code></td>
+          <td>별도 blueprint 없음 — Desktop 레이아웃 축소: 주문 요약 카드가 sticky 를 풀고 <strong>본문 컬럼 최하단으로 합류 (1-col)</strong> · 카드 폭 100%.</td>
+        </tr>
+        <tr>
+          <td>Mobile</td>
+          <td><code>&lt; 768px</code></td>
+          <td><strong>후속 pass 에서 작성 (TBD)</strong> — 1col + 하단 고정 결제 바 예상. 이번 pass 는 1280 baseline 만 (Mark 지시 2026-06-07).</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree — Desktop (≥1280px)</h2>
+    <p class="intro">
+      Sticky 헤더(64px 풀-블리드) + 1200px 캡 컨테이너 안에 2-컬럼 그리드 —
+      좌 본문 컬럼(가변 ≈752px)에 신청 정보가 위→아래 단일 흐름으로 쌓이고,
+      우 주문 요약 카드(360px)가 sticky 로 따라온다. blueprint 는 1280×760 캔버스의 ½ 스케일.
+    </p>
+
+    <div class="layout-grid layout-grid--desktop">
+      <div class="blueprint blueprint--desktop">
+        <!-- Whole frame outline -->
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- ① Global header — h=64 (½ scale 32) full-bleed -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0; left:0; right:0; height:32px;">
+          <span class="blueprint__region-label">① GlobalHeader · h=64 · sticky · full-bleed (검색 없음)</span>
+        </div>
+
+        <!-- container guides (max-width 1200 + gutter 32 → content 36..604 @ ½) -->
+        <div class="blueprint__region" style="top:32px; left:0; width:36px; bottom:0; border-style:dashed; border-color:rgba(var(--spec-blueprint-rgb), 0.25); background:none;"></div>
+        <div class="blueprint__region" style="top:32px; right:0; width:36px; bottom:0; border-style:dashed; border-color:rgba(var(--spec-blueprint-rgb), 0.25); background:none;"></div>
+
+        <!-- 좌 컬럼: x 36..412 (≈752px @1280) -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:44px; left:36px; width:376px; height:22px;">
+          <span class="blueprint__region-label" style="font-size:9px;">② ApprovalNoticeBanner — 결제 ≠ 확정 고지</span>
+        </div>
+        <div class="blueprint__region" style="top:74px; left:36px; width:376px; height:58px;">
+          <span class="blueprint__region-label" style="font-size:9px;">③ OrderInfoCard — 이벤트 + 티켓</span>
+        </div>
+        <div class="blueprint__region" style="top:140px; left:36px; width:376px; height:30px; border-style:dashed; border-color:rgba(var(--spec-blueprint-rgb), 0.4);">
+          <span class="blueprint__region-label" style="font-size:9px;">④ IdentityVerificationCard — 조건부 (본인인증 미완 시)</span>
+        </div>
+        <div class="blueprint__region" style="top:178px; left:36px; width:376px; height:120px;">
+          <span class="blueprint__region-label" style="font-size:9px;">⑤ ConsentSection — 약관 · 환불 정책 동의</span>
+        </div>
+
+        <!-- 우 컬럼: x 424..604 (360px @1280) -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:44px; left:424px; width:180px; height:160px;">
+          <span class="blueprint__region-label" style="font-size:9px;">⑥ OrderSummaryCard · w=360 · sticky<br>금액 + 승인 안내 + "결제 진행" CTA</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:36px; right:4px;">container 1200 캡 · gutter 32</div>
+        <div class="blueprint__align-marker" style="bottom:2px; right:40px;">⑥ sticky — 스크롤해도 우측 고정</div>
+      </div>
+
+      <div class="layout-tree"><b>&lt;body&gt;</b>
+├─ <em>GlobalHeader</em> (h=64 · sticky top · full-bleed        ← ①
+│  │  bottom 1px <code>color-divider</code> · 내부 1200px 캡 정렬)
+│  ├─ <b>Logo</b> (h=40 · 클릭 → 이벤트 상세 복귀 confirm 없이 이동)
+│  ├─ <b>Spacer</b> (flex grow)
+│  └─ <b>AvatarButton</b> 36 — 보호 페이지라 항상 로그인 상태
+│     <i>검색 필드 없음 — 결제 집중 컨텍스트 (web_user_home 대비 의도적 축약)</i>
+│
+└─ <b>&lt;main&gt;</b> (max-width <code>1200px</code> 중앙 · gutter <code>32px</code>
+   │  — <code>web_foundation_responsive</code> Desktop 컨테이너 규칙)
+   └─ <b>grid</b> (2-col: 본문 1fr ≈752 / 요약 360 · gap <code>24px</code>)
+      ├─ <em>CheckoutColumn</em> (flex column · gap <code>16px</code>)
+      │  ├─ <b>PageTitle</b> "신청 · 결제" (22/800)
+      │  ├─ <em>ApprovalNoticeBanner</em>                       ← ②
+      │  ├─ <em>OrderInfoCard</em>                              ← ③
+      │  ├─ <em>IdentityVerificationCard</em> (조건부)          ← ④
+      │  └─ <em>ConsentSection</em>                             ← ⑤
+      │
+      └─ <em>OrderSummaryCard</em> (sticky · top: 88px)         ← ⑥
+         └─ 금액 rows → 총액 → 환불 보장 노트 → CTA → helper</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <p class="intro">
+      Desktop 값 기준. Tablet 은 1-col 로 합류 (주문 요약이 본문 하단), Mobile 은 후속 pass.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 50px;">#</th>
+          <th style="width: 210px;">Region</th>
+          <th style="width: 230px;">Alignment</th>
+          <th>Spacing — Desktop</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>Page container</td><td>중앙 정렬 · max-width 1200px 캡 · 2-col grid</td><td>gutter <code>32px</code> · column gap <code>24px</code> — foundation Desktop 규칙</td></tr>
+        <tr><td>①</td><td>GlobalHeader</td><td>sticky top · full-bleed bg/border · 내부 1200px 캡</td><td>h: 64px · 내부 요소 gap: <code>24px</code> · bottom: <code>1px color-divider</code></td></tr>
+        <tr><td>②</td><td>ApprovalNoticeBanner</td><td>본문 컬럼 폭 100% · icon + 텍스트 row</td><td>padding: <code>14px 16px</code> · icon↔텍스트 gap: <code>12px</code> · radius 12 · 카드 간 gap <code>spacing-medium (16px)</code></td></tr>
+        <tr><td>③</td><td>OrderInfoCard</td><td>카드 내부 좌측 정렬 · 가격만 우측 끝</td><td>card padding: <code>20px</code> · radius <code>radius-card (16px)</code> · 썸네일↔텍스트 gap <code>14px</code> · 티켓 row 상단 dashed divider</td></tr>
+        <tr><td>④</td><td>IdentityVerificationCard</td><td>row · crossAxis center · 버튼 우측 끝</td><td>padding: <code>16px 20px</code> · icon↔텍스트 gap <code>12px</code> · warning tint bg — 조건부 렌더 (미노출 시 행 자체 생략, ⑤가 위로)</td></tr>
+        <tr><td>⑤</td><td>ConsentSection</td><td>체크 row 좌측 정렬 · "보기" 링크만 우측 끝</td><td>card padding: <code>20px</code> · 전체 동의↔개별 divider 위아래 <code>14px</code> · 개별 항목 gap <code>12px</code> · 환불 정책 박스 margin-top <code>16px</code></td></tr>
+        <tr><td>⑥</td><td>OrderSummaryCard</td><td>sticky (top: 헤더 64 + 24) · 내부 좌우 양끝 정렬 rows</td><td>w: 360px · padding: <code>20px</code> · radius <code>radius-card (16px)</code> · 총액 row 상단 1px divider · CTA margin-top <code>14px</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ① — GlobalHeader (checkout 축약형)</h2>
+    <p class="intro">
+      64px sticky 헤더 — <code>web_user_home</code> 의 GlobalHeader 에서 <strong>검색 필드를 제거한 축약형</strong>.
+      결제 결정에 집중하는 컨텍스트라 탐색 요소를 줄인다. 로고 — (남는 공간) — 아바타.
+      배경·하단 보더는 풀-블리드, 내부 컨텐츠는 1200px 캡에 정렬.
+    </p>
+    <div class="layout-grid layout-grid--desktop">
+      <div class="blueprint" style="width: 640px; height: 56px; border-radius: 8px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:12px; left:36px; width:70px; height:32px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉠ Logo h=40</span>
+        </div>
+        <div class="blueprint__region" style="top:16px; left:120px; right:60px; height:24px; border-style:dashed; border-color:rgba(var(--spec-blueprint-rgb), 0.3); background:none;">
+          <span class="blueprint__region-label" style="font-size:9px;">flex grow</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:14px; right:36px; width:20px; height:28px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉡</span>
+        </div>
+        <div class="blueprint__align-marker" style="bottom:2px; left:4px;">bottom: 1px color-divider · ½ scale</div>
+      </div>
+
+      <div class="layout-tree"><b>GlobalHeader</b> (h=64 · sticky · bg <code>color-background</code>)
+└─ inner Row (max-width 1200 · padding-inline <code>32px</code> · crossAxis center)
+   ├─ <em>Logo</em>                                       ← ㉠
+   │  └─ <b>SVG image</b> (h=40 · 클릭 → 이벤트 상세 복귀)
+   ├─ <b>Spacer</b> (flex grow)
+   └─ <em>Account slot</em>                               ← ㉡
+      └─ <b>AvatarButton</b> (36 원형 — 보호 페이지라 항상 로그인)
+
+<em>검색 필드 · 로그인 버튼 슬롯 없음 — 결제 집중 축약
+(home 의 GlobalHeader 와 같은 컴포넌트의 compact variant)</em></div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 180px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>Logo</td><td>좌측 정렬 · 자연 너비 (flex 0)</td><td>h: 40px · 컨테이너 좌측 끝에서 시작 · 클릭 → 이벤트 상세 복귀</td></tr>
+        <tr><td>㉡</td><td>Account slot</td><td>우측 끝 정렬</td><td>아바타 36×36 (hit area 44px) · 클릭 → 마이페이지</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ③ — OrderInfoCard</h2>
+    <p class="intro">
+      주문 대상 확인 카드 — 이벤트 요약(썸네일 + 제목 + 장소·일시)과 선택한 티켓 1종.
+      티켓 변경은 이 화면에서 하지 않고 "티켓 변경" 링크로 이벤트 상세에 돌려보낸다
+      (티켓 추천/잠금 규칙은 <a href="/specs/ticket_selection_sheet/index.html">ticket_selection_sheet</a> behavior — 상세 쪽 책임).
+      ② ApprovalNoticeBanner 는 단일 row atom (icon + title + sub) 이라 별도 Sub-anatomy 생략 — 위 tree 참조.
+    </p>
+    <div class="layout-grid layout-grid--desktop">
+      <div class="blueprint" style="width: 640px; height: 130px; border-radius: 16px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:14px; left:20px; width:140px; height:18px;">
+          <span class="blueprint__region-label" style="font-size:9px;">card title "주문 정보"</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:40px; left:20px; width:120px; height:44px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉠ Thumb 120×60 (2:1)</span>
+        </div>
+        <div class="blueprint__region" style="top:40px; left:152px; right:20px; height:44px; border-style:dashed; border-color:rgba(var(--spec-blueprint-rgb), 0.4);">
+          <span class="blueprint__region-label" style="font-size:9px;">㉡ 이벤트 제목 + 장소 · 일시</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:96px; left:20px; right:20px; height:22px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉢ Ticket row — 티켓명 · 1매 ↔ 가격 · 티켓 변경</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>OrderInfoCard</b> (<code>radius-card (16px)</code> · border 1px <code>color-divider</code> · padding 20)
+├─ <b>Card title</b> "주문 정보" (15/800)
+├─ <em>Event summary row</em> (gap 14 · crossAxis center)
+│  ├─ <em>Thumbnail</em> (120×60 · 2:1 · radius 8)         ← ㉠
+│  └─ <em>Text stack</em>                                  ← ㉡
+│     ├─ <b>이벤트 제목</b> (15/700 · 1줄 ellipsis)
+│     └─ <b>장소 · 일시</b> (13 · text-secondary · 위치 아이콘)
+└─ <em>Ticket row</em> (margin-top 14 · 상단 1px dashed)   ← ㉢
+   ├─ <b>티켓명</b> (14/600) + <b>수량 "1매"</b> (13 · secondary)
+   ├─ <b>Spacer</b>
+   ├─ <b>가격</b> (14/700)
+   └─ <b>"티켓 변경"</b> link (13/600 · color-primary)
+
+<em>수량 컨트롤 없음 — 단일 티켓 1매 고정 (모바일과 동일 ·
+ticket_selection_sheet 의 "수량은 후속 기능" 결정 상속)</em></div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 180px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>Thumbnail</td><td>좌측 고정 (flex 0)</td><td>120×60 (2:1 — 카드 이미지 비율 상속) · radius 8 · bg <code>color-surface</code> placeholder</td></tr>
+        <tr><td>㉡</td><td>Text stack</td><td>썸네일 우측 · 세로 center</td><td>제목↔meta gap <code>4px</code> · meta 아이콘 13px <code>color-primary</code></td></tr>
+        <tr><td>㉢</td><td>Ticket row</td><td>좌 티켓명 / 우 가격 + 링크</td><td>margin-top <code>14px</code> · padding-top <code>14px</code> · 상단 <code>1px dashed color-divider</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ④ — IdentityVerificationCard (조건부)</h2>
+    <p class="intro">
+      <strong>본인인증 미완 사용자에게만</strong> 주문 정보와 동의 사이에 삽입되는 카드.
+      behavior 는 <a href="/specs/identity_verification_screen/index.html">identity_verification_screen</a> 상속 —
+      웹은 Portone V2 웹 본인인증 창으로 진행. 인증 완료 시 이 카드가 사라지고 (또는 ✓ 완료 1줄로 축약) 결제 CTA 잠금이 풀린다.
+    </p>
+    <div class="layout-grid layout-grid--desktop">
+      <div class="blueprint" style="width: 640px; height: 76px; border-radius: 16px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:20px; left:20px; width:36px; height:36px; border-radius:50%;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉠</span>
+        </div>
+        <div class="blueprint__region" style="top:20px; left:68px; width:380px; height:36px; border-style:dashed; border-color:rgba(var(--spec-blueprint-rgb), 0.4);">
+          <span class="blueprint__region-label" style="font-size:9px;">㉡ title + sub</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:20px; right:20px; width:110px; height:36px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉢ 본인인증 하기</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>IdentityVerificationCard</b> (radius 16 · warning 8% tint bg
+│ · border 1px warning 35%)
+├─ <em>Icon circle</em> (36 · shield)                      ← ㉠
+├─ <em>Text stack</em>                                     ← ㉡
+│  ├─ <b>"본인인증이 필요해요"</b> (14/700)
+│  └─ <b>"안전한 참여를 위해 최초 1회 본인 명의 확인이 필요해요"</b>
+│     (13 · text-secondary)
+└─ <b>"본인인증 하기"</b> 버튼 (h=36 · primary · 우측 끝)  ← ㉢</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 180px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>Icon circle</td><td>좌측 고정 · 세로 center</td><td>36×36 · bg <code>color-warning</code> 18% tint · 아이콘 18px <code>color-warning</code></td></tr>
+        <tr><td>㉡</td><td>Text stack</td><td>icon 우측 · 세로 center</td><td>icon↔텍스트 gap <code>12px</code> · title↔sub gap <code>2px</code></td></tr>
+        <tr><td>㉢</td><td>Action button</td><td>우측 끝 · 세로 center</td><td>h: 36px · padding-inline <code>16px</code> · radius 8 · bg <code>color-primary</code> · 13/700 white</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ⑤ — ConsentSection (약관 · 환불 정책 동의)</h2>
+    <p class="intro">
+      결제 전 의무 고지 + 동의 수집 카드. 전체 동의 1개 + 필수 항목 3개 (주문 확인·결제 진행 / 환불 정책 /
+      개인정보 제3자 제공) + 환불 정책 요약 박스. 모바일 위저드의 "개인 정보 동의" step 은
+      여기의 [필수] 항목 1줄로 흡수 — 상세 내역은 "보기"로 노출.
+      환불 정책 3그룹 구조는 <a href="/specs/event_application_wizard_page/index.html">wizard 결제 단계</a> 상속.
+    </p>
+    <div class="layout-grid layout-grid--desktop">
+      <div class="blueprint" style="width: 640px; height: 240px; border-radius: 16px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:14px; left:20px; width:220px; height:18px;">
+          <span class="blueprint__region-label" style="font-size:9px;">card title "약관 및 환불 정책 동의"</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:40px; left:20px; right:20px; height:22px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉠ 전체 동의 (master checkbox)</span>
+        </div>
+        <div class="blueprint__region" style="top:72px; left:20px; right:20px; height:74px; border-style:dashed; border-color:rgba(var(--spec-blueprint-rgb), 0.4);">
+          <span class="blueprint__region-label" style="font-size:9px;">㉡ [필수] 항목 × 3 — 각 행 우측 끝 "보기"</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:156px; left:20px; right:20px; height:66px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉢ 환불 정책 요약 박스 — 자동 환불 / 직접 취소 / 그 외</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>ConsentSection</b> (<code>radius-card (16px)</code> · padding 20)
+├─ <b>Card title</b> "약관 및 환불 정책 동의" (15/800)
+├─ <em>전체 동의</em> (15/700 · checkbox 20)               ← ㉠
+├─ divider (1px · 위아래 14px)
+├─ <em>필수 항목 3개</em> (gap 12)                          ← ㉡
+│  ├─ ☐ [필수] 주문 내용 확인 및 결제 진행 동의
+│  ├─ ☐ [필수] 환불 정책 확인 ················· "보기"
+│  └─ ☐ [필수] 개인정보 제3자 제공 동의 (파트너) ·· "보기"
+└─ <em>환불 정책 요약 박스</em> (bg surface · radius 8)    ← ㉢
+   ├─ <b>자동 환불 (전액)</b> — 파트너 거절 · 시작까지 미승인 ·
+   │   파트너의 이벤트 취소
+   ├─ <b>직접 취소 (전액)</b> — 결제 후 N시간 이내 ·
+   │   이벤트 시작 N일 전까지 (정책값 동적 조회)
+   └─ <b>그 외</b> — 기간 경과 시 파트너에게 환불 요청 가능
+
+<em>체크는 모두 화면 내 상태 — 새로고침 시 초기화.
+동의 기록은 결제 진행 시점에 주문과 함께 저장.</em></div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 180px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>전체 동의</td><td>좌측 정렬 row · crossAxis center</td><td>checkbox 20×20 (radius 4) · box↔라벨 gap <code>10px</code> · checked: bg <code>color-primary</code></td></tr>
+        <tr><td>㉡</td><td>필수 항목 × 3</td><td>좌측 정렬 · "보기"만 우측 끝</td><td>항목 gap <code>12px</code> · [필수] 라벨 12/700 <code>color-primary</code> · "보기" 13 underline <code>color-text-secondary</code></td></tr>
+        <tr><td>㉢</td><td>환불 정책 요약 박스</td><td>박스 폭 100% · 텍스트 좌측</td><td>margin-top <code>16px</code> · padding <code>14px 16px</code> · bg <code>color-surface</code> · radius 8 · 12/1.65 text-secondary · 그룹 head 12/700 text-primary</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ⑥ — OrderSummaryCard (sticky)</h2>
+    <p class="intro">
+      우측 sticky 결제 요약 — 금액 내역 · 총액 · 환불 보장 노트 · "결제 진행" CTA · 보조 안내.
+      <strong>승인 대기 모델의 두 번째 고지 지점</strong> — CTA 바로 위에 "거절 시 전액 자동 환불" 노트를 둬서
+      결제 직전에 반드시 읽히게 한다.
+    </p>
+    <div class="layout-grid layout-grid--desktop">
+      <div class="blueprint" style="width: 360px; height: 300px; border-radius: 16px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:14px; left:20px; width:120px; height:18px;">
+          <span class="blueprint__region-label" style="font-size:9px;">title "결제 금액"</span>
+        </div>
+        <div class="blueprint__region" style="top:40px; left:20px; right:20px; height:24px; border-style:dashed; border-color:rgba(var(--spec-blueprint-rgb), 0.4);">
+          <span class="blueprint__region-label" style="font-size:9px;">㉠ 티켓 1매 ↔ 가격</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:74px; left:20px; right:20px; height:26px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉡ 총 결제 금액 (상단 divider)</span>
+        </div>
+        <div class="blueprint__region" style="top:112px; left:20px; right:20px; height:40px; border-style:dashed; border-color:rgba(var(--spec-blueprint-rgb), 0.4);">
+          <span class="blueprint__region-label" style="font-size:9px;">㉢ 승인 대기 · 환불 보장 노트</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:164px; left:20px; right:20px; height:48px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉣ "결제 진행" CTA · h=48</span>
+        </div>
+        <div class="blueprint__region" style="top:222px; left:20px; right:20px; height:32px; border-style:dashed; border-color:rgba(var(--spec-blueprint-rgb), 0.4);">
+          <span class="blueprint__region-label" style="font-size:9px;">㉤ helper — 외부 결제창 안내 / 잠금 사유</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>OrderSummaryCard</b> (w=360 · sticky top 88
+│ · <code>radius-card (16px)</code> · padding 20)
+├─ <b>Title</b> "결제 금액" (15/800)
+├─ <em>금액 row</em> "일반 입장권 × 1" ↔ 가격 (14)         ← ㉠
+├─ <em>총액 row</em> (상단 1px divider · 15/800             ← ㉡
+│   · 금액 18/800 <code>color-primary</code>)
+├─ <em>승인 대기 노트</em> (success 8% tint · ✓ 아이콘)     ← ㉢
+│  └─ "결제 후 파트너 승인 시 참여 확정 ·
+│      거절되면 전액 자동 환불돼요"
+├─ <b>"결제 진행"</b> CTA (h=48 · radius 10                ← ㉣
+│   · enabled: <code>color-primary</code> / disabled: divider)
+└─ <em>helper</em> (12 · secondary · center)               ← ㉤
+   ├─ enabled: "포트원(PortOne) 결제창에서 안전하게 진행돼요"
+   └─ disabled: 잠금 사유 — "필수 약관에 동의하면 결제할 수
+       있어요" / "본인인증 후 결제할 수 있어요"</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 180px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>금액 rows</td><td>좌 라벨 / 우 값 양끝 정렬</td><td>row padding <code>4px 0</code> · 14 text-secondary / 값 text-primary</td></tr>
+        <tr><td>㉡</td><td>총액 row</td><td>양끝 정렬 · baseline</td><td>margin-top <code>12px</code> · padding-top <code>12px</code> · 상단 <code>1px color-divider</code> · 금액 18/800 <code>color-primary</code></td></tr>
+        <tr><td>㉢</td><td>승인 대기 노트</td><td>icon + 텍스트 row</td><td>margin-top <code>14px</code> · padding <code>10px 12px</code> · bg <code>color-success</code> 8% tint · radius 8 · 12/1.5</td></tr>
+        <tr><td>㉣</td><td>CTA</td><td>폭 100% · 텍스트 center</td><td>h: 48px · radius 10 · 15/800 · enabled bg <code>color-primary</code> / disabled bg <code>color-divider</code> + text-secondary</td></tr>
+        <tr><td>㉤</td><td>helper</td><td>center</td><td>margin-top <code>8px</code> · 12 text-secondary — disabled 사유는 항상 텍스트로 노출 (색만으로 전달 금지)</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     🎨 PERSPECTIVE 2 · STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">
+      page-level 시각 변형 5종 — baseline = Default (본인인증 완료 · 동의 전).
+      본인인증/결제 진행은 외부 Portone V2 창에 위임 — 창 내부는 spec 범위 밖, 진입/복귀만 정의.
+      mockup 은 Desktop 1280 캔버스 (½ 스케일 표시).
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>State summary</h2>
+    <p class="intro">
+      모든 state 한눈 비교. 자세한 사양은 아래 각 state mini-table 참조.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 220px;">State</th>
+          <th style="width: 110px;">Tag</th>
+          <th style="width: 260px;">조건 (요약)</th>
+          <th>Key visual differentiator</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="is-baseline-tint"><td><strong>Default</strong> 🎯</td><td>primary</td><td>본인인증 완료 사용자 · 동의 전</td><td>본문 + sticky 요약 풀 렌더 · CTA disabled ("필수 약관 동의" helper)</td></tr>
+        <tr><td><strong>본인인증 필요</strong></td><td>gate</td><td>본인인증 미완 사용자 진입</td><td>본인인증 카드 삽입 + CTA 잠금 ("본인인증 후 결제" helper)</td></tr>
+        <tr><td><strong>결제 진행 중</strong></td><td>external</td><td>"결제 진행" 클릭 → 외부 결제창 열림</td><td>화면 dim + Portone V2 결제창 + "결제창에서 진행" 안내</td></tr>
+        <tr><td><strong>완료 · 승인 대기</strong></td><td>success</td><td>결제 완료 → 신청 생성됨</td><td>풀-페이지 ✅ "신청 완료" + "파트너 승인 대기" 칩 + 구매내역 CTA</td></tr>
+        <tr><td><strong>결제 실패</strong></td><td>error</td><td>결제 취소/승인 실패/네트워크 오류</td><td>checkout 화면 유지 + 하단 snackbar + CTA 즉시 재활성</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>States gallery</h2>
+
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- ════════════════════════════════════════════════════════
+           State 1: Default — 본인인증 완료 · 동의 전 (baseline)
+           ════════════════════════════════════════════════════════ -->
+      <table class="ref state-mini is-baseline-tint">
+        <thead>
+          <tr><th colspan="3">
+            <strong>Default · 본인인증 완료 + 동의 전</strong> 🎯 <span class="tag">primary</span>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <!-- ① Global header -->
+                <div class="wuc-header">
+                  <div class="wuc-header__inner">
+                    <img class="wuc-logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                    <div class="wuc-header__spacer"></div>
+                    <div class="wuc-avatar">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="wuc-main">
+                  <!-- 좌 본문 컬럼 -->
+                  <div class="wuc-col">
+                    <div class="wuc-page-title">신청 · 결제</div>
+
+                    <!-- ② 승인 대기 모델 고지 배너 -->
+                    <div class="wuc-banner">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><circle cx="12" cy="8" r="0.5" fill="currentColor"/></svg>
+                      <div>
+                        <div class="wuc-banner__title">결제 후 파트너 승인을 거쳐 참여가 확정돼요</div>
+                        <div class="wuc-banner__sub">결제만으로는 참여가 확정되지 않아요. 파트너가 거절하면 결제 금액 전액이 자동 환불돼요.</div>
+                      </div>
+                    </div>
+
+                    <!-- ③ 주문 정보 -->
+                    <div class="wuc-card">
+                      <div class="wuc-card__title">주문 정보</div>
+                      <div class="wuc-event">
+                        <div class="wuc-event__thumb" style="background: linear-gradient(135deg, #f0e6ff 0%, #ffe8d6 100%);"><span>2:1 이미지</span></div>
+                        <div style="min-width:0;">
+                          <div class="wuc-event__name">강남 루프탑 소셜 파티 — Verified Vibe</div>
+                          <div class="wuc-event__meta">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            강남구 · 6월 12일 (금) 19:30
+                          </div>
+                        </div>
+                      </div>
+                      <div class="wuc-ticket-row">
+                        <span class="wuc-ticket-row__name">일반 입장권</span>
+                        <span class="wuc-ticket-row__qty">· 1매</span>
+                        <span class="wuc-ticket-row__price">20,000원</span>
+                        <span class="wuc-link">티켓 변경</span>
+                      </div>
+                    </div>
+
+                    <!-- ⑤ 약관 · 환불 정책 동의 -->
+                    <div class="wuc-card">
+                      <div class="wuc-card__title">약관 및 환불 정책 동의</div>
+                      <div class="wuc-check wuc-check--all">
+                        <span class="wuc-check__box"></span>
+                        전체 동의
+                      </div>
+                      <div class="wuc-consent__divider"></div>
+                      <div class="wuc-consent__items">
+                        <div class="wuc-check">
+                          <span class="wuc-check__box"></span>
+                          <span class="wuc-check__req">[필수]</span> 주문 내용 확인 및 결제 진행 동의
+                        </div>
+                        <div class="wuc-check">
+                          <span class="wuc-check__box"></span>
+                          <span class="wuc-check__req">[필수]</span> 환불 정책 확인
+                          <span class="wuc-check__view">보기</span>
+                        </div>
+                        <div class="wuc-check">
+                          <span class="wuc-check__box"></span>
+                          <span class="wuc-check__req">[필수]</span> 개인정보 제3자 제공 동의 (파트너)
+                          <span class="wuc-check__view">보기</span>
+                        </div>
+                      </div>
+                      <div class="wuc-refund-box">
+                        <span class="wuc-refund-box__head">자동 환불 (전액)</span>
+                        파트너가 거절하거나, 이벤트 시작까지 승인되지 않거나, 파트너가 이벤트를 취소하면 전액 자동 환불돼요.
+                        <span class="wuc-refund-box__head">직접 취소 (전액)</span>
+                        결제 후 3시간 이내, 또는 이벤트 시작 7일 전까지는 직접 취소하면 즉시 전액 환불돼요.
+                        <span class="wuc-refund-box__head">그 외</span>
+                        환불 가능 기간이 지난 경우 파트너에게 환불을 요청할 수 있어요.
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- ⑥ 우 sticky 주문 요약 -->
+                  <div class="wuc-summary">
+                    <div class="wuc-summary__title">결제 금액</div>
+                    <div class="wuc-sum-row"><span>일반 입장권 × 1</span><b>20,000원</b></div>
+                    <div class="wuc-sum-total"><span>총 결제 금액</span><b>20,000원</b></div>
+                    <div class="wuc-sum-note">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                      <span>결제 후 파트너 승인 시 참여가 확정돼요. 거절되면 <b>전액 자동 환불</b>돼요.</span>
+                    </div>
+                    <div class="wuc-cta wuc-cta--disabled">결제 진행</div>
+                    <div class="wuc-cta-helper">필수 약관에 동의하면 결제할 수 있어요</div>
+                  </div>
+                </div>
+
+                <!-- Spec-mode overlays (1280-space 좌표) -->
+                <span class="annotation" style="top:8px;left:8px;">container 1200 캡 · gutter 32px</span>
+                <span class="annotation" style="top:96px;right:48px;">summary w=360 · sticky top 88</span>
+                <span class="annotation" style="top:200px;left:48px;">column gap 24px · 카드 간 16px</span>
+                <span class="callout" style="top:20px;left:560px;">ⓐ</span>
+                <span class="callout" style="top:120px;left:780px;">ⓑ</span>
+                <span class="callout" style="top:230px;left:780px;">ⓒ</span>
+                <span class="callout" style="top:420px;left:780px;">ⓓ</span>
+                <span class="callout" style="top:160px;left:1180px;">ⓔ</span>
+                <span class="callout" style="top:400px;left:1180px;">ⓕ</span>
+                <span class="type-spec" style="top:106px;left:230px;">22 / 800 — page title</span>
+                <span class="type-spec" style="top:330px;left:560px;">15 / 700 / 1.3 — event title</span>
+                <span class="type-spec" style="top:296px;right:60px;">18 / 800 — total (primary)</span>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>본인인증을 이미 마친 로그인 사용자가 유효한 티켓 파라미터로 진입해 주문 정보가 로드된 상태. 동의 체크는 모두 비어 있고 "결제 진행" CTA 는 비활성 — 비활성 사유가 helper 텍스트로 노출.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              ① <strong>"전체 동의" 클릭</strong> → 필수 3개 항목이 한 번에 체크/해제 · 모두 체크되면 CTA 활성 + helper 가 "포트원(PortOne) 결제창에서 안전하게 진행돼요"로 교체<br>
+              ② <strong>개별 동의 클릭</strong> → 해당 항목 토글 · 3개 모두 체크 시 전체 동의도 함께 체크 표시<br>
+              ③ <strong>"보기" 클릭</strong> (환불 정책 / 개인정보 제공) → 전문이 레이어 모달로 열림 (페이지 이탈 없음 · 닫으면 체크 상태 유지)<br>
+              ④ <strong>"결제 진행" 클릭</strong> (활성 시) → 결제 진행 중 state 로 전환 — 외부 결제창 열림<br>
+              ⑤ <strong>"티켓 변경" 클릭</strong> → 이벤트 상세로 복귀 (티켓 선택부터 다시)<br>
+              ⑥ <strong>로고 클릭 / 브라우저 back</strong> → 이벤트 상세 복귀 — 입력 폼이 없으므로 확인 다이얼로그 없이 즉시 이동 (동의 체크는 휘발)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · <strong>티켓 파라미터 없음/무효 진입</strong> — 주문을 구성할 수 없으므로 안내 후 이벤트 상세로 돌려보냄<br>
+              · <strong>무료 티켓</strong> — 금액이 모두 "0원"으로 표시되고 CTA 라벨이 "신청하기"로 교체 · 결제창 없이 곧장 완료(승인 대기)로<br>
+              · <strong>대기 중 매진</strong> — 결제 진행 시도 시 서버가 거부 → 결제 실패 패턴으로 안내 ("남은 자리가 없어요")<br>
+              · <strong>이미 신청한 이벤트</strong> — 진입 시점에 안내 + 구매내역으로 유도 (중복 신청 거부 — wizard behavior 상속)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>
+              ⓐ <code>GlobalHeader</code> (compact — 로고 · 아바타 · 검색 없음)<br>
+              ⓑ <code>ApprovalNoticeBanner</code> — 승인 대기 모델 고지 (결제 ≠ 확정)<br>
+              ⓒ <code>OrderInfoCard</code> — 이벤트 요약 + 티켓 row + "티켓 변경" 링크<br>
+              ⓓ <code>ConsentSection</code> — 전체 동의 + 필수 3항목 + 환불 정책 요약 박스<br>
+              ⓔ <code>OrderSummaryCard</code> (sticky) — 금액 · 총액 · 승인 대기 노트<br>
+              ⓕ <code>CTAButton</code> "결제 진행" (disabled) + helper 텍스트
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>
+              · color: <code>color-background</code> · <code>color-surface</code> (환불 박스 · 썸네일 placeholder) · <code>color-text-primary</code> · <code>color-text-secondary</code> · <code>color-divider</code> · <code>color-primary</code> (배너 아이콘 · 체크박스 checked · 총액 · [필수] 라벨 · 링크) · <code>color-success</code> (승인 대기 노트 ✓)<br>
+              · radius: <code>radius-card (16px)</code> (카드) · 12 (배너) · 10 (CTA) · 8 (썸네일 · 환불 박스 · 노트) · 4 (체크박스)<br>
+              · spacing: 컨테이너 gutter <code>32px</code> · column gap <code>24px</code> · 카드 간 <code>spacing-medium (16px)</code> · 카드 padding <code>20px</code><br>
+              · typography: page title 22/800 · 카드 title 15/800 · 본문 14 · 정책/helper 12 · 총액 18/800<br>
+              · CSS 소비: <code>var(--color-primary)</code> · <code>var(--radius-card)</code> 등 (Tailwind arbitrary value 동일)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 승인 대기 모델은 ② 배너(읽는 순서 첫 번째) + ⑥ 노트(결제 직전) 두 번 고지 — 결제 = 확정으로 오인하는 CS 를 구조적으로 차단. 환불 정책 요약 박스의 시간 값(3시간 / 7일)은 고정 카피가 아니라 플랫폼 환불 정책에서 동적으로 가져온다 (refund-policy-v2 — 열린 질문 ③ 참조).</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════════════════
+           State 2: 본인인증 필요
+           ════════════════════════════════════════════════════════ -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>본인인증 필요 · 결제 전 인증 게이트</strong> <span class="tag tag--mute">gate</span>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <div class="wuc-header">
+                  <div class="wuc-header__inner">
+                    <img class="wuc-logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                    <div class="wuc-header__spacer"></div>
+                    <div class="wuc-avatar">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="wuc-main">
+                  <div class="wuc-col">
+                    <div class="wuc-page-title">신청 · 결제</div>
+
+                    <div class="wuc-banner">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><circle cx="12" cy="8" r="0.5" fill="currentColor"/></svg>
+                      <div>
+                        <div class="wuc-banner__title">결제 후 파트너 승인을 거쳐 참여가 확정돼요</div>
+                        <div class="wuc-banner__sub">결제만으로는 참여가 확정되지 않아요. 파트너가 거절하면 결제 금액 전액이 자동 환불돼요.</div>
+                      </div>
+                    </div>
+
+                    <div class="wuc-card">
+                      <div class="wuc-card__title">주문 정보</div>
+                      <div class="wuc-event">
+                        <div class="wuc-event__thumb" style="background: linear-gradient(135deg, #f0e6ff 0%, #ffe8d6 100%);"><span>2:1 이미지</span></div>
+                        <div style="min-width:0;">
+                          <div class="wuc-event__name">강남 루프탑 소셜 파티 — Verified Vibe</div>
+                          <div class="wuc-event__meta">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            강남구 · 6월 12일 (금) 19:30
+                          </div>
+                        </div>
+                      </div>
+                      <div class="wuc-ticket-row">
+                        <span class="wuc-ticket-row__name">일반 입장권</span>
+                        <span class="wuc-ticket-row__qty">· 1매</span>
+                        <span class="wuc-ticket-row__price">20,000원</span>
+                        <span class="wuc-link">티켓 변경</span>
+                      </div>
+                    </div>
+
+                    <!-- ④ 본인인증 카드 (조건부) -->
+                    <div class="wuc-identity">
+                      <div class="wuc-identity__icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                      </div>
+                      <div>
+                        <div class="wuc-identity__title">본인인증이 필요해요</div>
+                        <div class="wuc-identity__sub">안전한 참여를 위해 최초 1회 본인 명의 확인이 필요해요</div>
+                      </div>
+                      <div class="wuc-identity__btn">본인인증 하기</div>
+                    </div>
+
+                    <div class="wuc-card">
+                      <div class="wuc-card__title">약관 및 환불 정책 동의</div>
+                      <div class="wuc-check wuc-check--all">
+                        <span class="wuc-check__box"></span>
+                        전체 동의
+                      </div>
+                      <div class="wuc-consent__divider"></div>
+                      <div class="wuc-consent__items">
+                        <div class="wuc-check">
+                          <span class="wuc-check__box"></span>
+                          <span class="wuc-check__req">[필수]</span> 주문 내용 확인 및 결제 진행 동의
+                        </div>
+                        <div class="wuc-check">
+                          <span class="wuc-check__box"></span>
+                          <span class="wuc-check__req">[필수]</span> 환불 정책 확인
+                          <span class="wuc-check__view">보기</span>
+                        </div>
+                        <div class="wuc-check">
+                          <span class="wuc-check__box"></span>
+                          <span class="wuc-check__req">[필수]</span> 개인정보 제3자 제공 동의 (파트너)
+                          <span class="wuc-check__view">보기</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="wuc-summary">
+                    <div class="wuc-summary__title">결제 금액</div>
+                    <div class="wuc-sum-row"><span>일반 입장권 × 1</span><b>20,000원</b></div>
+                    <div class="wuc-sum-total"><span>총 결제 금액</span><b>20,000원</b></div>
+                    <div class="wuc-sum-note">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                      <span>결제 후 파트너 승인 시 참여가 확정돼요. 거절되면 <b>전액 자동 환불</b>돼요.</span>
+                    </div>
+                    <div class="wuc-cta wuc-cta--disabled">결제 진행</div>
+                    <div class="wuc-cta-helper">본인인증 후 결제할 수 있어요</div>
+                  </div>
+                </div>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>본인인증 기록이 없는 사용자가 진입한 상태. 주문 정보·동의 카드 사이에 본인인증 카드가 삽입되고, 동의를 다 체크해도 결제 CTA 는 잠긴 채 helper 가 "본인인증 후 결제할 수 있어요"를 노출.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              ① <strong>"본인인증 하기" 클릭</strong> → 본인확인 정보 수집·이용 동의 확인을 거쳐 Portone V2 웹 본인인증 창이 새 창으로 열림 (동의 → 인증 창 → 성공/실패 흐름은 <a href="/specs/identity_verification_screen/index.html">identity_verification_screen</a> behavior 상속)<br>
+              ② <strong>인증 성공 후 복귀</strong> → 본인인증 카드가 사라지고 (인증 결과는 프로필에 영구 저장 — 다음 결제부터 이 state 없음) Default 와 동일한 잠금 해제 규칙 적용<br>
+              ③ <strong>동의 체크 / 보기 / 티켓 변경</strong> → Default 와 동일하게 동작 — 인증 전에도 미리 체크 가능
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · <strong>인증 팝업 차단</strong> — 인증 창이 열리지 않으면 즉시 실패 안내 + "다시 시도" (웹 팝업 차단 = 모바일 spec 의 "창이 열리지 않음" 케이스 상속)<br>
+              · <strong>인증 취소 / 창 닫기</strong> — 카드가 그대로 유지되고 "인증이 완료되지 않았어요" snackbar — 재시도는 버튼 재클릭<br>
+              · <strong>14세 미만 등 인증 거부</strong> — 인증 창 안에서 차단 → 복귀 시 안내 문구와 함께 결제 잠금 유지
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>+ <code>IdentityVerificationCard</code> (warning tint · shield 아이콘 + "본인인증 하기" 버튼)<br>↔ CTA helper 텍스트: "필수 약관 동의..." → "본인인증 후 결제할 수 있어요"<br>그 외 동일 (Default 참조)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>+ <code>color-warning</code> (인증 카드 tint bg · 아이콘) — 그 외 동일</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 본인인증을 별도 페이지/step 이 아니라 인라인 카드로 삽입 — 결제까지의 남은 일이 한 화면에 다 보이게 한다 (위저드 해체의 핵심 의도). CTA 잠금 사유는 두 개가 겹칠 수 있는데 (인증 + 동의) 인증을 먼저 안내 — 인증이 외부 창이라 시간이 더 걸리기 때문.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════════════════
+           State 3: 결제 진행 중 — 외부 결제창
+           ════════════════════════════════════════════════════════ -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>결제 진행 중 · 외부 결제창 열림</strong> <span class="tag tag--mute">external</span>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <div class="wuc-header">
+                  <div class="wuc-header__inner">
+                    <img class="wuc-logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                    <div class="wuc-header__spacer"></div>
+                    <div class="wuc-avatar">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="wuc-main">
+                  <div class="wuc-col">
+                    <div class="wuc-page-title">신청 · 결제</div>
+                    <div class="wuc-banner">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><circle cx="12" cy="8" r="0.5" fill="currentColor"/></svg>
+                      <div>
+                        <div class="wuc-banner__title">결제 후 파트너 승인을 거쳐 참여가 확정돼요</div>
+                        <div class="wuc-banner__sub">결제만으로는 참여가 확정되지 않아요. 파트너가 거절하면 결제 금액 전액이 자동 환불돼요.</div>
+                      </div>
+                    </div>
+                    <div class="wuc-card">
+                      <div class="wuc-card__title">주문 정보</div>
+                      <div class="wuc-event">
+                        <div class="wuc-event__thumb" style="background: linear-gradient(135deg, #f0e6ff 0%, #ffe8d6 100%);"><span>2:1 이미지</span></div>
+                        <div style="min-width:0;">
+                          <div class="wuc-event__name">강남 루프탑 소셜 파티 — Verified Vibe</div>
+                          <div class="wuc-event__meta">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            강남구 · 6월 12일 (금) 19:30
+                          </div>
+                        </div>
+                      </div>
+                      <div class="wuc-ticket-row">
+                        <span class="wuc-ticket-row__name">일반 입장권</span>
+                        <span class="wuc-ticket-row__qty">· 1매</span>
+                        <span class="wuc-ticket-row__price">20,000원</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="wuc-summary">
+                    <div class="wuc-summary__title">결제 금액</div>
+                    <div class="wuc-sum-row"><span>일반 입장권 × 1</span><b>20,000원</b></div>
+                    <div class="wuc-sum-total"><span>총 결제 금액</span><b>20,000원</b></div>
+                    <div class="wuc-sum-note">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                      <span>결제 후 파트너 승인 시 참여가 확정돼요. 거절되면 <b>전액 자동 환불</b>돼요.</span>
+                    </div>
+                    <div class="wuc-cta wuc-cta--disabled">결제창 진행 중…</div>
+                  </div>
+                </div>
+
+                <!-- 외부 결제창 overlay -->
+                <div class="wuc-dim">
+                  <div class="wuc-paywin">
+                    <div class="wuc-paywin__bar">
+                      <span>🔒</span>
+                      <span>checkout-service.portone.io</span>
+                    </div>
+                    <div class="wuc-paywin__body">
+                      <div class="wuc-paywin__title">결제 진행</div>
+                      <div class="wuc-paywin__sub">카드 / 계좌이체 / 간편결제<br>결제 수단을 선택하고 결제를 완료해 주세요.</div>
+                      <div class="wuc-paywin__sim">[Portone V2 웹 결제창 — 외부 영역 · 시뮬레이션]</div>
+                    </div>
+                  </div>
+                  <div class="wuc-dim__hint">
+                    열린 결제창에서 결제를 진행해 주세요<br>
+                    창이 보이지 않나요? <u>결제창 다시 열기</u> · <u>결제 취소</u>
+                  </div>
+                </div>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>"결제 진행"을 누른 직후 — Portone V2 웹 결제창이 페이지 위에 열리고 (팝업/레이어), checkout 화면은 dim 처리된 상태. CTA 는 "결제창 진행 중…"으로 잠김.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              ① <strong>결제창 안에서 결제 완료</strong> → 결제창이 닫히고 서버 확인을 거쳐 완료(승인 대기) state 로 전환<br>
+              ② <strong>결제창 닫기 / 결제 취소</strong> → dim 해제 + 결제 실패 state ("결제가 완료되지 않았어요" snackbar)<br>
+              ③ <strong>"결제창 다시 열기" 클릭</strong> → 같은 주문으로 결제창 재호출 (팝업이 가려졌거나 차단된 경우 구제)<br>
+              ④ <strong>"결제 취소" 클릭</strong> → dim 해제 + Default(동의 유지) 복귀
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · <strong>팝업 차단</strong> — 결제창이 안 뜨면 dim 위 안내의 "결제창 다시 열기"가 유일한 복구 경로 (브라우저 팝업 허용 안내 문구 병기)<br>
+              · <strong>결제는 성공했지만 확인 지연</strong> — 결제창이 닫힌 뒤 잠시 확인 중 스피너 → 서버 확인은 이중 검증·멱등이라 새로고침해도 결과가 유실되지 않음 (wizard behavior 상속)<br>
+              · <strong>진행 중 탭 이탈/복귀</strong> — 결제창 상태 그대로 유지 · 복귀 시 결과를 다시 확인
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>+ 화면 dim scrim + 외부 결제창 (Portone V2 — 내부는 외부 영역) + 안내 텍스트 ("다시 열기" · "결제 취소" 링크)<br>↔ <code>CTAButton</code> → "결제창 진행 중…" (disabled · helper 생략)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>— 결제창 내부는 외부 SDK 영역 (Minglit 토큰 미적용) · dim scrim 은 mockup 기준 rgba(17,24,39,0.45) — overlay 토큰 체계는 foundation 정의 따름</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 모바일의 full-screen Iamport WebView 를 데스크톱 관례(센터 팝업 + dim)로 치환. 결제창 호출 방식(팝업 vs 리디렉션)은 PG/결제수단에 따라 강제될 수 있음 — 리디렉션 fallback 시 복귀 URL 설계 필요 (열린 질문 ② 참조).</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════════════════
+           State 4: 완료 — 신청 완료 · 파트너 승인 대기
+           ════════════════════════════════════════════════════════ -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>완료 · 신청 완료 — 파트너 승인 대기</strong> <span class="tag tag--mute">success</span>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <div class="wuc-header">
+                  <div class="wuc-header__inner">
+                    <img class="wuc-logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                    <div class="wuc-header__spacer"></div>
+                    <div class="wuc-avatar">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="wuc-done">
+                  <div class="wuc-done__icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                  </div>
+                  <div class="wuc-done__title">신청이 완료됐어요</div>
+                  <div class="wuc-done__chip">파트너 승인 대기</div>
+                  <div class="wuc-done__desc">
+                    결제가 완료됐고, 파트너의 승인을 기다리고 있어요.<br>
+                    승인되면 참여가 확정되고, 거절되면 결제 금액 <b>전액이 자동 환불</b>돼요.<br>
+                    결과는 알림과 구매내역에서 확인할 수 있어요.
+                  </div>
+                  <div class="wuc-done__ctas">
+                    <div class="wuc-done__btn">구매내역 보기</div>
+                    <div class="wuc-done__btn wuc-done__btn--ghost">홈으로</div>
+                  </div>
+                </div>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>결제 확인이 끝나 신청이 생성된 상태. checkout 본문 전체가 풀-페이지 완료 화면으로 교체 — ✅ 아이콘 + "신청이 완료됐어요" + <strong>"파트너 승인 대기" 상태 칩</strong>. 핵심 카피: 결제 완료 ≠ 참여 확정, 거절 시 전액 자동 환불.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              ① <strong>"구매내역 보기" 클릭</strong> → 구매내역으로 이동 — 신청 건이 "승인 대기" 상태로 보임 (웹 구매내역 spec TBD)<br>
+              ② <strong>"홈으로" 클릭</strong> → 홈 (<code>/</code>) 이동<br>
+              ③ <strong>로고 / 아바타</strong> → 각각 홈 · 마이페이지 — 완료 화면은 어디로든 떠나도 무방 (신청은 이미 서버에 확정 저장)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · <strong>브라우저 back</strong> — checkout 입력 화면으로 재진입하지 않음 (이미 신청된 주문) — 이벤트 상세로 이동하고, 상세에는 "신청 완료 · 승인 대기" 상태가 반영<br>
+              · <strong>새로고침</strong> — 같은 완료 화면 복원 (신청 상태를 서버에서 다시 읽음)<br>
+              · <strong>무료 티켓</strong> — 결제 단계 없이 이 화면으로 직행 · 카피에서 "결제가 완료됐고" 절이 "신청이 접수됐고"로 교체
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>↔ checkout 본문 전체 → <code>ConfirmationView</code> — success 아이콘 circle + title + <strong>상태 칩 "파트너 승인 대기"</strong> + 안내 3줄 + CTA 2개 (모바일 <code>MinglitConfirmationPage</code> 의 웹 변형 — culmination 모션 패턴 상속)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>+ <code>color-success</code> (아이콘 circle) · <code>color-warning</code> (승인 대기 칩 — 진행 중 tone) — 그 외 동일</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 모바일 success 카피("심사는 보통 24시간 안에…")의 시간 약속은 웹에서 제외 — 보장 불가한 수치 대신 "알림과 구매내역에서 확인" 동선 안내로 대체. 승인 대기를 success 초록이 아닌 <strong>warning 칩</strong>으로 분리한 것이 의도 — "완료(초록) + 아직 진행 중(주황)"의 이중 상태를 시각으로 전달.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════════════════
+           State 5: 결제 실패
+           ════════════════════════════════════════════════════════ -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>결제 실패 · 재시도</strong> <span class="tag tag--mute">error</span>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <div class="wuc-header">
+                  <div class="wuc-header__inner">
+                    <img class="wuc-logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                    <div class="wuc-header__spacer"></div>
+                    <div class="wuc-avatar">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="wuc-main">
+                  <div class="wuc-col">
+                    <div class="wuc-page-title">신청 · 결제</div>
+                    <div class="wuc-banner">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><circle cx="12" cy="8" r="0.5" fill="currentColor"/></svg>
+                      <div>
+                        <div class="wuc-banner__title">결제 후 파트너 승인을 거쳐 참여가 확정돼요</div>
+                        <div class="wuc-banner__sub">결제만으로는 참여가 확정되지 않아요. 파트너가 거절하면 결제 금액 전액이 자동 환불돼요.</div>
+                      </div>
+                    </div>
+                    <div class="wuc-card">
+                      <div class="wuc-card__title">주문 정보</div>
+                      <div class="wuc-event">
+                        <div class="wuc-event__thumb" style="background: linear-gradient(135deg, #f0e6ff 0%, #ffe8d6 100%);"><span>2:1 이미지</span></div>
+                        <div style="min-width:0;">
+                          <div class="wuc-event__name">강남 루프탑 소셜 파티 — Verified Vibe</div>
+                          <div class="wuc-event__meta">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            강남구 · 6월 12일 (금) 19:30
+                          </div>
+                        </div>
+                      </div>
+                      <div class="wuc-ticket-row">
+                        <span class="wuc-ticket-row__name">일반 입장권</span>
+                        <span class="wuc-ticket-row__qty">· 1매</span>
+                        <span class="wuc-ticket-row__price">20,000원</span>
+                      </div>
+                    </div>
+                    <div class="wuc-card">
+                      <div class="wuc-card__title">약관 및 환불 정책 동의</div>
+                      <div class="wuc-check wuc-check--all wuc-check--checked">
+                        <span class="wuc-check__box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                        전체 동의
+                      </div>
+                      <div class="wuc-consent__divider"></div>
+                      <div class="wuc-consent__items">
+                        <div class="wuc-check wuc-check--checked">
+                          <span class="wuc-check__box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                          <span class="wuc-check__req">[필수]</span> 주문 내용 확인 및 결제 진행 동의
+                        </div>
+                        <div class="wuc-check wuc-check--checked">
+                          <span class="wuc-check__box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                          <span class="wuc-check__req">[필수]</span> 환불 정책 확인
+                          <span class="wuc-check__view">보기</span>
+                        </div>
+                        <div class="wuc-check wuc-check--checked">
+                          <span class="wuc-check__box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                          <span class="wuc-check__req">[필수]</span> 개인정보 제3자 제공 동의 (파트너)
+                          <span class="wuc-check__view">보기</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="wuc-summary">
+                    <div class="wuc-summary__title">결제 금액</div>
+                    <div class="wuc-sum-row"><span>일반 입장권 × 1</span><b>20,000원</b></div>
+                    <div class="wuc-sum-total"><span>총 결제 금액</span><b>20,000원</b></div>
+                    <div class="wuc-sum-note">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                      <span>결제 후 파트너 승인 시 참여가 확정돼요. 거절되면 <b>전액 자동 환불</b>돼요.</span>
+                    </div>
+                    <div class="wuc-cta">결제 진행</div>
+                    <div class="wuc-cta-helper">포트원(PortOne) 결제창에서 안전하게 진행돼요</div>
+                  </div>
+                </div>
+
+                <div class="wuc-snackbar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <span>결제가 완료되지 않았어요. 다시 시도해 주세요</span>
+                </div>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>결제창에서 취소했거나 결제 승인이 실패한 직후. checkout 화면이 그대로 유지되고 (동의 체크 보존) 하단 snackbar 로 사유를 안내 — "결제 진행" CTA 는 즉시 재활성 (재시도 1 클릭).</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              ① <strong>snackbar</strong> → 약 3초 후 자동 사라짐 (대기 불필요)<br>
+              ② <strong>"결제 진행" 재클릭</strong> → 결제 진행 중 state 재진입 (외부 결제창 다시 열림)<br>
+              ③ <strong>로고 / back</strong> → 이벤트 상세 복귀 — 결제 포기로 간주, 신청·청구 없음
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · <strong>실패 사유가 없을 때</strong> — 기본 카피 "결제가 완료되지 않았어요. 다시 시도해 주세요" (wizard 기본 메시지 상속)<br>
+              · <strong>같은 사유 반복 실패</strong> — 매번 같은 snackbar (loop 가드 없음 — 모바일 동일)<br>
+              · <strong>매진으로 거부</strong> — 사유 카피만 분기 ("남은 자리가 없어요") + CTA 비활성 전환 (재시도 무의미)<br>
+              · <strong>금액 불일치 등 시스템 거부</strong> — 결제는 자동 취소 처리되고 동일 snackbar 패턴으로 안내 (검증 규칙은 서버 책임)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>+ <code>Snackbar</code> (하단 center · 경고 아이콘 + 한 줄 메시지 · ~3초 자동 dismiss)<br>↔ Default 의 동의-완료 변형과 동일한 본문 — dim 없음 · CTA 즉시 active</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>+ snackbar bg #323232 (Material 기본 — wizard 상속) · <code>color-warning</code> (아이콘) · 13 white text · radius 8</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 wizard v2.13 의 결정 상속 — 실패를 모달 dialog 가 아닌 snackbar 로 가볍게 처리해 재시도를 1 클릭으로 유지. 결제 실패는 대부분 일시적(사용자 취소 등)이므로 화면 상태(동의 체크)를 절대 리셋하지 않는 것이 핵심.</td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </section>
+</div>
+
+<!-- ============================================================
+     🔄 PERSPECTIVE 3 · GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">
+      화면 전반 cross-cutting 동작. 모바일 spec(<a href="/specs/event_application_wizard_page/index.html">event_application_wizard_page</a> 결제 단계 ·
+      <a href="/specs/identity_verification_screen/index.html">identity_verification_screen</a>)에서 상속한 behavior 는
+      해당 spec 이 SSOT — 여기엔 웹에서 달라지는 점만 추가.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">사용자 액션</th>
+          <th>화면에 보이는 결과</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>브라우저 back / forward</td>
+          <td>Default · 본인인증 필요 · 결제 실패 → 이벤트 상세로 복귀 (동의 체크 휘발 — 입력 폼이 없으므로 위저드의 "작성 중 정보" confirm 은 두지 않음). 완료(승인 대기) 화면에서 back → checkout 재진입 불가 — 이벤트 상세로 이동 (이미 신청된 주문). 약관 "보기" 레이어는 history entry 아님 — back 시 페이지가 이동.</td>
+        </tr>
+        <tr>
+          <td>새로고침 / URL 직접 진입</td>
+          <td>티켓 파라미터로 주문(이벤트·티켓·금액) 복원 — 동의 체크는 초기화. 이미 신청 완료된 주문이면 완료(승인 대기) 화면으로 착지. 티켓 파라미터 없음/무효면 이벤트 상세로 돌려보냄. 결제 확인은 서버 검증·멱등이라 새로고침으로 결과가 유실되지 않음.</td>
+        </tr>
+        <tr>
+          <td>비로그인 접근</td>
+          <td>보호 페이지 — 로그인으로 유도하고 완료 후 같은 주문 파라미터로 이 화면에 복귀 (home 의 "보호 액션 시점에 로그인 유도" 규칙과 한 쌍).</td>
+        </tr>
+        <tr>
+          <td>이미 신청한 이벤트로 재진입</td>
+          <td>중복 신청은 서버가 거부 — 진입 시 "이미 신청한 이벤트예요" 안내 + 구매내역으로 유도 (wizard behavior 상속).</td>
+        </tr>
+        <tr>
+          <td>hover (fine pointer)</td>
+          <td>CTA/버튼: 배경 미세 강조 · 체크 row: 라벨 영역 hover 시 배경 tint · 링크: underline — <code>motion-fast (200ms)</code> + <code>cursor: pointer</code>. coarse pointer 는 press 피드백 (<code>motion-micro (100ms)</code>) — foundation 포인터 규칙.</td>
+        </tr>
+        <tr>
+          <td>브라우저 탭 비활성 → 복귀</td>
+          <td>화면 상태(체크·잠금) 그대로 유지. 결제 진행 중이었다면 복귀 시 결제 결과를 다시 확인해 완료/실패로 분기.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion &amp; timing</h2>
+    <p class="intro">
+      duration 은 MDS motion 토큰 (<code>micro 100 / fast 200 / medium 350 / slow 500</code>) —
+      웹 구현은 CSS <code>transition-duration</code> / Tailwind <code>duration-N</code> 으로 같은 ms 소비.
+      <code>prefers-reduced-motion</code> 대응은 Global edge cases 참조.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 260px;">Transition</th>
+          <th style="width: 170px;">Duration (token)</th>
+          <th>Curve / notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>첫 화면 진입 (서버 렌더)</td>
+          <td>없음 (0ms)</td>
+          <td>SSR 즉시 표시 — 진입 모션 없음</td>
+        </tr>
+        <tr>
+          <td>체크박스 토글</td>
+          <td><code>micro</code> (100ms)</td>
+          <td>박스 fill + check 아이콘 scale-in — CTA 활성 전환도 동시 트리거</td>
+        </tr>
+        <tr>
+          <td>CTA 활성 ↔ 비활성 전환</td>
+          <td><code>fast</code> (200ms)</td>
+          <td>배경색 transition · helper 텍스트는 즉시 교체</td>
+        </tr>
+        <tr>
+          <td>결제창 열림 (dim 진입)</td>
+          <td><code>fast</code> (200ms)</td>
+          <td>scrim fade-in — 결제창 자체는 외부 영역 (모션 관여 없음)</td>
+        </tr>
+        <tr>
+          <td>약관 "보기" 레이어 열림/닫힘</td>
+          <td><code>medium</code> (350ms)</td>
+          <td>fade + 살짝 위로 — 모달/시트 진입 표준</td>
+        </tr>
+        <tr>
+          <td>결제 실패 snackbar</td>
+          <td><code>fast</code> (200ms) in · 3s hold · <code>fast</code> out</td>
+          <td>하단 fade-in — CTA 는 즉시 active 복원 (재시도 1 클릭, wizard 상속)</td>
+        </tr>
+        <tr>
+          <td>완료 화면 진입 (culmination)</td>
+          <td><code>fast</code> (200ms) 전환 + 1.5s sequence</td>
+          <td>circle scale-bounce → check stroke-draw → title/desc/CTA stagger fade-up — 모바일 <code>MinglitConfirmationPage</code> 패턴 상속 · 1회 재생 후 final 고정</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>네트워크 끊김</strong> — 결제 진행/확인 요청 실패 시 결제 실패 snackbar 패턴으로 안내 (자동 재시도 없음 — 사용자 액션 필요). 주문 정보 로드 실패는 안내 + "다시 시도" (이벤트 상세 데이터 재요청).</li>
+      <li><strong>결제 결과 race</strong> — 결제 완료 직후 화면을 닫거나 새로고침해도 신청 생성은 서버 검증(이중 검증·멱등)이 보장 — 재진입 시 완료 화면으로 복원 (모바일 wizard 의 race 안전 처리 상속).</li>
+      <li><strong>다크 모드</strong> — 우측 상단 Dark 토글로 확인. 배경/카드/divider/텍스트 토큰 전환 · 승인 대기 칩의 warning tone, 환불 보장 노트의 success tint 는 양 모드 유지 · 외부 결제창 내부는 영향 없음.</li>
+      <li><strong>접근성</strong> — 키보드 tab 순서: 로고 → 아바타 → (본인인증 하기) → 전체 동의 → 개별 동의 ×3 → "보기" 링크 → 티켓 변경 → "결제 진행" CTA. 체크박스는 스페이스로 토글 · CTA 비활성 사유는 항상 helper 텍스트로 노출 (색만으로 전달 금지) · 완료 화면 제목은 화면 전환 시 포커스 이동.</li>
+      <li><strong>reduced motion</strong> — <code>prefers-reduced-motion</code> 시 완료 culmination 애니메이션 생략(final 정적 표시) · 체크/CTA transition 0ms.</li>
+      <li><strong>SEO / 공유</strong> — 보호 페이지: <code>noindex</code> · og 공유 비대상 (공유는 이벤트 상세가 담당).</li>
+      <li><strong>초광폭 (≥1920px)</strong> — 1200px 캡 유지, 잉여 폭은 배경 (foundation 규칙).</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     📖 PERSPECTIVE 4 · REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">
+      Implementation source + 인접 화면 link. Components / Tokens 는 States 의 각 mini-table 에 분산.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <p class="intro">
+      <code>planned</code> 상태 — 구현 미존재 항목은 <code>TBD</code>.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 200px;">항목</th><th>Path / Reference</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Page / Component</strong></td>
+          <td><code>WebUserCheckout</code> — <code>TBD</code></td>
+        </tr>
+        <tr>
+          <td><strong>File path</strong></td>
+          <td><code>apps/landing_user/src/app/events/[id]/checkout/page.tsx</code> (landing_user 확장 — web MVP) · <code>TBD</code></td>
+        </tr>
+        <tr>
+          <td><strong>Data source</strong></td>
+          <td>주문 구성: 이벤트 + 티켓 조회 (Supabase) · 신청/결제: <code>apply-event</code> EF + 결제 검증 EF (<code>payment-verify</code> 계열 — Portone V2 웹 어댑테이션 <code>TBD</code>) · 환불 정책 카피: 플랫폼 정책 동적 조회 (<code>get_current_policy('refund')</code>)</td>
+        </tr>
+        <tr>
+          <td><strong>Route</strong></td>
+          <td><code>/events/:id/checkout?ticket=:ticketId</code> · Next.js app router — 보호 라우트 (로그인 필요)</td>
+        </tr>
+        <tr>
+          <td><strong>Behavior Source</strong></td>
+          <td>
+            <a href="/specs/event_application_wizard_page/index.html"><code>/specs/event_application_wizard_page/index.html</code></a> ·
+            <a href="/specs/ticket_selection_sheet/index.html"><code>/specs/ticket_selection_sheet/index.html</code></a> ·
+            <a href="/specs/identity_verification_screen/index.html"><code>/specs/identity_verification_screen/index.html</code></a>
+            — Overview 의 Behavior Source 행과 동일 경로
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top: 12px; margin-bottom: 0;">
+      ※ 열린 질문 (디자인/백엔드 확정 필요): ① <strong>승인 대기 상태 매핑</strong> — 현행 결제 파이프라인은 결제 검증 시
+      곧장 승인·발권 처리 (<code>docs/architecture/payment-pipeline.md</code> — paid → approved 매핑) —
+      이 spec 의 "결제 완료 = 승인 대기" 모델로 가려면 결제 완료를 승인 대기 상태로 받는 백엔드 상태 머신 조정이 필요 (확정 주체/시점 확인) ·
+      ② <strong>Portone V2 결제창 호출 방식</strong> — 데스크톱 팝업/레이어 vs 리디렉션 (일부 PG/결제수단은 리디렉션 강제) —
+      리디렉션이면 복귀 URL 의 state 복원 설계가 추가로 필요 ·
+      ③ <strong>환불 정책 고지 값</strong> — 모바일 wizard spec 은 "결제 후 2시간", refund-policy-v2 PRD 는 grace 3시간 —
+      웹 카피의 기준 값 확정 필요 (동적 조회로 흡수하되 디자인 검수용 기준값은 정해야 함).
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 280px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>WebUserEventDetail</code> <em style="color: var(--color-text-secondary);">(spec TBD)</em></td>
+          <td>진입원 — 티켓 선택 후 "신청하기"로 이 화면 진입 · "티켓 변경"/back 복귀 도착지.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/web_user_home/index.html"><code>WebUserHome</code></a></td>
+          <td>퍼널 출발점 — GlobalHeader 컴포넌트/토큰 어휘를 공유 (이 화면은 compact variant).</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_application_wizard_page/index.html"><code>EventApplicationWizardPage</code> (mobile)</a></td>
+          <td>Behavior Source — 결제 단계 · 환불 정책 고지 · 실패/성공 패턴의 SSOT.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/ticket_selection_sheet/index.html"><code>TicketSelectionSheet</code> (mobile)</a></td>
+          <td>Behavior Source — ticketId 확정 게이트 · 단일 티켓 1매 결정의 SSOT.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/identity_verification_screen/index.html"><code>IdentityVerificationScreen</code> (mobile)</a></td>
+          <td>Behavior Source — 본인인증 동의 → 인증 창 → 성공/실패 retry 의 SSOT (웹은 Portone V2 웹 인증).</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/purchase_history_page/index.html"><code>PurchaseHistoryPage</code> (mobile)</a></td>
+          <td>완료 화면 "구매내역 보기" 도착지의 behavior 참고 — 웹 구매내역 spec 은 별도 작성 예정 (TBD).</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/web_foundation_responsive/"><code>WebFoundationResponsive</code></a></td>
+          <td>breakpoint · 컨테이너(1200 캡 · gutter 32) · 그리드 · 포인터 규칙 SSOT.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>

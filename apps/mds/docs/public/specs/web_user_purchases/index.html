@@ -1,0 +1,1990 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<!-- ── Web spec metadata ─────────────────────────────────────── -->
+<meta name="feature-status" content="planned">
+<meta name="features" content="event/refund-policy-v2">
+<meta name="surface" content="web_user">
+<title>Spec — WebUserPurchases (web_user · /my/purchases)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   WebUserPurchases-specific atoms.
+
+   Desktop-first mockup (Mark 지시 — 웹 MVP 유저웹 화면은 1280px
+   baseline 으로 설계. 모바일 variant 는 후속 pass — History 참조).
+
+   Mockup canvas = 실제 1280×760 캔버스를 0.5 스케일로 표시.
+   스크린샷은 .mock-scale 단위로 캡처.
+   ============================================================ */
+
+/* --- Desktop viewport frame (1280 canvas @ 0.5 display scale) --- */
+.viewport--desktop {
+  width: 1280px;
+  height: 760px;
+  border-radius: 12px;
+}
+.mock-scale {
+  width: 640px;
+  height: 380px;
+  overflow: hidden;
+  border-radius: 8px;
+}
+.mock-scale > .viewport--desktop {
+  transform: scale(0.5);
+  transform-origin: top left;
+}
+.state-mini__mock { width: 664px; }
+.layout-grid--desktop { grid-template-columns: 640px 1fr; }
+@media (max-width: 1100px) { .layout-grid--desktop { grid-template-columns: 1fr; } }
+.blueprint--desktop {
+  width: 640px;
+  height: 380px;
+  border-radius: 12px;
+}
+
+/* --- ① Global header (web_user_home 과 동일 패턴) --- */
+.wup-header {
+  height: 64px;
+  background: var(--color-background);
+  border-bottom: 1px solid var(--color-divider);
+}
+.wup-header__inner {
+  max-width: 1200px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.wup-logo { height: 40px; width: auto; flex: 0 0 auto; display: block; }
+.wup-search {
+  flex: 0 0 420px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 18px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: 999px;
+  color: var(--color-text-secondary);
+  font-size: 15px;
+  cursor: pointer;
+}
+.wup-search svg { width: 18px; height: 18px; flex: 0 0 auto; }
+.wup-header__spacer { flex: 1; }
+.wup-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  cursor: pointer;
+}
+.wup-avatar svg { width: 18px; height: 18px; }
+
+/* --- ② Page title --- */
+.wup-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 32px 32px;
+}
+.wup-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 20px;
+}
+
+/* --- ③/④ Master-detail grid --- */
+.wup-grid {
+  display: grid;
+  grid-template-columns: 363px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* --- ③ Purchase list (master) --- */
+.wup-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.wup-item {
+  background: var(--color-background);
+  border: 1px solid var(--color-divider);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+}
+.wup-item--selected {
+  border-color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 4%, var(--color-background));
+}
+.wup-item__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.wup-item__date {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.02em;
+}
+.wup-item__name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wup-item__bottom {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.wup-item__meta {
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+}
+.wup-item__amount {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.wup-item--muted .wup-item__name { color: var(--color-text-secondary); font-weight: 600; }
+
+/* --- StatusChip (목록·상세 공용) --- */
+.wup-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.wup-chip--success { background: color-mix(in srgb, var(--color-success) 16%, transparent); color: var(--color-success); }
+.wup-chip--warning { background: color-mix(in srgb, var(--color-warning) 18%, transparent); color: var(--color-warning); }
+.wup-chip--info    { background: rgba(59, 130, 246, 0.16); color: #3b82f6; }
+.wup-chip--error   { background: color-mix(in srgb, var(--color-error) 14%, transparent); color: var(--color-error); }
+.wup-chip--neutral { background: color-mix(in srgb, var(--color-text-secondary) 16%, transparent); color: var(--color-text-secondary); }
+
+/* --- ④ Detail panel --- */
+.wup-detail {
+  background: var(--color-background);
+  border: 1px solid var(--color-divider);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.wup-divider { height: 1px; background: var(--color-divider); }
+
+/* hero — 이벤트 정보 */
+.wup-hero { display: flex; gap: 16px; align-items: flex-start; }
+.wup-hero__thumb {
+  width: 88px; height: 88px;
+  border-radius: 12px;
+  background: var(--color-surface);
+  flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  overflow: hidden;
+}
+.wup-hero__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.wup-hero__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wup-hero__meta { font-size: 13.5px; color: var(--color-text-primary); }
+.wup-hero__sub { font-size: 12.5px; color: var(--color-text-secondary); }
+.wup-hero > .wup-chip { flex: 0 0 auto; margin-top: 2px; }
+
+/* section heading */
+.wup-sec__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.03em;
+  margin-bottom: 12px;
+}
+
+/* timeline — 신청 상태 (가로 stepper) */
+.wup-tl { display: flex; }
+.wup-tl__step { flex: 1; position: relative; padding-top: 22px; min-width: 0; }
+.wup-tl__step::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--color-divider);
+}
+.wup-tl__step::after {
+  content: '';
+  position: absolute;
+  top: 5px; left: 20px; right: 8px;
+  height: 2px;
+  background: var(--color-divider);
+}
+.wup-tl__step:last-child::after { display: none; }
+.wup-tl__step--done::before { background: var(--color-success); }
+.wup-tl__step--done::after  { background: var(--color-success); }
+.wup-tl__step--now::before  { background: var(--color-primary); animation: wup-pulse 1.4s ease-in-out infinite; }
+.wup-tl__step--fail::before { background: var(--color-error); }
+@keyframes wup-pulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 35%, transparent); } 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-primary) 12%, transparent); } }
+.wup-tl__label { font-size: 13px; font-weight: 600; color: var(--color-text-primary); }
+.wup-tl__step--off .wup-tl__label { color: var(--color-text-secondary); font-weight: 500; }
+.wup-tl__time { font-size: 11.5px; color: var(--color-text-secondary); margin-top: 2px; }
+.wup-tl-note {
+  margin-top: 14px;
+  background: var(--color-surface);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--color-text-primary);
+}
+.wup-tl-note b { font-weight: 700; }
+
+/* 결제 내역 KV */
+.wup-kv { display: flex; justify-content: space-between; align-items: baseline; padding: 7px 0; }
+.wup-kv__label { font-size: 13.5px; color: var(--color-text-secondary); }
+.wup-kv__value { font-size: 13.5px; font-weight: 500; color: var(--color-text-primary); }
+.wup-kv--strong .wup-kv__value { font-size: 15px; font-weight: 700; }
+
+/* 환불 카드 — 정책 단계 + 버튼 */
+.wup-pol { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
+.wup-pol__label { color: var(--color-text-primary); }
+.wup-pol__value { color: var(--color-text-secondary); font-weight: 500; }
+.wup-pol--now .wup-pol__label,
+.wup-pol--now .wup-pol__value { font-weight: 700; color: var(--color-text-primary); }
+.wup-btn {
+  margin-top: 12px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.wup-btn--refund {
+  background: color-mix(in srgb, var(--color-error) 10%, transparent);
+  color: var(--color-error);
+}
+.wup-btn--disabled {
+  background: color-mix(in srgb, var(--color-text-secondary) 8%, transparent);
+  color: color-mix(in srgb, var(--color-text-secondary) 55%, transparent);
+  cursor: not-allowed;
+}
+.wup-btn-reason {
+  margin-top: 8px;
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+  text-align: center;
+  line-height: 1.5;
+}
+.wup-refund-pending {
+  margin-top: 12px;
+  background: rgba(59, 130, 246, 0.08);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--color-text-primary);
+}
+
+/* 입장 안내 (QR 대체) */
+.wup-entry {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: var(--color-surface);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.wup-entry svg { width: 18px; height: 18px; flex: 0 0 auto; color: var(--color-primary); margin-top: 1px; }
+.wup-entry__text { font-size: 13px; line-height: 1.5; color: var(--color-text-primary); }
+
+/* --- ⑤ 환불 확인 다이얼로그 --- */
+.wup-dim {
+  position: absolute;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+.wup-dialog {
+  width: 420px;
+  background: var(--color-background);
+  border-radius: 16px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+}
+.wup-dialog__title { font-size: 18px; font-weight: 700; color: var(--color-text-primary); }
+.wup-dialog__body {
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--color-text-primary);
+}
+.wup-dialog__amount {
+  margin-top: 16px;
+  background: var(--color-surface);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 13.5px;
+  color: var(--color-text-secondary);
+}
+.wup-dialog__amount b { font-size: 17px; font-weight: 700; color: var(--color-text-primary); }
+.wup-dialog__policy { margin-top: 10px; font-size: 12.5px; color: var(--color-text-secondary); }
+.wup-dialog__actions { margin-top: 22px; display: flex; gap: 10px; justify-content: flex-end; }
+.wup-dialog__btn {
+  height: 42px;
+  padding: 0 20px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.wup-dialog__btn--ghost { color: var(--color-text-primary); background: transparent; }
+.wup-dialog__btn--danger { background: var(--color-error); color: #ffffff; }
+
+/* --- Empty 중앙 박스 --- */
+.wup-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 12px;
+  padding: 120px 0;
+}
+.wup-center__icon {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-secondary);
+}
+.wup-center__icon svg { width: 30px; height: 30px; }
+.wup-center__title { font-size: 17px; font-weight: 600; color: var(--color-text-primary); }
+.wup-center__sub { font-size: 14px; color: var(--color-text-secondary); line-height: 1.55; }
+.wup-center__btn {
+  margin-top: 8px;
+  height: 40px;
+  padding: 0 20px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-primary);
+  border-radius: 8px;
+  color: var(--color-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     Toolbar — universal toggles
+     ============================================================ -->
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     📍 HEADER
+     ============================================================ -->
+<header>
+  <h1>유저웹 구매 내역 · 환불 요청</h1>
+</header>
+
+<!-- ============================================================
+     🎯 OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 160px;">Status</th>
+        <td>
+          <strong>🚧 디자인중</strong>
+          <em style="color: var(--color-text-secondary);">— web-mvp pivot Phase 3 초기 설계 (Desktop 1280 baseline)</em>
+        </td>
+      </tr>
+      <tr>
+        <th>Surface</th>
+        <td><code>web_user</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>my · payment · refund</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>/my/purchases</code> · Next.js route (landing_user 확장) — 선택된 구매 건이 URL 에 반영 (query 또는 path param — 구현 시 확정). 마이 영역의 보호 화면 (로그인 필요).</td>
+      </tr>
+      <tr>
+        <th>Behavior Source</th>
+        <td>
+          <a href="/specs/purchase_history_page/index.html"><code>/specs/purchase_history_page/index.html</code></a>
+          — 목록 카드의 정보 구성 (결제일 · 상태 배지 · 이벤트명 · 일시 · 금액) · 시간 역순 정렬 · "카드는 시그널만, 액션은 상세로" 책임 분리 상속<br>
+          <a href="/specs/purchase_history_detail_page/index.html"><code>/specs/purchase_history_detail_page/index.html</code></a>
+          — 상세의 정보 흐름 (이벤트 → 상태 → 결제 → 환불 → 파트너) · 환불 정책 단계표 + 현재 단계 강조 · 취소 버튼 active/disabled 분기 · 환불 확인 다이얼로그 상속<br>
+          <a href="/specs/event_application_review_page/index.html"><code>/specs/event_application_review_page/index.html</code></a>
+          — 신청 상태 타임라인 (통과 step 초록 / 진행 중 pulse / 실패 빨강 / 취소 회색 tone 매핑 · 종결 step 의 사유 박스) 상속<br>
+          <a href="/specs/my_tickets_page/index.html"><code>/specs/my_tickets_page/index.html</code></a>
+          — 상태 칩의 색·어휘 톤 참고<br>
+          <strong>웹에서 달라지는 점</strong>: ① 목록·상세 2-화면 → <strong>master-detail 단일 화면</strong> (좌 목록 + 우 상세 패널) ·
+          ② <strong>환불 정책 v2 반영</strong> (그레이스 3시간 / 이벤트 7일 전 마감 / 파트너 귀책 자동 환불 — <a href="/specs/purchase_history_detail_page/index.html">모바일 spec</a>의 구 정책 2시간/부분환불 단계는 폐기) ·
+          ③ <strong>QR/입장권 없음</strong> (체크인 deprecated — "이벤트 당일 예약자 이름으로 입장" 안내 문구로 대체) ·
+          ④ 심사 상태 detail 별도 뎁스 → 타임라인을 상세 패널에 인라인 통합 (제출 답변 등 심층 정보는 웹 MVP 비범위).
+        </td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <em>— (top-level screen — 헤더 아바타 → 마이 영역에서 진입)</em><br>
+          <strong>Children</strong>: 환불 확인 다이얼로그는 이 화면 안의 overlay (별도 spec 없음 — State 5 참조)
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          <strong>내 구매를 확인하고 환불을 요청하는 화면.</strong> 좌측 목록에서 구매 건을 고르면
+          우측 패널에 이벤트 정보 · 신청 상태 타임라인 · 결제 내역 · 환불 정책 적용 상태가 한 번에 보인다.
+          환불이 가능한 기간이면 패널에서 바로 환불을 요청하고, 불가능하면 그 이유가 같은 자리에 보인다.
+          파트너 거절 등 자동 환불은 별도 액션 없이 상태로만 표시된다.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: 헤더 아바타 → 마이 영역 → 구매 내역 · 결제 완료 직후 redirect ·
+          알림/메일의 "환불 처리" 링크 → URL 직접 진입 (선택 건이 URL 에 있으면 해당 상세가 곧장 열림).<br>
+          <strong>Exit points</strong>: ① 상세 패널의 이벤트 정보 클릭 → 이벤트 상세 (<code>/events/:id</code>) ·
+          ② 로고 클릭 → 홈 (<code>/</code>) · ③ 비로그인 진입 → 로그인 화면 (완료 후 이 화면 복귀).
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          web-mvp pivot — "이벤트 탐색 → 상세 → 구매·신청" 퍼널의 사후 관리 화면.
+          환불 정책은 법적 필수 코어 (전자상거래법 청약철회 — <a href="https://github.com/Mark-Yun/minglit/blob/dev/docs/features/event/refund-policy-v2/prd.md">refund-policy-v2 PRD</a>)라 웹 MVP 에 포함.
+          모바일의 목록 → 상세 → 심사 상태 3-뎁스를 데스크톱 폭(1280)을 활용해 <strong>master-detail 1-화면</strong>으로 압축 —
+          목록을 떠나지 않고 건별 상태·환불 가능 여부를 비교 확인할 수 있다.
+          QR/체크인 계열은 2차 축소로 deprecated — 입장은 현장 명단 확인이므로 안내 문구만 남긴다.
+          1280px 데스크톱을 주 캔버스로 설계 (모바일 variant 는 후속 pass).
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>결제 직후 1회 + 환불 결심 시 — 분기당 0-2회. 빈도는 낮지만 돈이 걸린 액션(환불)이 일어나는 곳.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     🕐 HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">
+    이 spec의 주요 변경 이력. 최신 항목 위에 추가 (최신 → 오래된 순).
+  </p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-06-07</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>web-mvp pivot Phase 3 초기 설계 (1280 baseline)</strong> —
+          유저웹 구매 내역 + 환불 요청 신규 spec. Desktop ≥1280 을 주 mockup 으로 작성
+          (Mobile variant 는 후속 pass — TBD).
+          모바일 구매 내역 목록·상세·심사 상태 3개 spec 의 behavior 를 master-detail 단일 화면으로 통합 상속.
+          환불 정책은 <code>refund-policy-v2</code> (그레이스 3시간 / 이벤트 7일 전 / 파트너 귀책 자동 환불) 기준 —
+          모바일 spec 의 구 정책 표기(2시간 / 부분 환불 단계)는 따르지 않음.
+          QR/입장권·체크인 deprecated — 현장 명단 입장 안내 문구로 대체.
+          자동 환불 불가 기간의 파트너 환불 요청(Track 2) 플로우는 웹 포함 여부 미정 (열린 질문).
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Anchor nav -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Responsive Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#global-behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     🧱 PERSPECTIVE 1 · RESPONSIVE LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Responsive Layout</h2>
+    <span class="lede">
+      화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.
+      이 화면은 <strong>Desktop (≥1280) variant 가 주 blueprint</strong> — breakpoint variants 표 참조.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Breakpoint variants</h2>
+    <p class="intro">
+      Breakpoint · 컨테이너 · 그리드 정의의 SSOT는
+      <a href="/specs/web_foundation_responsive/"><code>web_foundation_responsive</code></a>.
+      이 화면은 <strong>Desktop-first 예외 화면</strong> — 1280 baseline 으로 먼저 설계하고
+      Mobile blueprint 는 후속 pass 에서 추가한다 (History 참조).
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 160px;">Variant</th>
+          <th style="width: 180px;">Breakpoint</th>
+          <th>이 화면에서의 차이</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Desktop</strong> (주 variant)</td>
+          <td><code>≥ 1280px</code></td>
+          <td>헤더(<a href="/specs/web_user_home/index.html">web_user_home</a> 와 동일) + 페이지 타이틀 + <strong>master-detail 2-컬럼</strong> — 좌측 구매 목록 (12col 중 4col) · 우측 상세 패널 (8col) · 컨테이너 1200px 캡 중앙 정렬 · gutter 32px — 아래 blueprint 가 이 variant.</td>
+        </tr>
+        <tr>
+          <td>Tablet</td>
+          <td><code>768–1279px</code></td>
+          <td>별도 blueprint 없음 — Desktop 레이아웃 축소: 목록 컬럼 폭 고정(≈320px) + 상세 패널이 잔여 폭 fluid · gap <code>spacing-medium (16px)</code>.</td>
+        </tr>
+        <tr>
+          <td>Mobile</td>
+          <td><code>&lt; 768px</code></td>
+          <td><strong>후속 pass 에서 작성 (TBD)</strong> — 목록 → 상세 2-step 전환 (master-detail 해체) 예상. 이번 pass 는 1280 baseline 만.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree — Desktop (≥1280px)</h2>
+    <p class="intro">
+      Sticky 헤더(64px 풀-블리드) + 1200px 캡 컨테이너 안에 페이지 타이틀 + master-detail 그리드.
+      <strong>좌측 목록은 헤더 아래 sticky 로 고정되어 자체 세로 스크롤</strong>,
+      우측 상세 패널은 본문 흐름대로 페이지 스크롤. blueprint 는 1280×760 캔버스의 ½ 스케일.
+    </p>
+
+    <div class="layout-grid layout-grid--desktop">
+      <div class="blueprint blueprint--desktop">
+        <!-- Whole frame outline -->
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- ① Global header — h=64 (½ scale 32) full-bleed -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0; left:0; right:0; height:32px;">
+          <span class="blueprint__region-label">① GlobalHeader · h=64 · sticky · full-bleed</span>
+        </div>
+
+        <!-- container guides (max-width 1200 + gutter 32 → content 36..604 @ ½) -->
+        <div class="blueprint__region" style="top:32px; left:0; width:36px; bottom:0; border-style:dashed; border-color:rgba(var(--spec-blueprint-rgb), 0.25); background:none;"></div>
+        <div class="blueprint__region" style="top:32px; right:0; width:36px; bottom:0; border-style:dashed; border-color:rgba(var(--spec-blueprint-rgb), 0.25); background:none;"></div>
+
+        <!-- ② Page title — h=30 (½ 15), top margin 24 (½ 12) -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:44px; left:36px; width:120px; height:15px;">
+          <span class="blueprint__region-label">② PageTitle "구매 내역"</span>
+        </div>
+
+        <!-- ③ Master list — 4col -->
+        <div class="blueprint__region" style="top:69px; left:36px; width:181px; bottom:12px;">
+          <span class="blueprint__region-label">③ PurchaseList — 4col · sticky · 자체 스크롤</span>
+        </div>
+
+        <!-- ④ Detail panel — 8col -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:69px; left:229px; right:36px; bottom:12px;">
+          <span class="blueprint__region-label">④ DetailPanel — 8col · 선택 건 상세 (페이지 스크롤)</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:36px; right:4px;">container 1200 캡 · gutter 32</div>
+        <div class="blueprint__align-marker" style="bottom:2px; left:40px;">↓ 목록 자체 스크롤</div>
+      </div>
+
+      <div class="layout-tree"><b>&lt;body&gt;</b>
+├─ <em>GlobalHeader</em> (h=64 · sticky top · full-bleed)        ← ①
+│  └─ <a href="/specs/web_user_home/index.html">web_user_home</a> Sub-anatomy ① 동일 — 재정의하지 않음
+│
+└─ <b>&lt;main&gt;</b> (max-width <code>1200px</code> 중앙 정렬 · gutter <code>32px</code>)
+   ├─ <em>PageTitle</em> "구매 내역" (margin-top <code>24px</code>)   ← ②
+   │
+   └─ <b>grid</b> (2-col: 4col / 8col · gap <code>24px</code> · margin-top <code>20px</code>)
+      ├─ <em>PurchaseList</em>                                ← ③
+      │  ├─ <b>PurchaseListItem</b> × N (시간 역순 — 최근 결제 먼저)
+      │  ├─ item gap: <code>12px</code>
+      │  └─ sticky (헤더 아래 고정) · 넘치면 자체 세로 스크롤
+      │
+      └─ <em>DetailPanel</em>                                 ← ④
+         └─ 선택 건의 상세 — 이벤트 정보 / 신청 상태 타임라인
+            / 결제 내역 / 환불 카드 / 입장 안내 (Sub-anatomy ③)</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <p class="intro">
+      Desktop 값 기준. Tablet 은 목록 폭 고정 + gap <code>spacing-medium (16px)</code> 으로 축소, Mobile 은 후속 pass.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 50px;">#</th>
+          <th style="width: 190px;">Region</th>
+          <th style="width: 240px;">Alignment</th>
+          <th>Spacing — Desktop</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>Page container</td><td>중앙 정렬 · max-width 1200px 캡</td><td>gutter <code>32px</code> — foundation Desktop 규칙</td></tr>
+        <tr><td>①</td><td>GlobalHeader</td><td>sticky top · full-bleed bg/border · 내부 1200px 캡</td><td>h: 64px · <a href="/specs/web_user_home/index.html">web_user_home</a> 와 동일 — 재정의하지 않음</td></tr>
+        <tr><td>②</td><td>PageTitle</td><td>좌측 정렬</td><td>margin-top: <code>24px</code> · 타이틀 22/700 · 타이틀→그리드: <code>20px</code></td></tr>
+        <tr><td>③</td><td>PurchaseList</td><td>12col 중 4col (≈363px) · sticky (헤더 아래 24px)</td><td>item 사이 gap: <code>12px</code> · item padding: <code>14px 16px</code> · item radius <code>12px</code> + 1px border · 선택 item 은 primary 보더 강조</td></tr>
+        <tr><td>④</td><td>DetailPanel</td><td>12col 중 8col (≈749px) · 단일 카드</td><td>radius <code>radius-card (16px)</code> + 1px border · padding: <code>24px</code> · 내부 섹션 gap: <code>18px</code> (1px divider 로 구분)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomies — 구성</h2>
+    <p class="intro">
+      ① GlobalHeader 는 <a href="/specs/web_user_home/index.html"><code>web_user_home</code></a> Sub-anatomy ① 에 위임 (재정의하지 않음).
+      아래는 이 화면 고유 region — 평면 나열 (② 목록 item · ③ 상세 패널 · ④ 타임라인 · ⑤ 환불 카드 · ⑥ 확인 다이얼로그).
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ② — PurchaseListItem + 반복 패턴</h2>
+    <p class="intro">
+      목록 item 1장의 구성 — 모바일 <a href="/specs/purchase_history_page/index.html">purchase_history_page</a> 카드의
+      4-region 을 master 목록용으로 압축 (썸네일·티켓명 제거 — 식별은 상세 패널이 담당).
+      item 은 "언제 결제 / 현재 상태 / 어떤 이벤트 / 언제 열림 / 얼마" 5 시그널만.
+      인라인 액션 없음 — item 전체가 클릭 영역, 클릭하면 우측 패널이 그 건으로 교체.
+    </p>
+    <div class="layout-grid" style="grid-template-columns: 363px 1fr;">
+      <div class="blueprint" style="width: 363px; height: 96px; border-radius: 12px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:14px; left:16px; width:90px; height:18px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉠ 결제일</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:14px; right:16px; width:80px; height:18px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉡ StatusChip</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:40px; left:16px; right:16px; height:20px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉢ 이벤트명 (15/700 · 1줄)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:66px; left:16px; width:150px; height:16px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉣ 이벤트 일시</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:66px; right:16px; width:70px; height:16px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉤ 결제 금액</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>PurchaseListItem</b> — 목록 cell (4col ≈ 363px @1280)
+└─ <b>item frame</b> — radius 12 · border 1px <code>color-divider</code>
+   │  padding <code>14px 16px</code> · 전체가 단일 클릭 영역
+   │  선택 시: border/inset <code>color-primary</code> + primary 4% tint bg
+   ├─ <em>top row</em> (spaceBetween)
+   │  ├─ <b>결제일</b> (12/500 · text-secondary)              ← ㉠
+   │  └─ <b>StatusChip</b> (11.5/600 · pill — 어휘 표 아래)   ← ㉡
+   ├─ Gap: <code>6px</code>
+   ├─ <b>이벤트명</b> (15/700 · 1줄 ellipsis)                 ← ㉢
+   ├─ Gap: <code>6px</code>
+   └─ <em>bottom row</em> (spaceBetween · baseline)
+      ├─ <b>이벤트 일시</b> (12.5 · text-secondary)           ← ㉣
+      └─ <b>결제 금액</b> (14/700)                            ← ㉤
+
+<em>반복</em>: 세로 stack · gap <code>12px</code> · 시간 역순 (최근 결제 먼저)</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 180px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠㉡</td><td>top row (결제일 ↔ 칩)</td><td>spaceBetween · crossAxis center</td><td>결제일 12/500 <code>color-text-secondary</code> · 칩 pill (<code>radius-chip</code> 체계 · padding 3/9)</td></tr>
+        <tr><td>㉢</td><td>이벤트명</td><td>좌측 정렬 · 1줄 ellipsis</td><td>15/700 <code>color-text-primary</code> · 이벤트 종료 건은 text-secondary 톤 다운</td></tr>
+        <tr><td>㉣㉤</td><td>bottom row (일시 ↔ 금액)</td><td>spaceBetween · baseline</td><td>일시 12.5 <code>color-text-secondary</code> · 금액 14/700 <code>color-text-primary</code></td></tr>
+      </tbody>
+    </table>
+
+    <p class="variant-label">StatusChip 어휘 — 목록·상세 공용 (한 건당 칩 1개)</p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 140px;">칩</th>
+          <th style="width: 120px;">색 톤</th>
+          <th style="width: 320px;">조건 (디자인 언어)</th>
+          <th>모바일 어휘 대응</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>승인 대기</strong></td><td>warning (노랑)</td><td>결제는 끝났고 파트너가 신청을 검토 중</td><td>"심사 중" (warning) — 웹은 "무엇을 기다리는지"가 읽히는 어휘로 변경</td></tr>
+        <tr><td><strong>확정</strong></td><td>success (초록)</td><td>참가 확정 (심사 없는 이벤트의 결제 완료 · 또는 파트너 승인 완료) + 이벤트 시작 전</td><td>"결제완료" / "승인됨" (success) — 두 어휘를 사용자 관점 "확정" 하나로 통합</td></tr>
+        <tr><td><strong>환불 요청 중</strong></td><td>info (파랑)</td><td>환불 요청이 접수되어 처리(입금)를 기다리는 중</td><td>"환불 처리 중" (warning) — 웹은 info 톤 (위험 아님 · 진행 시그널)</td></tr>
+        <tr><td><strong>환불됨</strong></td><td>neutral (회색)</td><td>본인 요청 환불이 완료됨 (입금까지 끝)</td><td>"취소됨" + "환불 완료" 2-배지 — 웹 목록은 1칩으로 압축 (상세에서 풀어 설명)</td></tr>
+        <tr><td><strong>거절·환불됨</strong></td><td>error (빨강)</td><td>파트너가 신청을 거절 → 전액 자동 환불 완료 (별도 액션 불필요)</td><td>"거절됨" (error) + "환불 완료" — 자동 환불 동반을 칩 라벨에 합성</td></tr>
+        <tr><td><strong>이벤트 종료</strong></td><td>neutral (회색)</td><td>이벤트 일시가 지났고 정상 참가로 종결</td><td>모바일 목록엔 없음 — 웹 신규 (종결 건을 활성 건과 시각 구분)</td></tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top: 12px;">
+      <strong>note</strong> — 결제 처리 중(PG 응답 대기)·결제 실패는 웹 결제 플로우 spec(TBD)에서 다룸 —
+      이 화면의 목록에는 결제가 성립한 건만 모인다 (열린 질문 ③ 참조).
+      파트너의 이벤트 취소(파트너 귀책)도 "환불됨" 칩 — 상세 타임라인의 사유로 구분.
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ③ — DetailPanel (우측 상세)</h2>
+    <p class="intro">
+      선택 건의 상세를 단일 카드에 섹션 스택으로. 정보 흐름은 모바일 상세 spec 상속 —
+      "어떤 이벤트 → 지금 어떤 상태 → 얼마/언제 냈나 → 환불은 어떻게". 섹션 사이 1px divider.
+      <strong>QR/입장권 영역 없음</strong> — 마지막 섹션이 현장 명단 입장 안내 문구 (확정 상태에서만).
+    </p>
+    <div class="layout-grid" style="grid-template-columns: 375px 1fr;">
+      <div class="blueprint" style="width: 375px; height: 340px; border-radius: 16px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:14px; left:14px; right:14px; height:56px;">
+          <span class="blueprint__region-label">㉠ EventSummary — 썸네일 88 + 제목/일시·장소/결제일·티켓 + 칩</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:84px; left:14px; right:14px; height:56px;">
+          <span class="blueprint__region-label">㉡ 신청 상태 타임라인 (Sub-anatomy ④)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:154px; left:14px; right:14px; height:58px;">
+          <span class="blueprint__region-label">㉢ 결제 내역 — KV row × 3</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:226px; left:14px; right:14px; height:72px;">
+          <span class="blueprint__region-label">㉣ 환불 카드 — 정책 단계 + 환불 요청 버튼 (Sub-anatomy ⑤)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:312px; left:14px; right:14px; height:18px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉤ 입장 안내 — "예약자 이름으로 입장" (확정 시)</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>DetailPanel</b> — 8col ≈ 749px @1280
+└─ <b>card frame</b> — <code>radius-card (16px)</code> · border 1px · padding <code>24px</code>
+   ├─ <em>EventSummary</em>                                  ← ㉠
+   │  ├─ <b>썸네일</b> 88×88 (radius 12)
+   │  ├─ <b>제목</b> (18/700) + <b>일시·장소</b> (13.5)
+   │  │  + <b>결제일·티켓명</b> (12.5 · text-secondary)
+   │  └─ <b>StatusChip</b> (우측 상단 — 목록과 동일 어휘)
+   │     · 클릭 → 이벤트 상세 페이지 (<code>/events/:id</code>)
+   ├─ Divider + gap <code>18px</code>
+   ├─ <em>신청 상태 타임라인</em>                             ← ㉡
+   ├─ Divider + gap <code>18px</code>
+   ├─ <em>결제 내역</em> — KV row(결제일 / 티켓 / 결제 금액)   ← ㉢
+   ├─ Divider + gap <code>18px</code>
+   ├─ <em>환불 카드</em> — 정책 단계 3행 + 버튼/사유            ← ㉣
+   └─ <em>입장 안내</em> (확정 상태에서만)                     ← ㉤
+      "이벤트 당일 예약자 이름으로 입장할 수 있어요"</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>EventSummary</td><td>row · crossAxis start · 칩은 우측 상단</td><td>썸네일 88×88 radius 12 · 썸네일↔텍스트 <code>spacing-medium (16px)</code> · 텍스트 내부 gap 5px · 영역 전체 클릭 → 이벤트 상세</td></tr>
+        <tr><td>㉡</td><td>신청 상태 타임라인</td><td>가로 stepper · step 균등 분할</td><td>섹션 제목 13/700 text-secondary · 제목→stepper <code>12px</code> · 상세는 Sub-anatomy ④</td></tr>
+        <tr><td>㉢</td><td>결제 내역</td><td>KV row — label 좌 / value 우</td><td>row v-padding <code>7px</code> · label 13.5 text-secondary · value 13.5/500 · 결제 금액 value 15/700</td></tr>
+        <tr><td>㉣</td><td>환불 카드</td><td>정책 3행 + full-width 버튼</td><td>상세는 Sub-anatomy ⑤</td></tr>
+        <tr><td>㉤</td><td>입장 안내</td><td>아이콘 + 문구 row</td><td>bg <code>color-surface</code> · radius 10 · padding <code>12px 14px</code> · 문구 13 · 확정 상태에서만 노출 (그 외 상태는 행 자체 생략)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ④ — 신청 상태 타임라인</h2>
+    <p class="intro">
+      모바일 <a href="/specs/event_application_review_page/index.html">event_application_review_page</a> 의
+      세로 타임라인을 데스크톱 패널 폭에 맞는 <strong>가로 stepper</strong>로 재배치.
+      step 색 tone 매핑(통과 초록 / 진행 중 primary pulse / 실패 빨강 / 취소·종결 회색)과
+      종결 step 의 사유 박스 패턴을 상속. 심층 정보(제출 답변 등)는 웹 MVP 비범위 — 타임라인 + 사유 박스까지만.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 160px;">구매 건 상태</th>
+          <th style="width: 320px;">step 구성 (좌 → 우)</th>
+          <th>사유 박스</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>확정 (심사 없음)</td><td>신청·결제 ✓ → <strong>확정 ✓</strong> (2 step)</td><td>—</td></tr>
+        <tr><td>승인 대기</td><td>신청·결제 ✓ → <strong>승인 대기 ●(pulse)</strong> → 확정 (미래·회색)</td><td>"파트너가 신청을 검토하고 있어요. 이벤트 시작까지 승인되지 않으면 자동 취소되고 전액 환불돼요."</td></tr>
+        <tr><td>확정 (심사 통과)</td><td>신청·결제 ✓ → 승인 대기 ✓ → <strong>확정 ✓</strong></td><td>—</td></tr>
+        <tr><td>거절·환불됨</td><td>신청·결제 ✓ → <strong>거절됨 ✕(빨강)</strong> → 환불 완료 ✓(회색)</td><td>파트너 거절 사유 + "결제 금액 전액이 자동 환불됐어요"</td></tr>
+        <tr><td>환불 요청 중</td><td>신청·결제 ✓ → 환불 요청 ✓ → <strong>환불 처리 중 ●(pulse)</strong></td><td>"환불이 접수됐어요. 영업일 기준 3일 안에 원래 결제 수단으로 입금돼요."</td></tr>
+        <tr><td>환불됨</td><td>신청·결제 ✓ → 환불 요청 ✓ → <strong>환불 완료 ✓(회색)</strong></td><td>"환불이 완료됐어요" (+ 파트너 귀책 취소면 그 사유)</td></tr>
+        <tr><td>이벤트 종료</td><td>신청·결제 ✓ → 확정 ✓ → <strong>이벤트 종료 ✓(회색)</strong></td><td>—</td></tr>
+      </tbody>
+    </table>
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr><th style="width: 60px;">#</th><th style="width: 200px;">Element</th><th>Spacing / tokens</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>step dot</td><td>12×12 원형 · 통과 <code>color-success</code> · 진행 중 <code>color-primary</code> + 1.4s pulse · 실패 <code>color-error</code> · 종결/미래 <code>color-divider</code> 톤</td></tr>
+        <tr><td>㉡</td><td>step 연결선</td><td>2px · 통과 구간은 success · 이후 구간은 <code>color-divider</code></td></tr>
+        <tr><td>㉢</td><td>step 라벨 + 시각</td><td>라벨 13/600 (미래 step 은 text-secondary 500) · 발생 시각 11.5 text-secondary · dot→라벨 <code>10px</code></td></tr>
+        <tr><td>㉣</td><td>사유 박스</td><td>stepper 아래 <code>14px</code> · bg <code>color-surface</code> · radius 10 · padding <code>12px 14px</code> · 12.5/1.55</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ⑤ — 환불 카드</h2>
+    <p class="intro">
+      <strong>환불 정책 v2</strong> (그레이스 3시간 / 이벤트 7일 전 마감 / 파트너 귀책 자동 — 전액/불가 이원화) 를
+      단계 3행으로 풀고 <strong>현재 해당 단계만 bold</strong> (모바일 상세 spec 의 차분한 강조 패턴 상속 — 색·배경 변화 없음).
+      버튼은 정책상 가능 기간에만 활성 — 불가 시 같은 자리에 비활성 + 아래 사유 1줄.
+      파트너 거절·이벤트 취소의 자동 환불은 이 카드에 버튼이 아예 없고 타임라인·칩으로만 표시.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 240px;">정책 단계 행 (label ↔ value)</th><th>현재 단계 판정</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>"결제 후 3시간 이내" ↔ "전액 환불"</td><td>결제 시각 + 3시간 전이면 이 행 bold</td></tr>
+        <tr><td>"이벤트 시작 7일 전까지" ↔ "전액 환불"</td><td>그레이스 지났고 마감 전이면 이 행 bold — 마감 날짜를 라벨에 합성 ("6월 14일까지")</td></tr>
+        <tr><td>"그 외" ↔ "자동 환불 불가"</td><td>둘 다 지났으면 이 행 bold</td></tr>
+      </tbody>
+    </table>
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr><th style="width: 240px;">상태 조건</th><th>버튼 / 안내 표시</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>전액 환불 가능 기간 (그레이스 내 또는 마감 전)</td><td><strong>"환불 요청" active</strong> — error 10% tint bg + error 텍스트 · h 44 · full width · 클릭 → 확인 다이얼로그 (State 5)</td></tr>
+        <tr><td>자동 환불 기간 종료</td><td><strong>"환불 요청" disabled</strong> (회색 · 클릭 무반응) + 아래 사유 1줄: "자동 환불 기간이 지났어요 · 환불이 필요하면 파트너에게 직접 문의해 주세요"</td></tr>
+        <tr><td>환불 요청 중</td><td>버튼 미노출 — info 톤 안내 박스로 교체: "환불이 접수됐어요 · 영업일 기준 3일 안에 입금돼요"</td></tr>
+        <tr><td>환불됨 · 거절·환불됨</td><td>버튼 미노출 — 환불 결과 KV (환불일 · 환불 금액)가 결제 내역 섹션에 추가</td></tr>
+        <tr><td>이벤트 종료</td><td>환불 카드 전체 미노출 (이벤트 시작 이후 환불 불가 — 약관)</td></tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top: 12px;">
+      <strong>note</strong> — 자동 환불 불가 기간의 인앱 파트너 환불 요청(refund-policy-v2 Track 2 — 사유 선택 → 파트너 승인/거절)은
+      웹 MVP 포함 여부 미정 — 현재 설계는 비활성 + 문의 안내까지 (열린 질문 ①).
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ⑥ — 환불 확인 다이얼로그</h2>
+    <p class="intro">
+      "환불 요청" 클릭 시 화면 중앙 모달. 카피 구조는 모바일 환불 확인 다이얼로그 +
+      <a href="https://github.com/Mark-Yun/minglit/blob/dev/docs/features/event/refund-policy-v2/spec.md">refund-policy-v2</a> 의
+      고지 의무 (환불 금액 + 입금 기한 + 정책 근거) 를 따른다. 주요 액션이 파괴적(환불)이므로 error 색.
+    </p>
+    <div class="layout-grid" style="grid-template-columns: 420px 1fr;">
+      <div class="blueprint" style="width: 420px; height: 250px; border-radius: 16px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:20px; left:24px; width:200px; height:24px;">
+          <span class="blueprint__region-label">㉠ 타이틀 "환불을 요청할까요?"</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:56px; left:24px; right:24px; height:36px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉡ 본문 — 전액 환불 + 입금 기한 고지</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:104px; left:24px; right:24px; height:44px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉢ 환불 금액 row (surface 박스)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:158px; left:24px; right:24px; height:18px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉣ 정책 근거 1줄</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:190px; right:24px; width:220px; height:40px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉤ 액션 — 돌아가기 / 환불 요청</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>ConfirmDialog</b> — w 420 · radius 16 · padding <code>28px</code>
+│  scrim: 검정 50% (화면 전체 dim)
+├─ <b>타이틀</b> "환불을 요청할까요?" (18/700)               ← ㉠
+├─ Gap: <code>10px</code>
+├─ <b>본문</b> "전액 환불 대상이에요. 환불 금액은            ← ㉡
+│   영업일 기준 3일 안에 원래 결제 수단으로 입금돼요." (14)
+├─ Gap: <code>16px</code>
+├─ <em>환불 금액 row</em> (bg surface · radius 10)          ← ㉢
+│  └─ "환불 금액" ↔ <b>{금액}원</b> (17/700)
+├─ <b>정책 근거</b> 1줄 (12.5 · text-secondary)             ← ㉣
+│   예: "이벤트 시작 7일 전(6월 14일)까지 전액 환불돼요"
+└─ <em>액션 row</em> (우측 정렬 · gap 10)                   ← ㉤
+   ├─ <b>"돌아가기"</b> (ghost · text)
+   └─ <b>"환불 요청"</b> (filled · <code>color-error</code> · 흰 텍스트)</div>
+    </div>
+  </section>
+</div>
+
+<!-- ============================================================
+     🎨 PERSPECTIVE 2 · STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">
+      page-level 시각 변형 5종 — baseline = Default(목록 + 확정 건 상세 · 환불 기간 지남).
+      목록 칩 어휘는 Sub-anatomy ② 표가 SSOT. mockup 은 Desktop 1280 캔버스 (½ 스케일 표시).
+      Loading / Error 는 <a href="/specs/web_user_home/index.html">web_user_home</a> 패턴 상속 — summary 표 참조.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>State summary</h2>
+    <p class="intro">
+      모든 state 한눈 비교. 자세한 사양은 아래 각 state mini-table 참조.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">State</th>
+          <th style="width: 110px;">Tag</th>
+          <th style="width: 280px;">조건 (요약)</th>
+          <th>Key visual differentiator</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="is-baseline-tint"><td><strong>Default · 확정 상세 (환불 기간 지남)</strong> 🎯</td><td>primary</td><td>구매 이력 보유 · 확정 건 선택 · 자동 환불 기간 종료</td><td>목록 + 상세 풀 렌더 · 환불 버튼 disabled + 사유 · 입장 안내 노출</td></tr>
+        <tr><td><strong>Empty · 구매 내역 없음</strong></td><td>no data</td><td>결제·신청 이력 0건</td><td>그리드 대신 중앙 안내 + "이벤트 둘러보기"</td></tr>
+        <tr><td><strong>승인 대기 상세</strong></td><td>variant</td><td>승인 대기 건 선택</td><td>타임라인 2번째 step pulse + 자동 환불 안내 박스 · 환불 버튼 active</td></tr>
+        <tr><td><strong>환불 요청 가능 상세</strong></td><td>variant</td><td>확정 건 선택 · 전액 환불 가능 기간</td><td>정책 2단계 bold (마감일 표기) · 환불 버튼 active (error tint)</td></tr>
+        <tr><td><strong>환불 요청 확인 다이얼로그</strong></td><td>modal</td><td>"환불 요청" 클릭 직후</td><td>화면 dim + 중앙 모달 (환불 금액 · 입금 기한 · 정책 근거)</td></tr>
+        <tr><td>Loading</td><td>async</td><td>목록/상세를 불러오는 중</td><td>mockup 생략 — 목록 item·상세 패널 자리 스켈레톤 (<a href="/specs/web_user_home/index.html">web_user_home</a> Loading 패턴 상속 · 레이아웃 점프 없음)</td></tr>
+        <tr><td>Error</td><td>network/server</td><td>로드 실패</td><td>mockup 생략 — 그리드 영역 중앙 에러 안내 + "다시 시도" (<a href="/specs/web_user_home/index.html">web_user_home</a> Error 패턴 상속)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>States gallery</h2>
+
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- ════════════════════════════════════════════════════════
+           State 1: Default — 확정 건 상세 · 환불 기간 지남 (baseline)
+           ════════════════════════════════════════════════════════ -->
+      <table class="ref state-mini is-baseline-tint">
+        <thead>
+          <tr><th colspan="3">
+            <strong>Default · 확정 상세 (환불 기간 지남)</strong> 🎯 <span class="tag">primary</span>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <!-- ① Global header -->
+                <div class="wup-header">
+                  <div class="wup-header__inner">
+                    <img class="wup-logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                    <div class="wup-search">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      이벤트 검색
+                    </div>
+                    <div class="wup-header__spacer"></div>
+                    <div class="wup-avatar">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="wup-main">
+                  <div class="wup-title">구매 내역</div>
+                  <div class="wup-grid">
+                    <!-- ③ Master list -->
+                    <div class="wup-list">
+                      <div class="wup-item wup-item--selected">
+                        <div class="wup-item__top"><span class="wup-item__date">2026.06.05</span><span class="wup-chip wup-chip--success">확정</span></div>
+                        <div class="wup-item__name">와인 페어링 디너 — 8인 한정</div>
+                        <div class="wup-item__bottom"><span class="wup-item__meta">6월 10일 (수) 19:00</span><span class="wup-item__amount">75,000원</span></div>
+                      </div>
+                      <div class="wup-item">
+                        <div class="wup-item__top"><span class="wup-item__date">2026.06.04</span><span class="wup-chip wup-chip--warning">승인 대기</span></div>
+                        <div class="wup-item__name">강남 루프탑 소셜 파티</div>
+                        <div class="wup-item__bottom"><span class="wup-item__meta">6월 20일 (토) 19:30</span><span class="wup-item__amount">20,000원</span></div>
+                      </div>
+                      <div class="wup-item">
+                        <div class="wup-item__top"><span class="wup-item__date">2026.06.03</span><span class="wup-chip wup-chip--success">확정</span></div>
+                        <div class="wup-item__name">성수 원데이 도자기 클래스</div>
+                        <div class="wup-item__bottom"><span class="wup-item__meta">6월 21일 (일) 13:00</span><span class="wup-item__amount">45,000원</span></div>
+                      </div>
+                      <div class="wup-item">
+                        <div class="wup-item__top"><span class="wup-item__date">2026.06.01</span><span class="wup-chip wup-chip--info">환불 요청 중</span></div>
+                        <div class="wup-item__name">보드게임 소모임</div>
+                        <div class="wup-item__bottom"><span class="wup-item__meta">6월 12일 (금) 14:00</span><span class="wup-item__amount">10,000원</span></div>
+                      </div>
+                      <div class="wup-item">
+                        <div class="wup-item__top"><span class="wup-item__date">2026.05.20</span><span class="wup-chip wup-chip--error">거절·환불됨</span></div>
+                        <div class="wup-item__name">봄 가든 파티</div>
+                        <div class="wup-item__bottom"><span class="wup-item__meta">5월 30일 (토) 18:00</span><span class="wup-item__amount">15,000원</span></div>
+                      </div>
+                      <div class="wup-item">
+                        <div class="wup-item__top"><span class="wup-item__date">2026.05.10</span><span class="wup-chip wup-chip--neutral">환불됨</span></div>
+                        <div class="wup-item__name">홍대 LP 뮤직 나이트</div>
+                        <div class="wup-item__bottom"><span class="wup-item__meta">5월 22일 (금) 20:00</span><span class="wup-item__amount">15,000원</span></div>
+                      </div>
+                      <div class="wup-item wup-item--muted">
+                        <div class="wup-item__top"><span class="wup-item__date">2026.05.02</span><span class="wup-chip wup-chip--neutral">이벤트 종료</span></div>
+                        <div class="wup-item__name">한강 선셋 러닝 크루</div>
+                        <div class="wup-item__bottom"><span class="wup-item__meta">5월 10일 (일) 18:30</span><span class="wup-item__amount">5,000원</span></div>
+                      </div>
+                    </div>
+
+                    <!-- ④ Detail panel — 확정 · 환불 기간 지남 -->
+                    <div class="wup-detail">
+                      <div class="wup-hero">
+                        <div class="wup-hero__thumb" style="background: linear-gradient(135deg, #ffe6e6 0%, #ffd6d6 100%);">2:1 이미지</div>
+                        <div class="wup-hero__text">
+                          <div class="wup-hero__title">와인 페어링 디너 — 8인 한정</div>
+                          <div class="wup-hero__meta">6월 10일 (수) 19:00 · 용산구 레드와인하우스</div>
+                          <div class="wup-hero__sub">결제일 2026.06.05 · 스탠다드 입장권</div>
+                        </div>
+                        <span class="wup-chip wup-chip--success">확정</span>
+                      </div>
+                      <div class="wup-divider"></div>
+
+                      <div class="wup-sec">
+                        <div class="wup-sec__title">신청 상태</div>
+                        <div class="wup-tl">
+                          <div class="wup-tl__step wup-tl__step--done">
+                            <div class="wup-tl__label">신청·결제</div>
+                            <div class="wup-tl__time">6월 5일 14:22</div>
+                          </div>
+                          <div class="wup-tl__step wup-tl__step--done">
+                            <div class="wup-tl__label">확정</div>
+                            <div class="wup-tl__time">6월 5일 14:22</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="wup-divider"></div>
+
+                      <div class="wup-sec">
+                        <div class="wup-sec__title">결제 내역</div>
+                        <div class="wup-kv"><span class="wup-kv__label">결제일</span><span class="wup-kv__value">2026.06.05 14:22</span></div>
+                        <div class="wup-kv"><span class="wup-kv__label">티켓</span><span class="wup-kv__value">스탠다드 입장권</span></div>
+                        <div class="wup-kv wup-kv--strong"><span class="wup-kv__label">결제 금액</span><span class="wup-kv__value">75,000원</span></div>
+                      </div>
+                      <div class="wup-divider"></div>
+
+                      <div class="wup-sec">
+                        <div class="wup-sec__title">환불</div>
+                        <div class="wup-pol"><span class="wup-pol__label">결제 후 3시간 이내</span><span class="wup-pol__value">전액 환불</span></div>
+                        <div class="wup-pol"><span class="wup-pol__label">이벤트 시작 7일 전까지</span><span class="wup-pol__value">전액 환불</span></div>
+                        <div class="wup-pol wup-pol--now"><span class="wup-pol__label">그 외</span><span class="wup-pol__value">자동 환불 불가</span></div>
+                        <div class="wup-btn wup-btn--disabled">환불 요청</div>
+                        <div class="wup-btn-reason">자동 환불 기간이 지났어요 · 환불이 필요하면 파트너에게 직접 문의해 주세요</div>
+                      </div>
+
+                      <div class="wup-entry">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="8" r="0.5" fill="currentColor"/></svg>
+                        <div class="wup-entry__text">이벤트 당일 <b>예약자 이름</b>으로 입장할 수 있어요 — 별도 QR·입장권이 필요 없어요.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Spec-mode overlays (1280-space 좌표) -->
+                <span class="annotation" style="top:8px;left:8px;">container 1200 캡 · gutter 32px</span>
+                <span class="annotation" style="top:100px;left:420px;">master-detail gap 24px</span>
+                <span class="annotation" style="bottom:8px;left:48px;">목록 sticky · 자체 스크롤</span>
+                <span class="callout" style="top:20px;left:230px;">ⓐ</span>
+                <span class="callout" style="top:92px;left:150px;">ⓑ</span>
+                <span class="callout" style="top:150px;left:380px;">ⓒ</span>
+                <span class="callout" style="top:160px;left:360px;">ⓓ</span>
+                <span class="callout" style="top:150px;right:48px;">ⓔ</span>
+                <span class="callout" style="top:300px;right:48px;">ⓕ</span>
+                <span class="callout" style="top:480px;right:48px;">ⓖ</span>
+                <span class="type-spec" style="top:140px;left:520px;">18 / 700 — detail title</span>
+                <span class="type-spec" style="top:200px;left:300px;">15 / 700 — item name</span>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>로그인 사용자가 구매 이력을 1건 이상 보유. 확정 건이 선택돼 있고, 그 건은 결제 후 3시간과 이벤트 7일 전 마감이 모두 지난 상태 (자동 환불 불가 기간). URL 에 선택 건이 없으면 가장 최근 건이 자동 선택.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              ① <strong>목록 item 클릭</strong> → 우측 패널이 그 건의 상세로 교체 + 선택 강조 이동 + URL 갱신 (페이지 이동 없음)<br>
+              ② <strong>상세의 이벤트 정보 클릭</strong> → 이벤트 상세 페이지 (<code>/events/:id</code>)<br>
+              ③ <strong>"환불 요청" 클릭</strong> → 무반응 (비활성 — 아래 사유 문구가 이유를 설명)<br>
+              ④ <strong>목록 스크롤</strong> → 더 오래된 구매 노출 (목록 컬럼 자체 스크롤)<br>
+              ⑤ <strong>헤더 액션</strong> (로고 → 홈 · 검색 → 검색 화면 · 아바타 → 마이 영역) — <a href="/specs/web_user_home/index.html">web_user_home</a> 헤더와 동일
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · <strong>URL 의 선택 건이 내 구매가 아니거나 없음</strong> — 최신 건 자동 선택으로 fallback (에러 화면 아님)<br>
+              · <strong>이벤트 정보 누락</strong> (관계 끊김) — 제목 "제목 없음" · 장소 "장소 정보 없음" (모바일 목록 spec 상속)<br>
+              · <strong>화면을 열어둔 채 기간 경과</strong> — 표시는 진입 시점 기준. 실제 환불 확정 시 서버가 재판정 (Global Behavior 참조)<br>
+              · <strong>이벤트 종료 건 선택</strong> — 환불 카드 전체 미노출 · 입장 안내 미노출 · 타임라인이 "이벤트 종료"로 종결
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>
+              ⓐ <code>GlobalHeader</code> (로고 · 검색 · 아바타 — <a href="/specs/web_user_home/index.html">web_user_home</a> 와 동일)<br>
+              ⓑ <code>PageTitle</code> ("구매 내역")<br>
+              ⓒ <code>PurchaseList</code> — <code>PurchaseListItem</code> × N (선택 강조 1개)<br>
+              ⓓ <code>StatusChip</code> (6 어휘 — Sub-anatomy ② 표)<br>
+              ⓔ <code>DetailPanel</code> — <code>EventSummary</code> + <code>ApplicationTimeline</code> + 결제 내역 KV<br>
+              ⓕ <code>RefundCard</code> (정책 단계 3행 · "환불 요청" disabled + 사유)<br>
+              ⓖ <code>EntryNotice</code> (현장 명단 입장 안내 — QR 대체)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>
+              · color: <code>color-background</code> (item·패널 bg) · <code>color-surface</code> (안내 박스 · 썸네일 placeholder) · <code>color-text-primary</code> · <code>color-text-secondary</code> · <code>color-divider</code> · <code>color-primary</code> (선택 보더 · 입장 안내 아이콘) · <code>color-success</code> (확정 칩 · 타임라인 통과) · <code>color-warning</code> (승인 대기 칩) · <code>color-error</code> (거절 칩 · 환불 버튼) · info(#3b82f6 · 환불 요청 중)<br>
+              · radius: <code>radius-card (16px)</code> (패널) · 12px (item · 썸네일) · <code>radius-chip</code> (칩 — pill) · 10px (버튼 · 안내 박스)<br>
+              · spacing: 컨테이너 gutter <code>32px</code> · 컬럼 gap <code>24px</code> · item gap <code>12px</code> · 패널 padding <code>24px</code> · 섹션 gap <code>18px</code><br>
+              · typography: 페이지 타이틀 22/700 · item 이벤트명 15/700 · detail 제목 18/700 · KV 13.5 · 결제 금액 15/700 · 칩 11.5/600<br>
+              · CSS 소비: <code>var(--color-primary)</code> · <code>var(--radius-card)</code> 등 (Tailwind arbitrary value 동일)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 비활성 버튼을 숨기지 않고 사유와 함께 같은 자리에 노출 — "왜 안 되는지"가 화면만으로 읽히게 (모바일 상세 spec 의 결정 상속). 거절·환불됨/환불됨 건 선택 시 이 패널의 환불 카드가 결과 표시로 바뀌는 변형은 Sub-anatomy ⑤ 표 참조 (별도 state 로 분리하지 않음).</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════════════════
+           State 2: Empty — 구매 내역 없음
+           ════════════════════════════════════════════════════════ -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>Empty · 구매 내역 없음</strong> <span class="tag tag--mute">no data</span>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <div class="wup-header">
+                  <div class="wup-header__inner">
+                    <img class="wup-logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                    <div class="wup-search">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      이벤트 검색
+                    </div>
+                    <div class="wup-header__spacer"></div>
+                    <div class="wup-avatar">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="wup-main">
+                  <div class="wup-title">구매 내역</div>
+                  <div class="wup-center">
+                    <div class="wup-center__icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                    </div>
+                    <div class="wup-center__title">아직 구매 내역이 없어요</div>
+                    <div class="wup-center__sub">이벤트에 참가하면 결제 내역과 환불 상태가 여기에 모여요</div>
+                    <div class="wup-center__btn">이벤트 둘러보기</div>
+                  </div>
+                </div>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>로그인 사용자의 결제·신청 이력이 0건. master-detail 그리드 자체를 그리지 않고 중앙 안내 단독 표시.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              + <strong>"이벤트 둘러보기" 클릭</strong> → 홈 (<code>/</code>) 으로 이동<br>
+              동일: 헤더 액션 (로고 · 검색 · 아바타)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>· <strong>결제 직후 반영 지연</strong> — 잠깐 Empty 로 보일 수 있음 — 갱신되면 자동으로 Default 전환 (모바일 behavior 상속)<br>· <strong>웹은 CTA 있음</strong> — 모바일 Empty(문구만)와 의도적 분기. 웹은 홈 복귀 동선이 명시적이어야 함 (뒤로 가기 의존 불가)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>↔ <code>PurchaseList</code> + <code>DetailPanel</code> → <code>EmptyState</code> (아이콘 + 타이틀 + 서브 + "이벤트 둘러보기" outline 버튼)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>동일 (Default 참조) — Empty 전용 추가 토큰 없음</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 안내 서브 카피에 "환불 상태"를 함께 언급 — 이 화면이 환불 관리처라는 기대를 첫 방문부터 형성.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════════════════
+           State 3: 승인 대기 상세
+           ════════════════════════════════════════════════════════ -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>승인 대기 상세</strong> <span class="tag tag--mute">variant</span>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <div class="wup-header">
+                  <div class="wup-header__inner">
+                    <img class="wup-logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                    <div class="wup-search">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      이벤트 검색
+                    </div>
+                    <div class="wup-header__spacer"></div>
+                    <div class="wup-avatar">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="wup-main">
+                  <div class="wup-title">구매 내역</div>
+                  <div class="wup-grid">
+                    <div class="wup-list">
+                      <div class="wup-item">
+                        <div class="wup-item__top"><span class="wup-item__date">2026.06.05</span><span class="wup-chip wup-chip--success">확정</span></div>
+                        <div class="wup-item__name">와인 페어링 디너 — 8인 한정</div>
+                        <div class="wup-item__bottom"><span class="wup-item__meta">6월 10일 (수) 19:00</span><span class="wup-item__amount">75,000원</span></div>
+                      </div>
+                      <div class="wup-item wup-item--selected">
+                        <div class="wup-item__top"><span class="wup-item__date">2026.06.04</span><span class="wup-chip wup-chip--warning">승인 대기</span></div>
+                        <div class="wup-item__name">강남 루프탑 소셜 파티</div>
+                        <div class="wup-item__bottom"><span class="wup-item__meta">6월 20일 (토) 19:30</span><span class="wup-item__amount">20,000원</span></div>
+                      </div>
+                      <div class="wup-item">
+                        <div class="wup-item__top"><span class="wup-item__date">2026.06.03</span><span class="wup-chip wup-chip--success">확정</span></div>
+                        <div class="wup-item__name">성수 원데이 도자기 클래스</div>
+                        <div class="wup-item__bottom"><span class="wup-item__meta">6월 21일 (일) 13:00</span><span class="wup-item__amount">45,000원</span></div>
+                      </div>
+                      <div class="wup-item">
+                        <div class="wup-item__top"><span class="wup-item__date">2026.06.01</span><span class="wup-chip wup-chip--info">환불 요청 중</span></div>
+                        <div class="wup-item__name">보드게임 소모임</div>
+                        <div class="wup-item__bottom"><span class="wup-item__meta">6월 12일 (금) 14:00</span><span class="wup-item__amount">10,000원</span></div>
+                      </div>
+                      <div class="wup-item">
+                        <div class="wup-item__top"><span class="wup-item__date">2026.05.20</span><span class="wup-chip wup-chip--error">거절·환불됨</span></div>
+                        <div class="wup-item__name">봄 가든 파티</div>
+                        <div class="wup-item__bottom"><span class="wup-item__meta">5월 30일 (토) 18:00</span><span class="wup-item__amount">15,000원</span></div>
+                      </div>
+                      <div class="wup-item">
+                        <div class="wup-item__top"><span class="wup-item__date">2026.05.10</span><span class="wup-chip wup-chip--neutral">환불됨</span></div>
+                        <div class="wup-item__name">홍대 LP 뮤직 나이트</div>
+                        <div class="wup-item__bottom"><span class="wup-item__meta">5월 22일 (금) 20:00</span><span class="wup-item__amount">15,000원</span></div>
+                      </div>
+                      <div class="wup-item wup-item--muted">
+                        <div class="wup-item__top"><span class="wup-item__date">2026.05.02</span><span class="wup-chip wup-chip--neutral">이벤트 종료</span></div>
+                        <div class="wup-item__name">한강 선셋 러닝 크루</div>
+                        <div class="wup-item__bottom"><span class="wup-item__meta">5월 10일 (일) 18:30</span><span class="wup-item__amount">5,000원</span></div>
+                      </div>
+                    </div>
+
+                    <!-- Detail — 승인 대기 -->
+                    <div class="wup-detail">
+                      <div class="wup-hero">
+                        <div class="wup-hero__thumb" style="background: linear-gradient(135deg, #f0e6ff 0%, #ffe8d6 100%);">2:1 이미지</div>
+                        <div class="wup-hero__text">
+                          <div class="wup-hero__title">강남 루프탑 소셜 파티</div>
+                          <div class="wup-hero__meta">6월 20일 (토) 19:30 · 강남구 Skybar Seoul</div>
+                          <div class="wup-hero__sub">결제일 2026.06.04 · 일반 입장권</div>
+                        </div>
+                        <span class="wup-chip wup-chip--warning">승인 대기</span>
+                      </div>
+                      <div class="wup-divider"></div>
+
+                      <div class="wup-sec">
+                        <div class="wup-sec__title">신청 상태</div>
+                        <div class="wup-tl">
+                          <div class="wup-tl__step wup-tl__step--done">
+                            <div class="wup-tl__label">신청·결제</div>
+                            <div class="wup-tl__time">6월 4일 21:08</div>
+                          </div>
+                          <div class="wup-tl__step wup-tl__step--now">
+                            <div class="wup-tl__label">승인 대기</div>
+                            <div class="wup-tl__time">파트너 검토 중</div>
+                          </div>
+                          <div class="wup-tl__step wup-tl__step--off">
+                            <div class="wup-tl__label">확정</div>
+                            <div class="wup-tl__time">—</div>
+                          </div>
+                        </div>
+                        <div class="wup-tl-note">파트너가 신청을 검토하고 있어요. 승인되면 참가가 확정돼요. 이벤트 시작까지 승인되지 않으면 <b>자동 취소되고 전액 환불</b>돼요.</div>
+                      </div>
+                      <div class="wup-divider"></div>
+
+                      <div class="wup-sec">
+                        <div class="wup-sec__title">결제 내역</div>
+                        <div class="wup-kv"><span class="wup-kv__label">결제일</span><span class="wup-kv__value">2026.06.04 21:08</span></div>
+                        <div class="wup-kv"><span class="wup-kv__label">티켓</span><span class="wup-kv__value">일반 입장권</span></div>
+                        <div class="wup-kv wup-kv--strong"><span class="wup-kv__label">결제 금액</span><span class="wup-kv__value">20,000원</span></div>
+                      </div>
+                      <div class="wup-divider"></div>
+
+                      <div class="wup-sec">
+                        <div class="wup-sec__title">환불</div>
+                        <div class="wup-pol"><span class="wup-pol__label">결제 후 3시간 이내</span><span class="wup-pol__value">전액 환불</span></div>
+                        <div class="wup-pol wup-pol--now"><span class="wup-pol__label">이벤트 시작 7일 전(6월 13일)까지</span><span class="wup-pol__value">전액 환불</span></div>
+                        <div class="wup-pol"><span class="wup-pol__label">그 외</span><span class="wup-pol__value">자동 환불 불가</span></div>
+                        <div class="wup-btn wup-btn--refund">환불 요청</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>승인 대기 건이 선택된 상태 — 결제는 끝났고 파트너의 신청 검토를 기다리는 중. 전액 환불 가능 기간 내.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              ↔ <strong>"환불 요청" 클릭</strong> → 활성 — 확인 다이얼로그 (State 5). 승인 전이라도 본인 의사로 환불(=신청 철회) 가능 (모바일 behavior 상속)<br>
+              동일: 목록 item 클릭 · 이벤트 정보 클릭 · 헤더 액션
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · <strong>보는 사이 파트너가 승인/거절</strong> — 자동 갱신 없음 (새로고침 시 반영). 환불 확정 시점엔 서버가 최신 상태로 재판정<br>
+              · <strong>파트너가 거절하면</strong> — 별도 액션 없이 자동 전액 환불 → 다음 방문 시 "거절·환불됨" 칩 + 타임라인 사유로 표시<br>
+              · <strong>이벤트 시작까지 미승인</strong> — 자동 취소 + 전액 환불 (타임라인 안내 박스가 미리 고지)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>
+              ↔ <code>ApplicationTimeline</code> — 2번째 step 진행 중 (pulse) + 미래 step 회색 + 안내 박스 추가<br>
+              ↔ <code>RefundCard</code> — 버튼 disabled → <strong>active</strong> · 정책 2단계 bold (마감일 합성 표기)<br>
+              − <code>EntryNotice</code> (확정 전 — 입장 안내 미노출)<br>
+              동일: 그 외 (Default 참조)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>+ <code>color-primary</code> (진행 중 step dot + 1.4s pulse) · <code>color-warning</code> (칩) — 그 외 동일</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 안내 박스가 "기다리면 어떻게 되는지"(승인 → 확정 / 미승인 → 자동 환불)를 모두 답해 문의 유입을 줄인다. pulse 는 reduced motion 시 정지 (Global edge cases).</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════════════════
+           State 4: 환불 요청 가능 상세
+           ════════════════════════════════════════════════════════ -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>환불 요청 가능 상세</strong> <span class="tag tag--mute">variant</span>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <div class="wup-header">
+                  <div class="wup-header__inner">
+                    <img class="wup-logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                    <div class="wup-search">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      이벤트 검색
+                    </div>
+                    <div class="wup-header__spacer"></div>
+                    <div class="wup-avatar">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="wup-main">
+                  <div class="wup-title">구매 내역</div>
+                  <div class="wup-grid">
+                    <div class="wup-list">
+                      <div class="wup-item">
+                        <div class="wup-item__top"><span class="wup-item__date">2026.06.05</span><span class="wup-chip wup-chip--success">확정</span></div>
+                        <div class="wup-item__name">와인 페어링 디너 — 8인 한정</div>
+                        <div class="wup-item__bottom"><span class="wup-item__meta">6월 10일 (수) 19:00</span><span class="wup-item__amount">75,000원</span></div>
+                      </div>
+                      <div class="wup-item">
+                        <div class="wup-item__top"><span class="wup-item__date">2026.06.04</span><span class="wup-chip wup-chip--warning">승인 대기</span></div>
+                        <div class="wup-item__name">강남 루프탑 소셜 파티</div>
+                        <div class="wup-item__bottom"><span class="wup-item__meta">6월 20일 (토) 19:30</span><span class="wup-item__amount">20,000원</span></div>
+                      </div>
+                      <div class="wup-item wup-item--selected">
+                        <div class="wup-item__top"><span class="wup-item__date">2026.06.03</span><span class="wup-chip wup-chip--success">확정</span></div>
+                        <div class="wup-item__name">성수 원데이 도자기 클래스</div>
+                        <div class="wup-item__bottom"><span class="wup-item__meta">6월 21일 (일) 13:00</span><span class="wup-item__amount">45,000원</span></div>
+                      </div>
+                      <div class="wup-item">
+                        <div class="wup-item__top"><span class="wup-item__date">2026.06.01</span><span class="wup-chip wup-chip--info">환불 요청 중</span></div>
+                        <div class="wup-item__name">보드게임 소모임</div>
+                        <div class="wup-item__bottom"><span class="wup-item__meta">6월 12일 (금) 14:00</span><span class="wup-item__amount">10,000원</span></div>
+                      </div>
+                      <div class="wup-item">
+                        <div class="wup-item__top"><span class="wup-item__date">2026.05.20</span><span class="wup-chip wup-chip--error">거절·환불됨</span></div>
+                        <div class="wup-item__name">봄 가든 파티</div>
+                        <div class="wup-item__bottom"><span class="wup-item__meta">5월 30일 (토) 18:00</span><span class="wup-item__amount">15,000원</span></div>
+                      </div>
+                      <div class="wup-item">
+                        <div class="wup-item__top"><span class="wup-item__date">2026.05.10</span><span class="wup-chip wup-chip--neutral">환불됨</span></div>
+                        <div class="wup-item__name">홍대 LP 뮤직 나이트</div>
+                        <div class="wup-item__bottom"><span class="wup-item__meta">5월 22일 (금) 20:00</span><span class="wup-item__amount">15,000원</span></div>
+                      </div>
+                      <div class="wup-item wup-item--muted">
+                        <div class="wup-item__top"><span class="wup-item__date">2026.05.02</span><span class="wup-chip wup-chip--neutral">이벤트 종료</span></div>
+                        <div class="wup-item__name">한강 선셋 러닝 크루</div>
+                        <div class="wup-item__bottom"><span class="wup-item__meta">5월 10일 (일) 18:30</span><span class="wup-item__amount">5,000원</span></div>
+                      </div>
+                    </div>
+
+                    <!-- Detail — 확정 · 환불 가능 -->
+                    <div class="wup-detail">
+                      <div class="wup-hero">
+                        <div class="wup-hero__thumb" style="background: linear-gradient(135deg, #fff4e6 0%, #ffe9d6 100%);">2:1 이미지</div>
+                        <div class="wup-hero__text">
+                          <div class="wup-hero__title">성수 원데이 도자기 클래스</div>
+                          <div class="wup-hero__meta">6월 21일 (일) 13:00 · 성동구 스튜디오 흙</div>
+                          <div class="wup-hero__sub">결제일 2026.06.03 · 1인 클래스권</div>
+                        </div>
+                        <span class="wup-chip wup-chip--success">확정</span>
+                      </div>
+                      <div class="wup-divider"></div>
+
+                      <div class="wup-sec">
+                        <div class="wup-sec__title">신청 상태</div>
+                        <div class="wup-tl">
+                          <div class="wup-tl__step wup-tl__step--done">
+                            <div class="wup-tl__label">신청·결제</div>
+                            <div class="wup-tl__time">6월 3일 10:41</div>
+                          </div>
+                          <div class="wup-tl__step wup-tl__step--done">
+                            <div class="wup-tl__label">확정</div>
+                            <div class="wup-tl__time">6월 3일 10:41</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="wup-divider"></div>
+
+                      <div class="wup-sec">
+                        <div class="wup-sec__title">결제 내역</div>
+                        <div class="wup-kv"><span class="wup-kv__label">결제일</span><span class="wup-kv__value">2026.06.03 10:41</span></div>
+                        <div class="wup-kv"><span class="wup-kv__label">티켓</span><span class="wup-kv__value">1인 클래스권</span></div>
+                        <div class="wup-kv wup-kv--strong"><span class="wup-kv__label">결제 금액</span><span class="wup-kv__value">45,000원</span></div>
+                      </div>
+                      <div class="wup-divider"></div>
+
+                      <div class="wup-sec">
+                        <div class="wup-sec__title">환불</div>
+                        <div class="wup-pol"><span class="wup-pol__label">결제 후 3시간 이내</span><span class="wup-pol__value">전액 환불</span></div>
+                        <div class="wup-pol wup-pol--now"><span class="wup-pol__label">이벤트 시작 7일 전(6월 14일)까지</span><span class="wup-pol__value">전액 환불</span></div>
+                        <div class="wup-pol"><span class="wup-pol__label">그 외</span><span class="wup-pol__value">자동 환불 불가</span></div>
+                        <div class="wup-btn wup-btn--refund">환불 요청</div>
+                      </div>
+
+                      <div class="wup-entry">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="8" r="0.5" fill="currentColor"/></svg>
+                        <div class="wup-entry__text">이벤트 당일 <b>예약자 이름</b>으로 입장할 수 있어요 — 별도 QR·입장권이 필요 없어요.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>확정 건이 선택돼 있고 전액 환불 가능 기간 (결제 후 3시간 내 · 또는 이벤트 7일 전 마감 이전). 정책 단계 중 현재 해당 행이 bold + 마감 날짜가 라벨에 합성 표기.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              ↔ <strong>"환불 요청" 클릭</strong> → 화면 dim + 확인 다이얼로그 (State 5)<br>
+              동일: 목록 item 클릭 · 이벤트 정보 클릭 · 헤더 액션
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · <strong>마감 임박</strong> — 표시는 진입 시점 기준. 다이얼로그에서 확정하는 순간 서버가 재판정 — 그 사이 기간이 지났으면 "환불 가능 기간이 막 지났어요" 안내 후 비활성 상태로 전환 (요청 미접수)<br>
+              · <strong>무료 건 (0원)</strong> — 동일 플로우 · 카피만 "신청 취소" / 환불 금액 행 생략 (모바일 무료 티켓 변형 상속)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>
+              ↔ <code>RefundCard</code> — 버튼 <strong>active</strong> (error tint) · 사유 문구 없음 · 정책 2단계 bold<br>
+              동일: 그 외 (Default 참조 — <code>EntryNotice</code> 노출 유지)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>+ <code>color-error</code> 10% tint bg + error 텍스트 (활성 환불 버튼) — 그 외 동일</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 마감 날짜를 정책 라벨에 합성 ("6월 14일까지") — 사용자가 D-day 를 계산하지 않게. 환불 버튼은 패널 안에서 유일한 error 톤 — 위험 시그널 과적 방지를 위해 다른 곳에 error 사용 금지.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════════════════
+           State 5: 환불 요청 확인 다이얼로그
+           ════════════════════════════════════════════════════════ -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>환불 요청 확인 다이얼로그</strong> <span class="tag tag--mute">modal</span>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop" style="position: relative;">
+                <div class="wup-header">
+                  <div class="wup-header__inner">
+                    <img class="wup-logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                    <div class="wup-search">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      이벤트 검색
+                    </div>
+                    <div class="wup-header__spacer"></div>
+                    <div class="wup-avatar">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="wup-main">
+                  <div class="wup-title">구매 내역</div>
+                  <div class="wup-grid">
+                    <div class="wup-list">
+                      <div class="wup-item">
+                        <div class="wup-item__top"><span class="wup-item__date">2026.06.05</span><span class="wup-chip wup-chip--success">확정</span></div>
+                        <div class="wup-item__name">와인 페어링 디너 — 8인 한정</div>
+                        <div class="wup-item__bottom"><span class="wup-item__meta">6월 10일 (수) 19:00</span><span class="wup-item__amount">75,000원</span></div>
+                      </div>
+                      <div class="wup-item">
+                        <div class="wup-item__top"><span class="wup-item__date">2026.06.04</span><span class="wup-chip wup-chip--warning">승인 대기</span></div>
+                        <div class="wup-item__name">강남 루프탑 소셜 파티</div>
+                        <div class="wup-item__bottom"><span class="wup-item__meta">6월 20일 (토) 19:30</span><span class="wup-item__amount">20,000원</span></div>
+                      </div>
+                      <div class="wup-item wup-item--selected">
+                        <div class="wup-item__top"><span class="wup-item__date">2026.06.03</span><span class="wup-chip wup-chip--success">확정</span></div>
+                        <div class="wup-item__name">성수 원데이 도자기 클래스</div>
+                        <div class="wup-item__bottom"><span class="wup-item__meta">6월 21일 (일) 13:00</span><span class="wup-item__amount">45,000원</span></div>
+                      </div>
+                      <div class="wup-item">
+                        <div class="wup-item__top"><span class="wup-item__date">2026.06.01</span><span class="wup-chip wup-chip--info">환불 요청 중</span></div>
+                        <div class="wup-item__name">보드게임 소모임</div>
+                        <div class="wup-item__bottom"><span class="wup-item__meta">6월 12일 (금) 14:00</span><span class="wup-item__amount">10,000원</span></div>
+                      </div>
+                      <div class="wup-item">
+                        <div class="wup-item__top"><span class="wup-item__date">2026.05.20</span><span class="wup-chip wup-chip--error">거절·환불됨</span></div>
+                        <div class="wup-item__name">봄 가든 파티</div>
+                        <div class="wup-item__bottom"><span class="wup-item__meta">5월 30일 (토) 18:00</span><span class="wup-item__amount">15,000원</span></div>
+                      </div>
+                      <div class="wup-item">
+                        <div class="wup-item__top"><span class="wup-item__date">2026.05.10</span><span class="wup-chip wup-chip--neutral">환불됨</span></div>
+                        <div class="wup-item__name">홍대 LP 뮤직 나이트</div>
+                        <div class="wup-item__bottom"><span class="wup-item__meta">5월 22일 (금) 20:00</span><span class="wup-item__amount">15,000원</span></div>
+                      </div>
+                    </div>
+
+                    <div class="wup-detail">
+                      <div class="wup-hero">
+                        <div class="wup-hero__thumb" style="background: linear-gradient(135deg, #fff4e6 0%, #ffe9d6 100%);">2:1 이미지</div>
+                        <div class="wup-hero__text">
+                          <div class="wup-hero__title">성수 원데이 도자기 클래스</div>
+                          <div class="wup-hero__meta">6월 21일 (일) 13:00 · 성동구 스튜디오 흙</div>
+                          <div class="wup-hero__sub">결제일 2026.06.03 · 1인 클래스권</div>
+                        </div>
+                        <span class="wup-chip wup-chip--success">확정</span>
+                      </div>
+                      <div class="wup-divider"></div>
+                      <div class="wup-sec">
+                        <div class="wup-sec__title">결제 내역</div>
+                        <div class="wup-kv"><span class="wup-kv__label">결제일</span><span class="wup-kv__value">2026.06.03 10:41</span></div>
+                        <div class="wup-kv"><span class="wup-kv__label">티켓</span><span class="wup-kv__value">1인 클래스권</span></div>
+                        <div class="wup-kv wup-kv--strong"><span class="wup-kv__label">결제 금액</span><span class="wup-kv__value">45,000원</span></div>
+                      </div>
+                      <div class="wup-divider"></div>
+                      <div class="wup-sec">
+                        <div class="wup-sec__title">환불</div>
+                        <div class="wup-pol"><span class="wup-pol__label">결제 후 3시간 이내</span><span class="wup-pol__value">전액 환불</span></div>
+                        <div class="wup-pol wup-pol--now"><span class="wup-pol__label">이벤트 시작 7일 전(6월 14일)까지</span><span class="wup-pol__value">전액 환불</span></div>
+                        <div class="wup-pol"><span class="wup-pol__label">그 외</span><span class="wup-pol__value">자동 환불 불가</span></div>
+                        <div class="wup-btn wup-btn--refund">환불 요청</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- ⑤ Dim + dialog -->
+                <div class="wup-dim">
+                  <div class="wup-dialog">
+                    <div class="wup-dialog__title">환불을 요청할까요?</div>
+                    <div class="wup-dialog__body">전액 환불 대상이에요. 환불 금액은 영업일 기준 3일 안에 원래 결제 수단으로 입금돼요.</div>
+                    <div class="wup-dialog__amount"><span>환불 금액</span><b>45,000원</b></div>
+                    <div class="wup-dialog__policy">이벤트 시작 7일 전(6월 14일)까지 전액 환불돼요.</div>
+                    <div class="wup-dialog__actions">
+                      <div class="wup-dialog__btn wup-dialog__btn--ghost">돌아가기</div>
+                      <div class="wup-dialog__btn wup-dialog__btn--danger">환불 요청</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>환불 가능 상태에서 "환불 요청" 클릭 직후. 화면 전체 dim + 중앙 모달. 뒤 화면은 보이되 조작 불가.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              + <strong>"환불 요청" (모달 주요 액션) 클릭</strong> → 서버가 가능 여부를 재확인 후 환불 접수 → 모달 닫힘 → 상세의 환불 카드가 "환불이 접수됐어요" 안내로, 목록 칩이 <strong>"환불 요청 중"</strong>으로 갱신 — 입금까지 끝나면 "환불됨"<br>
+              + <strong>"돌아가기" 클릭 / 바깥(dim) 클릭 / ESC</strong> → 모달 닫힘 — 아무 변경 없음<br>
+              − 뒤 화면 조작 (목록 클릭·스크롤) 불가
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · <strong>확정 도중 기간 경과</strong> — 서버 재확인에서 불가 판정 → "환불 가능 기간이 막 지났어요" 안내로 모달 내용 교체 + 확인 시 비활성 상태 상세로 복귀 (요청 미접수)<br>
+              · <strong>접수 도중 네트워크 끊김</strong> — 모달 안 인라인 에러 + 재시도. 같은 건에 대한 중복 접수는 서버가 차단<br>
+              · <strong>처리 중 버튼 상태</strong> — 주요 액션이 로딩 표시로 바뀌고 두 버튼 모두 잠김 (이중 클릭 방지)<br>
+              · <strong>무료 건</strong> — 타이틀 "신청을 취소할까요?" · 환불 금액 행 생략
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>
+              + <code>Scrim</code> (검정 50% dim — 화면 전체)<br>
+              + <code>ConfirmDialog</code> (타이틀 · 본문 고지 · 환불 금액 row · 정책 근거 · "돌아가기" ghost + "환불 요청" error filled)<br>
+              동일: 뒤 화면 (State 4 그대로)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>+ <code>color-error</code> (주요 액션 filled + 흰 텍스트) · scrim 검정 50% · 모달 radius <code>radius-card (16px)</code> · padding <code>28px</code> — 그 외 동일</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 환불 금액·입금 기한·정책 근거를 다이얼로그 안에 모두 고지 (전자상거래법 고지 의무 — refund-policy-v2). 카피는 약관 페이지와 동일 표현 유지. 다이얼로그 열림은 브라우저 history entry 로 쌓지 않음 (Global Behavior).</td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </section>
+</div>
+
+<!-- ============================================================
+     🔄 PERSPECTIVE 3 · GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">
+      화면 전반 cross-cutting 동작. 모바일 spec
+      (<a href="/specs/purchase_history_page/index.html">목록</a> ·
+      <a href="/specs/purchase_history_detail_page/index.html">상세</a> ·
+      <a href="/specs/event_application_review_page/index.html">심사 상태</a>)에서
+      상속한 behavior 는 그 spec 이 SSOT — 여기엔 웹에서 달라지는 점만 추가.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">사용자 액션</th>
+          <th>화면에 보이는 결과</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>브라우저 back / forward</td>
+          <td>선택 건 변경이 URL 에 반영되므로 back 으로 <strong>직전에 보던 건의 상세로 복귀</strong>. 다이얼로그 열림은 history entry 아님 — 열린 채 back 하면 페이지가 이동 (닫기는 돌아가기·바깥 클릭·ESC).</td>
+        </tr>
+        <tr>
+          <td>새로고침 / URL 직접 진입</td>
+          <td>URL 의 선택 건으로 동일 상세 복원 — 알림/메일 링크 착지에 사용. 선택 건이 없거나 내 구매가 아니면 최신 건 자동 선택. 서버 렌더로 Default(또는 Empty)가 곧장 표시.</td>
+        </tr>
+        <tr>
+          <td>비로그인 접근</td>
+          <td><strong>로그인 화면으로 유도</strong> — 완료 후 이 화면(같은 URL)으로 복귀. <a href="/specs/web_user_home/index.html">web_user_home</a> 과 달리 public 열람 없음 (개인 결제 정보).</td>
+        </tr>
+        <tr>
+          <td>환불 접수/처리로 상태 변경</td>
+          <td>확정 직후 상세·목록 칩이 즉시 갱신 (화면 이동 없음). 표시 상태는 항상 진입/액션 시점 기준 — 시간 경과·파트너 처리에 의한 변경은 새로고침 시 반영 (자동 폴링 없음).</td>
+        </tr>
+        <tr>
+          <td>hover (fine pointer)</td>
+          <td>목록 item: 배경 미세 강조 + <code>cursor: pointer</code> · 버튼: 배경 강조 — <code>motion-fast (200ms)</code>. 비활성 버튼은 not-allowed 커서 + hover 무변화. coarse pointer 는 press 피드백 (<code>motion-micro (100ms)</code>) — foundation 포인터 규칙.</td>
+        </tr>
+        <tr>
+          <td>브라우저 탭 비활성 → 복귀</td>
+          <td>자동 재요청 없음 — 보던 상태 유지. 단, 환불 확정 액션 시점엔 서버가 항상 재판정하므로 stale 화면이어도 잘못된 환불은 발생하지 않음.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion &amp; timing</h2>
+    <p class="intro">
+      duration 은 MDS motion 토큰 (<code>micro 100 / fast 200 / medium 350 / slow 500</code>) —
+      웹 구현은 CSS <code>transition-duration</code> / Tailwind <code>duration-N</code> 으로 같은 ms 소비.
+      <code>prefers-reduced-motion</code> 대응은 Global edge cases 참조.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 260px;">Transition</th>
+          <th style="width: 150px;">Duration (token)</th>
+          <th>Curve / notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>첫 화면 진입 (서버 렌더)</td>
+          <td>없음 (0ms)</td>
+          <td>SSR 즉시 표시 — 진입 모션 없음</td>
+        </tr>
+        <tr>
+          <td>목록 선택 → 상세 패널 교체</td>
+          <td><code>fast</code> (200ms)</td>
+          <td>패널 내용 crossfade — 패널 프레임은 고정 (점프 없음)</td>
+        </tr>
+        <tr>
+          <td>다이얼로그 열림/닫힘</td>
+          <td><code>medium</code> (350ms)</td>
+          <td>scrim fade + 모달 fade·미세 scale-in</td>
+        </tr>
+        <tr>
+          <td>환불 접수 → 칩/카드 갱신</td>
+          <td><code>fast</code> (200ms)</td>
+          <td>칩 색/라벨 + 환불 카드 내용 crossfade</td>
+        </tr>
+        <tr>
+          <td>item/버튼 hover · press</td>
+          <td><code>fast</code> (200ms) / <code>micro</code> (100ms)</td>
+          <td>배경색 전환 / press 즉각 피드백</td>
+        </tr>
+        <tr>
+          <td>진행 중 step pulse (타임라인)</td>
+          <td><em>(unscoped)</em> 1.4s loop</td>
+          <td>attention loop — 모바일 심사 상태 spec 의 1.4s pulse 상속</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>네트워크 끊김</strong> — 첫 로드 실패는 Error 패턴 (그리드 영역 중앙 안내 + "다시 시도"). 환불 접수 실패는 다이얼로그 안 인라인 에러 (State 5 참조).</li>
+      <li><strong>다크 모드</strong> — 우측 상단 Dark 토글로 확인. 배경/표면/텍스트/divider 토큰 전환 · 상태 칩의 의미색(성공/경고/에러/info) tint 는 모드 무관 유지 · 선택 item 의 primary 강조 유지.</li>
+      <li><strong>접근성</strong> — 키보드 tab 순서: 헤더 → 목록 item (위→아래) → 상세 패널 내 인터랙티브 요소 순. 목록에서 ↑↓ 로 선택 이동 검토 (구현 시 확정). 다이얼로그 열리면 포커스가 모달 안에 갇히고 닫히면 트리거 버튼으로 복귀. 상태 칩은 색에만 의존하지 않음 — 라벨 텍스트가 항상 함께.</li>
+      <li><strong>reduced motion</strong> — <code>prefers-reduced-motion</code> 시 타임라인 pulse 정지(정적 표시) · 패널 crossfade·모달 전환 0ms.</li>
+      <li><strong>SEO / 공유</strong> — 보호 화면이라 검색 노출 없음 (noindex). URL 공유 시 본인 외에는 로그인 → 본인 구매 기준으로 fallback.</li>
+      <li><strong>초광폭 (≥1920px)</strong> — 1200px 캡 유지, 잉여 폭은 배경 (foundation 규칙).</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     📖 PERSPECTIVE 4 · REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">
+      Implementation source + 인접 화면 link. Components / Tokens 는 States 의 각 mini-table 에 분산.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <p class="intro">
+      <code>planned</code> 상태 — 구현 미존재 항목은 <code>TBD</code>.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 200px;">항목</th><th>Path / Reference</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Page / Component</strong></td>
+          <td><code>WebUserPurchases</code> — <code>TBD</code></td>
+        </tr>
+        <tr>
+          <td><strong>File path</strong></td>
+          <td><code>apps/landing_user/src/app/my/purchases/page.tsx</code> (landing_user 확장 — web MVP) · <code>TBD</code></td>
+        </tr>
+        <tr>
+          <td><strong>Data source</strong></td>
+          <td>내 구매·신청 목록 조회 (본인 건만 — 인증 필수) · 환불 정책 값 (그레이스 3시간 / 마감 7일 — <code>refund-policy-v2</code> 정책 테이블) · 환불 접수 (서버 재판정 포함) · <code>TBD</code></td>
+        </tr>
+        <tr>
+          <td><strong>Route</strong></td>
+          <td><code>/my/purchases</code> · Next.js app router — 선택 건은 URL 에 반영 (query vs path param 구현 시 확정)</td>
+        </tr>
+        <tr>
+          <td><strong>Feature docs</strong></td>
+          <td><a href="https://github.com/Mark-Yun/minglit/blob/dev/docs/features/event/refund-policy-v2/prd.md"><code>docs/features/event/refund-policy-v2/prd.md</code></a> · <a href="https://github.com/Mark-Yun/minglit/blob/dev/docs/features/event/refund-policy-v2/spec.md"><code>spec.md</code></a> — 환불 정책·고지 카피의 SSOT</td>
+        </tr>
+        <tr>
+          <td><strong>Behavior Source</strong></td>
+          <td>
+            <a href="/specs/purchase_history_page/index.html"><code>/specs/purchase_history_page/index.html</code></a> ·
+            <a href="/specs/purchase_history_detail_page/index.html"><code>/specs/purchase_history_detail_page/index.html</code></a> ·
+            <a href="/specs/event_application_review_page/index.html"><code>/specs/event_application_review_page/index.html</code></a> ·
+            <a href="/specs/my_tickets_page/index.html"><code>/specs/my_tickets_page/index.html</code></a>
+            — Overview 의 Behavior Source 행과 동일 경로
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top: 12px; margin-bottom: 0;">
+      ※ 열린 질문 (디자인 확정 필요): ① <strong>자동 환불 불가 기간의 파트너 환불 요청 (Track 2)</strong> —
+      refund-policy-v2 의 인앱 요청 플로우(사유 선택 → 파트너 승인/거절 → 72시간 만료)를 웹 MVP 에 포함할지.
+      현재 설계는 비활성 버튼 + "파트너에게 직접 문의" 안내까지 — 포함 시 환불 카드에서 요청 모달이 추가로 열림 ·
+      ② <strong>환불 확정 직후 상태 표현</strong> — 결제사 처리가 즉시 끝나면 "환불 요청 중" 없이 곧장 "환불됨"으로 보낼지,
+      항상 "환불 요청 중"을 경유할지 (처리 소요 시간에 대한 backend 확정 필요) ·
+      ③ <strong>결제 진행 중·결제 실패 건의 목록 포함 여부</strong> — 웹 결제 플로우 spec(TBD)과 함께 결정 (현재는 결제 성립 건만 가정) ·
+      ④ <strong>영수증 진입</strong> — 결제사 영수증 링크를 결제 내역 섹션에 노출할지.
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 300px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/web_user_home/index.html"><code>WebUserHome</code></a></td>
+          <td>GlobalHeader 패턴·토큰 어휘의 기준 (파일럿) — Empty 의 "이벤트 둘러보기" 도착지.</td>
+        </tr>
+        <tr>
+          <td><code>WebUserEventDetail</code> <em style="color: var(--color-text-secondary);">(spec TBD)</em></td>
+          <td>상세 패널의 이벤트 정보 클릭 도착지 · 결제 완료 후 이 화면으로 redirect 하는 출발지.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/purchase_history_page/index.html"><code>PurchaseHistoryPage</code> (mobile)</a></td>
+          <td>Behavior Source — 목록 카드 시그널·정렬·책임 분리의 SSOT.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/purchase_history_detail_page/index.html"><code>PurchaseHistoryDetailPage</code> (mobile)</a></td>
+          <td>Behavior Source — 상세 정보 흐름·환불 정책 카드·취소 버튼 분기·확인 다이얼로그의 SSOT (정책 값만 v2 로 교체).</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_application_review_page/index.html"><code>EventApplicationReviewPage</code> (mobile)</a></td>
+          <td>Behavior Source — 신청 상태 타임라인 tone 매핑·사유 박스의 SSOT.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/my_tickets_page/index.html"><code>MyTicketsPage</code> (mobile)</a></td>
+          <td>상태 칩 색·어휘 톤 참고. 웹 MVP 에서는 별도 티켓 허브 없이 이 화면이 구매 사후 관리를 단일 담당.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/web_foundation_responsive/"><code>WebFoundationResponsive</code></a></td>
+          <td>breakpoint · 컨테이너(1200 캡 · gutter 32) · 그리드(12col · gap 24) · 포인터 규칙 SSOT.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>
