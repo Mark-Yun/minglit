@@ -42,6 +42,7 @@ type PostgrestEvent = {
     description?: unknown;
     image_urls?: string[] | null;
     visibility?: string | null;
+    status?: string | null;
     partners?: { name?: string | null; introduction?: string | null } | null;
     locations?: {
       name?: string | null;
@@ -83,7 +84,7 @@ const EVENT_SELECT = [
   "status",
   "max_participants",
   "current_participants",
-  "parties!inner(title,description,image_urls,visibility,partners(name,introduction),locations(name,address,region_1,region_2))",
+  "parties!inner(title,description,image_urls,visibility,status,partners(name,introduction),locations(name,address,region_1,region_2))",
   "locations(name,address,region_1,region_2)",
   "tickets(id,name,description,price,quantity,sold_count,status)",
 ].join(",");
@@ -207,6 +208,7 @@ async function fetchEventsFromSupabase(id?: string): Promise<FetchEventsResult> 
   endpoint.searchParams.set("select", EVENT_SELECT);
   endpoint.searchParams.set("status", "in.(scheduled,active,ongoing,completed)");
   endpoint.searchParams.set("or", "(visibility.eq.public,and(visibility.is.null,parties.visibility.eq.public))");
+  endpoint.searchParams.set("parties.status", "eq.active");
   endpoint.searchParams.set("order", "start_time.asc");
   endpoint.searchParams.set("limit", id ? "1" : "24");
 
@@ -235,7 +237,7 @@ async function fetchEventsFromSupabase(id?: string): Promise<FetchEventsResult> 
 }
 
 function isPubliclyVisible(row: PostgrestEvent): boolean {
-  return (row.visibility ?? row.parties?.visibility) === "public";
+  return (row.visibility ?? row.parties?.visibility) === "public" && row.parties?.status === "active";
 }
 
 function mapEvent(row: PostgrestEvent): PublicEvent {

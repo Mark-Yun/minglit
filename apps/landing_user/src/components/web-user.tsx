@@ -19,13 +19,6 @@ export function WebUserHome({ events }: { events: PublicEvent[] }) {
     <div className="web-user-shell">
       <GlobalHeader />
       <main className="wuh-main">
-        <section className="wuh-filterbar" aria-label="이벤트 필터">
-          <button className="wuh-eligibility" type="button" aria-pressed="false">
-            <span className="wuh-eligibility__box" aria-hidden="true" />
-            참가 가능한 이벤트만
-          </button>
-        </section>
-
         {events.length > 0 ? (
           <section className="wuh-grid" aria-label="이벤트 목록">
             {events.map((event) => (

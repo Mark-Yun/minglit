@@ -23,10 +23,12 @@ test("public event list requests the server-side visibility gate", async () => {
   assert.equal(captured.url.pathname, "/rest/v1/events");
   assert.match(captured.url.searchParams.get("select") ?? "", /visibility/);
   assert.match(captured.url.searchParams.get("select") ?? "", /parties!inner/);
+  assert.equal(captured.url.searchParams.get("select")?.includes("parties!inner(title,description,image_urls,visibility,status,"), true);
   assert.equal(
     captured.url.searchParams.get("or"),
     "(visibility.eq.public,and(visibility.is.null,parties.visibility.eq.public))",
   );
+  assert.equal(captured.url.searchParams.get("parties.status"), "eq.active");
   assert.equal(captured.url.searchParams.get("start_time")?.startsWith("gte."), true);
 });
 
@@ -41,6 +43,7 @@ test("public event detail keeps the same visibility gate with the id filter", as
     captured.url.searchParams.get("or"),
     "(visibility.eq.public,and(visibility.is.null,parties.visibility.eq.public))",
   );
+  assert.equal(captured.url.searchParams.get("parties.status"), "eq.active");
 });
 
 test("public event list defensively excludes private inherited and private override rows", async () => {
@@ -56,6 +59,21 @@ test("public event list defensively excludes private inherited and private overr
   assert.deepEqual(
     events.map((event) => event.id),
     ["public-inherited", "public-override"],
+  );
+});
+
+test("public event list defensively excludes inactive party rows", async () => {
+  await captureSupabaseRequest([
+    eventRow("active-party", "public", "public", "active"),
+    eventRow("draft-party", "public", "public", "draft"),
+    eventRow("closed-party", "public", "public", "closed"),
+  ]);
+
+  const events = await getPublicEvents();
+
+  assert.deepEqual(
+    events.map((event) => event.id),
+    ["active-party"],
   );
 });
 
@@ -120,7 +138,7 @@ async function captureSupabaseRequest(rows: unknown[]) {
   return captured as { url: URL };
 }
 
-function eventRow(id: string, eventVisibility: string | null, partyVisibility: string) {
+function eventRow(id: string, eventVisibility: string | null, partyVisibility: string, partyStatus = "active") {
   return {
     id,
     title: id,
@@ -137,6 +155,7 @@ function eventRow(id: string, eventVisibility: string | null, partyVisibility: s
       description: "party description",
       image_urls: [],
       visibility: partyVisibility,
+      status: partyStatus,
       partners: { name: "Partner", introduction: "Intro" },
       locations: { name: "Seoul", address: "Seoul", region_1: "Seoul", region_2: "Gangnam" },
     },
