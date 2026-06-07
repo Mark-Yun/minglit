@@ -75,7 +75,11 @@ export async function runCascade(
       trace.push(entry);
 
       if (result.ok) {
-        snapshot = applySuccessfulActionToSnapshot(snapshot, action);
+        snapshot = applySuccessfulActionToSnapshot(
+          snapshot,
+          action,
+          result.data,
+        );
       }
 
       // Fix #2545: Supabase per-trace rate limit 회피. EF 호출 후만 sleep (skip-action 시는 즉시 다음).
@@ -95,6 +99,7 @@ export async function runCascade(
 function applySuccessfulActionToSnapshot(
   snapshot: WorldSnapshot,
   action: Action,
+  responseData: unknown,
 ): WorldSnapshot {
   if (action.type !== "user_apply") return snapshot;
 
@@ -104,20 +109,30 @@ function applySuccessfulActionToSnapshot(
     return snapshot;
   }
 
-  const events = snapshot.events.map((event) => {
-    if (event.id !== eventId || !event.tickets) return event;
-    return {
-      ...event,
-      tickets: event.tickets.map((ticket) =>
-        ticket.id === ticketId
-          ? {
-            ...ticket,
-            sold_count: Math.min(ticket.quantity, ticket.sold_count + 1),
-          }
-          : ticket
-      ),
-    };
-  });
+  const targetTicket = snapshot.events
+    .find((event) => event.id === eventId)
+    ?.tickets?.find((ticket) => ticket.id === ticketId);
+  const shouldReserveCapacity = shouldReserveApplyTicketCapacity(
+    targetTicket?.price,
+    responseData,
+  );
+
+  const events = shouldReserveCapacity
+    ? snapshot.events.map((event) => {
+      if (event.id !== eventId || !event.tickets) return event;
+      return {
+        ...event,
+        tickets: event.tickets.map((ticket) =>
+          ticket.id === ticketId
+            ? {
+              ...ticket,
+              sold_count: Math.min(ticket.quantity, ticket.sold_count + 1),
+            }
+            : ticket
+        ),
+      };
+    })
+    : snapshot.events;
 
   const applications =
     snapshot.applications.some((application) =>
@@ -136,4 +151,27 @@ function applySuccessfulActionToSnapshot(
       ];
 
   return { ...snapshot, events, applications };
+}
+
+function shouldReserveApplyTicketCapacity(
+  ticketPrice: number | undefined,
+  responseData: unknown,
+): boolean {
+  const responseType = applyResponseType(responseData);
+  if (responseType === "free") return true;
+  if (responseType === "paid") return false;
+  return ticketPrice === 0;
+}
+
+function applyResponseType(responseData: unknown): string | null {
+  if (
+    typeof responseData !== "object" ||
+    responseData === null ||
+    Array.isArray(responseData)
+  ) {
+    return null;
+  }
+
+  const type = (responseData as { type?: unknown }).type;
+  return typeof type === "string" ? type : null;
 }
