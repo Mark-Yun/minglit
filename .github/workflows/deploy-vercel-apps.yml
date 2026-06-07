@@ -1,0 +1,150 @@
+name: deploy-vercel-apps
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-vercel-apps-dev
+  cancel-in-progress: true
+
+jobs:
+  deploy_mds_docs:
+    uses: ./.github/workflows/shared-vercel-deploy.yml
+    with:
+      app-type: nextjs
+      working-directory: ./apps/mds/docs
+      dev-domain-alias: dev.mds.minglit.com
+      deploy-branch: dev
+    secrets:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_MDS_DOCS_PROJECT_ID }}
+
+  deploy_landing_user:
+    uses: ./.github/workflows/shared-vercel-deploy.yml
+    with:
+      app-type: nextjs
+      working-directory: ./apps/landing_user
+      dev-domain-alias: dev.minglit.com
+      deploy-branch: dev
+      require-nextjs-supabase-env: true
+    secrets:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_LANDING_USER }}
+      SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
+      SUPABASE_DEV_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+      STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
+
+  deploy_landing_partner:
+    uses: ./.github/workflows/shared-vercel-deploy.yml
+    with:
+      app-type: nextjs
+      working-directory: ./apps/landing_partner
+      dev-domain-alias: dev.partner.minglit.com
+      deploy-branch: dev
+      require-nextjs-supabase-env: true
+    secrets:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_LANDING_PARTNER }}
+      SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
+      SUPABASE_DEV_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+      STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
+
+  smoke_test:
+    needs: [deploy_mds_docs, deploy_landing_user, deploy_landing_partner]
+    if: success()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Checkout minglit_env
+        uses: ./.github/actions/release-bot-token
+        with:
+          fallback-app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
+          fallback-private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
+
+      - name: Load Vercel bypass tokens
+        id: bypass
+        run: |
+          set -euo pipefail
+
+          write_bypass() {
+            local output_name="$1"
+            local key="$2"
+            local value
+            value="$(awk -F= -v key="$key" '$1 == key { sub(/^[^=]*=/, ""); print; exit }' minglit_env/dev/supabase.env)"
+            if [ -n "$value" ]; then
+              echo "::add-mask::$value"
+            fi
+            echo "${output_name}=${value}" >> "$GITHUB_OUTPUT"
+          }
+
+          write_bypass mds_docs VERCEL_BYPASS_MDS_DOCS
+          write_bypass landing_user VERCEL_BYPASS_LANDING_USER
+          write_bypass landing_partner VERCEL_BYPASS_LANDING_PARTNER
+
+      - name: Smoke test dev Vercel app aliases
+        env:
+          MDS_URL: ${{ needs.deploy_mds_docs.outputs.accessible-url }}
+          LANDING_USER_URL: ${{ needs.deploy_landing_user.outputs.accessible-url }}
+          LANDING_PARTNER_URL: ${{ needs.deploy_landing_partner.outputs.accessible-url }}
+          BYPASS_MDS_DOCS: ${{ steps.bypass.outputs.mds_docs }}
+          BYPASS_LANDING_USER: ${{ steps.bypass.outputs.landing_user }}
+          BYPASS_LANDING_PARTNER: ${{ steps.bypass.outputs.landing_partner }}
+        run: |
+          set -euo pipefail
+
+          check_url() {
+            local label="$1"
+            local url="$2"
+            local bypass="$3"
+            local status
+
+            printf "Checking %s (%s) ... " "$label" "$url"
+            if [ -n "$bypass" ]; then
+              status=$(curl -sL -o /dev/null -w "%{http_code}" \
+                -H "x-vercel-protection-bypass: $bypass" \
+                --max-time 15 "$url") || status="000"
+            else
+              status=$(curl -sL -o /dev/null -w "%{http_code}" \
+                --max-time 15 "$url") || status="000"
+            fi
+
+            if [ "$status" = "200" ]; then
+              echo "OK ($status)"
+              return 0
+            fi
+
+            echo "FAILED ($status)"
+            return 1
+          }
+
+          failed=0
+          check_url "mds-docs" "$MDS_URL" "$BYPASS_MDS_DOCS" || failed=1
+          check_url "landing-user" "$LANDING_USER_URL" "$BYPASS_LANDING_USER" || failed=1
+          check_url "landing-partner" "$LANDING_PARTNER_URL" "$BYPASS_LANDING_PARTNER" || failed=1
+
+          if [ "$failed" -ne 0 ]; then
+            echo "::error::One or more dev Vercel app aliases failed smoke test"
+            exit 1
+          fi
+
+  notify_failure:
+    needs: [deploy_mds_docs, deploy_landing_user, deploy_landing_partner, smoke_test]
+    if: always()
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+      statuses: write
+    uses: ./.github/workflows/shared-notify.yml
+    with:
+      failed: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+      workflow_name: 'Vercel Apps Deploy'
+      severity: 'P1-high'
+      job_results: '{"mds-docs":"${{ needs.deploy_mds_docs.result }}","landing-user":"${{ needs.deploy_landing_user.result }}","landing-partner":"${{ needs.deploy_landing_partner.result }}","smoke":"${{ needs.smoke_test.result }}"}'

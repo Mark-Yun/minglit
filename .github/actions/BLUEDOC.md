@@ -8,7 +8,7 @@
 |--------|------|
 | [cut-issue](./cut-issue/action.yml) | cut-gate tracking issue 생성/갱신/닫기 공통 action. `needs-swe` 같은 추가 label 적용 지원 |
 | [deploy-flutter-app](./deploy-flutter-app/action.yml) | Flutter app deploy 공통 action |
-| [deploy-nextjs-app](./deploy-nextjs-app/action.yml) | Next.js app deploy 공통 action |
+| [deploy-nextjs-app](./deploy-nextjs-app/action.yml) | Next.js GitHub build + Vercel prebuilt deploy 공통 action |
 | [ios-deploy](./ios-deploy/action.yml) | iOS deploy 공통 action |
 | [release-bot-token](./release-bot-token/action.yml) | `minglit_env/{stage}/github.env` 우선 로드 + `minglit-release-bot` GitHub App installation token mint |
 

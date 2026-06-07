@@ -16,6 +16,19 @@ inputs:
   deploy-branch:
     description: 'Branch name to determine prod vs preview deployment'
     required: true
+  require-supabase-env:
+    description: 'Require NEXT_PUBLIC_SUPABASE_* values before building.'
+    required: false
+    default: 'false'
+  next-public-supabase-url:
+    description: 'Build-time NEXT_PUBLIC_SUPABASE_URL value.'
+    required: false
+  next-public-supabase-publishable-key:
+    description: 'Build-time NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY value.'
+    required: false
+  next-public-statsig-client-key:
+    description: 'Optional build-time NEXT_PUBLIC_STATSIG_CLIENT_KEY value.'
+    required: false
 
 outputs:
   accessible-url:
@@ -42,14 +55,38 @@ runs:
         VERCEL_ORG_ID: ${{ inputs.vercel-org-id }}
         VERCEL_PROJECT_ID: ${{ inputs.vercel-project-id }}
         VERCEL_TOKEN: ${{ inputs.vercel-token }}
+        NEXT_PUBLIC_SUPABASE_URL: ${{ inputs.next-public-supabase-url }}
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ inputs.next-public-supabase-publishable-key }}
+        NEXT_PUBLIC_STATSIG_CLIENT_KEY: ${{ inputs.next-public-statsig-client-key }}
+        REQUIRE_SUPABASE_ENV: ${{ inputs.require-supabase-env }}
       run: |
+        set -euo pipefail
+
+        if [[ "$REQUIRE_SUPABASE_ENV" == "true" ]]; then
+          : "${NEXT_PUBLIC_SUPABASE_URL:?NEXT_PUBLIC_SUPABASE_URL is required}"
+          : "${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:?NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY is required}"
+        fi
+
+        mkdir -p .vercel
+        cat > .vercel/project.json <<JSON
+        {"orgId":"${VERCEL_ORG_ID}","projectId":"${VERCEL_PROJECT_ID}"}
+        JSON
+
+        if [ -f package-lock.json ]; then
+          npm ci
+        else
+          npm install
+        fi
+
         if [[ "${{ inputs.deploy-branch }}" == "main" ]]; then
-          npx --yes vercel@latest deploy --prod --token=$VERCEL_TOKEN --yes
+          npx --yes vercel@latest build --prod --token=$VERCEL_TOKEN
+          npx --yes vercel@latest deploy --prebuilt --prod --archive=tgz --token=$VERCEL_TOKEN --yes
           # Fix #389: output the production alias URL for smoke test
           echo "accessible-url=https://${{ inputs.dev-domain-alias }}" >> "$GITHUB_OUTPUT"
         else
           # Fix #372: capture preview URL and assign domain alias so dev.*.minglit.com stays reachable
-          DEPLOY_URL=$(npx --yes vercel@latest deploy --token=$VERCEL_TOKEN --yes)
+          npx --yes vercel@latest build --token=$VERCEL_TOKEN
+          DEPLOY_URL=$(npx --yes vercel@latest deploy --prebuilt --archive=tgz --token=$VERCEL_TOKEN --yes)
           echo "✅ Deployed to: $DEPLOY_URL"
           ALIAS_OK=false
           if [[ -n "${{ inputs.dev-domain-alias }}" ]]; then

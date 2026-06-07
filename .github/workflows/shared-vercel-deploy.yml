@@ -19,6 +19,11 @@ on:
         description: 'Branch name to deploy.'
         required: true
         type: string
+      require-nextjs-supabase-env:
+        description: 'Require NEXT_PUBLIC_SUPABASE_* when deploying a Next.js app.'
+        required: false
+        default: false
+        type: boolean
     outputs:
       accessible-url:
         description: 'URL that passed connectivity fallback selection.'
@@ -100,6 +105,10 @@ jobs:
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           dev-domain-alias: ${{ inputs.dev-domain-alias }}
           deploy-branch: ${{ inputs.deploy-branch }}
+          require-supabase-env: ${{ inputs.require-nextjs-supabase-env && 'true' || 'false' }}
+          next-public-supabase-url: ${{ inputs.deploy-branch == 'main' && secrets.SUPABASE_MAIN_URL || secrets.SUPABASE_DEV_URL }}
+          next-public-supabase-publishable-key: ${{ inputs.deploy-branch == 'main' && secrets.SUPABASE_MAIN_KEY || secrets.SUPABASE_DEV_KEY }}
+          next-public-statsig-client-key: ${{ secrets.STATSIG_CLIENT_KEY }}
 
       - name: Export accessible URL
         id: deploy
