@@ -1,0 +1,37 @@
+{
+  "name": "@minglit/web-kit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Minglit 웹 MVP 공유 클라이언트 패키지 — supabase 팩토리 / typed EF 클라이언트 / DB 타입 / 도메인 로직 / MDS UI",
+  "exports": {
+    "./supabase": "./src/supabase/index.ts",
+    "./ef": "./src/ef/index.ts",
+    "./types": "./src/types/index.ts",
+    "./domain": "./src/domain/index.ts",
+    "./ui": "./src/ui/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "gen:types": "supabase gen types typescript --local --workdir ../../.. > src/types/db.ts"
+  },
+  "dependencies": {
+    "@date-fns/tz": "^1.2.0",
+    "@supabase/ssr": "^0.6.1",
+    "@supabase/supabase-js": "^2.49.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "tailwind-merge": "^3.3.1",
+    "zod": "^4.0.0"
+  },
+  "peerDependencies": {
+    "next": ">=15",
+    "react": ">=19"
+  },
+  "devDependencies": {
+    "@types/node": "^25",
+    "@types/react": "^19",
+    "typescript": "^6"
+  }
+}

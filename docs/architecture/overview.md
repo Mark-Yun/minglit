@@ -226,7 +226,9 @@ Provider와 Repository의 위치 결정 기준:
 
 | 문서 | 내용 |
 |------|------|
-| [client.md](./client.md) | Flutter 앱 상세 아키텍처 (Feature-first, Coordinator, Repository, Design System) |
+| [apps/architecture.md](../../apps/architecture.md) | Flutter 앱 상세 아키텍처 (동결 — web-mvp pivot, behavior reference) |
+| [web-client.md](./web-client.md) | 웹 클라이언트 아키텍처 — web_kit, feature-first, RSC/CSR 전략 |
+| [web-mvp-pivot.md](./web-mvp-pivot.md) | 웹 MVP 피벗 결정 기록 — 코어 범위/동결 대상/로드맵 |
 | [backend.md](./backend.md) | Supabase 백엔드 (테이블, Edge Functions, RLS, Triggers) |
 | [trust-and-verification.md](./trust-and-verification.md) | 2-layer 신뢰 모델 상세 |
 | [payment-pipeline.md](./payment-pipeline.md) | 결제/정산 파이프라인 상세 |
