@@ -88,6 +88,8 @@ export type EventFormValues = {
   reason: string;
 };
 
+export type RecurrencePayload = Record<string, unknown>;
+
 type PartyRow = {
   id: string;
   title: string;
@@ -356,10 +358,10 @@ export function buildTicketTemplatePayload(party: PartnerParty, values: PartyFor
   };
 }
 
-export function buildRecurrencePayload(party: PartnerParty, values: PartyFormValues) {
+export function buildRecurrencePayload(party: PartnerParty, values: PartyFormValues): RecurrencePayload | RecurrencePayload[] | null {
   const existing = party.recurrenceRule;
   if (values.recurrencePattern === "none") {
-    return existing ? { action: "pause", rule_id: existing.id } : null;
+    return existing?.status === "active" ? { action: "pause", rule_id: existing.id } : null;
   }
 
   const body = {
@@ -372,11 +374,15 @@ export function buildRecurrencePayload(party: PartnerParty, values: PartyFormVal
   };
 
   if (existing) {
-    return {
+    const updatePayload = {
       action: "update",
       rule_id: existing.id,
       ...body,
     };
+    if (existing.status === "paused") {
+      return [updatePayload, { action: "resume", rule_id: existing.id }];
+    }
+    return updatePayload;
   }
 
   return {

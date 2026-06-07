@@ -202,6 +202,48 @@ test("recurrence payload creates, updates, or pauses recurrence-rules EF contrac
   });
 
   assert.deepEqual(pausePayload, { action: "pause", rule_id: "rule-1" });
+
+  const pausedParty = createParty({
+    recurrenceRule: {
+      id: "rule-paused",
+      pattern: "weekly",
+      days_of_week: [5],
+      month_day: null,
+      start_time: "19:00",
+      end_time: "21:00",
+      end_date: null,
+      status: "paused",
+    },
+  });
+  const resumePayloads = buildRecurrencePayload(pausedParty, {
+    ...defaultPartyFormValues,
+    recurrencePattern: "biweekly",
+    recurrenceDayOfWeek: 6,
+    recurrenceStartTime: "20:00",
+    recurrenceEndTime: "22:00",
+  });
+
+  assert.deepEqual(resumePayloads, [
+    {
+      action: "update",
+      rule_id: "rule-paused",
+      pattern: "biweekly",
+      days_of_week: [6],
+      month_day: null,
+      start_time: "20:00",
+      end_time: "22:00",
+      end_date: null,
+    },
+    { action: "resume", rule_id: "rule-paused" },
+  ]);
+
+  assert.equal(
+    buildRecurrencePayload(pausedParty, {
+      ...defaultPartyFormValues,
+      recurrencePattern: "none",
+    }),
+    null,
+  );
 });
 
 test("event form validation requires party, title, and increasing date range", () => {

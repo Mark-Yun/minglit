@@ -164,9 +164,9 @@ export function PartnerPartyFormPage({ mode }: { mode: PartyRouteMode }) {
         const partyId = typeof data === "object" && data && "party_id" in data ? String(data.party_id) : null;
         if (partyId) {
           const recurrencePayload = buildRecurrencePayload({ ...emptyParty(partyId), recurrenceRule: null }, values);
-          if (recurrencePayload) {
+          for (const payload of recurrencePayload ? [recurrencePayload].flat() : []) {
             const { error: recurrenceError } = await supabase.functions.invoke("recurrence-rules", {
-              body: recurrencePayload,
+              body: payload,
             });
             if (recurrenceError) throw recurrenceError;
           }
@@ -181,9 +181,9 @@ export function PartnerPartyFormPage({ mode }: { mode: PartyRouteMode }) {
         });
         if (ticketError) throw ticketError;
         const recurrencePayload = buildRecurrencePayload(currentParty, values);
-        if (recurrencePayload) {
+        for (const payload of recurrencePayload ? [recurrencePayload].flat() : []) {
           const { error: recurrenceError } = await supabase.functions.invoke("recurrence-rules", {
-            body: recurrencePayload,
+            body: payload,
           });
           if (recurrenceError) throw recurrenceError;
         }
