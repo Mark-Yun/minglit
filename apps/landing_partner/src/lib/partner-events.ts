@@ -40,6 +40,7 @@ export type PartnerEvent = {
   end_time: string;
   status: EventStatus;
   max_participants: number;
+  min_confirmed_count: number;
   current_participants: number;
   pending_count: number;
   paid_count: number;
@@ -106,6 +107,7 @@ type PartyRow = {
     end_time: string;
     status: EventStatus;
     max_participants: number | null;
+    min_confirmed_count: number | null;
     current_participants: number | null;
     locations: PartnerLocation | PartnerLocation[] | null;
   }> | null;
@@ -151,7 +153,7 @@ export async function fetchPartnerParties(
   const { data, error } = await supabase
     .from("parties")
     .select(
-      "id,title,description,status,min_confirmed_count,max_participants,location_id,locations(id,name,address,address_detail),ticket_templates(id,name,description,price,quantity),recurrence_rules(id,pattern,days_of_week,month_day,start_time,end_time,end_date,status),events(id,party_id,title,start_time,end_time,status,max_participants,current_participants,locations(id,name,address,address_detail))",
+      "id,title,description,status,min_confirmed_count,max_participants,location_id,locations(id,name,address,address_detail),ticket_templates(id,name,description,price,quantity),recurrence_rules(id,pattern,days_of_week,month_day,start_time,end_time,end_date,status),events(id,party_id,title,start_time,end_time,status,max_participants,min_confirmed_count,current_participants,locations(id,name,address,address_detail))",
     )
     .eq("partner_id", partnerId)
     .order("updated_at", { ascending: false })
@@ -193,6 +195,7 @@ export function normalizePartyRow(row: PartyRow): PartnerParty {
       end_time: event.end_time,
       status: event.status,
       max_participants: event.max_participants ?? row.max_participants ?? 0,
+      min_confirmed_count: event.min_confirmed_count ?? row.min_confirmed_count ?? 0,
       current_participants: event.current_participants ?? 0,
       pending_count: 0,
       paid_count: 0,
@@ -429,7 +432,7 @@ export function eventToFormValues(event: PartnerEvent): EventFormValues {
     startLocal: toDateTimeLocal(event.start_time),
     endLocal: toDateTimeLocal(event.end_time),
     maxParticipants: event.max_participants,
-    minConfirmedCount: 0,
+    minConfirmedCount: event.min_confirmed_count,
     reason: "",
   };
 }

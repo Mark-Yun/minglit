@@ -11,6 +11,7 @@ import {
   buildTicketTemplatePayload,
   defaultPartyFormValues,
   eventStatusLabel,
+  eventToFormValues,
   normalizePartyRow,
   splitEvents,
   validateEventForm,
@@ -254,6 +255,56 @@ test("event update payload carries schedule change reason only when present", ()
   assert.equal(payload.reason, "장소 사정");
 });
 
+test("event form values preserve existing minimum confirmed count", () => {
+  const values = eventToFormValues({
+    id: "event-1",
+    party_id: "party-1",
+    title: "기존 회차",
+    start_time: "2026-06-08T11:00:00.000Z",
+    end_time: "2026-06-08T13:00:00.000Z",
+    status: "scheduled",
+    max_participants: 20,
+    min_confirmed_count: 7,
+    current_participants: 3,
+    pending_count: 0,
+    paid_count: 0,
+    location: null,
+  });
+
+  assert.equal(values.minConfirmedCount, 7);
+});
+
+test("normalized event rows include minimum confirmed count for edit forms", () => {
+  const party = normalizePartyRow({
+    id: "party-1",
+    title: "성수 와인",
+    description: { plain_text: "소개" },
+    status: "active",
+    min_confirmed_count: 2,
+    max_participants: 12,
+    location_id: "location-1",
+    locations: { id: "location-1", name: "라운지", address: "서울", address_detail: null },
+    ticket_templates: [],
+    recurrence_rules: [],
+    events: [
+      {
+        id: "event-1",
+        party_id: "party-1",
+        title: "회차",
+        start_time: "2026-06-10T10:00:00.000Z",
+        end_time: "2026-06-10T12:00:00.000Z",
+        status: "scheduled",
+        max_participants: 12,
+        min_confirmed_count: 5,
+        current_participants: 3,
+        locations: null,
+      },
+    ],
+  });
+
+  assert.equal(party.events[0].min_confirmed_count, 5);
+});
+
 test("normalized event rows split active and past events for hub ordering", () => {
   const party = normalizePartyRow({
     id: "party-1",
@@ -275,6 +326,7 @@ test("normalized event rows split active and past events for hub ordering", () =
         end_time: "2026-06-10T12:00:00.000Z",
         status: "scheduled",
         max_participants: 12,
+        min_confirmed_count: 4,
         current_participants: 3,
         locations: null,
       },
@@ -286,6 +338,7 @@ test("normalized event rows split active and past events for hub ordering", () =
         end_time: "2026-06-01T12:00:00.000Z",
         status: "completed",
         max_participants: 12,
+        min_confirmed_count: 4,
         current_participants: 8,
         locations: null,
       },
