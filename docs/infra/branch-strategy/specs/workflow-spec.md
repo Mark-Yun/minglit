@@ -104,7 +104,7 @@ Soak window, workflow run history, commit status failure context 를 평가하�
 | 항목 | 값 |
 |------|----|
 | Trigger | `workflow_call` |
-| Inputs | `candidate_ref`, `candidate_sha`, `min_soak_hours`, `required_runs_json`, `failure_contexts`, `success_contexts`, `pass_context`, `pass_description` |
+| Inputs | `candidate_ref`, `candidate_sha`, `min_soak_hours`, `required_runs_json`, `failure_contexts`, `required_success_contexts`, `success_contexts`, `pass_context`, `pass_description` |
 | Outputs | `skipped`, `reason`, `candidate_sha` |
 | Called by | `dev-rc-cut-gate`, `rc-main-cut-gate` |
 
@@ -199,7 +199,7 @@ Cross-branch cherry-pick PR 자동 생성.
 | Trigger | `schedule` (cut 직전, TBD) + `workflow_dispatch` |
 | Inputs | optional `candidate_sha` (default: latest `origin/dev` HEAD) |
 | Outputs | commit status `dev-rc-cut-pass` (success only) + `dev-soak/*` success confirmations + cut issue `gate/dev-rc` |
-| Steps | calls `shared-soak-gate` with candidate=`origin/dev`, min_soak_hours=0, required runs=`deploy-dev-event-flow-cron>=1` and required visual evidence on matching SHA (`monitor-dev-cuj` run 요구는 web-mvp pivot 으로 제거), failure contexts=`dev-soak/backend-simulator` + `dev-soak/cuj-*` (수동 블락 레버) + required visual contexts, success contexts=required `dev-soak/*` (cuj-* 제외), pass context=`dev-rc-cut-pass`; then upserts cut issue as `status/waiting` or `status/ready` |
+| Steps | calls `shared-soak-gate` with candidate=`origin/dev`, min_soak_hours=0, required runs=`deploy-dev-event-flow-cron>=1` and required visual evidence on matching SHA (`monitor-dev-cuj` run 요구는 web-mvp pivot 으로 제거), failure contexts=`dev-soak/backend-simulator` + `dev-soak/cuj-*` (수동 블락 레버) + `dev-soak/app-ai-review` + `mds-render/snapshot`, required success contexts=`mds-render/snapshot` + `dev-soak/app-ai-review`, success contexts=`dev-soak/backend-simulator` only, pass context=`dev-rc-cut-pass`; then upserts cut issue as `status/waiting` or `status/ready` |
 | Failure path | 조건 미충족 또는 required success evidence 누락이면 `dev-rc-cut-pass` 를 쓰지 않는다. 실패를 발견한 monitor/AI agent 가 이미 `dev-soak/*` failure 를 쓴다 |
 
 > **No auto-revert** — snapshot 모델: 실패 = no `dev-rc-cut-pass`, dev keeps moving, 새 fix 가 자연스럽게 다음 dev-staging-dev-cut 후 새 candidate 로 검증됨.

@@ -342,6 +342,7 @@ def assert_dev_rc_cut_gate_contract() -> None:
 
     failure_contexts = str(with_config.get("failure_contexts", ""))
     success_contexts = str(with_config.get("success_contexts", ""))
+    required_success_contexts = str(with_config.get("required_success_contexts", ""))
     # cuj-* failure contexts stay as the manual block lever
     # (set-dev-soak-status); their success confirmations are removed with
     # the frozen CUJ monitor so the gate never writes fake CUJ evidence.
@@ -349,6 +350,8 @@ def assert_dev_rc_cut_gate_contract() -> None:
         "dev-soak/backend-simulator",
         "dev-soak/cuj-user",
         "dev-soak/cuj-partner",
+        "dev-soak/app-ai-review",
+        "mds-render/snapshot",
     ]
     for context in required_failure_contexts:
         if context not in failure_contexts:
@@ -358,6 +361,15 @@ def assert_dev_rc_cut_gate_contract() -> None:
     for context in ["dev-soak/cuj-user", "dev-soak/cuj-partner"]:
         if context in success_contexts:
             fail(f"dev-rc-cut-gate success_contexts must not confirm {context} while Flutter CUJ is frozen (web-mvp pivot)")
+    required_visual_contexts = [
+        "mds-render/snapshot",
+        "dev-soak/app-ai-review",
+    ]
+    for context in required_visual_contexts:
+        if context not in required_success_contexts:
+            fail(f"dev-rc-cut-gate required_success_contexts missing {context}")
+        if context in success_contexts:
+            fail(f"dev-rc-cut-gate success_contexts must not write required visual evidence {context}")
 
     if with_config.get("pass_context") != "dev-rc-cut-pass":
         fail("dev-rc-cut-gate pass_context must be dev-rc-cut-pass")
@@ -386,6 +398,9 @@ def assert_pr_gate_cuj_contract() -> None:
 def assert_shared_soak_gate_contract() -> None:
     workflow_text = SHARED_SOAK_GATE.read_text(encoding="utf-8")
     required_fragments = [
+        "required_success_contexts",
+        "INPUT_REQUIRED_SUCCESS_CONTEXTS",
+        "is ${state:-missing}",
         "run_limit = int(item.get",
         "run_limit < min_success",
         '--created ">=${COMMIT_ISO}"',

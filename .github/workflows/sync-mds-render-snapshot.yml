@@ -246,6 +246,7 @@ jobs:
         run: bash .github/scripts/archive-mds-render-snapshot.sh
 
       - name: Mark snapshot success
+        id: mark-snapshot-success
         env:
           GH_TOKEN: ${{ steps.release-bot.outputs.token }}
           TARGET_SHA: ${{ needs.plan.outputs.target_sha }}
@@ -259,6 +260,60 @@ jobs:
             -f context=mds-render/snapshot \
             -f description="MDS snapshot archived (${PNG_COUNT} PNGs)" \
             -f target_url="${SNAPSHOT_URL}"
+
+      - name: Mark snapshot failure
+        if: failure() && steps.mark-snapshot-success.outcome != 'success'
+        env:
+          GH_TOKEN: ${{ steps.release-bot.outputs.token }}
+          TARGET_SHA: ${{ needs.plan.outputs.target_sha }}
+        run: |
+          set -euo pipefail
+          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${TARGET_SHA}" \
+            --method POST \
+            -f state=failure \
+            -f context=mds-render/snapshot \
+            -f description="MDS render snapshot archive failed" \
+            -f target_url="${RUN_URL}"
+
+          title="[sync-mds-render-snapshot] archive failed for dev ${TARGET_SHA:0:8}"
+          body_file="$(mktemp)"
+          {
+            echo "Scheduler: sync-mds-render-snapshot"
+            echo ""
+            echo "## MDS render snapshot archive failure"
+            echo ""
+            echo "| Field | Value |"
+            echo "|---|---|"
+            echo "| Source dev SHA | \`${TARGET_SHA}\` |"
+            echo "| Status context | \`mds-render/snapshot=failure\` |"
+            echo "| Workflow run | ${RUN_URL} |"
+            echo ""
+            echo "The render snapshot was not archived, so visual review evidence is unavailable for this dev SHA."
+            echo ""
+            echo "<!-- minglit-mds-render-snapshot-archive-failure"
+            echo "source_sha: ${TARGET_SHA}"
+            echo "run_id: ${GITHUB_RUN_ID}"
+            echo "-->"
+          } > "${body_file}"
+
+          existing="$(
+            gh issue list \
+              --repo "${GITHUB_REPOSITORY}" \
+              --search "\"${title}\" in:title state:open" \
+              --json number \
+              --jq '.[0].number // empty'
+          )"
+          if [ -n "${existing}" ]; then
+            gh issue comment "${existing}" --repo "${GITHUB_REPOSITORY}" --body-file "${body_file}"
+          else
+            gh issue create \
+              --repo "${GITHUB_REPOSITORY}" \
+              --title "${title}" \
+              --body-file "${body_file}" \
+              --label automated \
+              --label P1-high
+          fi
 
       - name: Dispatch snapshot diff triage
         if: steps.archive.outputs.changed == 'true'

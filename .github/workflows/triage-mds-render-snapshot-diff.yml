@@ -46,7 +46,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           BEFORE_SHA: ${{ inputs.before_sha || github.event.client_payload.before_sha || '' }}
-          AFTER_SHA: ${{ inputs.after_sha || github.event.client_payload.after_sha || github.sha || '' }}
+          AFTER_SHA: ${{ inputs.after_sha || github.event.client_payload.after_sha || '' }}
           ARCHIVE_BRANCH: artifacts/mds-render
           DRY_RUN: ${{ inputs.dry_run || false }}
         run: bash ../.github/scripts/triage-mds-render-snapshot-diff.sh
