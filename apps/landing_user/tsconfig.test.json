@@ -9,5 +9,5 @@
     "rootDir": "src",
     "types": ["node"]
   },
-  "include": ["src/lib/events.ts", "src/lib/events.test.ts"]
+  "include": ["src/lib/events.ts", "src/lib/events.test.ts", "src/lib/user-orders.ts", "src/lib/user-orders.test.ts"]
 }
