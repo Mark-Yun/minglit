@@ -67,6 +67,11 @@ type PostgrestEvent = {
   }> | null;
 };
 
+type FetchEventsResult = {
+  rows: PostgrestEvent[];
+  shouldUseDemoFallback: boolean;
+};
+
 const EVENT_SELECT = [
   "id",
   "title",
@@ -171,32 +176,32 @@ const DEMO_EVENTS: PublicEvent[] = [
 ];
 
 export async function getPublicEvents(): Promise<PublicEvent[]> {
-  const rows = await fetchEventsFromSupabase();
-  const events = rows
+  const result = await fetchEventsFromSupabase();
+  const events = result.rows
     .filter(isPubliclyVisible)
     .map(mapEvent)
     .filter((event) => event.status !== "cancelled");
 
-  return events.length > 0 ? events : DEMO_EVENTS;
+  if (events.length > 0) return events;
+
+  return result.shouldUseDemoFallback ? DEMO_EVENTS : [];
 }
 
 export async function getPublicEvent(id: string): Promise<PublicEvent | null> {
-  const demo = DEMO_EVENTS.find((event) => event.id === id);
-
-  if (demo) return demo;
-
-  const rows = await fetchEventsFromSupabase(id);
-  const row = rows.find(isPubliclyVisible);
+  const result = await fetchEventsFromSupabase(id);
+  const row = result.rows.find(isPubliclyVisible);
   const event = row ? mapEvent(row) : null;
 
-  return event && event.status !== "cancelled" ? event : null;
+  if (event && event.status !== "cancelled") return event;
+
+  return result.shouldUseDemoFallback ? (DEMO_EVENTS.find((demo) => demo.id === id) ?? null) : null;
 }
 
-async function fetchEventsFromSupabase(id?: string): Promise<PostgrestEvent[]> {
+async function fetchEventsFromSupabase(id?: string): Promise<FetchEventsResult> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-  if (!url || !key) return [];
+  if (!url || !key) return { rows: [], shouldUseDemoFallback: true };
 
   const endpoint = new URL("/rest/v1/events", url);
   endpoint.searchParams.set("select", EVENT_SELECT);
@@ -221,11 +226,11 @@ async function fetchEventsFromSupabase(id?: string): Promise<PostgrestEvent[]> {
     };
     const response = await fetch(endpoint, fetchOptions);
 
-    if (!response.ok) return [];
+    if (!response.ok) return { rows: [], shouldUseDemoFallback: true };
 
-    return (await response.json()) as PostgrestEvent[];
+    return { rows: (await response.json()) as PostgrestEvent[], shouldUseDemoFallback: false };
   } catch {
-    return [];
+    return { rows: [], shouldUseDemoFallback: true };
   }
 }
 

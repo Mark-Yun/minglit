@@ -59,6 +59,45 @@ test("public event list defensively excludes private inherited and private overr
   );
 });
 
+test("public event list keeps a normal empty Supabase result empty", async () => {
+  await captureSupabaseRequest([]);
+
+  const events = await getPublicEvents();
+
+  assert.deepEqual(events, []);
+});
+
+test("public event detail does not expose demo events after a normal empty Supabase result", async () => {
+  await captureSupabaseRequest([]);
+
+  const event = await getPublicEvent("demo-gangnam-social");
+
+  assert.equal(event, null);
+});
+
+test("public event list uses demo fallback when local Supabase env is absent", async () => {
+  delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+  delete process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+  const events = await getPublicEvents();
+
+  assert.equal(events.length, 3);
+  assert.equal(events[0]?.id, "demo-gangnam-social");
+});
+
+test("public event list uses demo fallback when Supabase fetch fails", async () => {
+  process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "public-key";
+  globalThis.fetch = async () => {
+    throw new Error("network unavailable");
+  };
+
+  const events = await getPublicEvents();
+
+  assert.equal(events.length, 3);
+  assert.equal(events[0]?.id, "demo-gangnam-social");
+});
+
 async function captureSupabaseRequest(rows: unknown[]) {
   const captured: { url: URL | null } = { url: null };
 
