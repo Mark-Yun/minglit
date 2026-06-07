@@ -1,0 +1,2117 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<!-- ── Web spec metadata (machine-readable) ───────────────────── -->
+<meta name="feature-status" content="planned">
+<meta name="features" content="event/event-edit-cancel">
+<meta name="surface" content="web_partner">
+<title>Spec — WebPartnerEventEdit (web_partner · /events/new · /events/:eventId/edit)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   WebPartnerEventEdit — 파트너웹 이벤트(회차) 만들기·수정.
+   1280px desktop baseline — mockup은 1280×800 캔버스를 0.5 scale로 렌더.
+   콘솔 셸(사이드바)은 web_partner_home 파일럿과 동일 토큰/구조.
+
+   Partner brand: viewport-scoped --color-partner-primary (#6c3ce1).
+   ============================================================ */
+.viewport {
+  --color-primary: var(--color-partner-primary);   /* #6c3ce1 */
+  --spec-blueprint-rgb: 108, 60, 225;
+}
+body.dark-mode .viewport {
+  --color-primary: var(--color-partner-dark-primary); /* #9b7bec */
+}
+
+/* --- Desktop viewport (1280×800) + 0.5 scale wrapper --- */
+.viewport--desktop {
+  width: 1280px;
+  height: 800px;
+  border-radius: 12px;
+}
+.mock-scale {
+  width: 640px;
+  height: 400px;
+  overflow: hidden;
+  position: relative;
+}
+.mock-scale .viewport--desktop {
+  transform: scale(0.5);
+  transform-origin: top left;
+}
+.state-mini__mock { width: 664px; } /* 640 mock + 12px padding ×2 보정 */
+
+/* --- Desktop blueprint (560×350 = 1280×800 비율) --- */
+.layout-grid--desktop { grid-template-columns: 560px 1fr; }
+.blueprint--desktop {
+  width: 560px;
+  height: 350px;
+  border-radius: 8px;
+}
+
+/* ============================================================
+   Console shell — web_partner_home 셸과 동일 (wpe- prefix)
+   ============================================================ */
+.wpe-shell {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  background: var(--color-surface);
+}
+.wpe-sidebar {
+  background: var(--color-background);
+  border-right: 1px solid var(--color-divider);
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-large) var(--spacing-medium);
+  min-height: 0;
+}
+.wpe-sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 var(--spacing-small) var(--spacing-large);
+}
+.wpe-sidebar__logo-img { height: 26px; width: auto; display: block; }
+.wpe-sidebar__brand-suffix {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--color-text-secondary);
+  opacity: 0.5;
+  letter-spacing: -0.2px;
+}
+.wpe-nav { display: flex; flex-direction: column; gap: 4px; }
+.wpe-nav__item {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 var(--spacing-sm);
+  border-radius: var(--radius-button);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.wpe-nav__item svg { width: 20px; height: 20px; flex-shrink: 0; }
+.wpe-nav__item--active {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+}
+.wpe-sidebar__footer {
+  margin-top: auto;
+  padding-top: var(--spacing-medium);
+  border-top: 1px solid var(--color-divider);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.wpe-sidebar__avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.wpe-sidebar__account-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.wpe-sidebar__account-sub {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+/* --- Main column --- */
+.wpe-main {
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: var(--spacing-xlarge) 40px;
+  min-width: 0;
+}
+.wpe-main::-webkit-scrollbar { display: none; }
+
+/* --- ② Page header --- */
+.wpe-back {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-small);
+  cursor: pointer;
+}
+.wpe-header { margin-bottom: var(--spacing-large); }
+.wpe-header__title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.3px;
+  line-height: 1.3;
+}
+.wpe-header__sub {
+  margin-top: var(--spacing-xsmall);
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+/* --- ③ Form --- */
+.wpe-form {
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-large);
+}
+.wpe-section__title {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.2px;
+  margin-bottom: var(--spacing-small);
+}
+.wpe-row {
+  display: grid;
+  gap: var(--spacing-sm);
+}
+.wpe-row--3 { grid-template-columns: 1.2fr 1fr 1fr; }
+.wpe-row--2 { grid-template-columns: 1fr 1fr; }
+.wpe-field {
+  background: var(--color-background);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-button);
+  padding: var(--spacing-sm) var(--spacing-medium);
+}
+.wpe-field + .wpe-field { margin-top: var(--spacing-sm); }
+.wpe-field__label {
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+.wpe-field__value {
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+.wpe-field__value--placeholder { color: var(--color-text-secondary); opacity: 0.6; font-weight: 400; }
+.wpe-field__caret { float: right; color: var(--color-text-secondary); font-size: 12px; }
+.wpe-field__hint {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+}
+.wpe-field__hint--warn { color: var(--color-warning); font-weight: 500; }
+.wpe-field__hint--error { color: var(--color-error); font-weight: 500; }
+.wpe-field--changed { border-color: var(--color-primary); border-width: 1.5px; }
+.wpe-field--error { border-color: var(--color-error); border-width: 1.5px; }
+.wpe-field--error .wpe-field__label,
+.wpe-field--error .wpe-field__value { color: var(--color-error); }
+
+/* 티켓 구성 — 파티에서 상속된 읽기 전용 요약 */
+.wpe-tickets {
+  background: var(--color-background);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-button);
+  padding: var(--spacing-sm) var(--spacing-medium);
+}
+.wpe-ticket-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-small);
+  padding: 7px 0;
+  font-size: 13px;
+}
+.wpe-ticket-row + .wpe-ticket-row { border-top: 1px solid var(--color-divider); }
+.wpe-ticket-row__name { flex: 1; min-width: 0; font-weight: 600; color: var(--color-text-primary); }
+.wpe-ticket-row__price { font-weight: 600; color: var(--color-text-primary); }
+.wpe-ticket-row__qty { font-size: 12px; color: var(--color-text-secondary); }
+.wpe-tickets__foot {
+  display: flex;
+  align-items: center;
+  margin-top: var(--spacing-small);
+  padding-top: var(--spacing-small);
+  border-top: 1px solid var(--color-divider);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.wpe-tickets__link {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+/* lock chip — 핵심 필드 제약 표시 */
+.wpe-lockchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: var(--spacing-small);
+  padding: 2px 6px;
+  border-radius: var(--radius-small);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  font-size: 10px;
+  font-weight: 600;
+}
+.wpe-lockchip svg { width: 10px; height: 10px; }
+
+/* lock banner — 수정 모드 · 신청자 ≥1 */
+.wpe-lockbanner {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: flex-start;
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-medium);
+}
+.wpe-lockbanner svg { width: 18px; height: 18px; color: var(--color-primary); flex-shrink: 0; margin-top: 1px; }
+.wpe-lockbanner__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.wpe-lockbanner__sub {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+/* --- ④ Actions + danger zone --- */
+.wpe-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-small);
+}
+.wpe-btn {
+  height: 44px;
+  padding: 0 var(--spacing-large);
+  border-radius: var(--radius-button);
+  font-size: 14px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  border: none;
+}
+.wpe-btn--primary { background: var(--color-primary); color: #fff; }
+.wpe-btn--disabled { background: var(--color-divider); color: var(--color-text-secondary); cursor: default; }
+.wpe-btn--ghost {
+  background: transparent;
+  border: 1px solid var(--color-divider);
+  color: var(--color-text-primary);
+}
+.wpe-btn--danger { background: var(--color-error); color: #fff; }
+.wpe-btn--danger-disabled {
+  background: color-mix(in srgb, var(--color-error) 35%, var(--color-divider));
+  color: #fff; opacity: 0.7; cursor: default;
+}
+.wpe-btn--danger-outline {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--color-error) 45%, transparent);
+  color: var(--color-error);
+}
+.wpe-spinner {
+  width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: wpe-spin 1s linear infinite;
+}
+@keyframes wpe-spin { to { transform: rotate(360deg); } }
+
+.wpe-danger {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-large);
+  border: 1px solid color-mix(in srgb, var(--color-error) 30%, transparent);
+  background: color-mix(in srgb, var(--color-error) 4%, transparent);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-medium) var(--spacing-large);
+}
+.wpe-danger__text { flex: 1; min-width: 0; }
+.wpe-danger__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-error);
+}
+.wpe-danger__sub {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+.wpe-danger .wpe-btn { height: 38px; font-size: 13px; flex-shrink: 0; }
+
+/* --- 취소 확인 다이얼로그 --- */
+.wpe-dialog-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+.wpe-dialog {
+  width: 460px;
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-large);
+}
+.wpe-dialog__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.wpe-dialog__event {
+  margin-top: var(--spacing-xsmall);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.wpe-dialog__impact {
+  display: flex;
+  gap: var(--spacing-small);
+  margin-top: var(--spacing-sm);
+}
+.wpe-dialog__impact-pill {
+  flex: 1;
+  background: var(--color-surface);
+  border-radius: var(--radius-small);
+  padding: var(--spacing-small) var(--spacing-sm);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.wpe-dialog__impact-pill b {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 1px;
+}
+.wpe-dialog__notice {
+  display: flex;
+  gap: 8px;
+  margin-top: var(--spacing-sm);
+  background: color-mix(in srgb, var(--color-error) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-error) 25%, transparent);
+  border-radius: var(--radius-small);
+  padding: var(--spacing-sm);
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--color-text-primary);
+}
+.wpe-dialog__notice svg { width: 16px; height: 16px; color: var(--color-error); flex-shrink: 0; margin-top: 1px; }
+.wpe-dialog__reason {
+  margin-top: var(--spacing-sm);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-small);
+  padding: var(--spacing-small) var(--spacing-sm);
+  font-size: 13px;
+  color: var(--color-text-primary);
+}
+.wpe-dialog__reason small {
+  display: block;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  margin-bottom: 2px;
+}
+.wpe-dialog__check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: var(--spacing-sm);
+  font-size: 12.5px;
+  color: var(--color-text-primary);
+  line-height: 1.45;
+}
+.wpe-dialog__checkbox {
+  width: 16px; height: 16px;
+  border-radius: 4px;
+  background: var(--color-error);
+  color: #fff;
+  font-size: 11px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.wpe-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-small);
+  margin-top: var(--spacing-medium);
+}
+.wpe-dialog__actions .wpe-btn { height: 40px; font-size: 13px; }
+
+/* 저장 중 — 폼 비활성 톤 */
+.wpe-form--saving { opacity: 0.6; pointer-events: none; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     Toolbar — universal toggles
+     ============================================================ -->
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     📍 HEADER
+     ============================================================ -->
+<header>
+  <h1>파트너웹 이벤트(회차) 만들기·수정</h1>
+</header>
+
+<!-- ============================================================
+     🎯 OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 160px;">Status</th>
+        <td>
+          <strong>🚧 디자인중</strong>
+          <em style="color: var(--color-text-secondary);">— web-mvp pivot Phase 3 · 파트너 콘솔 "파티·이벤트" 영역의 작성 화면 (생성/수정 공용 폼)</em>
+        </td>
+      </tr>
+      <tr>
+        <th>Surface</th>
+        <td><code>web_partner</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>partner · event · create / edit (occurrence form)</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td>
+          <code>/events/new</code> (생성 — 파티 사전 선택 시 <code>?party=:partyId</code> 프리필) ·
+          <code>/events/:eventId/edit</code> (수정) · Next.js route (landing_partner 확장, 경로명 가안).
+          <a href="/specs/web_partner_home/index.html"><code>web_partner_home</code></a>이 정의한 콘솔 셸의
+          "파티·이벤트" 메뉴 아래 메인 영역에 렌더된다.
+        </td>
+      </tr>
+      <tr>
+        <th>Behavior Source</th>
+        <td>
+          <a href="/specs/event_create_page/index.html"><code>/specs/event_create_page/index.html</code></a>
+          — 파티 template prefill(장소·정원·티켓 구성·기본 정보) · 일시 기본값(다음 주 같은 요일 19:00) · 시작/종료 보정 규칙 · 생성 성공/실패 전이를 상속.<br>
+          <a href="/specs/event_edit_page/index.html"><code>/specs/event_edit_page/index.html</code></a>
+          — <strong>잠금 매트릭스</strong>(확정자 0명 = 전부 자유 / ≥1명 = 일시·장소 변경 시 사유 + 자동 알림, 정원 감소는 확정자 수 이상만) ·
+          dirty 감지 · 핵심 변경 확인 다이얼로그 · 저장 성공/실패 전이를 상속.
+          취소 시 전액 자동 환불 + 알림 강제는 <code>docs/features/event/event-edit-cancel/prd.md</code> 기준 (불가역 · 2단계 확인).<br>
+          웹에서 달라지는 점: 모바일의 생성(2-tab)·수정 별도 화면을 <strong>단일 폼 페이지 하나로 통합</strong>(생성/수정 모드 분기) ·
+          <strong>가격·티켓은 이 화면에서 편집하지 않음</strong> — 파티의 티켓 템플릿이 회차 티켓으로 복사되는 모델이라
+          읽기 전용 "티켓 구성" 요약만 보여주고 편집은 <a href="/specs/web_partner_party_create/index.html"><code>web_partner_party_create</code></a>로 위임
+          (가격 인상 시 신규 신청자만 적용 규칙도 파티 spec 관심사로 이동) ·
+          반복 규칙은 파티(<code>web_partner_party_create</code>)에서 설정하고, 자동 생성된 회차가 이 화면으로 편집 진입 — 이 화면은 단일 회차만 ·
+          입장 조건 편집은 범위 밖 ·
+          이벤트 취소는 별도 화면 대신 <strong>이 화면의 위험 구역 + 확인 다이얼로그</strong>로 통합 ·
+          변경 사유 바텀시트 → 다이얼로그.
+        </td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: 콘솔 셸 "파티·이벤트" 영역 — <a href="/specs/web_partner_party_events/index.html"><code>web_partner_party_events</code></a> (목록 허브)에서 진입.<br>
+          <strong>Children</strong>: 취소 확인 다이얼로그 · 핵심 변경 확인 다이얼로그는 이 spec 내부 — 별도 spec 없음.
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          <strong>파트너가 한 번의 회차를 열고, 이미 연 회차를 안전하게 고친다.</strong>
+          생성 시엔 파티를 고르면 장소·정원·티켓 구성이 미리 채워져 일시만 정하면 되고,
+          수정 시엔 신청자 보호 규칙(핵심 필드 경고·제한 + 자동 알림)이 화면에 그대로 드러난다.
+          이벤트 취소는 전액 자동 환불 + 신청자 알림을 고지하는 확인 다이얼로그를 거치는 불가역 액션.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: 파티·이벤트 목록의 "회차 만들기"(생성) / 이벤트 카드·상세의 "수정"(수정) ·
+          홈 empty CTA "파티·이벤트 만들러 가기"에서 파티 생성 후 이어짐 · URL 직접 진입/북마크.<br>
+          <strong>Exit points</strong>: 저장 성공 → 파티·이벤트 목록(또는 이벤트 상세)으로 복귀 + 성공 안내 ·
+          취소 확정 → 목록으로 복귀 + "이벤트가 취소되었어요" 안내 ·
+          뒤로가기/브라우저 back → 변경사항 있으면 버림 확인 후 이탈.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          모바일은 생성(<code>EventCreatePage</code> 2-tab)과 수정(<code>EventEditPage</code>)이 별도 화면이지만,
+          웹 MVP는 PRD 원칙 "생성 화면을 편집 모드로 재사용 — 학습 비용 0"을 그대로 적용해
+          <strong>하나의 폼 페이지에 생성/수정 모드</strong>를 두었다.
+          티켓 템플릿·반복 규칙은 파티(<code>web_partner_party_create</code>)의 책임으로 정리하고 — 백엔드도 파티
+          ticket_templates → 회차 tickets 복사 모델 — 이 화면은 회차의 본질인
+          <strong>파티 선택(생성) → 일시 → 장소 → 정원 → 기본 정보</strong>로 폼을 평탄화했다.
+          티켓 구성은 읽기 전용 요약으로만 보여준다 (편집 진입 링크 제공).
+          취소는 운영팀 수동 환불을 없애는 코어 플로우라(전액 자동 환불 강제 — Eventbrite 패턴) 별도 화면 없이
+          이 화면의 위험 구역에서 2단계 확인으로 처리한다.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>정기 파티 기준 1주~1달에 1회 생성 + 이벤트당 1~3회 수정. 주 케이스: 만든 직후 오타·정보 보강(다수) · 확정자 발생 후 긴급 일시·장소 변경(소수, 통지 의무) · 인원 미달 취소(드묾).</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     🕐 HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">
+    이 spec의 주요 변경 이력. 최신 항목 위에 추가 (최신 → 오래된 순).
+  </p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-06-07</td>
+        <td>1.1</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>리뷰 반영 — 가격 필드 제거, 티켓 구성은 파티 위임</strong>.
+          단일 가격 필드가 <code>web_partner_party_create</code>(티켓 템플릿 복수) ·
+          <code>web_user_event_detail</code>(티켓 옵션 선택) · 백엔드 복사 모델(파티 ticket_templates → 회차 tickets)과
+          충돌해 폼에서 가격 필드를 빼고, 읽기 전용 <strong>"티켓 구성" 요약 섹션</strong>(이름/가격/수량 + 파티 편집 링크)으로 교체.
+          잠금 매트릭스의 가격 행은 "파티 위임"으로 — 가격 인상 시 신규 신청자만 적용 규칙도 파티 spec 관심사로 이동.
+          반복 일정은 파티 생성 위저드 책임으로 확정 (이 화면은 단일 회차만).
+        </td>
+      </tr>
+      <tr>
+        <td>2026-06-07</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>web-mvp pivot Phase 3 초기 설계 (1280 baseline)</strong> —
+          생성/수정 공용 단일 폼 페이지. 콘솔 셸은 <code>web_partner_home</code> 상속.
+          5 state (생성 기본 · 수정-신청자 있음 제한 표시 · 검증 오류 · 취소 확인 다이얼로그 · 저장 중).
+          핵심(일시·장소·가격)/부수 필드 구분과 잠금 매트릭스는 <code>event_edit_page</code> +
+          <code>event-edit-cancel</code> PRD 상속. 취소 = 전액 자동 환불 + 신청자 알림 고지, 불가역 2단계 확인.
+          반복 일정·티켓 템플릿·입장 조건은 범위 밖.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     Anchor nav
+     ============================================================ -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Responsive Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#global-behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     🧱 PERSPECTIVE 1 · RESPONSIVE LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Responsive Layout</h2>
+    <span class="lede">
+      화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.
+      <strong>web_partner는 데스크톱 우선</strong> (<code>web_foundation_responsive</code> surface priority) —
+      Desktop(≥1280) blueprint가 1차 산출물.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Breakpoint variants</h2>
+    <p class="intro">
+      Breakpoint · 컨테이너 · 그리드 정의의 SSOT는
+      <a href="/specs/web_foundation_responsive/"><code>web_foundation_responsive</code></a>.
+      콘솔 셸(1440px 캡 · 사이드바 240px 고정)은
+      <a href="/specs/web_partner_home/index.html"><code>web_partner_home</code></a>이 SSOT.
+      폼 본문은 메인 영역 안에서 <strong>max-width 720px 좌측 정렬</strong> — 긴 줄 길이로 입력 폼이 늘어지지 않게.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 160px;">Variant</th>
+          <th style="width: 180px;">Breakpoint</th>
+          <th>이 화면에서의 차이</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Desktop</strong> (기본 — 이 surface의 1차 variant)</td><td><code>≥ 1280px</code></td><td>사이드바 240px + 메인 영역. 폼 720px 캡 좌측 정렬. 일시는 3필드(날짜/시작/종료) 가로 배치. 티켓 구성은 읽기 전용 요약 카드. 액션 버튼은 폼 하단 우측 정렬.</td></tr>
+        <tr><td>Tablet</td><td><code>768–1279px</code></td><td>Desktop 레이아웃 축소 — 사이드바 200px, 폼은 남는 폭 fluid (720px 미만이면 그만큼). 가로 필드 묶음 유지. 별도 blueprint 없음.</td></tr>
+        <tr><td><strong>Mobile</strong></td><td><code>&lt; 768px</code></td><td>사이드바가 상단 바(드로어)로 접히고 단일 컬럼. 일시 필드도 세로 스택. 저장 버튼은 하단 고정 바로 — 입력 도중에도 항상 보이게. 위험 구역은 폼 맨 아래 유지.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree — Desktop (≥1280px, 기본)</h2>
+    <p class="intro">
+      좌측 사이드바(콘솔 셸 — "파티·이벤트" active) + 메인 스크롤 영역.
+      메인은 뒤로 링크 + 페이지 헤더 → 폼(섹션 스택) → 하단 액션 row → (수정 모드) 위험 구역 순.
+      blueprint는 1280×800 비율(560×350)로 그림.
+    </p>
+
+    <div class="layout-grid layout-grid--desktop">
+      <div class="blueprint blueprint--desktop">
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- ① Sidebar: 240/1280 → 105/560 -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0; left:0; bottom:0; width:105px;">
+          <span class="blueprint__region-label">① 사이드바 · w=240px</span>
+        </div>
+        <!-- ② Header: main pad 32/40 → 14/17 -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:14px; left:122px; width:315px; height:42px;">
+          <span class="blueprint__region-label">② 뒤로 + 페이지 헤더 · h≈96px</span>
+        </div>
+        <!-- ③ Form (720/1280 → 315) -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:66px; left:122px; width:315px; height:208px;">
+          <span class="blueprint__region-label">③ 폼 — 섹션 스택 · max-w 720px</span>
+        </div>
+        <!-- ④ Actions + danger -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:284px; left:122px; width:315px; height:52px;">
+          <span class="blueprint__region-label">④ 액션 row + 위험 구역 (수정 모드)</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:4px; right:4px;">main pad: 32 / 40</div>
+        <div class="blueprint__align-marker" style="bottom:4px; right:4px;">우측 잉여 폭 = 배경</div>
+      </div>
+
+      <div class="layout-tree"><b>&lt;div&gt;</b> (콘솔 셸 — grid 2-col: 240px / 1fr · 1440px 캡 — <code>web_partner_home</code> 셸)
+├─ <em>사이드바</em> ("파티·이벤트" active)            ← ①
+│  └─ <b>SidebarNav</b> — 셸 SSOT: web_partner_home Sub-anatomy ①
+│
+└─ <b>&lt;main&gt;</b> (세로 스크롤 · padding: <code>spacing-xlarge (32px)</code> / 40px)
+   ├─ <em>뒤로 링크 + 페이지 헤더</em>                  ← ②
+   │  ├─ "← 파티·이벤트" (13 / 600 secondary)
+   │  ├─ 타이틀 — "새 회차 만들기" / "이벤트 수정" (24 / 700)
+   │  └─ 보조줄 — 안내 1줄 / (수정) 파티명 · 일시 (14 / 400)
+   ├─ Gap: <code>spacing-large (24px)</code>
+   │
+   ├─ <b>&lt;form&gt;</b> (max-width 720px · 좌측 정렬)   ← ③
+   │  ├─ (수정 · 신청자 ≥1) <b>LockBanner</b>
+   │  ├─ <em>파티</em> — <b>SelectField</b> (생성 모드만)
+   │  ├─ <em>일시</em> — 날짜 / 시작 / 종료 3필드 row
+   │  ├─ <em>장소</em> — <b>FormFieldCard</b>
+   │  ├─ <em>정원</em> — <b>FormFieldCard</b>
+   │  ├─ <em>티켓 구성</em> — <b>TicketSummaryCard</b> (읽기 전용 — 파티 위임)
+   │  ├─ <em>기본 정보</em> — 제목 / 설명
+   │  └─ 섹션 간 Gap: <code>spacing-large (24px)</code>
+   ├─ Gap: <code>spacing-large (24px)</code>
+   │
+   └─ <em>액션 + 위험 구역</em>                          ← ④
+      ├─ 액션 row — 우측 정렬 <b>Button</b> ("회차 만들기" / "저장")
+      └─ (수정 모드) <b>DangerZoneCard</b> — "이벤트 취소"</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree — Mobile (&lt;768px)</h2>
+    <p class="intro">
+      사이드바가 상단 바로 접히고 단일 컬럼 세로 스택. 모든 가로 필드 묶음이 세로로 풀리고,
+      저장 버튼만 하단 고정 바로 분리 — 긴 폼에서도 저장이 항상 보이게.
+    </p>
+
+    <div class="layout-grid">
+      <div class="blueprint">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:0; left:0; right:0; height:56px;">
+          <span class="blueprint__region-label">① 상단 바 — 브랜드 + 메뉴(드로어) · h=56px</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:72px; left:16px; right:16px; height:72px;">
+          <span class="blueprint__region-label">② 뒤로 + 페이지 헤더</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:160px; left:16px; right:16px; height:470px;">
+          <span class="blueprint__region-label">③ 폼 — 필드 전부 1-col 세로 스택<br>+ 위험 구역 (폼 맨 아래)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:0; left:0; right:0; height:76px;">
+          <span class="blueprint__region-label">④ 하단 고정 저장 바 · h=76px</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>&lt;body&gt;</b> (fluid · gutter <code>spacing-screen-edge (16px)</code>)
+├─ <em>상단 바</em>                                  ← ①
+│  └─ minglit · PARTNER 워드마크 + 메뉴 버튼 (드로어)
+│
+├─ <b>&lt;main&gt;</b> (세로 스크롤 단일 컬럼)
+│  ├─ <em>뒤로 + 페이지 헤더</em>                     ← ②
+│  └─ <b>&lt;form&gt;</b>                              ← ③
+│     ├─ 파티(생성) → 일시(날짜/시작/종료 세로) → 장소
+│     │  → 정원 → 티켓 구성(읽기 전용) → 제목 → 설명 — 전부 1-col
+│     └─ (수정 모드) <b>DangerZoneCard</b> — 맨 아래
+│
+└─ <em>하단 고정 저장 바</em>                          ← ④
+   └─ <b>Button</b> full-width ("회차 만들기" / "저장")</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <p class="intro">
+      variant별로 값이 다르면 Desktop / Mobile 컬럼에 각각 기입.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 50px;">#</th>
+          <th style="width: 190px;">Region</th>
+          <th style="width: 190px;">Alignment</th>
+          <th>Spacing — Desktop</th>
+          <th>Spacing — Mobile</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>콘솔 셸</td><td>grid 2-col (240px / 1fr) · 1440px 캡 중앙</td><td><code>web_partner_home</code> 셸 규칙 그대로 — 메인 padding <code>spacing-xlarge (32px)</code> 상하 / 40px 좌우</td><td>단일 컬럼 · gutter <code>spacing-screen-edge (16px)</code></td></tr>
+        <tr><td>①</td><td>사이드바 / 상단 바</td><td>셸 공통 — "파티·이벤트" item이 active 톤</td><td>web_partner_home Sub-anatomy ① 참조 (이 spec에서 재정의하지 않음)</td><td>상단 바 h=56px · 드로어</td></tr>
+        <tr><td>②</td><td>뒤로 + 페이지 헤더</td><td>좌측 정렬 · 뒤로 위 · 타이틀 · 보조줄</td><td>뒤로↔타이틀 <code>spacing-small (8px)</code> · 타이틀↔보조줄 <code>spacing-xsmall (4px)</code> · 헤더↔폼 <code>spacing-large (24px)</code></td><td>동일</td></tr>
+        <tr><td>③</td><td>폼</td><td>max-width 720px 좌측 정렬 · 섹션 스택</td><td>섹션 간 <code>spacing-large (24px)</code> · 섹션 타이틀↔필드 <code>spacing-small (8px)</code> · 가로 row 내 필드 gap <code>spacing-sm (12px)</code> · 필드 간 세로 <code>spacing-sm (12px)</code> · 필드 inner padding <code>spacing-sm (12px)</code> / <code>spacing-medium (16px)</code> · 필드 radius <code>radius-button (12px)</code></td><td>전 필드 1-col · 동일 gap</td></tr>
+        <tr><td>④</td><td>액션 + 위험 구역</td><td>액션 버튼 우측 정렬 · 위험 구역 full-width row</td><td>폼↔액션 <code>spacing-large (24px)</code> · 버튼 h=44px · 액션↔위험 구역 <code>spacing-large (24px)</code> · 위험 구역 padding <code>spacing-medium (16px)</code> / <code>spacing-large (24px)</code> · radius <code>radius-card (16px)</code></td><td>저장 바 h=76px (버튼 44 + padding <code>spacing-medium (16px)</code>) · 위험 구역은 폼 맨 아래</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ① — 사이드바 (콘솔 셸)</h2>
+    <p class="intro">
+      <strong>이 spec에서 재정의하지 않음.</strong> 콘솔 셸의 blueprint · spacing · 토큰 SSOT는
+      <a href="/specs/web_partner_home/index.html"><code>web_partner_home</code></a> Sub-anatomy ①.
+      이 화면에서 다른 점은 단 하나 — active 메뉴가 "홈"이 아닌 <strong>"파티·이벤트"</strong>이고,
+      신청 관리 badge 등 나머지 동작은 셸 공통 규칙을 따른다.
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ③ — 폼 필드 카드 (FormFieldCard)</h2>
+    <p class="intro">
+      이 폼의 모든 입력은 같은 카드 패턴 — 라벨(+ 제약 chip) / 값 / 힌트 3단.
+      모드·검증 상태에 따라 테두리와 힌트 톤만 바뀐다. select(파티·시간) 변형은 우측 caret 추가.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 360px; height: 96px; border-radius: 12px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:12px; left:16px; width:150px; height:16px;">
+          <span class="blueprint__region-label">㉠ 라벨 + 제약 chip</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:36px; left:16px; right:16px; height:22px;">
+          <span class="blueprint__region-label">㉡ 값 (입력)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:64px; left:16px; right:16px; height:18px;">
+          <span class="blueprint__region-label">㉢ 힌트 (info / warn / error)</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>FormFieldCard</b> (bg background · 1px divider border · <code>radius-button (12px)</code>)
+└─ padding: <code>spacing-sm (12px)</code> / <code>spacing-medium (16px)</code>
+   ├─ <em>라벨</em> (11 / 700 secondary)                        ← ㉠
+   │  └─ + <b>LockChip</b> (수정 · 제약 필드만 — primary 12% pill · 10/600)
+   ├─ Gap: 4px
+   ├─ <em>값</em> (15 / 500 text-primary · placeholder는 흐린 톤) ← ㉡
+   └─ <em>힌트</em> (12 / 400 · 필요 시에만)                     ← ㉢
+      ├─ info: secondary — "확정 참가자 8명보다 적게 줄일 수 없어요"
+      ├─ warn: <code>color-warning</code> 500 — "변경하면 8명에게 자동 알림"
+      └─ error: <code>color-error</code> 500 — 검증 실패 사유
+
+<i>상태 변형:</i>
+   변경 감지(dirty) → border <code>color-primary</code> 1.5px
+   검증 오류        → border <code>color-error</code> 1.5px + 라벨·값 error 톤
+   select 변형      → 값 우측에 caret (파티 · 시작/종료 시간)</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 180px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>라벨 + chip</td><td>row · 좌측 · chip은 라벨 우측</td><td>라벨↔chip <code>spacing-small (8px)</code> · chip padding 2px 6px · <code>radius-small (8px)</code></td></tr>
+        <tr><td>㉡</td><td>값</td><td>좌측 · 한 줄 (설명만 여러 줄)</td><td>라벨↔값 4px · 15/500 · placeholder 흐림</td></tr>
+        <tr><td>㉢</td><td>힌트</td><td>좌측 · 최대 2줄</td><td>값↔힌트 6px · 12px · 톤 3종 (info/warn/error)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ③ — 티켓 구성 요약 (TicketSummaryCard · 읽기 전용)</h2>
+    <p class="intro">
+      파티의 티켓 템플릿에서 상속된 회차 티켓 구성을 <strong>읽기 전용</strong>으로 요약 —
+      이 화면에서 편집할 수 없고, 푸터의 안내 + 링크가 편집 책임을
+      <a href="/specs/web_partner_party_create/index.html"><code>web_partner_party_create</code></a> (편집 모드)로 넘긴다.
+      백엔드 모델(파티 ticket_templates → 회차 tickets 복사)과 1:1.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 360px; height: 130px; border-radius: 12px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:12px; left:16px; right:16px; height:24px;">
+          <span class="blueprint__region-label">㉠ 티켓 row — 이름 좌 · 가격·수량 우</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:44px; left:16px; right:16px; height:24px;">
+          <span class="blueprint__region-label">㉠ 티켓 row × N</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:12px; left:16px; right:16px; height:28px; border-style:dashed;">
+          <span class="blueprint__region-label">㉡ 푸터 — 안내 좌 · 파티 편집 링크 우</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>TicketSummaryCard</b> (bg background · 1px divider border · <code>radius-button (12px)</code>)
+└─ padding: <code>spacing-sm (12px)</code> / <code>spacing-medium (16px)</code>
+   ├─ <em>티켓 row × N</em> (row 간 1px divider)                  ← ㉠
+   │  ├─ 티켓 이름 (13 / 600 · flex 1 · 말줄임)
+   │  ├─ 가격 (13 / 600)
+   │  └─ 수량 (12 / 400 secondary — "20매")
+   └─ <em>푸터</em> (상단 1px divider)                             ← ㉡
+      ├─ "티켓 구성은 파티에서 관리해요" (12 / 400 secondary)
+      └─ "파티에서 편집 →" (12 / 600 <code>color-primary</code> · 우측 끝)
+         → web_partner_party_create 편집 모드로 이동
+           (작성 중 변경사항 있으면 버림 확인 먼저)</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 180px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>티켓 row</td><td>row · 이름 좌 · 가격/수량 우</td><td>row padding 7px 0 · 요소 gap <code>spacing-small (8px)</code> · row 간 1px <code>color-divider</code></td></tr>
+        <tr><td>㉡</td><td>푸터</td><td>row · 안내 좌 · 링크 우 (margin-left auto)</td><td>padding-top <code>spacing-small (8px)</code> · 상단 1px <code>color-divider</code> · 링크 hover 시 underline</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ④ — 액션 row + 위험 구역 (DangerZoneCard)</h2>
+    <p class="intro">
+      저장 액션과 파괴적 액션을 시각적으로 분리 — 저장은 우측 정렬 primary 버튼,
+      이벤트 취소는 빨강 테두리 카드 안에 outline 버튼으로 격리(실수 클릭 방지).
+      위험 구역은 <strong>수정 모드에만</strong> 존재.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 360px; height: 130px; border-radius: 12px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:10px; right:12px; width:110px; height:26px;">
+          <span class="blueprint__region-label">㉠ 저장 버튼</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:52px; left:12px; right:12px; bottom:12px; border-style:dashed;">
+          <span class="blueprint__region-label">㉡ 위험 구역 — 설명 좌 · "이벤트 취소" 버튼 우</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><em>액션 row</em> (flex · justify-end)                         ← ㉠
+└─ <b>Button</b> primary (h=44px · "회차 만들기" / "저장")
+   · dirty 전(수정 모드) / 필수 미입력(생성 모드) → disabled 톤
+
+<b>DangerZoneCard</b> (수정 모드만)                            ← ㉡
+└─ border 1px <code>color-error</code> 30% · bg error 4% · <code>radius-card (16px)</code>
+   └─ <b>flex row</b>(align: center · gap: <code>spacing-large (24px)</code>)
+      ├─ <em>텍스트</em> (flex 1)
+      │  ├─ "이벤트 취소" (14 / 700 <code>color-error</code>)
+      │  └─ "취소하면 결제 건 전액이 자동 환불되고 신청자
+      │     전원에게 알림이 가요. 되돌릴 수 없어요." (12 / 400)
+      └─ <b>Button</b> danger-outline (h=38px · "이벤트 취소")
+         → 취소 확인 다이얼로그 열림</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 180px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>저장 버튼</td><td>폼 우측 끝 정렬</td><td>h=44px · padding 0 <code>spacing-large (24px)</code> · <code>radius-button (12px)</code> · disabled: <code>color-divider</code> bg + secondary text</td></tr>
+        <tr><td>㉡</td><td>위험 구역</td><td>row · 텍스트 좌 · 버튼 우</td><td>padding <code>spacing-medium (16px)</code> / <code>spacing-large (24px)</code> · border <code>color-error</code> 30% · bg error 4% · 버튼은 error outline</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy — 취소 확인 다이얼로그 (CancelConfirmDialog)</h2>
+    <p class="intro">
+      위험 구역의 "이벤트 취소" 클릭 시 등장하는 모달. <strong>환불·알림이 자동으로 일어난다는 사실을
+      읽지 않고는 진행할 수 없게</strong> 구성 — 영향 요약(확정·결제 수치) + 빨강 고지 + 확인 체크가
+      빨강 실행 버튼의 잠금을 푼다 (2단계 확인 — 불가역 액션).
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 280px; height: 300px; border-radius: 16px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:14px; left:16px; right:16px; height:34px;">
+          <span class="blueprint__region-label">㉠ 타이틀 + 이벤트 요약</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:58px; left:16px; right:16px; height:38px;">
+          <span class="blueprint__region-label">㉡ 영향 요약 pill ×3</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:106px; left:16px; right:16px; height:52px;">
+          <span class="blueprint__region-label">㉢ 환불·알림 고지 (error 톤)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:168px; left:16px; right:16px; height:40px;">
+          <span class="blueprint__region-label">㉣ 취소 사유 select (선택)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:218px; left:16px; right:16px; height:30px;">
+          <span class="blueprint__region-label">㉤ 확인 체크</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:14px; right:16px; width:160px; height:28px;">
+          <span class="blueprint__region-label">㉥ 액션 (돌아가기 · 취소 실행)</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>CancelConfirmDialog</b> (w=460px · bg background · <code>radius-card (16px)</code>)
+└─ padding: <code>spacing-large (24px)</code> · overlay rgba(0,0,0,0.45)
+   ├─ <em>타이틀</em> "이벤트를 취소할까요?" (18/700)              ← ㉠
+   ├─ <em>이벤트 요약</em> — 이벤트명 · 일시 (13/400 secondary)
+   ├─ <em>영향 요약 pill ×3</em> (surface bg · <code>radius-small</code>)   ← ㉡
+   │  └─ 확정 참가자 N명 · 결제 완료 N건 · 환불 총액 ₩N
+   ├─ <em>고지</em> (error 8% bg · error 25% border)              ← ㉢
+   │  └─ "결제 건 <b>전액이 자동으로 환불</b>되고, 신청자 전원에게
+   │     <b>취소 알림</b>이 발송돼요. <b>되돌릴 수 없어요.</b>"
+   ├─ <em>취소 사유</em> select — 선택 입력 · 알림 본문에 인용     ← ㉣
+   ├─ <em>확인 체크</em> — "자동 환불·알림 발송을 확인했어요"      ← ㉤
+   └─ <em>액션 row</em> (우측 정렬)                               ← ㉥
+      ├─ <b>Button</b> ghost "돌아가기"
+      └─ <b>Button</b> danger "이벤트 취소" — 체크 전 disabled</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 200px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>타이틀 + 요약</td><td>좌측</td><td>타이틀↔요약 <code>spacing-xsmall (4px)</code></td></tr>
+        <tr><td>㉡</td><td>영향 요약 pill</td><td>3등분 row</td><td>gap <code>spacing-small (8px)</code> · pill padding <code>spacing-small (8px)</code> / <code>spacing-sm (12px)</code> · 수치 15/700</td></tr>
+        <tr><td>㉢</td><td>환불·알림 고지</td><td>icon + 본문 row</td><td><code>color-error</code> 8% bg / 25% border · <code>radius-small (8px)</code> · 12px · 1.55 행간</td></tr>
+        <tr><td>㉣</td><td>취소 사유</td><td>full-width select</td><td>1px divider border · <code>radius-small (8px)</code> · 선택 입력 (인원 미달 / 장소 문제 / 기타 직접 입력)</td></tr>
+        <tr><td>㉤</td><td>확인 체크</td><td>checkbox + 문구 row</td><td>checkbox 16px · 문구 12.5px · 체크 시 ㉥ 빨강 버튼 활성</td></tr>
+        <tr><td>㉥</td><td>액션</td><td>우측 정렬</td><td>버튼 h=40px · gap <code>spacing-small (8px)</code> · 실행 버튼 <code>color-error</code> filled</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     🎨 PERSPECTIVE 2 · STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">
+      각 state의 시각 mockup + 6 aspect rows. States는 breakpoint와 무관하게 공유 —
+      mockup은 web_partner 기본 breakpoint인 <strong>Desktop 1280px</strong> (0.5 scale 렌더).
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>States gallery</h2>
+    <p class="intro">
+      5 state — 모드(생성/수정)와 신청자 유무가 핵심 분기.
+      Behavior Source의 state 중 반복 일정 on(<code>event_create_page</code> State 2) ·
+      파티 정보 탭(State 3) · 변경 사유 다이얼로그(<code>event_edit_page</code> State 3 — 이 spec에선
+      저장 시 확인 다이얼로그로 통합, Global Behavior 참조)는 웹 MVP 폼에 맞게 흡수했다.
+    </p>
+
+    <h3 style="margin-top: 24px;">State summary</h3>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 220px;">State</th>
+          <th style="width: 100px;">Tag</th>
+          <th style="width: 260px;">조건 (요약)</th>
+          <th>Key visual differentiator</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="is-baseline-tint"><td><strong>생성 기본</strong> 🎯</td><td>primary</td><td><code>/events/new</code> 진입 · 파티 선택/프리필</td><td>파티 select + 프리필된 폼 — 제약 표시 없음</td></tr>
+        <tr><td><strong>수정 · 신청자 있음</strong></td><td>restricted</td><td><code>/edit</code> 진입 · 확정 참가자 ≥1명</td><td>잠금 배너 + 일시·장소·정원에 제약 chip/힌트 + 위험 구역</td></tr>
+        <tr><td><strong>검증 오류</strong></td><td>error</td><td>입력값이 규칙 위반 (예: 정원 &lt; 확정자 수)</td><td>해당 필드 빨강 테두리 + 에러 힌트 · 저장 disabled</td></tr>
+        <tr><td><strong>취소 확인 다이얼로그</strong></td><td>danger modal</td><td>위험 구역 "이벤트 취소" 클릭</td><td>환불 총액 + 자동 환불·알림 고지 + 확인 체크 + 빨강 실행 버튼</td></tr>
+        <tr><td><strong>저장 중</strong></td><td>async</td><td>저장 확정 후 응답 대기</td><td>폼 비활성 톤 + 저장 버튼 spinner "저장 중…"</td></tr>
+      </tbody>
+    </table>
+
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- ════════════════════════════════════════════════════
+           State 1 · 생성 기본 (baseline)
+           ════════════════════════════════════════════════════ -->
+      <table class="ref state-mini is-baseline-tint">
+        <thead>
+          <tr><th colspan="3">
+            <strong>생성 기본</strong> 🎯 <span class="tag">primary · baseline</span>
+            <small>새 회차 만들기 — 파티를 고르면 장소·정원·티켓 구성이 미리 채워짐</small>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <div class="wpe-shell">
+                  <aside class="wpe-sidebar">
+                    <div class="wpe-sidebar__brand">
+                      <img class="wpe-sidebar__logo-img" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                      <span class="wpe-sidebar__brand-suffix">PARTNER</span>
+                    </div>
+                    <nav class="wpe-nav">
+                      <div class="wpe-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                        홈
+                      </div>
+                      <div class="wpe-nav__item wpe-nav__item--active">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        파티·이벤트
+                      </div>
+                      <div class="wpe-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m22 11-3 3-2-2"/></svg>
+                        신청 관리
+                      </div>
+                      <div class="wpe-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        정산
+                      </div>
+                    </nav>
+                    <div class="wpe-sidebar__footer">
+                      <div class="wpe-sidebar__avatar">박</div>
+                      <div>
+                        <div class="wpe-sidebar__account-name">강남 와인러버스</div>
+                        <div class="wpe-sidebar__account-sub">계정 · 로그아웃</div>
+                      </div>
+                    </div>
+                  </aside>
+                  <main class="wpe-main">
+                    <div class="wpe-back">← 파티·이벤트</div>
+                    <div class="wpe-header">
+                      <div class="wpe-header__title">새 회차 만들기</div>
+                      <div class="wpe-header__sub">파티의 장소·정원·티켓 구성이 미리 채워져요 — 일시만 정하면 바로 열 수 있어요</div>
+                    </div>
+                    <div class="wpe-form">
+                      <div class="wpe-section">
+                        <div class="wpe-section__title">파티</div>
+                        <div class="wpe-field">
+                          <div class="wpe-field__label">회차를 열 파티</div>
+                          <div class="wpe-field__value">금요 와인 모임 <span class="wpe-field__caret">▾</span></div>
+                          <div class="wpe-field__hint">파티를 바꾸면 아래 장소·정원·티켓 구성이 그 파티 기준으로 다시 채워져요</div>
+                        </div>
+                      </div>
+                      <div class="wpe-section">
+                        <div class="wpe-section__title">일시</div>
+                        <div class="wpe-row wpe-row--3">
+                          <div class="wpe-field">
+                            <div class="wpe-field__label">날짜</div>
+                            <div class="wpe-field__value">2026.06.19 (금)</div>
+                          </div>
+                          <div class="wpe-field">
+                            <div class="wpe-field__label">시작</div>
+                            <div class="wpe-field__value">19:30 <span class="wpe-field__caret">▾</span></div>
+                          </div>
+                          <div class="wpe-field">
+                            <div class="wpe-field__label">종료</div>
+                            <div class="wpe-field__value">21:30 <span class="wpe-field__caret">▾</span></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="wpe-section">
+                        <div class="wpe-section__title">장소</div>
+                        <div class="wpe-field">
+                          <div class="wpe-field__label">장소</div>
+                          <div class="wpe-field__value">강남 와인바 · 서울 강남구 역삼로 123</div>
+                        </div>
+                      </div>
+                      <div class="wpe-section">
+                        <div class="wpe-section__title">정원</div>
+                        <div class="wpe-field">
+                          <div class="wpe-field__label">정원</div>
+                          <div class="wpe-field__value">20명</div>
+                        </div>
+                      </div>
+                      <div class="wpe-section">
+                        <div class="wpe-section__title">티켓 구성</div>
+                        <div class="wpe-tickets">
+                          <div class="wpe-ticket-row">
+                            <span class="wpe-ticket-row__name">일반 입장</span>
+                            <span class="wpe-ticket-row__price">35,000원</span>
+                            <span class="wpe-ticket-row__qty">20매</span>
+                          </div>
+                          <div class="wpe-ticket-row">
+                            <span class="wpe-ticket-row__name">얼리버드</span>
+                            <span class="wpe-ticket-row__price">28,000원</span>
+                            <span class="wpe-ticket-row__qty">10매</span>
+                          </div>
+                          <div class="wpe-tickets__foot">
+                            티켓 구성은 파티에서 관리해요
+                            <span class="wpe-tickets__link">파티에서 편집 →</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="wpe-section">
+                        <div class="wpe-section__title">기본 정보</div>
+                        <div class="wpe-field">
+                          <div class="wpe-field__label">제목</div>
+                          <div class="wpe-field__value">금요 와인 모임 #13</div>
+                        </div>
+                        <div class="wpe-field">
+                          <div class="wpe-field__label">설명</div>
+                          <div class="wpe-field__value" style="font-size: 13px; font-weight: 400; color: var(--color-text-secondary); line-height: 1.5;">매주 금요일 저녁, 강남 와인바에서 진행되는 소셜 와인 모임입니다. 와인 4종 시음과 함께…</div>
+                        </div>
+                      </div>
+                      <div class="wpe-actions">
+                        <button class="wpe-btn wpe-btn--primary">회차 만들기</button>
+                      </div>
+                    </div>
+                  </main>
+                </div>
+
+                <!-- Spec-mode overlays (첫 state만) -->
+                <span class="annotation" style="top:8px; left:250px;">main pad: spacing-xlarge (32) / 40</span>
+                <span class="annotation" style="top:236px; left:790px;">폼 max-width 720 · 섹션 간 spacing-large (24)</span>
+                <span class="annotation" style="top:330px; left:790px;">row 내 필드 gap spacing-sm (12)</span>
+                <span class="callout" style="top:120px; left:200px;">ⓐ</span>
+                <span class="callout" style="top:60px; left:560px;">ⓑ</span>
+                <span class="callout" style="top:210px; left:740px;">ⓒ</span>
+                <span class="callout" style="top:330px; left:740px;">ⓓ</span>
+                <span class="type-spec" style="top:104px; left:480px;">24 / 700 / 1.3</span>
+                <span class="type-spec" style="top:262px; left:480px;">15 / 500 / 1.4</span>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>로그인한 파트너가 <code>/events/new</code> 진입. 파티가 1개거나 진입 시 파티가 지정돼 있으면 그 파티로 프리필, 여러 개면 파티 select에서 선택. 일시는 다음 주 같은 요일 19:00 기본값 (Behavior Source 상속).</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · 파티 select 변경 → 장소·정원·티켓 구성·기본 정보가 그 파티 값으로 다시 채워짐 (직접 고친 값이 있으면 덮어쓰기 전에 확인)<br>
+              · 날짜/시작/종료 선택 → 시작을 종료 뒤로 옮기면 종료가 시작 +2시간으로 자동 보정<br>
+              · 장소·정원·제목·설명 수정 → 자유 (제약 표시 없음 — 아직 신청자가 없으므로)<br>
+              · 티켓 구성 → 읽기 전용. "파티에서 편집" 클릭 → 파티 편집(<code>web_partner_party_create</code> 편집 모드)으로 이동 — 작성 중 내용이 있으면 버림 확인 먼저<br>
+              · "회차 만들기" 클릭 → 저장 중 state → 성공 시 파티·이벤트 목록으로 복귀 + "새 회차가 열렸어요" 안내<br>
+              · "← 파티·이벤트" / 사이드바 이동 → 입력값이 있으면 "작성 중인 내용을 버릴까요?" 확인
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              <strong>파티가 하나도 없음</strong> — 폼 대신 "먼저 파티를 만들어 주세요" 안내 + 파티 만들기 진입 (이 화면은 항상 파티가 부모).<br>
+              <strong>선택한 파티에 티켓 템플릿이 없음</strong> — 티켓 구성 자리에 "파티에서 티켓을 먼저 만들어 주세요" 안내 + 파티 편집 링크, "회차 만들기"는 비활성 (티켓 없는 회차 생성 차단).<br>
+              <strong>필수값(일시·장소·정원·제목) 비움</strong> — "회차 만들기" 클릭 시 첫 누락 필드로 스크롤 + 검증 오류 state.<br>
+              <strong>과거 일시 선택</strong> — 날짜 picker에서 오늘 이전 선택 불가.<br>
+              <strong>이벤트 데이터 로드 중(수정 진입)</strong> — 폼 자리에 필드 모양 skeleton, 셸·헤더는 유지 (생성 진입은 즉시 렌더).
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td><code>SidebarNav</code> (ⓐ — 셸 공통 · "파티·이벤트" active) · <code>PageHeader</code> (ⓑ — 뒤로 링크 + 타이틀 + 보조줄) · <code>SelectField</code> (ⓒ — 파티) · <code>FormFieldCard</code> (ⓓ — 날짜/시작/종료/장소/정원/제목/설명) · <code>TicketSummaryCard</code> (읽기 전용 티켓 요약 + 파티 편집 링크) · <code>FormSection</code> (섹션 타이틀) · <code>Button</code> (primary — "회차 만들기")</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td><code>color-partner-primary (#6c3ce1)</code> (viewport 내 <code>color-primary</code>로 매핑) · <code>color-surface</code> (셸 배경) · <code>color-background</code> (사이드바·필드) · <code>color-divider</code> (필드 테두리) · <code>color-text-primary</code> / <code>color-text-secondary</code> · <code>spacing-xlarge (32px)</code> · <code>spacing-large (24px)</code> · <code>spacing-medium (16px)</code> · <code>spacing-sm (12px)</code> · <code>spacing-small (8px)</code> · <code>radius-card (16px)</code> · <code>radius-button (12px)</code> · <code>radius-small (8px)</code> · typography 24/700 (타이틀) · 15/500 (필드 값) · 11/700 (필드 라벨) — CSS로는 <code>var(--color-partner-primary)</code> 등</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 모바일 생성 화면의 2-tab(운영 및 티켓 / 파티 정보)을 단일 폼으로 평탄화 — 데스크톱은 한 화면에 다 보이므로 탭이 불필요. 가격·티켓 편집은 의도적으로 없음 — 티켓 구성은 파티 ticket_templates에서 복사되는 모델이라 읽기 전용 요약 + 파티 편집 링크로 위임 (<code>web_partner_party_create</code>). 반복 규칙도 파티 책임 — 자동 생성된 회차가 이 화면으로 편집 진입. 생성 모드 저장 버튼은 프리필 덕에 처음부터 활성 — 필수 누락은 클릭 시 검증으로 잡는다.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════════════
+           State 2 · 수정 · 신청자 있음 (제한 표시)
+           ════════════════════════════════════════════════════ -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>수정 · 신청자 있음</strong> <span class="tag">restricted</span>
+            <small>확정 참가자 ≥1명 — 핵심 필드(일시·장소) 경고 + 정원 검증, 부수 필드 자유</small>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <div class="wpe-shell">
+                  <aside class="wpe-sidebar">
+                    <div class="wpe-sidebar__brand">
+                      <img class="wpe-sidebar__logo-img" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                      <span class="wpe-sidebar__brand-suffix">PARTNER</span>
+                    </div>
+                    <nav class="wpe-nav">
+                      <div class="wpe-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                        홈
+                      </div>
+                      <div class="wpe-nav__item wpe-nav__item--active">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        파티·이벤트
+                      </div>
+                      <div class="wpe-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m22 11-3 3-2-2"/></svg>
+                        신청 관리
+                      </div>
+                      <div class="wpe-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        정산
+                      </div>
+                    </nav>
+                    <div class="wpe-sidebar__footer">
+                      <div class="wpe-sidebar__avatar">박</div>
+                      <div>
+                        <div class="wpe-sidebar__account-name">강남 와인러버스</div>
+                        <div class="wpe-sidebar__account-sub">계정 · 로그아웃</div>
+                      </div>
+                    </div>
+                  </aside>
+                  <main class="wpe-main">
+                    <div class="wpe-back">← 파티·이벤트</div>
+                    <div class="wpe-header">
+                      <div class="wpe-header__title">이벤트 수정 — 금요 와인 모임 #12</div>
+                      <div class="wpe-header__sub">금요 와인 모임 · 2026.06.12 (금) 19:30</div>
+                    </div>
+                    <div class="wpe-form">
+                      <div class="wpe-lockbanner">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <div>
+                          <div class="wpe-lockbanner__title">확정 참가자 8명 · 결제 완료 6건</div>
+                          <div class="wpe-lockbanner__sub">일시·장소를 바꾸면 저장할 때 확정 참가자에게 자동 알림이 발송돼요. 정원은 8명 미만으로 줄일 수 없어요.</div>
+                        </div>
+                      </div>
+                      <div class="wpe-section">
+                        <div class="wpe-section__title">
+                          일시
+                          <span class="wpe-lockchip">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                            변경 시 알림
+                          </span>
+                        </div>
+                        <div class="wpe-row wpe-row--3">
+                          <div class="wpe-field">
+                            <div class="wpe-field__label">날짜</div>
+                            <div class="wpe-field__value">2026.06.12 (금)</div>
+                          </div>
+                          <div class="wpe-field">
+                            <div class="wpe-field__label">시작</div>
+                            <div class="wpe-field__value">19:30 <span class="wpe-field__caret">▾</span></div>
+                          </div>
+                          <div class="wpe-field">
+                            <div class="wpe-field__label">종료</div>
+                            <div class="wpe-field__value">21:30 <span class="wpe-field__caret">▾</span></div>
+                          </div>
+                        </div>
+                        <div class="wpe-field__hint wpe-field__hint--warn" style="margin-top: 8px;">⚠️ 일시를 바꾸면 저장 시 변경 안내가 확정 참가자 8명에게 자동 발송돼요</div>
+                      </div>
+                      <div class="wpe-section">
+                        <div class="wpe-section__title">장소</div>
+                        <div class="wpe-field">
+                          <div class="wpe-field__label">
+                            장소
+                            <span class="wpe-lockchip">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                              변경 시 알림
+                            </span>
+                          </div>
+                          <div class="wpe-field__value">강남 와인바 · 서울 강남구 역삼로 123</div>
+                          <div class="wpe-field__hint wpe-field__hint--warn">⚠️ 장소를 바꾸면 저장 시 확정 참가자 8명에게 자동 알림</div>
+                        </div>
+                      </div>
+                      <div class="wpe-section">
+                        <div class="wpe-section__title">정원</div>
+                        <div class="wpe-field">
+                          <div class="wpe-field__label">
+                            정원
+                            <span class="wpe-lockchip">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                              8명 미만 불가
+                            </span>
+                          </div>
+                          <div class="wpe-field__value">20명</div>
+                          <div class="wpe-field__hint">확정 참가자 8명보다 적게 줄일 수 없어요</div>
+                        </div>
+                      </div>
+                      <div class="wpe-section">
+                        <div class="wpe-section__title">티켓 구성</div>
+                        <div class="wpe-tickets">
+                          <div class="wpe-ticket-row">
+                            <span class="wpe-ticket-row__name">일반 입장</span>
+                            <span class="wpe-ticket-row__price">35,000원</span>
+                            <span class="wpe-ticket-row__qty">20매</span>
+                          </div>
+                          <div class="wpe-tickets__foot">
+                            티켓 구성은 파티에서 관리해요
+                            <span class="wpe-tickets__link">파티에서 편집 →</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="wpe-section">
+                        <div class="wpe-section__title">기본 정보</div>
+                        <div class="wpe-field">
+                          <div class="wpe-field__label">제목</div>
+                          <div class="wpe-field__value">금요 와인 모임 #12</div>
+                        </div>
+                      </div>
+                      <div class="wpe-actions">
+                        <button class="wpe-btn wpe-btn--disabled">저장</button>
+                      </div>
+                      <div class="wpe-danger">
+                        <div class="wpe-danger__text">
+                          <div class="wpe-danger__title">이벤트 취소</div>
+                          <div class="wpe-danger__sub">취소하면 결제 6건이 전액 자동 환불되고 신청자 전원에게 알림이 가요. 되돌릴 수 없어요.</div>
+                        </div>
+                        <button class="wpe-btn wpe-btn--danger-outline">이벤트 취소</button>
+                      </div>
+                    </div>
+                  </main>
+                </div>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td><code>/events/:eventId/edit</code> 진입 · 이벤트 로드 완료 · 확정 참가자(승인 또는 결제 완료) <strong>1명 이상</strong> · 아직 변경한 필드 없음. (확정자 0명인 수정은 이 state에서 잠금 배너·chip·경고 힌트만 빠진 모습 — 생성 기본과 같은 자유 편집.)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · 제목·설명 수정 → 자유 (부수 필드 — 저장 시 알림 없이 조용히 반영)<br>
+              · 일시 또는 장소 변경 → 필드가 변경 감지 톤(보라 테두리)으로, 저장 클릭 시 <strong>변경 확인 다이얼로그</strong>(변경 전→후 + 사유 입력 + "확정 참가자 8명에게 자동 알림" 고지) → 확정하면 저장 진행<br>
+              · 정원 변경 → 8명 미만 입력 시 검증 오류 state · 늘리기는 자유<br>
+              · 티켓 구성 → 읽기 전용 — "파티에서 편집" 클릭 시 파티 편집으로 이동 (변경사항 있으면 버림 확인 먼저). 가격 변경의 신청자 보호 규칙은 파티 spec 책임<br>
+              · "저장" → 변경 없으면 disabled · 변경 있고 모두 유효하면 활성 → 저장 중 state<br>
+              · "이벤트 취소" → 취소 확인 다이얼로그 state<br>
+              · 뒤로/사이드바 이동 → 변경사항 있으면 "변경사항을 버릴까요?" 확인
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              <strong>변경 후 원래 값으로 되돌림</strong> — 변경 감지 해제, 저장 다시 disabled (확인 다이얼로그도 안 뜸).<br>
+              <strong>일시와 장소를 함께 변경</strong> — 저장 시 확인 다이얼로그 1번에 두 변경을 모두 요약 (모바일의 순차 다이얼로그를 웹에선 저장 시점 1회로 통합).<br>
+              <strong>수정 중 다른 운영자가 신청 승인</strong> — 화면의 확정자 수는 진입 시점 기준, 저장 시 서버가 재검증 → 충돌이면 실패 안내 + 새로고침 권장.<br>
+              <strong>이벤트 시작이 임박(24시간 이내)</strong> — 일시 변경 차단, 배너가 경고 톤으로 (Behavior Source의 임박 차단 규칙 상속).
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>+ <code>LockBanner</code> (확정·결제 수치 + 제약 요약) · + <code>LockChip</code> (변경 시 알림 / 8명 미만 불가) · + <code>FieldHint</code> warn/info · + <code>DangerZoneCard</code> ("이벤트 취소") · − <code>SelectField</code> (파티 — 수정 모드에선 헤더 보조줄에 read-only 표기) · ↔ 액션 버튼 <code>회차 만들기 (활성)</code> → <code>저장 (dirty 전 disabled)</code> · 동일 — <code>TicketSummaryCard</code> (읽기 전용 유지)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>+ <code>color-primary</code> 8% (잠금 배너 bg) / 25% (배너 border) / 12% (LockChip bg) · + <code>color-warning</code> (warn 힌트) · + <code>color-error</code> 30% border / 4% bg (위험 구역) · 나머지 동일 (생성 기본 참조)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 핵심 변형. 배너(전체 요약) + chip(필드 단위) + 힌트(이유) 3중으로 제약을 표시 — 읽지 않아도 어떤 필드가 왜 조심스러운지 보이게. "막기"보다 "알리기" — 일시·장소는 편집 자체는 자유롭고, 결과(자동 알림)를 저장 시점에 확정시킨다. 잠금 매트릭스 SSOT는 <code>event_edit_page</code> Global Behavior.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════════════
+           State 3 · 검증 오류
+           ════════════════════════════════════════════════════ -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>검증 오류</strong> <span class="tag tag--mute">error</span>
+            <small>입력값이 규칙 위반 — 예: 정원을 확정자 수보다 적게</small>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <div class="wpe-shell">
+                  <aside class="wpe-sidebar">
+                    <div class="wpe-sidebar__brand">
+                      <img class="wpe-sidebar__logo-img" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                      <span class="wpe-sidebar__brand-suffix">PARTNER</span>
+                    </div>
+                    <nav class="wpe-nav">
+                      <div class="wpe-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                        홈
+                      </div>
+                      <div class="wpe-nav__item wpe-nav__item--active">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        파티·이벤트
+                      </div>
+                      <div class="wpe-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m22 11-3 3-2-2"/></svg>
+                        신청 관리
+                      </div>
+                      <div class="wpe-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        정산
+                      </div>
+                    </nav>
+                    <div class="wpe-sidebar__footer">
+                      <div class="wpe-sidebar__avatar">박</div>
+                      <div>
+                        <div class="wpe-sidebar__account-name">강남 와인러버스</div>
+                        <div class="wpe-sidebar__account-sub">계정 · 로그아웃</div>
+                      </div>
+                    </div>
+                  </aside>
+                  <main class="wpe-main">
+                    <div class="wpe-back">← 파티·이벤트</div>
+                    <div class="wpe-header">
+                      <div class="wpe-header__title">이벤트 수정 — 금요 와인 모임 #12</div>
+                      <div class="wpe-header__sub">금요 와인 모임 · 2026.06.12 (금) 19:30</div>
+                    </div>
+                    <div class="wpe-form">
+                      <div class="wpe-lockbanner">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <div>
+                          <div class="wpe-lockbanner__title">확정 참가자 8명 · 결제 완료 6건</div>
+                          <div class="wpe-lockbanner__sub">일시·장소를 바꾸면 저장할 때 확정 참가자에게 자동 알림이 발송돼요. 정원은 8명 미만으로 줄일 수 없어요.</div>
+                        </div>
+                      </div>
+                      <div class="wpe-section">
+                        <div class="wpe-section__title">정원</div>
+                        <div class="wpe-field wpe-field--error">
+                          <div class="wpe-field__label">정원</div>
+                          <div class="wpe-field__value" style="font-weight: 700;">5명</div>
+                          <div class="wpe-field__hint wpe-field__hint--error">확정 참가자 8명보다 적게 줄일 수 없어요 — 8명 이상으로 입력해 주세요</div>
+                        </div>
+                      </div>
+                      <div class="wpe-section">
+                        <div class="wpe-section__title">일시</div>
+                        <div class="wpe-row wpe-row--3">
+                          <div class="wpe-field">
+                            <div class="wpe-field__label">날짜</div>
+                            <div class="wpe-field__value">2026.06.12 (금)</div>
+                          </div>
+                          <div class="wpe-field">
+                            <div class="wpe-field__label">시작</div>
+                            <div class="wpe-field__value">19:30 <span class="wpe-field__caret">▾</span></div>
+                          </div>
+                          <div class="wpe-field">
+                            <div class="wpe-field__label">종료</div>
+                            <div class="wpe-field__value">21:30 <span class="wpe-field__caret">▾</span></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="wpe-actions">
+                        <button class="wpe-btn wpe-btn--disabled">저장</button>
+                      </div>
+                      <div class="wpe-danger">
+                        <div class="wpe-danger__text">
+                          <div class="wpe-danger__title">이벤트 취소</div>
+                          <div class="wpe-danger__sub">취소하면 결제 6건이 전액 자동 환불되고 신청자 전원에게 알림이 가요. 되돌릴 수 없어요.</div>
+                        </div>
+                        <button class="wpe-btn wpe-btn--danger-outline">이벤트 취소</button>
+                      </div>
+                    </div>
+                  </main>
+                </div>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>입력값이 규칙을 어긴 동안 — 대표 케이스: 정원을 확정 참가자 수보다 적게 입력 (입력 직후 즉시 검증). 그 외: 필수값 비움(저장 클릭 시 검증) · 종료가 시작보다 빠름(자동 보정 우선, 보정 불가 시 에러) · 과거 날짜.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · 정원을 8명 이상으로 정정 → 에러 즉시 해제, 변경 감지 톤만 남고 저장 다시 활성<br>
+              · 정원을 원래 값으로 되돌림 → 에러·변경 감지 모두 해제<br>
+              · "저장" → 에러가 1개라도 있는 동안 disabled — 클릭 무반응<br>
+              · 다른 필드 수정 → 에러와 무관하게 가능 (저장은 모든 필드 유효해야 활성)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              <strong>생성 모드의 필수 누락</strong> — "회차 만들기" 클릭 시 첫 누락 필드로 스크롤 + 같은 에러 패턴 (빨강 테두리 + 사유 힌트).<br>
+              <strong>화면 밖 필드의 에러</strong> — 저장 클릭 시 첫 에러 필드로 자동 스크롤 + 포커스.<br>
+              <strong>클라이언트 검증을 통과해도 서버가 거절</strong> (예: 그 사이 확정자 증가) — 저장 실패 안내 + 해당 필드에 같은 에러 표시 (서버 검증이 단일 진실).
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>+ <code>FormFieldCard</code> error 변형 (빨강 1.5px 테두리 + 라벨·값 error 톤) · + <code>FieldHint</code> error · − 해당 필드의 <code>LockChip</code> (에러 힌트가 사유를 대신 설명) · 동일 — 나머지 (수정 · 신청자 있음 참조)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>+ <code>color-error</code> (필드 테두리 1.5px · 라벨 · 값 · 힌트) — 나머지 동일</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 에러는 인라인이 원칙 — 풀-페이지 에러·토스트로 흩지 않는다. 에러 문구는 "안 돼요"가 아니라 "어떻게 하면 되는지"까지 (8명 이상으로 입력해 주세요). 클라이언트 검증은 빠른 피드백용, 서버 재검증이 단일 진실 (Behavior Source 상속).</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════════════
+           State 4 · 취소 확인 다이얼로그
+           ════════════════════════════════════════════════════ -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>취소 확인 다이얼로그</strong> <span class="tag tag--mute">danger modal</span>
+            <small>불가역 액션 — 전액 자동 환불 + 신청자 알림을 고지하는 2단계 확인</small>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <div class="wpe-shell">
+                  <aside class="wpe-sidebar">
+                    <div class="wpe-sidebar__brand">
+                      <img class="wpe-sidebar__logo-img" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                      <span class="wpe-sidebar__brand-suffix">PARTNER</span>
+                    </div>
+                    <nav class="wpe-nav">
+                      <div class="wpe-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                        홈
+                      </div>
+                      <div class="wpe-nav__item wpe-nav__item--active">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        파티·이벤트
+                      </div>
+                      <div class="wpe-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m22 11-3 3-2-2"/></svg>
+                        신청 관리
+                      </div>
+                      <div class="wpe-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        정산
+                      </div>
+                    </nav>
+                    <div class="wpe-sidebar__footer">
+                      <div class="wpe-sidebar__avatar">박</div>
+                      <div>
+                        <div class="wpe-sidebar__account-name">강남 와인러버스</div>
+                        <div class="wpe-sidebar__account-sub">계정 · 로그아웃</div>
+                      </div>
+                    </div>
+                  </aside>
+                  <main class="wpe-main">
+                    <div class="wpe-back">← 파티·이벤트</div>
+                    <div class="wpe-header">
+                      <div class="wpe-header__title">이벤트 수정 — 금요 와인 모임 #12</div>
+                      <div class="wpe-header__sub">금요 와인 모임 · 2026.06.12 (금) 19:30</div>
+                    </div>
+                    <div class="wpe-form">
+                      <div class="wpe-lockbanner">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <div>
+                          <div class="wpe-lockbanner__title">확정 참가자 8명 · 결제 완료 6건</div>
+                          <div class="wpe-lockbanner__sub">일시·장소를 바꾸면 저장할 때 확정 참가자에게 자동 알림이 발송돼요.</div>
+                        </div>
+                      </div>
+                      <div class="wpe-danger">
+                        <div class="wpe-danger__text">
+                          <div class="wpe-danger__title">이벤트 취소</div>
+                          <div class="wpe-danger__sub">취소하면 결제 6건이 전액 자동 환불되고 신청자 전원에게 알림이 가요. 되돌릴 수 없어요.</div>
+                        </div>
+                        <button class="wpe-btn wpe-btn--danger-outline">이벤트 취소</button>
+                      </div>
+                    </div>
+                  </main>
+                </div>
+                <div class="wpe-dialog-overlay">
+                  <div class="wpe-dialog">
+                    <div class="wpe-dialog__title">이벤트를 취소할까요?</div>
+                    <div class="wpe-dialog__event">금요 와인 모임 #12 · 2026.06.12 (금) 19:30</div>
+                    <div class="wpe-dialog__impact">
+                      <div class="wpe-dialog__impact-pill"><b>8명</b>확정 참가자</div>
+                      <div class="wpe-dialog__impact-pill"><b>6건</b>결제 완료</div>
+                      <div class="wpe-dialog__impact-pill"><b>₩210,000</b>환불 총액</div>
+                    </div>
+                    <div class="wpe-dialog__notice">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                      <span>취소하면 결제 6건 <strong>₩210,000이 전액 자동 환불</strong>되고, 신청자 전원에게 <strong>취소 알림이 발송</strong>돼요. 환불액은 다음 정산에서 차감돼요. <strong>이 작업은 되돌릴 수 없어요.</strong></span>
+                    </div>
+                    <div class="wpe-dialog__reason">
+                      <small>취소 사유 (선택 — 신청자 알림에 함께 보여요)</small>
+                      인원 미달 <span class="wpe-field__caret">▾</span>
+                    </div>
+                    <div class="wpe-dialog__check">
+                      <span class="wpe-dialog__checkbox">✓</span>
+                      <span>전액 환불과 취소 알림이 자동으로 발송된다는 것을 확인했어요</span>
+                    </div>
+                    <div class="wpe-dialog__actions">
+                      <button class="wpe-btn wpe-btn--ghost">돌아가기</button>
+                      <button class="wpe-btn wpe-btn--danger">이벤트 취소</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>수정 모드에서 위험 구역의 "이벤트 취소" 클릭 직후. 뒤 화면은 dim 처리. 영향 수치(확정·결제·환불 총액)는 열리는 시점의 서버 값으로 채워진다.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · 취소 사유 선택 (선택 입력 — 인원 미달 / 장소 문제 / 기타 직접 입력) → 신청자 알림 본문에 인용<br>
+              · 확인 체크 → 빨강 "이벤트 취소" 버튼 잠금 해제 (체크 전엔 disabled — 2단계 확인)<br>
+              · "이벤트 취소" 클릭 → 처리 중 (버튼 spinner) → 완료 시 파티·이벤트 목록으로 복귀 + "이벤트가 취소되었어요 — 환불과 알림이 진행 중이에요" 안내<br>
+              · "돌아가기" / 오버레이 바깥 클릭 / Esc → 다이얼로그만 닫힘, 아무 일도 일어나지 않음
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              <strong>신청자 0명 이벤트의 취소</strong> — 영향 pill·환불 고지 없이 "신청자가 없어 환불·알림 없이 취소돼요" 한 줄 + 확인 체크 생략 (가벼운 확인만).<br>
+              <strong>무료 이벤트 (결제 0건, 확정 있음)</strong> — 환불 고지 대신 "신청자 8명에게 취소 알림이 발송돼요"만.<br>
+              <strong>처리 중 닫기 시도</strong> — 실행 후엔 다이얼로그를 닫을 수 없음 (불가역 처리 진행 중).<br>
+              <strong>환불 일부 실패</strong> — 취소 자체는 완료, "일부 환불이 처리 중이에요" 안내 — 실패 건은 운영자가 후속 처리 (파트너 화면 책임 밖).
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>+ <code>CancelConfirmDialog</code> (타이틀 + 이벤트 요약 + 영향 pill ×3 + 환불·알림 고지 + 사유 select + 확인 체크 + 액션 row) · + <code>Checkbox</code> · + <code>Button</code> danger filled / ghost — 뒤 화면 컴포넌트는 동일 (dim만)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>+ overlay <code>rgba(0,0,0,0.45)</code> · + <code>color-error</code> (고지 8% bg / 25% border · 실행 버튼 filled · 체크박스) · dialog <code>radius-card (16px)</code> · padding <code>spacing-large (24px)</code> — 나머지 동일</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 모바일 설계의 "사유 바텀시트 → 최종 확인 다이얼로그" 2화면을 웹에선 다이얼로그 1개로 합치되, <strong>확인 체크가 2단계 확인을 대신</strong>한다 (Meetup "cannot be undone" 패턴). 환불 강제는 PRD 그대로 — 파트너에게 선택지를 주지 않고 고지만 한다 (Eventbrite 수준 참가자 보호). 사유는 선택 — 모바일과 달리 취소를 막는 마찰을 최소화.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════════════
+           State 5 · 저장 중
+           ════════════════════════════════════════════════════ -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>저장 중</strong> <span class="tag tag--mute">async</span>
+            <small>저장 확정 후 서버 응답 대기 — 폼 일시 잠금</small>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <div class="wpe-shell">
+                  <aside class="wpe-sidebar">
+                    <div class="wpe-sidebar__brand">
+                      <img class="wpe-sidebar__logo-img" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                      <span class="wpe-sidebar__brand-suffix">PARTNER</span>
+                    </div>
+                    <nav class="wpe-nav">
+                      <div class="wpe-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                        홈
+                      </div>
+                      <div class="wpe-nav__item wpe-nav__item--active">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        파티·이벤트
+                      </div>
+                      <div class="wpe-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m22 11-3 3-2-2"/></svg>
+                        신청 관리
+                      </div>
+                      <div class="wpe-nav__item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        정산
+                      </div>
+                    </nav>
+                    <div class="wpe-sidebar__footer">
+                      <div class="wpe-sidebar__avatar">박</div>
+                      <div>
+                        <div class="wpe-sidebar__account-name">강남 와인러버스</div>
+                        <div class="wpe-sidebar__account-sub">계정 · 로그아웃</div>
+                      </div>
+                    </div>
+                  </aside>
+                  <main class="wpe-main">
+                    <div class="wpe-back">← 파티·이벤트</div>
+                    <div class="wpe-header">
+                      <div class="wpe-header__title">이벤트 수정 — 금요 와인 모임 #12</div>
+                      <div class="wpe-header__sub">금요 와인 모임 · 2026.06.12 (금) 19:30</div>
+                    </div>
+                    <div class="wpe-form">
+                      <div class="wpe-form--saving" style="display: flex; flex-direction: column; gap: var(--spacing-large);">
+                        <div class="wpe-lockbanner">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                          <div>
+                            <div class="wpe-lockbanner__title">확정 참가자 8명 · 결제 완료 6건</div>
+                            <div class="wpe-lockbanner__sub">일시·장소를 바꾸면 저장할 때 확정 참가자에게 자동 알림이 발송돼요.</div>
+                          </div>
+                        </div>
+                        <div class="wpe-section">
+                          <div class="wpe-section__title">기본 정보</div>
+                          <div class="wpe-field wpe-field--changed">
+                            <div class="wpe-field__label">제목</div>
+                            <div class="wpe-field__value">금요 와인 모임 #12 (시즌 2)</div>
+                          </div>
+                        </div>
+                        <div class="wpe-section">
+                          <div class="wpe-section__title">일시</div>
+                          <div class="wpe-row wpe-row--3">
+                            <div class="wpe-field wpe-field--changed">
+                              <div class="wpe-field__label">날짜</div>
+                              <div class="wpe-field__value">2026.06.13 (토)</div>
+                            </div>
+                            <div class="wpe-field">
+                              <div class="wpe-field__label">시작</div>
+                              <div class="wpe-field__value">19:30</div>
+                            </div>
+                            <div class="wpe-field">
+                              <div class="wpe-field__label">종료</div>
+                              <div class="wpe-field__value">21:30</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="wpe-actions">
+                        <button class="wpe-btn wpe-btn--primary" style="opacity: 0.85; cursor: default;">
+                          <span class="wpe-spinner"></span>
+                          저장 중…
+                        </button>
+                      </div>
+                    </div>
+                  </main>
+                </div>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>저장 확정 후 (핵심 변경이 있었다면 변경 확인 다이얼로그까지 통과한 뒤) 서버 응답 대기. 생성 모드의 "회차 만들기" 클릭 후에도 동일 패턴.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · 폼 영역 → 비활성 톤 · 클릭 무반응 (이중 제출 방지)<br>
+              · 사이드바 → 동작하되 이동 시도 시 "저장이 끝날 때까지 잠시만요" 안내<br>
+              · 성공 → 파티·이벤트 목록으로 복귀 + "저장되었어요" 안내 — 일시·장소 변경이 포함됐으면 "확정 참가자 8명에게 변경 알림이 발송됐어요" 부가 문구<br>
+              · 실패 → 폼 복귀(입력값 유지) + 실패 안내 — 서버가 알려준 사유가 있으면 해당 필드에 인라인 에러로
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              <strong>매우 빠른 응답</strong> — 이 state가 한 프레임도 안 보일 수 있음.<br>
+              <strong>저장 중 네트워크 끊김</strong> — 실패 처리와 동일: 폼 유지 + 재시도 가능.<br>
+              <strong>알림 발송은 서버 비동기</strong> — 성공 안내는 "발송 시작"까지만 보장 (실제 도달은 화면 책임 밖 — Behavior Source 상속).
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>↔ 액션 버튼 → spinner + "저장 중…" 변형 · + 폼 비활성 톤 (opacity 0.6 + 입력 차단) — 나머지 동일 (수정 · 신청자 있음 참조)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>동일 — spinner: 14px · 흰색 호 · 1s linear 회전 (버튼에 캡슐화) · 폼 비활성 opacity 0.6</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 변경 감지된 필드(보라 테두리)는 저장 중에도 유지 — 무엇이 반영되는 중인지 보이게. 성공 후 목록 복귀는 모바일(저장 → 상세 복귀)과 달리 웹 목록이 기본 도착지 — 상세에서 진입했다면 상세로 (진입 경로 기억).</td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </section>
+</div>
+
+<!-- ============================================================
+     🔄 PERSPECTIVE 3 · GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">
+      cross-cutting 동작만. 모바일 spec에서 상속한 behavior는
+      <code>event_create_page</code> · <code>event_edit_page</code> 기준 — 여기엔 웹에서 달라지는 점만 추가.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>핵심 · 부수 필드 매트릭스 (상속 요약)</h2>
+    <p class="intro">
+      SSOT는 <a href="/specs/event_edit_page/index.html"><code>event_edit_page</code></a>의 잠금 매트릭스 +
+      <code>docs/features/event/event-edit-cancel/prd.md</code>. 아래는 이 웹 화면이 따르는 요약 —
+      수치·정책이 어긋나면 원문이 이긴다.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 180px;">필드</th>
+          <th style="width: 90px;">구분</th>
+          <th style="width: 160px;">신청자 0명 (또는 생성)</th>
+          <th>확정 참가자 ≥1명 (수정)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>제목 · 설명</td><td>부수</td><td>자유</td><td>자유 — 저장 시 알림 없이 조용히 반영</td></tr>
+        <tr><td><strong>일시 (날짜·시작·종료)</strong></td><td><strong>핵심</strong></td><td>자유</td><td>편집은 가능하되 저장 시 <strong>변경 확인 다이얼로그</strong> (변경 전→후 + 사유 + "N명에게 자동 알림" 고지) → 확정해야 저장. 시작 24시간 이내면 변경 차단.</td></tr>
+        <tr><td><strong>장소</strong></td><td><strong>핵심</strong></td><td>자유</td><td>일시와 동일 — 확인 다이얼로그 + 자동 알림.</td></tr>
+        <tr><td>티켓 구성 · 가격</td><td><strong>파티 위임</strong></td><td>읽기 전용 (요약 표시)</td><td>이 화면에선 편집 불가 — 편집은 <a href="/specs/web_partner_party_create/index.html"><code>web_partner_party_create</code></a> (티켓 템플릿). 가격 인상 시 신규 신청자만 적용·확정자 가격 보호 규칙은 파티 spec 관심사로 이동.</td></tr>
+        <tr><td>정원 (증가)</td><td>부수</td><td>자유</td><td>자유</td></tr>
+        <tr><td>정원 (감소)</td><td>부수+검증</td><td>자유</td><td><strong>새 정원 ≥ 확정자 수</strong>일 때만 — 미달이면 인라인 에러 + 저장 disabled.</td></tr>
+        <tr><td>이벤트 취소</td><td>위험</td><td>가벼운 확인만 (환불·알림 없음)</td><td><strong>2단계 확인 다이얼로그</strong> — 전액 자동 환불 + 신청자 전원 알림 + 정산 차감 고지 · 불가역.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">사용자 액션</th>
+          <th>화면에 보이는 결과</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>브라우저 back</td>
+          <td>다이얼로그(취소 확인 · 변경 확인)가 열려 있으면 다이얼로그만 닫힘 (history entry로 취급). 폼에 변경사항이 있으면 "변경사항을 버릴까요?" 확인 후 이탈, 없으면 즉시 이전 페이지로.</td>
+        </tr>
+        <tr>
+          <td>새로고침 / URL 직접 진입</td>
+          <td><code>/events/new</code> → 빈 생성 폼 (<code>?party=</code> 있으면 프리필) · <code>/events/:id/edit</code> → 이벤트 로드 후 신청자 수 기준으로 자유/제한 모드 착지. <strong>작성 중이던 입력은 유실</strong> — dirty 상태에서 새로고침/탭 닫기 시 브라우저 이탈 확인을 띄운다 (임시저장 없음 — 웹 MVP 범위 밖).</td>
+        </tr>
+        <tr>
+          <td>비로그인 접근</td>
+          <td>파트너 로그인으로 이동, 로그인 후 이 URL로 복귀. 콘솔 전체가 로그인 필수 (셸 공통).</td>
+        </tr>
+        <tr>
+          <td>남의 이벤트 / 없는 이벤트의 수정 URL</td>
+          <td>"찾을 수 없는 이벤트예요" 안내 + 파티·이벤트 목록으로 링크 (권한 없음과 미존재를 구분해 노출하지 않음).</td>
+        </tr>
+        <tr>
+          <td>이미 취소된 이벤트의 수정 URL</td>
+          <td>폼 대신 "취소된 이벤트는 수정할 수 없어요" 안내 + 목록으로 링크 — 취소는 불가역.</td>
+        </tr>
+        <tr>
+          <td>hover (fine pointer)</td>
+          <td>필드·버튼·위험 구역 버튼에 hover 피드백 (<code>motion-fast (200ms)</code> · 테두리/배경 톤 + <code>cursor: pointer</code>). hover로만 노출되는 정보 없음 — <code>web_foundation_responsive</code> 포인터 규칙.</td>
+        </tr>
+        <tr>
+          <td>다크 모드</td>
+          <td>surface/필드 배경이 다크 토큰으로 전환, partner primary는 <code>color-partner-dark-primary (#9b7bec)</code>로 매핑. error·warning 톤은 다크 변형 유지.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion &amp; timing</h2>
+    <p class="intro">
+      duration은 MDS motion 토큰 — 웹 구현은 CSS <code>transition-duration</code> / Tailwind로 같은 ms 값을 소비.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 260px;">Transition</th>
+          <th style="width: 160px;">Duration (token)</th>
+          <th>Curve / notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>화면 진입 (사이드바 라우트 전환)</td>
+          <td><code>fast</code> (200ms)</td>
+          <td>메인 영역 fade — 사이드바는 고정 (셸 공통)</td>
+        </tr>
+        <tr>
+          <td>다이얼로그 열림/닫힘 (취소 확인 · 변경 확인)</td>
+          <td><code>medium</code> (350ms)</td>
+          <td>overlay fade + 다이얼로그 살짝 위로 진입 (ease-out)</td>
+        </tr>
+        <tr>
+          <td>필드 변경 감지 / 에러 테두리 전환</td>
+          <td><code>fast</code> (200ms)</td>
+          <td>border-color transition — 에러 힌트는 즉시 표시</td>
+        </tr>
+        <tr>
+          <td>hover 피드백 (필드 · 버튼)</td>
+          <td><code>fast</code> (200ms)</td>
+          <td>ease-out — 배경/테두리 톤 변화</td>
+        </tr>
+        <tr>
+          <td>저장 spinner 회전</td>
+          <td><em>(unscoped)</em> 1s linear infinite</td>
+          <td>버튼 내 14px 호 — 컴포넌트에 캡슐화</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>네트워크 끊김</strong> — 저장/취소 실행 중 끊기면 실패 안내 + 입력값 유지 (재시도 가능). 수정 진입 로드 실패는 폼 자리에 "다시 시도" 안내 (셸은 유지).</li>
+      <li><strong>다크 모드</strong> — 우측 상단 Dark 토글로 확인. 필드/배너/위험 구역의 tint 들은 모두 토큰 기반 (primary/error의 % 혼합)이라 색만 전환되고 구조 동일.</li>
+      <li><strong>접근성</strong> — tab 순서: 사이드바 → 뒤로 링크 → 폼 필드 순서대로 → 저장 → 위험 구역. 모든 필드에 라벨 연결, 에러는 필드와 함께 읽히게. 다이얼로그는 포커스 트랩 + Esc 닫기, 열릴 때 타이틀로 포커스 이동. 빨강 실행 버튼은 체크박스와 disabled 상태가 보조기기에도 전달되게.</li>
+      <li><strong>reduced motion</strong> — <code>prefers-reduced-motion</code> 시 다이얼로그 진입 모션·hover transition 0ms. spinner는 유지 (진행 표시는 정보).</li>
+      <li><strong>SEO / 공유</strong> — 비공개 콘솔 화면. noindex — og 메타 불필요.</li>
+      <li><strong>동시 수정 충돌</strong> — 두 세션이 같은 이벤트를 수정하면 늦게 저장한 쪽에 실패 안내 + 새로고침 권장 (확정자 수 검증 포함 서버가 단일 진실 — Behavior Source 상속).</li>
+      <li><strong>초광폭 (≥1920px)</strong> — 콘솔 셸 1440px 캡 중앙 정렬 (셸 공통). 폼은 그 안에서도 720px 캡.</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     📖 PERSPECTIVE 4 · REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">
+      Implementation source + 인접 화면 link만. Components / Tokens는 States의 각 mini-table 참조.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <p class="intro">
+      🚧 디자인중 — 웹 구현 미착수. 데이터 계약은 모바일 생성/수정 + 취소(자동 환불) 백엔드 경로 재사용이 출발점.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 200px;">항목</th><th>Path / Reference</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Page / Component</strong></td>
+          <td><code>WebPartnerEventEdit</code> (생성/수정 공용 폼 — 콘솔 셸 <code>PartnerConsoleShell</code> 위) — <code>TBD</code></td>
+        </tr>
+        <tr>
+          <td><strong>File path</strong></td>
+          <td><code>apps/landing_partner/src/app/events/new/page.tsx</code> · <code>apps/landing_partner/src/app/events/[eventId]/edit/page.tsx</code> <code>TBD</code> — 콘솔 라우트 그룹 구조는 구현 시 확정</td>
+        </tr>
+        <tr>
+          <td><strong>Data source</strong></td>
+          <td>이벤트 생성/수정 write + 파티 template read (prefill — 생성 시 파티 ticket_templates → 회차 tickets 복사 포함) + 회차 티켓 요약 read + 확정자 카운트 read · 취소는 일괄 환불(PortOne 결제 취소) + 알림 발행 경로 — 모바일이 쓰던 Supabase 계약 재사용 <code>TBD</code></td>
+        </tr>
+        <tr>
+          <td><strong>Route</strong></td>
+          <td><code>/events/new</code> · <code>/events/:eventId/edit</code> · Next.js app router (landing_partner 확장) — 경로명 <code>TBD</code></td>
+        </tr>
+        <tr>
+          <td><strong>Behavior Source</strong></td>
+          <td><a href="/specs/event_create_page/index.html"><code>/specs/event_create_page/index.html</code></a> · <a href="/specs/event_edit_page/index.html"><code>/specs/event_edit_page/index.html</code></a> — Overview의 Behavior Source 행과 동일 경로 · 취소 정책: <code>docs/features/event/event-edit-cancel/prd.md</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 280px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/event_create_page/index.html"><code>EventCreatePage</code></a></td>
+          <td>Behavior Source (생성) — 파티 template prefill · 일시 기본값/보정 · 생성 성공/실패 전이의 SSOT</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_edit_page/index.html"><code>EventEditPage</code></a></td>
+          <td>Behavior Source (수정) — 잠금 매트릭스 · dirty 감지 · 변경 사유 + 자동 알림 · 변경 이력 로그의 SSOT</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/web_partner_home/index.html"><code>WebPartnerHome</code></a></td>
+          <td>콘솔 셸(사이드바) SSOT — 이 화면은 "파티·이벤트" 메뉴 아래 렌더</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/web_partner_party_events/index.html"><code>WebPartnerPartyEvents</code></a></td>
+          <td>진입·복귀 지점 — "회차 만들기" / 이벤트 카드 "수정" → 이 화면 · 저장/취소 후 복귀 도착지</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/web_partner_party_create/index.html"><code>WebPartnerPartyCreate</code></a></td>
+          <td>티켓 템플릿 · 반복 규칙의 SSOT — 이 화면의 "티켓 구성" 요약이 가리키는 편집 도착지 (가격·티켓 정책 책임)</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_application_manage_page/index.html"><code>EventApplicationManagePage</code></a></td>
+          <td>확정 참가자 수의 출처가 되는 신청 승인 흐름 — 웹 "신청 관리" spec 작성 예정</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/web_foundation_responsive/"><code>WebFoundationResponsive</code></a></td>
+          <td>breakpoint · 컨테이너 · 그리드 · 포인터 규칙 SSOT</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     ✅ AUTHORING CHECKLIST
+     ============================================================ -->
+<section class="doc" style="border: 2px solid var(--color-primary); border-radius: var(--radius-card); padding: 16px 24px; margin-top: 32px;">
+  <h2 style="color: var(--color-primary);">✅ Authoring checklist (web)</h2>
+  <ul class="notes" style="line-height: 1.9;">
+    <li>✓ <strong>Head meta</strong> — feature-status=planned · features=event/event-edit-cancel · surface=web_partner (Overview Surface 행과 일치)</li>
+    <li>✓ <strong>Overview</strong> — Status · Surface · Category · Route · Behavior Source · Hierarchy · Purpose · Entry/Exit · Background · Frequency 채움</li>
+    <li>✓ <strong>Behavior Source</strong> — <code>event_create_page</code> + <code>event_edit_page</code> 상속 범위 + 웹에서 달라지는 점(단일 폼 통합 · 취소 다이얼로그 통합 · 범위 축소) 명시</li>
+    <li>✓ <strong>History</strong> — 2026-06-07 v1.0 initial row</li>
+    <li>✓ <strong>Responsive Layout</strong> — Desktop(≥1280) 1차 blueprint + Mobile(&lt;768) blueprint + Tablet 1줄 (web_partner 데스크톱 우선)</li>
+    <li>✓ <strong>Sub-anatomy</strong> — ① 사이드바(셸 SSOT 위임) · ③ 폼 필드 카드 · ③ 티켓 구성 요약(읽기 전용 — 파티 위임) · ④ 액션+위험 구역 · 취소 확인 다이얼로그 (평면 나열)</li>
+    <li>✓ <strong>States</strong> — 5 state enumerate (생성 기본 / 수정-신청자 있음 / 검증 오류 / 취소 확인 다이얼로그 / 저장 중) · summary matrix · 첫 state 풀 리스트 · 2번째+ additive diff · 6 aspect rows · mockup은 Desktop 1280 (0.5 scale)</li>
+    <li>✓ <strong>Global Behavior</strong> — 핵심·부수 매트릭스 상속 요약 / 브라우저 back / 새로고침·URL / 비로그인 / 권한·취소됨 / motion 토큰 + reduced-motion</li>
+    <li>✓ <strong>토큰 표기</strong> — MDS 이름 + 괄호 px · 구현은 CSS variable 관점</li>
+    <li>✓ <strong>Reference</strong> — TBD 명시 + Behavior Source 경로 일치</li>
+    <li>⏳ <strong>Screen registry</strong> — <code>src/lib/screen-definitions.ts</code>의 <code>WEB_PARTNER_SCREENS</code> 등록은 별도 작업 (이 PR 범위 외 — surface 등록은 메인 작업 담당)</li>
+  </ul>
+</section>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>
