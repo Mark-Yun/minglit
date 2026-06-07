@@ -12,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'builder.dart';
 import 'catalog.dart';
+import 'state.dart';
 
 class MdsRenderEngine {
   /// 카탈로그의 모든 state 를 testWidgets 로 실행 + PNG 캡처.
@@ -25,31 +26,57 @@ class MdsRenderEngine {
 
     for (final state in catalog.states) {
       testWidgets(state.name, (tester) async {
-        addTearDown(() {
-          debugDefaultTargetPlatformOverride = null;
-        });
-
-        final builder = state.setup(catalog.builder());
-        await tester.pumpWidget(builder.build());
-        // Fix #2590: repeat() 애니메이션은 pumpAndSettle이 timeout — 고정 pump 사용.
-        if (state.infiniteAnimation) {
-          // pulse 1회분(MinglitAnimation.medium ≈ 300ms) — 시작 직후 visible 상태 캡처.
-          await tester.pump(const Duration(milliseconds: 300));
-        } else {
-          await tester.pumpAndSettle();
-        }
-
-        // Android: Flutter surface → image 변환 후 캡처 필요.
-        await binding.convertFlutterSurfaceToImage();
-        if (state.infiniteAnimation) {
-          // surface 변환 후 추가 프레임 — 렌더링 파이프라인 완료 보장.
-          await tester.pump(const Duration(milliseconds: 100));
-        } else {
-          await tester.pumpAndSettle();
-        }
-
-        await binding.takeScreenshot('${catalog.screen}__${state.name}');
+        await _pumpState(
+          tester: tester,
+          catalog: catalog,
+          state: state,
+          binding: binding,
+        );
       });
+    }
+  }
+
+  @visibleForTesting
+  static Future<void> pumpStateForTest<B extends MdsScreenBuilder<dynamic>>({
+    required WidgetTester tester,
+    required MdsCatalog<B> catalog,
+    required MdsState<B> state,
+  }) => _pumpState(tester: tester, catalog: catalog, state: state);
+
+  static Future<void> _pumpState<B extends MdsScreenBuilder<dynamic>>({
+    required WidgetTester tester,
+    required MdsCatalog<B> catalog,
+    required MdsState<B> state,
+    IntegrationTestWidgetsFlutterBinding? binding,
+  }) async {
+    try {
+      final builder = state.setup(catalog.builder());
+      await tester.pumpWidget(builder.build());
+      // Fix #2590: repeat() 애니메이션은 pumpAndSettle이 timeout — 고정 pump 사용.
+      if (state.infiniteAnimation) {
+        // pulse 1회분(MinglitAnimation.medium ≈ 300ms) — 시작 직후 visible 상태 캡처.
+        await tester.pump(const Duration(milliseconds: 300));
+      } else {
+        await tester.pumpAndSettle();
+      }
+
+      if (binding == null) {
+        return;
+      }
+
+      // Android: Flutter surface → image 변환 후 캡처 필요.
+      await binding.convertFlutterSurfaceToImage();
+      if (state.infiniteAnimation) {
+        // surface 변환 후 추가 프레임 — 렌더링 파이프라인 완료 보장.
+        await tester.pump(const Duration(milliseconds: 100));
+      } else {
+        await tester.pumpAndSettle();
+      }
+
+      await binding.takeScreenshot('${catalog.screen}__${state.name}');
+    } finally {
+      // Flutter verifies debug globals before addTearDown callbacks run.
+      debugDefaultTargetPlatformOverride = null;
     }
   }
 }
