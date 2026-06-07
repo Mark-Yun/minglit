@@ -38,7 +38,7 @@ export function createServerClient(cookieStore: ServerCookieStore) {
           }
         } catch {
           // Server Component 에서 호출되면 쿠키 쓰기가 불가능하다.
-          // 세션 갱신은 middleware(createMiddlewareClient)가 담당하므로 무시해도 안전.
+          // 세션 갱신은 middleware(updateSession)가 담당하므로 무시해도 안전.
         }
       },
     },

@@ -29,4 +29,4 @@ Minglit 웹 MVP 의 **공유 클라이언트 패키지** (`@minglit/web-kit`). �
 - [shared/packages/mds/tokens](../mds/tokens/) — `tokens.css` 생성물 / [minglit_kit](../minglit_kit/BLUEDOC.md) — 동결된 behavior reference
 
 ---
-_Reviewed: 2026-06-07 (scaffold)_
+_Reviewed: 2026-06-07 23:05_
