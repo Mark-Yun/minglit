@@ -840,6 +840,34 @@ Deno.test({
 });
 
 Deno.test({
+  name: "update: max_participants must be a positive integer",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectEventRoute(),
+      permRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update",
+          event_id: TEST_EVENT_ID,
+          event: { max_participants: 0 },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "event.max_participants must be a positive integer");
+      });
+    });
+  },
+});
+
+Deno.test({
   name: "update: missing event_id returns 400",
   fn: async () => {
     const handler = await captureServeHandler(
