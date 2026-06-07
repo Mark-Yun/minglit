@@ -40,7 +40,14 @@ Deno.test({
       },
     ];
     const tickets = [
-      { id: "ticket-late", event_id: "event-late", price: 15000 },
+      {
+        id: "ticket-late",
+        event_id: "event-late",
+        price: 15000,
+        status: "on_sale",
+        quantity: 20,
+        sold_count: 3,
+      },
     ];
     const blocks = [
       {
@@ -101,7 +108,13 @@ Deno.test({
     assertEquals(snapshot.events.length, 1);
     assertEquals(snapshot.events[0].id, "event-late");
     assertEquals(snapshot.events[0].tickets, [
-      { id: "ticket-late", price: 15000 },
+      {
+        id: "ticket-late",
+        price: 15000,
+        status: "on_sale",
+        quantity: 20,
+        sold_count: 3,
+      },
     ]);
     assertEquals(snapshot.blocks, blocks);
   },

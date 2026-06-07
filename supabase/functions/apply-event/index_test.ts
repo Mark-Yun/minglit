@@ -65,20 +65,25 @@ Deno.test("apply-event :: event not found → 404", async () => {
   assertEquals(res.status, 404);
 });
 
-// ─── 3. event status not "scheduled" → 409 ──────────────────────────────────
+// ─── 3. event status guard ──────────────────────────────────────────────────
 
-Deno.test("apply-event :: event status=active → 409 (scheduled only)", async () => {
+Deno.test("apply-event :: event status=active → 200 (application-open)", async () => {
   const handler = await getHandler();
-  const sb = fakeSupabase().on("events", "select", {
-    data: buildEvent({ status: "active" }),
-  });
+  const sb = fakeSupabase()
+    .on("events", "select", {
+      data: buildEvent({ status: "active" }),
+    })
+    .on("tickets", "select", { data: buildTicket({ price: 0 }) })
+    .on("event_applications", "select", { data: null })
+    .on("apply_event", "rpc", { data: "app-active-1" });
   const res = await runHandler(handler, {
     body: BASE_BODY,
     ctx: makeCtx({ supabase: sb, userId: "u-1" }),
   });
-  assertEquals(res.status, 409);
-  const body = await readJson<{ error: string }>(res);
-  assertEquals(body.error, "Event is not accepting applications");
+  assertEquals(res.status, 200);
+  const body = await readJson<{ type: string; application_id: string }>(res);
+  assertEquals(body.type, "free");
+  assertEquals(body.application_id, "app-active-1");
 });
 
 Deno.test("apply-event :: event status=cancelled → 409", async () => {

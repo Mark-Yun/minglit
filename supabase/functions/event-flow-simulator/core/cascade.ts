@@ -1,7 +1,11 @@
 // v2/core/cascade.ts — Stochastic Cascade 엔진
 
 import type { Action, Actor, PRNG } from "./types.ts";
-import { projectForPartner, projectForUser, type WorldSnapshot } from "./observable.ts";
+import {
+  projectForPartner,
+  projectForUser,
+  type WorldSnapshot,
+} from "./observable.ts";
 import type { Trace, TraceEntry } from "./trace.ts";
 import { userPolicy } from "../policy/user.ts";
 import { partnerPolicy } from "../policy/partner.ts";
@@ -29,7 +33,10 @@ export interface CascadeConfig {
   /** 시뮬할 tick 수 */
   ticks: number;
   /** 각 tick 후 snapshot 갱신 콜백 (실 운영: 재조회 RPC). 미제공 시 snapshot 변경 X */
-  refreshSnapshot?: (current: WorldSnapshot, trace: Trace) => Promise<WorldSnapshot> | WorldSnapshot;
+  refreshSnapshot?: (
+    current: WorldSnapshot,
+    trace: Trace,
+  ) => Promise<WorldSnapshot> | WorldSnapshot;
   /** EF 호출 후 throttle delay (ms). Supabase 의 per-trace rate limit (Fix #2545) 회피용. 기본 0 = 즉시. 실 운영 권장 200~400ms */
   delayBetweenCallsMs?: number;
 }
@@ -39,7 +46,9 @@ export interface CascadeResult {
   finalSnapshot: WorldSnapshot;
 }
 
-export async function runCascade(config: CascadeConfig): Promise<CascadeResult> {
+export async function runCascade(
+  config: CascadeConfig,
+): Promise<CascadeResult> {
   const trace: Trace = [];
   let snapshot = config.initialSnapshot;
 
@@ -65,6 +74,14 @@ export async function runCascade(config: CascadeConfig): Promise<CascadeResult> 
       if (result.error) entry.error = result.error;
       trace.push(entry);
 
+      if (result.ok) {
+        snapshot = applySuccessfulActionToSnapshot(
+          snapshot,
+          action,
+          result.data,
+        );
+      }
+
       // Fix #2545: Supabase per-trace rate limit 회피. EF 호출 후만 sleep (skip-action 시는 즉시 다음).
       if (config.delayBetweenCallsMs && config.delayBetweenCallsMs > 0) {
         await new Promise((r) => setTimeout(r, config.delayBetweenCallsMs));
@@ -77,4 +94,84 @@ export async function runCascade(config: CascadeConfig): Promise<CascadeResult> 
   }
 
   return { trace, finalSnapshot: snapshot };
+}
+
+function applySuccessfulActionToSnapshot(
+  snapshot: WorldSnapshot,
+  action: Action,
+  responseData: unknown,
+): WorldSnapshot {
+  if (action.type !== "user_apply") return snapshot;
+
+  const eventId = action.payload.event_id;
+  const ticketId = action.payload.ticket_id;
+  if (typeof eventId !== "string" || typeof ticketId !== "string") {
+    return snapshot;
+  }
+
+  const targetTicket = snapshot.events
+    .find((event) => event.id === eventId)
+    ?.tickets?.find((ticket) => ticket.id === ticketId);
+  const shouldReserveCapacity = shouldReserveApplyTicketCapacity(
+    targetTicket?.price,
+    responseData,
+  );
+
+  const events = shouldReserveCapacity
+    ? snapshot.events.map((event) => {
+      if (event.id !== eventId || !event.tickets) return event;
+      return {
+        ...event,
+        tickets: event.tickets.map((ticket) =>
+          ticket.id === ticketId
+            ? {
+              ...ticket,
+              sold_count: Math.min(ticket.quantity, ticket.sold_count + 1),
+            }
+            : ticket
+        ),
+      };
+    })
+    : snapshot.events;
+
+  const applications =
+    snapshot.applications.some((application) =>
+        application.user_id === action.actorId &&
+        application.event_id === eventId
+      )
+      ? snapshot.applications
+      : [
+        ...snapshot.applications,
+        {
+          id: `local:${action.actorId}:${eventId}`,
+          user_id: action.actorId,
+          event_id: eventId,
+          status: "local_applied",
+        },
+      ];
+
+  return { ...snapshot, events, applications };
+}
+
+function shouldReserveApplyTicketCapacity(
+  ticketPrice: number | undefined,
+  responseData: unknown,
+): boolean {
+  const responseType = applyResponseType(responseData);
+  if (responseType === "free") return true;
+  if (responseType === "paid") return false;
+  return ticketPrice === 0;
+}
+
+function applyResponseType(responseData: unknown): string | null {
+  if (
+    typeof responseData !== "object" ||
+    responseData === null ||
+    Array.isArray(responseData)
+  ) {
+    return null;
+  }
+
+  const type = (responseData as { type?: unknown }).type;
+  return typeof type === "string" ? type : null;
 }

@@ -28,7 +28,11 @@ export class EFTransport implements Transport {
   async execute(action: Action) {
     const token = this.cfg.tokenByActor.get(action.actorId);
     if (!token) {
-      return { ok: false, status: 0, error: `no token for actor ${action.actorId}` };
+      return {
+        ok: false,
+        status: 0,
+        error: `no token for actor ${action.actorId}`,
+      };
     }
 
     // direct DB write 분기 (block 액션)
@@ -69,10 +73,12 @@ export class EFTransport implements Transport {
       token,
       extraHeaders,
     );
+    const ok = res.status >= 200 && res.status < 300;
     return {
-      ok: res.status >= 200 && res.status < 300,
+      ok,
       status: res.status,
       data: res.data,
+      error: ok ? undefined : extractResponseError(res.data),
     };
   }
 
@@ -87,4 +93,16 @@ export class EFTransport implements Transport {
         `event-flow-simulator:${runId}:${sequence}:${action.type}`,
     };
   }
+}
+
+function extractResponseError(data: unknown): string | undefined {
+  if (typeof data === "string" && data.length > 0) return data;
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    return undefined;
+  }
+  const record = data as Record<string, unknown>;
+  const message = record.error ?? record.message;
+  return typeof message === "string" && message.length > 0
+    ? message
+    : undefined;
 }

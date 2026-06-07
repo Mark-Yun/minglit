@@ -8,6 +8,11 @@ import { clearRegistry, registerAction } from "../action/_registry.ts";
 import { applyAction } from "../action/apply.ts";
 
 const baseRates: Rates = { user: { user_apply: 1.0 }, partner: {} };
+const visibleEvent = {
+  id: "e1",
+  status: "scheduled",
+  tickets: [{ id: "t1", status: "on_sale", quantity: 10, sold_count: 0 }],
+};
 
 function setup() {
   clearRegistry();
@@ -30,7 +35,7 @@ Deno.test({
     setup();
     const state = {
       myApplications: [],
-      visibleEvents: [{ id: "e1", tickets: [{ id: "t1" }] }],
+      visibleEvents: [visibleEvent],
     };
     const action = userPolicy("user-1", state, baseRates, createPRNG(1));
     assertEquals(action?.type, "user_apply");
@@ -48,7 +53,7 @@ Deno.test({
     const zeroRates: Rates = { user: { user_apply: 0 }, partner: {} };
     const state = {
       myApplications: [],
-      visibleEvents: [{ id: "e1", tickets: [{ id: "t1" }] }],
+      visibleEvents: [visibleEvent],
     };
     const action = userPolicy("user-1", state, zeroRates, createPRNG(1));
     assertEquals(action, null);
@@ -62,7 +67,7 @@ Deno.test({
     setup();
     const state = {
       myApplications: [],
-      visibleEvents: [{ id: "e1", tickets: [{ id: "t1" }] }],
+      visibleEvents: [visibleEvent],
     };
     const a1 = userPolicy("user-1", state, baseRates, createPRNG(42));
     const a2 = userPolicy("user-1", state, baseRates, createPRNG(42));
