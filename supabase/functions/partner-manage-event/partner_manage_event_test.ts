@@ -1001,6 +1001,33 @@ Deno.test({
 });
 
 Deno.test({
+  name: "update_status: started scheduled event cannot be cancelled",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectEventRoute("scheduled", TEST_PARTNER_ID, { startTime: PAST_TIME }),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update_status",
+          event_id: TEST_EVENT_ID,
+          status: "cancelled",
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "Event is no longer editable");
+      });
+    });
+  },
+});
+
+Deno.test({
   name: "update_status: completed → 400 (system only)",
   fn: async () => {
     const handler = await captureServeHandler(

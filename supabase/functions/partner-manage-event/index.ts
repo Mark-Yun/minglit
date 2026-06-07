@@ -720,7 +720,7 @@ async function handleUpdateStatus(
   // Fetch event → party → partner
   const { data: event, error: fetchError } = await supabase
     .from("events")
-    .select("id, status, party_id, parties!inner(partner_id)")
+    .select("id, status, start_time, party_id, parties!inner(partner_id)")
     .eq("id", eventId)
     .maybeSingle();
 
@@ -733,6 +733,9 @@ async function handleUpdateStatus(
       `Cannot change status from ${event.status} to ${status}`,
       400,
     );
+  }
+  if (typeof event.start_time === "string" && isEventStarted(event.start_time)) {
+    return errorResponse("Event is no longer editable", 400);
   }
 
   const partnerId = extractRelatedPartnerId(event);
