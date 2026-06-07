@@ -20,6 +20,7 @@
 | [`check-ios-connectivity-plus-cap.sh`](./check-ios-connectivity-plus-cap.sh) | iOS deploy runner 가 지원할 때까지 `connectivity_plus <7.1.0` resolution 강제 | `pr-gate.guard-ios-connectivity-plus-cap` |
 | [`scan-build-artifact-secrets.py`](./scan-build-artifact-secrets.py) | APK/AAB/`.next` 등 빌드 산출물에서 Supabase service-role secret 패턴을 redacted summary 로 검사 | `pr-gate.scan-build-artifact-secrets` |
 | [`install-dev-event-flow-cron.sh`](./install-dev-event-flow-cron.sh) | dev Supabase `dev-event-flow-simulator` pg_cron 설치/검증 | `deploy-dev-event-flow-cron` |
+| [`filter-advisor-findings.py`](./filter-advisor-findings.py) | Supabase Advisor raw findings 를 accepted/unsuppressed 로 분리하고 object-scoped accepted finding 을 적용 | `monitor-security-advisor` |
 
 ## 핵심 컨벤션
 
