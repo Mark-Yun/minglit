@@ -434,7 +434,7 @@
       <tr>
         <th>Hierarchy</th>
         <td>
-          <strong>Parent</strong>: <em>— (top-level screen — 이벤트 상세에서 진입)</em> · 진입원 <code>WebUserEventDetail</code> spec 은 별도 작성 예정 (TBD)<br>
+          <strong>Parent</strong>: <em>— (top-level screen — 이벤트 상세에서 진입)</em> · 진입원은 <a href="/specs/web_user_event_detail/index.html"><code>WebUserEventDetail</code></a><br>
           <strong>Children</strong>: <em>—</em> · 완료(승인 대기) 화면은 이 spec 의 state 로 포함 (별도 spec 아님)
         </td>
       </tr>
@@ -451,7 +451,7 @@
         <th>User journey</th>
         <td>
           <strong>Entry points</strong>: 이벤트 상세(<code>/events/:id</code>)에서 티켓 선택 후 "신청하기" · URL 직접 진입은 티켓 파라미터가 유효할 때만 (없으면 이벤트 상세로 돌려보냄) · 비로그인 진입은 로그인 후 복귀.<br>
-          <strong>Exit points</strong>: ① 결제 완료 → 완료 화면(승인 대기) → "구매내역 보기" (<code>/my/purchases</code> — TBD) ·
+          <strong>Exit points</strong>: ① 결제 완료 → 완료 화면(승인 대기) → "구매내역 보기" (<code>/my/purchases</code> — <a href="/specs/web_user_purchases/index.html"><code>WebUserPurchases</code></a>) ·
           ② 로고/브라우저 back → 이벤트 상세 복귀 (결제 취소로 간주) ·
           ③ 결제 실패 → 이 화면 유지 (재시도).
         </td>
@@ -1483,7 +1483,7 @@ ticket_selection_sheet 의 "수량은 후속 기능" 결정 상속)</em></div>
           <tr>
             <td class="state-mini__aspect">사용자 액션</td>
             <td>
-              ① <strong>"구매내역 보기" 클릭</strong> → 구매내역으로 이동 — 신청 건이 "승인 대기" 상태로 보임 (웹 구매내역 spec TBD)<br>
+              ① <strong>"구매내역 보기" 클릭</strong> → 구매내역으로 이동 — 신청 건이 "승인 대기" 상태로 보임 (<a href="/specs/web_user_purchases/index.html"><code>WebUserPurchases</code></a>)<br>
               ② <strong>"홈으로" 클릭</strong> → 홈 (<code>/</code>) 이동<br>
               ③ <strong>로고 / 아바타</strong> → 각각 홈 · 마이페이지 — 완료 화면은 어디로든 떠나도 무방 (신청은 이미 서버에 확정 저장)
             </td>
@@ -1835,7 +1835,7 @@ ticket_selection_sheet 의 "수량은 후속 기능" 결정 상속)</em></div>
       <thead><tr><th style="width: 280px;">Spec</th><th>Relation</th></tr></thead>
       <tbody>
         <tr>
-          <td><code>WebUserEventDetail</code> <em style="color: var(--color-text-secondary);">(spec TBD)</em></td>
+          <td><a href="/specs/web_user_event_detail/index.html"><code>WebUserEventDetail</code></a></td>
           <td>진입원 — 티켓 선택 후 "신청하기"로 이 화면 진입 · "티켓 변경"/back 복귀 도착지.</td>
         </tr>
         <tr>
@@ -1856,7 +1856,7 @@ ticket_selection_sheet 의 "수량은 후속 기능" 결정 상속)</em></div>
         </tr>
         <tr>
           <td><a href="/specs/purchase_history_page/index.html"><code>PurchaseHistoryPage</code> (mobile)</a></td>
-          <td>완료 화면 "구매내역 보기" 도착지의 behavior 참고 — 웹 구매내역 spec 은 별도 작성 예정 (TBD).</td>
+          <td>완료 화면 "구매내역 보기" 도착지 — <a href="/specs/web_user_purchases/index.html"><code>WebUserPurchases</code></a> 참조.</td>
         </tr>
         <tr>
           <td><a href="/specs/web_foundation_responsive/"><code>WebFoundationResponsive</code></a></td>
