@@ -6,10 +6,13 @@
     "dev": "next dev -p 3003",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "tsc -p tsconfig.test.json && node --test .test-build/lib/partner-dashboard.test.js"
   },
   "dependencies": {
     "@statsig/react-bindings": "^3.33.2",
+    "@supabase/supabase-js": "^2.107.0",
+    "lucide-react": "^1.17.0",
     "next": "16.2.6",
     "react": "19.2.6",
     "react-dom": "19.2.6"
@@ -19,11 +22,11 @@
     "lightningcss-linux-x64-gnu": "1.32.0"
   },
   "devDependencies": {
+    "@next/eslint-plugin-next": "16.2.6",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^25",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@next/eslint-plugin-next": "16.2.6",
     "eslint": "10",
     "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",
