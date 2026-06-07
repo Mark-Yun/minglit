@@ -85,6 +85,7 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
   const partnerId = party.partner_id as string;
 
   const permCheck = await requirePartnerPermission(supabase, partnerId, userId, [
+    "PARTY_MANAGE",
     "EVENT_MANAGE",
     "APPLICATION_MANAGE",
   ]);

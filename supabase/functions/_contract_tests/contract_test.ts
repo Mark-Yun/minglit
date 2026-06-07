@@ -242,6 +242,16 @@ Deno.test("contract: settlement-query response matches schema", async () => {
     const { fetchMock } = createFetchMock([
       authRoute,
       {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/partner_member_permissions") && req.method === "GET",
+        handler: () => jsonResponse({ role: "manager", permissions: ["SETTLEMENT_VIEW"] }),
+      },
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/partners") && req.method === "GET",
+        handler: () => jsonResponse({ portone_partner_id: "portone-partner-001" }),
+      },
+      {
         matcher: "https://api.portone.io/platform/partner-settlements",
         handler: () =>
           jsonResponse({
@@ -264,6 +274,7 @@ Deno.test("contract: settlement-query response matches schema", async () => {
       await withNoIntervals(async () => {
         const req = authenticatedJsonRequest("http://localhost", {
           type: "settlements",
+          partner_id: "bbbbbbbb-bbbb-1bbb-8bbb-bbbbbbbbbbbb",
         });
         const res = await handler(req);
         assertEquals(res.status, 200);

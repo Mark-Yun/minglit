@@ -21,6 +21,8 @@ import {
   type PartnerParty,
 } from "./partner-events";
 import {
+  canEditPartnerSettlements,
+  canManagePartnerApplications,
   canViewPartnerSettlements,
   dashboardSections,
   fetchCurrentPartner,
@@ -31,9 +33,16 @@ import {
   type ManagedPartner,
 } from "./partner-dashboard";
 import {
+  applicationModeQueryValue,
+  applicationReviewResultMessage,
   applicationTabForStatus,
+  applicationTabQueryValue,
+  bankStatusLabel,
   filterApplications,
+  isReviewableApplicationStatus,
   maskAccountNumber,
+  normalizeApplicationModeParam,
+  normalizeApplicationTabParam,
   normalizeBankAccount,
   normalizeSettlementRow,
   validateBankAccountInput,
@@ -120,6 +129,21 @@ test("settlement visibility requires owner role or settlement view permission", 
   assert.equal(canViewPartnerSettlements({ role: "manager", permissions: ["SETTLEMENT_VIEW"] }), true);
   assert.equal(canViewPartnerSettlements({ role: "manager", permissions: ["PARTNER_EDIT", "PARTY_MANAGE"] }), false);
   assert.equal(canViewPartnerSettlements({ role: "staff", permissions: ["PARTY_MANAGE"] }), false);
+});
+
+test("settlement editing requires owner role or settlement edit permission", () => {
+  assert.equal(canEditPartnerSettlements({ role: "owner", permissions: [] }), true);
+  assert.equal(canEditPartnerSettlements({ role: "manager", permissions: ["SETTLEMENT_EDIT"] }), true);
+  assert.equal(canEditPartnerSettlements({ role: "manager", permissions: ["SETTLEMENT_VIEW"] }), false);
+  assert.equal(canEditPartnerSettlements({ role: "staff", permissions: ["PARTY_MANAGE"] }), false);
+});
+
+test("application management is independent from settlement visibility", () => {
+  assert.equal(canManagePartnerApplications({ role: "owner", permissions: [] }), true);
+  assert.equal(canManagePartnerApplications({ role: "manager", permissions: ["PARTY_MANAGE"] }), true);
+  assert.equal(canManagePartnerApplications({ role: "staff", permissions: ["APPLICATION_MANAGE"] }), false);
+  assert.equal(canManagePartnerApplications({ role: "staff", permissions: ["EVENT_MANAGE"] }), false);
+  assert.equal(canManagePartnerApplications({ role: "staff", permissions: ["SETTLEMENT_VIEW"] }), false);
 });
 
 test("party form validation rejects missing core fields and impossible capacity", () => {
@@ -477,6 +501,52 @@ test("partner application helpers group statuses by review tab", () => {
   assert.deepEqual(filterApplications(applications, "approved").map((item) => item.id), ["paid"]);
 });
 
+test("partner application review actions match the batch review RPC statuses", () => {
+  assert.equal(isReviewableApplicationStatus("pending"), true);
+  assert.equal(isReviewableApplicationStatus("pending_review"), true);
+  assert.equal(isReviewableApplicationStatus("payment_pending"), false);
+  assert.equal(isReviewableApplicationStatus("approved"), false);
+});
+
+test("partner application query params support deep-linked tab and roster mode", () => {
+  assert.equal(normalizeApplicationTabParam("대기"), "pending");
+  assert.equal(normalizeApplicationTabParam("approved"), "approved");
+  assert.equal(normalizeApplicationTabParam("거절"), "rejected");
+  assert.equal(normalizeApplicationTabParam("unknown"), "pending");
+  assert.equal(applicationTabQueryValue("pending"), "대기");
+  assert.equal(applicationTabQueryValue("approved"), "확정");
+  assert.equal(applicationTabQueryValue("rejected"), "거절");
+  assert.equal(normalizeApplicationModeParam("명단"), "roster");
+  assert.equal(normalizeApplicationModeParam("roster"), "roster");
+  assert.equal(normalizeApplicationModeParam("신청"), "applications");
+  assert.equal(applicationModeQueryValue("roster"), "명단");
+  assert.equal(applicationModeQueryValue("applications"), "신청");
+});
+
+test("partner application review messages surface skipped results", () => {
+  assert.equal(applicationReviewResultMessage("approve", {
+    approved: ["app-1"],
+    rejected: [],
+    skippedDueToCapacity: [],
+    skippedAlreadyProcessed: [],
+    remainingSlotsAfter: 0,
+  }), "신청을 승인했습니다.");
+  assert.equal(applicationReviewResultMessage("approve", {
+    approved: [],
+    rejected: [],
+    skippedDueToCapacity: ["app-1"],
+    skippedAlreadyProcessed: [],
+    remainingSlotsAfter: 0,
+  }), "정원이 가득 차 승인되지 않은 신청이 있습니다. 목록을 다시 확인해 주세요.");
+  assert.equal(applicationReviewResultMessage("reject", {
+    approved: [],
+    rejected: [],
+    skippedDueToCapacity: [],
+    skippedAlreadyProcessed: ["app-1"],
+    remainingSlotsAfter: 0,
+  }), "이미 처리된 신청이라 변경되지 않았습니다. 목록을 다시 확인해 주세요.");
+});
+
 test("partner settlement helpers normalize money rows and mask bank accounts", () => {
   assert.deepEqual(normalizeSettlementRow({
     id: "stl-1",
@@ -507,6 +577,14 @@ test("partner settlement helpers normalize money rows and mask bank accounts", (
     accountHolder: "김민글",
     verificationStatus: "manual_review_pending",
   });
+});
+
+test("bank status labels treat manual review approval as verified", () => {
+  assert.equal(bankStatusLabel("verified"), "검증 완료");
+  assert.equal(bankStatusLabel("manual_review_approved"), "검증 완료");
+  assert.equal(bankStatusLabel("manual_review_pending"), "검토 대기");
+  assert.equal(bankStatusLabel("failed"), "검증 실패");
+  assert.equal(bankStatusLabel(null), "검토 필요");
 });
 
 test("bank account input requires bank, holder, and 10-16 digit account number", () => {

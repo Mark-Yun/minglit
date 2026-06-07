@@ -2,21 +2,35 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Banknote, Check, ClipboardList, Loader2, ShieldAlert, XCircle } from "lucide-react";
+import { Banknote, Check, ClipboardList, Loader2, Printer, ShieldAlert, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { PartnerConsoleShell } from "@/components/partner-console";
-import { canViewPartnerSettlements, resolvePartnerDashboardGate, type ManagedPartner } from "@/lib/partner-dashboard";
+import {
+  canEditPartnerSettlements,
+  canManagePartnerApplications,
+  canViewPartnerSettlements,
+  resolvePartnerDashboardGate,
+  type ManagedPartner,
+} from "@/lib/partner-dashboard";
 import {
   fetchBankAccount,
   fetchPartnerApplicationEvents,
   fetchSettlementRows,
   filterApplications,
+  isReviewableApplicationStatus,
+  applicationModeQueryValue,
+  applicationReviewResultMessage,
+  applicationTabQueryValue,
+  normalizeApplicationModeParam,
+  normalizeApplicationTabParam,
   reviewPartnerApplications,
   upsertBankAccount,
   validateBankAccountInput,
+  type ApplicationMode,
   type ApplicationTab,
   type BankAccount,
+  bankStatusLabel,
   type PartnerApplication,
   type PartnerApplicationEvent,
   type SettlementRow,
@@ -63,12 +77,24 @@ export function PartnerApplicationsPage() {
   const searchParams = useSearchParams();
   const [gate, setGate] = useState<GateState>({ status: "loading" });
   const [state, setState] = useState<ApplicationsState>({ status: "loading" });
-  const [selectedEventId, setSelectedEventId] = useState<string>("");
   const [selectedApplicationId, setSelectedApplicationId] = useState<string>("");
-  const [tab, setTab] = useState<ApplicationTab>((searchParams.get("tab") as ApplicationTab) || "pending");
   const [rejecting, setRejecting] = useState<PartnerApplication | null>(null);
   const [message, setMessage] = useState<string>("");
   const [submittingId, setSubmittingId] = useState<string | null>(null);
+  const events = state.status === "ready" ? state.events : [];
+  const tab = normalizeApplicationTabParam(searchParams.get("tab"));
+  const mode = normalizeApplicationModeParam(searchParams.get("mode"));
+  const selectedEvent = events.find((event) => event.id === searchParams.get("event")) ?? events[0] ?? null;
+  const visible = selectedEvent ? filterApplications(selectedEvent.applications, tab) : [];
+  const roster = selectedEvent
+    ? [...filterApplications(selectedEvent.applications, "approved")].sort((left, right) => left.userName.localeCompare(right.userName, "ko-KR"))
+    : [];
+  const selectedApplication = visible.find((application) => application.id === selectedApplicationId) ?? visible[0] ?? null;
+  const counts = {
+    pending: selectedEvent ? filterApplications(selectedEvent.applications, "pending").length : 0,
+    approved: selectedEvent ? filterApplications(selectedEvent.applications, "approved").length : 0,
+    rejected: selectedEvent ? filterApplications(selectedEvent.applications, "rejected").length : 0,
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -88,8 +114,8 @@ export function PartnerApplicationsPage() {
       }
       setGate(resolved);
       if (resolved.status !== "ready") return;
-      if (!canViewPartnerSettlements(resolved.partner)) {
-        setState({ status: "error", message: "정산 조회 권한이 없습니다. 파트너 소유자에게 권한을 요청해 주세요." });
+      if (!canManagePartnerApplications(resolved.partner)) {
+        setState({ status: "error", message: "신청 관리 권한이 없습니다. 파트너 소유자에게 권한을 요청해 주세요." });
         return;
       }
 
@@ -97,7 +123,6 @@ export function PartnerApplicationsPage() {
         const events = await fetchPartnerApplicationEvents(supabase, resolved.partner.id);
         if (cancelled) return;
         setState({ status: "ready", events });
-        setSelectedEventId(searchParams.get("event") || events[0]?.id || "");
       } catch (error) {
         if (!cancelled) setState({ status: "error", message: error instanceof Error ? error.message : "신청 데이터를 불러오지 못했습니다." });
       }
@@ -107,7 +132,22 @@ export function PartnerApplicationsPage() {
     return () => {
       cancelled = true;
     };
-  }, [router, searchParams]);
+  }, [router]);
+
+  useEffect(() => {
+    if (gate.status !== "ready" || state.status !== "ready") return;
+    if (!selectedEvent) return;
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("event", selectedEvent.id);
+    params.set("tab", applicationTabQueryValue(tab));
+    params.set("mode", applicationModeQueryValue(mode));
+    const nextQuery = params.toString();
+    const currentQuery = searchParams.toString();
+    if (nextQuery !== currentQuery) {
+      router.replace(`/dashboard/applications?${nextQuery}`, { scroll: false });
+    }
+  }, [gate.status, mode, router, searchParams, selectedEvent, state.status, tab]);
 
   async function submitReview(application: PartnerApplication, action: "approve" | "reject", reason = "") {
     const supabase = getSupabaseBrowserClient();
@@ -117,13 +157,13 @@ export function PartnerApplicationsPage() {
     setMessage("");
 
     try {
-      await reviewPartnerApplications(
+      const result = await reviewPartnerApplications(
         supabase,
         application.eventId,
         action === "approve" ? [application.id] : [],
         action === "reject" ? [{ applicationId: application.id, reason }] : [],
       );
-      setMessage(action === "approve" ? "신청을 승인했습니다." : "신청을 거절했습니다. 결제/환불 상태는 목록에서 다시 확인해 주세요.");
+      setMessage(applicationReviewResultMessage(action, result));
       if (gate.status === "ready") {
         const events = await fetchPartnerApplicationEvents(supabase, gate.partner.id);
         setState({ status: "ready", events });
@@ -140,15 +180,16 @@ export function PartnerApplicationsPage() {
     return <OperationsFrame gate={gate} mobileTitle="신청" />;
   }
 
-  const events = state.status === "ready" ? state.events : [];
-  const selectedEvent = events.find((event) => event.id === selectedEventId) ?? events[0] ?? null;
-  const visible = selectedEvent ? filterApplications(selectedEvent.applications, tab) : [];
-  const selectedApplication = visible.find((application) => application.id === selectedApplicationId) ?? visible[0] ?? null;
-  const counts = {
-    pending: selectedEvent ? filterApplications(selectedEvent.applications, "pending").length : 0,
-    approved: selectedEvent ? filterApplications(selectedEvent.applications, "approved").length : 0,
-    rejected: selectedEvent ? filterApplications(selectedEvent.applications, "rejected").length : 0,
-  };
+  function replaceApplicationQuery(next: { eventId?: string; tab?: ApplicationTab; mode?: ApplicationMode }) {
+    const eventId = next.eventId ?? selectedEvent?.id;
+    if (!eventId) return;
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("event", eventId);
+    params.set("tab", applicationTabQueryValue(next.tab ?? tab));
+    params.set("mode", applicationModeQueryValue(next.mode ?? mode));
+    router.replace(`/dashboard/applications?${params.toString()}`, { scroll: false });
+  }
 
   return (
     <PartnerConsoleShell accountLabel={gate.partner.name} accountSub={gate.email} mobileTitle="신청">
@@ -163,15 +204,23 @@ export function PartnerApplicationsPage() {
             <div className="wpa-toolbar">
               <label className="wpo-field">
                 <span>이벤트</span>
-                <select value={selectedEvent?.id ?? ""} onChange={(event) => setSelectedEventId(event.target.value)}>
+                <select value={selectedEvent?.id ?? ""} onChange={(event) => replaceApplicationQuery({ eventId: event.target.value })}>
                   {events.map((event) => (
                     <option key={event.id} value={event.id}>{event.title}</option>
                   ))}
                 </select>
               </label>
+              <div className="wpo-segment" role="tablist" aria-label="신청 화면 모드">
+                <button type="button" className={mode === "applications" ? "is-active" : ""} onClick={() => replaceApplicationQuery({ mode: "applications" })}>
+                  신청 관리
+                </button>
+                <button type="button" className={mode === "roster" ? "is-active" : ""} onClick={() => replaceApplicationQuery({ mode: "roster" })}>
+                  참가자 명단
+                </button>
+              </div>
               <div className="wpo-segment" role="tablist" aria-label="신청 상태">
                 {tabs.map((item) => (
-                  <button key={item.key} type="button" className={tab === item.key ? "is-active" : ""} onClick={() => setTab(item.key)}>
+                  <button key={item.key} type="button" className={tab === item.key ? "is-active" : ""} onClick={() => replaceApplicationQuery({ tab: item.key })}>
                     {item.label} {counts[item.key]}
                   </button>
                 ))}
@@ -180,38 +229,42 @@ export function PartnerApplicationsPage() {
 
             {message ? <div className="wpo-toast" role="status">{message}</div> : null}
 
-            <div className="wpa-grid">
-              <section className="wpo-panel">
-                <h2>신청 목록</h2>
-                {visible.length === 0 ? (
-                  <EmptyPanel icon={<ClipboardList aria-hidden="true" />} title="표시할 신청이 없습니다" description="이벤트 또는 상태 탭을 바꾸면 다른 신청을 볼 수 있습니다." />
-                ) : (
-                  <div className="wpa-list">
-                    {visible.map((application) => (
-                      <button
-                        key={application.id}
-                        type="button"
-                        className={`wpa-application${selectedApplication?.id === application.id ? " is-active" : ""}`}
-                        onClick={() => setSelectedApplicationId(application.id)}
-                      >
-                        <span>
-                          <strong>{application.userName}</strong>
-                          <small>{application.ticketName} · {formatCurrency(application.amount)}</small>
-                        </span>
-                        <StatusChip label={applicationStatusLabel(application.status)} />
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </section>
+            {mode === "roster" ? (
+              <RosterPanel event={selectedEvent} applications={roster} />
+            ) : (
+              <div className="wpa-grid">
+                <section className="wpo-panel">
+                  <h2>신청 목록</h2>
+                  {visible.length === 0 ? (
+                    <EmptyPanel icon={<ClipboardList aria-hidden="true" />} title="표시할 신청이 없습니다" description="이벤트 또는 상태 탭을 바꾸면 다른 신청을 볼 수 있습니다." />
+                  ) : (
+                    <div className="wpa-list">
+                      {visible.map((application) => (
+                        <button
+                          key={application.id}
+                          type="button"
+                          className={`wpa-application${selectedApplication?.id === application.id ? " is-active" : ""}`}
+                          onClick={() => setSelectedApplicationId(application.id)}
+                        >
+                          <span>
+                            <strong>{application.userName}</strong>
+                            <small>{application.ticketName} · {formatCurrency(application.amount)}</small>
+                          </span>
+                          <StatusChip label={applicationStatusLabel(application.status)} />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </section>
 
-              <ApplicationDetail
-                application={selectedApplication}
-                submittingId={submittingId}
-                onApprove={(application) => submitReview(application, "approve")}
-                onReject={(application) => setRejecting(application)}
-              />
-            </div>
+                <ApplicationDetail
+                  application={selectedApplication}
+                  submittingId={submittingId}
+                  onApprove={(application) => submitReview(application, "approve")}
+                  onReject={(application) => setRejecting(application)}
+                />
+              </div>
+            )}
           </>
         ) : null}
       </section>
@@ -225,6 +278,51 @@ export function PartnerApplicationsPage() {
         />
       ) : null}
     </PartnerConsoleShell>
+  );
+}
+
+function RosterPanel({ event, applications }: { event: PartnerApplicationEvent | null; applications: PartnerApplication[] }) {
+  return (
+    <section className="wpo-panel wpa-roster">
+      <div className="wpa-roster__header">
+        <div>
+          <h2>참가자 명단</h2>
+          <p>{event ? `${event.title} · 확정 ${applications.length}명` : "선택된 이벤트가 없습니다."}</p>
+        </div>
+        <button type="button" className="wpo-secondary" onClick={() => window.print()} disabled={!event || applications.length === 0}>
+          <Printer aria-hidden="true" />
+          명단 인쇄
+        </button>
+      </div>
+      {applications.length === 0 ? (
+        <EmptyPanel icon={<ClipboardList aria-hidden="true" />} title="확정 참가자가 없습니다" description="승인 완료된 신청이 생기면 명단에 표시됩니다." />
+      ) : (
+        <div className="wpa-roster__table-wrap">
+          <table className="wpa-roster__table">
+            <thead>
+              <tr>
+                <th>입장</th>
+                <th>이름</th>
+                <th>티켓</th>
+                <th>결제 금액</th>
+                <th>상태</th>
+              </tr>
+            </thead>
+            <tbody>
+              {applications.map((application) => (
+                <tr key={application.id}>
+                  <td><span className="wpa-roster__check" aria-hidden="true" /></td>
+                  <td>{application.userName}</td>
+                  <td>{application.ticketName}</td>
+                  <td>{formatCurrency(application.amount)}</td>
+                  <td>{applicationStatusLabel(application.status)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -254,6 +352,10 @@ export function PartnerSettlementsPage() {
       }
       setGate(resolved);
       if (resolved.status !== "ready") return;
+      if (!canViewPartnerSettlements(resolved.partner)) {
+        setState({ status: "error", message: "정산 조회 권한이 없습니다. 파트너 소유자에게 권한을 요청해 주세요." });
+        return;
+      }
 
       try {
         const [settlements, bankAccount] = await Promise.all([
@@ -275,6 +377,10 @@ export function PartnerSettlementsPage() {
   async function submitBankAccount(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (gate.status !== "ready") return;
+    if (!canEditPartnerSettlements(gate.partner)) {
+      setMessage("정산 계좌 수정 권한이 없습니다. 파트너 소유자에게 권한을 요청해 주세요.");
+      return;
+    }
     const supabase = getSupabaseBrowserClient();
     if (!supabase) return;
 
@@ -311,6 +417,7 @@ export function PartnerSettlementsPage() {
 
   const settlements = state.status === "ready" ? state.settlements : [];
   const total = settlements.reduce((sum, row) => sum + row.amount, 0);
+  const canEditSettlementAccount = canEditPartnerSettlements(gate.partner);
 
   return (
     <PartnerConsoleShell accountLabel={gate.partner.name} accountSub={gate.email} mobileTitle="정산">
@@ -356,29 +463,33 @@ export function PartnerSettlementsPage() {
                   <small>{state.bankAccount.accountHolder} · {bankStatusLabel(state.bankAccount.verificationStatus)}</small>
                 </div>
               ) : (
-                <p className="wpo-muted">등록된 계좌가 없습니다. 정산금을 받을 계좌를 등록해 주세요.</p>
+                <p className="wpo-muted">
+                  {canEditSettlementAccount ? "등록된 계좌가 없습니다. 정산금을 받을 계좌를 등록해 주세요." : "등록된 계좌가 없습니다."}
+                </p>
               )}
 
-              <form className="wps-bank-form" onSubmit={submitBankAccount}>
-                <label className="wpo-field">
-                  <span>은행</span>
-                  <select value={form.bankCode} onChange={(event) => setForm({ ...form, bankCode: event.target.value })}>
-                    {banks.map((bank) => <option key={bank.code} value={bank.code}>{bank.name}</option>)}
-                  </select>
-                </label>
-                <label className="wpo-field">
-                  <span>예금주</span>
-                  <input value={form.accountHolder} onChange={(event) => setForm({ ...form, accountHolder: event.target.value })} />
-                </label>
-                <label className="wpo-field">
-                  <span>계좌번호</span>
-                  <input inputMode="numeric" value={form.accountNumber} onChange={(event) => setForm({ ...form, accountNumber: event.target.value })} />
-                </label>
-                <button className="wpo-primary" type="submit" disabled={submitting}>
-                  {submitting ? <Loader2 aria-hidden="true" /> : <Check aria-hidden="true" />}
-                  계좌 검토 요청
-                </button>
-              </form>
+              {canEditSettlementAccount ? (
+                <form className="wps-bank-form" onSubmit={submitBankAccount}>
+                  <label className="wpo-field">
+                    <span>은행</span>
+                    <select value={form.bankCode} onChange={(event) => setForm({ ...form, bankCode: event.target.value })}>
+                      {banks.map((bank) => <option key={bank.code} value={bank.code}>{bank.name}</option>)}
+                    </select>
+                  </label>
+                  <label className="wpo-field">
+                    <span>예금주</span>
+                    <input value={form.accountHolder} onChange={(event) => setForm({ ...form, accountHolder: event.target.value })} />
+                  </label>
+                  <label className="wpo-field">
+                    <span>계좌번호</span>
+                    <input inputMode="numeric" value={form.accountNumber} onChange={(event) => setForm({ ...form, accountNumber: event.target.value })} />
+                  </label>
+                  <button className="wpo-primary" type="submit" disabled={submitting}>
+                    {submitting ? <Loader2 aria-hidden="true" /> : <Check aria-hidden="true" />}
+                    계좌 검토 요청
+                  </button>
+                </form>
+              ) : null}
               {message ? <div className="wpo-toast" role="status">{message}</div> : null}
             </section>
           </>
@@ -430,7 +541,7 @@ function ApplicationDetail({
     );
   }
 
-  const isPending = application.status === "pending" || application.status === "pending_review" || application.status === "payment_pending";
+  const isPending = isReviewableApplicationStatus(application.status);
   const isSubmitting = submittingId === application.id;
 
   return (
@@ -533,13 +644,6 @@ function refundStatusLabel(status: string): string {
   if (status === "requested") return "환불 요청";
   if (status === "failed") return "환불 실패";
   return "해당 없음";
-}
-
-function bankStatusLabel(status: string | null): string {
-  if (status === "verified") return "검증 완료";
-  if (status === "manual_review_pending") return "검토 대기";
-  if (status === "failed") return "검증 실패";
-  return "검토 필요";
 }
 
 function formatCurrency(amount: number, currency = "KRW"): string {

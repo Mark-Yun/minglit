@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export type ApplicationStatus = "pending" | "pending_review" | "approved" | "rejected" | "cancelled" | "paid" | "payment_failed" | "payment_pending";
 export type RefundStatus = "none" | "requested" | "completed" | "failed";
 export type ApplicationTab = "pending" | "approved" | "rejected";
+export type ApplicationMode = "applications" | "roster";
 
 export type PartnerApplicationEvent = {
   id: string;
@@ -156,6 +157,35 @@ export function filterApplications(applications: PartnerApplication[], tab: Appl
   return applications.filter((application) => applicationTabForStatus(application.status) === tab);
 }
 
+export function isReviewableApplicationStatus(status: ApplicationStatus): boolean {
+  return status === "pending" || status === "pending_review";
+}
+
+export function normalizeApplicationTabParam(value: string | null): ApplicationTab {
+  const normalized = value?.trim().toLowerCase();
+  if (normalized === "approved" || normalized === "확정") return "approved";
+  if (normalized === "rejected" || normalized === "거절") return "rejected";
+  return "pending";
+}
+
+export function applicationTabQueryValue(tab: ApplicationTab): string {
+  if (tab === "approved") return "확정";
+  if (tab === "rejected") return "거절";
+  return "대기";
+}
+
+export function normalizeApplicationModeParam(value: string | null): ApplicationMode {
+  const normalized = value?.trim().toLowerCase();
+  if (normalized === "roster" || normalized === "명단" || normalized === "참가자명단" || normalized === "참가자 명단") {
+    return "roster";
+  }
+  return "applications";
+}
+
+export function applicationModeQueryValue(mode: ApplicationMode): string {
+  return mode === "roster" ? "명단" : "신청";
+}
+
 export async function reviewPartnerApplications(
   supabase: SupabaseClient,
   eventId: string,
@@ -193,6 +223,25 @@ export async function reviewPartnerApplications(
     skippedAlreadyProcessed: body?.skipped_already_processed ?? [],
     remainingSlotsAfter: body?.remaining_slots_after ?? 0,
   };
+}
+
+export function applicationReviewResultMessage(
+  action: "approve" | "reject",
+  result: ApplicationReviewResult,
+): string {
+  if (result.skippedDueToCapacity.length > 0) {
+    return "정원이 가득 차 승인되지 않은 신청이 있습니다. 목록을 다시 확인해 주세요.";
+  }
+  if (result.skippedAlreadyProcessed.length > 0) {
+    return "이미 처리된 신청이라 변경되지 않았습니다. 목록을 다시 확인해 주세요.";
+  }
+  if (action === "approve" && result.approved.length > 0) {
+    return "신청을 승인했습니다.";
+  }
+  if (action === "reject" && result.rejected.length > 0) {
+    return "신청을 거절했습니다. 결제/환불 상태는 목록에서 다시 확인해 주세요.";
+  }
+  return "처리된 신청이 없습니다. 목록을 다시 확인해 주세요.";
 }
 
 export async function fetchSettlementRows(supabase: SupabaseClient, partnerId: string): Promise<SettlementRow[]> {
@@ -240,6 +289,13 @@ export function normalizeBankAccount(row: BankAccountRow): BankAccount {
     accountHolder: row.account_holder ?? "예금주 미등록",
     verificationStatus: row.bank_verification_status,
   };
+}
+
+export function bankStatusLabel(status: string | null): string {
+  if (status === "verified" || status === "manual_review_approved") return "검증 완료";
+  if (status === "manual_review_pending") return "검토 대기";
+  if (status === "failed") return "검증 실패";
+  return "검토 필요";
 }
 
 export async function upsertBankAccount(supabase: SupabaseClient, input: BankAccountInput): Promise<void> {

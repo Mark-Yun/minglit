@@ -1327,6 +1327,7 @@ button:focus-visible {
 
 .wpo-segment button,
 .wpo-primary,
+.wpo-secondary,
 .wpo-danger,
 .wpo-dialog__actions button {
   min-height: 40px;
@@ -1358,7 +1359,13 @@ button:focus-visible {
   background: var(--color-error);
 }
 
+.wpo-secondary {
+  color: var(--color-partner-primary);
+  background: color-mix(in srgb, var(--color-partner-primary) 10%, transparent);
+}
+
 .wpo-primary:disabled,
+.wpo-secondary:disabled,
 .wpo-danger:disabled,
 .wpo-dialog__actions button:disabled {
   color: var(--color-text-secondary);
@@ -1367,6 +1374,7 @@ button:focus-visible {
 }
 
 .wpo-primary svg,
+.wpo-secondary svg,
 .wpo-danger svg,
 .wpo-loading svg {
   width: 18px;
@@ -1484,6 +1492,56 @@ button:focus-visible {
   display: grid;
   gap: 12px;
   margin: 0;
+}
+
+.wpa-roster {
+  display: grid;
+  gap: var(--spacing-medium);
+}
+
+.wpa-roster__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-medium);
+}
+
+.wpa-roster__header p {
+  margin: 4px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.wpa-roster__table-wrap {
+  overflow-x: auto;
+}
+
+.wpa-roster__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.wpa-roster__table th,
+.wpa-roster__table td {
+  padding: 12px 10px;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.wpa-roster__table th {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.wpa-roster__check {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--color-divider);
+  border-radius: 4px;
 }
 
 .wpa-detail dl div {
