@@ -113,6 +113,44 @@ Deno.test({
 });
 
 Deno.test({
+  name:
+    "runCascade - successful apply consumes local ticket availability within the same tick",
+  fn: async () => {
+    clearRegistry();
+    registerAction(applyAction);
+    const snap = snapshotWithOneEvent();
+    snap.events[0].tickets![0].quantity = 1;
+    snap.events[0].tickets![0].sold_count = 0;
+    const { transport, calls } = recordingTransport();
+
+    const { finalSnapshot, trace } = await runCascade({
+      actors: [
+        { id: "user-1", role: "user" },
+        { id: "user-2", role: "user" },
+      ],
+      initialSnapshot: snap,
+      rates: defaultRates,
+      transport,
+      rng: createPRNG(1),
+      ticks: 1,
+    });
+
+    assertEquals(calls.length, 1);
+    assertEquals(calls[0].actorId, "user-1");
+    assertEquals(trace.length, 1);
+    assertEquals(finalSnapshot.events[0].tickets![0].sold_count, 1);
+    assertEquals(finalSnapshot.applications, [
+      {
+        id: "local:user-1:e1",
+        user_id: "user-1",
+        event_id: "e1",
+        status: "local_applied",
+      },
+    ]);
+  },
+});
+
+Deno.test({
   name: "runCascade - records error in trace when transport fails",
   fn: async () => {
     clearRegistry();
