@@ -1080,6 +1080,30 @@ button {
   color: var(--color-secondary);
 }
 
+.wuc-identity__body {
+  min-width: 0;
+  flex: 1;
+}
+
+.wuc-identity__btn {
+  align-self: center;
+  min-height: 36px;
+  padding: 0 14px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+  background: var(--color-primary);
+  border: 0;
+  border-radius: 10px;
+}
+
+.wuc-identity__btn:disabled {
+  color: var(--color-text-secondary);
+  background: var(--color-divider);
+  cursor: not-allowed;
+}
+
 .wuc-check {
   display: flex;
   align-items: center;

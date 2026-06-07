@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { canRequestAutomaticRefund, findCheckoutTicket, mapPurchaseRow, statusCopy } from "./user-orders";
+import { canRequestAutomaticRefund, checkoutGate, findCheckoutTicket, mapPurchaseRow, statusCopy } from "./user-orders";
 import type { PublicEvent } from "./events";
 
 test("findCheckoutTicket returns only orderable on-sale tickets", () => {
@@ -11,6 +11,42 @@ test("findCheckoutTicket returns only orderable on-sale tickets", () => {
   assert.equal(findCheckoutTicket(event, "ticket-sold-out"), null);
   assert.equal(findCheckoutTicket(event, "ticket-hidden"), null);
   assert.equal(findCheckoutTicket(event, null), null);
+});
+
+test("checkoutGate blocks unverified users before server order creation", () => {
+  assert.deepEqual(checkoutGate({
+    authStatus: "ready",
+    isVerified: false,
+    agreed: true,
+    ticketPrice: 0,
+    isCreating: false,
+  }), {
+    canSubmit: false,
+    helper: "본인인증 후 결제할 수 있어요.",
+  });
+});
+
+test("checkoutGate keeps paid tickets disabled until web payment adapter exists", () => {
+  assert.deepEqual(checkoutGate({
+    authStatus: "ready",
+    isVerified: true,
+    agreed: true,
+    ticketPrice: 39000,
+    isCreating: false,
+  }), {
+    canSubmit: false,
+    helper: "유료 결제창은 아직 연결되지 않아 출시 전입니다.",
+  });
+});
+
+test("checkoutGate allows verified free-ticket applications after consent", () => {
+  assert.equal(checkoutGate({
+    authStatus: "ready",
+    isVerified: true,
+    agreed: true,
+    ticketPrice: 0,
+    isCreating: false,
+  }).canSubmit, true);
 });
 
 test("mapPurchaseRow normalizes joined event, ticket, and status fields", () => {

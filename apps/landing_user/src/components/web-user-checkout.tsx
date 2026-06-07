@@ -4,14 +4,18 @@ import Link from "next/link";
 import { AlertCircle, CalendarDays, Check, CreditCard, Loader2, MapPin, ShieldCheck, User } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { PublicEvent, Ticket } from "@/lib/events";
-import { createCheckoutOrder, verifyCheckoutPayment } from "@/lib/user-orders";
+import { checkoutGate, createCheckoutOrder, fetchUserVerified } from "@/lib/user-orders";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
-type AuthState = { status: "loading" } | { status: "config-error" } | { status: "anonymous" } | { status: "ready" };
+type AuthState =
+  | { status: "loading" }
+  | { status: "config-error" }
+  | { status: "anonymous" }
+  | { status: "profile-error" }
+  | { status: "ready"; isVerified: boolean };
 type CheckoutState =
   | { status: "idle" }
   | { status: "creating" }
-  | { status: "payment"; applicationId: string; merchantUid: string }
   | { status: "done" }
   | { status: "error"; message: string };
 
@@ -38,7 +42,12 @@ export function WebUserCheckout({ event, ticket }: { event: PublicEvent; ticket:
         return;
       }
 
-      setAuthState({ status: "ready" });
+      try {
+        const isVerified = await fetchUserVerified(supabase, data.session.user.id);
+        if (!cancelled) setAuthState({ status: "ready", isVerified });
+      } catch {
+        if (!cancelled) setAuthState({ status: "profile-error" });
+      }
     }
 
     void resolveAuth();
@@ -48,19 +57,17 @@ export function WebUserCheckout({ event, ticket }: { event: PublicEvent; ticket:
     };
   }, []);
 
-  const helper = useMemo(() => {
-    if (authState.status === "loading") return "로그인 상태를 확인하고 있습니다.";
-    if (authState.status === "anonymous") return "로그인 후 같은 주문으로 돌아옵니다.";
-    if (authState.status === "config-error") return "Supabase 공개 환경변수가 없어 결제를 시작할 수 없습니다.";
-    if (!agreed) return "필수 약관과 환불 정책에 동의해 주세요.";
-    if (checkout.status === "creating") return "주문을 생성하고 있습니다.";
-    if (checkout.status === "payment") return "Portone V2 결제창 완료 후 결제 식별자를 입력해 검증합니다.";
-    return "결제 후에도 파트너 승인 전까지는 승인 대기 상태입니다.";
-  }, [agreed, authState.status, checkout.status]);
+  const gate = useMemo(() => checkoutGate({
+    authStatus: authState.status,
+    isVerified: authState.status === "ready" ? authState.isVerified : false,
+    agreed,
+    ticketPrice: ticket.price,
+    isCreating: checkout.status === "creating",
+  }), [agreed, authState, checkout.status, ticket.price]);
 
   async function startPayment() {
     const supabase = getSupabaseBrowserClient();
-    if (!supabase || authState.status !== "ready" || !agreed) return;
+    if (!supabase || !gate.canSubmit) return;
 
     setCheckout({ status: "creating" });
 
@@ -71,31 +78,9 @@ export function WebUserCheckout({ event, ticket }: { event: PublicEvent; ticket:
         return;
       }
 
-      setCheckout({
-        status: "payment",
-        applicationId: order.applicationId,
-        merchantUid: order.applicationId,
-      });
+      setCheckout({ status: "error", message: "유료 결제창은 아직 연결되지 않아 주문을 완료할 수 없습니다." });
     } catch (error) {
       setCheckout({ status: "error", message: error instanceof Error ? error.message : "주문 생성에 실패했습니다." });
-    }
-  }
-
-  async function verifyPayment(formData: FormData) {
-    const supabase = getSupabaseBrowserClient();
-    const impUid = String(formData.get("imp_uid") ?? "").trim();
-    const merchantUid = String(formData.get("merchant_uid") ?? "").trim();
-
-    if (!supabase || !impUid || !merchantUid) {
-      setCheckout({ status: "error", message: "결제 식별자를 입력해 주세요." });
-      return;
-    }
-
-    try {
-      await verifyCheckoutPayment(supabase, impUid, merchantUid);
-      setCheckout({ status: "done" });
-    } catch (error) {
-      setCheckout({ status: "error", message: error instanceof Error ? error.message : "결제 검증에 실패했습니다." });
     }
   }
 
@@ -151,13 +136,7 @@ export function WebUserCheckout({ event, ticket }: { event: PublicEvent; ticket:
             </div>
           </section>
 
-          <section className="wuc-identity">
-            <div className="wuc-identity__icon"><ShieldCheck aria-hidden="true" /></div>
-            <div>
-              <div className="wuc-identity__title">본인인증은 결제 단계에서 확인합니다</div>
-              <p className="wuc-identity__sub">Portone V2 웹 인증이 연결되면 최초 1회 인증 후 결제를 이어갑니다.</p>
-            </div>
-          </section>
+          {authState.status === "ready" && !authState.isVerified ? <IdentityVerificationCard /> : null}
 
           <section className="wuc-card">
             <h2 className="wuc-card__title">약관 및 환불 정책</h2>
@@ -192,15 +171,14 @@ export function WebUserCheckout({ event, ticket }: { event: PublicEvent; ticket:
             <button
               className="wuc-pay"
               type="button"
-              disabled={authState.status !== "ready" || !agreed || checkout.status === "creating"}
+              disabled={!gate.canSubmit}
               onClick={startPayment}
             >
               {checkout.status === "creating" ? <Loader2 className="spin" aria-hidden="true" /> : <CreditCard aria-hidden="true" />}
-              결제 진행
+              {ticket.price > 0 ? "결제 준비 중" : "무료 신청"}
             </button>
           )}
-          <p className="wuc-summary__helper">{helper}</p>
-          {checkout.status === "payment" ? <PaymentReturnForm merchantUid={checkout.merchantUid} onVerify={verifyPayment} /> : null}
+          <p className="wuc-summary__helper">{gate.helper}</p>
           {checkout.status === "error" ? <div className="wuc-snackbar" role="alert">{checkout.message}</div> : null}
         </aside>
       </main>
@@ -236,20 +214,18 @@ function EventThumb({ event }: { event: PublicEvent }) {
   );
 }
 
-function PaymentReturnForm({ merchantUid, onVerify }: { merchantUid: string; onVerify: (formData: FormData) => void }) {
+function IdentityVerificationCard() {
   return (
-    <form className="wuc-paywin" action={onVerify}>
-      <div className="wuc-paywin__sim">Portone V2 웹 결제창 연결 대기</div>
-      <label>
-        imp_uid
-        <input name="imp_uid" placeholder="imp_xxx" />
-      </label>
-      <label>
-        merchant_uid
-        <input name="merchant_uid" defaultValue={merchantUid} />
-      </label>
-      <button type="submit">결제 검증</button>
-    </form>
+    <section className="wuc-identity">
+      <div className="wuc-identity__icon"><ShieldCheck aria-hidden="true" /></div>
+      <div className="wuc-identity__body">
+        <div className="wuc-identity__title">본인인증이 필요해요</div>
+        <p className="wuc-identity__sub">안전한 참여를 위해 최초 1회 본인 명의 확인이 필요해요.</p>
+      </div>
+      <button className="wuc-identity__btn" type="button" disabled>
+        본인인증 준비 중
+      </button>
+    </section>
   );
 }
 

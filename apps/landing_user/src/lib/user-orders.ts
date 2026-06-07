@@ -7,6 +7,14 @@ export type CheckoutOrderResult = {
   requiresPayment: boolean;
   ticketName: string;
 };
+export type CheckoutGateInput = {
+  authStatus: "loading" | "config-error" | "anonymous" | "profile-error" | "ready";
+  isVerified: boolean;
+  agreed: boolean;
+  ticketPrice: number;
+  isCreating: boolean;
+};
+export type CheckoutGate = { canSubmit: boolean; helper: string };
 
 export type PurchaseStatus = "pending" | "pending_review" | "approved" | "rejected" | "cancelled" | "paid" | "payment_failed" | "payment_pending";
 export type RefundStatus = "none" | "requested" | "completed" | "failed";
@@ -87,6 +95,31 @@ export function findCheckoutTicket(event: PublicEvent, ticketId: string | null):
 
 export function isTicketOrderable(ticket: Ticket): boolean {
   return ticket.status === "on_sale" && (ticket.quantity <= 0 || ticket.soldCount < ticket.quantity);
+}
+
+export function checkoutGate(input: CheckoutGateInput): CheckoutGate {
+  if (input.authStatus === "loading") return { canSubmit: false, helper: "로그인 상태를 확인하고 있습니다." };
+  if (input.authStatus === "anonymous") return { canSubmit: false, helper: "로그인 후 같은 주문으로 돌아옵니다." };
+  if (input.authStatus === "config-error") return { canSubmit: false, helper: "Supabase 공개 환경변수가 없어 신청을 시작할 수 없습니다." };
+  if (input.authStatus === "profile-error") return { canSubmit: false, helper: "프로필 인증 상태를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요." };
+  if (!input.isVerified) return { canSubmit: false, helper: "본인인증 후 결제할 수 있어요." };
+  if (input.ticketPrice > 0) return { canSubmit: false, helper: "유료 결제창은 아직 연결되지 않아 출시 전입니다." };
+  if (!input.agreed) return { canSubmit: false, helper: "필수 약관과 환불 정책에 동의해 주세요." };
+  if (input.isCreating) return { canSubmit: false, helper: "신청을 생성하고 있습니다." };
+
+  return { canSubmit: true, helper: "무료 티켓 신청 후에도 파트너 승인 전까지는 승인 대기 상태입니다." };
+}
+
+export async function fetchUserVerified(supabase: SupabaseClient, userId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("user_profiles")
+    .select("is_verified")
+    .eq("id", userId)
+    .single<{ is_verified: boolean | null }>();
+
+  if (error) throw error;
+
+  return data?.is_verified === true;
 }
 
 export async function createCheckoutOrder(
