@@ -31,6 +31,7 @@ type PostgrestEvent = {
   title?: string | null;
   description?: unknown;
   image_urls?: string[] | null;
+  visibility?: string | null;
   start_time: string;
   end_time: string;
   status: string;
@@ -40,6 +41,7 @@ type PostgrestEvent = {
     title?: string | null;
     description?: unknown;
     image_urls?: string[] | null;
+    visibility?: string | null;
     partners?: { name?: string | null; introduction?: string | null } | null;
     locations?: {
       name?: string | null;
@@ -70,12 +72,13 @@ const EVENT_SELECT = [
   "title",
   "description",
   "image_urls",
+  "visibility",
   "start_time",
   "end_time",
   "status",
   "max_participants",
   "current_participants",
-  "parties(title,description,image_urls,partners(name,introduction),locations(name,address,region_1,region_2))",
+  "parties!inner(title,description,image_urls,visibility,partners(name,introduction),locations(name,address,region_1,region_2))",
   "locations(name,address,region_1,region_2)",
   "tickets(id,name,description,price,quantity,sold_count,status)",
 ].join(",");
@@ -169,7 +172,10 @@ const DEMO_EVENTS: PublicEvent[] = [
 
 export async function getPublicEvents(): Promise<PublicEvent[]> {
   const rows = await fetchEventsFromSupabase();
-  const events = rows.map(mapEvent).filter((event) => event.status !== "cancelled");
+  const events = rows
+    .filter(isPubliclyVisible)
+    .map(mapEvent)
+    .filter((event) => event.status !== "cancelled");
 
   return events.length > 0 ? events : DEMO_EVENTS;
 }
@@ -180,7 +186,8 @@ export async function getPublicEvent(id: string): Promise<PublicEvent | null> {
   if (demo) return demo;
 
   const rows = await fetchEventsFromSupabase(id);
-  const event = rows[0] ? mapEvent(rows[0]) : null;
+  const row = rows.find(isPubliclyVisible);
+  const event = row ? mapEvent(row) : null;
 
   return event && event.status !== "cancelled" ? event : null;
 }
@@ -194,6 +201,7 @@ async function fetchEventsFromSupabase(id?: string): Promise<PostgrestEvent[]> {
   const endpoint = new URL("/rest/v1/events", url);
   endpoint.searchParams.set("select", EVENT_SELECT);
   endpoint.searchParams.set("status", "in.(scheduled,active,ongoing,completed)");
+  endpoint.searchParams.set("or", "(visibility.eq.public,and(visibility.is.null,parties.visibility.eq.public))");
   endpoint.searchParams.set("order", "start_time.asc");
   endpoint.searchParams.set("limit", id ? "1" : "24");
 
@@ -204,13 +212,14 @@ async function fetchEventsFromSupabase(id?: string): Promise<PostgrestEvent[]> {
   }
 
   try {
-    const response = await fetch(endpoint, {
+    const fetchOptions: RequestInit & { next: { revalidate: number } } = {
       headers: {
         apikey: key,
         Authorization: `Bearer ${key}`,
       },
       next: { revalidate: 60 },
-    });
+    };
+    const response = await fetch(endpoint, fetchOptions);
 
     if (!response.ok) return [];
 
@@ -218,6 +227,10 @@ async function fetchEventsFromSupabase(id?: string): Promise<PostgrestEvent[]> {
   } catch {
     return [];
   }
+}
+
+function isPubliclyVisible(row: PostgrestEvent): boolean {
+  return (row.visibility ?? row.parties?.visibility) === "public";
 }
 
 function mapEvent(row: PostgrestEvent): PublicEvent {
