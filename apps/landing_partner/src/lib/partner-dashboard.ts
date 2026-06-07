@@ -31,6 +31,9 @@ export type PartnerDashboardSection = {
 
 export const partnerInquiryHref = "mailto:contact@minglit.com";
 
+const ownerRoles = new Set(["owner"]);
+const settlementViewPermissions = new Set(["SETTLEMENT_VIEW", "settlement.read"]);
+
 type PartnerPermissionRow = {
   partner_id: string;
   role: string;
@@ -157,6 +160,11 @@ export const dashboardSections: PartnerDashboardSection[] = [
 
 export function getPartnerDashboardSection(section: string): PartnerDashboardSection | null {
   return dashboardSections.find((item) => item.key === section) ?? null;
+}
+
+export function canViewPartnerSettlements(partner: Pick<ManagedPartner, "role" | "permissions">): boolean {
+  if (ownerRoles.has(partner.role)) return true;
+  return partner.permissions.some((permission) => settlementViewPermissions.has(permission));
 }
 
 export const dashboardSnapshot = {

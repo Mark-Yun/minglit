@@ -1253,6 +1253,361 @@ button:focus-visible {
   }
 }
 
+.wpo-page {
+  display: grid;
+  gap: var(--spacing-large);
+}
+
+.wpo-header h1 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.wpo-header p,
+.wpo-muted {
+  margin: var(--spacing-xsmall) 0 0;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.wpo-panel {
+  padding: var(--spacing-large);
+  background: var(--color-background);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+}
+
+.wpo-panel h2 {
+  margin: 0 0 var(--spacing-medium);
+  color: var(--color-text-primary);
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.wpo-field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.wpo-field select,
+.wpo-field input,
+.wpo-dialog textarea {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  color: var(--color-text-primary);
+  background: var(--color-background);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-button);
+}
+
+.wpo-dialog textarea {
+  min-height: 112px;
+  padding-block: 10px;
+  resize: vertical;
+}
+
+.wpo-segment {
+  display: inline-grid;
+  grid-auto-flow: column;
+  gap: 4px;
+  padding: 4px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-button);
+}
+
+.wpo-segment button,
+.wpo-primary,
+.wpo-danger,
+.wpo-dialog__actions button {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 14px;
+  font-weight: 900;
+  border: 0;
+  border-radius: var(--radius-button);
+  cursor: pointer;
+}
+
+.wpo-segment button {
+  color: var(--color-text-secondary);
+  background: transparent;
+}
+
+.wpo-segment button.is-active,
+.wpo-primary,
+.wpo-dialog__actions button:last-child {
+  color: #fff;
+  background: var(--color-partner-primary);
+}
+
+.wpo-danger {
+  color: #fff;
+  background: var(--color-error);
+}
+
+.wpo-primary:disabled,
+.wpo-danger:disabled,
+.wpo-dialog__actions button:disabled {
+  color: var(--color-text-secondary);
+  background: var(--color-divider);
+  cursor: not-allowed;
+}
+
+.wpo-primary svg,
+.wpo-danger svg,
+.wpo-loading svg {
+  width: 18px;
+  height: 18px;
+}
+
+.wpo-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  color: var(--color-partner-primary);
+  font-size: 12px;
+  font-weight: 900;
+  background: color-mix(in srgb, var(--color-partner-primary) 10%, transparent);
+  border-radius: 999px;
+}
+
+.wpo-toast {
+  padding: 12px 14px;
+  color: var(--color-text-primary);
+  font-size: 13px;
+  background: color-mix(in srgb, var(--color-partner-primary) 8%, var(--color-background));
+  border: 1px solid color-mix(in srgb, var(--color-partner-primary) 24%, var(--color-divider));
+  border-radius: var(--radius-button);
+}
+
+.wpo-loading,
+.wpo-error,
+.wpo-empty {
+  display: grid;
+  justify-items: center;
+  gap: var(--spacing-small);
+  min-height: 220px;
+  align-content: center;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.wpo-error {
+  color: var(--color-error);
+}
+
+.wpo-empty svg,
+.wpo-error svg {
+  width: 34px;
+  height: 34px;
+}
+
+.wpo-empty h2,
+.wpo-empty p {
+  margin: 0;
+}
+
+.wpo-empty h2 {
+  color: var(--color-text-primary);
+  font-size: 18px;
+}
+
+.wpo-empty a {
+  color: var(--color-partner-primary);
+  font-weight: 900;
+}
+
+.wpa-toolbar {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) auto;
+  gap: var(--spacing-medium);
+  align-items: end;
+}
+
+.wpa-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(320px, 1.05fr);
+  gap: var(--spacing-large);
+  align-items: start;
+}
+
+.wpa-list {
+  display: grid;
+  gap: 8px;
+}
+
+.wpa-application {
+  width: 100%;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-medium);
+  padding: 12px;
+  text-align: left;
+  background: var(--color-background);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-button);
+  cursor: pointer;
+}
+
+.wpa-application.is-active {
+  border-color: var(--color-partner-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-partner-primary) 12%, transparent);
+}
+
+.wpa-application strong,
+.wpa-application small {
+  display: block;
+}
+
+.wpa-application small {
+  margin-top: 4px;
+  color: var(--color-text-secondary);
+}
+
+.wpa-detail dl {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.wpa-detail dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-medium);
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.wpa-detail dt {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+.wpa-detail dd {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-weight: 800;
+}
+
+.wpa-reason {
+  margin: var(--spacing-medium) 0 0;
+  padding: 12px;
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  border-radius: var(--radius-button);
+}
+
+.wpa-actions,
+.wpo-dialog__actions,
+.wps-bank-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-small);
+  margin-top: var(--spacing-large);
+}
+
+.wpo-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: var(--spacing-screen-edge);
+  background: rgba(17, 24, 39, 0.46);
+}
+
+.wpo-dialog__panel {
+  width: min(440px, 100%);
+  padding: var(--spacing-large);
+  background: var(--color-background);
+  border-radius: var(--radius-card);
+  box-shadow: 0 24px 60px rgba(17, 24, 39, 0.22);
+}
+
+.wpo-dialog__panel h2,
+.wpo-dialog__panel p {
+  margin: 0 0 var(--spacing-medium);
+}
+
+.wps-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-medium);
+}
+
+.wps-summary-card {
+  padding: var(--spacing-large);
+  background: var(--color-background);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+}
+
+.wps-summary-card span,
+.wps-row span,
+.wps-account__current small {
+  display: block;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+.wps-summary-card strong {
+  display: block;
+  margin-top: 8px;
+  color: var(--color-text-primary);
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.wps-table {
+  display: grid;
+  gap: 8px;
+}
+
+.wps-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-medium);
+  min-height: 64px;
+  padding: 12px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-button);
+}
+
+.wps-row strong,
+.wps-row b,
+.wps-account__current strong {
+  color: var(--color-text-primary);
+}
+
+.wps-account__current {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  background: var(--color-surface);
+  border-radius: var(--radius-button);
+}
+
+.wps-bank-form .wpo-field {
+  flex: 1 1 180px;
+}
+
 @media (hover: hover) and (pointer: fine) {
   .btn-social:hover:not(:disabled),
   .wph-todo-card:hover,
@@ -1524,5 +1879,31 @@ button:focus-visible {
 
   .wpe-modal__actions .wpe-btn {
     width: 100%;
+  }
+
+  .wpa-toolbar,
+  .wpa-grid,
+  .wps-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .wpo-panel,
+  .wps-summary-card {
+    padding: var(--spacing-medium);
+  }
+
+  .wpo-segment {
+    grid-auto-flow: row;
+  }
+
+  .wpa-detail dl div,
+  .wps-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .wpa-actions,
+  .wps-bank-form {
+    display: grid;
   }
 }

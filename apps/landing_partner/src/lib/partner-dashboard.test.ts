@@ -21,6 +21,7 @@ import {
   type PartnerParty,
 } from "./partner-events";
 import {
+  canViewPartnerSettlements,
   dashboardSections,
   fetchCurrentPartner,
   getPartnerDashboardSection,
@@ -29,6 +30,15 @@ import {
   resolvePartnerLoginGate,
   type ManagedPartner,
 } from "./partner-dashboard";
+import {
+  applicationTabForStatus,
+  filterApplications,
+  maskAccountNumber,
+  normalizeBankAccount,
+  normalizeSettlementRow,
+  validateBankAccountInput,
+  type PartnerApplication,
+} from "./partner-operations";
 
 const testUser = { id: "user-1", email: "owner@example.com" } as User;
 
@@ -103,6 +113,13 @@ test("dashboard section links used by the shell resolve to known placeholder rou
 test("partner inquiry link leaves the dashboard redirect route", () => {
   assert.equal(partnerInquiryHref, "mailto:contact@minglit.com");
   assert.equal(partnerInquiryHref.startsWith("/"), false);
+});
+
+test("settlement visibility requires owner role or settlement view permission", () => {
+  assert.equal(canViewPartnerSettlements({ role: "owner", permissions: [] }), true);
+  assert.equal(canViewPartnerSettlements({ role: "manager", permissions: ["SETTLEMENT_VIEW"] }), true);
+  assert.equal(canViewPartnerSettlements({ role: "manager", permissions: ["PARTNER_EDIT", "PARTY_MANAGE"] }), false);
+  assert.equal(canViewPartnerSettlements({ role: "staff", permissions: ["PARTY_MANAGE"] }), false);
 });
 
 test("party form validation rejects missing core fields and impossible capacity", () => {
@@ -447,6 +464,70 @@ test("normalized event rows split active and past events for hub ordering", () =
   assert.equal(eventStatusLabel(active[0], new Date("2026-06-08T00:00:00.000Z")), "모집 중");
 });
 
+test("partner application helpers group statuses by review tab", () => {
+  const applications = [
+    createApplication({ id: "pending", status: "pending" }),
+    createApplication({ id: "paid", status: "paid" }),
+    createApplication({ id: "rejected", status: "rejected" }),
+  ];
+
+  assert.equal(applicationTabForStatus("payment_pending"), "pending");
+  assert.equal(applicationTabForStatus("approved"), "approved");
+  assert.equal(applicationTabForStatus("cancelled"), "rejected");
+  assert.deepEqual(filterApplications(applications, "approved").map((item) => item.id), ["paid"]);
+});
+
+test("partner settlement helpers normalize money rows and mask bank accounts", () => {
+  assert.deepEqual(normalizeSettlementRow({
+    id: "stl-1",
+    partnerId: "partner-1",
+    transferId: "tr-1",
+    amount: 120000,
+    currency: "KRW",
+    settlementDate: "2026-07-01",
+  }), {
+    id: "stl-1",
+    partnerId: "partner-1",
+    transferId: "tr-1",
+    amount: 120000,
+    currency: "KRW",
+    settlementDate: "2026-07-01",
+  });
+  assert.equal(maskAccountNumber("123456789012"), "123-*****-9012");
+  assert.deepEqual(normalizeBankAccount({
+    bank_code: "kb",
+    bank_name: "KB국민은행",
+    account_number: "123456789012",
+    account_holder: "김민글",
+    bank_verification_status: "manual_review_pending",
+  }), {
+    bankCode: "kb",
+    bankName: "KB국민은행",
+    accountNumber: "123-*****-9012",
+    accountHolder: "김민글",
+    verificationStatus: "manual_review_pending",
+  });
+});
+
+test("bank account input requires bank, holder, and 10-16 digit account number", () => {
+  assert.deepEqual(validateBankAccountInput({
+    partnerId: "partner-1",
+    bankCode: "",
+    accountHolder: "",
+    accountNumber: "123",
+  }), [
+    "은행을 선택해 주세요.",
+    "예금주를 입력해 주세요.",
+    "계좌번호는 숫자 10~16자리로 입력해 주세요.",
+  ]);
+  assert.deepEqual(validateBankAccountInput({
+    partnerId: "partner-1",
+    bankCode: "kb",
+    accountHolder: "김민글",
+    accountNumber: "123-4567-8901",
+  }), []);
+});
+
 const expectedPartner: ManagedPartner = {
   id: "partner-1",
   name: "Minglit Lounge",
@@ -468,6 +549,23 @@ function createParty(overrides: Partial<PartnerParty> = {}): PartnerParty {
     ticketTemplates: [],
     recurrenceRule: null,
     events: [],
+    ...overrides,
+  };
+}
+
+function createApplication(overrides: Partial<PartnerApplication> = {}): PartnerApplication {
+  return {
+    id: "app-1",
+    eventId: "event-1",
+    userId: "user-1",
+    userName: "참가자",
+    ticketName: "일반",
+    amount: 10000,
+    status: "pending",
+    refundStatus: "none",
+    rejectionReason: null,
+    createdAt: "2026-07-01T00:00:00.000Z",
+    paidAt: null,
     ...overrides,
   };
 }
