@@ -9,7 +9,9 @@ export const metadata: Metadata = {
 };
 
 export function generateStaticParams() {
-  return dashboardSections.map((section) => ({ section: section.key }));
+  return dashboardSections
+    .filter((section) => section.key !== "events")
+    .map((section) => ({ section: section.key }));
 }
 
 export default function DashboardSectionRoute({ params }: { params: { section: string } }) {
