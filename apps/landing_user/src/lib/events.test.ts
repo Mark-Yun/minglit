@@ -26,8 +26,9 @@ test("public event list requests the server-side visibility gate", async () => {
   assert.equal(captured.url.searchParams.get("select")?.includes("parties!inner(title,description,image_urls,visibility,status,"), true);
   assert.equal(
     captured.url.searchParams.get("or"),
-    "(visibility.eq.public,and(visibility.is.null,parties.visibility.eq.public))",
+    "(visibility.eq.public,visibility.is.null)",
   );
+  assert.equal(captured.url.searchParams.get("parties.visibility"), "eq.public");
   assert.equal(captured.url.searchParams.get("parties.status"), "eq.active");
   assert.equal(captured.url.searchParams.get("start_time")?.startsWith("gte."), true);
 });
@@ -41,8 +42,9 @@ test("public event detail keeps the same visibility gate with the id filter", as
   assert.equal(captured.url.searchParams.get("limit"), "1");
   assert.equal(
     captured.url.searchParams.get("or"),
-    "(visibility.eq.public,and(visibility.is.null,parties.visibility.eq.public))",
+    "(visibility.eq.public,visibility.is.null)",
   );
+  assert.equal(captured.url.searchParams.get("parties.visibility"), "eq.public");
   assert.equal(captured.url.searchParams.get("parties.status"), "eq.active");
 });
 

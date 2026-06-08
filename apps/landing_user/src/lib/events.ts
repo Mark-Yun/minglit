@@ -224,7 +224,11 @@ async function fetchEventsFromSupabase(id?: string): Promise<FetchEventsResult> 
   const endpoint = new URL("/rest/v1/events", url);
   endpoint.searchParams.set("select", EVENT_SELECT);
   endpoint.searchParams.set("status", "in.(scheduled,active,ongoing,completed)");
-  endpoint.searchParams.set("or", "(visibility.eq.public,and(visibility.is.null,parties.visibility.eq.public))");
+  // 이벤트 공개 여부: 명시적 public 이거나 미설정(파티 공개 설정을 따름).
+  // PostgREST 의 root `or` 논리트리에서는 embedded 리소스 컬럼(parties.*)을
+  // 참조할 수 없으므로(PGRST100), 파티 공개 조건은 아래 embedded 필터로 분리한다.
+  endpoint.searchParams.set("or", "(visibility.eq.public,visibility.is.null)");
+  endpoint.searchParams.set("parties.visibility", "eq.public");
   endpoint.searchParams.set("parties.status", "eq.active");
   endpoint.searchParams.set("order", "start_time.asc");
   endpoint.searchParams.set("limit", id ? "1" : "24");
