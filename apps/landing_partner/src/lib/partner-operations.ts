@@ -1,4 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import {
+  partnerReviewApplications,
+  settlementQuery,
+  partnerManageSettlement,
+} from "@minglit/web-kit/ef";
 
 export type ApplicationStatus = "pending" | "pending_review" | "approved" | "rejected" | "cancelled" | "paid" | "payment_failed" | "payment_pending";
 export type RefundStatus = "none" | "requested" | "completed" | "failed";
@@ -58,8 +63,6 @@ export type BankAccountInput = {
   accountHolder: string;
   accountNumber: string;
 };
-
-type FunctionError = { message?: string };
 
 type ApplicationEventRow = {
   id: string;
@@ -192,36 +195,21 @@ export async function reviewPartnerApplications(
   approvals: string[],
   rejections: Array<{ applicationId: string; reason: string }>,
 ): Promise<ApplicationReviewResult> {
-  const { data, error } = await supabase.functions.invoke("partner-review-applications", {
-    body: {
-      event_id: eventId,
-      approvals,
-      rejections: rejections.map((item) => ({
-        application_id: item.applicationId,
-        reason: item.reason,
-      })),
-    },
+  const body = await partnerReviewApplications(supabase, {
+    event_id: eventId,
+    approvals,
+    rejections: rejections.map((item) => ({
+      application_id: item.applicationId,
+      reason: item.reason,
+    })),
   });
 
-  if (error) throw new Error(error.message);
-
-  const body = data as {
-    approved?: string[];
-    rejected?: string[];
-    skipped_due_to_capacity?: string[];
-    skipped_already_processed?: string[];
-    remaining_slots_after?: number;
-    error?: FunctionError;
-  } | null;
-
-  if (body?.error) throw new Error(body.error.message ?? "신청 처리를 완료하지 못했습니다.");
-
   return {
-    approved: body?.approved ?? [],
-    rejected: body?.rejected ?? [],
-    skippedDueToCapacity: body?.skipped_due_to_capacity ?? [],
-    skippedAlreadyProcessed: body?.skipped_already_processed ?? [],
-    remainingSlotsAfter: body?.remaining_slots_after ?? 0,
+    approved: body.approved,
+    rejected: body.rejected,
+    skippedDueToCapacity: body.skipped_due_to_capacity,
+    skippedAlreadyProcessed: body.skipped_already_processed,
+    remainingSlotsAfter: body.remaining_slots_after,
   };
 }
 
@@ -245,16 +233,10 @@ export function applicationReviewResultMessage(
 }
 
 export async function fetchSettlementRows(supabase: SupabaseClient, partnerId: string): Promise<SettlementRow[]> {
-  const { data, error } = await supabase.functions.invoke("settlement-query", {
-    body: { type: "settlements", partner_id: partnerId },
-  });
+  const result = await settlementQuery(supabase, { partner_id: partnerId, type: "settlements" });
 
-  if (error) throw new Error(error.message);
-
-  const body = data as { settlements?: SettlementFunctionRow[]; error?: FunctionError } | null;
-  if (body?.error) throw new Error(body.error.message ?? "정산 내역을 불러오지 못했습니다.");
-
-  return (body?.settlements ?? []).map(normalizeSettlementRow);
+  const settlements = (result as { settlements?: SettlementFunctionRow[] }).settlements ?? [];
+  return settlements.map(normalizeSettlementRow);
 }
 
 export function normalizeSettlementRow(row: SettlementFunctionRow): SettlementRow {
@@ -302,20 +284,13 @@ export async function upsertBankAccount(supabase: SupabaseClient, input: BankAcc
   const errors = validateBankAccountInput(input);
   if (errors.length > 0) throw new Error(errors[0]);
 
-  const { data, error } = await supabase.functions.invoke("partner-manage-settlement", {
-    body: {
-      action: "upsert_bank_account",
-      partner_id: input.partnerId,
-      bank_code: input.bankCode,
-      account_holder: input.accountHolder,
-      account_number: input.accountNumber,
-    },
+  await partnerManageSettlement(supabase, {
+    action: "upsert_bank_account",
+    partner_id: input.partnerId,
+    bank_code: input.bankCode,
+    account_holder: input.accountHolder,
+    account_number: input.accountNumber,
   });
-
-  if (error) throw new Error(error.message);
-  if ((data as { error?: FunctionError } | null)?.error) {
-    throw new Error((data as { error: FunctionError }).error.message ?? "계좌를 저장하지 못했습니다.");
-  }
 }
 
 export function validateBankAccountInput(input: BankAccountInput): string[] {

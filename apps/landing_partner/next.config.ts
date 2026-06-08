@@ -7,7 +7,6 @@ if (process.env.NODE_ENV === "production" && !process.env.CI) {
 }
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@minglit/web-kit"],
   /* config options here */
 };
 

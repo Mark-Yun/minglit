@@ -18,11 +18,13 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import {
   dashboardSections,
-  dashboardSnapshot,
+  emptyPartnerDashboard,
+  fetchPartnerDashboard,
   partnerInquiryHref,
   resolvePartnerDashboardGate,
   resolvePartnerLoginGate,
   type ManagedPartner,
+  type PartnerDashboardData,
   type PartnerDashboardSection,
 } from "@/lib/partner-dashboard";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
@@ -177,6 +179,7 @@ export function PartnerLoginPage() {
 export function PartnerDashboardPage() {
   const router = useRouter();
   const [authState, setAuthState] = useState<AuthState>({ status: "loading" });
+  const [snapshot, setSnapshot] = useState<PartnerDashboardData>(emptyPartnerDashboard);
 
   useEffect(() => {
     let cancelled = false;
@@ -197,6 +200,15 @@ export function PartnerDashboardPage() {
       }
 
       setAuthState(gate);
+
+      if (gate.status === "ready") {
+        try {
+          const data = await fetchPartnerDashboard(supabase, gate.partner.id);
+          if (!cancelled) setSnapshot(data);
+        } catch {
+          if (!cancelled) setSnapshot(emptyPartnerDashboard);
+        }
+      }
     }
 
     void loadDashboard();
@@ -207,7 +219,7 @@ export function PartnerDashboardPage() {
   }, [router]);
 
   if (authState.status === "ready") {
-    return <DashboardShell partner={authState.partner} email={authState.email} />;
+    return <DashboardShell partner={authState.partner} email={authState.email} snapshot={snapshot} />;
   }
 
   return (
@@ -318,7 +330,7 @@ export function PartnerDashboardSectionPage({ section }: { section: PartnerDashb
   );
 }
 
-function DashboardShell({ partner, email }: { partner: ManagedPartner; email: string }) {
+function DashboardShell({ partner, email, snapshot }: { partner: ManagedPartner; email: string; snapshot: PartnerDashboardData }) {
   const greeting = useMemo(() => `${partner.name} 운영을 확인하세요`, [partner.name]);
 
   return (
@@ -329,7 +341,7 @@ function DashboardShell({ partner, email }: { partner: ManagedPartner; email: st
       </header>
 
       <section className="wph-todo" aria-label="오늘 할 일">
-        {dashboardSnapshot.todos.map((todo) => (
+        {snapshot.todos.map((todo) => (
           <Link key={todo.key} className={`wph-todo-card${todo.alert ? " wph-todo-card--alert" : ""}`} href={todo.href}>
             <span className="wph-todo-card__label">
               {todo.alert ? <span className="wph-pulse-dot" aria-hidden="true" /> : <CheckCircle2 aria-hidden="true" />}
@@ -351,7 +363,10 @@ function DashboardShell({ partner, email }: { partner: ManagedPartner; email: st
         </div>
 
         <div className="wph-event-list">
-          {dashboardSnapshot.events.map((event) => (
+          {snapshot.events.length === 0 ? (
+            <p className="wph-event-empty">예정된 이벤트가 없어요. 새 회차를 만들면 여기에서 한눈에 볼 수 있어요.</p>
+          ) : null}
+          {snapshot.events.map((event) => (
             <article key={event.title} className="wph-event-row">
               <span className={`wph-dday-chip ${event.dday === "오늘" ? "wph-dday-chip--today" : "wph-dday-chip--soon"}`}>
                 {event.dday}
@@ -396,7 +411,7 @@ export function PartnerConsoleShell({
   const navItems = [
     { href: "/dashboard", label: "홈", icon: Home },
     { href: dashboardSections[0].href, label: dashboardSections[0].label, icon: CalendarDays },
-    { href: dashboardSections[1].href, label: dashboardSections[1].label, icon: ClipboardList, badge: "4" },
+    { href: dashboardSections[1].href, label: dashboardSections[1].label, icon: ClipboardList },
     { href: dashboardSections[2].href, label: dashboardSections[2].label, icon: Banknote },
   ];
   const renderNavItems = (closeOnSelect = false) =>
@@ -414,7 +429,6 @@ export function PartnerConsoleShell({
         >
           <Icon aria-hidden="true" />
           <span>{item.label}</span>
-          {item.badge ? <span className="wph-nav__badge">{item.badge}</span> : null}
         </Link>
       );
     });

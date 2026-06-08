@@ -1,4 +1,5 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@minglit/web-kit/supabase";
 
 let browserClient: SupabaseClient | null | undefined;
 
@@ -13,14 +14,6 @@ export function getSupabaseBrowserClient(): SupabaseClient | null {
     return browserClient;
   }
 
-  browserClient = createClient(url, publishableKey, {
-    auth: {
-      detectSessionInUrl: true,
-      flowType: "pkce",
-      persistSession: true,
-      autoRefreshToken: true,
-    },
-  });
-
+  browserClient = createBrowserClient() as unknown as SupabaseClient;
   return browserClient;
 }

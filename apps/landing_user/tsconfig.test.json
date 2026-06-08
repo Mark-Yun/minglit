@@ -7,7 +7,19 @@
     "noEmit": false,
     "outDir": ".test-build",
     "rootDir": "src",
-    "types": ["node"]
+    "types": [
+      "node"
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    }
   },
-  "include": ["src/lib/events.ts", "src/lib/events.test.ts", "src/lib/user-orders.ts", "src/lib/user-orders.test.ts"]
+  "include": [
+    "src/lib/events.ts",
+    "src/lib/events.test.ts",
+    "src/lib/user-orders.ts",
+    "src/lib/user-orders.test.ts"
+  ]
 }
