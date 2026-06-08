@@ -7,6 +7,9 @@ import { z } from "zod";
 import { callEdgeFunction, type SessionSource } from "./call";
 import { MinglitError } from "./errors";
 import { applyEvent } from "./functions/apply-event";
+import { settlementQuery } from "./functions/settlement-query";
+import { partnerManageSettlement } from "./functions/partner-manage-settlement";
+import { recurrenceRules } from "./functions/recurrence-rules";
 
 const SUPABASE_URL = "https://unit-test.supabase.co";
 const ANON_KEY = "anon-key-for-tests";
@@ -293,5 +296,115 @@ describe("applyEvent wrapper — Idempotency-Key 자동 생성", () => {
     expect(lastRequest(mock).headers["Idempotency-Key"]).toBe(
       "client-retry-key",
     );
+  });
+});
+
+describe("settlementQuery wrapper", () => {
+  it("settlement-query EF 로 body 를 그대로 POST 하고 passthrough 페이로드를 보존한다", async () => {
+    const mock = stubFetch(
+      jsonResponse({ success: true, items: [{ id: "s1" }], paging: { total: 1 } }),
+    );
+
+    const result = await settlementQuery(sessionSource(), {
+      partner_id: "p1",
+      type: "settlements",
+      from_date: "2026-01-01",
+      to_date: "2026-01-31",
+    });
+
+    const { url, init } = lastRequest(mock);
+    expect(url).toBe(`${SUPABASE_URL}/functions/v1/settlement-query`);
+    expect(init.body).toBe(
+      JSON.stringify({
+        partner_id: "p1",
+        type: "settlements",
+        from_date: "2026-01-01",
+        to_date: "2026-01-31",
+      }),
+    );
+    // passthrough: PortOne 외부 shape 가 success 와 함께 보존된다
+    expect(result).toEqual({
+      success: true,
+      items: [{ id: "s1" }],
+      paging: { total: 1 },
+    });
+  });
+
+  it('success 누락 시 MinglitError kind="contract"', async () => {
+    stubFetch(jsonResponse({ items: [] }));
+
+    const error = await expectMinglitError(
+      settlementQuery(sessionSource(), { partner_id: "p1", type: "payouts" }),
+    );
+
+    expect(error.kind).toBe("contract");
+    expect(error.fn).toBe("settlement-query");
+  });
+});
+
+describe("partnerManageSettlement wrapper", () => {
+  it("upsert_bank_account action 을 POST 하고 검증된 응답을 반환한다", async () => {
+    const mock = stubFetch(
+      jsonResponse({
+        success: true,
+        bank_verification_status: "manual_review_pending",
+      }),
+    );
+
+    const result = await partnerManageSettlement(sessionSource(), {
+      action: "upsert_bank_account",
+      partner_id: "p1",
+      bank_code: "kb",
+      account_holder: "홍길동",
+      account_number: "1234567890",
+    });
+
+    const { url, init } = lastRequest(mock);
+    expect(url).toBe(
+      `${SUPABASE_URL}/functions/v1/partner-manage-settlement`,
+    );
+    expect(JSON.parse(String(init.body))).toMatchObject({
+      action: "upsert_bank_account",
+      partner_id: "p1",
+    });
+    expect(result.bank_verification_status).toBe("manual_review_pending");
+  });
+});
+
+describe("recurrenceRules wrapper", () => {
+  it("create action 응답의 rule_id / events_created 를 파싱한다", async () => {
+    const mock = stubFetch(
+      jsonResponse({ success: true, rule_id: "r1", events_created: 8 }),
+    );
+
+    const result = await recurrenceRules(sessionSource(), {
+      action: "create",
+      party_id: "party1",
+      pattern: "weekly",
+      days_of_week: [1, 3, 5],
+      start_time: "19:00",
+      end_time: "21:00",
+    });
+
+    expect(lastRequest(mock).url).toBe(
+      `${SUPABASE_URL}/functions/v1/recurrence-rules`,
+    );
+    expect(result).toEqual({
+      success: true,
+      rule_id: "r1",
+      events_created: 8,
+    });
+  });
+
+  it("pause action 처럼 success 만 오는 응답도 통과시킨다", async () => {
+    stubFetch(jsonResponse({ success: true }));
+
+    const result = await recurrenceRules(sessionSource(), {
+      action: "pause",
+      rule_id: "r1",
+    });
+
+    expect(result).toEqual({ success: true });
+    expect(result.rule_id).toBeUndefined();
   });
 });

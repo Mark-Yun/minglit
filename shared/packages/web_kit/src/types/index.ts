@@ -44,3 +44,26 @@ export type {
   PartnerReviewApplicationsResponse,
   PartnerReviewRejectionItem,
 } from "../ef/functions/partner-review-applications";
+export type {
+  SettlementQueryRequest,
+  SettlementQueryResponse,
+  SettlementQueryType,
+} from "../ef/functions/settlement-query";
+export type {
+  PartnerManageSettlementAction,
+  PartnerManageSettlementRequest,
+  PartnerManageSettlementResponse,
+  PartnerRequestManualBankAccountReviewRequest,
+  PartnerUpsertBankAccountRequest,
+} from "../ef/functions/partner-manage-settlement";
+export type {
+  RecurrenceCancelRequest,
+  RecurrenceCreateRequest,
+  RecurrencePattern,
+  RecurrencePauseRequest,
+  RecurrenceResumeRequest,
+  RecurrenceRulesAction,
+  RecurrenceRulesRequest,
+  RecurrenceRulesResponse,
+  RecurrenceUpdateRequest,
+} from "../ef/functions/recurrence-rules";

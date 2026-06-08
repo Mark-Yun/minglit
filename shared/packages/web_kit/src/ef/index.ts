@@ -22,3 +22,6 @@ export * from "./functions/identity-verify";
 export * from "./functions/partner-manage-party";
 export * from "./functions/partner-manage-event";
 export * from "./functions/partner-review-applications";
+export * from "./functions/settlement-query";
+export * from "./functions/partner-manage-settlement";
+export * from "./functions/recurrence-rules";
