@@ -14,6 +14,7 @@
 | `supabase_client.ts`                                             | service/user Supabase client 생성, secret key `apikey`/legacy bearer 헤더 호환    |
 | `logger.ts` / `axiom_logger.ts` / `statsig_utils.ts`             | local/Axiom/Statsig observability                                                 |
 | `iamport_client.ts` / `portone_client.ts`                        | 결제 외부 client                                                                  |
+| `portone_client_test.ts`                                         | PortOne V2 API method/payload contract regression                                 |
 | `partner_permissions.ts` / `refund_utils.ts` / `worker_utils.ts` | IO 포함 공용 helper                                                               |
 | `validation_utils.ts` / `temporal_utils.ts`                      | 입력/시간 helper                                                                  |
 | [domains/](domains/BLUEDOC.md)                                   | pure business rule core (`event`, `payment`, `order`)                             |
@@ -36,4 +37,4 @@
 
 ---
 
-_Reviewed: 2026-06-04 22:22_
+_Reviewed: 2026-06-08 14:50_
