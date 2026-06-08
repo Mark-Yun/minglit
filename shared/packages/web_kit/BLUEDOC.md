@@ -7,7 +7,7 @@ Minglit 웹 MVP 의 **공유 클라이언트 패키지** (`@minglit/web-kit`). �
 | 모듈 | 무엇 |
 |---|---|
 | [`src/supabase/`](./src/supabase/) | 클라이언트 팩토리 — `createBrowserClient` / `createServerClient`(RSC) / `createMiddlewareClient`. `@supabase/ssr` 쿠키 세션 + env zod 검증 (`env.ts`) |
-| [`src/ef/`](./src/ef/) | typed EF 클라이언트 — `callEdgeFunction` 코어 (Bearer 자동 첨부 · zod 응답 검증 · `MinglitError` 정규화) + 웹 MVP 코어 9개 wrapper (`functions/`) |
+| [`src/ef/`](./src/ef/) | typed EF 클라이언트 — `callEdgeFunction` 코어 (Bearer 자동 첨부 · zod 응답 검증 · `MinglitError` 정규화) + 웹 MVP 코어 10개 wrapper (`functions/`) |
 | [`src/types/`](./src/types/) | `db.ts` = `npm run gen:types` 생성 DB 타입 (현재 placeholder) · EF DTO 는 ef/ zod 스키마의 `z.infer` 재노출 |
 | [`src/domain/`](./src/domain/) | `status-vocab.ts` — 상태 칩/탭 어휘 SSoT · `date-format.ts` — KST 포맷터 ("6월 12일 (금) 19:30" / D-day / 상대시간) |
 | [`src/ui/`](./src/ui/) | MDS 토큰 스킨 컴포넌트 — `cn` / `StatusChip` / `Button` (radix copy-in 본격 작성은 후속) |
@@ -29,4 +29,4 @@ Minglit 웹 MVP 의 **공유 클라이언트 패키지** (`@minglit/web-kit`). �
 - [shared/packages/mds/tokens](../mds/tokens/) — `tokens.css` 생성물 / [minglit_kit](../minglit_kit/BLUEDOC.md) — 동결된 behavior reference
 
 ---
-_Reviewed: 2026-06-08 13:46_
+_Reviewed: 2026-06-08 15:43_
