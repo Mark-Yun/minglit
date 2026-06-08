@@ -10,7 +10,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { errorResponse, successResponse } from "../_shared/response_utils.ts";
 import { requirePartnerPermission } from "../_shared/partner_permissions.ts";
 import { parseAction } from "../_shared/request_utils.ts";
-import { isEventEditableByPartner } from "../_shared/domains/event/availability.ts";
+import {
+  isEventEditableByPartner,
+  isEventStarted,
+} from "../_shared/domains/event/availability.ts";
 
 const VALID_EVENT_STATUSES = ["scheduled", "cancelled", "completed"];
 const _VALID_GENDERS = ["male", "female"];
@@ -532,13 +535,14 @@ async function handleUpdate(
   // Fix #2110: Fetch OLD event values for change_log before/after snapshot.
   const { data: oldEvent, error: fetchError } = await supabase
     .from("events")
-    .select("id, party_id, start_time, end_time, parties!inner(partner_id)")
+    .select("id, party_id, status, start_time, end_time, current_participants, parties!inner(partner_id)")
     .eq("id", eventId)
     .maybeSingle();
 
   if (fetchError) return errorResponse("Failed to load event", 500);
   if (!oldEvent) return errorResponse("Event not found", 404);
 
+  const oldEventRecord = oldEvent as Record<string, unknown>;
   const partnerId = extractRelatedPartnerId(oldEvent);
   if (!partnerId) return errorResponse("Failed to resolve partner", 500);
 
@@ -550,6 +554,17 @@ async function handleUpdate(
     ["PARTY_MANAGE", "EVENT_MANAGE"],
   );
   if (permCheck) return permCheck;
+
+  const oldStatus = typeof oldEventRecord.status === "string"
+    ? oldEventRecord.status
+    : "";
+  const oldStartTime = oldEventRecord.start_time;
+  if (
+    !isEventEditableByPartner(oldStatus) ||
+    (typeof oldStartTime === "string" && isEventStarted(oldStartTime))
+  ) {
+    return errorResponse("Event is no longer editable", 400);
+  }
 
   // Build update fields
   const eventData = body.event;
@@ -570,6 +585,24 @@ async function handleUpdate(
 
   if (Object.keys(updates).length === 0) {
     return errorResponse("No fields to update", 400);
+  }
+
+  if (updates.max_participants !== undefined) {
+    const nextMaxParticipants = updates.max_participants;
+    const currentParticipants = oldEventRecord.current_participants;
+    if (
+      typeof nextMaxParticipants !== "number" ||
+      !Number.isInteger(nextMaxParticipants) ||
+      nextMaxParticipants < 1
+    ) {
+      return errorResponse("event.max_participants must be a positive integer", 400);
+    }
+    if (
+      typeof currentParticipants === "number" &&
+      nextMaxParticipants < currentParticipants
+    ) {
+      return errorResponse("max_participants cannot be lower than current_participants", 400);
+    }
   }
 
   if (updates.location_id !== undefined) {
@@ -627,21 +660,21 @@ async function handleUpdate(
   // (tracked separately — notification-worker extension needed).
   const reason = typeof body.reason === "string" ? body.reason.trim() : null;
   const isScheduleChanged = (updates.start_time !== undefined &&
-    updates.start_time !== (oldEvent as Record<string, unknown>).start_time) ||
+    updates.start_time !== oldEventRecord.start_time) ||
     (updates.end_time !== undefined &&
-      updates.end_time !== (oldEvent as Record<string, unknown>).end_time);
+      updates.end_time !== oldEventRecord.end_time);
 
   if (reason && isScheduleChanged) {
     const changeLog: Record<string, unknown> = {
       event_id: eventId,
       changed_by: userId,
       reason,
-      previous_start_time: (oldEvent as Record<string, unknown>).start_time,
+      previous_start_time: oldEventRecord.start_time,
       new_start_time: updates.start_time ??
-        (oldEvent as Record<string, unknown>).start_time,
-      previous_end_time: (oldEvent as Record<string, unknown>).end_time,
+        oldEventRecord.start_time,
+      previous_end_time: oldEventRecord.end_time,
       new_end_time: updates.end_time ??
-        (oldEvent as Record<string, unknown>).end_time,
+        oldEventRecord.end_time,
     };
     // Use service_role client — event_change_logs has no INSERT RLS for users.
     const { error: logError } = await supabase
@@ -687,7 +720,9 @@ async function handleUpdateStatus(
   // Fetch event → party → partner
   const { data: event, error: fetchError } = await supabase
     .from("events")
-    .select("id, status, party_id, parties!inner(partner_id)")
+    .select(
+      "id, status, start_time, party_id, metadata, parties!inner(partner_id)",
+    )
     .eq("id", eventId)
     .maybeSingle();
 
@@ -700,6 +735,9 @@ async function handleUpdateStatus(
       `Cannot change status from ${event.status} to ${status}`,
       400,
     );
+  }
+  if (typeof event.start_time === "string" && isEventStarted(event.start_time)) {
+    return errorResponse("Event is no longer editable", 400);
   }
 
   const partnerId = extractRelatedPartnerId(event);
@@ -714,9 +752,27 @@ async function handleUpdateStatus(
   );
   if (permCheck) return permCheck;
 
+  if (status === "cancelled") {
+    const block = await assertNoActiveApplicationsForCancellation(
+      supabase,
+      eventId,
+    );
+    if (block) return block;
+  }
+
+  const statusUpdate: Record<string, unknown> = { status };
+  const cancelReason = normalizeCancelReason(body.reason);
+  if (status === "cancelled" && cancelReason) {
+    statusUpdate.metadata = {
+      ...toRecord(event.metadata),
+      cancel_reason: cancelReason.code,
+      cancel_reason_text: cancelReason.text,
+    };
+  }
+
   const { error: updateError } = await supabase
     .from("events")
-    .update({ status })
+    .update(statusUpdate)
     .eq("id", eventId);
 
   if (updateError) {
@@ -727,6 +783,54 @@ async function handleUpdateStatus(
   }
 
   return successResponse({ success: true });
+}
+
+async function assertNoActiveApplicationsForCancellation(
+  supabase: SupabaseClient,
+  eventId: string,
+): Promise<Response | null> {
+  const { data, error } = await supabase
+    .from("event_applications")
+    .select("id, status")
+    .eq("event_id", eventId)
+    .in("status", [
+      "pending",
+      "pending_review",
+      "payment_pending",
+      "approved",
+      "paid",
+    ])
+    .limit(1);
+
+  if (error) return errorResponse("Failed to load event applications", 500);
+  if (Array.isArray(data) && data.length > 0) {
+    return errorResponse(
+      "Cannot cancel events with active applications until refund orchestration is available",
+      409,
+    );
+  }
+  return null;
+}
+
+function normalizeCancelReason(
+  value: unknown,
+): { code: string; text: string } | null {
+  if (typeof value !== "string") return null;
+  const text = value.trim();
+  if (!text) return null;
+  const codeByText: Record<string, string> = {
+    "인원 미달": "insufficient_attendees",
+    "장소 문제": "venue_issue",
+    "기타": "other",
+  };
+  return { code: codeByText[text] ?? "other", text };
+}
+
+function toRecord(value: unknown): Record<string, unknown> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return {};
+  }
+  return value as Record<string, unknown>;
 }
 
 async function handleUpdateTickets(

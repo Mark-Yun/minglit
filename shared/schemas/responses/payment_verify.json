@@ -3,10 +3,14 @@
   "$id": "payment_verify_success_response",
   "title": "payment-verify success response",
   "type": "object",
-  "required": ["success", "imp_uid"],
+  "required": ["success"],
   "properties": {
     "success": { "type": "boolean", "const": true },
+    "type": { "type": "string", "enum": ["paid", "already_processed"] },
     "imp_uid": { "type": "string", "minLength": 1 },
+    "payment_id": { "type": "string", "minLength": 1 },
+    "application_id": { "type": "string", "minLength": 1 },
+    "purchase_url": { "type": "string", "minLength": 1 },
     "message": { "type": "string" }
   },
   "additionalProperties": false

@@ -45,6 +45,15 @@
 |-----|-------------|----------|
 | `PORTONE_API_KEY` | PortOne V1 API key | Yes |
 | `PORTONE_API_SECRET` | PortOne V1 API secret | Yes |
+| `PORTONE_V2_API_KEY` | PortOne V2 API key for web payment verification | Yes |
+
+### user-create-order
+
+| Key | Description | Required |
+|-----|-------------|----------|
+| `PORTONE_V2_STORE_ID` | PortOne V2 public store id for browser checkout | Yes |
+| `PORTONE_V2_CHANNEL_KEY` | PortOne V2 public channel key for browser checkout | Yes |
+| `LANDING_USER_ORIGIN` | User landing origin used to build PortOne checkout redirectUrl | No |
 
 ### payment-cancel
 

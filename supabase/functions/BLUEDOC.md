@@ -18,6 +18,7 @@ minglit 의 backend API 진입점. 60+ EF 와 공용 `_shared/`, 테스트 유�
 | [user-create-order/](./user-create-order/BLUEDOC.md)                     | 이벤트 신청/주문 생성 EF                                         |
 | [payment-verify/](./payment-verify/BLUEDOC.md)                           | PortOne 결제 검증/승인 EF                                        |
 | [user-cancel-order/](./user-cancel-order/BLUEDOC.md)                     | 유저 신청 취소/환불 EF                                           |
+| [user-request-refund/](./user-request-refund/)                           | 유저 파트너 환불 요청 EF                                         |
 | [partner-manage-party/](./partner-manage-party/)                         | 파티/장소/티켓 템플릿/매칭 템플릿 파트너 관리 EF                 |
 | [storage-upload/](./storage-upload/)                                     | Storage signed upload presign/complete/abort                     |
 | [partner-approve-application/](./partner-approve-application/BLUEDOC.md) | 파트너 신청 승인 EF                                              |
@@ -42,4 +43,4 @@ minglit 의 backend API 진입점. 60+ EF 와 공용 `_shared/`, 테스트 유�
 
 ---
 
-_Reviewed: 2026-06-04 22:22_
+_Reviewed: 2026-06-08 15:43_

@@ -544,6 +544,12 @@ verify_jwt = false  # JWT verification handled in function code
 import_map = "./deno.json"
 entrypoint = "./functions/user-create-order/index.ts"
 
+[functions.user-request-refund]
+enabled = true
+verify_jwt = false  # JWT verification handled in function code
+import_map = "./deno.json"
+entrypoint = "./functions/user-request-refund/index.ts"
+
 [functions.user-manage-notification]
 enabled = true
 verify_jwt = false  # JWT verification handled in function code

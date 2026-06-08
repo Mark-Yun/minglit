@@ -1,6 +1,6 @@
 BEGIN;
 
-SELECT plan(5);
+SELECT plan(8);
 
 SELECT is_empty(
   $$
@@ -158,6 +158,53 @@ SELECT is_empty(
   ORDER BY 1
   $$,
   'service_role can EXECUTE EF/cron/trigger-only SECURITY DEFINER functions'
+);
+
+SELECT is_empty(
+  $$
+  WITH target(function_oid) AS (
+    VALUES
+      ('public.has_partner_permission(uuid, text)'::regprocedure),
+      ('public.is_super_admin()'::regprocedure),
+      ('public.is_visible_user_profile(uuid)'::regprocedure)
+  )
+  SELECT function_oid::regprocedure::text
+  FROM target
+  WHERE has_function_privilege('anon', function_oid, 'EXECUTE')
+  ORDER BY 1
+  $$,
+  'anon cannot EXECUTE authenticated RLS predicate SECURITY DEFINER helpers directly'
+);
+
+SELECT is_empty(
+  $$
+  WITH target(function_oid) AS (
+    VALUES
+      ('public.has_partner_permission(uuid, text)'::regprocedure),
+      ('public.is_super_admin()'::regprocedure),
+      ('public.is_visible_user_profile(uuid)'::regprocedure)
+  )
+  SELECT function_oid::regprocedure::text
+  FROM target
+  WHERE NOT has_function_privilege('authenticated', function_oid, 'EXECUTE')
+     OR NOT has_function_privilege('service_role', function_oid, 'EXECUTE')
+  ORDER BY 1
+  $$,
+  'authenticated and service_role can EXECUTE RLS predicate SECURITY DEFINER helpers'
+);
+
+SELECT is_empty(
+  $$
+  SELECT schemaname, tablename, policyname, roles
+  FROM pg_policies
+  WHERE schemaname IN ('public', 'storage')
+    AND roles && ARRAY['public', 'anon']::name[]
+    AND (
+      coalesce(qual, '') || ' ' || coalesce(with_check, '')
+    ) ~ '(^|[^[:alnum:]_])((public\.)?(has_partner_permission|is_super_admin|is_visible_user_profile))\('
+  ORDER BY schemaname, tablename, policyname
+  $$,
+  'anon-targeted RLS policies do not reference authenticated helper SECURITY DEFINER functions'
 );
 
 SELECT is_empty(

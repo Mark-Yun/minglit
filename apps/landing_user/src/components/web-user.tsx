@@ -186,8 +186,8 @@ function TicketPanel({ event }: { event: PublicEvent }) {
   const selectedTicket = event.tickets.find((ticket) => ticket.id === selectedTicketId) ?? availableTickets[0] ?? event.tickets[0];
   const closed = isEventClosed(event) || availableTickets.length === 0;
   const progress = event.maxParticipants > 0 ? Math.min(100, Math.round((event.currentParticipants / event.maxParticipants) * 100)) : 0;
-  const ctaLabel = closed ? "마감된 이벤트" : "로그인하고 신청하기";
-  const helper = closed ? "이미 마감되어 신청할 수 없어요" : "비로그인 열람은 가능하고, 신청 시 로그인으로 이동합니다.";
+  const ctaLabel = closed ? "마감된 이벤트" : "신청하고 결제하기";
+  const helper = closed ? "이미 마감되어 신청할 수 없어요" : "티켓을 확인한 뒤 결제 보호 화면으로 이동합니다.";
 
   const sortedTickets = useMemo(
     () => [...event.tickets].sort((a, b) => a.price - b.price),
@@ -250,7 +250,7 @@ function TicketPanel({ event }: { event: PublicEvent }) {
         <span>합계</span>
         <b>{closed || !selectedTicket ? "-" : formatPrice(selectedTicket.price)}</b>
       </div>
-      <Link className={`wed-cta${closed ? " wed-cta--disabled" : ""}`} href={closed ? "#" : `/login?next=/events/${event.id}`}>
+      <Link className={`wed-cta${closed ? " wed-cta--disabled" : ""}`} href={closed || !selectedTicket ? "#" : `/events/${event.id}/checkout?ticket=${selectedTicket.id}`}>
         <TicketIcon aria-hidden="true" />
         {ctaLabel}
       </Link>

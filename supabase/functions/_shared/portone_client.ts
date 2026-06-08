@@ -78,22 +78,75 @@ export interface PortoneTransfer {
   [key: string]: unknown;
 }
 
+export interface PortoneV2Payment {
+  id?: string;
+  paymentId?: string;
+  status?: string;
+  amount?: number | { total?: number; [key: string]: unknown };
+  paidAt?: string;
+  paid_at?: string;
+  [key: string]: unknown;
+}
+
 export class PortoneV2Client {
   private apiKey: string;
-  private baseUrl = Deno.env.get('PORTONE_V2_API_URL') || "https://api.portone.io";
+  private baseUrl = Deno.env.get("PORTONE_V2_API_URL") ||
+    "https://api.portone.io";
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
   }
 
-  async getIdentityVerification(verificationId: string): Promise<Record<string, unknown>> {
-    const response = await fetch(`${this.baseUrl}/identity-verifications/${verificationId}`, {
+  async getIdentityVerification(
+    verificationId: string,
+  ): Promise<Record<string, unknown>> {
+    const response = await fetch(
+      `${this.baseUrl}/identity-verifications/${verificationId}`,
+      {
+        method: "GET",
+        headers: {
+          "Authorization": `PortOne ${this.apiKey}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(JSON.stringify(errorData));
+    }
+    return await response.json();
+  }
+
+  async getPayment(paymentId: string): Promise<PortoneV2Payment> {
+    const response = await fetch(`${this.baseUrl}/payments/${paymentId}`, {
       method: "GET",
       headers: {
         "Authorization": `PortOne ${this.apiKey}`,
         "Content-Type": "application/json",
       },
     });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(JSON.stringify(errorData));
+    }
+    return await response.json();
+  }
+
+  async cancelPayment(
+    paymentId: string,
+    reason: string,
+  ): Promise<Record<string, unknown>> {
+    const response = await fetch(
+      `${this.baseUrl}/payments/${paymentId}/cancel`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `PortOne ${this.apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ reason }),
+      },
+    );
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(JSON.stringify(errorData));
@@ -127,13 +180,16 @@ export class PortoneV2Client {
   }
 
   async getPartner(partnerId: string): Promise<PortonePlatformPartner> {
-    const response = await fetch(`${this.baseUrl}/platform/partners/${partnerId}`, {
-      method: "GET",
-      headers: {
-        "Authorization": `PortOne ${this.apiKey}`,
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `${this.baseUrl}/platform/partners/${partnerId}`,
+      {
+        method: "GET",
+        headers: {
+          "Authorization": `PortOne ${this.apiKey}`,
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(JSON.stringify(errorData));
@@ -170,14 +226,17 @@ export class PortoneV2Client {
     cancellationId: string;
     [key: string]: unknown;
   }): Promise<Record<string, unknown>> {
-    const response = await fetch(`${this.baseUrl}/platform/transfers/order-cancel`, {
-      method: "POST",
-      headers: {
-        "Authorization": `PortOne ${this.apiKey}`,
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `${this.baseUrl}/platform/transfers/order-cancel`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `PortOne ${this.apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
       },
-      body: JSON.stringify(body),
-    });
+    );
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(JSON.stringify(errorData));
@@ -189,21 +248,34 @@ export class PortoneV2Client {
     partnerId?: string;
     dateRange?: { from?: string; until?: string };
     page?: PortonePageFilter;
-  }): Promise<{ settlements: PortoneSettlement[]; page: Record<string, unknown> }> {
+  }): Promise<
+    { settlements: PortoneSettlement[]; page: Record<string, unknown> }
+  > {
     const params = new URLSearchParams();
     if (filter?.partnerId) params.set("partnerId", filter.partnerId);
-    if (filter?.dateRange?.from) params.set("dateRange.from", filter.dateRange.from);
-    if (filter?.dateRange?.until) params.set("dateRange.until", filter.dateRange.until);
-    if (filter?.page?.number !== undefined) params.set("page.number", String(filter.page.number));
-    if (filter?.page?.size !== undefined) params.set("page.size", String(filter.page.size));
+    if (filter?.dateRange?.from) {
+      params.set("dateRange.from", filter.dateRange.from);
+    }
+    if (filter?.dateRange?.until) {
+      params.set("dateRange.until", filter.dateRange.until);
+    }
+    if (filter?.page?.number !== undefined) {
+      params.set("page.number", String(filter.page.number));
+    }
+    if (filter?.page?.size !== undefined) {
+      params.set("page.size", String(filter.page.size));
+    }
     const qs = params.toString();
-    const response = await fetch(`${this.baseUrl}/platform/partner-settlements${qs ? `?${qs}` : ""}`, {
-      method: "GET",
-      headers: {
-        "Authorization": `PortOne ${this.apiKey}`,
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `${this.baseUrl}/platform/partner-settlements${qs ? `?${qs}` : ""}`,
+      {
+        method: "GET",
+        headers: {
+          "Authorization": `PortOne ${this.apiKey}`,
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(JSON.stringify(errorData));
@@ -217,16 +289,23 @@ export class PortoneV2Client {
   }): Promise<{ payouts: PortonePayout[]; page: Record<string, unknown> }> {
     const params = new URLSearchParams();
     if (filter?.partnerId) params.set("partnerId", filter.partnerId);
-    if (filter?.page?.number !== undefined) params.set("page.number", String(filter.page.number));
-    if (filter?.page?.size !== undefined) params.set("page.size", String(filter.page.size));
+    if (filter?.page?.number !== undefined) {
+      params.set("page.number", String(filter.page.number));
+    }
+    if (filter?.page?.size !== undefined) {
+      params.set("page.size", String(filter.page.size));
+    }
     const qs = params.toString();
-    const response = await fetch(`${this.baseUrl}/platform/payouts${qs ? `?${qs}` : ""}`, {
-      method: "GET",
-      headers: {
-        "Authorization": `PortOne ${this.apiKey}`,
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `${this.baseUrl}/platform/payouts${qs ? `?${qs}` : ""}`,
+      {
+        method: "GET",
+        headers: {
+          "Authorization": `PortOne ${this.apiKey}`,
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(JSON.stringify(errorData));
@@ -234,15 +313,20 @@ export class PortoneV2Client {
     return await response.json();
   }
 
-  async requestPayout(params: PortonePayoutRequest): Promise<PortonePayoutResponse> {
-    const response = await fetch(`${this.baseUrl}/platform/partner-settlements/complete-payout`, {
-      method: "POST",
-      headers: {
-        "Authorization": `PortOne ${this.apiKey}`,
-        "Content-Type": "application/json",
+  async requestPayout(
+    params: PortonePayoutRequest,
+  ): Promise<PortonePayoutResponse> {
+    const response = await fetch(
+      `${this.baseUrl}/platform/partner-settlements/complete-payout`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `PortOne ${this.apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(params),
       },
-      body: JSON.stringify(params),
-    });
+    );
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(JSON.stringify(errorData));
@@ -251,13 +335,16 @@ export class PortoneV2Client {
   }
 
   async getPayoutDetail(payoutId: string): Promise<PortonePayout> {
-    const response = await fetch(`${this.baseUrl}/platform/payouts/${payoutId}`, {
-      method: "GET",
-      headers: {
-        "Authorization": `PortOne ${this.apiKey}`,
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `${this.baseUrl}/platform/payouts/${payoutId}`,
+      {
+        method: "GET",
+        headers: {
+          "Authorization": `PortOne ${this.apiKey}`,
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(JSON.stringify(errorData));
@@ -268,7 +355,9 @@ export class PortoneV2Client {
   async getPartnerTransfers(filter?: {
     partnerId?: string;
     page?: PortonePageFilter;
-  }): Promise<{ transferSummaries: PortoneTransfer[]; page: Record<string, unknown> }> {
+  }): Promise<
+    { transferSummaries: PortoneTransfer[]; page: Record<string, unknown> }
+  > {
     const body: Record<string, unknown> = {};
     if (filter?.page) {
       body.page = filter.page;
@@ -276,14 +365,17 @@ export class PortoneV2Client {
     if (filter?.partnerId) {
       body.filter = { partnerIds: [filter.partnerId] };
     }
-    const response = await fetch(`${this.baseUrl}/platform/transfer-summaries`, {
-      method: "GET",
-      headers: {
-        "Authorization": `PortOne ${this.apiKey}`,
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `${this.baseUrl}/platform/transfer-summaries`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `PortOne ${this.apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
       },
-      body: JSON.stringify(body),
-    });
+    );
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(JSON.stringify(errorData));
@@ -299,20 +391,31 @@ let _portoneClientInstance: PortoneV2Client | null = null;
 export function getPortoneClient(): PortoneV2Client {
   if (_portoneClientInstance) return _portoneClientInstance;
   const key = Deno.env.get("PORTONE_V2_API_KEY");
-  if (!key) throw new Error("Missing required environment variable: PORTONE_V2_API_KEY");
+  if (!key) {
+    throw new Error(
+      "Missing required environment variable: PORTONE_V2_API_KEY",
+    );
+  }
   _portoneClientInstance = new PortoneV2Client(key);
   return _portoneClientInstance;
 }
 
 // Fix #1786: 4 EF에 복붙된 partners.portone_partner_id fetch 패턴 통합
 // deno-lint-ignore no-explicit-any
-export async function fetchPartnerPortoneId(supabase: any, partnerId: string): Promise<string> {
+export async function fetchPartnerPortoneId(
+  supabase: any,
+  partnerId: string,
+): Promise<string> {
   const { data, error } = await supabase
     .from("partners")
     .select("portone_partner_id")
     .eq("id", partnerId)
     .single();
-  if (error) throw new Error(`Failed to fetch partner ${partnerId}: ${error.message}`);
-  if (!data?.portone_partner_id) throw new Error(`Partner ${partnerId} has no PortOne link`);
+  if (error) {
+    throw new Error(`Failed to fetch partner ${partnerId}: ${error.message}`);
+  }
+  if (!data?.portone_partner_id) {
+    throw new Error(`Partner ${partnerId} has no PortOne link`);
+  }
   return data.portone_partner_id;
 }

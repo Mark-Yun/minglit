@@ -5,6 +5,7 @@ import {
   minglitEdgeFunction,
 } from "../_shared/edge_function.ts";
 import { IamportClient } from "../_shared/iamport_client.ts";
+import { getPortoneClient } from "../_shared/portone_client.ts";
 import { errorResponse, successResponse } from "../_shared/response_utils.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
 import { log } from "../_shared/logger.ts";
@@ -45,6 +46,7 @@ export const handler = async (
       userId: ctx.auth.userId,
       input,
       iamportClient: new IamportClient(IMP_KEY, IMP_SECRET),
+      ...("provider" in input ? { portoneClient: getPortoneClient() } : {}),
     });
 
     if (!result.ok) {
@@ -52,10 +54,27 @@ export const handler = async (
     }
 
     if (result.alreadyProcessed) {
-      return successResponse({ success: true, message: "Already processed" });
+      return successResponse({
+        success: true,
+        type: "already_processed",
+        message: "Already processed",
+        ...(result.applicationId
+          ? { application_id: result.applicationId }
+          : {}),
+        ...(result.applicationId
+          ? { purchase_url: `/my/purchases?purchase=${result.applicationId}` }
+          : {}),
+      });
     }
 
-    return successResponse({ success: true, imp_uid: result.impUid });
+    return successResponse({
+      success: true,
+      type: "paid",
+      ...(result.impUid ? { imp_uid: result.impUid } : {}),
+      ...(result.paymentId ? { payment_id: result.paymentId } : {}),
+      application_id: result.applicationId,
+      purchase_url: `/my/purchases?purchase=${result.applicationId}`,
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     log({

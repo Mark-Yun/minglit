@@ -1,11 +1,12 @@
 {
   "name": "minglit-root",
-  "version": "26.06.08-dev-staging",
+  "version": "26.06.09-dev-staging",
   "private": true,
   "workspaces": [
     "apps/landing_user",
     "apps/landing_partner",
-    "apps/mds/docs"
+    "apps/mds/docs",
+    "shared/packages/web_kit"
   ],
   "scripts": {
     "dev:user": "npm run dev --workspace=landing_user",

@@ -1,0 +1,58 @@
+{
+  "name": "@minglit/web-kit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Minglit 웹 MVP 공유 클라이언트 패키지 — supabase 팩토리 / typed EF 클라이언트 / DB 타입 / 도메인 로직 / MDS UI",
+  "exports": {
+    "./supabase": {
+      "types": "./dist/supabase/index.d.ts",
+      "default": "./dist/supabase/index.js"
+    },
+    "./ef": {
+      "types": "./dist/ef/index.d.ts",
+      "default": "./dist/ef/index.js"
+    },
+    "./types": {
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/types/index.js"
+    },
+    "./domain": {
+      "types": "./dist/domain/index.d.ts",
+      "default": "./dist/domain/index.js"
+    },
+    "./ui": {
+      "types": "./dist/ui/index.d.ts",
+      "default": "./dist/ui/index.js"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "gen:types": "supabase gen types typescript --local --workdir ../../.. > src/types/db.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "prepare": "npm run build"
+  },
+  "dependencies": {
+    "@date-fns/tz": "^1.2.0",
+    "@supabase/ssr": "^0.6.1",
+    "@supabase/supabase-js": "^2.49.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "tailwind-merge": "^3.3.1",
+    "zod": "^4.0.0"
+  },
+  "peerDependencies": {
+    "next": ">=15",
+    "react": ">=19"
+  },
+  "devDependencies": {
+    "@types/node": "^25",
+    "@types/react": "^19",
+    "typescript": "^6",
+    "vitest": "^4.1.8"
+  },
+  "files": [
+    "dist"
+  ]
+}
