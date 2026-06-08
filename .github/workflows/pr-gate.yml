@@ -569,7 +569,7 @@ jobs:
   scan-flutter-artifact-secrets:
     name: scan-build-artifact-secrets
     needs: changes
-    if: ${{ needs.changes.outputs.app_user == 'true' || needs.changes.outputs.app_partner == 'true' || needs.changes.outputs.artifact_secret_scan == 'true' }}
+    if: ${{ github.actor != 'dependabot[bot]' && github.actor != 'app/dependabot' && (needs.changes.outputs.app_user == 'true' || needs.changes.outputs.app_partner == 'true' || needs.changes.outputs.artifact_secret_scan == 'true') }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
