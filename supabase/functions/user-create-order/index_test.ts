@@ -15,7 +15,10 @@ import {
   readJson,
   runHandler,
 } from "../_shared/_testing/mod.ts";
-import { importHandlerWithStubbedServe } from "../_test_utils/mock_http.ts";
+import {
+  importHandlerWithStubbedServe,
+  withEnv,
+} from "../_test_utils/mock_http.ts";
 
 let _handler: Handler | null = null;
 async function getHandler(): Promise<Handler> {
@@ -27,6 +30,12 @@ async function getHandler(): Promise<Handler> {
 }
 
 // ── helpers ────────────────────────────────────────────────────────────────────
+
+const PORTONE_V2_ENV = {
+  PORTONE_V2_STORE_ID: "store-test",
+  PORTONE_V2_CHANNEL_KEY: "channel-test",
+  LANDING_USER_ORIGIN: "https://user.test",
+};
 
 /** Build the minimal fake required for a happy-path (no entry groups, no existing app). */
 function happyPathFake(overrides: {
@@ -261,53 +270,57 @@ Deno.test("user-create-order :: existing application (paid) → 400 ALREADY_APPL
 });
 
 Deno.test("user-create-order :: existing application (cancelled) → reapplication allowed, 200", async () => {
-  const handler = await getHandler();
-  const sb = fakeSupabase()
-    .on("events", "select", { data: buildEvent() })
-    .on("tickets", "select", { data: buildTicket() })
-    .on("user_profiles", "select", { data: buildUserProfile() })
-    .on("check_party_balance", "rpc", { data: { allowed: true } })
-    .on("event_applications", "select", {
-      data: buildApplication({ status: "cancelled" }),
-    })
-    .on("apply_event", "rpc", { data: "app-reused-1" })
-    .on("event_applications", "update", { error: null });
-  const res = await runHandler(handler, {
-    body: { event_id: "ev-1", ticket_id: "tk-1" },
-    ctx: makeCtx({ supabase: sb, userId: "u-1" }),
+  await withEnv(PORTONE_V2_ENV, async () => {
+    const handler = await getHandler();
+    const sb = fakeSupabase()
+      .on("events", "select", { data: buildEvent() })
+      .on("tickets", "select", { data: buildTicket() })
+      .on("user_profiles", "select", { data: buildUserProfile() })
+      .on("check_party_balance", "rpc", { data: { allowed: true } })
+      .on("event_applications", "select", {
+        data: buildApplication({ status: "cancelled" }),
+      })
+      .on("apply_event", "rpc", { data: "app-reused-1" })
+      .on("event_applications", "update", { error: null });
+    const res = await runHandler(handler, {
+      body: { event_id: "ev-1", ticket_id: "tk-1" },
+      ctx: makeCtx({ supabase: sb, userId: "u-1" }),
+    });
+    assertEquals(res.status, 200);
+    const body = await readJson<{ success: boolean; application_id: string }>(
+      res,
+    );
+    assertEquals(body.success, true);
+    assertEquals(body.application_id, "app-reused-1");
+    // update path for existing app was taken
+    assertEquals(sb.callsFor("event_applications", "update").length, 1);
   });
-  assertEquals(res.status, 200);
-  const body = await readJson<{ success: boolean; application_id: string }>(
-    res,
-  );
-  assertEquals(body.success, true);
-  assertEquals(body.application_id, "app-reused-1");
-  // update path for existing app was taken
-  assertEquals(sb.callsFor("event_applications", "update").length, 1);
 });
 
 // ── happy paths ────────────────────────────────────────────────────────────────
 
 Deno.test("user-create-order :: paid ticket — happy path → 200 + requires_payment=true", async () => {
-  const handler = await getHandler();
-  const sb = happyPathFake({ ticket: { price: 15000 } });
-  const res = await runHandler(handler, {
-    body: { event_id: "ev-1", ticket_id: "tk-1" },
-    ctx: makeCtx({ supabase: sb, userId: "u-1" }),
+  await withEnv(PORTONE_V2_ENV, async () => {
+    const handler = await getHandler();
+    const sb = happyPathFake({ ticket: { price: 15000 } });
+    const res = await runHandler(handler, {
+      body: { event_id: "ev-1", ticket_id: "tk-1" },
+      ctx: makeCtx({ supabase: sb, userId: "u-1" }),
+    });
+    assertEquals(res.status, 200);
+    const body = await readJson<{
+      success: boolean;
+      application_id: string;
+      amount: number;
+      requires_payment: boolean;
+      ticket_name: string;
+    }>(res);
+    assertEquals(body.success, true);
+    assertEquals(body.requires_payment, true);
+    assertEquals(body.amount, 15000);
+    assertEquals(body.ticket_name, "General");
+    assertEquals(body.application_id, "app-new-1");
   });
-  assertEquals(res.status, 200);
-  const body = await readJson<{
-    success: boolean;
-    application_id: string;
-    amount: number;
-    requires_payment: boolean;
-    ticket_name: string;
-  }>(res);
-  assertEquals(body.success, true);
-  assertEquals(body.requires_payment, true);
-  assertEquals(body.amount, 15000);
-  assertEquals(body.ticket_name, "General");
-  assertEquals(body.application_id, "app-new-1");
 });
 
 Deno.test("user-create-order :: free ticket (price=0) — happy path → 200 + requires_payment=false", async () => {

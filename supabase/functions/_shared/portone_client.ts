@@ -368,7 +368,7 @@ export class PortoneV2Client {
     const response = await fetch(
       `${this.baseUrl}/platform/transfer-summaries`,
       {
-        method: "GET",
+        method: "POST",
         headers: {
           "Authorization": `PortOne ${this.apiKey}`,
           "Content-Type": "application/json",

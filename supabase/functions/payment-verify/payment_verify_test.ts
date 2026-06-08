@@ -131,6 +131,179 @@ Deno.test("payment-verify - PortOne V2 happy path approves order by payment_id",
   });
 });
 
+Deno.test("payment-verify - PortOne V2 order not found returns 404", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute,
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/event_applications") &&
+          req.method === "GET",
+        handler: () => jsonResponse({ message: "not found" }, { status: 404 }),
+      },
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const response = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            provider: "portone_v2",
+            payment_id: "pay-missing",
+          }),
+        );
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 404);
+        assertEquals(payload.error, "Order not found");
+      });
+    });
+  });
+});
+
+Deno.test("payment-verify - PortOne V2 already processed returns purchase link", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute,
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/event_applications") &&
+          req.method === "GET",
+        handler: () =>
+          jsonResponse({
+            ...mockOrderWithOwner,
+            id: "order-processed",
+            status: "approved",
+          }),
+      },
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const response = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            provider: "portone_v2",
+            payment_id: "pay-processed",
+          }),
+        );
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 200);
+        assertEquals(payload.type, "already_processed");
+        assertEquals(payload.application_id, "order-processed");
+        assertEquals(
+          payload.purchase_url,
+          "/my/purchases?purchase=order-processed",
+        );
+      });
+    });
+  });
+});
+
+Deno.test("payment-verify - PortOne V2 amount mismatch cancels payment", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock, calls } = createFetchMock([
+      authRoute,
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/event_applications") &&
+          req.method === "GET",
+        handler: () => jsonResponse({ ...mockOrderWithOwner, id: "order-123" }),
+      },
+      {
+        matcher: "https://api.portone.io/payments/pay-mismatch",
+        handler: () =>
+          jsonResponse({
+            id: "pay-mismatch",
+            status: "PAID",
+            amount: { total: 999 },
+          }),
+      },
+      {
+        matcher: "https://api.portone.io/payments/pay-mismatch/cancel",
+        handler: () => jsonResponse({ cancellationId: "cancel-1" }),
+      },
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const response = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            provider: "portone_v2",
+            payment_id: "pay-mismatch",
+          }),
+        );
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 400);
+        assertEquals(payload.error, "Amount mismatch");
+        assertEquals(
+          calls.some((call) =>
+            call.url.includes("/payments/pay-mismatch/cancel")
+          ),
+          true,
+        );
+      });
+    });
+  });
+});
+
+Deno.test("payment-verify - PortOne V2 DB update failure returns 500", async () => {
+  await withEnv(ENV, async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute,
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/event_applications") &&
+          req.method === "GET",
+        handler: () => jsonResponse({ ...mockOrderWithOwner, id: "order-123" }),
+      },
+      {
+        matcher: "https://api.portone.io/payments/pay123",
+        handler: () =>
+          jsonResponse({
+            id: "pay123",
+            status: "PAID",
+            amount: mockOrder.payment_amount,
+            paid_at: "2026-06-08T00:00:00Z",
+          }),
+      },
+      {
+        matcher: (req) =>
+          req.url.includes("/rest/v1/event_applications") &&
+          req.method === "PATCH",
+        handler: () => jsonResponse({ message: "db error" }, { status: 500 }),
+      },
+    ]);
+
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const response = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            provider: "portone_v2",
+            payment_id: "pay123",
+          }),
+        );
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 500);
+        assertEquals(payload.error, "Failed to update order status");
+      });
+    });
+  });
+});
+
 Deno.test("payment-verify - missing params returns 400", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(
