@@ -94,9 +94,9 @@ jobs:
           SENTRY_DSN_FLUTTER: ${{ secrets.SENTRY_DSN_FLUTTER }}
           STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
 
-      - name: Deploy Next.js app
-        if: ${{ inputs.app-type == 'nextjs' }}
-        id: deploy_nextjs
+      - name: Deploy Next.js app (preview)
+        if: ${{ inputs.app-type == 'nextjs' && inputs.deploy-branch != 'main' }}
+        id: deploy_nextjs_preview
         uses: ./.github/actions/deploy-nextjs-app
         with:
           working-directory: ${{ inputs.working-directory }}
@@ -106,8 +106,24 @@ jobs:
           dev-domain-alias: ${{ inputs.dev-domain-alias }}
           deploy-branch: ${{ inputs.deploy-branch }}
           require-supabase-env: ${{ inputs.require-nextjs-supabase-env && 'true' || 'false' }}
-          next-public-supabase-url: ${{ inputs.deploy-branch == 'main' && secrets.SUPABASE_MAIN_URL || secrets.SUPABASE_DEV_URL }}
-          next-public-supabase-publishable-key: ${{ inputs.deploy-branch == 'main' && secrets.SUPABASE_MAIN_KEY || secrets.SUPABASE_DEV_KEY }}
+          next-public-supabase-url: ${{ secrets.SUPABASE_DEV_URL }}
+          next-public-supabase-publishable-key: ${{ secrets.SUPABASE_DEV_KEY }}
+          next-public-statsig-client-key: ${{ secrets.STATSIG_CLIENT_KEY }}
+
+      - name: Deploy Next.js app (production)
+        if: ${{ inputs.app-type == 'nextjs' && inputs.deploy-branch == 'main' }}
+        id: deploy_nextjs_production
+        uses: ./.github/actions/deploy-nextjs-app
+        with:
+          working-directory: ${{ inputs.working-directory }}
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          dev-domain-alias: ${{ inputs.dev-domain-alias }}
+          deploy-branch: ${{ inputs.deploy-branch }}
+          require-supabase-env: ${{ inputs.require-nextjs-supabase-env && 'true' || 'false' }}
+          next-public-supabase-url: ${{ secrets.SUPABASE_MAIN_URL }}
+          next-public-supabase-publishable-key: ${{ secrets.SUPABASE_MAIN_KEY }}
           next-public-statsig-client-key: ${{ secrets.STATSIG_CLIENT_KEY }}
 
       - name: Export accessible URL
@@ -115,6 +131,8 @@ jobs:
         run: |
           if [ "${{ inputs.app-type }}" = "flutter" ]; then
             echo "accessible-url=${{ steps.deploy_flutter.outputs.accessible-url }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ inputs.deploy-branch }}" = "main" ]; then
+            echo "accessible-url=${{ steps.deploy_nextjs_production.outputs.accessible-url }}" >> "$GITHUB_OUTPUT"
           else
-            echo "accessible-url=${{ steps.deploy_nextjs.outputs.accessible-url }}" >> "$GITHUB_OUTPUT"
+            echo "accessible-url=${{ steps.deploy_nextjs_preview.outputs.accessible-url }}" >> "$GITHUB_OUTPUT"
           fi
