@@ -136,6 +136,7 @@ feature 문서는 일괄 재작성하지 않는다. prd.md 와 spec.md 의 CUJ �
 
 | 문서 | 내용 |
 |------|------|
+| [web-client.md](./web-client.md) | 웹 클라이언트 아키텍처 — web_kit, feature-first, 렌더링/테스트 전략 |
 | [overview.md](./overview.md) | 시스템 조감도 — EF-only gateway 등 피벗을 가능하게 한 구조 |
 | [backend.md](./backend.md) | Supabase 백엔드 (Phase 2 EF 정리의 대상 목록) |
 | [architecture-decisions.md](./architecture-decisions.md) | ADR — 백엔드/검색/추천 스택 결정 이력 |
