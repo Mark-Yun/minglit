@@ -208,6 +208,11 @@
       "envs": ["dev", "production"],
       "description": "유저 주문 취소 + PortOne 환불 처리"
     },
+    "user-request-refund": {
+      "callers": ["user"],
+      "envs": ["dev", "production"],
+      "description": "유저가 자동 환불 불가 주문의 파트너 환불 요청을 생성"
+    },
     "user-event-feed": {
       "callers": ["user", "public"],
       "envs": ["dev", "production"],

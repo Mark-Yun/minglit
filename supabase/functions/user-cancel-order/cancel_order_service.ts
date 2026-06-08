@@ -18,6 +18,13 @@ const FN = "user-cancel-order";
 export type CancelOrderServiceResult =
   | { ok: true; type: "cancelled" }
   | { ok: true; type: "refunded"; refundAmount: number | undefined }
+  | {
+    ok: true;
+    type: "partner_refund_available";
+    applicationId: string;
+    reason: string;
+    deadlineHours: number;
+  }
   | { ok: false; status: number; message: string; details?: unknown };
 
 export async function cancelOrder(args: {
@@ -266,7 +273,13 @@ async function refundPaidApplication(args: {
   });
 
   if (!eligibility.eligible) {
-    return fail(400, "refund_not_eligible", { reason: eligibility.reason });
+    return {
+      ok: true,
+      type: "partner_refund_available",
+      applicationId: args.application.id,
+      reason: eligibility.reason ?? "refund_window_expired",
+      deadlineHours: 72,
+    };
   }
 
   let cancelResponse: Record<string, unknown>;

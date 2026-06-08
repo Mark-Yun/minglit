@@ -88,6 +88,24 @@
           },
           "PORTONE_API_SECRET": {
             "desc": "PortOne V1 API secret"
+          },
+          "PORTONE_V2_API_KEY": {
+            "desc": "PortOne V2 API key for web payment verification"
+          }
+        }
+      },
+      "user-create-order": {
+        "required": {
+          "PORTONE_V2_STORE_ID": {
+            "desc": "PortOne V2 public store id for browser checkout"
+          },
+          "PORTONE_V2_CHANNEL_KEY": {
+            "desc": "PortOne V2 public channel key for browser checkout"
+          }
+        },
+        "optional": {
+          "LANDING_USER_ORIGIN": {
+            "desc": "User landing origin used to build PortOne checkout redirectUrl"
           }
         }
       },

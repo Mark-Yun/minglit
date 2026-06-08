@@ -21,6 +21,18 @@ export const createOrderResponseSchema = z.object({
   amount: z.number(),
   requires_payment: z.boolean(),
   ticket_name: z.string(),
+  payment: z.object({
+    provider: z.literal("portone_v2"),
+    storeId: z.string(),
+    channelKey: z.string(),
+    paymentId: z.string(),
+    orderName: z.string(),
+    totalAmount: z.number(),
+    currency: z.literal("CURRENCY_KRW"),
+    payMethod: z.literal("CARD"),
+    redirectUrl: z.string(),
+    forceRedirect: z.boolean(),
+  }).optional(),
 });
 export type CreateOrderResponse = z.infer<typeof createOrderResponseSchema>;
 

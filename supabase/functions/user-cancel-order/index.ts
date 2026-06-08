@@ -47,6 +47,18 @@ export const handler = async (
       });
     }
 
+    if (result.type === "partner_refund_available") {
+      return successResponse({
+        success: true,
+        type: "partner_refund_available",
+        data: {
+          application_id: result.applicationId,
+          reason: result.reason,
+          deadline_hours: result.deadlineHours,
+        },
+      });
+    }
+
     return successResponse({ success: true, type: "cancelled" });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
