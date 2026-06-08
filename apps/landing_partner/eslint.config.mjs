@@ -67,7 +67,7 @@ const eslintConfig = defineConfig([
   },
   // TypeScript overlay: @typescript-eslint/parser + recommended rules for .ts/.tsx
   ...nextTs,
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+  globalIgnores([".next/**", "out/**", "build/**", ".test-build/**", "next-env.d.ts"]),
 ]);
 
 export default eslintConfig;

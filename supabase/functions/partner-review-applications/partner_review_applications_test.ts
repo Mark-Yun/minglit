@@ -36,14 +36,14 @@ function eventRoute() {
   };
 }
 
-function permissionRoute(hasPermission = true) {
+function permissionRoute(permissions: string[] | null = ["EVENT_MANAGE"]) {
   return {
     matcher: (req: Request) =>
       req.url.includes("/rest/v1/partner_member_permissions") && req.method === "GET",
     handler: () =>
       jsonResponse(
-        hasPermission
-          ? [{ role: "owner", permissions: ["EVENT_MANAGE"] }]
+        permissions
+          ? [{ role: "manager", permissions }]
           : [],
       ),
   };
@@ -150,7 +150,7 @@ Deno.test("returns 400 when rejection has empty reason", async () => {
 });
 
 Deno.test("returns 403 when caller lacks permission", async () => {
-  const { fetchMock } = createFetchMock([authRoute, eventRoute(), permissionRoute(false)]);
+  const { fetchMock } = createFetchMock([authRoute, eventRoute(), permissionRoute(null)]);
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
@@ -169,11 +169,44 @@ Deno.test("returns 403 when caller lacks permission", async () => {
   });
 });
 
+Deno.test("allows party managers to review applications", async () => {
+  const { fetchMock } = createFetchMock([
+    authRoute,
+    eventRoute(),
+    permissionRoute(["PARTY_MANAGE"]),
+    rpcRoute({
+      approved: [appId1],
+      rejected: [],
+      skipped_due_to_capacity: [],
+      skipped_already_processed: [],
+      remaining_slots_after: 4,
+    }),
+  ]);
+  await withEnv(ENV, async () => {
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
+        const res = await handler(
+          authenticatedJsonRequest(
+            "https://supabase.test/partner-review-applications",
+            { event_id: eventId, approvals: [appId1], rejections: [] },
+          ),
+        );
+        assertEquals(res.status, 200);
+        const body = await readJson(res);
+        assertEquals(body.approved, [appId1]);
+      });
+    });
+  });
+});
+
 Deno.test("approves and rejects in single call", async () => {
   const { fetchMock } = createFetchMock([
     authRoute,
     eventRoute(),
-    permissionRoute(true),
+    permissionRoute(),
     rpcRoute({
       approved: [appId1],
       rejected: [appId2],
@@ -213,7 +246,7 @@ Deno.test("returns skipped_due_to_capacity when event full", async () => {
   const { fetchMock } = createFetchMock([
     authRoute,
     eventRoute(),
-    permissionRoute(true),
+    permissionRoute(),
     rpcRoute({
       approved: [],
       rejected: [],

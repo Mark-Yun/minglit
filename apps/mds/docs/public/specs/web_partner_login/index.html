@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<!-- ── Web spec metadata (machine-readable) ───────────────────── -->
+<meta name="feature-status" content="planned">
+<meta name="features" content="account/partner-login">
+<meta name="surface" content="web_partner">
+<title>Spec — WebPartnerLogin (web_partner · /login)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   WebPartnerLogin — 파트너웹 로그인 (콘솔 진입 전 단계).
+   중앙 카드형 로그인: surface 배경 캔버스 + 400px 로그인 카드.
+   사이드바 콘솔 셸(web_partner_home) 밖의 유일한 web_partner 화면.
+   1280px desktop baseline (Mark 지시 2026-06-07) — mockup은 1280×800
+   캔버스를 0.5 scale로 렌더. 모바일 variant는 후속 TBD.
+
+   Partner brand: viewport-scoped --color-partner-primary (#6c3ce1).
+   ============================================================ */
+.viewport {
+  --color-primary: var(--color-partner-primary);   /* #6c3ce1 */
+  --spec-blueprint-rgb: 108, 60, 225;
+}
+body.dark-mode .viewport {
+  --color-primary: var(--color-partner-dark-primary); /* #9b7bec */
+}
+
+/* --- Desktop viewport (1280×800) + 0.5 scale wrapper --- */
+.viewport--desktop {
+  width: 1280px;
+  height: 800px;
+  border-radius: 12px;
+}
+.mock-scale {
+  width: 640px;
+  height: 400px;
+  overflow: hidden;
+  position: relative;
+}
+.mock-scale .viewport--desktop {
+  transform: scale(0.5);
+  transform-origin: top left;
+}
+.state-mini__mock { width: 664px; } /* 640 mock + 12px padding ×2 보정 */
+
+/* --- Desktop blueprint (560×350 = 1280×800 비율) --- */
+.layout-grid--desktop { grid-template-columns: 560px 1fr; }
+.blueprint--desktop {
+  width: 560px;
+  height: 350px;
+  border-radius: 8px;
+}
+
+/* ============================================================
+   Screen widgets — wpl- prefix
+   ============================================================ */
+.wpl-canvas {
+  position: absolute;
+  inset: 0;
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.wpl-card {
+  width: 400px;
+  background: var(--color-background);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-xxlarge) var(--spacing-xlarge);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* --- ㉠ Brand block --- */
+.wpl-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: var(--spacing-xlarge);
+}
+.wpl-brand__logo { height: 56px; width: auto; display: block; }
+.wpl-brand__badge {
+  margin-top: var(--spacing-medium);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--color-primary);
+}
+.wpl-brand__slogan {
+  margin-top: var(--spacing-sm);
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  text-align: center;
+  line-height: 1.45;
+}
+
+/* --- ㉡ OAuth buttons (brand-locked — behavior source 상속) --- */
+.wpl-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+.btn-social {
+  height: 48px;
+  border-radius: var(--radius-small);
+  border: 1px solid var(--color-divider);
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-small);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-social__icon { width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; line-height: 1; }
+.btn-social__icon svg { width: 20px; height: 20px; display: block; }
+.btn-social--google { background: #ffffff; color: #111827; border-color: #e5e7eb; }
+body.dark-mode .viewport .btn-social--google { background: #212121; color: #ffffff; border-color: #3d3d3d; }
+.btn-social--apple { background: #111827; color: #ffffff; border-color: #111827; }
+body.dark-mode .viewport .btn-social--apple { background: #ffffff; color: #111827; border-color: #ffffff; }
+.btn-social--kakao { background: #FEE500; color: #111827; border-color: #FEE500; }
+.is-disabled { opacity: 0.45; pointer-events: none; }
+
+/* in-button spinner (진행 중 state) */
+.wpl-btn-spinner {
+  width: 18px; height: 18px;
+  border: 2px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: wpl-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes wpl-spin { to { transform: rotate(360deg); } }
+
+/* --- 실패 안내 배너 (카드 내 inline alert) --- */
+.wpl-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-small);
+  background: color-mix(in srgb, var(--color-error) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-error) 25%, transparent);
+  border-radius: var(--radius-small);
+  padding: var(--spacing-sm) var(--spacing-medium);
+  margin-bottom: var(--spacing-medium);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--color-error);
+}
+.wpl-alert strong { font-weight: 700; }
+
+/* --- ㉢ 입점 문의 안내 --- */
+.wpl-inquiry {
+  margin-top: var(--spacing-large);
+  padding-top: var(--spacing-medium);
+  border-top: 1px solid var(--color-divider);
+  text-align: center;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.wpl-inquiry a {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* --- 권한 없음 (파트너 계정 아님) 카드 내용 --- */
+.wpl-noaccess { text-align: center; }
+.wpl-noaccess__icon { font-size: 40px; line-height: 1; }
+.wpl-noaccess__title {
+  margin-top: var(--spacing-medium);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.wpl-noaccess__sub {
+  margin-top: var(--spacing-small);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+}
+.wpl-account-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--spacing-medium);
+  padding: 5px 12px;
+  border-radius: var(--radius-chip);
+  background: var(--color-surface);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.wpl-noaccess__actions {
+  margin-top: var(--spacing-large);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+.wpl-btn {
+  height: 48px;
+  border-radius: var(--radius-small);
+  font-size: 14px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+}
+.wpl-btn--primary { background: var(--color-primary); color: #fff; }
+.wpl-btn--outline {
+  background: transparent;
+  border: 1px solid var(--color-divider);
+  color: var(--color-text-primary);
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     Toolbar — universal toggles
+     ============================================================ -->
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     📍 HEADER
+     ============================================================ -->
+<header>
+  <h1>파트너웹 로그인</h1>
+</header>
+
+<!-- ============================================================
+     🎯 OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 160px;">Status</th>
+        <td>
+          <strong>🚧 디자인중</strong>
+          <em style="color: var(--color-text-secondary);">— web-mvp pivot Phase 3 · 파트너 콘솔의 유일한 비로그인 화면 (콘솔 셸 밖)</em>
+        </td>
+      </tr>
+      <tr>
+        <th>Surface</th>
+        <td><code>web_partner</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>auth · entry · partner</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>/login</code> · Next.js route (landing_partner 확장 — 경로명 TBD). 콘솔 진입 전 단계라 <a href="/specs/web_partner_home/index.html"><code>web_partner_home</code></a>의 사이드바 콘솔 셸을 쓰지 않는 단독 레이아웃.</td>
+      </tr>
+      <tr>
+        <th>Behavior Source</th>
+        <td>
+          <a href="/specs/partner_login_page/index.html"><code>/specs/partner_login_page/index.html</code></a>
+          — OAuth 3종(Google · Apple · Kakao) 흐름 · 진행 중/실패 처리 · 이미 로그인된 파트너는 화면 없이 즉시 통과 · 보호 화면에서 보내진 경우 로그인 후 원래 목적지로 복귀 규칙을 상속. 웹 브라우저에서는 Apple 버튼이 항상 보인다 (모바일 앱의 기기별 분기와 달리 변형 없음).
+          <br>웹에서 달라지는 점: 풀스크린 레이아웃 → <strong>surface 배경 위 중앙 카드</strong> · 진행 중 풀스크린 스피너 → 카드 내 진행 표시 · 떴다 사라지는 에러 다이얼로그 → 카드 안에 머무는 안내 배너 · 개발용 로고 5탭 트리거 없음 · <strong>"권한 없음(파트너 계정 아님)" state 신설</strong> — 같은 계정 체계를 쓰는 일반 사용자가 들어올 수 있는 웹 특성.
+        </td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <em>— (top-level — 콘솔 셸 밖 단독 화면)</em><br>
+          <strong>Children</strong>: <em>—</em>
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          <strong>입점 파트너가 콘솔로 들어가는 단 하나의 문.</strong>
+          OAuth 로그인만 제공하고, 성공하면 파트너 홈(<code>/dashboard</code>)으로 보낸다.
+          파트너 입점은 운영자 수동 승인이므로 가입/신청 퍼널이 없다 — 입점 전 방문자에게는
+          "입점 문의" 안내 링크 하나만 둔다.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: URL 직접 진입/북마크 · 파트너 랜딩의 "로그인" 진입 · 콘솔 보호 화면에 비로그인으로 접근해 보내진 경우 · 알림 메일 링크 클릭 시 비로그인 상태.<br>
+          <strong>Exit points</strong>: 로그인 성공 → 파트너 홈 <code>/dashboard</code> (보호 화면에서 보내졌으면 원래 목적지로 복귀) · 파트너 아닌 계정 → 권한 없음 카드 → 입점 문의(랜딩) 또는 다른 계정으로 재로그인 · "입점 문의" → 파트너 랜딩의 입점 안내.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          web-mvp pivot으로 파트너 콘솔이 데스크톱 운영 도구로 재구성됐다
+          (<code>docs/architecture/web-mvp-pivot.md</code> §9). 로그인은 콘솔 진입 전 단계라
+          사이드바 셸이 없고, 데스크톱에서 풀폭 로그인은 어색하므로 <strong>중앙 카드형</strong>으로.
+          입점이 운영자 수동이라 모바일 spec의 "파트너 입점 문의" CTA는 유지하되
+          가입/신청 링크는 의도적으로 두지 않는다. 같은 minglit 계정 체계를 쓰므로
+          일반 사용자가 로그인에 성공할 수 있는데, 이때 콘솔로 들여보내지 않고
+          "파트너 계정이 아니에요"를 이 화면에서 바로 알려준다
+          (<code>web_partner_home</code>의 "파트너 아닌 계정 접근" 정책과 한 쌍 — 입구 쪽 표현).
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>로그아웃 상태에서만. 세션이 살아 있으면 보이지 않고 통과 — 파트너당 가끔 (첫 진입 · 세션 만료 · 로그아웃 후).</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     🕐 HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">
+    이 spec의 주요 변경 이력. 최신 항목 위에 추가 (최신 → 오래된 순).
+  </p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-06-07</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>web-mvp pivot Phase 3 초기 설계 (1280 baseline)</strong> —
+          surface 배경 + 중앙 400px 로그인 카드. OAuth 3종은 behavior source 상속,
+          웹은 Apple 버튼 항상 노출. 가입/신청 링크 없음 — "입점 문의" 안내 링크(랜딩)만.
+          4 state (Default · 로그인 진행 중 · 로그인 실패 · 권한 없음(파트너 계정 아님)).
+          모바일 variant는 후속 TBD. Behavior Source: <code>partner_login_page</code> v1.0.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     Anchor nav
+     ============================================================ -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Responsive Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#global-behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     🧱 PERSPECTIVE 1 · RESPONSIVE LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Responsive Layout</h2>
+    <span class="lede">
+      화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.
+      <strong>web_partner는 데스크톱 우선</strong> (<code>web_foundation_responsive</code> surface priority) —
+      Desktop(≥1280) blueprint가 1차 산출물. 모바일 variant는 후속 TBD.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Breakpoint variants</h2>
+    <p class="intro">
+      Breakpoint · 컨테이너 · 그리드 정의의 SSOT는
+      <a href="/specs/web_foundation_responsive/"><code>web_foundation_responsive</code></a>.
+      이 화면은 콘텐츠가 카드 1장뿐이라 컨테이너 그리드를 쓰지 않는다 —
+      surface 배경 캔버스에 카드를 양축 중앙 정렬.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 160px;">Variant</th>
+          <th style="width: 180px;">Breakpoint</th>
+          <th>이 화면에서의 차이</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Desktop</strong> (기본 — 이 surface의 1차 variant)</td><td><code>≥ 1280px</code></td><td>surface 배경 캔버스 + 중앙 로그인 카드 (w=400px 고정). 초광폭에서도 카드 폭 불변 — 잉여 폭은 배경.</td></tr>
+        <tr><td>Tablet</td><td><code>768–1279px</code></td><td>Desktop과 동일 — 카드 폭이 고정이라 캔버스만 줄어듦. 별도 blueprint 없음.</td></tr>
+        <tr><td><strong>Mobile</strong></td><td><code>&lt; 768px</code></td><td><strong>후속 TBD</strong> — 가안: 카드 테두리를 풀고 풀폭 단일 컬럼(모바일 앱 로그인과 같은 감각, gutter <code>spacing-screen-edge (16px)</code>). 별도 blueprint는 모바일 variant 작업에서 추가.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree — Desktop (≥1280px, 기본)</h2>
+    <p class="intro">
+      구조는 2층뿐 — surface 배경 캔버스(①) 위에 로그인 카드(②)가 양축 중앙.
+      카드 내부 구성은 Sub-anatomy ② 참조. blueprint는 1280×800 비율(560×350)로 그림.
+    </p>
+
+    <div class="layout-grid layout-grid--desktop">
+      <div class="blueprint blueprint--desktop">
+        <!-- ① 페이지 캔버스 (전체) -->
+        <div class="blueprint__region" style="top:0; left:0; right:0; bottom:0; border-style:solid; border-color: rgba(var(--spec-blueprint-rgb), 0.18);">
+          <span class="blueprint__region-label">① 페이지 캔버스 (surface)</span>
+        </div>
+        <!-- ② 로그인 카드: 400/1280 → 175/560 · h 480/800 → 210/350 -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:70px; left:192px; width:175px; height:210px;">
+          <span class="blueprint__region-label">② 로그인 카드 · w=400px</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:4px; right:4px;">카드: 양축 중앙</div>
+      </div>
+
+      <div class="layout-tree"><b>&lt;main&gt;</b> (페이지 캔버스 — 100vw/100vh · bg <code>color-surface</code>)
+└─ <em>중앙 정렬 (수평 + 수직)</em>                  ← ①
+   └─ <b>LoginCard</b> (w=400px 고정)              ← ②
+      └─ Sub-anatomy ② 참조
+         (브랜드 블록 → OAuth 버튼 그룹 → 입점 문의 안내)</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <p class="intro">
+      Desktop 기준. Mobile 칸은 후속 variant 작업에서 채움.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 50px;">#</th>
+          <th style="width: 190px;">Region</th>
+          <th style="width: 190px;">Alignment</th>
+          <th>Spacing — Desktop</th>
+          <th>Spacing — Mobile</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>①</td><td>페이지 캔버스</td><td>카드 양축 중앙 정렬</td><td>bg <code>color-surface</code> · 컨테이너 그리드 없음 (카드 1장)</td><td>후속 TBD</td></tr>
+        <tr><td>②</td><td>로그인 카드</td><td>내부 세로 스택 · 콘텐츠 중앙</td><td>w=400px 고정 · padding <code>spacing-xxlarge (48px)</code> 상하 / <code>spacing-xlarge (32px)</code> 좌우 · 1px <code>color-divider</code> border · <code>radius-card (16px)</code></td><td>후속 TBD</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ② — 로그인 카드 (LoginCard)</h2>
+    <p class="intro">
+      위에서부터 브랜드 블록 → OAuth 버튼 그룹 → 입점 문의 안내. 가입/신청 링크는 의도적으로 없음 —
+      입점은 운영자 수동 승인. 실패 배너(로그인 실패 state)는 버튼 그룹 바로 위에 끼어든다.
+    </p>
+    <div class="layout-grid">
+      <div class="blueprint" style="width: 280px; height: 336px; border-radius: 16px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:32px; left:22px; right:22px; height:88px;">
+          <span class="blueprint__region-label">㉠ 브랜드 블록<br>로고 + PARTNER 배지 + 슬로건</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:142px; left:22px; right:22px; height:118px;">
+          <span class="blueprint__region-label">㉡ OAuth 버튼 그룹 · h=48 × 3</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="bottom:24px; left:22px; right:22px; height:30px;">
+          <span class="blueprint__region-label">㉢ 입점 문의 안내</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>LoginCard</b> (w=400px · bg background · 1px divider · <code>radius-card (16px)</code>)
+└─ padding: <code>spacing-xxlarge (48px)</code> / <code>spacing-xlarge (32px)</code>
+   └─ <b>flex column</b>(crossAxis: stretch)
+      ├─ <em>브랜드 블록</em> (중앙 정렬)                       ← ㉠
+      │  ├─ minglit 로고 (h=56px · light/dark 자동 교체)
+      │  ├─ Gap: <code>spacing-medium (16px)</code>
+      │  ├─ "PARTNER" 배지 (18 / 600 · letter-spacing 2 · <code>color-primary</code>)
+      │  ├─ Gap: <code>spacing-sm (12px)</code>
+      │  └─ 슬로건 "Verified Vibe, Spark Your Business" (14 / 400 secondary)
+      ├─ Gap: <code>spacing-xlarge (32px)</code>
+      │
+      ├─ <em>OAuth 버튼 그룹</em> (풀폭)                        ← ㉡
+      │  ├─ <b>OAuthButton</b> Google  (h=48 · <code>radius-small (8px)</code>)
+      │  ├─ Gap: <code>spacing-sm (12px)</code>
+      │  ├─ <b>OAuthButton</b> Apple   <i>(웹은 항상 노출)</i>
+      │  ├─ Gap: <code>spacing-sm (12px)</code>
+      │  └─ <b>OAuthButton</b> Kakao   (brand-locked yellow)
+      ├─ Gap: <code>spacing-large (24px)</code>
+      │
+      └─ <em>입점 문의 안내</em> (상단 1px divider)             ← ㉢
+         └─ "아직 입점 전이신가요? <b>입점 문의</b>" (13 · 링크만 <code>color-primary</code>)</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 180px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>브랜드 블록</td><td>세로 스택 · 중앙 정렬</td><td>로고↔배지 <code>spacing-medium (16px)</code> · 배지↔슬로건 <code>spacing-sm (12px)</code> · 블록↔버튼 <code>spacing-xlarge (32px)</code></td></tr>
+        <tr><td>㉡</td><td>OAuth 버튼 그룹</td><td>세로 스택 · 풀폭 stretch</td><td>버튼 h=48px · <code>radius-small (8px)</code> · 버튼 사이 <code>spacing-sm (12px)</code> · 아이콘↔라벨 <code>spacing-small (8px)</code></td></tr>
+        <tr><td>㉢</td><td>입점 문의 안내</td><td>중앙 정렬 · 카드 하단</td><td>상단 1px <code>color-divider</code> · 그룹↔안내 <code>spacing-large (24px)</code> · divider↔텍스트 <code>spacing-medium (16px)</code> · 13px · 링크만 <code>color-primary</code> 600</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     🎨 PERSPECTIVE 2 · STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">
+      각 state의 시각 mockup + 6 aspect rows. States는 breakpoint와 무관하게 공유 —
+      mockup은 web_partner 기본 breakpoint인 <strong>Desktop 1280px</strong> (0.5 scale 렌더).
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>States gallery</h2>
+    <p class="intro">
+      4 state — 인증 진행 단계와 계정 권한이 분기 기준. Behavior Source(<code>partner_login_page</code>)의
+      OS별 변형(Android에서 Apple 빠짐)은 웹에 없고(브라우저는 항상 3버튼),
+      대신 웹 전용으로 <strong>권한 없음(파트너 계정 아님)</strong> state를 신설.
+    </p>
+
+    <h3 style="margin-top: 24px;">State summary</h3>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 220px;">State</th>
+          <th style="width: 100px;">Tag</th>
+          <th style="width: 260px;">조건 (요약)</th>
+          <th>Key visual differentiator</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="is-baseline-tint"><td><strong>Default · 대기</strong> 🎯</td><td>primary</td><td>비로그인 방문 · 진행 중인 인증 없음</td><td>브랜드 + OAuth 3버튼 + 입점 문의 링크 — 전부 활성</td></tr>
+        <tr><td><strong>로그인 진행 중</strong></td><td>async</td><td>OAuth 버튼 클릭 직후 ~ 외부 로그인 페이지로 떠나기 전 / 복귀 후 확인 중</td><td>누른 버튼이 스피너 + "이동하는 중…"으로, 나머지 흐리게 비활성</td></tr>
+        <tr><td><strong>로그인 실패</strong></td><td>error</td><td>인증 마무리 실패 (네트워크/서버)</td><td>버튼 그룹 위에 에러 톤 안내 배너 — 버튼은 다시 활성</td></tr>
+        <tr><td><strong>권한 없음 · 파트너 계정 아님</strong></td><td>blocked</td><td>로그인 성공 · 이 계정에 입점된 파트너 없음</td><td>버튼 그룹 자리가 안내 블록으로 교체 — 입점 문의 + 다른 계정 로그인</td></tr>
+      </tbody>
+    </table>
+
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- ════════════════════════════════════════════════════
+           State 1 · Default · 대기 (baseline)
+           ════════════════════════════════════════════════════ -->
+      <table class="ref state-mini is-baseline-tint">
+        <thead>
+          <tr><th colspan="3">
+            <strong>Default · 대기</strong> 🎯 <span class="tag">primary · baseline</span>
+            <small>비로그인 방문 — 진행 중인 인증 없음</small>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <div class="wpl-canvas">
+                  <div class="wpl-card">
+                    <div class="wpl-brand">
+                      <img class="wpl-brand__logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                      <div class="wpl-brand__badge">PARTNER</div>
+                      <div class="wpl-brand__slogan">Verified Vibe, Spark Your Business</div>
+                    </div>
+                    <div class="wpl-buttons">
+                      <button class="btn-social btn-social--google"><span class="btn-social__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg></span><span>Google로 시작하기</span></button>
+                      <button class="btn-social btn-social--apple"><span class="btn-social__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-2.987 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.572-2.27 1.206-2.98.804-.94 2.142-1.64 3.248-1.68.03.13.05.28.05.43zm4.565 15.71c-.03.07-.463 1.58-1.518 3.12-.945 1.34-1.94 2.71-3.43 2.71-1.517 0-1.9-.88-3.63-.88-1.698 0-2.302.91-3.67.91-1.377 0-2.332-1.26-3.428-2.8-1.287-1.82-2.323-4.63-2.323-7.28 0-4.28 2.797-6.55 5.552-6.55 1.448 0 2.675.95 3.6.95.865 0 2.222-1.01 3.902-1.01.613 0 2.886.06 4.374 2.19-.13.09-2.383 1.37-2.383 4.19 0 3.26 2.854 4.42 2.955 4.45z"/></svg></span><span>Apple로 시작하기</span></button>
+                      <button class="btn-social btn-social--kakao"><span class="btn-social__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C7.03 3 3 6.14 3 10c0 2.42 1.59 4.55 4 5.79V21l4.46-2.97c.18.01.36.02.54.02 4.97 0 9-3.14 9-7s-4.03-7-9-7z"/></svg></span><span>Kakao로 시작하기</span></button>
+                    </div>
+                    <div class="wpl-inquiry">아직 입점 전이신가요? <a>입점 문의</a></div>
+                  </div>
+                </div>
+
+                <!-- Spec-mode overlays (첫 state만) -->
+                <span class="annotation" style="top:8px; left:8px;">카드: w=400 · padding spacing-xxlarge (48) / spacing-xlarge (32)</span>
+                <span class="annotation" style="top:430px; left:856px;">버튼 gap: spacing-sm (12)</span>
+                <span class="callout" style="top:225px; left:408px;">ⓐ</span>
+                <span class="callout" style="top:400px; left:408px;">ⓑ</span>
+                <span class="callout" style="top:578px; left:408px;">ⓒ</span>
+                <span class="type-spec" style="top:288px; left:856px;">18 / 600 / letter-spacing 2</span>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>비로그인으로 방문 · 진행 중인 인증 없음. 콘솔의 어느 화면에 비로그인으로 접근해도 결국 이 카드에 닿는다.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · Google / Apple / Kakao 버튼 클릭 → 카드가 진행 중으로 바뀌고 해당 제공자의 로그인 페이지로 이동 — 인증을 마치고 돌아오면 파트너 홈 <code>/dashboard</code>로 (보호 화면에서 보내졌으면 원래 목적지로)<br>
+              · "입점 문의" 클릭 → 파트너 랜딩의 입점 안내가 새 탭으로 열림 — 로그인 화면은 그대로 유지<br>
+              · 버튼·링크 hover → 배경/테두리 톤 변화 (fine pointer)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              <strong>이미 로그인된 파트너가 진입</strong> — 카드가 보이지 않고 즉시 파트너 홈으로.<br>
+              <strong>로그인은 돼 있지만 파트너 아닌 계정</strong> — 즉시 "권한 없음" 카드로 (OAuth 버튼을 거치지 않음).<br>
+              <strong>세션 만료로 콘솔에서 보내진 경우</strong> — 카드 위에 "로그인이 만료됐어요. 다시 로그인해주세요" 안내 1줄이 추가로 보임.<br>
+              <strong>가입 링크를 찾는 방문자</strong> — 가입/신청 버튼이 없는 것은 의도 (입점은 운영자 승인) — 입점 문의 링크가 유일한 안내.
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td><code>LoginCard</code> (ⓐ–ⓒ를 담는 중앙 카드) · 브랜드 블록 (ⓐ — 로고 h=56 + PARTNER 배지 + 슬로건) · <code>OAuthButton</code> × 3 (ⓑ — brand-locked Google · Apple · Kakao · h=48) · 입점 문의 안내 (ⓒ — divider + 텍스트 + <code>TextLink</code>)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td><code>color-partner-primary (#6c3ce1)</code> (viewport 내 <code>color-primary</code>로 매핑 — 배지·링크) · <code>color-surface</code> (페이지 캔버스) · <code>color-background</code> (카드) · <code>color-divider</code> · <code>color-text-primary</code> / <code>color-text-secondary</code> · <code>radius-card (16px)</code> (카드) · <code>radius-small (8px)</code> (OAuth 버튼) · <code>spacing-xxlarge (48px)</code> · <code>spacing-xlarge (32px)</code> · <code>spacing-large (24px)</code> · <code>spacing-medium (16px)</code> · <code>spacing-sm (12px)</code> · <code>spacing-small (8px)</code> · brand-locked 예외: Kakao <code>#FEE500</code> — CSS로는 <code>var(--color-partner-primary)</code> 등</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 모바일과 같은 브랜드 블록·슬로건·버튼 문법을 유지해 "같은 서비스"임이 보이게 하되, 데스크톱에서는 카드로 묶어 시선을 모음. 비밀번호/이메일 입력란 없음 — OAuth 전용 (behavior source 상속).</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════════════
+           State 2 · 로그인 진행 중
+           ════════════════════════════════════════════════════ -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>로그인 진행 중</strong> <span class="tag tag--mute">async</span>
+            <small>OAuth 버튼 클릭 직후 — 외부 로그인 페이지로 넘어가기 전의 짧은 구간</small>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <div class="wpl-canvas">
+                  <div class="wpl-card">
+                    <div class="wpl-brand">
+                      <img class="wpl-brand__logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                      <div class="wpl-brand__badge">PARTNER</div>
+                      <div class="wpl-brand__slogan">Verified Vibe, Spark Your Business</div>
+                    </div>
+                    <div class="wpl-buttons">
+                      <button class="btn-social btn-social--google"><span class="wpl-btn-spinner" aria-hidden="true"></span><span>Google로 이동하는 중…</span></button>
+                      <button class="btn-social btn-social--apple is-disabled"><span class="btn-social__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-2.987 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.572-2.27 1.206-2.98.804-.94 2.142-1.64 3.248-1.68.03.13.05.28.05.43zm4.565 15.71c-.03.07-.463 1.58-1.518 3.12-.945 1.34-1.94 2.71-3.43 2.71-1.517 0-1.9-.88-3.63-.88-1.698 0-2.302.91-3.67.91-1.377 0-2.332-1.26-3.428-2.8-1.287-1.82-2.323-4.63-2.323-7.28 0-4.28 2.797-6.55 5.552-6.55 1.448 0 2.675.95 3.6.95.865 0 2.222-1.01 3.902-1.01.613 0 2.886.06 4.374 2.19-.13.09-2.383 1.37-2.383 4.19 0 3.26 2.854 4.42 2.955 4.45z"/></svg></span><span>Apple로 시작하기</span></button>
+                      <button class="btn-social btn-social--kakao is-disabled"><span class="btn-social__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C7.03 3 3 6.14 3 10c0 2.42 1.59 4.55 4 5.79V21l4.46-2.97c.18.01.36.02.54.02 4.97 0 9-3.14 9-7s-4.03-7-9-7z"/></svg></span><span>Kakao로 시작하기</span></button>
+                    </div>
+                    <div class="wpl-inquiry is-disabled">아직 입점 전이신가요? <a>입점 문의</a></div>
+                  </div>
+                </div>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>OAuth 버튼 클릭 직후부터 외부 로그인 페이지로 떠나기 전까지 (보통 1초 미만). 인증을 마치고 돌아와 세션을 확인하는 동안에도 같은 모습.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>클릭 무반응 — 누른 버튼은 진행 표시로, 나머지 버튼과 입점 문의 링크는 흐려지며 비활성.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              <strong>제공자 응답이 느림</strong> — 진행 표시 유지. 자동 시간 초과 없음 (behavior source 상속).<br>
+              <strong>제공자 페이지에서 브라우저 back으로 돌아옴</strong> — 에러 없이 Default 카드로 복귀 ("임의로 닫음 = 에러 아님" 상속).<br>
+              <strong>매우 빠른 핸드오프</strong> — 이 state가 한 프레임도 안 보일 수 있음.
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>↔ 누른 <code>OAuthButton</code> → 진행 표시 (스피너 18px + "…로 이동하는 중") · 나머지 <code>OAuthButton</code> 2개 + 입점 문의 링크는 비활성 (45% 흐림) — 브랜드 블록 · 카드 골조는 유지</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>동일 (Default 참조) — 스피너 색은 누른 버튼의 글자색 그대로 · 비활성은 45% 투명도 (스피너 회전 0.7s linear — 컴포넌트에 캡슐화)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 모바일은 풀스크린 스피너로 컷 전환하지만, 웹은 곧 페이지 전체가 제공자 화면으로 넘어가므로 카드 골조를 유지해 레이아웃 점프를 줄임 — 웹에서 달라지는 점 (Behavior Source 행 참조).</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════════════
+           State 3 · 로그인 실패
+           ════════════════════════════════════════════════════ -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>로그인 실패</strong> <span class="tag tag--mute">error</span>
+            <small>인증 마무리 실패 — 카드 안 안내 배너 + 재시도 가능</small>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <div class="wpl-canvas">
+                  <div class="wpl-card">
+                    <div class="wpl-brand">
+                      <img class="wpl-brand__logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                      <div class="wpl-brand__badge">PARTNER</div>
+                      <div class="wpl-brand__slogan">Verified Vibe, Spark Your Business</div>
+                    </div>
+                    <div class="wpl-alert"><span aria-hidden="true">⚠️</span><span><strong>로그인하지 못했어요.</strong> 잠시 후 다시 시도해주세요.</span></div>
+                    <div class="wpl-buttons">
+                      <button class="btn-social btn-social--google"><span class="btn-social__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg></span><span>Google로 시작하기</span></button>
+                      <button class="btn-social btn-social--apple"><span class="btn-social__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-2.987 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.572-2.27 1.206-2.98.804-.94 2.142-1.64 3.248-1.68.03.13.05.28.05.43zm4.565 15.71c-.03.07-.463 1.58-1.518 3.12-.945 1.34-1.94 2.71-3.43 2.71-1.517 0-1.9-.88-3.63-.88-1.698 0-2.302.91-3.67.91-1.377 0-2.332-1.26-3.428-2.8-1.287-1.82-2.323-4.63-2.323-7.28 0-4.28 2.797-6.55 5.552-6.55 1.448 0 2.675.95 3.6.95.865 0 2.222-1.01 3.902-1.01.613 0 2.886.06 4.374 2.19-.13.09-2.383 1.37-2.383 4.19 0 3.26 2.854 4.42 2.955 4.45z"/></svg></span><span>Apple로 시작하기</span></button>
+                      <button class="btn-social btn-social--kakao"><span class="btn-social__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C7.03 3 3 6.14 3 10c0 2.42 1.59 4.55 4 5.79V21l4.46-2.97c.18.01.36.02.54.02 4.97 0 9-3.14 9-7s-4.03-7-9-7z"/></svg></span><span>Kakao로 시작하기</span></button>
+                    </div>
+                    <div class="wpl-inquiry">아직 입점 전이신가요? <a>입점 문의</a></div>
+                  </div>
+                </div>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>제공자에서 돌아왔지만 인증을 마무리하지 못함 (네트워크/서버 문제) · 또는 외부 로그인 페이지로 넘어가는 단계 자체가 실패.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · OAuth 버튼 다시 클릭 → 배너가 사라지며 진행 중으로 재진입 (재시도)<br>
+              · "입점 문의" 클릭 → Default와 동일하게 동작
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              <strong>연속 실패</strong> — 배너는 항상 1개만 (중복으로 쌓이지 않음 — behavior source 상속).<br>
+              <strong>제공자 페이지에서 사용자가 직접 취소하고 돌아옴</strong> — 실패가 아님: 배너 없이 Default로 복귀.
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>+ 카드 내 안내 배너 (에러 톤 · 아이콘 + 1줄 메시지 — 버튼 그룹 바로 위) · 그 외 동일 (버튼·링크 모두 다시 활성)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>+ <code>color-error</code> (배너 글자·테두리) · error 8% tint (배너 배경) · <code>radius-small (8px)</code> (배너) — 나머지 동일 (Default 참조)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 모바일의 떴다 사라지는 다이얼로그 대신 카드 안에 머무는 배너 — 데스크톱에서 흐름 단절이 적고, 새 시도를 시작할 때만 사라짐 (자동으로 사라지지 않음). 에러 빨강은 이 화면에서 여기에만 사용.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════════════
+           State 4 · 권한 없음 · 파트너 계정 아님
+           ════════════════════════════════════════════════════ -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>권한 없음 · 파트너 계정 아님</strong> <span class="tag tag--mute">blocked</span>
+            <small>로그인 성공 — 그러나 이 계정으로 입점된 파트너가 없음</small>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <div class="wpl-canvas">
+                  <div class="wpl-card">
+                    <div class="wpl-brand">
+                      <img class="wpl-brand__logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                      <div class="wpl-brand__badge">PARTNER</div>
+                    </div>
+                    <div class="wpl-noaccess">
+                      <div class="wpl-noaccess__icon">🔒</div>
+                      <div class="wpl-noaccess__title">파트너 계정이 아니에요</div>
+                      <div class="wpl-noaccess__sub">로그인은 됐지만 이 계정으로 입점된 파트너가 없어요.<br>파트너 입점은 운영자 승인으로 진행돼요.</div>
+                      <span class="wpl-account-chip">wine.lover@gmail.com 계정으로 로그인됨</span>
+                      <div class="wpl-noaccess__actions">
+                        <button class="wpl-btn wpl-btn--primary">입점 문의하기</button>
+                        <button class="wpl-btn wpl-btn--outline">다른 계정으로 로그인</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>인증은 성공했지만 이 계정에 연결된 파트너가 없음 — 일반 사용자 계정으로 로그인했거나 아직 입점 처리 전. (이미 이런 계정으로 로그인된 채 진입해도 같은 카드.)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · "입점 문의하기" 클릭 → 파트너 랜딩의 입점 안내가 새 탭으로 열림 — 이 카드는 유지<br>
+              · "다른 계정으로 로그인" 클릭 → 현재 계정에서 로그아웃되고 Default 카드로 복귀
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              <strong>운영자가 방금 입점 처리를 끝낸 경우</strong> — 새로고침하면 파트너 홈으로 (계정 연결이 즉시 반영).<br>
+              <strong>이 상태에서 콘솔 URL을 직접 입력</strong> — 다시 이 카드로 (콘솔 전체가 파트너 권한 필수 — <code>web_partner_home</code>의 접근 정책과 한 쌍).
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>↔ <code>OAuthButton</code> 그룹 + 입점 문의 안내 → 안내 블록 (아이콘 + 제목 + 설명) + 계정 칩 (로그인된 이메일) + <code>Button</code> primary filled ("입점 문의하기") + <code>Button</code> outline ("다른 계정으로 로그인") · − 슬로건 — 로고 + PARTNER 배지는 유지</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>동일 (Default 참조) — 권한 없음 전용 추가 토큰 없음 (아이콘은 이모지 · 칩 배경은 <code>color-surface</code> · 칩 <code>radius-chip (100px)</code>)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 에러 빨강을 쓰지 않음 — 사용자의 잘못이 아니라 권한 안내. 가입 유도 없이 문의 안내만 (입점은 운영자 수동 — 서비스 정책). 어떤 계정으로 로그인됐는지 칩으로 보여줘 "다른 계정" 판단을 돕는다.</td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </section>
+</div>
+
+<!-- ============================================================
+     🔄 PERSPECTIVE 3 · GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">
+      cross-cutting 동작만. 모바일 spec에서 상속한 behavior는
+      <code>partner_login_page</code> 기준 — 여기엔 웹에서 달라지는 점만 추가.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">사용자 액션</th>
+          <th>화면에 보이는 결과</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>브라우저 back</td>
+          <td>이 화면에 직접 왔으면 이전 페이지(랜딩 등)로. 제공자 로그인 페이지에서 back으로 돌아오면 에러 없이 Default 카드로 복귀. 모달/시트 없음 — history 분기 없음.</td>
+        </tr>
+        <tr>
+          <td>새로고침 / URL 직접 진입</td>
+          <td>세션 기준으로 착지 — 비로그인이면 Default, 로그인된 파트너면 즉시 파트너 홈으로, 파트너 아닌 로그인 계정이면 권한 없음 카드.</td>
+        </tr>
+        <tr>
+          <td>보호 화면에서 보내져 온 경우</td>
+          <td>로그인을 마치면 처음 가려던 콘솔 화면으로 자동 복귀 (홈으로 가지 않음 — behavior source 상속).</td>
+        </tr>
+        <tr>
+          <td>hover (fine pointer)</td>
+          <td>OAuth 버튼·링크·액션 버튼에 hover 피드백 (<code>motion-fast (200ms)</code> · 배경/테두리 톤 변화 + <code>cursor: pointer</code>). hover로만 노출되는 정보 없음 — <code>web_foundation_responsive</code> 포인터 규칙.</td>
+        </tr>
+        <tr>
+          <td>다크 모드</td>
+          <td>캔버스/카드 배경이 다크 토큰으로, partner primary는 다크 변형(<code>color-partner-dark-primary</code> #9b7bec)으로. OAuth 버튼은 brand 규칙대로 교체 (Google 어두운 배경 · Apple 흑백 반전 · Kakao 노랑 유지 — behavior source 상속).</td>
+        </tr>
+        <tr>
+          <td>로고 연타 (개발용 트리거)</td>
+          <td>웹에는 없음 — 모바일 앱 전용 (테스트 계정 전환은 웹 콘솔 범위 외).</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion &amp; timing</h2>
+    <p class="intro">
+      duration은 MDS motion 토큰 — 웹 구현은 CSS <code>transition-duration</code> / Tailwind로 같은 ms 값을 소비.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">Transition</th>
+          <th style="width: 160px;">Duration (token)</th>
+          <th>Curve / notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>OAuth 버튼 클릭 → 진행 중</td>
+          <td><code>micro</code> (100ms)</td>
+          <td>컷에 가까운 즉시 전환 — 즉각 피드백 (behavior source 상속)</td>
+        </tr>
+        <tr>
+          <td>제공자 페이지로 이동 / 복귀</td>
+          <td>— (브라우저 내비게이션)</td>
+          <td>페이지 전체가 넘어감 — 화면 쪽 모션 없음</td>
+        </tr>
+        <tr>
+          <td>실패 배너 표시</td>
+          <td><code>fast</code> (200ms)</td>
+          <td>fade-in · 카드 안에서 자리 차지 (레이아웃이 아래로 한 번만 밀림)</td>
+        </tr>
+        <tr>
+          <td>권한 없음 카드로 교체</td>
+          <td><code>fast</code> (200ms)</td>
+          <td>카드 내용 crossfade — 카드 골조는 그대로</td>
+        </tr>
+        <tr>
+          <td>hover 피드백 (버튼 · 링크)</td>
+          <td><code>fast</code> (200ms)</td>
+          <td>ease-out — 배경/테두리 톤 변화</td>
+        </tr>
+        <tr>
+          <td>진행 스피너 회전</td>
+          <td><em>(unscoped)</em> 0.7s linear infinite</td>
+          <td>behavior source의 스피너 회전 주기 상속</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>네트워크 끊김</strong> — OAuth 버튼 클릭 시 핸드오프가 실패하면 로그인 실패 state로 (별도 풀-페이지 에러 없음 — 카드가 곧 에러 표면).</li>
+      <li><strong>다크 모드</strong> — 우측 상단 Dark 토글로 확인. 캔버스/카드/텍스트 토큰 전환 + primary → <code>color-partner-dark-primary</code> + OAuth 버튼 brand 규칙 교체.</li>
+      <li><strong>접근성</strong> — tab 순서: Google → Apple → Kakao → 입점 문의 (권한 없음 카드는 입점 문의하기 → 다른 계정으로 로그인). 모든 버튼·링크에 visible focus ring. 버튼 라벨이 그대로 읽혀 의미 전달 ("Google로 시작하기"). 실패 배너는 표시 즉시 보조기기에 알림.</li>
+      <li><strong>reduced motion</strong> — <code>prefers-reduced-motion</code> 시 fade/hover transition 0ms. 진행 스피너는 진행 인지를 위해 유지.</li>
+      <li><strong>SEO / 공유</strong> — 로그인 화면은 noindex. 공유 프리뷰 대상 아님 — og 메타 불필요.</li>
+      <li><strong>초광폭 (≥1920px)</strong> — 카드 400px 고정 중앙, 잉여 폭은 surface 배경 (<code>web_foundation_responsive</code> 규칙 — 컨테이너 캡 이전에 카드 자체가 고정 폭).</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     📖 PERSPECTIVE 4 · REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">
+      Implementation source + 인접 화면 link만. Components / Tokens는 States의 각 mini-table 참조.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <p class="intro">
+      🚧 디자인중 — 웹 구현 미착수. 인증은 모바일과 같은 Supabase 계정 체계 — 웹 클라이언트 연결만 신규.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 200px;">항목</th><th>Path / Reference</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Page / Component</strong></td>
+          <td><code>WebPartnerLogin</code> — <code>TBD</code></td>
+        </tr>
+        <tr>
+          <td><strong>File path</strong></td>
+          <td><code>apps/landing_partner/src/app/login/page.tsx</code> <code>TBD</code> — 콘솔 라우트 그룹 밖 (셸 미적용)</td>
+        </tr>
+        <tr>
+          <td><strong>Data source</strong></td>
+          <td>Supabase Auth OAuth (Google · Apple · Kakao) — 모바일과 동일 계정 체계, 웹 OAuth 콜백 경로 포함 <code>TBD</code></td>
+        </tr>
+        <tr>
+          <td><strong>Route</strong></td>
+          <td><code>/login</code> · Next.js app router (landing_partner 확장) — 경로명 <code>TBD</code></td>
+        </tr>
+        <tr>
+          <td><strong>Behavior Source</strong></td>
+          <td><a href="/specs/partner_login_page/index.html"><code>/specs/partner_login_page/index.html</code></a> — Overview의 Behavior Source 행과 동일 경로</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 280px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/partner_login_page/index.html"><code>PartnerLoginPage</code></a></td>
+          <td>Behavior Source — OAuth 흐름 · 진행/실패 처리 · 이미 로그인 통과 · redirect 복귀 규칙의 SSOT</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/web_partner_home/index.html"><code>WebPartnerHome</code></a></td>
+          <td>로그인 성공 도착지 (<code>/dashboard</code>) — 콘솔의 비로그인 redirect가 이 화면으로 돌아옴. "파트너 아닌 계정 접근" 정책의 콘솔 쪽 표현</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/auth_callback_page/index.html"><code>AuthCallbackPage</code></a></td>
+          <td>모바일 OAuth 복귀 처리 참고 — 웹 콜백 화면 spec은 web_user 로그인 작업과 함께 후속</td>
+        </tr>
+        <tr>
+          <td><em>파트너 랜딩 (landing_partner)</em></td>
+          <td>"입점 문의" 링크의 도착지 — 랜딩의 입점 안내 섹션 (별도 spec 없음 · 마케팅 페이지)</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/web_foundation_responsive/"><code>WebFoundationResponsive</code></a></td>
+          <td>breakpoint · 컨테이너 · 포인터 규칙 SSOT</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     ✅ AUTHORING CHECKLIST
+     ============================================================ -->
+<section class="doc" style="border: 2px solid var(--color-primary); border-radius: var(--radius-card); padding: 16px 24px; margin-top: 32px;">
+  <h2 style="color: var(--color-primary);">✅ Authoring checklist (web)</h2>
+  <ul class="notes" style="line-height: 1.9;">
+    <li>✓ <strong>Head meta</strong> — feature-status=planned · features=account/partner-login · surface=web_partner (Overview Surface 행과 일치)</li>
+    <li>✓ <strong>Overview</strong> — Status · Surface · Category · Route · Behavior Source · Hierarchy · Purpose · Entry/Exit · Background · Frequency 채움</li>
+    <li>✓ <strong>Behavior Source</strong> — <code>partner_login_page</code> 상속 범위 + 웹에서 달라지는 점 (중앙 카드 · 카드 내 진행/배너 · 권한 없음 state 신설) 명시</li>
+    <li>✓ <strong>History</strong> — 2026-06-07 v1.0 initial row (web-mvp pivot Phase 3 · 1280 baseline)</li>
+    <li>✓ <strong>Responsive Layout</strong> — Desktop(≥1280) 1차 blueprint (web_partner 데스크톱 우선 — foundation surface priority) · Tablet "Desktop과 동일" 1줄</li>
+    <li>⏳ <strong>Mobile variant</strong> — 후속 TBD (Mark 지시 — 1280 데스크톱 기준 먼저). variants 표에 가안 방향만 1줄</li>
+    <li>✓ <strong>Sub-anatomy</strong> — ② 로그인 카드 (㉠ 브랜드 · ㉡ OAuth 그룹 · ㉢ 입점 문의 안내) — ① 캔버스는 단일 정렬 규칙이라 생략</li>
+    <li>✓ <strong>States</strong> — 4 state enumerate (Default / 진행 중 / 실패 / 권한 없음) · 첫 state 풀 리스트 · 2번째+ additive diff · 6 aspect rows · mockup은 Desktop 1280 (0.5 scale)</li>
+    <li>✓ <strong>Global Behavior</strong> — 브라우저 back / 새로고침·URL / redirect 복귀 / hover / 다크 모드 / motion 토큰 + reduced-motion</li>
+    <li>✓ <strong>토큰 표기</strong> — MDS 이름 + 괄호 px · 구현은 CSS variable 관점</li>
+    <li>✓ <strong>Reference</strong> — TBD 명시 · 인접 화면 (behavior source / 성공 도착지 / 랜딩)</li>
+    <li>⏳ <strong>Screen registry</strong> — <code>src/lib/screen-definitions.ts</code>의 <code>WEB_PARTNER_SCREENS</code> 등록은 별도 작업 (이 PR 범위 외 — surface 등록은 메인 작업 담당)</li>
+  </ul>
+</section>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>

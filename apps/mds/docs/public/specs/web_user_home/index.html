@@ -1,0 +1,1802 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<!-- ── Web spec metadata ─────────────────────────────────────── -->
+<meta name="feature-status" content="planned">
+<meta name="features" content="discovery/event-feed, event/event-list">
+<meta name="surface" content="web_user">
+<title>Spec — WebUserHome (web_user · /)</title>
+<link rel="stylesheet" href="/specs/_spec.css">
+<style>
+/* ============================================================
+   WebUserHome-specific atoms.
+
+   Desktop-first mockup (Mark 지시 2026-06-07 — 이 화면은 1280px
+   baseline 으로 설계. foundation 의 web_user 모바일 우선 원칙의
+   예외 — History 참조).
+
+   Mockup canvas = 실제 1280×760 캔버스를 0.5 스케일로 표시.
+   스크린샷은 .mock-scale 단위로 캡처.
+   ============================================================ */
+
+/* --- Desktop viewport frame (1280 canvas @ 0.5 display scale) --- */
+.viewport--desktop {
+  width: 1280px;
+  height: 760px;
+  border-radius: 12px;
+}
+.mock-scale {
+  width: 640px;
+  height: 380px;
+  overflow: hidden;
+  border-radius: 8px;
+}
+.mock-scale > .viewport--desktop {
+  transform: scale(0.5);
+  transform-origin: top left;
+}
+.state-mini__mock { width: 664px; }
+.layout-grid--desktop { grid-template-columns: 640px 1fr; }
+@media (max-width: 1100px) { .layout-grid--desktop { grid-template-columns: 1fr; } }
+.blueprint--desktop {
+  width: 640px;
+  height: 380px;
+  border-radius: 12px;
+}
+
+/* --- ① Global header --- */
+.wuh-header {
+  height: 64px;
+  background: var(--color-background);
+  border-bottom: 1px solid var(--color-divider);
+}
+.wuh-header__inner {
+  max-width: 1200px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.wuh-logo { height: 40px; width: auto; flex: 0 0 auto; display: block; }
+.wuh-search {
+  flex: 0 0 420px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 18px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: 999px;
+  color: var(--color-text-secondary);
+  font-size: 15px;
+  cursor: pointer;
+}
+.wuh-search svg { width: 18px; height: 18px; flex: 0 0 auto; }
+.wuh-header__spacer { flex: 1; }
+.wuh-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  cursor: pointer;
+}
+.wuh-avatar svg { width: 18px; height: 18px; }
+.wuh-login-btn {
+  height: 40px;
+  padding: 0 22px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* --- ② Eligibility filter (조건부 — 로그인 + 본인인증 프로필 보유 시에만 렌더) --- */
+.wuh-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 32px 32px;
+}
+.wuh-filterbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.wuh-eligibility {
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.wuh-eligibility__box {
+  width: 20px; height: 20px;
+  border-radius: 4px;
+  border: 1.5px solid var(--color-divider);
+  background: var(--color-background);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  color: #ffffff;
+}
+.wuh-eligibility__box svg { width: 12px; height: 12px; }
+.wuh-eligibility--checked .wuh-eligibility__box {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.wuh-eligibility--checked { color: var(--color-primary); font-weight: 600; }
+
+/* --- ③ Event card grid --- */
+.wuh-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+/* Card — MinglitEventCard 의 web 변형.
+   모바일(edge-to-edge + bottom divider) → 웹 그리드(독립 라운드 카드
+   radius-card 16 + 1px border + hover elevation). 이미지 2:1 + overlay
+   구성은 event_card spec 을 그대로 상속. */
+.wuh-card {
+  background: var(--color-background);
+  border: 1px solid var(--color-divider);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+.wuh-card__image {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  background: var(--color-surface);
+  overflow: hidden;
+}
+.wuh-card__image--ended { filter: saturate(0); }
+.wuh-card__ph {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  opacity: 0.5;
+}
+.wuh-card__grad {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 45%, rgba(17, 24, 39, 0.5) 100%);
+  pointer-events: none;
+}
+.wuh-ovl {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(17, 24, 39, 0.5);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 13px;
+}
+.wuh-ovl--partner { top: 12px; left: 12px; }
+.wuh-ovl--pp { top: 12px; right: 12px; }
+.wuh-ovl svg { width: 13px; height: 13px; color: #ffffff; }
+.wuh-ovl__avatar {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.wuh-ovl__avatar svg { width: 12px; height: 12px; }
+.wuh-ovl__name {
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 400;
+}
+.wuh-gauge { display: inline-flex; gap: 2px; margin: 0 3px; }
+.wuh-gauge i {
+  width: 10px; height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.wuh-gauge i.low   { background: var(--color-secondary); }
+.wuh-gauge i.mid   { background: var(--color-tertiary); }
+.wuh-gauge i.high  { background: var(--color-primary); }
+.wuh-gauge i.empty { background: rgba(255,255,255,0.2); }
+.wuh-ovl .sep { color: rgba(255,255,255,0.5); margin: 0 4px; }
+.wuh-ovl .today { color: var(--color-secondary); font-weight: 600; }
+.wuh-ovl .full { color: var(--color-secondary); font-weight: 600; margin-left: 4px; }
+.wuh-card__tags {
+  position: absolute;
+  bottom: 12px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  z-index: 2;
+}
+.wuh-card__tags span {
+  padding: 2px 8px;
+  background: rgba(0, 0, 0, 0.45);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.wuh-card__scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.wuh-card__scrim b {
+  padding: 8px 16px;
+  background: rgba(0,0,0,0.5);
+  border-radius: 8px;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 16px;
+}
+.wuh-card__body {
+  padding: 12px 16px 16px;
+  display: flex;
+  flex-direction: column;
+}
+.wuh-card__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+.wuh-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+.wuh-card__meta svg {
+  width: 13px; height: 13px;
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+.wuh-card__meta .txt {
+  flex: 1;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wuh-card__meta .price {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-secondary);
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+/* --- Skeleton (Loading) --- */
+.skeleton-bar {
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--color-surface) 25%, var(--color-divider) 50%, var(--color-surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+.wuh-skel {
+  border: 1px solid var(--color-divider);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.wuh-skel__img { width: 100%; aspect-ratio: 2/1; border-radius: 0; }
+.wuh-skel__body {
+  padding: 12px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* --- Empty / Error center box --- */
+.wuh-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 12px;
+  padding: 120px 0;
+}
+.wuh-center__icon {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-secondary);
+}
+.wuh-center__icon svg { width: 30px; height: 30px; }
+.wuh-center__title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.wuh-center__sub {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+}
+.wuh-center__btn {
+  margin-top: 8px;
+  height: 40px;
+  padding: 0 20px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-primary);
+  border-radius: 8px;
+  color: var(--color-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     Toolbar — universal toggles
+     ============================================================ -->
+<div class="toolbar">
+  <label><input type="checkbox" id="spec-toggle"> Spec mode (annotations / callouts on)</label>
+  <label><input type="checkbox" id="dark-toggle"> Dark mode (viewports flip dark)</label>
+</div>
+
+<div class="page">
+
+<!-- ============================================================
+     📍 HEADER
+     ============================================================ -->
+<header>
+  <h1>유저웹 홈 · 이벤트 목록</h1>
+</header>
+
+<!-- ============================================================
+     🎯 OVERVIEW
+     ============================================================ -->
+<section class="doc">
+  <h2>Overview</h2>
+  <table class="ref">
+    <tbody>
+      <tr>
+        <th style="width: 160px;">Status</th>
+        <td>
+          <strong>🚧 디자인중</strong>
+          <em style="color: var(--color-text-secondary);">— web-mvp pivot Phase 3 초기 설계 (Desktop 1280 baseline)</em>
+        </td>
+      </tr>
+      <tr>
+        <th>Surface</th>
+        <td><code>web_user</code></td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>home · discovery · event list</td>
+      </tr>
+      <tr>
+        <th>Route / Surface</th>
+        <td><code>/</code> · Next.js route (landing_user 확장) — 유저웹의 기본 진입 화면</td>
+      </tr>
+      <tr>
+        <th>Behavior Source</th>
+        <td>
+          <a href="/specs/home_page/index.html"><code>/specs/home_page/index.html</code></a>
+          — page-level state 전이 (Default / Loading / Empty / Error) · 필터→목록 갱신 · 무한 스크롤 · 에러/재시도 규칙 상속<br>
+          <a href="/specs/event_card/index.html"><code>/specs/event_card/index.html</code></a>
+          — 카드 1장의 정보 구성 · 4 lifecycle state (normal / today / soldOut / ended) · overlay 규칙 상속<br>
+          <a href="/specs/search_page/index.html"><code>/specs/search_page/index.html</code></a>
+          — 헤더 검색 필드의 검색 진입 behavior 참고<br>
+          <strong>웹에서 달라지는 점</strong>: ① <strong>비로그인 공개 열람 허용</strong> (모바일은 비인증 전체 차단 — 웹은 검색/SNS 유입 특성상 공개) ·
+          ② EventNowBar / 태그 칩바 / 알림 아이콘 제외 (web MVP 비범위 — 매칭·태그추천·AI피드 deprecated) ·
+          ③ 카드가 edge-to-edge 피드 → 독립 라운드 카드 그리드.
+        </td>
+      </tr>
+      <tr>
+        <th>Hierarchy</th>
+        <td>
+          <strong>Parent</strong>: <em>— (top-level screen — 유저웹의 기본 진입 화면)</em><br>
+          <strong>Children</strong>: <em>—</em> · 카드 클릭 도착지는 <a href="/specs/web_user_event_detail/index.html"><code>WebUserEventDetail</code></a>
+        </td>
+      </tr>
+      <tr>
+        <th>Purpose</th>
+        <td>
+          <strong>이벤트를 발견하는 첫 화면.</strong> 방문자(로그인 여부 무관)가 진행 예정 이벤트를 그리드로 훑어보고,
+          관심 이벤트의 상세 페이지(→ 구매·신청)로 진입한다. 본인인증을 마친 사용자는
+          "참가 가능한 이벤트만" 체크로 자기 자격에 맞는 이벤트만 추릴 수 있다.
+          웹 MVP 의 제품 코어 "이벤트 탐색 → 상세 → 구매·신청" 퍼널의 출발점.
+        </td>
+      </tr>
+      <tr>
+        <th>User journey</th>
+        <td>
+          <strong>Entry points</strong>: URL 직접 진입 (<code>/</code>) · 검색엔진/SNS 유입 (비로그인 다수) · 로그인 직후 복귀 · 상세 페이지에서 로고/back 으로 복귀.<br>
+          <strong>Exit points</strong>: ① 카드 클릭 → 이벤트 상세 (<code>/events/:id</code>) ·
+          ② 검색 필드 클릭 → 검색 화면 (<code>/search</code>) ·
+          ③ "로그인" 클릭 → 로그인 화면 (성공 시 이 화면으로 복귀) ·
+          ④ 아바타 클릭 → 마이페이지.
+        </td>
+      </tr>
+      <tr>
+        <th>Background</th>
+        <td>
+          web-mvp pivot — 제품 코어를 "이벤트 탐색 → 상세 → 구매·신청"으로 좁힌 첫 유저웹 화면.
+          모바일 홈의 매칭/태그추천/NowBar/AI피드 계열 요소는 deprecated 로 모두 제외하고,
+          <strong>헤더 + 카드 그리드</strong>의 커머스형 목록 구조로 재설계 —
+          필터는 "참가 가능한 이벤트만" 체크박스 하나로 최소화 (지역/날짜/정렬은 MVP 비범위 — Mark 피드백 2026-06-07).
+          모바일과 달리 비로그인 공개 열람을 허용 — 검색엔진/SNS 유입이 첫 방문의 대부분이고,
+          로그인 요구는 보호 액션(구매·신청·마이페이지) 시점으로 미룬다.
+          1280px 데스크톱을 주 캔버스로 설계 (Mark 지시 2026-06-07) — 모바일 variant 는 후속 pass.
+        </td>
+      </tr>
+      <tr>
+        <th>Frequency</th>
+        <td>방문마다 1회 이상 — 유저웹의 기본 랜딩이자 탐색 허브.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================================
+     🕐 HISTORY
+     ============================================================ -->
+<section class="doc">
+  <h2>History</h2>
+  <p class="intro">
+    이 spec의 주요 변경 이력. 최신 항목 위에 추가 (최신 → 오래된 순).
+  </p>
+  <table class="ref">
+    <thead>
+      <tr>
+        <th style="width: 110px;">Date</th>
+        <th style="width: 80px;">Version</th>
+        <th style="width: 120px;">Author</th>
+        <th>Changes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2026-06-07</td>
+        <td>1.1</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>Mark 피드백: 지역/날짜/정렬 제거, 참가 가능 체크박스 추가</strong> —
+          FilterBar 의 지역·날짜 드롭다운과 추천순 정렬을 전부 제거하고,
+          <strong>"참가 가능한 이벤트만" 체크박스</strong> 하나로 교체.
+          로그인 + 본인인증 프로필 보유 사용자에게만 노출 — 비노출 시 필터 행 자체 생략.
+          Sub-anatomy ② FilterBar → EligibilityFilter 개명, 전 state mockup ·
+          조건/액션/에지케이스 행 · Global Behavior (URL query · motion · tab 순서) 일관 갱신.
+        </td>
+      </tr>
+      <tr>
+        <td>2026-06-07</td>
+        <td>1.0</td>
+        <td>mark-yun</td>
+        <td>
+          <strong>web-mvp pivot Phase 3 초기 설계 (1280 baseline)</strong> —
+          유저웹 홈/이벤트 목록 신규 spec. Desktop ≥1280 을 주 mockup 으로 작성
+          (Mark 지시 2026-06-07 — foundation 의 web_user 모바일 우선 원칙의 화면별 예외.
+          Mobile variant 는 이번 pass 에서 생략, 후속 pass 에서 추가).
+          behavior 는 <code>home_page</code> · <code>event_card</code> 모바일 spec 상속,
+          비로그인 공개 열람은 웹 신규 분기. 매칭/태그추천/NowBar/AI피드 deprecated 요소 제외.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Anchor nav -->
+<nav class="perspective-nav">
+  <a href="#layout"><span class="glyph">🧱</span> Responsive Layout</a>
+  <a href="#states"><span class="glyph">🎨</span> States</a>
+  <a href="#global-behavior"><span class="glyph">🔄</span> Global Behavior</a>
+  <a href="#reference"><span class="glyph">📖</span> Reference</a>
+</nav>
+
+<!-- ============================================================
+     🧱 PERSPECTIVE 1 · RESPONSIVE LAYOUT
+     ============================================================ -->
+<div class="perspective" id="layout">
+  <div class="perspective__header">
+    <span class="glyph">🧱</span>
+    <h2>Responsive Layout</h2>
+    <span class="lede">
+      화면 구조 — 영역, 정렬, 간격 규칙. 색·타이포 무시.
+      이 화면은 <strong>Desktop (≥1280) variant 가 주 blueprint</strong> — breakpoint variants 표 참조.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Breakpoint variants</h2>
+    <p class="intro">
+      Breakpoint · 컨테이너 · 그리드 정의의 SSOT는
+      <a href="/specs/web_foundation_responsive/"><code>web_foundation_responsive</code></a>.
+      이 화면은 <strong>Desktop-first 예외 화면</strong> — 1280 baseline 으로 먼저 설계하고
+      Mobile blueprint 는 후속 pass 에서 추가한다 (History 참조).
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 160px;">Variant</th>
+          <th style="width: 180px;">Breakpoint</th>
+          <th>이 화면에서의 차이</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Desktop</strong> (주 variant)</td>
+          <td><code>≥ 1280px</code></td>
+          <td>헤더(로고 + 검색 필드 + 아바타) + 참가 가능 체크박스 행(조건부) + <strong>12col 그리드에서 카드 4col × 3장/행</strong> · 컨테이너 1200px 캡 중앙 정렬 · gutter 32px — 아래 blueprint 가 이 variant.</td>
+        </tr>
+        <tr>
+          <td>Tablet</td>
+          <td><code>768–1279px</code></td>
+          <td>별도 blueprint 없음 — Desktop 레이아웃 축소: 카드 2col (gap <code>spacing-medium (16px)</code>) · 검색 필드 폭 축소 (≈280px) · 체크박스 행 동일 (조건부 노출 규칙 포함).</td>
+        </tr>
+        <tr>
+          <td>Mobile</td>
+          <td><code>&lt; 768px</code></td>
+          <td><strong>후속 pass 에서 작성 (TBD)</strong> — 카드 1col · 검색은 헤더 아이콘으로 축약 예정. 이번 pass 는 1280 baseline 만 (Mark 지시 2026-06-07).</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Blueprint &amp; tree — Desktop (≥1280px)</h2>
+    <p class="intro">
+      Sticky 헤더(64px 풀-블리드) + 1200px 캡 컨테이너 안에 참가 가능 체크박스 행(조건부) + 카드 그리드.
+      세로 스크롤 단일 흐름 — 사이드 패널 없음. blueprint 는 1280×760 캔버스의 ½ 스케일.
+    </p>
+
+    <div class="layout-grid layout-grid--desktop">
+      <div class="blueprint blueprint--desktop">
+        <!-- Whole frame outline -->
+        <div class="blueprint__region blueprint__region--full"></div>
+
+        <!-- ① Global header — h=64 (½ scale 32) full-bleed -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0; left:0; right:0; height:32px;">
+          <span class="blueprint__region-label">① GlobalHeader · h=64 · sticky · full-bleed</span>
+        </div>
+
+        <!-- container guides (max-width 1200 + gutter 32 → content 36..604 @ ½) -->
+        <div class="blueprint__region" style="top:32px; left:0; width:36px; bottom:0; border-style:dashed; border-color:rgba(var(--spec-blueprint-rgb), 0.25); background:none;"></div>
+        <div class="blueprint__region" style="top:32px; right:0; width:36px; bottom:0; border-style:dashed; border-color:rgba(var(--spec-blueprint-rgb), 0.25); background:none;"></div>
+
+        <!-- ② Eligibility filter — h=40 (½ 20), top margin 24 (½ 12) · 조건부 노출 -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:44px; left:36px; right:36px; height:20px;">
+          <span class="blueprint__region-label">② EligibilityFilter · h=40 — 참가 가능 체크박스 (조건부)</span>
+        </div>
+
+        <!-- ③ Card grid — 3 columns -->
+        <div class="blueprint__region" style="top:76px; left:36px; right:36px; bottom:12px;">
+          <span class="blueprint__region-label">③ EventCardGrid — 12col 중 4col × 3 · gap 24px</span>
+        </div>
+        <!-- column separators (visual hint) -->
+        <div class="blueprint__region" style="top:76px; left:36px; width:181px; height:64px; border-style:dashed; border-color:rgba(var(--spec-blueprint-rgb), 0.35); background:none;">
+          <span class="blueprint__region-label" style="font-size:9px;">card · 4col</span>
+        </div>
+        <div class="blueprint__region" style="top:76px; left:229px; width:181px; height:64px; border-style:dashed; border-color:rgba(var(--spec-blueprint-rgb), 0.35); background:none;">
+          <span class="blueprint__region-label" style="font-size:9px;">card · 4col</span>
+        </div>
+        <div class="blueprint__region" style="top:76px; left:422px; width:181px; height:64px; border-style:dashed; border-color:rgba(var(--spec-blueprint-rgb), 0.35); background:none;">
+          <span class="blueprint__region-label" style="font-size:9px;">card · 4col</span>
+        </div>
+
+        <div class="blueprint__align-marker" style="top:36px; right:4px;">container 1200 캡 · gutter 32</div>
+        <div class="blueprint__align-marker" style="bottom:2px; right:40px;">↓ 스크롤 — 다음 목록 자동 로드</div>
+      </div>
+
+      <div class="layout-tree"><b>&lt;body&gt;</b>
+├─ <em>GlobalHeader</em> (h=64 · sticky top · full-bleed       ← ①
+│  │  bottom 1px <code>color-divider</code> · 내부 컨텐츠는 1200px 캡 정렬)
+│  ├─ <b>Logo</b> (h=40 · 클릭 → 페이지 최상단)
+│  ├─ Gap: <code>24px</code>
+│  ├─ <b>SearchField</b> (w=420 · pill · placeholder "이벤트 검색")
+│  ├─ <b>Spacer</b> (flex grow)
+│  └─ <b>AvatarButton</b> 36 — 로그인 시
+│     <i>비로그인 → </i><b>"로그인" 버튼</b> (primary pill)
+│
+└─ <b>&lt;main&gt;</b> (max-width <code>1200px</code> 중앙 정렬 · gutter <code>32px</code>
+   │  — <code>web_foundation_responsive</code> Desktop 컨테이너 규칙)
+   ├─ <em>EligibilityFilter</em> (h=40 · margin-top <code>24px</code>) ← ②
+   │  └─ <b>Checkbox</b> 20 + 라벨 "참가 가능한 이벤트만"
+   │     · 로그인 + 본인인증 프로필 보유 시에만 노출
+   │     · 비노출이면 이 행 자체 생략 — 그리드가 위로
+   │
+   └─ <em>EventCardGrid</em> (margin-top <code>24px</code>)      ← ③
+      └─ <b>EventCard(web)</b> × N — 12col 중 4col (3장/행)
+         · gap: <code>24px</code> (행/열 동일)
+         · 스크롤 끝 근접 → 다음 목록 자동 로드 (하단 스피너)</div>
+    </div>
+  </section>
+
+  <section class="doc">
+    <h2>Spacing &amp; alignment rules</h2>
+    <p class="intro">
+      Desktop 값 기준. Tablet 은 그리드 2col + gap <code>spacing-medium (16px)</code> 로 축소,
+      Mobile 은 후속 pass.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 50px;">#</th>
+          <th style="width: 190px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing — Desktop</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>—</td><td>Page container</td><td>중앙 정렬 · max-width 1200px 캡</td><td>gutter <code>32px</code> — foundation Desktop 규칙. 캡 초과 영역은 배경으로</td></tr>
+        <tr><td>①</td><td>GlobalHeader</td><td>sticky top · full-bleed bg/border · 내부 1200px 캡</td><td>h: 64px · 내부 요소 gap: <code>24px</code> · bottom: <code>1px color-divider</code></td></tr>
+        <tr><td>②</td><td>EligibilityFilter (조건부)</td><td>row · crossAxis center · 좌측 정렬</td><td>margin-top: <code>24px</code> · h: 40px · 체크박스 20×20 (hit area 44px — 라벨 포함 전체 클릭) · 박스↔라벨: <code>8px</code> · 비노출 시 행 자체 생략</td></tr>
+        <tr><td>③</td><td>EventCardGrid</td><td>12col 그리드 · 카드 4col 균등 (3장/행)</td><td>margin-top: <code>24px</code> · gap: <code>24px</code> — foundation Desktop grid gap · 하단: <code>32px</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ① — GlobalHeader</h2>
+    <p class="intro">
+      64px sticky 헤더. 로고 — 검색 필드 — (남는 공간) — 아바타/로그인 버튼.
+      배경·하단 보더는 풀-블리드, 내부 컨텐츠는 1200px 캡에 정렬.
+      비로그인 시 ㉢ 슬롯이 "로그인" primary pill 버튼으로 교체 (States 참조).
+    </p>
+    <div class="layout-grid layout-grid--desktop">
+      <div class="blueprint" style="width: 640px; height: 56px; border-radius: 8px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:12px; left:36px; width:70px; height:32px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉠ Logo h=40</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:12px; left:118px; width:210px; height:32px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉡ SearchField w=420 · pill</span>
+        </div>
+        <div class="blueprint__region" style="top:16px; left:340px; right:60px; height:24px; border-style:dashed; border-color:rgba(var(--spec-blueprint-rgb), 0.3); background:none;">
+          <span class="blueprint__region-label" style="font-size:9px;">flex grow</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:14px; right:36px; width:20px; height:28px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉢</span>
+        </div>
+        <div class="blueprint__align-marker" style="bottom:2px; left:4px;">bottom: 1px color-divider · ½ scale</div>
+      </div>
+
+      <div class="layout-tree"><b>GlobalHeader</b> (h=64 · sticky · bg <code>color-background</code>)
+└─ inner Row (max-width 1200 · padding-inline <code>32px</code> · crossAxis center)
+   ├─ <em>Logo</em>                                       ← ㉠
+   │  └─ <b>SVG image</b> (h=40 · 클릭 → 최상단 스크롤)
+   ├─ Gap: <code>24px</code>
+   ├─ <em>SearchField</em>                                ← ㉡
+   │  └─ <b>pill input</b> (w=420 · h=44 · radius 999
+   │     · bg <code>color-surface</code> · 돋보기 아이콘 + "이벤트 검색")
+   ├─ <b>Spacer</b> (flex grow)
+   └─ <em>Account slot</em>                               ← ㉢
+      ├─ 로그인: <b>AvatarButton</b> (36 원형 · 프로필 사진/fallback)
+      └─ 비로그인: <b>"로그인" 버튼</b> (h=40 · primary pill)
+
+<em>알림 아이콘 없음</em> — 알림은 web MVP 비범위 (모바일 spec 대비 의도적 제거)</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 180px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>Logo</td><td>좌측 정렬 · 자연 너비 (flex 0)</td><td>h: 40px · 컨테이너 좌측 끝에서 시작</td></tr>
+        <tr><td>㉡</td><td>SearchField</td><td>로고 우측 고정 폭</td><td>w: 420px · h: 44px · radius 999 · padding-inline: <code>18px</code> · 아이콘↔placeholder: <code>10px</code> · bg <code>color-surface</code> · border <code>1px color-divider</code></td></tr>
+        <tr><td>㉢</td><td>Account slot</td><td>우측 끝 정렬</td><td>아바타 36×36 (hit area 44px) · 또는 로그인 버튼 h=40 padding-inline 22px · bg <code>color-primary</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ② — EligibilityFilter (조건부)</h2>
+    <p class="intro">
+      그리드 좌상단의 <strong>"참가 가능한 이벤트만" 체크박스</strong> 하나 — 이 화면의 유일한 필터.
+      <strong>로그인 + 본인인증 프로필을 가진 사용자에게만 노출</strong>되고, 체크하면 본인 프로필
+      (나이·성별 등) 기준으로 참가 자격이 되는 이벤트만 그리드에 남는다.
+      비로그인 / 프로필 미완성 사용자에게는 체크박스를 그리지 않으며 — 바가 비므로
+      <strong>필터 행 자체를 생략</strong>하고 그리드가 위로 당겨진다.
+      지역/날짜/정렬 필터는 web MVP 비범위 (Mark 피드백 2026-06-07 — History 1.1).
+    </p>
+    <div class="layout-grid layout-grid--desktop">
+      <div class="blueprint" style="width: 640px; height: 48px; border-radius: 8px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:14px; left:36px; width:20px; height:20px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉠</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:12px; left:64px; width:150px; height:24px;">
+          <span class="blueprint__region-label" style="font-size:9px;">㉡ 라벨 "참가 가능한 이벤트만"</span>
+        </div>
+        <div class="blueprint__align-marker" style="top:2px; left:230px;">박스↔라벨 gap: 8px · ½ scale</div>
+        <div class="blueprint__align-marker" style="top:2px; right:8px;">노출 조건: 로그인 + 본인인증 프로필</div>
+      </div>
+
+      <div class="layout-tree"><b>EligibilityFilter</b> (Row · crossAxis center · 좌측 정렬)
+├─ <em>Checkbox</em>                                      ← ㉠
+│  └─ 20×20 · radius 4 · hit area 44px
+│     · 해제: border 1.5px <code>color-divider</code>
+│     · 체크: bg/border <code>color-primary</code> + 흰 체크 표시
+├─ Gap: <code>8px</code>
+└─ <em>라벨</em> "참가 가능한 이벤트만"                   ← ㉡
+   · 해제: 14/500 <code>color-text-primary</code>
+   · 체크: 14/600 <code>color-primary</code>
+   · 라벨 클릭도 토글 (박스+라벨 전체가 한 클릭 영역)
+
+<em>노출 조건:</em> 로그인 + 본인인증 프로필 보유 사용자만
+<em>비노출:</em> 행 자체 생략 — 그리드가 margin-top <code>24px</code> 위치로 위로</div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 60px;">#</th>
+          <th style="width: 180px;">Region</th>
+          <th style="width: 220px;">Alignment</th>
+          <th>Spacing / tokens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>㉠</td><td>Checkbox</td><td>좌측 정렬 · 라벨과 한 클릭 영역</td><td>20×20 · radius 4px · 해제 border <code>1.5px color-divider</code> · 체크 bg <code>color-primary</code> · hit area 44px</td></tr>
+        <tr><td>㉡</td><td>라벨</td><td>박스 우측 · baseline center</td><td>박스↔라벨 gap: <code>8px</code> · 14/500 (체크 시 <code>color-primary</code> · w600)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Sub-anatomy ③ — EventCard(web) + 반복 패턴</h2>
+    <p class="intro">
+      카드 1장의 내부 구성 — <strong>SSOT 는 <a href="/specs/event_card/index.html"><code>event_card</code></a> spec</strong>
+      (이미지 2:1 · overlay 4종 · body title + meta). 웹 변형분만 여기서 정의:
+      edge-to-edge → <strong>독립 라운드 카드</strong> (<code>radius-card (16px)</code> + 1px border + hover elevation),
+      카드 사이 divider → 그리드 gap 으로 대체.
+    </p>
+    <div class="layout-grid" style="grid-template-columns: 362px 1fr;">
+      <div class="blueprint" style="width: 362px; height: 256px; border-radius: 16px;">
+        <div class="blueprint__region blueprint__region--full"></div>
+        <!-- image 2:1 = 181px -->
+        <div class="blueprint__region blueprint__region--shaded" style="top:0; left:0; right:0; height:181px;">
+          <span class="blueprint__region-label">㉠ Image (2:1) + gradient fade</span>
+        </div>
+        <div class="blueprint__region" style="top:12px; left:12px; width:110px; height:26px; border-color:rgba(var(--spec-blueprint-rgb), 0.55);">
+          <span class="blueprint__region-label" style="font-size:9px;">㉡ Partner</span>
+        </div>
+        <div class="blueprint__region" style="top:12px; right:12px; width:150px; height:26px; border-color:rgba(var(--spec-blueprint-rgb), 0.55);">
+          <span class="blueprint__region-label" style="font-size:9px;">㉢ 참여 게이지 + D-Day</span>
+        </div>
+        <div class="blueprint__region" style="top:148px; left:16px; right:16px; height:24px; border-color:rgba(var(--spec-blueprint-rgb), 0.6); background:rgba(var(--spec-blueprint-rgb), 0.1);">
+          <span class="blueprint__region-label" style="font-size:9px;">㉣ Tag chips</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:193px; left:16px; right:16px; height:22px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉤ Title (16/700 · 1줄)</span>
+        </div>
+        <div class="blueprint__region blueprint__region--shaded" style="top:221px; left:16px; right:16px; height:18px;">
+          <span class="blueprint__region-label" style="font-size:10px;">㉥ Meta — 위치 · 날짜 ↔ 가격</span>
+        </div>
+      </div>
+
+      <div class="layout-tree"><b>EventCard(web)</b> — 그리드 cell (4col ≈ 362px @1280)
+└─ <b>card frame</b> — <code>radius-card (16px)</code> · border 1px <code>color-divider</code>
+   ├─ <em>Image Stack</em> (2:1)                          ← ㉠
+   │  ├─ <em>Partner overlay</em> (top-left)              ← ㉡
+   │  ├─ <em>참여 게이지 + D-Day overlay</em> (top-right) ← ㉢
+   │  ├─ <em>Tag chips overlay</em> (image bottom)        ← ㉣
+   │  └─ [soldOut] scrim + "마감" badge / [ended] grayscale
+   └─ <em>Body</em> (padding: 12 / 16 / 16)
+      ├─ <b>Title</b> (16/700 · 1줄 ellipsis)             ← ㉤
+      └─ <em>Meta row</em>                                ← ㉥
+         ├─ 위치 아이콘 + "지역 · 날짜시간" (13 · text-secondary)
+         └─ <b>가격</b> (14/700 · <code>color-secondary</code> · 우측 고정)
+
+<em>내부 overlay 규칙 · 4 lifecycle state = event_card spec 상속</em></div>
+    </div>
+
+    <table class="ref" style="margin-top: 16px;">
+      <thead>
+        <tr>
+          <th style="width: 200px;">반복 패턴</th>
+          <th>규칙</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Desktop (≥1280)</td><td><strong>3장/행</strong> (12col 중 4col) · gap <code>24px</code> — 행/열 동일</td></tr>
+        <tr><td>Tablet (768–1279)</td><td>2장/행 · gap <code>spacing-medium (16px)</code></td></tr>
+        <tr><td>Mobile (&lt;768)</td><td>1장/행 — 후속 pass 에서 확정 (TBD)</td></tr>
+        <tr><td>웹 변형 (vs 모바일 카드)</td><td>edge-to-edge + bottom divider → 독립 카드 <code>radius-card (16px)</code> + border · hover: elevation + 살짝 떠오름 (<code>motion-fast (200ms)</code>) — fine pointer 만, foundation 포인터 규칙</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<!-- ============================================================
+     🎨 PERSPECTIVE 2 · STATES
+     ============================================================ -->
+<div class="perspective" id="states">
+  <div class="perspective__header">
+    <span class="glyph">🎨</span>
+    <h2>States</h2>
+    <span class="lede">
+      page-level 시각 변형 5종 — baseline = Default(로그인 · 목록 로드됨).
+      카드 1장의 lifecycle state (normal/today/soldOut/ended) 는
+      <a href="/specs/event_card/index.html">event_card</a> 상속.
+      mockup 은 Desktop 1280 캔버스 (½ 스케일 표시).
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>State summary</h2>
+    <p class="intro">
+      모든 state 한눈 비교. 자세한 사양은 아래 각 state mini-table 참조.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 200px;">State</th>
+          <th style="width: 100px;">Tag</th>
+          <th style="width: 260px;">조건 (요약)</th>
+          <th>Key visual differentiator</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="is-baseline-tint"><td><strong>Default</strong> 🎯</td><td>primary</td><td>로그인(본인인증 완료) + 목록 로드 완료</td><td>카드 그리드 풀 렌더 · "참가 가능" 체크박스 노출 (해제 기본)</td></tr>
+        <tr><td><strong>비로그인</strong></td><td>public</td><td>로그인하지 않은 방문</td><td>그리드 동일 노출 · 헤더 우측 "로그인" 버튼 · 필터 행 없음</td></tr>
+        <tr><td><strong>Loading</strong></td><td>async</td><td>목록을 불러오는 중</td><td>카드 자리 스켈레톤 6장 (shimmer)</td></tr>
+        <tr><td><strong>Empty</strong></td><td>no data</td><td>"참가 가능" 체크 ON + 자격 충족 0건</td><td>그리드 대신 중앙 안내 + 체크 해제 유도</td></tr>
+        <tr><td><strong>Error</strong></td><td>network/server</td><td>목록 로드 실패</td><td>중앙 에러 안내 + "다시 시도"</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>States gallery</h2>
+
+    <div class="visual-gallery" style="background: var(--color-surface); padding: 16px; border-radius: var(--radius-card); display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- ════════════════════════════════════════════════════════
+           State 1: Default — 로그인 · 목록 로드됨 (baseline)
+           ════════════════════════════════════════════════════════ -->
+      <table class="ref state-mini is-baseline-tint">
+        <thead>
+          <tr><th colspan="3">
+            <strong>Default · 로그인 + 목록 로드됨</strong> 🎯 <span class="tag">primary</span>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <!-- ① Global header -->
+                <div class="wuh-header">
+                  <div class="wuh-header__inner">
+                    <img class="wuh-logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                    <div class="wuh-search">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      이벤트 검색
+                    </div>
+                    <div class="wuh-header__spacer"></div>
+                    <div class="wuh-avatar">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="wuh-main">
+                  <!-- ② Filter bar -->
+                  <div class="wuh-filterbar">
+                    <div class="wuh-eligibility">
+                      <span class="wuh-eligibility__box"></span>
+                      참가 가능한 이벤트만
+                    </div>
+                  </div>
+
+                  <!-- ③ Event card grid -->
+                  <div class="wuh-grid">
+                    <!-- Card 1: today -->
+                    <div class="wuh-card">
+                      <div class="wuh-card__image" style="background: linear-gradient(135deg, #f0e6ff 0%, #ffe8d6 100%);">
+                        <div class="wuh-card__ph">2:1 이미지</div>
+                        <div class="wuh-card__grad"></div>
+                        <div class="wuh-ovl wuh-ovl--partner">
+                          <span class="wuh-ovl__avatar"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></span>
+                          <span class="wuh-ovl__name">Skybar Seoul</span>
+                        </div>
+                        <div class="wuh-ovl wuh-ovl--pp">
+                          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
+                          <span class="wuh-gauge"><i class="mid"></i><i class="mid"></i><i class="empty"></i></span>
+                          <span>12/20</span><span class="sep">·</span>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+                          <span class="today">오늘</span>
+                        </div>
+                        <div class="wuh-card__tags"><span>#루프탑파티</span><span>#와인</span></div>
+                      </div>
+                      <div class="wuh-card__body">
+                        <div class="wuh-card__title">강남 루프탑 소셜 파티 — Verified Vibe</div>
+                        <div class="wuh-card__meta">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                          <span class="txt">강남구 · 6월 7일 (일) 19:30</span>
+                          <span class="price">20,000원~</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Card 2: normal -->
+                    <div class="wuh-card">
+                      <div class="wuh-card__image" style="background: linear-gradient(135deg, #e6f0ff 0%, #d6e8ff 100%);">
+                        <div class="wuh-card__ph">2:1 이미지</div>
+                        <div class="wuh-card__grad"></div>
+                        <div class="wuh-ovl wuh-ovl--partner">
+                          <span class="wuh-ovl__avatar"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>
+                          <span class="wuh-ovl__name">보드게임바 플레이</span>
+                        </div>
+                        <div class="wuh-ovl wuh-ovl--pp">
+                          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
+                          <span class="wuh-gauge"><i class="low"></i><i class="empty"></i><i class="empty"></i></span>
+                          <span>3/12</span><span class="sep">·</span>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+                          <span>D-4</span>
+                        </div>
+                        <div class="wuh-card__tags"><span>#보드게임</span><span>#실내</span></div>
+                      </div>
+                      <div class="wuh-card__body">
+                        <div class="wuh-card__title">보드게임 소모임 — 2인 이상 즉시 참여</div>
+                        <div class="wuh-card__meta">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                          <span class="txt">마포구 · 6월 11일 (목) 14:00</span>
+                          <span class="price">10,000원~</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Card 3: soldOut -->
+                    <div class="wuh-card">
+                      <div class="wuh-card__image" style="background: linear-gradient(135deg, #ffe6e6 0%, #ffd6d6 100%);">
+                        <div class="wuh-card__ph">2:1 이미지</div>
+                        <div class="wuh-card__grad"></div>
+                        <div class="wuh-ovl wuh-ovl--partner">
+                          <span class="wuh-ovl__avatar"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg></span>
+                          <span class="wuh-ovl__name">레드와인하우스</span>
+                        </div>
+                        <div class="wuh-ovl wuh-ovl--pp">
+                          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
+                          <span class="wuh-gauge"><i class="high"></i><i class="high"></i><i class="high"></i></span>
+                          <span>8/8</span><span class="full">만석</span><span class="sep">·</span>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+                          <span>D-2</span>
+                        </div>
+                        <div class="wuh-card__scrim"><b>마감</b></div>
+                      </div>
+                      <div class="wuh-card__body">
+                        <div class="wuh-card__title">와인 페어링 디너 — 8인 한정</div>
+                        <div class="wuh-card__meta">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                          <span class="txt">용산구 · 6월 9일 (화) 19:00</span>
+                          <span class="price">75,000원~</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Card 4: normal -->
+                    <div class="wuh-card">
+                      <div class="wuh-card__image" style="background: linear-gradient(135deg, #e6fff2 0%, #d6f5e8 100%);">
+                        <div class="wuh-card__ph">2:1 이미지</div>
+                        <div class="wuh-card__grad"></div>
+                        <div class="wuh-ovl wuh-ovl--partner">
+                          <span class="wuh-ovl__avatar"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>
+                          <span class="wuh-ovl__name">러닝크루 한강</span>
+                        </div>
+                        <div class="wuh-ovl wuh-ovl--pp">
+                          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
+                          <span class="wuh-gauge"><i class="mid"></i><i class="mid"></i><i class="empty"></i></span>
+                          <span>9/15</span><span class="sep">·</span>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+                          <span>D-2</span>
+                        </div>
+                        <div class="wuh-card__tags"><span>#러닝</span><span>#야외</span></div>
+                      </div>
+                      <div class="wuh-card__body">
+                        <div class="wuh-card__title">한강 선셋 러닝 크루</div>
+                        <div class="wuh-card__meta">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                          <span class="txt">영등포구 · 6월 9일 (화) 18:30</span>
+                          <span class="price">5,000원~</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Card 5: normal -->
+                    <div class="wuh-card">
+                      <div class="wuh-card__image" style="background: linear-gradient(135deg, #fff4e6 0%, #ffe9d6 100%);">
+                        <div class="wuh-card__ph">2:1 이미지</div>
+                        <div class="wuh-card__grad"></div>
+                        <div class="wuh-ovl wuh-ovl--partner">
+                          <span class="wuh-ovl__avatar"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>
+                          <span class="wuh-ovl__name">스튜디오 흙</span>
+                        </div>
+                        <div class="wuh-ovl wuh-ovl--pp">
+                          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
+                          <span class="wuh-gauge"><i class="mid"></i><i class="empty"></i><i class="empty"></i></span>
+                          <span>4/8</span><span class="sep">·</span>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+                          <span>D-7</span>
+                        </div>
+                        <div class="wuh-card__tags"><span>#클래스</span><span>#도자기</span></div>
+                      </div>
+                      <div class="wuh-card__body">
+                        <div class="wuh-card__title">성수 원데이 도자기 클래스</div>
+                        <div class="wuh-card__meta">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                          <span class="txt">성동구 · 6월 14일 (일) 13:00</span>
+                          <span class="price">45,000원~</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Card 6: normal -->
+                    <div class="wuh-card">
+                      <div class="wuh-card__image" style="background: linear-gradient(135deg, #efe6ff 0%, #e0d6ff 100%);">
+                        <div class="wuh-card__ph">2:1 이미지</div>
+                        <div class="wuh-card__grad"></div>
+                        <div class="wuh-ovl wuh-ovl--partner">
+                          <span class="wuh-ovl__avatar"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>
+                          <span class="wuh-ovl__name">사운드클럽 LP</span>
+                        </div>
+                        <div class="wuh-ovl wuh-ovl--pp">
+                          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
+                          <span class="wuh-gauge"><i class="mid"></i><i class="empty"></i><i class="empty"></i></span>
+                          <span>11/24</span><span class="sep">·</span>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+                          <span>D-5</span>
+                        </div>
+                        <div class="wuh-card__tags"><span>#음악</span><span>#LP</span></div>
+                      </div>
+                      <div class="wuh-card__body">
+                        <div class="wuh-card__title">홍대 LP 뮤직 나이트</div>
+                        <div class="wuh-card__meta">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                          <span class="txt">마포구 · 6월 12일 (금) 20:00</span>
+                          <span class="price">15,000원~</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Spec-mode overlays (1280-space 좌표) -->
+                <span class="annotation" style="top:8px;left:8px;">container 1200 캡 · gutter 32px</span>
+                <span class="annotation" style="top:160px;right:48px;">grid gap 24px</span>
+                <span class="annotation" style="top:96px;left:48px;">체크박스 20 + 라벨 · h=40 (조건부 노출)</span>
+                <span class="callout" style="top:20px;left:230px;">ⓐ</span>
+                <span class="callout" style="top:20px;left:560px;">ⓑ</span>
+                <span class="callout" style="top:100px;left:300px;">ⓒ</span>
+                <span class="callout" style="top:240px;left:640px;">ⓓ</span>
+                <span class="type-spec" style="top:330px;left:300px;">16 / 700 / 1.3 — card title</span>
+                <span class="type-spec" style="top:368px;left:340px;">14 / 700 — price (secondary)</span>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>로그인 + 본인인증 프로필을 가진 사용자가 진입해 이벤트 목록을 받아 그리드가 채워진 상태. "참가 가능한 이벤트만" 체크박스가 노출되며 기본은 해제 — 전체 이벤트 표시.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              ① <strong>카드 클릭</strong> → 이벤트 상세 페이지로 이동 (<code>/events/:id</code>)<br>
+              ② <strong>검색 필드 클릭</strong> → 검색 화면으로 이동 (검색 동작은 <a href="/specs/search_page/index.html">search_page</a> behavior 상속)<br>
+              ③ <strong>"참가 가능한 이벤트만" 체크</strong> → 본인 프로필(나이·성별 등) 기준으로 참가 자격이 되는 이벤트만 남도록 목록 교체 — 해제하면 전체 목록 복귀. 라벨 클릭도 동일하게 토글<br>
+              ④ <strong>아바타 클릭</strong> → 마이페이지로 이동<br>
+              ⑤ <strong>로고 클릭</strong> → 페이지 최상단으로 부드럽게 스크롤 (이미 최상단이면 무반응)<br>
+              ⑥ <strong>스크롤 끝 근접</strong> → 다음 목록 자동 로드 (하단 스피너 → 카드 추가)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · <strong>로그인했지만 본인인증 프로필 미완성</strong> — 체크박스 미노출, 필터 행 자체가 생략돼 비로그인과 같은 모습 (헤더만 아바타)<br>
+              · <strong>목록 끝 도달</strong> — "더 이상 이벤트가 없어요" 안내가 그리드 하단에 표시<br>
+              · <strong>추가 로드 실패</strong> — 하단 스피너가 사라지고 조용히 실패 (새로고침으로 재시도 유도 — 모바일 behavior 상속)<br>
+              · <strong>마감/종료 카드</strong> — 카드 자체의 scrim·그레이스케일 처리 (<a href="/specs/event_card/index.html">event_card</a> 상속) — 클릭은 가능, 상세에서 마감 안내<br>
+              · <strong>마지막 행이 1~2장</strong> — 좌측 정렬 유지 (가운데 정렬하지 않음)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>
+              ⓐ <code>GlobalHeader</code> (로고 · 검색 필드 · 아바타 — 알림 아이콘 없음)<br>
+              ⓑ <code>SearchField</code> (pill · placeholder "이벤트 검색")<br>
+              ⓒ <code>EligibilityFilter</code> — 체크박스 + 라벨 "참가 가능한 이벤트만" (로그인 + 본인인증 프로필 보유 시에만 — 아니면 행 자체 생략)<br>
+              ⓓ <code>EventCard(web)</code> × N — 4col × 3 그리드 (내부 구성은 <a href="/specs/event_card/index.html">event_card</a> 상속 · 웹 변형: radius-card + border + hover elevation)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>
+              · color: <code>color-background</code> · <code>color-surface</code> (검색 필드 · 이미지 placeholder) · <code>color-text-primary</code> · <code>color-text-secondary</code> · <code>color-divider</code> · <code>color-primary</code> (active 칩 · 위치 아이콘 · 게이지 high) · <code>color-secondary</code> (가격 · "오늘"/"만석" 강조) · <code>color-tertiary</code> (게이지 mid)<br>
+              · radius: <code>radius-card (16px)</code> (카드) · <code>radius-chip</code> (태그 — pill) · 체크박스 4px<br>
+              · spacing: 컨테이너 gutter <code>32px</code> · grid gap <code>24px</code> · 헤더 요소 gap <code>24px</code> · 체크박스 20×20 · 박스↔라벨 <code>8px</code> · 카드 body padding <code>spacing-medium (16px)</code> 체계<br>
+              · typography: 카드 title 16/700 · meta 13/400 · price 14/700 · 체크 라벨 14/500 (체크 시 600)<br>
+              · CSS 소비: <code>var(--color-primary)</code> · <code>var(--radius-card)</code> 등 (Tailwind arbitrary value 동일)
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 카드 hover 시 elevation + 살짝 떠오름 (<code>motion-fast (200ms)</code> · fine pointer 만 — foundation 포인터 규칙). 카드 전체가 하나의 링크 — 내부에 개별 클릭 요소 없음 (새 탭 열기 등 브라우저 기본 동작 보존).<br>
+            📝 <strong>체크 상태 유지 제안</strong> — 체크 여부를 URL query 로 표현: 새로고침·back·공유 시 그대로 복원되지만, query 없는 새 방문은 항상 해제가 기본. 자동 기억(세션 저장)은 하지 않는다 — 다음 방문에 "목록이 왜 적지?" 혼란을 막고 전체 카탈로그 노출을 우선.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════════════════
+           State 2: 비로그인 — public 열람
+           ════════════════════════════════════════════════════════ -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>비로그인 · public 열람</strong> <span class="tag tag--mute">public</span>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <div class="wuh-header">
+                  <div class="wuh-header__inner">
+                    <img class="wuh-logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                    <div class="wuh-search">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      이벤트 검색
+                    </div>
+                    <div class="wuh-header__spacer"></div>
+                    <div class="wuh-login-btn">로그인</div>
+                  </div>
+                </div>
+
+                <div class="wuh-main">
+                  <!-- 비로그인: EligibilityFilter 미노출 — 필터 행 자체를 그리지 않고 그리드가 위로 -->
+                  <div class="wuh-grid">
+                    <div class="wuh-card">
+                      <div class="wuh-card__image" style="background: linear-gradient(135deg, #f0e6ff 0%, #ffe8d6 100%);">
+                        <div class="wuh-card__ph">2:1 이미지</div>
+                        <div class="wuh-card__grad"></div>
+                        <div class="wuh-ovl wuh-ovl--partner">
+                          <span class="wuh-ovl__avatar"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></span>
+                          <span class="wuh-ovl__name">Skybar Seoul</span>
+                        </div>
+                        <div class="wuh-ovl wuh-ovl--pp">
+                          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
+                          <span class="wuh-gauge"><i class="mid"></i><i class="mid"></i><i class="empty"></i></span>
+                          <span>12/20</span><span class="sep">·</span>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+                          <span class="today">오늘</span>
+                        </div>
+                        <div class="wuh-card__tags"><span>#루프탑파티</span><span>#와인</span></div>
+                      </div>
+                      <div class="wuh-card__body">
+                        <div class="wuh-card__title">강남 루프탑 소셜 파티 — Verified Vibe</div>
+                        <div class="wuh-card__meta">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                          <span class="txt">강남구 · 6월 7일 (일) 19:30</span>
+                          <span class="price">20,000원~</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="wuh-card">
+                      <div class="wuh-card__image" style="background: linear-gradient(135deg, #e6f0ff 0%, #d6e8ff 100%);">
+                        <div class="wuh-card__ph">2:1 이미지</div>
+                        <div class="wuh-card__grad"></div>
+                        <div class="wuh-ovl wuh-ovl--partner">
+                          <span class="wuh-ovl__avatar"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>
+                          <span class="wuh-ovl__name">보드게임바 플레이</span>
+                        </div>
+                        <div class="wuh-ovl wuh-ovl--pp">
+                          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
+                          <span class="wuh-gauge"><i class="low"></i><i class="empty"></i><i class="empty"></i></span>
+                          <span>3/12</span><span class="sep">·</span>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+                          <span>D-4</span>
+                        </div>
+                        <div class="wuh-card__tags"><span>#보드게임</span><span>#실내</span></div>
+                      </div>
+                      <div class="wuh-card__body">
+                        <div class="wuh-card__title">보드게임 소모임 — 2인 이상 즉시 참여</div>
+                        <div class="wuh-card__meta">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                          <span class="txt">마포구 · 6월 11일 (목) 14:00</span>
+                          <span class="price">10,000원~</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="wuh-card">
+                      <div class="wuh-card__image" style="background: linear-gradient(135deg, #e6fff2 0%, #d6f5e8 100%);">
+                        <div class="wuh-card__ph">2:1 이미지</div>
+                        <div class="wuh-card__grad"></div>
+                        <div class="wuh-ovl wuh-ovl--partner">
+                          <span class="wuh-ovl__avatar"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>
+                          <span class="wuh-ovl__name">러닝크루 한강</span>
+                        </div>
+                        <div class="wuh-ovl wuh-ovl--pp">
+                          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
+                          <span class="wuh-gauge"><i class="mid"></i><i class="mid"></i><i class="empty"></i></span>
+                          <span>9/15</span><span class="sep">·</span>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+                          <span>D-2</span>
+                        </div>
+                        <div class="wuh-card__tags"><span>#러닝</span><span>#야외</span></div>
+                      </div>
+                      <div class="wuh-card__body">
+                        <div class="wuh-card__title">한강 선셋 러닝 크루</div>
+                        <div class="wuh-card__meta">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                          <span class="txt">영등포구 · 6월 9일 (화) 18:30</span>
+                          <span class="price">5,000원~</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>로그인하지 않은 방문자가 진입한 상태 — 검색엔진/SNS 유입의 기본 착지. 목록·검색은 동일하게 노출되지만, "참가 가능" 체크박스는 노출되지 않아 필터 행 자체가 없다 (그리드가 위로).</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · <strong>카드 클릭</strong> → 이벤트 상세로 이동 — 비로그인도 열람 가능<br>
+              · <strong>"로그인" 클릭</strong> → 로그인 화면으로 이동 → 완료 후 보던 화면으로 복귀<br>
+              · <strong>검색</strong> → Default 와 동일하게 동작<br>
+              · <strong>보호 액션 시도</strong> (상세 화면의 구매·신청, 마이페이지 진입 등) → 로그인 화면으로 유도 — 로그인 완료 후 하려던 동작 지점으로 복귀
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>
+              · <strong>로그인 완료 복귀</strong> — 보던 스크롤 위치 그대로 복원, 헤더가 아바타로 전환 — 본인인증 프로필이 있으면 그제야 "참가 가능" 체크박스가 나타남<br>
+              · <strong>로그인했지만 프로필 미완성</strong> — 여전히 필터 행 없음 (체크박스는 본인인증 완료 후에만)<br>
+              · <strong>모바일 앱과 의도적 분기</strong> — 모바일 home 은 비로그인 전체 차단이지만, 웹은 공개 열람 (SEO/유입 특성). behavior source 대비 신규 분기
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>↔ <code>AvatarButton</code> → <code>"로그인" 버튼</code> (primary pill)<br>− <code>EligibilityFilter</code> — 필터 영역 없음 (행 자체 생략 · 그리드가 위로 당겨짐)<br>그 외 동일 (Default 참조)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>동일 — 로그인 버튼이 <code>color-primary</code> 채움 + 흰 텍스트인 점만 추가</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 화면 안에서 로그인을 강요하는 배너·모달 없음 — 로그인 유도는 보호 액션 시점 1곳으로 모은다. 비로그인 노출 정보 범위(가격·참여 현황)는 열린 질문 (Reference 노트).</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════════════════
+           State 3: Loading
+           ════════════════════════════════════════════════════════ -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>Loading · 목록 불러오는 중</strong> <span class="tag tag--mute">async</span>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <div class="wuh-header">
+                  <div class="wuh-header__inner">
+                    <img class="wuh-logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                    <div class="wuh-search">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      이벤트 검색
+                    </div>
+                    <div class="wuh-header__spacer"></div>
+                    <div class="wuh-avatar">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="wuh-main">
+                  <div class="wuh-filterbar">
+                    <div class="wuh-eligibility wuh-eligibility--checked">
+                      <span class="wuh-eligibility__box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                      참가 가능한 이벤트만
+                    </div>
+                  </div>
+
+                  <div class="wuh-grid">
+                    <div class="wuh-skel">
+                      <div class="skeleton-bar wuh-skel__img"></div>
+                      <div class="wuh-skel__body">
+                        <div class="skeleton-bar" style="height:18px;width:85%;"></div>
+                        <div class="skeleton-bar" style="height:13px;width:60%;"></div>
+                      </div>
+                    </div>
+                    <div class="wuh-skel">
+                      <div class="skeleton-bar wuh-skel__img"></div>
+                      <div class="wuh-skel__body">
+                        <div class="skeleton-bar" style="height:18px;width:78%;"></div>
+                        <div class="skeleton-bar" style="height:13px;width:55%;"></div>
+                      </div>
+                    </div>
+                    <div class="wuh-skel">
+                      <div class="skeleton-bar wuh-skel__img"></div>
+                      <div class="wuh-skel__body">
+                        <div class="skeleton-bar" style="height:18px;width:82%;"></div>
+                        <div class="skeleton-bar" style="height:13px;width:64%;"></div>
+                      </div>
+                    </div>
+                    <div class="wuh-skel">
+                      <div class="skeleton-bar wuh-skel__img"></div>
+                      <div class="wuh-skel__body">
+                        <div class="skeleton-bar" style="height:18px;width:70%;"></div>
+                        <div class="skeleton-bar" style="height:13px;width:50%;"></div>
+                      </div>
+                    </div>
+                    <div class="wuh-skel">
+                      <div class="skeleton-bar wuh-skel__img"></div>
+                      <div class="wuh-skel__body">
+                        <div class="skeleton-bar" style="height:18px;width:88%;"></div>
+                        <div class="skeleton-bar" style="height:13px;width:58%;"></div>
+                      </div>
+                    </div>
+                    <div class="wuh-skel">
+                      <div class="skeleton-bar wuh-skel__img"></div>
+                      <div class="wuh-skel__body">
+                        <div class="skeleton-bar" style="height:18px;width:75%;"></div>
+                        <div class="skeleton-bar" style="height:13px;width:62%;"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>목록을 불러오는 중. 첫 진입은 서버 렌더로 Default 가 곧장 보이는 것이 기본 — 이 상태는 <strong>"참가 가능" 체크 토글 등 클라이언트 측 재조회</strong> 시에 해당.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              · 헤더 액션(검색 · 로고 · 아바타)은 그대로 가능<br>
+              · 체크박스 재토글 가능 — 진행 중 요청은 최신 체크 상태로 대체<br>
+              · 스켈레톤 카드는 클릭 무반응
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>· 응답이 길어지면 스켈레톤 유지 — 별도 타임아웃 UI 없음 (모바일 behavior 상속)<br>· 빠른 응답이면 스켈레톤 없이 곧바로 결과로 교체 (깜빡임 방지)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>↔ <code>EventCard(web)</code> → <code>SkeletonCard</code> × 6 (이미지 2:1 블록 + 텍스트 라인 2개 — 카드와 동일 footprint)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>동일 + <code>color-surface</code>/<code>color-divider</code> shimmer sweep (skeleton 캡슐화 — 추가 토큰 없음)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 스켈레톤이 실제 카드와 같은 칸을 차지해 로드 완료 시 레이아웃 점프 없음.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════════════════
+           State 4: Empty
+           ════════════════════════════════════════════════════════ -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>Empty · 참가 가능한 이벤트 없음 (체크 ON)</strong> <span class="tag tag--mute">no data</span>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <div class="wuh-header">
+                  <div class="wuh-header__inner">
+                    <img class="wuh-logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                    <div class="wuh-search">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      이벤트 검색
+                    </div>
+                    <div class="wuh-header__spacer"></div>
+                    <div class="wuh-avatar">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="wuh-main">
+                  <div class="wuh-filterbar">
+                    <div class="wuh-eligibility wuh-eligibility--checked">
+                      <span class="wuh-eligibility__box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+                      참가 가능한 이벤트만
+                    </div>
+                  </div>
+
+                  <div class="wuh-center">
+                    <div class="wuh-center__icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    </div>
+                    <div class="wuh-center__title">참가 가능한 이벤트가 없어요</div>
+                    <div class="wuh-center__sub">체크를 해제하면 모든 이벤트를 볼 수 있어요</div>
+                    <div class="wuh-center__btn">체크 해제하고 모두 보기</div>
+                  </div>
+                </div>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>"참가 가능한 이벤트만"이 체크된 상태에서, 본인 자격으로 참가할 수 있는 이벤트가 0건인 상태.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              + <strong>"체크 해제하고 모두 보기" 클릭</strong> → 체크가 풀리고 전체 목록으로 복귀 (Loading 경유)<br>
+              · 상단 체크박스를 직접 해제해도 동일한 결과
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>· <strong>체크 없이 전체 0건</strong> (데이터 자체 부족) — 문구가 다름: "준비 중인 이벤트가 곧 올라와요" + 해제 버튼 없음<br>· 비로그인/프로필 미완성 사용자는 체크 필터가 없으므로 이 변형(체크 ON 0건)에는 도달하지 않음 — 전체 0건 변형만 가능</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>↔ <code>EventCardGrid</code> → <code>EmptyState</code> (아이콘 + 타이틀 + 서브 + "체크 해제하고 모두 보기" outline 버튼) — 그리드 영역 중앙 정렬</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>+ <code>color-text-secondary</code> (아이콘 · 서브 문구) — 그 외 동일</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 체크 ON 상태를 상단에 그대로 남겨 "왜 비었는지"가 화면만으로 읽히게 한다 — 해제 유도 CTA 와 한 쌍.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ════════════════════════════════════════════════════════
+           State 5: Error
+           ════════════════════════════════════════════════════════ -->
+      <table class="ref state-mini">
+        <thead>
+          <tr><th colspan="3">
+            <strong>Error · 목록 로드 실패</strong> <span class="tag tag--mute">network/server</span>
+          </th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="6" class="state-mini__mock">
+              <div class="mock-scale">
+              <div class="viewport viewport--desktop">
+                <div class="wuh-header">
+                  <div class="wuh-header__inner">
+                    <img class="wuh-logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit">
+                    <div class="wuh-search">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      이벤트 검색
+                    </div>
+                    <div class="wuh-header__spacer"></div>
+                    <div class="wuh-avatar">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="wuh-main">
+                  <div class="wuh-filterbar">
+                    <div class="wuh-eligibility">
+                      <span class="wuh-eligibility__box"></span>
+                      참가 가능한 이벤트만
+                    </div>
+                  </div>
+
+                  <div class="wuh-center">
+                    <div class="wuh-center__icon" style="color: var(--color-error);">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="13"/><circle cx="12" cy="16.5" r="0.5" fill="currentColor"/></svg>
+                    </div>
+                    <div class="wuh-center__title">이벤트 목록을 불러오지 못했습니다</div>
+                    <div class="wuh-center__sub">네트워크 상태를 확인하고 다시 시도해 주세요</div>
+                    <div class="wuh-center__btn">다시 시도</div>
+                  </div>
+                </div>
+              </div>
+              </div>
+            </td>
+            <td class="state-mini__aspect">조건</td>
+            <td>목록을 받아오지 못한 상태 — 네트워크 끊김 / 서버 오류 / 타임아웃.</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">사용자 액션</td>
+            <td>
+              + <strong>"다시 시도" 클릭</strong> → 재요청 → Loading 으로 전환<br>
+              + <strong>브라우저 새로고침</strong> → 화면 전체 다시 로드
+            </td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">에지케이스</td>
+            <td>· 재시도가 같은 오류로 반복되면 동일 화면 유지 — 자동 재시도 없음 (사용자 액션 필요, 모바일 behavior 상속)<br>· 존재하지 않는 경로 진입(404)은 이 state 가 아니라 별도 404 페이지 (사이트 공통 — TBD)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">컴포넌트</td>
+            <td>↔ <code>EventCardGrid</code> → <code>ErrorState</code> (아이콘 + 타이틀 + 서브 + "다시 시도" outline 버튼)</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">토큰</td>
+            <td>+ <code>color-error</code> (아이콘) — 버튼은 <code>color-primary</code> outline 유지</td>
+          </tr>
+          <tr>
+            <td class="state-mini__aspect">노트</td>
+            <td>📝 에러 메시지는 generic — 구체 사유는 콘솔/로그에만 (모바일 behavior 상속).</td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </section>
+</div>
+
+<!-- ============================================================
+     🔄 PERSPECTIVE 3 · GLOBAL BEHAVIOR
+     ============================================================ -->
+<div class="perspective" id="global-behavior">
+  <div class="perspective__header">
+    <span class="glyph">🔄</span>
+    <h2>Global Behavior</h2>
+    <span class="lede">
+      화면 전반 cross-cutting 동작. 모바일 spec(<a href="/specs/home_page/index.html">home_page</a>)에서
+      상속한 behavior 는 그 spec 이 SSOT — 여기엔 웹에서 달라지는 점만 추가.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Cross-cutting interactions</h2>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">사용자 액션</th>
+          <th>화면에 보이는 결과</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>브라우저 back / forward</td>
+          <td>상세 → 목록 복귀 시 <strong>스크롤 위치와 "참가 가능" 체크 상태가 그대로 복원</strong>. 체크 여부는 URL query 에 반영되므로 back 으로 체크 토글 이전 상태로도 돌아갈 수 있다.</td>
+        </tr>
+        <tr>
+          <td>새로고침 / URL 직접 진입</td>
+          <td>URL query ("참가 가능" 체크 여부) 만으로 동일 결과 복원. 서버 렌더로 Default(또는 Empty) 가 곧장 표시 — 첫 화면에 스켈레톤 없음. 비로그인/프로필 미완성 사용자가 체크 query 가 붙은 URL 로 진입하면 query 는 무시되고 전체 목록 표시.</td>
+        </tr>
+        <tr>
+          <td>비로그인 접근</td>
+          <td>public 열람 — 차단·redirect 없음 (비로그인 state 참조). 보호 액션 시점에만 로그인 유도.</td>
+        </tr>
+        <tr>
+          <td>hover (fine pointer)</td>
+          <td>카드: elevation + 살짝 떠오름 · 칩/버튼: 배경 미세 강조 — <code>motion-fast (200ms)</code> + <code>cursor: pointer</code>. coarse pointer 는 press 피드백 (<code>motion-micro (100ms)</code>) — foundation 포인터 규칙.</td>
+        </tr>
+        <tr>
+          <td>스크롤 끝 근접</td>
+          <td>다음 목록 자동 로드 — 그리드 하단 스피너 → 카드 추가 (모바일 무한 스크롤 behavior 상속 · 페이지네이션 전환 여부는 열린 질문).</td>
+        </tr>
+        <tr>
+          <td>브라우저 탭 비활성 → 복귀</td>
+          <td>자동 재요청 없음 — 보던 목록 유지. 최신화는 수동 새로고침.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Motion &amp; timing</h2>
+    <p class="intro">
+      duration 은 MDS motion 토큰 (<code>micro 100 / fast 200 / medium 350 / slow 500</code>) —
+      웹 구현은 CSS <code>transition-duration</code> / Tailwind <code>duration-N</code> 으로 같은 ms 소비.
+      <code>prefers-reduced-motion</code> 대응은 Global edge cases 참조.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr>
+          <th style="width: 240px;">Transition</th>
+          <th style="width: 150px;">Duration (token)</th>
+          <th>Curve / notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>첫 화면 진입 (서버 렌더)</td>
+          <td>없음 (0ms)</td>
+          <td>SSR 즉시 표시 — 진입 모션 없음</td>
+        </tr>
+        <tr>
+          <td>"참가 가능" 체크 토글 → 목록 교체</td>
+          <td><code>medium</code> (350ms)</td>
+          <td>그리드 crossfade — 스켈레톤 경유 시에도 동일</td>
+        </tr>
+        <tr>
+          <td>카드 hover 진입/이탈</td>
+          <td><code>fast</code> (200ms)</td>
+          <td>ease-out — elevation + translateY(-2px)</td>
+        </tr>
+        <tr>
+          <td>체크박스/버튼 press 피드백</td>
+          <td><code>micro</code> (100ms)</td>
+          <td>체크 표시·배경색 즉각 변화</td>
+        </tr>
+        <tr>
+          <td>로고 클릭 → 최상단 스크롤</td>
+          <td><code>medium</code> (350ms)</td>
+          <td>easeOut 감속 (모바일 behavior 상속)</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Global edge cases</h2>
+    <ul class="notes">
+      <li><strong>네트워크 끊김</strong> — 첫 로드 실패는 Error state. 무한 스크롤 추가 로드 실패는 하단 스피너 제거 후 조용히 실패 (모바일 behavior 상속).</li>
+      <li><strong>다크 모드</strong> — 우측 상단 Dark 토글로 확인. 배경/표면/텍스트/divider 토큰 전환 · 카드 이미지 위 overlay 는 dark scrim 고정이라 모드 무관 · active 칩의 primary 강조 유지.</li>
+      <li><strong>접근성</strong> — 키보드 tab 순서: 로고 → 검색 → 로그인/아바타 → 참가 가능 체크박스(노출 시) → 카드 순. 카드 전체가 단일 링크 + visible focus ring. 200% 줌에서 가로 스크롤 없이 사용 가능 (그리드가 하위 tier 컬럼 수로 reflow — foundation 규칙).</li>
+      <li><strong>reduced motion</strong> — <code>prefers-reduced-motion</code> 시 카드 hover 모션·목록 crossfade transition 0ms · skeleton shimmer 정지 (정적 표시).</li>
+      <li><strong>SEO / 공유</strong> — public 페이지: title/og 메타 + 이벤트 목록 서버 렌더 (비로그인 공개 열람과 한 쌍의 결정). 체크 query 가 붙은 URL 을 공유받은 사람에게 자격 정보가 없으면 query 는 무시되고 전체 목록.</li>
+      <li><strong>초광폭 (≥1920px)</strong> — 1200px 캡 유지, 잉여 폭은 배경 (foundation 규칙 — 카드 4col 로 늘리지 않음).</li>
+    </ul>
+  </section>
+</div>
+
+<!-- ============================================================
+     📖 PERSPECTIVE 4 · REFERENCE
+     ============================================================ -->
+<div class="perspective" id="reference">
+  <div class="perspective__header">
+    <span class="glyph">📖</span>
+    <h2>Reference</h2>
+    <span class="lede">
+      Implementation source + 인접 화면 link. Components / Tokens 는 States 의 각 mini-table 에 분산.
+    </span>
+  </div>
+
+  <section class="doc">
+    <h2>Implementation source</h2>
+    <p class="intro">
+      <code>planned</code> 상태 — 구현 미존재 항목은 <code>TBD</code>.
+    </p>
+    <table class="ref">
+      <thead>
+        <tr><th style="width: 200px;">항목</th><th>Path / Reference</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Page / Component</strong></td>
+          <td><code>WebUserHome</code> — <code>TBD</code></td>
+        </tr>
+        <tr>
+          <td><strong>File path</strong></td>
+          <td><code>apps/landing_user/src/app/page.tsx</code> (landing_user 확장 — web MVP) · <code>TBD</code></td>
+        </tr>
+        <tr>
+          <td><strong>Data source</strong></td>
+          <td>공개 이벤트 목록 조회 (Supabase — 비로그인 read 가능해야 함) · 참가 자격 필터: 본인 프로필(나이·성별 등) 기준 판정 · <code>TBD</code></td>
+        </tr>
+        <tr>
+          <td><strong>Route</strong></td>
+          <td><code>/</code> · Next.js app router — "참가 가능" 체크 여부는 URL query 로 표현</td>
+        </tr>
+        <tr>
+          <td><strong>Behavior Source</strong></td>
+          <td>
+            <a href="/specs/home_page/index.html"><code>/specs/home_page/index.html</code></a> ·
+            <a href="/specs/event_card/index.html"><code>/specs/event_card/index.html</code></a> ·
+            <a href="/specs/search_page/index.html"><code>/specs/search_page/index.html</code></a>
+            — Overview 의 Behavior Source 행과 동일 경로
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="intro" style="margin-top: 12px; margin-bottom: 0;">
+      ※ 열린 질문 (디자인 확정 필요): ① 무한 스크롤 vs 페이지네이션 (SEO/푸터 도달성) ·
+      ② 비로그인 카드의 정보 노출 범위 (가격·참여 현황 전부 공개 여부) ·
+      ③ 헤더 검색 — <code>/search</code> 페이지 이동 vs 인라인 결과 드롭다운.
+    </p>
+  </section>
+
+  <section class="doc">
+    <h2>Related screens</h2>
+    <table class="ref">
+      <thead><tr><th style="width: 280px;">Spec</th><th>Relation</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="/specs/web_user_event_detail/index.html"><code>WebUserEventDetail</code></a></td>
+          <td>카드 클릭 도착지 — 상세 → 구매·신청 퍼널의 다음 화면.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/home_page/index.html"><code>HomePage</code> (mobile)</a></td>
+          <td>Behavior Source — page-level state · 필터/무한 스크롤/에러 규칙의 SSOT.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/event_card/index.html"><code>MinglitEventCard</code> (mobile)</a></td>
+          <td>Behavior Source — 카드 내부 구성 · 4 lifecycle state 의 SSOT.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/search_page/index.html"><code>SearchPage</code> (mobile)</a></td>
+          <td>헤더 검색 필드의 검색 진입 behavior 참고.</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/login_page/index.html"><code>LoginPage</code> (mobile)</a></td>
+          <td>"로그인" 버튼·보호 액션 유도 도착지 — 웹 로그인 spec 은 별도 작성 예정 (TBD).</td>
+        </tr>
+        <tr>
+          <td><a href="/specs/web_foundation_responsive/"><code>WebFoundationResponsive</code></a></td>
+          <td>breakpoint · 컨테이너(1200 캡 · gutter 32) · 그리드(12col · gap 24) · 포인터 규칙 SSOT.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+</div>
+
+</div>
+
+<script>
+  document.getElementById('spec-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('spec-mode', e.target.checked);
+  });
+  document.getElementById('dark-toggle').addEventListener('change', (e) => {
+    document.body.classList.toggle('dark-mode', e.target.checked);
+  });
+</script>
+
+</body>
+</html>

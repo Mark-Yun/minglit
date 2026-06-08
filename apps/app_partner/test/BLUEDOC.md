@@ -10,6 +10,7 @@
 | [`integration/`](./integration/) | Integration 테스트 (CI 의 `pr-gate.test-integration-app-partner-cuj` 실행) |
 | [`visual_qa/`](./visual_qa/) | 시각 QA 캡처 |
 | [`utils/`](./utils/) | 테스트 헬퍼 (mocks, utils, reporter integration) |
+| [`mds_render_engine_debug_override_test.dart`](./mds_render_engine_debug_override_test.dart) | MDS render runner debug override cleanup 회귀 테스트 |
 | [`widget_test.dart`](./widget_test.dart) | 레거시 widget test |
 | [`flutter_test_config.dart`](./flutter_test_config.dart) | 테스트 환경 setup |
 | [`reporter.dart`](./reporter.dart) | test_reporter 통합 |
@@ -38,4 +39,4 @@ CI 자동 실행: `pr-gate.test-flutter-apps` matrix. 커버리지 dev 자동 �
 - [tests/_coverage/BLUEDOC](../../../tests/_coverage/BLUEDOC.md)
 
 ---
-_Reviewed: 2026-06-05 10:37_
+_Reviewed: 2026-06-08 07:25_

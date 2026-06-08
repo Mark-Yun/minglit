@@ -3,6 +3,7 @@
 import type { ActionDef } from "./_registry.ts";
 import { registerAction } from "./_registry.ts";
 import {
+  isEventFull,
   isEventOpenForApplication,
   isTicketSoldOut,
 } from "../../_shared/domains/event/availability.ts";
@@ -17,12 +18,26 @@ type TicketCandidate = {
 type EventCandidate = {
   id: string;
   status?: string;
+  current_participants?: number;
+  max_participants?: number;
   tickets?: TicketCandidate[];
 };
 
 function isApplicationEvent(event: EventCandidate): boolean {
-  return typeof event.status === "string" &&
-    isEventOpenForApplication(event.status);
+  if (
+    typeof event.status !== "string" ||
+    !isEventOpenForApplication(event.status)
+  ) {
+    return false;
+  }
+  if (
+    typeof event.current_participants === "number" &&
+    typeof event.max_participants === "number" &&
+    isEventFull(event.current_participants, event.max_participants)
+  ) {
+    return false;
+  }
+  return true;
 }
 
 function isApplicationTicket(ticket: TicketCandidate): boolean {

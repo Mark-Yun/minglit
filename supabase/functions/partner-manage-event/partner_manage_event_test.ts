@@ -117,6 +117,11 @@ function insertEventRoute(id = TEST_EVENT_ID): FetchRoute {
 function selectEventRoute(
   status = "scheduled",
   partnerId = TEST_PARTNER_ID,
+  overrides: {
+    startTime?: string;
+    currentParticipants?: number;
+    metadata?: Record<string, unknown> | null;
+  } = {},
 ): FetchRoute {
   return {
     matcher: (req) =>
@@ -128,6 +133,10 @@ function selectEventRoute(
         id: TEST_EVENT_ID,
         status,
         party_id: TEST_PARTY_ID,
+        start_time: overrides.startTime ?? FUTURE_START,
+        end_time: FUTURE_END,
+        current_participants: overrides.currentParticipants ?? 0,
+        metadata: overrides.metadata ?? {},
         parties: { partner_id: partnerId },
       }),
   };
@@ -143,11 +152,40 @@ function selectEventNotFoundRoute(): FetchRoute {
   };
 }
 
-function updateEventRoute(): FetchRoute {
+function updateEventRoute(
+  assertPatch?: (body: Record<string, unknown>) => void | Promise<void>,
+): FetchRoute {
   return {
     matcher: (req) =>
       req.url.includes("/rest/v1/events") && req.method === "PATCH",
-    handler: () => new Response(null, { status: 200 }),
+    handler: async (req) => {
+      if (assertPatch) {
+        const body = await req.json() as Record<string, unknown>;
+        await assertPatch(body);
+      }
+      return new Response(null, { status: 200 });
+    },
+  };
+}
+
+function selectNoActiveApplicationsRoute(): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/event_applications") &&
+      req.url.includes("select=") &&
+      req.method === "GET",
+    handler: () => jsonResponse([]),
+  };
+}
+
+function selectActiveApplicationsRoute(status = "paid"): FetchRoute {
+  return {
+    matcher: (req) =>
+      req.url.includes("/rest/v1/event_applications") &&
+      req.url.includes("select=") &&
+      req.method === "GET",
+    handler: () =>
+      jsonResponse([{ id: "application-001", status }]),
   };
 }
 
@@ -731,6 +769,7 @@ Deno.test({
       authRoute(),
       selectEventRoute(),
       permRoute(),
+      selectNoActiveApplicationsRoute(),
       updateEventRoute(),
     ]);
 
@@ -746,6 +785,118 @@ Deno.test({
         assertEquals(res.status, 200);
         const body = await readJson(res);
         assertEquals(body.success, true);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "update: completed event cannot be edited",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectEventRoute("completed"),
+      permRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update",
+          event_id: TEST_EVENT_ID,
+          event: { start_time: FUTURE_START },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "Event is no longer editable");
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "update: started scheduled event cannot be edited",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectEventRoute("scheduled", TEST_PARTNER_ID, { startTime: PAST_TIME }),
+      permRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update",
+          event_id: TEST_EVENT_ID,
+          event: { start_time: FUTURE_START },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "Event is no longer editable");
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "update: max_participants cannot go below current participants",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectEventRoute("scheduled", TEST_PARTNER_ID, { currentParticipants: 8 }),
+      permRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update",
+          event_id: TEST_EVENT_ID,
+          event: { max_participants: 5 },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "max_participants cannot be lower than current_participants");
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "update: max_participants must be a positive integer",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectEventRoute(),
+      permRoute(),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update",
+          event_id: TEST_EVENT_ID,
+          event: { max_participants: 0 },
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "event.max_participants must be a positive integer");
       });
     });
   },
@@ -865,6 +1016,7 @@ Deno.test({
       authRoute(),
       selectEventRoute("scheduled"),
       permRoute(),
+      selectNoActiveApplicationsRoute(),
       updateEventRoute(),
     ]);
 
@@ -879,6 +1031,106 @@ Deno.test({
         assertEquals(res.status, 200);
         const body = await readJson(res);
         assertEquals(body.success, true);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "update_status: stores cancellation reason in event metadata",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectEventRoute("scheduled", TEST_PARTNER_ID, {
+        metadata: { visibility: "private" },
+      }),
+      permRoute(),
+      selectNoActiveApplicationsRoute(),
+      updateEventRoute((body) => {
+        assertEquals(body.status, "cancelled");
+        assertEquals(body.metadata, {
+          visibility: "private",
+          cancel_reason: "venue_issue",
+          cancel_reason_text: "장소 문제",
+        });
+      }),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update_status",
+          event_id: TEST_EVENT_ID,
+          status: "cancelled",
+          reason: "장소 문제",
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 200);
+        const body = await readJson(res);
+        assertEquals(body.success, true);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "update_status: active applications block partner cancellation",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectEventRoute("scheduled"),
+      permRoute(),
+      selectActiveApplicationsRoute("paid"),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update_status",
+          event_id: TEST_EVENT_ID,
+          status: "cancelled",
+          reason: "인원 미달",
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 409);
+        const body = await readJson(res);
+        assertEquals(
+          body.error,
+          "Cannot cancel events with active applications until refund orchestration is available",
+        );
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "update_status: started scheduled event cannot be cancelled",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      selectEventRoute("scheduled", TEST_PARTNER_ID, { startTime: PAST_TIME }),
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const req = authenticatedJsonRequest("http://localhost", {
+          action: "update_status",
+          event_id: TEST_EVENT_ID,
+          status: "cancelled",
+        });
+        const res = await handler(req);
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "Event is no longer editable");
       });
     });
   },
