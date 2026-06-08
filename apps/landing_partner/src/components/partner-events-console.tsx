@@ -48,6 +48,14 @@ import {
   type PartyFormValues,
 } from "@/lib/partner-events";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import {
+  partnerManageEvent,
+  partnerManageParty,
+  recurrenceRules,
+  type PartnerManageEventRequest,
+  type PartnerManagePartyRequest,
+  type RecurrenceRulesRequest,
+} from "@minglit/web-kit/ef";
 
 type PartnerEventsState =
   | { status: "loading" }
@@ -157,35 +165,29 @@ export function PartnerPartyFormPage({ mode }: { mode: PartyRouteMode }) {
 
     try {
       if (mode.type === "create") {
-        const { data, error } = await supabase.functions.invoke("partner-manage-party", {
-          body: buildPartyCreatePayload(state.partner, values),
-        });
-        if (error) throw error;
-        const partyId = typeof data === "object" && data && "party_id" in data ? String(data.party_id) : null;
+        const result = await partnerManageParty(
+          supabase,
+          buildPartyCreatePayload(state.partner, values) as PartnerManagePartyRequest,
+        );
+        const partyId = result.party_id ?? null;
         if (partyId) {
           const recurrencePayload = buildRecurrencePayload({ ...emptyParty(partyId), recurrenceRule: null }, values);
           for (const payload of recurrencePayload ? [recurrencePayload].flat() : []) {
-            const { error: recurrenceError } = await supabase.functions.invoke("recurrence-rules", {
-              body: payload,
-            });
-            if (recurrenceError) throw recurrenceError;
+            await recurrenceRules(supabase, payload as unknown as RecurrenceRulesRequest);
           }
         }
       } else if (currentParty) {
-        const { error } = await supabase.functions.invoke("partner-manage-party", {
-          body: buildPartyUpdatePayload(currentParty, values),
-        });
-        if (error) throw error;
-        const { error: ticketError } = await supabase.functions.invoke("partner-manage-party", {
-          body: buildTicketTemplatePayload(currentParty, values),
-        });
-        if (ticketError) throw ticketError;
+        await partnerManageParty(
+          supabase,
+          buildPartyUpdatePayload(currentParty, values) as PartnerManagePartyRequest,
+        );
+        await partnerManageParty(
+          supabase,
+          buildTicketTemplatePayload(currentParty, values) as PartnerManagePartyRequest,
+        );
         const recurrencePayload = buildRecurrencePayload(currentParty, values);
         for (const payload of recurrencePayload ? [recurrencePayload].flat() : []) {
-          const { error: recurrenceError } = await supabase.functions.invoke("recurrence-rules", {
-            body: payload,
-          });
-          if (recurrenceError) throw recurrenceError;
+          await recurrenceRules(supabase, payload as unknown as RecurrenceRulesRequest);
         }
       }
       router.push("/dashboard/events");
@@ -278,15 +280,15 @@ export function PartnerEventFormPage({ mode }: { mode: EventRouteMode }) {
 
     try {
       if (mode.type === "create" && selectedParty) {
-        const { error } = await supabase.functions.invoke("partner-manage-event", {
-          body: buildEventCreatePayload(selectedParty, values),
-        });
-        if (error) throw error;
+        await partnerManageEvent(
+          supabase,
+          buildEventCreatePayload(selectedParty, values) as PartnerManageEventRequest,
+        );
       } else if (mode.type === "edit") {
-        const { error } = await supabase.functions.invoke("partner-manage-event", {
-          body: buildEventUpdatePayload(mode.eventId, values),
-        });
-        if (error) throw error;
+        await partnerManageEvent(
+          supabase,
+          buildEventUpdatePayload(mode.eventId, values) as PartnerManageEventRequest,
+        );
       }
       router.push("/dashboard/events");
     } catch (error) {
@@ -303,10 +305,12 @@ export function PartnerEventFormPage({ mode }: { mode: EventRouteMode }) {
     setSubmitting(true);
     setFormError(null);
     try {
-      const { error } = await supabase.functions.invoke("partner-manage-event", {
-        body: { action: "update_status", event_id: mode.eventId, status: "cancelled", reason: cancelReason },
+      await partnerManageEvent(supabase, {
+        action: "update_status",
+        event_id: mode.eventId,
+        status: "cancelled",
+        reason: cancelReason,
       });
-      if (error) throw error;
       router.push("/dashboard/events");
     } catch (error) {
       setFormError(error instanceof Error ? error.message : "회차 취소에 실패했어요.");

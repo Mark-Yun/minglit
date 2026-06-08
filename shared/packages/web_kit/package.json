@@ -2,19 +2,35 @@
   "name": "@minglit/web-kit",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "description": "Minglit 웹 MVP 공유 클라이언트 패키지 — supabase 팩토리 / typed EF 클라이언트 / DB 타입 / 도메인 로직 / MDS UI",
   "exports": {
-    "./supabase": "./src/supabase/index.ts",
-    "./ef": "./src/ef/index.ts",
-    "./types": "./src/types/index.ts",
-    "./domain": "./src/domain/index.ts",
-    "./ui": "./src/ui/index.ts"
+    "./supabase": {
+      "types": "./dist/supabase/index.d.ts",
+      "default": "./dist/supabase/index.js"
+    },
+    "./ef": {
+      "types": "./dist/ef/index.d.ts",
+      "default": "./dist/ef/index.js"
+    },
+    "./types": {
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/types/index.js"
+    },
+    "./domain": {
+      "types": "./dist/domain/index.d.ts",
+      "default": "./dist/domain/index.js"
+    },
+    "./ui": {
+      "types": "./dist/ui/index.d.ts",
+      "default": "./dist/ui/index.js"
+    }
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "gen:types": "supabase gen types typescript --local --workdir ../../.. > src/types/db.ts"
+    "gen:types": "supabase gen types typescript --local --workdir ../../.. > src/types/db.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "prepare": "npm run build"
   },
   "dependencies": {
     "@date-fns/tz": "^1.2.0",
@@ -34,6 +50,9 @@
     "@types/node": "^25",
     "@types/react": "^19",
     "typescript": "^6",
-    "vitest": "^3.2.4"
-  }
+    "vitest": "^4.1.8"
+  },
+  "files": [
+    "dist"
+  ]
 }

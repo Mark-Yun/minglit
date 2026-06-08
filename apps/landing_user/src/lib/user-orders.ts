@@ -1,4 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import {
+  userCreateOrder,
+  paymentVerify,
+  userCancelOrder,
+  MinglitError,
+} from "@minglit/web-kit/ef";
 import type { PublicEvent, Ticket } from "./events";
 
 export type CheckoutOrderResult = {
@@ -40,8 +46,6 @@ export type UserPurchase = {
   paidAt: string | null;
   refundedAt: string | null;
 };
-
-type FunctionError = { message?: string };
 
 type PurchaseRow = {
   id: string;
@@ -127,30 +131,22 @@ export async function createCheckoutOrder(
   eventId: string,
   ticketId: string,
 ): Promise<CheckoutOrderResult> {
-  const { data, error } = await supabase.functions.invoke("user-create-order", {
-    body: { event_id: eventId, ticket_id: ticketId },
-  });
 
-  if (error) throw new Error(error.message);
-
-  const body = data as {
-    application_id?: string;
-    amount?: number;
-    requires_payment?: boolean;
-    ticket_name?: string;
-    error?: FunctionError;
-  } | null;
-
-  if (!body?.application_id) {
-    throw new Error(body?.error?.message ?? "주문을 생성하지 못했습니다.");
+  try {
+    const body = await userCreateOrder(supabase, { event_id: eventId, ticket_id: ticketId });
+    // wrapper schema guarantees application_id/amount/requires_payment/ticket_name.
+    return {
+      applicationId: body.application_id,
+      amount: body.amount,
+      requiresPayment: body.requires_payment,
+      ticketName: body.ticket_name,
+    };
+  } catch (error) {
+    if (error instanceof MinglitError) {
+      throw new Error(error.message || "주문을 생성하지 못했습니다.");
+    }
+    throw error;
   }
-
-  return {
-    applicationId: body.application_id,
-    amount: body.amount ?? 0,
-    requiresPayment: body.requires_payment ?? false,
-    ticketName: body.ticket_name ?? "티켓",
-  };
 }
 
 export async function verifyCheckoutPayment(
@@ -158,13 +154,14 @@ export async function verifyCheckoutPayment(
   impUid: string,
   merchantUid: string,
 ): Promise<void> {
-  const { data, error } = await supabase.functions.invoke("payment-verify", {
-    body: { imp_uid: impUid, merchant_uid: merchantUid },
-  });
 
-  if (error) throw new Error(error.message);
-  if ((data as { error?: FunctionError } | null)?.error) {
-    throw new Error((data as { error: FunctionError }).error.message ?? "결제를 검증하지 못했습니다.");
+  try {
+    await paymentVerify(supabase, { imp_uid: impUid, merchant_uid: merchantUid });
+  } catch (error) {
+    if (error instanceof MinglitError) {
+      throw new Error(error.message || "결제를 검증하지 못했습니다.");
+    }
+    throw error;
   }
 }
 
@@ -182,18 +179,18 @@ export async function fetchUserPurchases(supabase: SupabaseClient): Promise<User
 }
 
 export async function cancelUserOrder(supabase: SupabaseClient, eventId: string, reason: string): Promise<string> {
-  const { data, error } = await supabase.functions.invoke("user-cancel-order", {
-    body: { event_id: eventId, reason },
-  });
 
-  if (error) throw new Error(error.message);
-
-  const body = data as { type?: string; data?: { refund_amount?: number }; error?: FunctionError } | null;
-  if (body?.error) throw new Error(body.error.message ?? "환불 요청을 처리하지 못했습니다.");
-  if (body?.type === "refunded") return `${(body.data?.refund_amount ?? 0).toLocaleString("ko-KR")}원 환불이 접수됐습니다.`;
-  if (body?.type === "cancelled") return "신청 취소가 접수됐습니다.";
-
-  return "요청이 접수됐습니다.";
+  try {
+    const body = await userCancelOrder(supabase, { event_id: eventId, reason });
+    if (body.type === "refunded") return `${body.data.refund_amount.toLocaleString("ko-KR")}원 환불이 접수됐습니다.`;
+    if (body.type === "cancelled") return "신청 취소가 접수됐습니다.";
+    return "요청이 접수됐습니다.";
+  } catch (error) {
+    if (error instanceof MinglitError) {
+      throw new Error(error.message || "환불 요청을 처리하지 못했습니다.");
+    }
+    throw error;
+  }
 }
 
 export function mapPurchaseRow(row: PurchaseRow): UserPurchase {
