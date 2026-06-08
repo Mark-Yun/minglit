@@ -33,4 +33,4 @@ Minglit 의 **백엔드 구현 루트**. DB migration, Edge Functions, seed, bac
 - [docs/infra/bluedoc/BLUEDOC.md](../docs/infra/bluedoc/BLUEDOC.md) — BLUEDOC 컨벤션
 
 ---
-_Reviewed: 2026-06-06 16:49_
+_Reviewed: 2026-06-08 13:31_

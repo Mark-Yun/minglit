@@ -5,5 +5,117 @@
     "envs": ["dev", "main"],
     "issue": 2756,
     "reason": "Minglit production auth does not support email/password signup or login. Password-backed accounts are limited to dev/test seed and simulator flows, so Supabase Auth leaked-password protection is not an applicable production control."
+  },
+  {
+    "name": "rls_disabled_in_public",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3424,
+    "cache_key": "rls_disabled_in_public_public_spatial_ref_sys",
+    "reason": "public.spatial_ref_sys is PostGIS extension catalog metadata. It is documented as the only public RLS-disabled table exception and should not be modified by Minglit migrations."
+  },
+  {
+    "name": "extension_in_public",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3424,
+    "cache_key": "extension_in_public_pgroonga",
+    "reason": "PGroonga is an extension dependency used for Korean full-text search. Moving extension objects requires a separate extension-schema migration plan."
+  },
+  {
+    "name": "extension_in_public",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3424,
+    "cache_key": "extension_in_public_citext",
+    "reason": "citext is extension-owned infrastructure. Moving extension objects requires a separate extension-schema migration plan."
+  },
+  {
+    "name": "extension_in_public",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3424,
+    "cache_key": "extension_in_public_postgis",
+    "reason": "PostGIS is an extension dependency used for geospatial search. Moving extension objects requires a separate extension-schema migration plan."
+  },
+  {
+    "name": "anon_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3424,
+    "cache_key": "anon_security_definer_function_executable_public_st_estimatedextent_text, text",
+    "reason": "st_estimatedextent(text, text) is a PostGIS extension-owned function. Its execute posture should be handled with the broader extension-schema migration plan."
+  },
+  {
+    "name": "anon_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3424,
+    "cache_key": "anon_security_definer_function_executable_public_st_estimatedextent_text, text, text",
+    "reason": "st_estimatedextent(text, text, text) is a PostGIS extension-owned function. Its execute posture should be handled with the broader extension-schema migration plan."
+  },
+  {
+    "name": "anon_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3424,
+    "cache_key": "anon_security_definer_function_executable_public_st_estimatedextent_text, text, text, boolean",
+    "reason": "st_estimatedextent(text, text, text, boolean) is a PostGIS extension-owned function. Its execute posture should be handled with the broader extension-schema migration plan."
+  },
+  {
+    "name": "rls_enabled_no_policy",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3424,
+    "cache_key": "rls_enabled_no_policy_public_active_storage_uploads",
+    "reason": "active_storage_uploads is intentionally RLS-enabled with no publishable-role policy; writes go through storage-upload Edge Function service_role flow."
+  },
+  {
+    "name": "rls_enabled_no_policy",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3424,
+    "cache_key": "rls_enabled_no_policy_public_app_roles",
+    "reason": "app_roles is intentionally default-deny to publishable roles and is accessed only by service_role/admin paths and SECURITY DEFINER helpers."
+  },
+  {
+    "name": "rls_enabled_no_policy",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3424,
+    "cache_key": "rls_enabled_no_policy_public_party_embeddings",
+    "reason": "party_embeddings is intentionally default-deny to publishable roles; embedding writes and reads are service_role/internal pipeline concerns."
+  },
+  {
+    "name": "rls_enabled_no_policy",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3424,
+    "cache_key": "rls_enabled_no_policy_public_storage_upload_bucket_policies",
+    "reason": "storage_upload_bucket_policies is intentionally default-deny to publishable roles and is managed by service_role storage-upload infrastructure."
+  },
+  {
+    "name": "rls_enabled_no_policy",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3424,
+    "cache_key": "rls_enabled_no_policy_public_user_actions",
+    "reason": "user_actions is intentionally default-deny to publishable roles; user action data is written through controlled backend flows."
+  },
+  {
+    "name": "rls_enabled_no_policy",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3424,
+    "cache_key": "rls_enabled_no_policy_public_user_embeddings",
+    "reason": "user_embeddings is intentionally default-deny to publishable roles; embedding writes and reads are service_role/internal pipeline concerns."
+  },
+  {
+    "name": "rls_enabled_no_policy",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3424,
+    "cache_key": "rls_enabled_no_policy_public_webhook_imp_uid_log",
+    "reason": "webhook_imp_uid_log is intentionally default-deny to publishable roles and is populated by backend webhook processing."
   }
 ]
