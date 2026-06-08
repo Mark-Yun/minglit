@@ -28,8 +28,22 @@ export type CreateOrderServiceResult =
     amount: number;
     requiresPayment: boolean;
     ticketName: string;
+    payment?: PortoneV2BrowserPayment;
   }
   | CreateOrderServiceFailure;
+
+export interface PortoneV2BrowserPayment {
+  provider: "portone_v2";
+  store_id: string;
+  channel_key: string;
+  payment_id: string;
+  order_name: string;
+  total_amount: number;
+  currency: "CURRENCY_KRW";
+  pay_method: "CARD";
+  redirect_url: string;
+  force_redirect: boolean;
+}
 
 export interface CreateOrderServiceFailure {
   ok: false;
@@ -54,7 +68,7 @@ export async function createApplicationOrder(args: {
       supabase
         .from("events")
         .select(
-          "id, party_id, status, start_time, max_participants, current_participants",
+          "id, party_id, title, status, start_time, max_participants, current_participants",
         )
         .eq("id", input.event_id)
         .single(),
@@ -189,7 +203,9 @@ export async function createApplicationOrder(args: {
   const paymentPlan = decideCreateOrderPaymentPlan(
     ticket as CreateOrderTicketSnapshot,
   );
-  const pendingPaymentId = `PENDING_${crypto.randomUUID()}`;
+  const pendingPaymentId = paymentPlan.requiresPayment
+    ? createPortoneV2PaymentId()
+    : `PENDING_${crypto.randomUUID()}`;
 
   const { data: appId, error: applyError } = await withSpan(
     "db.rpc.apply_event",
@@ -260,6 +276,56 @@ export async function createApplicationOrder(args: {
     amount: paymentPlan.amount,
     requiresPayment: paymentPlan.requiresPayment,
     ticketName: String((ticket as { name?: unknown }).name ?? ""),
+    ...(paymentPlan.requiresPayment
+      ? {
+        payment: buildPortonePayment({
+          eventId: input.event_id,
+          eventTitle: String((event as { title?: unknown }).title ?? "이벤트"),
+          ticketName: String((ticket as { name?: unknown }).name ?? ""),
+          paymentId: pendingPaymentId,
+          amount: paymentPlan.amount,
+        }),
+      }
+      : {}),
+  };
+}
+
+function createPortoneV2PaymentId(): string {
+  return `pay${crypto.randomUUID().replaceAll("-", "")}`;
+}
+
+function buildPortonePayment(args: {
+  eventId: string;
+  eventTitle: string;
+  ticketName: string;
+  paymentId: string;
+  amount: number;
+}): PortoneV2BrowserPayment {
+  const storeId = Deno.env.get("PORTONE_V2_STORE_ID");
+  const channelKey = Deno.env.get("PORTONE_V2_CHANNEL_KEY");
+  const landingOrigin = Deno.env.get("LANDING_USER_ORIGIN") ??
+    Deno.env.get("NEXT_PUBLIC_SITE_URL") ??
+    "http://localhost:3000";
+
+  if (!storeId || !channelKey) {
+    throw new Error(
+      "Missing required environment variables: PORTONE_V2_STORE_ID, PORTONE_V2_CHANNEL_KEY",
+    );
+  }
+
+  return {
+    provider: "portone_v2",
+    store_id: storeId,
+    channel_key: channelKey,
+    payment_id: args.paymentId,
+    order_name: `Minglit - ${args.eventTitle} / ${args.ticketName}`,
+    total_amount: args.amount,
+    currency: "CURRENCY_KRW",
+    pay_method: "CARD",
+    redirect_url: `${
+      landingOrigin.replace(/\/$/, "")
+    }/events/${args.eventId}/checkout/return`,
+    force_redirect: false,
   };
 }
 

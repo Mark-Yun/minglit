@@ -1,8 +1,8 @@
 import { assertEquals } from "@std/assert";
 import {
+  authenticatedJsonRequest,
   captureServeHandler,
   createFetchMock,
-  authenticatedJsonRequest,
   jsonResponse,
   readJson,
   textRequest,
@@ -11,7 +11,6 @@ import {
   withNoIntervals,
 } from "../_test_utils/mock_http.ts";
 import { authRoute } from "../_test_utils/fixtures.ts";
-
 
 const ENV = {
   PORTONE_API_KEY: "test-key",
@@ -46,7 +45,9 @@ function appRoute(overrides?: {
         id: "app-123",
         status: overrides?.status ?? "pending",
         payment_id: overrides?.payment_id ?? "imp_123",
-        payment_amount: overrides?.payment_amount !== undefined ? overrides.payment_amount : 30000,
+        payment_amount: overrides?.payment_amount !== undefined
+          ? overrides.payment_amount
+          : 30000,
         paid_at: overrides?.paid_at !== undefined ? overrides.paid_at : null,
         refund_status: overrides?.refund_status ?? "none",
         event_id: "event-123",
@@ -66,7 +67,8 @@ function eventRoute(start_time?: string) {
 function policyRoute() {
   return {
     matcher: (req: Request) =>
-      req.url.includes("/rest/v1/rpc/get_current_policy") && req.method === "POST",
+      req.url.includes("/rest/v1/rpc/get_current_policy") &&
+      req.method === "POST",
     handler: () => jsonResponse({ grace_period_hours: 2, cutoff_days: 7 }),
   };
 }
@@ -78,7 +80,8 @@ const portoneTokenRoute = {
 
 const portoneCancelRoute = {
   matcher: "https://api.iamport.kr/payments/cancel",
-  handler: () => jsonResponse({ code: 0, response: { status: "cancelled", amount: 30000 } }),
+  handler: () =>
+    jsonResponse({ code: 0, response: { status: "cancelled", amount: 30000 } }),
 };
 
 const dbUpdateRoute = {
@@ -95,20 +98,24 @@ const dbDeleteAppRoute = {
 
 const dbDeleteVerificationRoute = {
   matcher: (req: Request) =>
-    req.url.includes("/rest/v1/verification_submissions") && req.method === "DELETE",
+    req.url.includes("/rest/v1/verification_submissions") &&
+    req.method === "DELETE",
   handler: () => jsonResponse({}),
 };
 
 const appNotFoundRoute = {
   matcher: (req: Request) =>
     req.url.includes("/rest/v1/event_applications") && req.method === "GET",
-  handler: () => jsonResponse({ error: { message: "not found" } }, { status: 406 }),
+  handler: () =>
+    jsonResponse({ error: { message: "not found" } }, { status: 406 }),
 };
 
 // ===== Pre-payment cancellation tests =====
 
 Deno.test("pending 신청 → 취소 → event_applications 삭제", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+  const handler = await captureServeHandler(
+    new URL("./index.ts", import.meta.url),
+  );
 
   const { fetchMock, calls } = createFetchMock([
     authRoute,
@@ -120,7 +127,9 @@ Deno.test("pending 신청 → 취소 → event_applications 삭제", async () =>
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = authenticatedJsonRequest("http://localhost", { event_id: "event-123" });
+        const request = authenticatedJsonRequest("http://localhost", {
+          event_id: "event-123",
+        });
         const response = await handler(request);
         const payload = await readJson(response);
 
@@ -130,12 +139,16 @@ Deno.test("pending 신청 → 취소 → event_applications 삭제", async () =>
 
         // Verify deletion calls were made
         const deleteVerification = calls.find(
-          (c) => c.url.includes("/rest/v1/verification_submissions") && c.method === "DELETE",
+          (c) =>
+            c.url.includes("/rest/v1/verification_submissions") &&
+            c.method === "DELETE",
         );
         assertEquals(!!deleteVerification, true);
 
         const deleteApp = calls.find(
-          (c) => c.url.includes("/rest/v1/event_applications") && c.method === "DELETE",
+          (c) =>
+            c.url.includes("/rest/v1/event_applications") &&
+            c.method === "DELETE",
         );
         assertEquals(!!deleteApp, true);
       });
@@ -144,7 +157,9 @@ Deno.test("pending 신청 → 취소 → event_applications 삭제", async () =>
 });
 
 Deno.test("pending + verification_submissions → 함께 삭제", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+  const handler = await captureServeHandler(
+    new URL("./index.ts", import.meta.url),
+  );
 
   const { fetchMock, calls } = createFetchMock([
     authRoute,
@@ -156,22 +171,32 @@ Deno.test("pending + verification_submissions → 함께 삭제", async () => {
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = authenticatedJsonRequest("http://localhost", { event_id: "event-123" });
+        const request = authenticatedJsonRequest("http://localhost", {
+          event_id: "event-123",
+        });
         const response = await handler(request);
 
         assertEquals(response.status, 200);
 
         const deleteVerification = calls.find(
-          (c) => c.url.includes("/rest/v1/verification_submissions") && c.method === "DELETE",
+          (c) =>
+            c.url.includes("/rest/v1/verification_submissions") &&
+            c.method === "DELETE",
         );
-        assertEquals(!!deleteVerification, true, "verification_submissions should be deleted");
+        assertEquals(
+          !!deleteVerification,
+          true,
+          "verification_submissions should be deleted",
+        );
       });
     });
   });
 });
 
 Deno.test("payment_failed → 취소 → 삭제", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+  const handler = await captureServeHandler(
+    new URL("./index.ts", import.meta.url),
+  );
 
   const { fetchMock } = createFetchMock([
     authRoute,
@@ -183,7 +208,9 @@ Deno.test("payment_failed → 취소 → 삭제", async () => {
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = authenticatedJsonRequest("http://localhost", { event_id: "event-123" });
+        const request = authenticatedJsonRequest("http://localhost", {
+          event_id: "event-123",
+        });
         const response = await handler(request);
         const payload = await readJson(response);
 
@@ -198,7 +225,9 @@ Deno.test("payment_failed → 취소 → 삭제", async () => {
 // ===== Free event cancellation =====
 
 Deno.test("무료 이벤트 (payment_amount = 0) → 취소 → status = 'cancelled'", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+  const handler = await captureServeHandler(
+    new URL("./index.ts", import.meta.url),
+  );
 
   const { fetchMock, calls } = createFetchMock([
     authRoute,
@@ -210,7 +239,9 @@ Deno.test("무료 이벤트 (payment_amount = 0) → 취소 → status = 'cancel
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = authenticatedJsonRequest("http://localhost", { event_id: "event-123" });
+        const request = authenticatedJsonRequest("http://localhost", {
+          event_id: "event-123",
+        });
         const response = await handler(request);
         const payload = await readJson(response);
 
@@ -219,7 +250,9 @@ Deno.test("무료 이벤트 (payment_amount = 0) → 취소 → status = 'cancel
         assertEquals(payload.type, "cancelled");
 
         const dbCall = calls.find(
-          (c) => c.url.includes("/rest/v1/event_applications") && c.method === "PATCH",
+          (c) =>
+            c.url.includes("/rest/v1/event_applications") &&
+            c.method === "PATCH",
         );
         const dbBody = JSON.parse(dbCall!.body!);
         assertEquals(dbBody.status, "cancelled");
@@ -231,7 +264,9 @@ Deno.test("무료 이벤트 (payment_amount = 0) → 취소 → status = 'cancel
 });
 
 Deno.test("무료 이벤트 (payment_amount = null) → 400 (손상 데이터)", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+  const handler = await captureServeHandler(
+    new URL("./index.ts", import.meta.url),
+  );
 
   const { fetchMock } = createFetchMock([
     authRoute,
@@ -241,7 +276,9 @@ Deno.test("무료 이벤트 (payment_amount = null) → 400 (손상 데이터)",
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = authenticatedJsonRequest("http://localhost", { event_id: "event-123" });
+        const request = authenticatedJsonRequest("http://localhost", {
+          event_id: "event-123",
+        });
         const response = await handler(request);
 
         assertEquals(response.status, 400);
@@ -251,7 +288,9 @@ Deno.test("무료 이벤트 (payment_amount = null) → 400 (손상 데이터)",
 });
 
 Deno.test("무료 이벤트 + 이벤트 시작 후 → 400 (refund_not_eligible)", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+  const handler = await captureServeHandler(
+    new URL("./index.ts", import.meta.url),
+  );
 
   const pastEvent = new Date(nowMs - 1 * 60 * 60 * 1000).toISOString(); // 1시간 전
 
@@ -264,7 +303,9 @@ Deno.test("무료 이벤트 + 이벤트 시작 후 → 400 (refund_not_eligible)
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = authenticatedJsonRequest("http://localhost", { event_id: "event-123" });
+        const request = authenticatedJsonRequest("http://localhost", {
+          event_id: "event-123",
+        });
         const response = await handler(request);
         const payload = await readJson(response);
 
@@ -276,7 +317,9 @@ Deno.test("무료 이벤트 + 이벤트 시작 후 → 400 (refund_not_eligible)
 });
 
 Deno.test("이미 cancelled → 400", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+  const handler = await captureServeHandler(
+    new URL("./index.ts", import.meta.url),
+  );
 
   const { fetchMock } = createFetchMock([
     authRoute,
@@ -286,7 +329,9 @@ Deno.test("이미 cancelled → 400", async () => {
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = authenticatedJsonRequest("http://localhost", { event_id: "event-123" });
+        const request = authenticatedJsonRequest("http://localhost", {
+          event_id: "event-123",
+        });
         const response = await handler(request);
         const payload = await readJson(response);
 
@@ -300,11 +345,17 @@ Deno.test("이미 cancelled → 400", async () => {
 // ===== Paid event refund tests =====
 
 Deno.test("paid → grace period 내 → 환불 성공 + refund_status = 'completed'", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+  const handler = await captureServeHandler(
+    new URL("./index.ts", import.meta.url),
+  );
 
   const { fetchMock, calls } = createFetchMock([
     authRoute,
-    appRoute({ status: "paid", paid_at: eligiblePaidAt, payment_amount: 30000 }),
+    appRoute({
+      status: "paid",
+      paid_at: eligiblePaidAt,
+      payment_amount: 30000,
+    }),
     eventRoute(nearFutureEvent),
     policyRoute(),
     portoneTokenRoute,
@@ -315,7 +366,9 @@ Deno.test("paid → grace period 내 → 환불 성공 + refund_status = 'comple
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = authenticatedJsonRequest("http://localhost", { event_id: "event-123" });
+        const request = authenticatedJsonRequest("http://localhost", {
+          event_id: "event-123",
+        });
         const response = await handler(request);
         const payload = await readJson(response);
 
@@ -325,7 +378,9 @@ Deno.test("paid → grace period 내 → 환불 성공 + refund_status = 'comple
         assertEquals(payload.data.refund_amount, 30000);
 
         const dbCall = calls.find(
-          (c) => c.url.includes("/rest/v1/event_applications") && c.method === "PATCH",
+          (c) =>
+            c.url.includes("/rest/v1/event_applications") &&
+            c.method === "PATCH",
         );
         const dbBody = JSON.parse(dbCall!.body!);
         assertEquals(dbBody.refund_status, "completed");
@@ -339,11 +394,17 @@ Deno.test("paid → grace period 내 → 환불 성공 + refund_status = 'comple
 });
 
 Deno.test("paid → grace period 초과 + cutoff 내 → 환불 성공", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+  const handler = await captureServeHandler(
+    new URL("./index.ts", import.meta.url),
+  );
 
   const { fetchMock } = createFetchMock([
     authRoute,
-    appRoute({ status: "paid", paid_at: ineligiblePaidAt, payment_amount: 30000 }),
+    appRoute({
+      status: "paid",
+      paid_at: ineligiblePaidAt,
+      payment_amount: 30000,
+    }),
     eventRoute(farFutureEvent), // 10일 후 → cutoff 합격
     policyRoute(),
     portoneTokenRoute,
@@ -354,7 +415,9 @@ Deno.test("paid → grace period 초과 + cutoff 내 → 환불 성공", async (
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = authenticatedJsonRequest("http://localhost", { event_id: "event-123" });
+        const request = authenticatedJsonRequest("http://localhost", {
+          event_id: "event-123",
+        });
         const response = await handler(request);
         const payload = await readJson(response);
 
@@ -366,12 +429,18 @@ Deno.test("paid → grace period 초과 + cutoff 내 → 환불 성공", async (
   });
 });
 
-Deno.test("paid → grace period 초과 + cutoff 초과 → 400 (refund_not_eligible)", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+Deno.test("paid → grace period 초과 + cutoff 초과 → partner refund available", async () => {
+  const handler = await captureServeHandler(
+    new URL("./index.ts", import.meta.url),
+  );
 
   const { fetchMock } = createFetchMock([
     authRoute,
-    appRoute({ status: "paid", paid_at: ineligiblePaidAt, payment_amount: 30000 }),
+    appRoute({
+      status: "paid",
+      paid_at: ineligiblePaidAt,
+      payment_amount: 30000,
+    }),
     eventRoute(nearFutureEvent), // 3일 후 → cutoff 불합격
     policyRoute(),
   ]);
@@ -379,29 +448,41 @@ Deno.test("paid → grace period 초과 + cutoff 초과 → 400 (refund_not_elig
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = authenticatedJsonRequest("http://localhost", { event_id: "event-123" });
+        const request = authenticatedJsonRequest("http://localhost", {
+          event_id: "event-123",
+        });
         const response = await handler(request);
         const payload = await readJson(response);
 
-        assertEquals(response.status, 400);
-        assertEquals(payload.error, "refund_not_eligible");
+        assertEquals(response.status, 200);
+        assertEquals(payload.success, true);
+        assertEquals(payload.type, "partner_refund_available");
+        assertEquals(payload.data.application_id, "app-123");
       });
     });
   });
 });
 
 Deno.test("이미 환불됨 (refund_status != 'none') → 400 (already_refunded)", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+  const handler = await captureServeHandler(
+    new URL("./index.ts", import.meta.url),
+  );
 
   const { fetchMock } = createFetchMock([
     authRoute,
-    appRoute({ status: "paid", refund_status: "completed", payment_amount: 30000 }),
+    appRoute({
+      status: "paid",
+      refund_status: "completed",
+      payment_amount: 30000,
+    }),
   ]);
 
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = authenticatedJsonRequest("http://localhost", { event_id: "event-123" });
+        const request = authenticatedJsonRequest("http://localhost", {
+          event_id: "event-123",
+        });
         const response = await handler(request);
         const payload = await readJson(response);
 
@@ -413,11 +494,17 @@ Deno.test("이미 환불됨 (refund_status != 'none') → 400 (already_refunded)
 });
 
 Deno.test("pending_review → 환불 정상 처리", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+  const handler = await captureServeHandler(
+    new URL("./index.ts", import.meta.url),
+  );
 
   const { fetchMock } = createFetchMock([
     authRoute,
-    appRoute({ status: "pending_review", paid_at: eligiblePaidAt, payment_amount: 30000 }),
+    appRoute({
+      status: "pending_review",
+      paid_at: eligiblePaidAt,
+      payment_amount: 30000,
+    }),
     eventRoute(nearFutureEvent),
     policyRoute(),
     portoneTokenRoute,
@@ -428,7 +515,9 @@ Deno.test("pending_review → 환불 정상 처리", async () => {
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = authenticatedJsonRequest("http://localhost", { event_id: "event-123" });
+        const request = authenticatedJsonRequest("http://localhost", {
+          event_id: "event-123",
+        });
         const response = await handler(request);
         const payload = await readJson(response);
 
@@ -440,11 +529,17 @@ Deno.test("pending_review → 환불 정상 처리", async () => {
 });
 
 Deno.test("approved → 환불 정상 처리", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+  const handler = await captureServeHandler(
+    new URL("./index.ts", import.meta.url),
+  );
 
   const { fetchMock } = createFetchMock([
     authRoute,
-    appRoute({ status: "approved", paid_at: eligiblePaidAt, payment_amount: 30000 }),
+    appRoute({
+      status: "approved",
+      paid_at: eligiblePaidAt,
+      payment_amount: 30000,
+    }),
     eventRoute(nearFutureEvent),
     policyRoute(),
     portoneTokenRoute,
@@ -455,7 +550,9 @@ Deno.test("approved → 환불 정상 처리", async () => {
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = authenticatedJsonRequest("http://localhost", { event_id: "event-123" });
+        const request = authenticatedJsonRequest("http://localhost", {
+          event_id: "event-123",
+        });
         const response = await handler(request);
         const payload = await readJson(response);
 
@@ -467,11 +564,17 @@ Deno.test("approved → 환불 정상 처리", async () => {
 });
 
 Deno.test("reason 포함 → 정상 처리", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+  const handler = await captureServeHandler(
+    new URL("./index.ts", import.meta.url),
+  );
 
   const { fetchMock, calls } = createFetchMock([
     authRoute,
-    appRoute({ status: "paid", paid_at: eligiblePaidAt, payment_amount: 30000 }),
+    appRoute({
+      status: "paid",
+      paid_at: eligiblePaidAt,
+      payment_amount: 30000,
+    }),
     eventRoute(nearFutureEvent),
     policyRoute(),
     portoneTokenRoute,
@@ -491,7 +594,9 @@ Deno.test("reason 포함 → 정상 처리", async () => {
         assertEquals(response.status, 200);
 
         // Verify reason was passed to PortOne
-        const cancelCall = calls.find((c) => c.url.includes("/payments/cancel"));
+        const cancelCall = calls.find((c) =>
+          c.url.includes("/payments/cancel")
+        );
         const cancelBody = JSON.parse(cancelCall!.body!);
         assertEquals(cancelBody.reason, "일정 변경");
       });
@@ -502,7 +607,9 @@ Deno.test("reason 포함 → 정상 처리", async () => {
 // ===== Auth & Edge cases =====
 
 Deno.test("존재하지 않는 event_id → 404", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+  const handler = await captureServeHandler(
+    new URL("./index.ts", import.meta.url),
+  );
 
   const { fetchMock } = createFetchMock([
     authRoute,
@@ -512,7 +619,9 @@ Deno.test("존재하지 않는 event_id → 404", async () => {
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = authenticatedJsonRequest("http://localhost", { event_id: "nonexistent" });
+        const request = authenticatedJsonRequest("http://localhost", {
+          event_id: "nonexistent",
+        });
         const response = await handler(request);
         const payload = await readJson(response);
 
@@ -524,7 +633,9 @@ Deno.test("존재하지 않는 event_id → 404", async () => {
 });
 
 Deno.test("인증 없이 → 401", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+  const handler = await captureServeHandler(
+    new URL("./index.ts", import.meta.url),
+  );
 
   const { fetchMock } = createFetchMock([
     {
@@ -536,7 +647,9 @@ Deno.test("인증 없이 → 401", async () => {
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = authenticatedJsonRequest("http://localhost", { event_id: "event-123" });
+        const request = authenticatedJsonRequest("http://localhost", {
+          event_id: "event-123",
+        });
         const response = await handler(request);
 
         assertEquals(response.status, 401);
@@ -546,7 +659,9 @@ Deno.test("인증 없이 → 401", async () => {
 });
 
 Deno.test("rejected 상태 → 400", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+  const handler = await captureServeHandler(
+    new URL("./index.ts", import.meta.url),
+  );
 
   const { fetchMock } = createFetchMock([
     authRoute,
@@ -556,7 +671,9 @@ Deno.test("rejected 상태 → 400", async () => {
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = authenticatedJsonRequest("http://localhost", { event_id: "event-123" });
+        const request = authenticatedJsonRequest("http://localhost", {
+          event_id: "event-123",
+        });
         const response = await handler(request);
         const payload = await readJson(response);
 
@@ -568,7 +685,9 @@ Deno.test("rejected 상태 → 400", async () => {
 });
 
 Deno.test("신청 없는 event_id → 404", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+  const handler = await captureServeHandler(
+    new URL("./index.ts", import.meta.url),
+  );
 
   const { fetchMock } = createFetchMock([
     authRoute,
@@ -578,7 +697,9 @@ Deno.test("신청 없는 event_id → 404", async () => {
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = authenticatedJsonRequest("http://localhost", { event_id: "event-no-app" });
+        const request = authenticatedJsonRequest("http://localhost", {
+          event_id: "event-no-app",
+        });
         const response = await handler(request);
         const payload = await readJson(response);
 
@@ -590,13 +711,17 @@ Deno.test("신청 없는 event_id → 404", async () => {
 });
 
 Deno.test("missing event_id → 400", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+  const handler = await captureServeHandler(
+    new URL("./index.ts", import.meta.url),
+  );
   const { fetchMock } = createFetchMock([authRoute]);
 
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = authenticatedJsonRequest("http://localhost", { reason: "test" });
+        const request = authenticatedJsonRequest("http://localhost", {
+          reason: "test",
+        });
         const response = await handler(request);
         const payload = await readJson(response);
 
@@ -608,7 +733,9 @@ Deno.test("missing event_id → 400", async () => {
 });
 
 Deno.test("malformed JSON → 400", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+  const handler = await captureServeHandler(
+    new URL("./index.ts", import.meta.url),
+  );
   const { fetchMock } = createFetchMock([authRoute]);
 
   await withEnv(ENV, async () => {
@@ -628,11 +755,17 @@ Deno.test("malformed JSON → 400", async () => {
 });
 
 Deno.test("token failure → 502", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+  const handler = await captureServeHandler(
+    new URL("./index.ts", import.meta.url),
+  );
 
   const { fetchMock } = createFetchMock([
     authRoute,
-    appRoute({ status: "paid", paid_at: eligiblePaidAt, payment_amount: 30000 }),
+    appRoute({
+      status: "paid",
+      paid_at: eligiblePaidAt,
+      payment_amount: 30000,
+    }),
     eventRoute(nearFutureEvent),
     policyRoute(),
     {
@@ -644,7 +777,9 @@ Deno.test("token failure → 502", async () => {
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = authenticatedJsonRequest("http://localhost", { event_id: "event-123" });
+        const request = authenticatedJsonRequest("http://localhost", {
+          event_id: "event-123",
+        });
         const response = await handler(request);
         const payload = await readJson(response);
 
@@ -656,26 +791,36 @@ Deno.test("token failure → 502", async () => {
 });
 
 Deno.test("DB error is non-fatal for refund → 200", async () => {
-  const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+  const handler = await captureServeHandler(
+    new URL("./index.ts", import.meta.url),
+  );
 
   const { fetchMock } = createFetchMock([
     authRoute,
-    appRoute({ status: "paid", paid_at: eligiblePaidAt, payment_amount: 30000 }),
+    appRoute({
+      status: "paid",
+      paid_at: eligiblePaidAt,
+      payment_amount: 30000,
+    }),
     eventRoute(nearFutureEvent),
     policyRoute(),
     portoneTokenRoute,
     portoneCancelRoute,
     {
       matcher: (req: Request) =>
-        req.url.includes("/rest/v1/event_applications") && req.method === "PATCH",
-      handler: () => jsonResponse({ error: { message: "DB error" } }, { status: 500 }),
+        req.url.includes("/rest/v1/event_applications") &&
+        req.method === "PATCH",
+      handler: () =>
+        jsonResponse({ error: { message: "DB error" } }, { status: 500 }),
     },
   ]);
 
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const request = authenticatedJsonRequest("http://localhost", { event_id: "event-123" });
+        const request = authenticatedJsonRequest("http://localhost", {
+          event_id: "event-123",
+        });
         const response = await handler(request);
         const payload = await readJson(response);
 

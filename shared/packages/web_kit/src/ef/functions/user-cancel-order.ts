@@ -19,6 +19,15 @@ export const cancelOrderResponseSchema = z.discriminatedUnion("type", [
     success: z.literal(true),
     type: z.literal("cancelled"),
   }),
+  z.object({
+    success: z.literal(true),
+    type: z.literal("partner_refund_available"),
+    data: z.object({
+      application_id: z.string(),
+      reason: z.string(),
+      deadline_hours: z.number(),
+    }),
+  }),
 ]);
 export type CancelOrderResponse = z.infer<typeof cancelOrderResponseSchema>;
 

@@ -49,6 +49,7 @@ export const handler = async (
       amount: result.amount,
       requires_payment: result.requiresPayment,
       ticket_name: result.ticketName,
+      ...(result.payment ? { payment: result.payment } : {}),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
