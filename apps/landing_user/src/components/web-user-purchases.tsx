@@ -145,7 +145,7 @@ function PurchasesHeader() {
 }
 
 function PurchaseListItem({ purchase, selected, onSelect }: { purchase: UserPurchase; selected: boolean; onSelect: () => void }) {
-  const status = statusCopy(purchase.status, purchase.refundStatus);
+  const status = statusCopy(purchase.status, purchase.refundStatus, new Date(purchase.endsAt) < new Date());
 
   return (
     <button className={`wup-item${selected ? " wup-item--selected" : ""}`} type="button" onClick={onSelect}>
@@ -163,7 +163,7 @@ function PurchaseListItem({ purchase, selected, onSelect }: { purchase: UserPurc
 }
 
 function PurchaseDetail({ purchase, actionMessage, pendingCancel, onCancel }: { purchase: UserPurchase; actionMessage: string | null; pendingCancel: boolean; onCancel: () => void }) {
-  const status = statusCopy(purchase.status, purchase.refundStatus);
+  const status = statusCopy(purchase.status, purchase.refundStatus, new Date(purchase.endsAt) < new Date());
   const refundable = useMemo(() => canRequestAutomaticRefund(purchase), [purchase]);
 
   return (

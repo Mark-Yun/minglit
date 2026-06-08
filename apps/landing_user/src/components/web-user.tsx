@@ -11,26 +11,101 @@ import {
   User,
   Users,
 } from "lucide-react";
-import { useMemo, useState } from "react";
-import type { PublicEvent, Ticket } from "@/lib/events";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useMemo, useState } from "react";
+import type { EntryGender, PublicEvent, Ticket } from "@/lib/events";
+import { useAuthState } from "@/lib/use-auth-state";
 
 export function WebUserHome({ events }: { events: PublicEvent[] }) {
   return (
     <div className="web-user-shell">
       <GlobalHeader />
       <main className="wuh-main">
-        {events.length > 0 ? (
-          <section className="wuh-grid" aria-label="이벤트 목록">
-            {events.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </section>
-        ) : (
-          <EmptyState title="표시할 이벤트가 없어요" description="새로운 이벤트가 열리면 이곳에 먼저 보여드릴게요." />
-        )}
+        {/* Fallback renders the unfiltered grid so the first paint matches the
+            server render (no skeleton) while useSearchParams hydrates. */}
+        <Suspense fallback={<EventGrid events={events} />}>
+          <HomeContent events={events} />
+        </Suspense>
       </main>
     </div>
   );
+}
+
+function HomeContent({ events }: { events: PublicEvent[] }) {
+  const auth = useAuthState();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Checkbox only exists for signed-in + verified users with a known gender.
+  const canFilter = auth.status === "ready" && auth.isVerified;
+  const checked = canFilter && searchParams.get("eligible") === "1";
+
+  const visibleEvents = useMemo(() => {
+    if (!checked || !auth.gender) return events;
+    return events.filter((event) => isEligibleFor(event, auth.gender as EntryGender));
+  }, [events, checked, auth.gender]);
+
+  const setEligible = useCallback(
+    (next: boolean) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (next) params.set("eligible", "1");
+      else params.delete("eligible");
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [searchParams, router, pathname],
+  );
+
+  return (
+    <>
+      {canFilter ? (
+        <div className="wuh-filterbar">
+          <label className="wuh-eligibility">
+            <input
+              type="checkbox"
+              className="wuh-eligibility__box"
+              checked={checked}
+              onChange={(event) => setEligible(event.target.checked)}
+            />
+            참가 가능한 이벤트만
+          </label>
+        </div>
+      ) : null}
+      {checked && visibleEvents.length === 0 ? (
+        <div className="web-empty">
+          <Search aria-hidden="true" />
+          <h1>참가 가능한 이벤트가 없어요</h1>
+          <p>자격 조건에 맞는 이벤트가 아직 없어요. 체크를 해제하면 전체 이벤트를 볼 수 있어요.</p>
+          <button type="button" className="web-empty__btn" onClick={() => setEligible(false)}>
+            전체 이벤트 보기
+          </button>
+        </div>
+      ) : (
+        <EventGrid events={visibleEvents} />
+      )}
+    </>
+  );
+}
+
+function EventGrid({ events }: { events: PublicEvent[] }) {
+  if (events.length === 0) {
+    return <EmptyState title="표시할 이벤트가 없어요" description="새로운 이벤트가 열리면 이곳에 먼저 보여드릴게요." />;
+  }
+
+  return (
+    <section className="wuh-grid" aria-label="이벤트 목록">
+      {events.map((event) => (
+        <EventCard key={event.id} event={event} />
+      ))}
+    </section>
+  );
+}
+
+function isEligibleFor(event: PublicEvent, gender: EntryGender): boolean {
+  const genders = event.entryGroupGenders ?? [];
+  // Empty = no gender restriction (open). Otherwise the user's gender must match.
+  return genders.length === 0 || genders.includes(gender);
 }
 
 export function WebUserEventDetail({ event }: { event: PublicEvent }) {
@@ -181,13 +256,13 @@ function InfoTile({ icon, title, sub }: { icon: React.ReactNode; title: string; 
 }
 
 function TicketPanel({ event }: { event: PublicEvent }) {
+  const auth = useAuthState();
   const availableTickets = event.tickets.filter((ticket) => !isTicketClosed(ticket));
   const [selectedTicketId, setSelectedTicketId] = useState(availableTickets[0]?.id ?? event.tickets[0]?.id ?? "");
   const selectedTicket = event.tickets.find((ticket) => ticket.id === selectedTicketId) ?? availableTickets[0] ?? event.tickets[0];
   const closed = isEventClosed(event) || availableTickets.length === 0;
   const progress = event.maxParticipants > 0 ? Math.min(100, Math.round((event.currentParticipants / event.maxParticipants) * 100)) : 0;
-  const ctaLabel = closed ? "마감된 이벤트" : "신청하고 결제하기";
-  const helper = closed ? "이미 마감되어 신청할 수 없어요" : "티켓을 확인한 뒤 결제 보호 화면으로 이동합니다.";
+  const cta = ticketCta(event, auth.status, closed, selectedTicket);
 
   const sortedTickets = useMemo(
     () => [...event.tickets].sort((a, b) => a.price - b.price),
@@ -250,13 +325,53 @@ function TicketPanel({ event }: { event: PublicEvent }) {
         <span>합계</span>
         <b>{closed || !selectedTicket ? "-" : formatPrice(selectedTicket.price)}</b>
       </div>
-      <Link className={`wed-cta${closed ? " wed-cta--disabled" : ""}`} href={closed || !selectedTicket ? "#" : `/events/${event.id}/checkout?ticket=${selectedTicket.id}`}>
+      {cta.banner ? (
+        <div className="wed-login-banner" role="note">{cta.banner}</div>
+      ) : null}
+      <Link className={`wed-cta${cta.disabled ? " wed-cta--disabled" : ""}`} href={cta.href}>
         <TicketIcon aria-hidden="true" />
-        {ctaLabel}
+        {cta.label}
       </Link>
-      <div className={`wed-cta-note${closed ? " wed-cta-note--warn" : ""}`}>{helper}</div>
+      <div className={`wed-cta-note${cta.noteWarn ? " wed-cta-note--warn" : ""}`}>{cta.note}</div>
     </aside>
   );
+}
+
+type TicketCta = { label: string; href: string; note: string; noteWarn: boolean; disabled: boolean; banner: string | null };
+
+function ticketCta(
+  event: PublicEvent,
+  authStatus: "loading" | "anonymous" | "ready",
+  closed: boolean,
+  selectedTicket: Ticket | undefined,
+): TicketCta {
+  if (closed) {
+    return { label: "마감된 이벤트", href: "#", note: "이미 마감되어 신청할 수 없어요", noteWarn: true, disabled: true, banner: null };
+  }
+
+  if (authStatus === "loading") {
+    return { label: "로그인 상태 확인 중", href: "#", note: "로그인 상태를 확인하고 있어요", noteWarn: false, disabled: true, banner: null };
+  }
+
+  if (authStatus === "anonymous") {
+    return {
+      label: "로그인하고 신청하기",
+      href: `/login?next=${encodeURIComponent(`/events/${event.id}`)}`,
+      note: "신청에는 로그인이 필요해요 — 보던 화면으로 돌아와요",
+      noteWarn: false,
+      disabled: false,
+      banner: "로그인 후 신청할 수 있어요",
+    };
+  }
+
+  return {
+    label: "신청하고 결제하기",
+    href: selectedTicket ? `/events/${event.id}/checkout?ticket=${selectedTicket.id}` : "#",
+    note: "티켓을 확인한 뒤 결제 보호 화면으로 이동합니다.",
+    noteWarn: false,
+    disabled: !selectedTicket,
+    banner: null,
+  };
 }
 
 function isEventClosed(event: PublicEvent): boolean {

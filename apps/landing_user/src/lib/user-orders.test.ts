@@ -90,6 +90,17 @@ test("statusCopy prioritizes refund state over application state", () => {
   assert.deepEqual(statusCopy("rejected", "none"), { label: "거절됨", tone: "error" });
 });
 
+test("statusCopy surfaces event-ended chip for completed-ish purchases without refunds", () => {
+  assert.deepEqual(statusCopy("approved", "none", true), { label: "이벤트 종료", tone: "neutral" });
+  assert.deepEqual(statusCopy("paid", "none", true), { label: "이벤트 종료", tone: "neutral" });
+  // refund state still wins over event-ended.
+  assert.deepEqual(statusCopy("approved", "requested", true), { label: "환불 요청됨", tone: "warning" });
+  // non-completed statuses keep their own copy even after the event ends.
+  assert.deepEqual(statusCopy("rejected", "none", true), { label: "거절됨", tone: "error" });
+  // default (no third arg) preserves the existing two-arg behavior.
+  assert.deepEqual(statusCopy("approved", "none"), { label: "확정", tone: "success" });
+});
+
 test("canRequestAutomaticRefund follows 3h grace and 7d cutoff", () => {
   const base = {
     id: "app-1",

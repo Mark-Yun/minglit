@@ -8,6 +8,8 @@ export type Ticket = {
   status: string;
 };
 
+export type EntryGender = "male" | "female";
+
 export type PublicEvent = {
   id: string;
   title: string;
@@ -24,6 +26,9 @@ export type PublicEvent = {
   locationAddress: string;
   tags: string[];
   tickets: Ticket[];
+  // Gendered entry-group eligibility. Empty = no gender restriction (open to all).
+  // A null-gender entry group also resolves to "open", so it yields [].
+  entryGroupGenders?: EntryGender[];
 };
 
 type PostgrestEvent = {
@@ -66,6 +71,7 @@ type PostgrestEvent = {
     sold_count?: number | null;
     status?: string | null;
   }> | null;
+  entry_groups?: Array<{ gender?: string | null }> | null;
 };
 
 type FetchEventsResult = {
@@ -87,6 +93,7 @@ const EVENT_SELECT = [
   "parties!inner(title,description,image_urls,visibility,status,partners(name,introduction),locations(name,address,region_1,region_2))",
   "locations(name,address,region_1,region_2)",
   "tickets(id,name,description,price,quantity,sold_count,status)",
+  "entry_groups(gender)",
 ].join(",");
 
 const DEMO_EVENTS: PublicEvent[] = [
@@ -256,6 +263,7 @@ function mapEvent(row: PostgrestEvent): PublicEvent {
   const title = row.title ?? party?.title ?? "이벤트";
 
   return {
+    entryGroupGenders: mapEntryGroupGenders(row.entry_groups),
     id: row.id,
     title,
     description: readableDescription(row.description ?? party?.description),
@@ -272,6 +280,19 @@ function mapEvent(row: PostgrestEvent): PublicEvent {
     tags: buildTags(title, location?.region_2 ?? location?.region_1),
     tickets,
   };
+}
+
+function mapEntryGroupGenders(groups: PostgrestEvent["entry_groups"]): EntryGender[] {
+  if (!groups || groups.length === 0) return [];
+
+  const genders = new Set<EntryGender>();
+  for (const group of groups) {
+    // A null-gender group is unrestricted → the whole event is open to all.
+    if (group.gender == null) return [];
+    if (group.gender === "male" || group.gender === "female") genders.add(group.gender);
+  }
+
+  return Array.from(genders);
 }
 
 function readableDescription(value: unknown): string {
