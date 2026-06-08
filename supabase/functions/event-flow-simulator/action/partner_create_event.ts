@@ -5,8 +5,15 @@ import { registerAction } from "./_registry.ts";
 
 const MIN_SCHEDULED_EVENTS = 2;
 const EVENT_DURATION_MS = 2 * 60 * 60 * 1000;
-const MIN_START_DELAY_DAYS = 7;
-const START_DELAY_WINDOW_DAYS = 21;
+// horizon 을 7일을 가로지르는 2~14일로 둔다.
+// - 과거 7~28일(중앙값 17일) 은 scheduled 가 수 주간 유지되어 모든 적격 파트너가
+//   MIN_SCHEDULED_EVENTS 캡에 묶이고 이벤트 공급이 영구 정지됐다 (auto_complete_past_events
+//   15분 cron 이 end_time 을 지나야 completed 로 내려 캡을 푼다).
+// - 7일 미만 이벤트는 며칠 안에 완료되어 캡을 풀고 create 를 재개시킨다.
+// - 7일 이상 이벤트(약 절반)는 남겨, refund 액션(event start ≥ 7일, Fix #2131)의
+//   적격성을 유지한다. 하한을 1일이 아닌 2일로 두는 것도 같은 이유.
+const MIN_START_DELAY_DAYS = 2;
+const START_DELAY_WINDOW_DAYS = 12;
 
 type PartnerParty = {
   id: string;
