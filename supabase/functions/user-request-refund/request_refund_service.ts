@@ -4,6 +4,7 @@ import {
   parseRefundPolicy,
   verifyRefundEligibility,
 } from "../_shared/domains/payment/refund_policy.ts";
+import { classifyApplicationStatus } from "../_shared/domains/payment/application_status.ts";
 import type { UserRequestRefundInput } from "./input.ts";
 
 const FN = "user-request-refund";
@@ -69,7 +70,7 @@ export async function requestPartnerRefund(args: {
     return fail(403, "Forbidden");
   }
 
-  if (!["paid", "approved"].includes(app.status)) {
+  if (!classifyApplicationStatus(app.status).isPaid) {
     return fail(400, "refund_request_not_allowed", {
       reason: "invalid_status",
     });

@@ -181,6 +181,22 @@ Deno.test("user-request-refund - creates partner refund request", async () => {
   });
 });
 
+Deno.test("user-request-refund - pending_review can request partner refund", async () => {
+  const result = await runRefundRequest([
+    appRoute({ status: "pending_review" }),
+    eventRoute,
+    policyRoute,
+    noExistingRequestRoute,
+    partyRoute,
+    createRefundRequestRoute,
+  ]);
+
+  assertEquals(result.response.status, 200);
+  assertEquals(result.payload.success, true);
+  assertEquals(result.payload.type, "partner_refund_requested");
+  assertEquals(result.payload.request.id, "request-123");
+});
+
 Deno.test("user-request-refund - automatic refund eligible returns 409", async () => {
   await withEnv(ENV, async () => {
     const handler = await captureServeHandler(
