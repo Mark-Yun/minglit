@@ -166,9 +166,9 @@ function GlobalHeader() {
   return (
     <header className="wuh-header">
       <div className="wuh-header__inner">
-        <Link className="minglit-logo" href="/" aria-label="Minglit 홈">
-          <span className="minglit-logo__mark">M</span>
-          <span className="minglit-logo__text">Minglit</span>
+        <Link href="/" aria-label="Minglit 홈">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="wuh-logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit" />
         </Link>
         <button className="wuh-search" type="button">
           <Search aria-hidden="true" />
@@ -191,10 +191,11 @@ function EventCard({ event }: { event: PublicEvent }) {
     <Link className="wuh-card" href={`/events/${event.id}`} aria-label={`${event.title} 상세 보기`}>
       <EventImage className="wuh-card__image" event={event} closed={isClosed} />
       <div className="wuh-card__body">
-        <div className="wuh-card__date">{formatShortDate(event.startsAt)}</div>
         <h2 className="wuh-card__title">{event.title}</h2>
         <p className="wuh-card__meta">
-          {event.locationName} · {formatPrice(minTicketPrice)}
+          <MapPin aria-hidden="true" />
+          <span className="txt">{event.locationName} · {formatCardWhen(event.startsAt)}</span>
+          <span className="price">{formatPrice(minTicketPrice)}</span>
         </p>
         <div className="wuh-card__foot">
           <span>{event.currentParticipants}/{event.maxParticipants} 신청</span>
@@ -207,16 +208,58 @@ function EventCard({ event }: { event: PublicEvent }) {
 
 function EventHero({ event }: { event: PublicEvent }) {
   const closed = isEventClosed(event);
+  const images = event.images.length > 0 ? event.images : event.imageUrl ? [event.imageUrl] : [];
+  const [activeIndex, setActiveIndex] = useState(0);
+  const hasCarousel = images.length > 1;
+  const active = Math.min(activeIndex, images.length - 1);
 
-  return <EventImage className="wed-hero" event={event} closed={closed} />;
+  return (
+    <EventImage
+      className="wed-hero"
+      event={event}
+      closed={closed}
+      imageUrl={hasCarousel ? images[active] : undefined}
+      dots={
+        hasCarousel ? (
+          <div className="wed-hero__dots" role="tablist" aria-label="이벤트 이미지">
+            {images.map((image, index) => (
+              <button
+                key={image}
+                type="button"
+                role="tab"
+                aria-selected={index === active}
+                aria-label={`이미지 ${index + 1}`}
+                className={`wed-hero__dot${index === active ? " wed-hero__dot--active" : ""}`}
+                onClick={() => setActiveIndex(index)}
+              />
+            ))}
+          </div>
+        ) : null
+      }
+    />
+  );
 }
 
-function EventImage({ className, event, closed }: { className: string; event: PublicEvent; closed: boolean }) {
+function EventImage({
+  className,
+  event,
+  closed,
+  imageUrl,
+  dots,
+}: {
+  className: string;
+  event: PublicEvent;
+  closed: boolean;
+  imageUrl?: string | null;
+  dots?: React.ReactNode;
+}) {
+  const src = imageUrl !== undefined ? imageUrl : event.imageUrl;
+
   return (
     <div className={`${className}${closed ? ` ${className}--ended` : ""}`}>
-      {event.imageUrl ? (
+      {src ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={event.imageUrl} alt="" />
+        <img src={src} alt="" />
       ) : (
         <div className="event-image__ph">Minglit Event</div>
       )}
@@ -234,6 +277,7 @@ function EventImage({ className, event, closed }: { className: string; event: Pu
           <span key={tag}>{tag}</span>
         ))}
       </div>
+      {dots}
       {closed ? (
         <div className="wuh-card__scrim">
           <b>{event.status === "completed" ? "종료" : "마감"}</b>
@@ -401,6 +445,16 @@ function formatShortDate(value: string): string {
     weekday: "short",
     timeZone: "Asia/Seoul",
   }).format(new Date(value));
+}
+
+function formatCardWhen(value: string): string {
+  const time = new Intl.DateTimeFormat("ko-KR", {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "Asia/Seoul",
+  }).format(new Date(value));
+
+  return `${formatShortDate(value)} ${time}`;
 }
 
 function formatDateRange(start: string, end: string): string {

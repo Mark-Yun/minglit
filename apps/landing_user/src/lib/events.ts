@@ -15,6 +15,9 @@ export type PublicEvent = {
   title: string;
   description: string;
   imageUrl: string | null;
+  // Full ordered image list for the detail hero carousel. Falls back to
+  // [imageUrl] when only a single image is available; empty when none.
+  images: string[];
   startsAt: string;
   endsAt: string;
   status: string;
@@ -103,6 +106,11 @@ const DEMO_EVENTS: PublicEvent[] = [
     description:
       "퇴근 후 가볍게 와인과 대화를 즐기는 소셜 모임입니다. 처음 오는 사람도 편하게 합류할 수 있도록 호스트가 테이블을 안내합니다.",
     imageUrl: "https://picsum.photos/seed/minglit-web-wine/1200/600",
+    images: [
+      "https://picsum.photos/seed/minglit-web-wine/1200/600",
+      "https://picsum.photos/seed/minglit-web-wine-2/1200/600",
+      "https://picsum.photos/seed/minglit-web-wine-3/1200/600",
+    ],
     startsAt: "2026-07-04T10:30:00+09:00",
     endsAt: "2026-07-04T13:00:00+09:00",
     status: "scheduled",
@@ -131,6 +139,7 @@ const DEMO_EVENTS: PublicEvent[] = [
     description:
       "작은 드로잉 워크숍과 전시 토크가 이어지는 주말 클래스입니다. 재료는 현장에서 제공합니다.",
     imageUrl: "https://picsum.photos/seed/minglit-web-art/1200/600",
+    images: ["https://picsum.photos/seed/minglit-web-art/1200/600"],
     startsAt: "2026-07-11T15:00:00+09:00",
     endsAt: "2026-07-11T18:00:00+09:00",
     status: "active",
@@ -159,6 +168,7 @@ const DEMO_EVENTS: PublicEvent[] = [
     description:
       "가벼운 5km 러닝 후 근처 카페에서 대화를 나누는 입문자 환영 모임입니다.",
     imageUrl: "https://picsum.photos/seed/minglit-web-run/1200/600",
+    images: ["https://picsum.photos/seed/minglit-web-run/1200/600"],
     startsAt: "2026-07-18T08:00:00+09:00",
     endsAt: "2026-07-18T10:30:00+09:00",
     status: "scheduled",
@@ -259,7 +269,9 @@ function mapEvent(row: PostgrestEvent): PublicEvent {
     soldCount: ticket.sold_count ?? 0,
     status: ticket.status ?? "on_sale",
   }));
-  const imageUrl = row.image_urls?.[0] ?? party?.image_urls?.[0] ?? null;
+  const rawImages = (row.image_urls?.length ? row.image_urls : party?.image_urls) ?? [];
+  const imageUrl = rawImages[0] ?? null;
+  const images = rawImages.length > 0 ? rawImages : imageUrl ? [imageUrl] : [];
   const title = row.title ?? party?.title ?? "이벤트";
 
   return {
@@ -268,6 +280,7 @@ function mapEvent(row: PostgrestEvent): PublicEvent {
     title,
     description: readableDescription(row.description ?? party?.description),
     imageUrl,
+    images,
     startsAt: row.start_time,
     endsAt: row.end_time,
     status: row.status,

@@ -135,6 +135,7 @@ function buildEvent(): PublicEvent {
     title: "이벤트",
     description: "설명",
     imageUrl: null,
+    images: [],
     startsAt: "2026-07-01T10:00:00.000Z",
     endsAt: "2026-07-01T12:00:00.000Z",
     status: "scheduled",

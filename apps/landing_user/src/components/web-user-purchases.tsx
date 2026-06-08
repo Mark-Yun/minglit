@@ -132,9 +132,9 @@ function PurchasesHeader() {
   return (
     <header className="wup-header">
       <div className="wup-header__inner">
-        <Link className="minglit-logo" href="/" aria-label="Minglit 홈">
-          <span className="minglit-logo__mark">M</span>
-          <span className="minglit-logo__text">Minglit</span>
+        <Link href="/" aria-label="Minglit 홈">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="wuh-logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit" />
         </Link>
         <Link className="wup-search" href="/"><Search aria-hidden="true" />이벤트, 지역, 키워드 검색</Link>
         <div className="wup-header__spacer" />
