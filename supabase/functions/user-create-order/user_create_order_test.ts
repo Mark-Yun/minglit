@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { assert, assertEquals } from "@std/assert";
 import {
   authenticatedJsonRequest,
   captureServeHandler,
@@ -124,13 +124,20 @@ Deno.test({
           assertEquals(payload.ticket_name, "일반 티켓");
           assertEquals(typeof payload.application_id, "string");
           assertEquals(payload.payment.provider, "portone_v2");
-          assertEquals(payload.payment.store_id, "store-test");
-          assertEquals(payload.payment.channel_key, "channel-test");
-          assertEquals(payload.payment.total_amount, 15000);
+          assertEquals(payload.payment.storeId, "store-test");
+          assertEquals(payload.payment.channelKey, "channel-test");
+          assert(payload.payment.paymentId.startsWith("pay"));
           assertEquals(
-            payload.payment.redirect_url,
+            payload.payment.orderName,
+            "Minglit - 이벤트 / 일반 티켓",
+          );
+          assertEquals(payload.payment.totalAmount, 15000);
+          assertEquals(payload.payment.payMethod, "CARD");
+          assertEquals(
+            payload.payment.redirectUrl,
             "https://user.test/events/event-1/checkout/return",
           );
+          assertEquals(payload.payment.forceRedirect, false);
         });
       });
     });

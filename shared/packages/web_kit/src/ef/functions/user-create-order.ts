@@ -23,15 +23,15 @@ export const createOrderResponseSchema = z.object({
   ticket_name: z.string(),
   payment: z.object({
     provider: z.literal("portone_v2"),
-    store_id: z.string(),
-    channel_key: z.string(),
-    payment_id: z.string(),
-    order_name: z.string(),
-    total_amount: z.number(),
+    storeId: z.string(),
+    channelKey: z.string(),
+    paymentId: z.string(),
+    orderName: z.string(),
+    totalAmount: z.number(),
     currency: z.literal("CURRENCY_KRW"),
-    pay_method: z.literal("CARD"),
-    redirect_url: z.string(),
-    force_redirect: z.boolean(),
+    payMethod: z.literal("CARD"),
+    redirectUrl: z.string(),
+    forceRedirect: z.boolean(),
   }).optional(),
 });
 export type CreateOrderResponse = z.infer<typeof createOrderResponseSchema>;

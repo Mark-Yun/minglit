@@ -69,23 +69,44 @@ const partyRoute = {
   handler: () => jsonResponse({ partner_id: "partner-123" }),
 };
 
-const insertRefundRequestRoute = {
+const createRefundRequestRoute = {
   matcher: (req: Request) =>
-    req.url.includes("/rest/v1/refund_requests") && req.method === "POST",
-  handler: () =>
-    jsonResponse({
+    req.url.includes("/rest/v1/rpc/create_partner_refund_request") &&
+    req.method === "POST",
+  handler: async (req: Request) => {
+    const body = await req.json();
+    assertEquals(body.p_application_id, "app-123");
+    assertEquals(body.p_user_id, "user-123");
+    assertEquals(body.p_event_id, "event-123");
+    assertEquals(body.p_partner_id, "partner-123");
+    assertEquals(body.p_reason_code, "schedule_change");
+    assertEquals(body.p_reason_text ?? null, null);
+    return jsonResponse({
       id: "request-123",
       application_id: "app-123",
       status: "pending",
       requested_at: "2026-06-08T00:00:00Z",
       response_deadline_at: "2026-06-11T00:00:00Z",
-    }),
+    });
+  },
 };
 
-const updateApplicationRoute = {
+const createRefundRequestWithTextRoute = {
   matcher: (req: Request) =>
-    req.url.includes("/rest/v1/event_applications") && req.method === "PATCH",
-  handler: () => jsonResponse({}),
+    req.url.includes("/rest/v1/rpc/create_partner_refund_request") &&
+    req.method === "POST",
+  handler: async (req: Request) => {
+    const body = await req.json();
+    assertEquals(body.p_reason_code, "other");
+    assertEquals(body.p_reason_text, "Cannot attend");
+    return jsonResponse({
+      id: "request-123",
+      application_id: "app-123",
+      status: "pending",
+      requested_at: "2026-06-08T00:00:00Z",
+      response_deadline_at: "2026-06-11T00:00:00Z",
+    });
+  },
 };
 
 function errorRoute(
@@ -137,8 +158,7 @@ Deno.test("user-request-refund - creates partner refund request", async () => {
       policyRoute,
       noExistingRequestRoute,
       partyRoute,
-      insertRefundRequestRoute,
-      updateApplicationRoute,
+      createRefundRequestRoute,
     ]);
 
     await withMockedFetch(fetchMock, async () => {
@@ -213,8 +233,7 @@ Deno.test("user-request-refund - validates input", async () => {
     policyRoute,
     noExistingRequestRoute,
     partyRoute,
-    insertRefundRequestRoute,
-    updateApplicationRoute,
+    createRefundRequestWithTextRoute,
   ], {
     application_id: "app-123",
     reason_code: "other",
@@ -307,8 +326,8 @@ Deno.test("user-request-refund - dependency failures and duplicates", async () =
   assertEquals(partyFailure.payload.error, "Failed to create refund request");
 });
 
-Deno.test("user-request-refund - write failures", async () => {
-  const insertConflict = await runRefundRequest([
+Deno.test("user-request-refund - transactional rpc write failures", async () => {
+  const rpcConflict = await runRefundRequest([
     appRoute(),
     eventRoute,
     policyRoute,
@@ -316,38 +335,25 @@ Deno.test("user-request-refund - write failures", async () => {
     partyRoute,
     {
       matcher: (req: Request) =>
-        req.url.includes("/rest/v1/refund_requests") && req.method === "POST",
+        req.url.includes("/rest/v1/rpc/create_partner_refund_request") &&
+        req.method === "POST",
       handler: () => jsonResponse({ code: "23505" }, { status: 409 }),
     },
   ]);
-  assertEquals(insertConflict.response.status, 409);
-  assertEquals(insertConflict.payload.error, "refund_request_exists");
+  assertEquals(rpcConflict.response.status, 409);
+  assertEquals(rpcConflict.payload.error, "refund_request_exists");
 
-  const insertFailure = await runRefundRequest([
+  const rpcFailure = await runRefundRequest([
     appRoute(),
     eventRoute,
     policyRoute,
     noExistingRequestRoute,
     partyRoute,
     errorRoute((req) =>
-      req.url.includes("/rest/v1/refund_requests") && req.method === "POST"
+      req.url.includes("/rest/v1/rpc/create_partner_refund_request") &&
+      req.method === "POST"
     ),
   ]);
-  assertEquals(insertFailure.response.status, 500);
-  assertEquals(insertFailure.payload.error, "Failed to create refund request");
-
-  const updateFailure = await runRefundRequest([
-    appRoute(),
-    eventRoute,
-    policyRoute,
-    noExistingRequestRoute,
-    partyRoute,
-    insertRefundRequestRoute,
-    errorRoute((req) =>
-      req.url.includes("/rest/v1/event_applications") &&
-      req.method === "PATCH"
-    ),
-  ]);
-  assertEquals(updateFailure.response.status, 500);
-  assertEquals(updateFailure.payload.error, "Failed to create refund request");
+  assertEquals(rpcFailure.response.status, 500);
+  assertEquals(rpcFailure.payload.error, "Failed to create refund request");
 });

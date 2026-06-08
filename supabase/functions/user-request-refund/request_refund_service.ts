@@ -165,58 +165,32 @@ export async function requestPartnerRefund(args: {
     now.getTime() + RESPONSE_DEADLINE_HOURS * 60 * 60 * 1000,
   ).toISOString();
 
-  const { data: request, error: insertError } = await withSpan(
-    "db.insert.refund_requests",
-    "db.insert",
+  const { data: requestData, error: requestError } = await withSpan(
+    "db.rpc.create_partner_refund_request",
+    "db.rpc",
     () =>
-      supabase
-        .from("refund_requests")
-        .insert({
-          application_id: app.id,
-          user_id: userId,
-          event_id: app.event_id,
-          partner_id: (party as { partner_id: string }).partner_id,
-          status: "pending",
-          reason_code: input.reason_code,
-          reason_text: input.reason_text ?? null,
-          requested_at: requestedAt,
-          response_deadline_at: responseDeadlineAt,
-        })
-        .select(
-          "id, application_id, status, requested_at, response_deadline_at",
-        )
-        .single(),
+      supabase.rpc("create_partner_refund_request", {
+        p_application_id: app.id,
+        p_user_id: userId,
+        p_event_id: app.event_id,
+        p_partner_id: (party as { partner_id: string }).partner_id,
+        p_reason_code: input.reason_code,
+        p_reason_text: input.reason_text ?? null,
+        p_requested_at: requestedAt,
+        p_response_deadline_at: responseDeadlineAt,
+      }),
   );
 
-  if (insertError || !request) {
-    const code = isUniqueViolation(insertError) ? 409 : 500;
+  const request = Array.isArray(requestData) ? requestData[0] : requestData;
+  if (requestError || !request) {
+    const code = isUniqueViolation(requestError) ? 409 : 500;
     return fail(
       code,
       code === 409
         ? "refund_request_exists"
         : "Failed to create refund request",
-      insertError,
+      requestError,
     );
-  }
-
-  const { error: updateError } = await withSpan(
-    "db.update.event_applications.refund_requested",
-    "db.update",
-    () =>
-      supabase
-        .from("event_applications")
-        .update({ refund_status: "requested", updated_at: requestedAt })
-        .eq("id", app.id),
-  );
-
-  if (updateError) {
-    log({
-      function: FN,
-      level: "error",
-      message: "Failed to sync application refund_status",
-      metadata: { detail: updateError, application_id: app.id },
-    });
-    return fail(500, "Failed to create refund request");
   }
 
   const row = request as {

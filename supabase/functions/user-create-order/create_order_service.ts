@@ -34,15 +34,15 @@ export type CreateOrderServiceResult =
 
 export interface PortoneV2BrowserPayment {
   provider: "portone_v2";
-  store_id: string;
-  channel_key: string;
-  payment_id: string;
-  order_name: string;
-  total_amount: number;
+  storeId: string;
+  channelKey: string;
+  paymentId: string;
+  orderName: string;
+  totalAmount: number;
   currency: "CURRENCY_KRW";
-  pay_method: "CARD";
-  redirect_url: string;
-  force_redirect: boolean;
+  payMethod: "CARD";
+  redirectUrl: string;
+  forceRedirect: boolean;
 }
 
 export interface CreateOrderServiceFailure {
@@ -315,17 +315,17 @@ function buildPortonePayment(args: {
 
   return {
     provider: "portone_v2",
-    store_id: storeId,
-    channel_key: channelKey,
-    payment_id: args.paymentId,
-    order_name: `Minglit - ${args.eventTitle} / ${args.ticketName}`,
-    total_amount: args.amount,
+    storeId,
+    channelKey,
+    paymentId: args.paymentId,
+    orderName: `Minglit - ${args.eventTitle} / ${args.ticketName}`,
+    totalAmount: args.amount,
     currency: "CURRENCY_KRW",
-    pay_method: "CARD",
-    redirect_url: `${
+    payMethod: "CARD",
+    redirectUrl: `${
       landingOrigin.replace(/\/$/, "")
     }/events/${args.eventId}/checkout/return`,
-    force_redirect: false,
+    forceRedirect: false,
   };
 }
 
