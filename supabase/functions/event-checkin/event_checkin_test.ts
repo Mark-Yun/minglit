@@ -603,6 +603,76 @@ Deno.test({
 });
 
 Deno.test({
+  name: "event-checkin - manual_checkin returns 400 for missing ticket_id",
+  fn: async () => {
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: "/auth/v1/user",
+        handler: () => jsonResponse({ id: "staff-1", email: "staff@test.com" }),
+      },
+    ]);
+
+    await withEnv(BASE_ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(
+            new URL("./index.ts", import.meta.url),
+          );
+          const response = await handler(
+            authenticatedJsonRequest(BASE_URL, {
+              action: "manual_checkin",
+              event_id: "evt-1",
+            }),
+          );
+          assertEquals(response.status, 400);
+          const body = await readJson(response);
+          assertEquals(body.error, "Missing required parameter: ticket_id");
+        });
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "event-checkin - manual_checkin maps permission RPC errors to 403",
+  fn: async () => {
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: "/auth/v1/user",
+        handler: () => jsonResponse({ id: "staff-1", email: "staff@test.com" }),
+      },
+      {
+        matcher: "/rest/v1/rpc/process_manual_checkin_for_actor",
+        handler: () =>
+          jsonResponse({ message: "permission denied for event" }, {
+            status: 400,
+          }),
+      },
+    ]);
+
+    await withEnv(BASE_ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(
+            new URL("./index.ts", import.meta.url),
+          );
+          const response = await handler(
+            authenticatedJsonRequest(BASE_URL, {
+              action: "manual_checkin",
+              ticket_id: "ticket-1",
+              event_id: "evt-1",
+            }),
+          );
+          assertEquals(response.status, 403);
+          const body = await readJson(response);
+          assertEquals(body.error, "permission denied for event");
+        });
+      });
+    });
+  },
+});
+
+Deno.test({
   name:
     "event-checkin - qr_checkin verifies signature and calls actor-aware RPC",
   fn: async () => {
@@ -659,6 +729,169 @@ Deno.test({
           assertEquals(rpcBody?.p_ticket_id, "ticket-1");
           assertEquals(rpcBody?.p_event_id, "evt-1");
           assertEquals(rpcBody?.p_user_id, "ticket-user-1");
+        });
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "event-checkin - qr_checkin returns 400 when QR token is expired",
+  fn: async () => {
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: "/auth/v1/user",
+        handler: () => jsonResponse({ id: "staff-1", email: "staff@test.com" }),
+      },
+    ]);
+
+    await withEnv(BASE_ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(
+            new URL("./index.ts", import.meta.url),
+          );
+          const response = await handler(
+            authenticatedJsonRequest(BASE_URL, {
+              action: "qr_checkin",
+              ticket_id: "ticket-1",
+              event_id: "evt-1",
+              user_id: "ticket-user-1",
+              signature: "unused",
+              expires_at: new Date(Date.now() - 1000).toISOString(),
+            }),
+          );
+          assertEquals(response.status, 400);
+          const body = await readJson(response);
+          assertEquals(body.error, "QR token expired");
+        });
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "event-checkin - qr_checkin requires ticket signing public key",
+  fn: async () => {
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: "/auth/v1/user",
+        handler: () => jsonResponse({ id: "staff-1", email: "staff@test.com" }),
+      },
+    ]);
+
+    await withEnv(BASE_ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(
+            new URL("./index.ts", import.meta.url),
+          );
+          const response = await handler(
+            authenticatedJsonRequest(BASE_URL, {
+              action: "qr_checkin",
+              ticket_id: "ticket-1",
+              event_id: "evt-1",
+              user_id: "ticket-user-1",
+              signature: "unused",
+              expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+            }),
+          );
+          assertEquals(response.status, 500);
+          const body = await readJson(response);
+          assertEquals(body.error, "Ticket verification key not configured");
+        });
+      });
+    });
+  },
+});
+
+Deno.test({
+  name:
+    "event-checkin - qr_checkin returns 500 for signature verification errors",
+  fn: async () => {
+    const ENV = {
+      ...BASE_ENV,
+      TICKET_SIGNING_PUBLIC_KEY_JWK: "{invalid-json",
+    };
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: "/auth/v1/user",
+        handler: () => jsonResponse({ id: "staff-1", email: "staff@test.com" }),
+      },
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(
+            new URL("./index.ts", import.meta.url),
+          );
+          const response = await handler(
+            authenticatedJsonRequest(BASE_URL, {
+              action: "qr_checkin",
+              ticket_id: "ticket-1",
+              event_id: "evt-1",
+              user_id: "ticket-user-1",
+              signature: "unused",
+              expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+            }),
+          );
+          assertEquals(response.status, 500);
+          const body = await readJson(response);
+          assertEquals(body.error, "Signature verification failed");
+        });
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "event-checkin - qr_checkin maps RPC failures to 500",
+  fn: async () => {
+    const { privateKey, publicKeyJwk } = await generateTestKeys();
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    const signature = await signToken(
+      privateKey,
+      "ticket-1",
+      "evt-1",
+      "ticket-user-1",
+      expiresAt,
+    );
+    const ENV = {
+      ...BASE_ENV,
+      TICKET_SIGNING_PUBLIC_KEY_JWK: JSON.stringify(publicKeyJwk),
+    };
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: "/auth/v1/user",
+        handler: () => jsonResponse({ id: "staff-1", email: "staff@test.com" }),
+      },
+      {
+        matcher: "/rest/v1/rpc/process_qr_checkin_for_actor",
+        handler: () =>
+          jsonResponse({ message: "database unavailable" }, { status: 500 }),
+      },
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(
+            new URL("./index.ts", import.meta.url),
+          );
+          const response = await handler(
+            authenticatedJsonRequest(BASE_URL, {
+              action: "qr_checkin",
+              ticket_id: "ticket-1",
+              event_id: "evt-1",
+              user_id: "ticket-user-1",
+              signature,
+              expires_at: expiresAt,
+            }),
+          );
+          assertEquals(response.status, 500);
+          const body = await readJson(response);
+          assertEquals(body.error, "database unavailable");
         });
       });
     });

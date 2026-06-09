@@ -93,6 +93,82 @@ Deno.test({
   },
 });
 
+Deno.test({
+  name: "set_interaction - returns 400 for missing fields",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([authRoute()]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(authenticatedJsonRequest("http://localhost", {
+          action: "set_interaction",
+          target_id: TEST_TARGET_ID,
+          target_type: "partner",
+        }));
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(
+          body.error,
+          "Missing target_id, target_type, interaction_type, or active",
+        );
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "set_interaction - returns 400 for invalid target_type",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([authRoute()]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(authenticatedJsonRequest("http://localhost", {
+          action: "set_interaction",
+          target_id: TEST_TARGET_ID,
+          target_type: "invalid",
+          interaction_type: "bookmark",
+          active: true,
+        }));
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "Invalid target_type: invalid");
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "set_interaction - returns 400 for invalid interaction_type",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([authRoute()]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(authenticatedJsonRequest("http://localhost", {
+          action: "set_interaction",
+          target_id: TEST_TARGET_ID,
+          target_type: "partner",
+          interaction_type: "invalid",
+          active: true,
+        }));
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "Invalid interaction_type: invalid");
+      });
+    });
+  },
+});
+
 // ─────────────────────────────────────────
 // toggle
 // ─────────────────────────────────────────

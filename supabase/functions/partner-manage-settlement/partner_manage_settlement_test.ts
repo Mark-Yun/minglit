@@ -238,6 +238,64 @@ Deno.test({
   },
 });
 
+Deno.test({
+  name: "retry_payout: returns 400 for missing partner_id",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([authRoute()]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "retry_payout",
+            payout_id: "payout-001",
+          }),
+        );
+        assertEquals(res.status, 400);
+        const body = await readJson(res);
+        assertEquals(body.error, "Missing partner_id");
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "retry_payout: maps unauthorized RPC errors to 403",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      {
+        matcher: "/rest/v1/rpc/request_retry_payout_for_actor",
+        handler: () =>
+          jsonResponse({ message: "unauthorized payout retry" }, {
+            status: 400,
+          }),
+      },
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(
+          authenticatedJsonRequest("http://localhost", {
+            action: "retry_payout",
+            payout_id: "payout-001",
+            partner_id: TEST_PARTNER_ID,
+          }),
+        );
+        assertEquals(res.status, 403);
+        const body = await readJson(res);
+        assertEquals(body.error, "unauthorized payout retry");
+      });
+    });
+  },
+});
+
 // ─── UPSERT: success ───
 Deno.test({
   name: "upsert_bank_account: upserts bank account successfully",

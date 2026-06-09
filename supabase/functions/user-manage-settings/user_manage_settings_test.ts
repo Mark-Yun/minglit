@@ -519,6 +519,71 @@ Deno.test("save_consents — 다른 user_id 요청은 403", async () => {
   });
 });
 
+Deno.test("save_consents — consents가 배열이 아니면 400", async () => {
+  const { fetchMock } = createFetchMock([authRoute]);
+
+  await withEnv(ENV, async () => {
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
+
+        const request = authenticatedJsonRequest("http://localhost", {
+          action: "save_consents",
+          user_id: "user-123",
+          consents: { consent_key: "terms_of_service" },
+        });
+        const response = await handler(request);
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 400);
+        assertEquals(payload.error, "Missing required field: consents");
+      });
+    });
+  });
+});
+
+Deno.test("save_consents — RPC 실패 시 500", async () => {
+  const { fetchMock } = createFetchMock([
+    authRoute,
+    {
+      matcher: (req: Request) =>
+        req.url.includes("/rest/v1/rpc/save_user_consents_for_user") &&
+        req.method === "POST",
+      handler: () =>
+        jsonResponse({ message: "consent rpc failed" }, { status: 500 }),
+    },
+  ]);
+
+  await withEnv(ENV, async () => {
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
+
+        const request = authenticatedJsonRequest("http://localhost", {
+          action: "save_consents",
+          user_id: "user-123",
+          consents: [
+            {
+              consent_key: "terms_of_service",
+              consented: true,
+              policy_version: 1,
+            },
+          ],
+        });
+        const response = await handler(request);
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 500);
+        assertEquals(payload.error, "Failed to save consents");
+      });
+    });
+  });
+});
+
 // ===== Auth & Edge cases =====
 
 Deno.test("인증 없이 호출 → 401", async () => {
