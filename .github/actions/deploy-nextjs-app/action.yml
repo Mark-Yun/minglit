@@ -79,13 +79,13 @@ runs:
         fi
 
         if [[ "${{ inputs.deploy-branch }}" == "main" ]]; then
-          npx --yes vercel@latest build --prod --token=$VERCEL_TOKEN
+          npx --yes vercel@latest build --prod --token=$VERCEL_TOKEN --yes
           npx --yes vercel@latest deploy --prebuilt --prod --archive=tgz --token=$VERCEL_TOKEN --yes
           # Fix #389: output the production alias URL for smoke test
           echo "accessible-url=https://${{ inputs.dev-domain-alias }}" >> "$GITHUB_OUTPUT"
         else
           # Fix #372: capture preview URL and assign domain alias so dev.*.minglit.com stays reachable
-          npx --yes vercel@latest build --token=$VERCEL_TOKEN
+          npx --yes vercel@latest build --token=$VERCEL_TOKEN --yes
           DEPLOY_URL=$(npx --yes vercel@latest deploy --prebuilt --archive=tgz --token=$VERCEL_TOKEN --yes)
           echo "✅ Deployed to: $DEPLOY_URL"
           ALIAS_OK=false
