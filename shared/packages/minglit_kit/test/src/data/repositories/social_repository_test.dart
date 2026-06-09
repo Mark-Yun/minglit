@@ -17,15 +17,6 @@ void main() {
 
   final mockUser = MockUser();
 
-  void stubRpc() {
-    when(
-      () => mockClient.rpc<dynamic>(
-        'set_social_interaction',
-        params: any(named: 'params'),
-      ),
-    ).thenAnswer((_) => FakeRpcBuilder<dynamic>(null));
-  }
-
   // Fix #2393: stub user-manage-social EF.
   void stubSocialEf({int status = 200}) {
     when(
@@ -51,7 +42,7 @@ void main() {
   group('SocialRepository', () {
     group('setInteraction', () {
       test('activates interaction without error', () async {
-        stubRpc();
+        stubSocialEf();
 
         await expectLater(
           repository.setInteraction(
@@ -65,7 +56,7 @@ void main() {
       });
 
       test('deactivates interaction without error', () async {
-        stubRpc();
+        stubSocialEf();
 
         await expectLater(
           repository.setInteraction(
@@ -78,10 +69,10 @@ void main() {
         );
       });
 
-      // Fix #1957: mutual exclusivity and advisory lock are enforced atomically
-      // inside set_social_interaction(). Verify the correct RPC params are sent.
-      test('passes correct params to set_social_interaction RPC', () async {
-        stubRpc();
+      // Fix #1957/#3445: mutual exclusivity and advisory lock are enforced
+      // atomically inside the EF service-only RPC. Verify EF payload.
+      test('passes correct body to user-manage-social EF', () async {
+        stubSocialEf();
 
         await repository.setInteraction(
           targetId: 'party_1',
@@ -91,13 +82,14 @@ void main() {
         );
 
         verify(
-          () => mockClient.rpc<dynamic>(
-            'set_social_interaction',
-            params: {
-              'p_target_id': 'party_1',
-              'p_target_type': 'party',
-              'p_interaction_type': 'like',
-              'p_active': true,
+          () => mockFunctions.invoke(
+            'user-manage-social',
+            body: {
+              'action': 'set_interaction',
+              'target_id': 'party_1',
+              'target_type': 'party',
+              'interaction_type': 'like',
+              'active': true,
             },
           ),
         ).called(1);

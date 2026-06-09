@@ -363,22 +363,32 @@ class SettlementRepository {
     }
   }
 
-  /// Requests a retry payout via RPC.
+  /// Requests a retry payout via Edge Function.
   ///
-  /// Calls the request_retry_payout RPC function to retry a failed payout.
+  /// Calls the partner-manage-settlement EF to retry a failed payout.
   Future<Map<String, dynamic>> retryPayout({
     required String payoutId,
     required String partnerId,
   }) async {
     Log.d('retryPayout called | payoutId: $payoutId, partnerId: $partnerId');
     try {
-      final result = await _supabase.rpc<Map<String, dynamic>>(
-        'request_retry_payout',
-        params: {
-          'p_payout_id': payoutId,
-          'p_partner_id': partnerId,
+      final response = await _supabase.functions.invoke(
+        'partner-manage-settlement',
+        body: {
+          'action': 'retry_payout',
+          'payout_id': payoutId,
+          'partner_id': partnerId,
         },
       );
+      if (response.status != 200) {
+        throw FunctionException(
+          status: response.status,
+          details: response.data,
+          reasonPhrase: 'Edge function error',
+        );
+      }
+
+      final result = response.data as Map<String, dynamic>;
 
       Log.d('retryPayout success | payoutId: $payoutId');
       return result;

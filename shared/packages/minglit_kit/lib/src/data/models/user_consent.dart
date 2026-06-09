@@ -62,7 +62,7 @@ abstract class UserConsent with _$UserConsent {
       _$UserConsentFromJson(json);
 }
 
-/// Input for saving a consent via the `save_user_consents` RPC.
+/// Input for saving a consent via the `user-manage-settings` Edge Function.
 @freezed
 abstract class ConsentInput with _$ConsentInput {
   /// Creates a [ConsentInput].

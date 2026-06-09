@@ -117,5 +117,285 @@
     "issue": 3424,
     "cache_key": "rls_enabled_no_policy_public_webhook_imp_uid_log",
     "reason": "webhook_imp_uid_log is intentionally default-deny to publishable roles and is populated by backend webhook processing."
+  },
+  {
+    "name": "anon_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "anon_security_definer_function_executable_public_get_entry_group_participant_counts_p_event_id uuid",
+    "reason": "docs/architecture/backend.md classifies get_entry_group_participant_counts(uuid) as a public read RPC; exact cache-key accepted for the current read contract."
+  },
+  {
+    "name": "anon_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "anon_security_definer_function_executable_public_get_event_ticket_balance_status_p_event_id uuid",
+    "reason": "docs/architecture/backend.md classifies get_event_ticket_balance_status(uuid) as a public read RPC; exact cache-key accepted for the current read contract."
+  },
+  {
+    "name": "anon_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "anon_security_definer_function_executable_public_get_events_within_radius_p_lat double precision, p_lng double precision, p_radius_meters integer, p_limit integer",
+    "reason": "docs/architecture/backend.md classifies get_events_within_radius(...) as a public read/search RPC; exact cache-key accepted for the current discovery contract."
+  },
+  {
+    "name": "anon_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "anon_security_definer_function_executable_public_get_events_within_radius_p_lat double precision, p_lng double precision, p_radius_meters integer, p_limit integer, p_user_id uuid",
+    "reason": "docs/architecture/backend.md classifies get_events_within_radius(...) as a public read/search RPC; exact cache-key accepted for the current discovery contract."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_get_bulk_eligibility_data_p_user_id uuid",
+    "reason": "get_bulk_eligibility_data(uuid) is an authenticated client RPC; PUBLIC/anon execute has been revoked and authenticated execute remains the current client contract."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_get_entry_group_participant_counts_p_event_id uuid",
+    "reason": "docs/architecture/backend.md classifies get_entry_group_participant_counts(uuid) as a public read RPC; exact cache-key accepted for the current read contract."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_get_event_applications_with_user_p_event_id uuid",
+    "reason": "docs/architecture/backend.md classifies get_event_applications_with_user(uuid) as an authenticated RPC; PUBLIC/anon execute has been revoked and authenticated execute remains the current client contract."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_get_event_checkin_stats_p_event_id uuid",
+    "reason": "get_event_checkin_stats(uuid) is an authenticated check-in RPC; PUBLIC/anon execute has been revoked and authenticated execute remains the current client contract."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_get_event_checkin_stats_by_group_p_event_id uuid",
+    "reason": "get_event_checkin_stats_by_group(uuid) is an authenticated check-in RPC; PUBLIC/anon execute has been revoked and authenticated execute remains the current client contract."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_get_event_participants_for_checkin_p_event_id uuid",
+    "reason": "get_event_participants_for_checkin(uuid) is an authenticated check-in RPC; PUBLIC/anon execute has been revoked and authenticated execute remains the current client contract."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_get_event_ticket_balance_status_p_event_id uuid",
+    "reason": "docs/architecture/backend.md classifies get_event_ticket_balance_status(uuid) as a public read RPC; exact cache-key accepted for the current read contract."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_get_events_within_radius_p_lat double precision, p_lng double precision, p_radius_meters integer, p_limit integer",
+    "reason": "docs/architecture/backend.md classifies get_events_within_radius(...) as a public read/search RPC; exact cache-key accepted for the current discovery contract."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_get_events_within_radius_p_lat double precision, p_lng double precision, p_radius_meters integer, p_limit integer, p_user_id uuid",
+    "reason": "docs/architecture/backend.md classifies get_events_within_radius(...) as a public read/search RPC; exact cache-key accepted for the current discovery contract."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_get_featured_tags_",
+    "reason": "get_featured_tags() is an authenticated tag-discovery RPC; PUBLIC/anon execute has been revoked and authenticated execute remains the current client contract."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_get_matched_user_contact_target_user_id uuid, target_event_id uuid",
+    "reason": "get_matched_user_contact(uuid, uuid) is an authenticated match-contact RPC; PUBLIC/anon execute has been revoked and authenticated execute remains the current client contract."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_get_matched_user_info_p_target_user_id uuid, p_target_event_id uuid",
+    "reason": "docs/architecture/backend.md classifies get_matched_user_info(uuid, uuid) as an authenticated RPC; PUBLIC/anon execute has been revoked and authenticated execute remains the current client contract."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_get_parties_by_tag_p_tag_id uuid, p_limit integer, p_offset integer",
+    "reason": "get_parties_by_tag(uuid, integer, integer) is an authenticated tag-discovery RPC; PUBLIC/anon execute has been revoked and authenticated execute remains the current client contract."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_get_partner_members_with_user_p_partner_id uuid",
+    "reason": "docs/architecture/backend.md classifies get_partner_members_with_user(uuid) as an authenticated RPC; PUBLIC/anon execute has been revoked and authenticated execute remains the current client contract."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_get_pending_verification_requests_with_user_p_partner_id uuid",
+    "reason": "docs/architecture/backend.md classifies get_pending_verification_requests_with_user(uuid) as an authenticated RPC; PUBLIC/anon execute has been revoked and authenticated execute remains the current client contract."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_get_personalized_recommendations_p_user_id uuid, p_limit integer",
+    "reason": "docs/architecture/backend.md classifies get_personalized_recommendations(uuid, integer) as an authenticated RPC; PUBLIC/anon execute has been revoked and authenticated execute remains the current client contract."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_get_tag_recommendations_p_limit integer",
+    "reason": "get_tag_recommendations(integer) is an authenticated tag-discovery RPC; PUBLIC/anon execute has been revoked and authenticated execute remains the current client contract."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_get_ticket_public_key_",
+    "reason": "docs/architecture/backend.md classifies get_ticket_public_key() as an authenticated RPC; PUBLIC/anon execute has been revoked and authenticated execute remains the current client contract."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_get_trending_tags_p_limit integer, p_days integer",
+    "reason": "get_trending_tags(integer, integer) is an authenticated tag-discovery RPC; PUBLIC/anon execute has been revoked and authenticated execute remains the current client contract."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_has_partner_permission_p_id uuid, p_key text",
+    "reason": "has_partner_permission(uuid, text) is an RLS predicate helper; #3424 removed PUBLIC/anon direct execute and authenticated execute remains required by current policy posture."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_is_super_admin_",
+    "reason": "is_super_admin() is an RLS predicate helper; #3424 removed PUBLIC/anon direct execute and authenticated execute remains required by current policy posture."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_is_visible_user_profile_p_user_id uuid",
+    "reason": "is_visible_user_profile(uuid) is an RLS predicate helper; #3424 removed PUBLIC/anon direct execute and authenticated execute remains required by current policy posture."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_process_manual_checkin_p_ticket_id uuid, p_event_id uuid",
+    "reason": "process_manual_checkin(uuid, uuid) still has active publishable-client callers; #3445 tracks EF migration and authenticated execute removal."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_process_qr_checkin_p_ticket_id uuid, p_event_id uuid, p_user_id uuid",
+    "reason": "process_qr_checkin(uuid, uuid, uuid) still has active publishable-client callers; #3445 tracks EF migration and authenticated execute removal."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_request_retry_payout_p_payout_id uuid, p_partner_id uuid",
+    "reason": "request_retry_payout(uuid, uuid) still has active publishable-client callers; #3445 tracks EF migration and authenticated execute removal."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_save_user_consents_p_user_id uuid, p_consents jsonb",
+    "reason": "save_user_consents(uuid, jsonb) still has active publishable-client callers; #3445 tracks EF migration and authenticated execute removal."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_search_tags_p_query text",
+    "reason": "search_tags(text) is an authenticated tag-discovery RPC; PUBLIC/anon execute has been revoked and authenticated execute remains the current client contract."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_set_social_interaction_p_target_id text, p_target_type text, p_interaction_type text, p_active boolean",
+    "reason": "set_social_interaction(text, text, text, boolean) still has active publishable-client callers; #3445 tracks EF migration and authenticated execute removal."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_st_estimatedextent_text, text",
+    "reason": "st_estimatedextent(text, text) is a PostGIS extension-owned function. Its execute posture should be handled with the broader extension-schema migration plan."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_st_estimatedextent_text, text, text",
+    "reason": "st_estimatedextent(text, text, text) is a PostGIS extension-owned function. Its execute posture should be handled with the broader extension-schema migration plan."
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "type": "security",
+    "envs": ["dev", "main"],
+    "issue": 3443,
+    "cache_key": "authenticated_security_definer_function_executable_public_st_estimatedextent_text, text, text, boolean",
+    "reason": "st_estimatedextent(text, text, text, boolean) is a PostGIS extension-owned function. Its execute posture should be handled with the broader extension-schema migration plan."
   }
 ]

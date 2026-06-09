@@ -1,12 +1,12 @@
 // user-manage-social — Manage social interactions (like, block, report)
 // Replaces direct client writes to social_interactions + report_details
 
-import {
-  errorResponse,
-  successResponse,
-} from "../_shared/response_utils.ts";
+import { errorResponse, successResponse } from "../_shared/response_utils.ts";
 import { parseAction } from "../_shared/request_utils.ts";
-import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
+import {
+  type EFContext,
+  minglitEdgeFunction,
+} from "../_shared/edge_function.ts";
 
 const VALID_INTERACTION_TYPES = ["like", "dislike", "subscribe", "bookmark"];
 const VALID_TARGET_TYPES = ["party", "partner", "review", "comment"];
@@ -18,13 +18,52 @@ const VALID_REPORT_REASONS = [
   "other",
 ];
 
-export const handler = async (req: Request, { auth, supabase }: EFContext): Promise<Response> => {
+export const handler = async (
+  req: Request,
+  { auth, supabase }: EFContext,
+): Promise<Response> => {
   const { userId } = auth as { type: "user"; userId: string };
 
   const result = await parseAction(req);
   if (result instanceof Response) return result;
   const { action, body } = result;
   if (!action) return errorResponse("Missing action", 400);
+
+  // ─────────────────────────────────────────
+  // set_interaction — explicit final state via service_role-only RPC
+  // ─────────────────────────────────────────
+  if (action === "set_interaction") {
+    const targetId = body.target_id as string | undefined;
+    const targetType = body.target_type as string | undefined;
+    const interactionType = body.interaction_type as string | undefined;
+    const active = body.active as boolean | undefined;
+
+    if (!targetId || !targetType || !interactionType || active == null) {
+      return errorResponse(
+        "Missing target_id, target_type, interaction_type, or active",
+        400,
+      );
+    }
+    if (!VALID_TARGET_TYPES.includes(targetType)) {
+      return errorResponse(`Invalid target_type: ${targetType}`, 400);
+    }
+    if (!VALID_INTERACTION_TYPES.includes(interactionType)) {
+      return errorResponse(`Invalid interaction_type: ${interactionType}`, 400);
+    }
+    if (typeof active !== "boolean") {
+      return errorResponse("active must be a boolean", 400);
+    }
+
+    const { error } = await supabase.rpc("set_social_interaction_for_user", {
+      p_user_id: userId,
+      p_target_id: targetId,
+      p_target_type: targetType,
+      p_interaction_type: interactionType,
+      p_active: active,
+    });
+    if (error) return errorResponse(error.message, 500);
+    return successResponse({ success: true, active });
+  }
 
   // ─────────────────────────────────────────
   // toggle — like/dislike/subscribe/bookmark

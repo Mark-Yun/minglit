@@ -9,6 +9,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class _MockSupabaseClient extends Mock implements SupabaseClient {}
 
+class _MockFunctionsClient extends Mock implements FunctionsClient {}
+
 /// PostgrestFilterBuilder를 구현하는 fake. rpc() 스텁 반환값으로 사용.
 class _FakeRpcBuilder<T> implements PostgrestFilterBuilder<T> {
   _FakeRpcBuilder(this._data);
@@ -28,9 +30,12 @@ class _FakeRpcBuilder<T> implements PostgrestFilterBuilder<T> {
 
 void main() {
   late _MockSupabaseClient mockClient;
+  late _MockFunctionsClient mockFunctions;
 
   setUp(() {
     mockClient = _MockSupabaseClient();
+    mockFunctions = _MockFunctionsClient();
+    when(() => mockClient.functions).thenReturn(mockFunctions);
   });
 
   void stubFetch(List<dynamic> response) {
@@ -44,11 +49,16 @@ void main() {
 
   void stubCheckin(String result) {
     when(
-      () => mockClient.rpc<dynamic>(
-        'process_manual_checkin',
-        params: any(named: 'params'),
+      () => mockFunctions.invoke(
+        'event-checkin',
+        body: any(named: 'body'),
       ),
-    ).thenAnswer((_) => _FakeRpcBuilder<dynamic>(result));
+    ).thenAnswer(
+      (_) async => FunctionResponse(
+        status: 200,
+        data: {'success': result == 'success', 'result': result},
+      ),
+    );
   }
 
   ProviderContainer makeContainer() {

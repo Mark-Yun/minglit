@@ -22,6 +22,7 @@ VALUES
   ('public', 'partners'),
   ('public', 'party_tags'),
   ('public', 'policies'),
+  ('public', 'refund_requests'),
   ('public', 'social_interactions'),
   ('public', 'tag_usage_daily'),
   ('public', 'tag_usage_monthly'),

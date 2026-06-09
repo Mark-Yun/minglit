@@ -2,18 +2,21 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/models/user_consent.dart';
 import 'package:minglit_kit/src/data/repositories/consent_repository.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../helpers/mocks.dart';
 import '../../../helpers/supabase_mock_helpers.dart';
 
 void main() {
   late MockSupabaseClient mockClient;
+  late MockFunctionsClient mockFunctions;
   late ConsentRepository repository;
 
   final now = DateTime.now();
 
   setUp(() {
     mockClient = createMockSupabase();
+    mockFunctions = mockClient.functions as MockFunctionsClient;
     repository = ConsentRepository(mockClient);
   });
 
@@ -64,13 +67,18 @@ void main() {
     });
 
     group('saveConsents', () {
-      test('calls save_user_consents RPC with correct params', () async {
+      test('calls user-manage-settings EF with correct body', () async {
         when(
-          () => mockClient.rpc<void>(
-            'save_user_consents',
-            params: any(named: 'params'),
+          () => mockFunctions.invoke(
+            'user-manage-settings',
+            body: any(named: 'body'),
           ),
-        ).thenAnswer((_) => FakeRpcBuilder(null));
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 200,
+            data: {'success': true},
+          ),
+        );
 
         await repository.saveConsents('user_1', [
           const ConsentInput(
@@ -86,25 +94,31 @@ void main() {
         ]);
 
         final captured = verify(
-          () => mockClient.rpc<void>(
-            'save_user_consents',
-            params: captureAny(named: 'params'),
+          () => mockFunctions.invoke(
+            'user-manage-settings',
+            body: captureAny(named: 'body'),
           ),
         ).captured;
 
-        final params = captured.first as Map<String, dynamic>;
-        expect(params['p_user_id'], 'user_1');
-        expect(params['p_consents'], isList);
-        expect(params['p_consents'] as List, hasLength(2));
+        final body = captured.first as Map<String, dynamic>;
+        expect(body['action'], 'save_consents');
+        expect(body['user_id'], 'user_1');
+        expect(body['consents'], isList);
+        expect(body['consents'] as List, hasLength(2));
       });
 
-      test('throws on RPC error', () async {
+      test('throws on EF error', () async {
         when(
-          () => mockClient.rpc<void>(
-            'save_user_consents',
-            params: any(named: 'params'),
+          () => mockFunctions.invoke(
+            'user-manage-settings',
+            body: any(named: 'body'),
           ),
-        ).thenThrow(Exception('RPC error'));
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 500,
+            data: {'error': 'EF error'},
+          ),
+        );
 
         expect(
           () => repository.saveConsents('user_1', [
@@ -113,7 +127,7 @@ void main() {
               consented: true,
             ),
           ]),
-          throwsA(isA<Exception>()),
+          throwsA(isA<FunctionException>()),
         );
       });
     });

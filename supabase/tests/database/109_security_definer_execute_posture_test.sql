@@ -16,11 +16,6 @@ SELECT is_empty(
       ('public.get_event_checkin_stats(uuid)'::regprocedure),
       ('public.get_event_checkin_stats_by_group(uuid)'::regprocedure),
       ('public.get_event_participants_for_checkin(uuid)'::regprocedure),
-      ('public.process_manual_checkin(uuid, uuid)'::regprocedure),
-      ('public.process_qr_checkin(uuid, uuid, uuid)'::regprocedure),
-      ('public.request_retry_payout(uuid, uuid)'::regprocedure),
-      ('public.save_user_consents(uuid, jsonb)'::regprocedure),
-      ('public.set_social_interaction(text, text, text, boolean)'::regprocedure),
       ('public.get_ticket_public_key()'::regprocedure)
   )
   SELECT function_oid::regprocedure::text
@@ -45,11 +40,6 @@ SELECT is_empty(
       ('public.get_event_checkin_stats(uuid)'::regprocedure),
       ('public.get_event_checkin_stats_by_group(uuid)'::regprocedure),
       ('public.get_event_participants_for_checkin(uuid)'::regprocedure),
-      ('public.process_manual_checkin(uuid, uuid)'::regprocedure),
-      ('public.process_qr_checkin(uuid, uuid, uuid)'::regprocedure),
-      ('public.request_retry_payout(uuid, uuid)'::regprocedure),
-      ('public.save_user_consents(uuid, jsonb)'::regprocedure),
-      ('public.set_social_interaction(text, text, text, boolean)'::regprocedure),
       ('public.get_ticket_public_key()'::regprocedure)
   )
   SELECT function_oid::regprocedure::text
@@ -58,7 +48,7 @@ SELECT is_empty(
      OR NOT has_function_privilege('service_role', function_oid, 'EXECUTE')
   ORDER BY 1
   $$,
-  'authenticated-client SECURITY DEFINER RPCs remain callable by authenticated and service_role'
+  'read-only authenticated-client SECURITY DEFINER RPCs remain callable by authenticated and service_role'
 );
 
 SELECT is_empty(
@@ -86,13 +76,23 @@ SELECT is_empty(
       ('public.handle_storage_object_created()'::regprocedure),
       ('public.handle_verification_approval()'::regprocedure),
       ('public.issue_ticket_on_approval()'::regprocedure),
+      ('public.process_manual_checkin(uuid, uuid)'::regprocedure),
+      ('public.process_manual_checkin_for_actor(uuid, uuid, uuid)'::regprocedure),
+      ('public.process_qr_checkin(uuid, uuid, uuid)'::regprocedure),
+      ('public.process_qr_checkin_for_actor(uuid, uuid, uuid, uuid)'::regprocedure),
       ('public.process_reconciliation_kill_switch(uuid)'::regprocedure),
       ('public.produce_event()'::regprocedure),
       ('public.produce_event(public.event_type_name, text, uuid, jsonb)'::regprocedure),
       ('public.protect_user_profile_fields()'::regprocedure),
       ('public.remove_participant_on_cancel()'::regprocedure),
+      ('public.request_retry_payout(uuid, uuid)'::regprocedure),
+      ('public.request_retry_payout_for_actor(uuid, uuid, uuid)'::regprocedure),
       ('public.replace_match_rules(uuid, jsonb)'::regprocedure),
+      ('public.save_user_consents(uuid, jsonb)'::regprocedure),
+      ('public.save_user_consents_for_user(uuid, jsonb)'::regprocedure),
       ('public.send_event_reminders()'::regprocedure),
+      ('public.set_social_interaction(text, text, text, boolean)'::regprocedure),
+      ('public.set_social_interaction_for_user(uuid, text, text, text, boolean)'::regprocedure),
       ('public.sync_max_participants()'::regprocedure),
       ('public.trigger_produce_event_application()'::regprocedure),
       ('public.trigger_produce_event_events()'::regprocedure),
@@ -136,13 +136,23 @@ SELECT is_empty(
       ('public.handle_storage_object_created()'::regprocedure),
       ('public.handle_verification_approval()'::regprocedure),
       ('public.issue_ticket_on_approval()'::regprocedure),
+      ('public.process_manual_checkin(uuid, uuid)'::regprocedure),
+      ('public.process_manual_checkin_for_actor(uuid, uuid, uuid)'::regprocedure),
+      ('public.process_qr_checkin(uuid, uuid, uuid)'::regprocedure),
+      ('public.process_qr_checkin_for_actor(uuid, uuid, uuid, uuid)'::regprocedure),
       ('public.process_reconciliation_kill_switch(uuid)'::regprocedure),
       ('public.produce_event()'::regprocedure),
       ('public.produce_event(public.event_type_name, text, uuid, jsonb)'::regprocedure),
       ('public.protect_user_profile_fields()'::regprocedure),
       ('public.remove_participant_on_cancel()'::regprocedure),
+      ('public.request_retry_payout(uuid, uuid)'::regprocedure),
+      ('public.request_retry_payout_for_actor(uuid, uuid, uuid)'::regprocedure),
       ('public.replace_match_rules(uuid, jsonb)'::regprocedure),
+      ('public.save_user_consents(uuid, jsonb)'::regprocedure),
+      ('public.save_user_consents_for_user(uuid, jsonb)'::regprocedure),
       ('public.send_event_reminders()'::regprocedure),
+      ('public.set_social_interaction(text, text, text, boolean)'::regprocedure),
+      ('public.set_social_interaction_for_user(uuid, text, text, text, boolean)'::regprocedure),
       ('public.sync_max_participants()'::regprocedure),
       ('public.trigger_produce_event_application()'::regprocedure),
       ('public.trigger_produce_event_events()'::regprocedure),

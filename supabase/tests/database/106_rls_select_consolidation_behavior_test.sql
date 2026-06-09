@@ -73,6 +73,27 @@ WITH application AS (
 )
 SELECT set_config('tests.select_rls_application_id', id::text, true) FROM application;
 
+WITH refund_request AS (
+  INSERT INTO public.refund_requests (
+    application_id,
+    user_id,
+    event_id,
+    partner_id,
+    reason_code,
+    response_deadline_at
+  )
+  VALUES (
+    current_setting('tests.select_rls_application_id')::uuid,
+    tests.get_supabase_uid('select_rls_applicant'),
+    current_setting('tests.select_rls_event_id')::uuid,
+    current_setting('tests.select_rls_partner_id')::uuid,
+    'schedule_change',
+    now() + interval '2 days'
+  )
+  RETURNING id
+)
+SELECT set_config('tests.select_rls_refund_request_id', id::text, true) FROM refund_request;
+
 WITH verification AS (
   INSERT INTO public.verifications (
     partner_id,
@@ -148,6 +169,12 @@ SELECT results_eq(
   'applicant can read own event application'
 );
 SELECT results_eq(
+  $$SELECT count(*)::int FROM public.refund_requests
+    WHERE id = current_setting('tests.select_rls_refund_request_id')::uuid$$,
+  $$VALUES (1)$$,
+  'applicant can read own refund request'
+);
+SELECT results_eq(
   $$SELECT count(*)::int FROM public.verification_submissions
     WHERE id = current_setting('tests.select_rls_submission_id')::uuid$$,
   $$VALUES (1)$$,
@@ -162,6 +189,12 @@ SELECT results_eq(
   'partner owner can read event applications for owned party'
 );
 SELECT results_eq(
+  $$SELECT count(*)::int FROM public.refund_requests
+    WHERE id = current_setting('tests.select_rls_refund_request_id')::uuid$$,
+  $$VALUES (1)$$,
+  'partner owner can read refund requests for owned partner'
+);
+SELECT results_eq(
   $$SELECT count(*)::int FROM public.verification_submissions
     WHERE id = current_setting('tests.select_rls_submission_id')::uuid$$,
   $$VALUES (1)$$,
@@ -173,6 +206,11 @@ SELECT is_empty(
   $$SELECT id FROM public.event_applications
     WHERE id = current_setting('tests.select_rls_application_id')::uuid$$,
   'unrelated user cannot read event application'
+);
+SELECT is_empty(
+  $$SELECT id FROM public.refund_requests
+    WHERE id = current_setting('tests.select_rls_refund_request_id')::uuid$$,
+  'unrelated user cannot read refund request'
 );
 SELECT is_empty(
   $$SELECT id FROM public.verification_submissions

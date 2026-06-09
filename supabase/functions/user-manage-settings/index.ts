@@ -1,11 +1,11 @@
 // user-manage-settings — FCM token registration and user settings management
 // Issue #2040: atomic upsert for user_settings + user_consents via RPC
 
-import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 import {
-  errorResponse,
-  successResponse,
-} from "../_shared/response_utils.ts";
+  type EFContext,
+  minglitEdgeFunction,
+} from "../_shared/edge_function.ts";
+import { errorResponse, successResponse } from "../_shared/response_utils.ts";
 import { parseAction } from "../_shared/request_utils.ts";
 import { log, withSpan } from "../_shared/logger.ts";
 import { initStatsig, logStatsigEvent } from "../_shared/statsig_utils.ts";
@@ -17,10 +17,15 @@ const VALID_DEVICE_TYPES = ["android", "ios", "web"];
 
 initStatsig();
 
-export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
+export const handler = async (
+  req: Request,
+  ctx: EFContext,
+): Promise<Response> => {
   if (req.method !== "POST") return errorResponse("Method not allowed", 405);
 
-  if (ctx.auth.type !== "user") return errorResponse("Unexpected auth type", 500);
+  if (ctx.auth.type !== "user") {
+    return errorResponse("Unexpected auth type", 500);
+  }
   const userId = ctx.auth.userId;
   const { supabase } = ctx;
 
@@ -41,7 +46,9 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
         }
         if (!device_type || !VALID_DEVICE_TYPES.includes(device_type)) {
           return errorResponse(
-            `Invalid device_type. Must be one of: ${VALID_DEVICE_TYPES.join(", ")}`,
+            `Invalid device_type. Must be one of: ${
+              VALID_DEVICE_TYPES.join(", ")
+            }`,
             400,
           );
         }
@@ -135,7 +142,9 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
 
         if (Object.keys(sanitized).length === 0) {
           return errorResponse(
-            `No valid settings fields. Allowed: ${ALLOWED_SETTINGS_FIELDS.join(", ")}`,
+            `No valid settings fields. Allowed: ${
+              ALLOWED_SETTINGS_FIELDS.join(", ")
+            }`,
             400,
           );
         }
@@ -176,6 +185,42 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
         ).catch(() => {});
 
         return successResponse({ success: true, settings: data });
+      }
+
+      case "save_consents": {
+        const { consents, user_id } = body as {
+          consents?: unknown;
+          user_id?: string;
+        };
+
+        if (user_id && user_id !== userId) {
+          return errorResponse("Cannot write consents for another user", 403);
+        }
+        if (!Array.isArray(consents)) {
+          return errorResponse("Missing required field: consents", 400);
+        }
+
+        const { error } = await withSpan(
+          "db.rpc.save_user_consents_for_user",
+          "db.rpc",
+          () =>
+            supabase.rpc("save_user_consents_for_user", {
+              p_user_id: userId,
+              p_consents: consents,
+            }),
+        );
+
+        if (error) {
+          log({
+            function: FN,
+            level: "error",
+            message: "Failed to save consents",
+            metadata: { userId, detail: error },
+          });
+          return errorResponse("Failed to save consents", 500);
+        }
+
+        return successResponse({ success: true });
       }
 
       default:

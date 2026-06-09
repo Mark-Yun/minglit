@@ -28,13 +28,9 @@ class SocialRepository {
   /// NOTHING — idempotent, never throws 23505).
   /// When [active] is false, the interaction is deleted (idempotent).
   ///
-  /// Fix #1957: explicit intent eliminates TOCTOU races — callers pass the
-  /// desired final state, so concurrent calls with the same intent are safe.
-  /// Sets the interaction state for the current user with explicit intent.
-  ///
-  /// Delegates to the `set_social_interaction` Postgres function, which runs
-  /// in a single transaction with an advisory lock — eliminating TOCTOU races
-  /// and concurrent like/dislike cross-intent races.
+  /// Delegates to the `user-manage-social` EF, which calls a service-only
+  /// Postgres function with an advisory lock — eliminating TOCTOU races and
+  /// concurrent like/dislike cross-intent races.
   ///
   /// Fix #1957: explicit intent + atomic server-side operation.
   Future<void> setInteraction({
@@ -50,17 +46,17 @@ class SocialRepository {
     Log.d('setInteraction | type: $interactionType');
 
     try {
-      // Fix #1957: single RPC call — atomic transaction + advisory lock prevents
-      // concurrent cross-intent (like vs dislike) races from both landing.
-      await _supabase.rpc<dynamic>(
-        'set_social_interaction',
-        params: {
-          'p_target_id': targetId,
-          'p_target_type': targetType.name,
-          'p_interaction_type': interactionType.name,
-          'p_active': active,
+      final response = await _supabase.functions.invoke(
+        _efSocial,
+        body: {
+          'action': 'set_interaction',
+          'target_id': targetId,
+          'target_type': targetType.name,
+          'interaction_type': interactionType.name,
+          'active': active,
         },
       );
+      _ensureSuccess(response);
     } on Object catch (e, st) {
       Log.e('❌ [SocialRepo] setInteraction Error', e, st);
       rethrow;
