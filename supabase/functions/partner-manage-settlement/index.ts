@@ -85,6 +85,39 @@ export const handler = async (
     const { action, body } = result;
     if (!action) return errorResponse("Missing action", 400);
 
+    // ─── retry_payout ───
+    if (action === "retry_payout") {
+      const payoutId = typeof body.payout_id === "string"
+        ? body.payout_id.trim()
+        : "";
+      if (!payoutId) {
+        return errorResponse("Missing payout_id", 400);
+      }
+
+      const partnerId = typeof body.partner_id === "string"
+        ? body.partner_id.trim()
+        : "";
+      if (!partnerId) {
+        return errorResponse("Missing partner_id", 400);
+      }
+
+      const { data, error } = await supabase.rpc(
+        "request_retry_payout_for_actor",
+        {
+          p_actor_user_id: userId,
+          p_payout_id: payoutId,
+          p_partner_id: partnerId,
+        },
+      );
+
+      if (error) {
+        const status = error.message.includes("unauthorized") ? 403 : 500;
+        return errorResponse(error.message, status);
+      }
+
+      return successResponse(data as Record<string, unknown>);
+    }
+
     // ─── upsert_bank_account ───
     if (action === "upsert_bank_account") {
       const partnerId = typeof body.partner_id === "string"

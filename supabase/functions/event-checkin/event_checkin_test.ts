@@ -74,11 +74,18 @@ function participantMock(overrides = {}) {
 // ──────────────────────────────────────────────
 
 Deno.test({
-  name: "event-checkin - returns 200 and checks in participant with valid QR signature",
+  name:
+    "event-checkin - returns 200 and checks in participant with valid QR signature",
   fn: async () => {
     const { privateKey, publicKeyJwk } = await generateTestKeys();
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-    const signature = await signToken(privateKey, "ticket-1", "evt-1", "user-1", expiresAt);
+    const signature = await signToken(
+      privateKey,
+      "ticket-1",
+      "evt-1",
+      "user-1",
+      expiresAt,
+    );
 
     const ENV = {
       ...BASE_ENV,
@@ -91,23 +98,35 @@ Deno.test({
         handler: () => jsonResponse({ id: "user-1", email: "test@test.com" }),
       },
       {
-        matcher: (req: Request) => req.url.includes("/rest/v1/event_participants") && req.method === "GET",
+        matcher: (req: Request) =>
+          req.url.includes("/rest/v1/event_participants") &&
+          req.method === "GET",
         handler: () => jsonResponse(participantMock()),
       },
       {
-        matcher: (req: Request) => req.url.includes("/rest/v1/events") && !req.url.includes("event_participants") && req.method === "GET",
+        matcher: (req: Request) =>
+          req.url.includes("/rest/v1/events") &&
+          !req.url.includes("event_participants") && req.method === "GET",
         handler: () => jsonResponse({ id: "evt-1", status: "active" }),
       },
       {
-        matcher: (req: Request) => req.url.includes("/rest/v1/event_participants") && req.method === "PATCH",
-        handler: () => new Response(null, { status: 204, headers: { "content-range": "0-0/1" } }),
+        matcher: (req: Request) =>
+          req.url.includes("/rest/v1/event_participants") &&
+          req.method === "PATCH",
+        handler: () =>
+          new Response(null, {
+            status: 204,
+            headers: { "content-range": "0-0/1" },
+          }),
       },
     ]);
 
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
-          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const handler = await captureServeHandler(
+            new URL("./index.ts", import.meta.url),
+          );
           const response = await handler(
             authenticatedJsonRequest(BASE_URL, {
               event_id: "evt-1",
@@ -140,13 +159,18 @@ Deno.test({
     await withEnv(BASE_ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
-          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const handler = await captureServeHandler(
+            new URL("./index.ts", import.meta.url),
+          );
           const response = await handler(
             authenticatedJsonRequest(BASE_URL, { event_id: "evt-1" }),
           );
           assertEquals(response.status, 400);
           const body = await readJson(response);
-          assertEquals(body.error, "Missing required parameters: event_id, participant_id");
+          assertEquals(
+            body.error,
+            "Missing required parameters: event_id, participant_id",
+          );
         });
       });
     });
@@ -166,7 +190,9 @@ Deno.test({
     await withEnv(BASE_ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
-          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const handler = await captureServeHandler(
+            new URL("./index.ts", import.meta.url),
+          );
           const response = await handler(
             authenticatedJsonRequest(BASE_URL, {
               event_id: "evt-1",
@@ -175,7 +201,10 @@ Deno.test({
           );
           assertEquals(response.status, 400);
           const body = await readJson(response);
-          assertEquals(body.error, "Missing required parameters: signature, expires_at");
+          assertEquals(
+            body.error,
+            "Missing required parameters: signature, expires_at",
+          );
         });
       });
     });
@@ -197,7 +226,9 @@ Deno.test({
     await withEnv(BASE_ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
-          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const handler = await captureServeHandler(
+            new URL("./index.ts", import.meta.url),
+          );
           const response = await handler(
             authenticatedJsonRequest(BASE_URL, {
               event_id: "evt-1",
@@ -234,7 +265,9 @@ Deno.test({
     await withEnv(BASE_ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
-          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const handler = await captureServeHandler(
+            new URL("./index.ts", import.meta.url),
+          );
           const response = await handler(
             authenticatedJsonRequest(BASE_URL, {
               event_id: "evt-1",
@@ -260,7 +293,8 @@ Deno.test({
     const { fetchMock } = createFetchMock([
       {
         matcher: "/auth/v1/user",
-        handler: () => jsonResponse({ id: "other-user", email: "other@test.com" }),
+        handler: () =>
+          jsonResponse({ id: "other-user", email: "other@test.com" }),
       },
       {
         matcher: "/rest/v1/event_participants",
@@ -271,7 +305,9 @@ Deno.test({
     await withEnv(BASE_ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
-          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const handler = await captureServeHandler(
+            new URL("./index.ts", import.meta.url),
+          );
           const response = await handler(
             authenticatedJsonRequest(BASE_URL, {
               event_id: "evt-1",
@@ -282,7 +318,10 @@ Deno.test({
           );
           assertEquals(response.status, 403);
           const body = await readJson(response);
-          assertEquals(body.error, "Forbidden: caller is not the participant's user");
+          assertEquals(
+            body.error,
+            "Forbidden: caller is not the participant's user",
+          );
         });
       });
     });
@@ -306,7 +345,9 @@ Deno.test({
         handler: () => jsonResponse({ id: "user-1", email: "test@test.com" }),
       },
       {
-        matcher: (req: Request) => req.url.includes("/rest/v1/event_participants") && req.method === "GET",
+        matcher: (req: Request) =>
+          req.url.includes("/rest/v1/event_participants") &&
+          req.method === "GET",
         handler: () => jsonResponse(participantMock()),
       },
     ]);
@@ -314,7 +355,9 @@ Deno.test({
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
-          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const handler = await captureServeHandler(
+            new URL("./index.ts", import.meta.url),
+          );
           const response = await handler(
             authenticatedJsonRequest(BASE_URL, {
               event_id: "evt-1",
@@ -337,7 +380,13 @@ Deno.test({
   fn: async () => {
     const { privateKey, publicKeyJwk } = await generateTestKeys();
     const expiresAt = new Date(Date.now() + 3600000).toISOString();
-    const signature = await signToken(privateKey, "ticket-1", "evt-1", "user-1", expiresAt);
+    const signature = await signToken(
+      privateKey,
+      "ticket-1",
+      "evt-1",
+      "user-1",
+      expiresAt,
+    );
 
     const ENV = {
       ...BASE_ENV,
@@ -350,11 +399,15 @@ Deno.test({
         handler: () => jsonResponse({ id: "user-1", email: "test@test.com" }),
       },
       {
-        matcher: (req: Request) => req.url.includes("/rest/v1/event_participants") && req.method === "GET",
+        matcher: (req: Request) =>
+          req.url.includes("/rest/v1/event_participants") &&
+          req.method === "GET",
         handler: () => jsonResponse(participantMock({ status: "checked_in" })),
       },
       {
-        matcher: (req: Request) => req.url.includes("/rest/v1/events") && !req.url.includes("event_participants") && req.method === "GET",
+        matcher: (req: Request) =>
+          req.url.includes("/rest/v1/events") &&
+          !req.url.includes("event_participants") && req.method === "GET",
         handler: () => jsonResponse({ id: "evt-1", status: "active" }),
       },
     ]);
@@ -362,7 +415,9 @@ Deno.test({
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
-          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const handler = await captureServeHandler(
+            new URL("./index.ts", import.meta.url),
+          );
           const response = await handler(
             authenticatedJsonRequest(BASE_URL, {
               event_id: "evt-1",
@@ -385,7 +440,13 @@ Deno.test({
   fn: async () => {
     const { privateKey, publicKeyJwk } = await generateTestKeys();
     const expiresAt = new Date(Date.now() + 3600000).toISOString();
-    const signature = await signToken(privateKey, "ticket-1", "evt-1", "user-1", expiresAt);
+    const signature = await signToken(
+      privateKey,
+      "ticket-1",
+      "evt-1",
+      "user-1",
+      expiresAt,
+    );
 
     const ENV = {
       ...BASE_ENV,
@@ -398,11 +459,15 @@ Deno.test({
         handler: () => jsonResponse({ id: "user-1", email: "test@test.com" }),
       },
       {
-        matcher: (req: Request) => req.url.includes("/rest/v1/event_participants") && req.method === "GET",
+        matcher: (req: Request) =>
+          req.url.includes("/rest/v1/event_participants") &&
+          req.method === "GET",
         handler: () => jsonResponse(participantMock({ status: "cancelled" })),
       },
       {
-        matcher: (req: Request) => req.url.includes("/rest/v1/events") && !req.url.includes("event_participants") && req.method === "GET",
+        matcher: (req: Request) =>
+          req.url.includes("/rest/v1/events") &&
+          !req.url.includes("event_participants") && req.method === "GET",
         handler: () => jsonResponse({ id: "evt-1", status: "active" }),
       },
     ]);
@@ -410,7 +475,9 @@ Deno.test({
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
-          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const handler = await captureServeHandler(
+            new URL("./index.ts", import.meta.url),
+          );
           const response = await handler(
             authenticatedJsonRequest(BASE_URL, {
               event_id: "evt-1",
@@ -421,7 +488,10 @@ Deno.test({
           );
           assertEquals(response.status, 400);
           const body = await readJson(response);
-          assertEquals(body.error, "Cannot check in participant with status 'cancelled'");
+          assertEquals(
+            body.error,
+            "Cannot check in participant with status 'cancelled'",
+          );
         });
       });
     });
@@ -436,11 +506,16 @@ Deno.test({
     await withEnv(BASE_ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
-          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+          const handler = await captureServeHandler(
+            new URL("./index.ts", import.meta.url),
+          );
           const request = new Request(BASE_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ event_id: "evt-1", participant_id: "part-1" }),
+            body: JSON.stringify({
+              event_id: "evt-1",
+              participant_id: "part-1",
+            }),
           });
 
           const response = await handler(request);
@@ -459,12 +534,131 @@ Deno.test({
     await withEnv(BASE_ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
         await withNoIntervals(async () => {
-          const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
-          const response = await handler(new Request(BASE_URL, { method: "OPTIONS" }));
+          const handler = await captureServeHandler(
+            new URL("./index.ts", import.meta.url),
+          );
+          const response = await handler(
+            new Request(BASE_URL, { method: "OPTIONS" }),
+          );
           assertEquals(response.status, 200);
-          assertEquals(response.headers.get("Access-Control-Allow-Origin"), "*");
-          assertEquals(response.headers.get("Access-Control-Allow-Methods"), "GET, POST, OPTIONS");
-          assertEquals(response.headers.has("Access-Control-Allow-Headers"), true);
+          assertEquals(
+            response.headers.get("Access-Control-Allow-Origin"),
+            "*",
+          );
+          assertEquals(
+            response.headers.get("Access-Control-Allow-Methods"),
+            "GET, POST, OPTIONS",
+          );
+          assertEquals(
+            response.headers.has("Access-Control-Allow-Headers"),
+            true,
+          );
+        });
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "event-checkin - manual_checkin calls actor-aware RPC",
+  fn: async () => {
+    let rpcBody: Record<string, unknown> | null = null;
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: "/auth/v1/user",
+        handler: () => jsonResponse({ id: "staff-1", email: "staff@test.com" }),
+      },
+      {
+        matcher: "/rest/v1/rpc/process_manual_checkin_for_actor",
+        handler: async (req) => {
+          rpcBody = await req.json();
+          return jsonResponse("success");
+        },
+      },
+    ]);
+
+    await withEnv(BASE_ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(
+            new URL("./index.ts", import.meta.url),
+          );
+          const response = await handler(
+            authenticatedJsonRequest(BASE_URL, {
+              action: "manual_checkin",
+              ticket_id: "ticket-1",
+              event_id: "evt-1",
+            }),
+          );
+          assertEquals(response.status, 200);
+          const body = await readJson(response);
+          assertEquals(body.result, "success");
+          assertEquals(rpcBody?.p_actor_user_id, "staff-1");
+          assertEquals(rpcBody?.p_ticket_id, "ticket-1");
+          assertEquals(rpcBody?.p_event_id, "evt-1");
+        });
+      });
+    });
+  },
+});
+
+Deno.test({
+  name:
+    "event-checkin - qr_checkin verifies signature and calls actor-aware RPC",
+  fn: async () => {
+    const { privateKey, publicKeyJwk } = await generateTestKeys();
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    const signature = await signToken(
+      privateKey,
+      "ticket-1",
+      "evt-1",
+      "ticket-user-1",
+      expiresAt,
+    );
+    let rpcBody: Record<string, unknown> | null = null;
+
+    const ENV = {
+      ...BASE_ENV,
+      TICKET_SIGNING_PUBLIC_KEY_JWK: JSON.stringify(publicKeyJwk),
+    };
+
+    const { fetchMock } = createFetchMock([
+      {
+        matcher: "/auth/v1/user",
+        handler: () => jsonResponse({ id: "staff-1", email: "staff@test.com" }),
+      },
+      {
+        matcher: "/rest/v1/rpc/process_qr_checkin_for_actor",
+        handler: async (req) => {
+          rpcBody = await req.json();
+          return jsonResponse("success");
+        },
+      },
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        await withNoIntervals(async () => {
+          const handler = await captureServeHandler(
+            new URL("./index.ts", import.meta.url),
+          );
+          const response = await handler(
+            authenticatedJsonRequest(BASE_URL, {
+              action: "qr_checkin",
+              ticket_id: "ticket-1",
+              event_id: "evt-1",
+              user_id: "ticket-user-1",
+              signature,
+              expires_at: expiresAt,
+            }),
+          );
+          assertEquals(response.status, 200);
+          const body = await readJson(response);
+          assertEquals(body.result, "success");
+          assertEquals(rpcBody?.p_actor_user_id, "staff-1");
+          assertEquals(rpcBody?.p_ticket_id, "ticket-1");
+          assertEquals(rpcBody?.p_event_id, "evt-1");
+          assertEquals(rpcBody?.p_user_id, "ticket-user-1");
         });
       });
     });

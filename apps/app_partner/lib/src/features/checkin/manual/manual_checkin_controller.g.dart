@@ -11,7 +11,7 @@ part of 'manual_checkin_controller.dart';
 /// 이벤트 참가자 목록 + 수동 체크인 처리 컨트롤러.
 ///
 /// - 초기 로드: `get_event_participants_for_checkin` RPC
-/// - 체크인 처리: `process_manual_checkin` RPC + optimistic 업데이트
+/// - 체크인 처리: `event-checkin` EF + optimistic 업데이트
 
 @ProviderFor(ManualCheckinController)
 const manualCheckinControllerProvider = ManualCheckinControllerFamily._();
@@ -19,7 +19,7 @@ const manualCheckinControllerProvider = ManualCheckinControllerFamily._();
 /// 이벤트 참가자 목록 + 수동 체크인 처리 컨트롤러.
 ///
 /// - 초기 로드: `get_event_participants_for_checkin` RPC
-/// - 체크인 처리: `process_manual_checkin` RPC + optimistic 업데이트
+/// - 체크인 처리: `event-checkin` EF + optimistic 업데이트
 final class ManualCheckinControllerProvider
     extends
         $AsyncNotifierProvider<
@@ -29,7 +29,7 @@ final class ManualCheckinControllerProvider
   /// 이벤트 참가자 목록 + 수동 체크인 처리 컨트롤러.
   ///
   /// - 초기 로드: `get_event_participants_for_checkin` RPC
-  /// - 체크인 처리: `process_manual_checkin` RPC + optimistic 업데이트
+  /// - 체크인 처리: `event-checkin` EF + optimistic 업데이트
   const ManualCheckinControllerProvider._({
     required ManualCheckinControllerFamily super.from,
     required String super.argument,
@@ -73,7 +73,7 @@ String _$manualCheckinControllerHash() =>
 /// 이벤트 참가자 목록 + 수동 체크인 처리 컨트롤러.
 ///
 /// - 초기 로드: `get_event_participants_for_checkin` RPC
-/// - 체크인 처리: `process_manual_checkin` RPC + optimistic 업데이트
+/// - 체크인 처리: `event-checkin` EF + optimistic 업데이트
 
 final class ManualCheckinControllerFamily extends $Family
     with
@@ -96,7 +96,7 @@ final class ManualCheckinControllerFamily extends $Family
   /// 이벤트 참가자 목록 + 수동 체크인 처리 컨트롤러.
   ///
   /// - 초기 로드: `get_event_participants_for_checkin` RPC
-  /// - 체크인 처리: `process_manual_checkin` RPC + optimistic 업데이트
+  /// - 체크인 처리: `event-checkin` EF + optimistic 업데이트
 
   ManualCheckinControllerProvider call(String eventId) =>
       ManualCheckinControllerProvider._(argument: eventId, from: this);
@@ -108,7 +108,7 @@ final class ManualCheckinControllerFamily extends $Family
 /// 이벤트 참가자 목록 + 수동 체크인 처리 컨트롤러.
 ///
 /// - 초기 로드: `get_event_participants_for_checkin` RPC
-/// - 체크인 처리: `process_manual_checkin` RPC + optimistic 업데이트
+/// - 체크인 처리: `event-checkin` EF + optimistic 업데이트
 
 abstract class _$ManualCheckinController
     extends $AsyncNotifier<List<CheckinParticipant>> {

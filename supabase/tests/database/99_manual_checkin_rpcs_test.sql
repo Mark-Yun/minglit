@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(11);
+SELECT plan(12);
 
 -- ============================================================
 -- Setup: service role로 파트너/이벤트/티켓/참가자 데이터 구성
@@ -12,6 +12,7 @@ SELECT tests.create_supabase_user('mc_no_perm');
 SELECT tests.create_supabase_user('mc_user_a');
 SELECT tests.create_supabase_user('mc_user_b');
 SELECT tests.create_supabase_user('mc_user_c');
+SELECT tests.create_supabase_user('mc_admin');
 
 DO $$
 DECLARE
@@ -21,6 +22,7 @@ DECLARE
   v_ticket_id        uuid;
   v_ticket_b_id      uuid;
   v_ticket_c_id      uuid;
+  v_ticket_admin_id  uuid;
   v_cancelled_evt_id uuid;
   v_ticket_d_id      uuid;
 BEGIN
@@ -29,6 +31,9 @@ BEGIN
 
   INSERT INTO public.partner_member_permissions (partner_id, user_id, role, permissions)
   VALUES (v_partner_id, tests.get_supabase_uid('mc_staff'), 'staff', ARRAY['PARTY_MANAGE']::text[]);
+
+  INSERT INTO public.app_roles (user_id, role)
+  VALUES (tests.get_supabase_uid('mc_admin'), 'super_admin');
 
   INSERT INTO public.parties (partner_id, title, min_confirmed_count, max_participants)
   VALUES (v_partner_id, 'Manual Checkin Party', 0, 20)
@@ -51,6 +56,9 @@ BEGIN
   INSERT INTO public.tickets (event_id, name, quantity, price)
   VALUES (v_event_id, 'Ticket C', 10, 0) RETURNING id INTO v_ticket_c_id;
 
+  INSERT INTO public.tickets (event_id, name, quantity, price)
+  VALUES (v_event_id, 'Ticket Admin', 10, 0) RETURNING id INTO v_ticket_admin_id;
+
   -- mc_user_b: already checked_in
   INSERT INTO public.event_participants (event_id, ticket_id, user_id, status, ticket_code, display_name, checked_in_at)
   VALUES (v_event_id, v_ticket_b_id, tests.get_supabase_uid('mc_user_b'), 'checked_in', 'MC0002', 'User B', now());
@@ -58,6 +66,9 @@ BEGIN
   -- mc_user_c: no_show (체크인 불가 상태)
   INSERT INTO public.event_participants (event_id, ticket_id, user_id, status, ticket_code, display_name)
   VALUES (v_event_id, v_ticket_c_id, tests.get_supabase_uid('mc_user_c'), 'no_show', 'MC0003', 'User C');
+
+  INSERT INTO public.event_participants (event_id, ticket_id, user_id, status, ticket_code, display_name)
+  VALUES (v_event_id, v_ticket_admin_id, tests.get_supabase_uid('mc_admin'), 'ticket_issued', 'MC0005', 'Admin User');
 
   -- cancelled 이벤트 (이벤트 상태 게이트 테스트용)
   INSERT INTO public.events (party_id, start_time, end_time, min_confirmed_count, max_participants, status)
@@ -74,6 +85,7 @@ BEGIN
   PERFORM set_config('tests.mc_ticket_id',         v_ticket_id::text,        true);
   PERFORM set_config('tests.mc_ticket_b_id',       v_ticket_b_id::text,      true);
   PERFORM set_config('tests.mc_ticket_c_id',       v_ticket_c_id::text,      true);
+  PERFORM set_config('tests.mc_ticket_admin_id',   v_ticket_admin_id::text,  true);
   PERFORM set_config('tests.mc_cancelled_evt_id',  v_cancelled_evt_id::text, true);
   PERFORM set_config('tests.mc_ticket_d_id',       v_ticket_d_id::text,      true);
 END $$;
@@ -115,8 +127,8 @@ SELECT is(
       current_setting('tests.mc_event_id')::uuid
     )
   )),
-  2,
-  'get_event_participants_for_checkin: 참가자 2명 반환 (no_show 제외)'
+  3,
+  'get_event_participants_for_checkin: 참가자 3명 반환 (no_show 제외)'
 );
 
 -- ============================================================
@@ -201,6 +213,16 @@ SELECT is(
      AND event_id  = current_setting('tests.mc_event_id')::uuid),
   'checked_in',
   'process_manual_checkin: 체크인 후 status = checked_in'
+);
+
+SELECT is(
+  public.process_manual_checkin_for_actor(
+    tests.get_supabase_uid('mc_admin'),
+    current_setting('tests.mc_ticket_admin_id')::uuid,
+    current_setting('tests.mc_event_id')::uuid
+  ),
+  'success',
+  'process_manual_checkin_for_actor: super_admin actor can check in without partner membership'
 );
 
 -- ============================================================

@@ -90,7 +90,7 @@
     "user-manage-social": {
       "callers": ["user"],
       "envs": ["dev", "production"],
-      "description": "소셜 인터랙션 관리 (좋아요, 차단, 신고)"
+      "description": "소셜 인터랙션 관리 (명시적 set, 좋아요, 차단, 신고)"
     },
     "user-get-ticket-token": {
       "callers": ["user"],
@@ -129,7 +129,7 @@
     "user-manage-settings": {
       "callers": ["user"],
       "envs": ["dev", "production"],
-      "description": "FCM 토큰 및 사용자 설정 관리 — upsert/delete_token, update_settings (Fix #2040)"
+      "description": "FCM 토큰, 사용자 설정, 동의 저장 관리 — upsert/delete_token, update_settings, save_consents"
     },
     "partner-reject-application": {
       "callers": ["user"],
@@ -154,7 +154,7 @@
     "event-checkin": {
       "callers": ["user"],
       "envs": ["dev", "production"],
-      "description": "이벤트 체크인 처리"
+      "description": "이벤트 체크인 처리 — QR/수동 체크인 EF gateway"
     },
     "commit-match-likes": {
       "callers": ["user"],
@@ -179,7 +179,7 @@
     "partner-manage-settlement": {
       "callers": ["user"],
       "envs": ["dev", "production"],
-      "description": "파트너 정산 관리"
+      "description": "파트너 정산 관리 — 은행 계좌 관리 및 지급 재시도"
     },
     "apply-event": {
       "callers": ["user"],

@@ -27,13 +27,82 @@ function authRoute() {
 }
 
 // ─────────────────────────────────────────
+// set_interaction
+// ─────────────────────────────────────────
+
+Deno.test({
+  name: "set_interaction - calls actor-aware RPC",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    let rpcBody: Record<string, unknown> | null = null;
+    const { fetchMock } = createFetchMock([
+      authRoute(),
+      {
+        matcher: "/rest/v1/rpc/set_social_interaction_for_user",
+        handler: async (req) => {
+          rpcBody = await req.json();
+          return jsonResponse(null);
+        },
+      },
+    ]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(authenticatedJsonRequest("http://localhost", {
+          action: "set_interaction",
+          target_id: TEST_TARGET_ID,
+          target_type: "partner",
+          interaction_type: "bookmark",
+          active: true,
+        }));
+        assertEquals(res.status, 200);
+        const body = await readJson(res);
+        assertEquals(body.success, true);
+        assertEquals(rpcBody?.p_user_id, TEST_USER_ID);
+        assertEquals(rpcBody?.p_target_id, TEST_TARGET_ID);
+        assertEquals(rpcBody?.p_target_type, "partner");
+        assertEquals(rpcBody?.p_interaction_type, "bookmark");
+        assertEquals(rpcBody?.p_active, true);
+      });
+    });
+  },
+});
+
+Deno.test({
+  name: "set_interaction - returns 400 when active is not boolean",
+  fn: async () => {
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
+    const { fetchMock } = createFetchMock([authRoute()]);
+
+    await withEnv(ENV, async () => {
+      await withMockedFetch(fetchMock, async () => {
+        const res = await handler(authenticatedJsonRequest("http://localhost", {
+          action: "set_interaction",
+          target_id: TEST_TARGET_ID,
+          target_type: "partner",
+          interaction_type: "bookmark",
+          active: "true",
+        }));
+        assertEquals(res.status, 400);
+      });
+    });
+  },
+});
+
+// ─────────────────────────────────────────
 // toggle
 // ─────────────────────────────────────────
 
 Deno.test({
   name: "toggle like - adds interaction when not exists",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
 
     const { fetchMock, calls } = createFetchMock([
       authRoute(),
@@ -42,7 +111,10 @@ Deno.test({
       // select existing → null
       { matcher: "social_interactions?", handler: () => jsonResponse(null) },
       // insert
-      { matcher: "social_interactions", handler: () => jsonResponse({}, { status: 201 }) },
+      {
+        matcher: "social_interactions",
+        handler: () => jsonResponse({}, { status: 201 }),
+      },
     ]);
 
     await withEnv(ENV, async () => {
@@ -64,7 +136,9 @@ Deno.test({
 Deno.test({
   name: "toggle - returns 400 for invalid interaction_type",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -84,7 +158,9 @@ Deno.test({
 Deno.test({
   name: "toggle - returns 400 for invalid target_type",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -104,7 +180,9 @@ Deno.test({
 Deno.test({
   name: "toggle - returns 400 for missing fields",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -127,10 +205,15 @@ Deno.test({
 Deno.test({
   name: "block - succeeds",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
-      { matcher: "social_interactions", handler: () => jsonResponse({}, { status: 201 }) },
+      {
+        matcher: "social_interactions",
+        handler: () => jsonResponse({}, { status: 201 }),
+      },
     ]);
 
     await withEnv(ENV, async () => {
@@ -150,7 +233,9 @@ Deno.test({
 Deno.test({
   name: "block - returns 400 when blocking self",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -168,7 +253,9 @@ Deno.test({
 Deno.test({
   name: "unblock - succeeds",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       { matcher: "social_interactions?", handler: () => jsonResponse([]) },
@@ -195,15 +282,26 @@ Deno.test({
 Deno.test({
   name: "report - succeeds with block + report + details",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
       authRoute(),
       // block upsert
-      { matcher: "social_interactions", handler: () => jsonResponse({}, { status: 201 }) },
+      {
+        matcher: "social_interactions",
+        handler: () => jsonResponse({}, { status: 201 }),
+      },
       // report upsert
-      { matcher: "social_interactions", handler: () => jsonResponse({}, { status: 201 }) },
+      {
+        matcher: "social_interactions",
+        handler: () => jsonResponse({}, { status: 201 }),
+      },
       // report_details insert
-      { matcher: "report_details", handler: () => jsonResponse({}, { status: 201 }) },
+      {
+        matcher: "report_details",
+        handler: () => jsonResponse({}, { status: 201 }),
+      },
     ]);
 
     await withEnv(ENV, async () => {
@@ -225,7 +323,9 @@ Deno.test({
 Deno.test({
   name: "report - returns 400 for invalid reason",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -244,7 +344,9 @@ Deno.test({
 Deno.test({
   name: "report - returns 400 when reporting self",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -267,18 +369,25 @@ Deno.test({
 Deno.test({
   name: "returns 401 without auth",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([
-      { matcher: "/auth/v1/user", handler: () => jsonResponse({ error: "invalid" }, { status: 401 }) },
+      {
+        matcher: "/auth/v1/user",
+        handler: () => jsonResponse({ error: "invalid" }, { status: 401 }),
+      },
     ]);
 
     await withEnv(ENV, async () => {
       await withMockedFetch(fetchMock, async () => {
-        const res = await handler(new Request("http://localhost", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "block", target_id: "x" }),
-        }));
+        const res = await handler(
+          new Request("http://localhost", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "block", target_id: "x" }),
+          }),
+        );
         assertEquals(res.status, 401);
       });
     });
@@ -288,7 +397,9 @@ Deno.test({
 Deno.test({
   name: "returns 400 for unknown action",
   fn: async () => {
-    const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+    const handler = await captureServeHandler(
+      new URL("./index.ts", import.meta.url),
+    );
     const { fetchMock } = createFetchMock([authRoute()]);
 
     await withEnv(ENV, async () => {
@@ -301,4 +412,3 @@ Deno.test({
     });
   },
 });
-
