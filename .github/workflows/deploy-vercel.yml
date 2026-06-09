@@ -52,10 +52,16 @@ jobs:
       working-directory: ./apps/landing_user
       dev-domain-alias: dev.minglit.com
       deploy-branch: ${{ inputs.deploy_branch || github.ref_name }}
+      require-nextjs-supabase-env: true
     secrets:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_LANDING_USER }}
+      SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
+      SUPABASE_DEV_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+      SUPABASE_MAIN_URL: ${{ secrets.SUPABASE_MAIN_URL }}
+      SUPABASE_MAIN_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
+      STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
 
   deploy-landing_partner:
     uses: ./.github/workflows/shared-vercel-deploy.yml
@@ -64,10 +70,16 @@ jobs:
       working-directory: ./apps/landing_partner
       dev-domain-alias: dev.partner.minglit.com
       deploy-branch: ${{ inputs.deploy_branch || github.ref_name }}
+      require-nextjs-supabase-env: true
     secrets:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_LANDING_PARTNER }}
+      SUPABASE_DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
+      SUPABASE_DEV_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+      SUPABASE_MAIN_URL: ${{ secrets.SUPABASE_MAIN_URL }}
+      SUPABASE_MAIN_KEY: ${{ secrets.SUPABASE_MAIN_PUBLISHABLE_KEY }}
+      STATSIG_CLIENT_KEY: ${{ secrets.STATSIG_CLIENT_KEY }}
 
   deploy-app_partner:
     uses: ./.github/workflows/shared-vercel-deploy.yml
