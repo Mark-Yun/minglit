@@ -13,7 +13,7 @@ const EVENT_DURATION_MS = 2 * 60 * 60 * 1000;
 // - 7일 이상 이벤트(약 절반)는 남겨, refund 액션(event start ≥ 7일, Fix #2131)의
 //   적격성을 유지한다. 하한을 1일이 아닌 2일로 두는 것도 같은 이유.
 const MIN_START_DELAY_DAYS = 2;
-const START_DELAY_WINDOW_DAYS = 12;
+const START_DELAY_WINDOW_DAYS = 13;
 
 type PartnerParty = {
   id: string;

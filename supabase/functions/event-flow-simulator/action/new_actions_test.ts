@@ -12,9 +12,46 @@ import { blockAction } from "./block.ts";
 import { partnerApproveAction } from "./partner_approve.ts";
 import { partnerRejectAction } from "./partner_reject.ts";
 import { partnerCreateEventAction } from "./partner_create_event.ts";
-import { createPRNG } from "../core/types.ts";
+import { createPRNG, type PRNG } from "../core/types.ts";
 
 const rng = createPRNG(1);
+const DAY_MS = 86_400_000;
+
+function sequenceRng(values: number[]): PRNG {
+  let index = 0;
+  return {
+    next() {
+      return values[index++] ?? values.at(-1) ?? 0;
+    },
+    split() {
+      return sequenceRng(values.slice(index));
+    },
+  };
+}
+
+function withFixedNow<T>(isoNow: string, fn: () => T): T {
+  const fixedNow = new Date(isoNow).getTime();
+  const originalNow = Date.now;
+  Date.now = () => fixedNow;
+  try {
+    return fn();
+  } finally {
+    Date.now = originalNow;
+  }
+}
+
+function createEventStartDelayDays(rng: PRNG): number {
+  const fixedNow = new Date("2026-06-08T00:00:00.000Z").getTime();
+  return withFixedNow("2026-06-08T00:00:00.000Z", () => {
+    const payload = partnerCreateEventAction.buildPayload({
+      myParties: [{ id: "party1", status: "active" }],
+      myEvents: [],
+    }, rng);
+    const startTime = (payload.event as Record<string, unknown>)
+      .start_time as string;
+    return (new Date(startTime).getTime() - fixedNow) / DAY_MS;
+  });
+}
 
 // ============================================================
 // Identity 가드 — type / role / ef wiring
@@ -241,6 +278,17 @@ Deno.test({
       Error,
       "without an existing party",
     );
+  },
+});
+
+Deno.test({
+  name:
+    "partnerCreateEventAction.buildPayload - start horizon crosses refund 7-day cutoff",
+  fn: () => {
+    // First rng value selects the party; second value selects start delay.
+    assertEquals(createEventStartDelayDays(sequenceRng([0, 0])), 2);
+    assertEquals(createEventStartDelayDays(sequenceRng([0, 0.39])), 7);
+    assertEquals(createEventStartDelayDays(sequenceRng([0, 0.999999])), 14);
   },
 });
 
