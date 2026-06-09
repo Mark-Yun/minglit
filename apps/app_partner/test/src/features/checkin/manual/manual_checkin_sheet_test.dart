@@ -178,7 +178,7 @@ void main() {
       expect(btn.onPressed, isNull);
     });
 
-    // Fix #1947: rapid taps must not fire duplicate process_manual_checkin RPC
+    // Fix #1947: rapid taps must not fire duplicate event-checkin EF calls
     testWidgets('체크인 버튼 탭 중 스피너 표시 — 중복 탭 차단', (tester) async {
       final completer = Completer<void>();
       late _SlowController controller;

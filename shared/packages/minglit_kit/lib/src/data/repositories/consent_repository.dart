@@ -14,7 +14,7 @@ ConsentRepository consentRepository(Ref ref) {
 /// Repository for user consent data from Supabase.
 ///
 /// Reads use direct table queries (SELECT-only RLS).
-/// Writes use the `save_user_consents` SECURITY DEFINER RPC.
+/// Writes use the `user-manage-settings` Edge Function.
 class ConsentRepository {
   /// Creates a [ConsentRepository] with the given Supabase client.
   const ConsentRepository(this._supabase);
@@ -35,16 +35,27 @@ class ConsentRepository {
         .toList();
   }
 
-  /// Saves consents via the `save_user_consents` RPC.
+  /// Saves consents via the `user-manage-settings` Edge Function.
   ///
   /// Each [ConsentInput] is upserted: existing rows are updated,
   /// new rows are inserted. Uses ON CONFLICT (user_id, consent_key).
   Future<void> saveConsents(String userId, List<ConsentInput> consents) async {
     final payload = consents.map((c) => c.toJson()).toList();
-    await _supabase.rpc<void>(
-      'save_user_consents',
-      params: {'p_user_id': userId, 'p_consents': payload},
+    final response = await _supabase.functions.invoke(
+      'user-manage-settings',
+      body: {
+        'action': 'save_consents',
+        'user_id': userId,
+        'consents': payload,
+      },
     );
+    if (response.status != 200) {
+      throw FunctionException(
+        status: response.status,
+        details: response.data,
+        reasonPhrase: 'Edge function error',
+      );
+    }
   }
 
   /// Checks whether the user has all required consents.

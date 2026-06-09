@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(9);
+SELECT plan(10);
 
 -- ============================================================
 -- Setup: service role로 파트너/이벤트/참가자 데이터 구성
@@ -9,6 +9,7 @@ SELECT tests.authenticate_as_service_role();
 
 SELECT tests.create_supabase_user('checkin_staff');
 SELECT tests.create_supabase_user('checkin_no_perm');
+SELECT tests.create_supabase_user('checkin_admin');
 
 DO $$
 DECLARE
@@ -30,6 +31,9 @@ BEGIN
     ARRAY['PARTY_MANAGE']::text[]
   );
 
+  INSERT INTO public.app_roles (user_id, role)
+  VALUES (tests.get_supabase_uid('checkin_admin'), 'super_admin');
+
   INSERT INTO public.parties (partner_id, title, min_confirmed_count, max_participants)
   VALUES (v_partner_id, 'Checkin Test Party', 0, 10)
   RETURNING id INTO v_party_id;
@@ -46,7 +50,8 @@ BEGIN
   INSERT INTO public.event_participants (event_id, ticket_id, user_id, status, ticket_code, display_name)
   VALUES
     (v_event_id, v_ticket_id, tests.get_supabase_uid('checkin_staff'),   'ticket_issued', 'CODE0001', 'Staff User'),
-    (v_event_id, v_ticket_id, tests.get_supabase_uid('checkin_no_perm'), 'checked_in',    'CODE0002', 'No Perm User');
+    (v_event_id, v_ticket_id, tests.get_supabase_uid('checkin_no_perm'), 'checked_in',    'CODE0002', 'No Perm User'),
+    (v_event_id, v_ticket_id, tests.get_supabase_uid('checkin_admin'),   'ticket_issued', 'CODE0003', 'Admin User');
 
   PERFORM set_config('tests.checkin_event_id',  v_event_id::text,  true);
   PERFORM set_config('tests.checkin_ticket_id', v_ticket_id::text, true);
@@ -132,6 +137,17 @@ SELECT isnt(
   'process_qr_checkin: success 후 checked_in_at 설정됨'
 );
 
+SELECT is(
+  public.process_qr_checkin_for_actor(
+    tests.get_supabase_uid('checkin_admin'),
+    current_setting('tests.checkin_ticket_id')::uuid,
+    current_setting('tests.checkin_event_id')::uuid,
+    tests.get_supabase_uid('checkin_admin')
+  ),
+  'success',
+  'process_qr_checkin_for_actor: super_admin actor can check in without partner membership'
+);
+
 -- ============================================================
 -- Test 7: get_event_checkin_stats — PARTY_MANAGE 없는 유저 → permission denied
 -- ============================================================
@@ -161,15 +177,15 @@ SELECT throws_like(
 
 -- ============================================================
 -- Test 9: get_event_checkin_stats — 정상 케이스 → total/checked_in 집계
--- (Test 4 이후: checkin_staff=checked_in, checkin_no_perm=checked_in → total=2, checked_in=2)
+-- (Test 4 이후: checkin_staff/checkin_no_perm/checkin_admin 모두 checked_in)
 -- ============================================================
 
 SELECT is(
   public.get_event_checkin_stats(
     current_setting('tests.checkin_event_id')::uuid
   ),
-  jsonb_build_object('total', 2, 'checked_in', 2),
-  'get_event_checkin_stats: total=2, checked_in=2 집계 정확'
+  jsonb_build_object('total', 3, 'checked_in', 3),
+  'get_event_checkin_stats: total=3, checked_in=3 집계 정확'
 );
 
 SELECT * FROM finish();

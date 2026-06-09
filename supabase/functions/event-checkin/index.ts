@@ -1,15 +1,35 @@
 // event-checkin/index.ts — Check-in a participant for an event
 // Fix #2185 (Batch 6): migrate to minglitEdgeFunction wrapper — auth via manifest (user caller)
 
-import { minglitEdgeFunction, type EFContext } from "../_shared/edge_function.ts";
 import {
-  errorResponse,
-  successResponse,
-} from "../_shared/response_utils.ts";
+  type EFContext,
+  minglitEdgeFunction,
+} from "../_shared/edge_function.ts";
+import { errorResponse, successResponse } from "../_shared/response_utils.ts";
 import { parseJsonBody } from "../_shared/request_utils.ts";
 import { log } from "../_shared/logger.ts";
 
 const FN = "event-checkin";
+
+function rpcErrorStatus(message: string): number {
+  if (
+    message.includes("permission denied") || message.includes("unauthorized")
+  ) {
+    return 403;
+  }
+  return 500;
+}
+
+function requireString(
+  body: Record<string, unknown>,
+  key: string,
+): string | Response {
+  const value = body[key];
+  if (typeof value !== "string" || value.trim() === "") {
+    return errorResponse(`Missing required parameter: ${key}`, 400);
+  }
+  return value.trim();
+}
 
 // Fix #1491: base64url 디코딩 — Ed25519 서명 바이트 복원
 function base64UrlDecode(str: string): Uint8Array {
@@ -24,20 +44,147 @@ function base64UrlDecode(str: string): Uint8Array {
   return bytes;
 }
 
-export const handler = async (req: Request, ctx: EFContext): Promise<Response> => {
+async function verifyQrSignature(
+  ticketId: string,
+  eventId: string,
+  ticketUserId: string,
+  expiresAt: string,
+  signature: string,
+): Promise<Response | null> {
+  const expiresAtMs = new Date(expiresAt).getTime();
+  if (isNaN(expiresAtMs) || expiresAtMs < Date.now()) {
+    return errorResponse("QR token expired", 400);
+  }
+
+  const publicKeyJwkStr = Deno.env.get("TICKET_SIGNING_PUBLIC_KEY_JWK");
+  if (!publicKeyJwkStr) {
+    log({
+      function: FN,
+      level: "error",
+      message: "TICKET_SIGNING_PUBLIC_KEY_JWK not configured",
+    });
+    return errorResponse("Ticket verification key not configured", 500);
+  }
+
+  try {
+    const publicKey = await crypto.subtle.importKey(
+      "jwk",
+      JSON.parse(publicKeyJwkStr),
+      { name: "Ed25519" },
+      false,
+      ["verify"],
+    );
+
+    const payload = `${ticketId}|${eventId}|${ticketUserId}|${expiresAt}`;
+    const message = new TextEncoder().encode(payload);
+    const sigBytes = base64UrlDecode(signature);
+
+    const valid = await crypto.subtle.verify(
+      "Ed25519",
+      publicKey,
+      sigBytes,
+      message,
+    );
+    if (!valid) {
+      log({
+        function: FN,
+        level: "warn",
+        message: "QR signature verification failed",
+        metadata: { event_id: eventId, ticket_id: ticketId },
+      });
+      return errorResponse("Invalid QR signature", 403);
+    }
+  } catch (e) {
+    log({
+      function: FN,
+      level: "error",
+      message: "Signature verification error",
+      metadata: { detail: String(e) },
+    });
+    return errorResponse("Signature verification failed", 500);
+  }
+
+  return null;
+}
+
+export const handler = async (
+  req: Request,
+  ctx: EFContext,
+): Promise<Response> => {
   const { supabase } = ctx;
-  if (ctx.auth.type !== "user") return errorResponse("Unexpected auth type", 500);
+  if (ctx.auth.type !== "user") {
+    return errorResponse("Unexpected auth type", 500);
+  }
   const userId = ctx.auth.userId;
 
   const body = await parseJsonBody(req);
   if (body instanceof Response) return body;
 
   const { event_id, participant_id, signature, expires_at } = body as {
+    action?: string;
     event_id?: string;
     participant_id?: string;
+    ticket_id?: string;
+    user_id?: string;
     signature?: string;
     expires_at?: string;
   };
+
+  if (body.action === "manual_checkin") {
+    const ticketId = requireString(body, "ticket_id");
+    if (ticketId instanceof Response) return ticketId;
+    const eventId = requireString(body, "event_id");
+    if (eventId instanceof Response) return eventId;
+
+    const { data, error } = await supabase.rpc(
+      "process_manual_checkin_for_actor",
+      {
+        p_actor_user_id: userId,
+        p_ticket_id: ticketId,
+        p_event_id: eventId,
+      },
+    );
+    if (error) {
+      return errorResponse(error.message, rpcErrorStatus(error.message));
+    }
+    return successResponse({ success: data === "success", result: data });
+  }
+
+  if (body.action === "qr_checkin") {
+    const ticketId = requireString(body, "ticket_id");
+    if (ticketId instanceof Response) return ticketId;
+    const eventId = requireString(body, "event_id");
+    if (eventId instanceof Response) return eventId;
+    const ticketUserId = requireString(body, "user_id");
+    if (ticketUserId instanceof Response) return ticketUserId;
+    const qrSignature = requireString(body, "signature");
+    if (qrSignature instanceof Response) return qrSignature;
+    const expiresAt = requireString(body, "expires_at");
+    if (expiresAt instanceof Response) return expiresAt;
+
+    const signatureError = await verifyQrSignature(
+      ticketId,
+      eventId,
+      ticketUserId,
+      expiresAt,
+      qrSignature,
+    );
+    if (signatureError) return signatureError;
+
+    const { data, error } = await supabase.rpc(
+      "process_qr_checkin_for_actor",
+      {
+        p_actor_user_id: userId,
+        p_ticket_id: ticketId,
+        p_event_id: eventId,
+        p_user_id: ticketUserId,
+      },
+    );
+    if (error) {
+      return errorResponse(error.message, rpcErrorStatus(error.message));
+    }
+    return successResponse({ success: data === "success", result: data });
+  }
 
   if (!event_id || !participant_id) {
     return errorResponse(
@@ -91,55 +238,16 @@ export const handler = async (req: Request, ctx: EFContext): Promise<Response> =
   }
 
   // Fix #1491: 서버 측 Ed25519 QR 서명 검증 — 클라이언트 우회 방지
-  const publicKeyJwkStr = Deno.env.get("TICKET_SIGNING_PUBLIC_KEY_JWK");
-  if (!publicKeyJwkStr) {
-    log({
-      function: FN,
-      level: "error",
-      message: "TICKET_SIGNING_PUBLIC_KEY_JWK not configured",
-    });
-    return errorResponse("Ticket verification key not configured", 500);
-  }
-
-  try {
-    const publicKey = await crypto.subtle.importKey(
-      "jwk",
-      JSON.parse(publicKeyJwkStr),
-      { name: "Ed25519" },
-      false,
-      ["verify"],
-    );
-
-    const ticketId = (participant as { ticket_id: string }).ticket_id;
-    const participantUserId = (participant as { user_id: string }).user_id;
-    const payload = `${ticketId}|${event_id}|${participantUserId}|${expires_at}`;
-    const message = new TextEncoder().encode(payload);
-    const sigBytes = base64UrlDecode(signature);
-
-    const valid = await crypto.subtle.verify(
-      "Ed25519",
-      publicKey,
-      sigBytes,
-      message,
-    );
-    if (!valid) {
-      log({
-        function: FN,
-        level: "warn",
-        message: "QR signature verification failed",
-        metadata: { participant_id, event_id },
-      });
-      return errorResponse("Invalid QR signature", 403);
-    }
-  } catch (e) {
-    log({
-      function: FN,
-      level: "error",
-      message: "Signature verification error",
-      metadata: { detail: String(e) },
-    });
-    return errorResponse("Signature verification failed", 500);
-  }
+  const ticketId = (participant as { ticket_id: string }).ticket_id;
+  const participantUserId = (participant as { user_id: string }).user_id;
+  const signatureError = await verifyQrSignature(
+    ticketId,
+    event_id,
+    participantUserId,
+    expires_at,
+    signature,
+  );
+  if (signatureError) return signatureError;
 
   // Fix #998: 이벤트 상태 머신 확장 — active/ongoing 상태에서만 체크인 허용
   const { data: event, error: eventFetchErr } = await supabase

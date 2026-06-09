@@ -8,7 +8,7 @@ part 'manual_checkin_controller.g.dart';
 /// 이벤트 참가자 목록 + 수동 체크인 처리 컨트롤러.
 ///
 /// - 초기 로드: `get_event_participants_for_checkin` RPC
-/// - 체크인 처리: `process_manual_checkin` RPC + optimistic 업데이트
+/// - 체크인 처리: `event-checkin` EF + optimistic 업데이트
 @riverpod
 class ManualCheckinController extends _$ManualCheckinController {
   @override
@@ -51,12 +51,24 @@ class ManualCheckinController extends _$ManualCheckinController {
     );
 
     try {
+      final response = await supabase.functions.invoke(
+        'event-checkin',
+        body: {
+          'action': 'manual_checkin',
+          'ticket_id': ticketId,
+          'event_id': eventId,
+        },
+      );
+      if (response.status != 200) {
+        throw FunctionException(
+          status: response.status,
+          details: response.data,
+          reasonPhrase: 'Edge function error',
+        );
+      }
+
       final result =
-          await supabase.rpc<dynamic>(
-                'process_manual_checkin',
-                params: {'p_ticket_id': ticketId, 'p_event_id': eventId},
-              )
-              as String;
+          (response.data as Map<String, dynamic>)['result'] as String;
 
       // Fix #1812: already_checked_in은 서버 실제 상태도 checked_in이므로
       // optimistic 상태를 유지한다. not_found만 이전 상태로 복구.

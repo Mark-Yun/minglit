@@ -63,15 +63,15 @@ SELECT is_empty(
 );
 
 -- ============================================================
--- 5. RPC — authenticated user can save own consents
+-- 5. RPC — EF service role user context can save own consents
 -- ============================================================
 SELECT tests.create_supabase_user('consent_user_a', 'consent_a@test.com');
 SELECT tests.create_supabase_user('consent_user_b', 'consent_b@test.com');
 
 SELECT results_eq(
   $$SELECT has_function_privilege('authenticated', 'public.save_user_consents(uuid, jsonb)', 'EXECUTE')::text$$,
-  $$VALUES ('true')$$,
-  'authenticated can execute save_user_consents until EF wrapper migration'
+  $$VALUES ('false')$$,
+  'authenticated cannot execute save_user_consents directly after EF wrapper migration'
 );
 
 SELECT results_eq(
@@ -80,22 +80,17 @@ SELECT results_eq(
   'service_role can execute save_user_consents for Edge Function writes'
 );
 
-SELECT tests.authenticate_as('consent_user_a');
+SELECT tests.authenticate_as_service_role_user('consent_user_a');
 
-SELECT lives_ok(
-  format(
-    $$SELECT public.save_user_consents(
-      '%s',
-      '[
-        {"consent_key":"terms_of_service","consented":true,"policy_version":1},
-        {"consent_key":"privacy_collection","consented":true,"policy_version":1},
-        {"consent_key":"age_confirmation","consented":true}
-      ]'::jsonb
-    )$$,
-    tests.get_supabase_uid('consent_user_a')
-  ),
-  'authenticated user context can save own consents via RPC'
+SELECT public.save_user_consents(
+  tests.get_supabase_uid('consent_user_a'),
+  '[
+    {"consent_key":"terms_of_service","consented":true,"policy_version":1},
+    {"consent_key":"privacy_collection","consented":true,"policy_version":1},
+    {"consent_key":"age_confirmation","consented":true}
+  ]'::jsonb
 );
+SELECT pass('service_role user context can save own consents via RPC compatibility wrapper');
 
 -- ============================================================
 -- 6. RLS — user can SELECT only own consents
@@ -127,7 +122,7 @@ ROLLBACK TO SAVEPOINT before_direct_insert;
 -- ============================================================
 -- 8. RPC — user cannot save consents for another user
 -- ============================================================
-SELECT tests.authenticate_as('consent_user_a');
+SELECT tests.authenticate_as_service_role_user('consent_user_a');
 
 SAVEPOINT before_cross_save;
 SELECT throws_ok(
@@ -184,18 +179,13 @@ ROLLBACK TO SAVEPOINT before_direct_delete;
 -- ============================================================
 -- 11. RPC — user can update own consent state
 -- ============================================================
-SELECT tests.authenticate_as('consent_user_a');
+SELECT tests.authenticate_as_service_role_user('consent_user_a');
 
-SELECT lives_ok(
-  format(
-    $$SELECT public.save_user_consents(
-      '%s',
-      '[{"consent_key":"terms_of_service","consented":false}]'::jsonb
-    )$$,
-    tests.get_supabase_uid('consent_user_a')
-  ),
-  'user A can update own consent via RPC'
+SELECT public.save_user_consents(
+  tests.get_supabase_uid('consent_user_a'),
+  '[{"consent_key":"terms_of_service","consented":false}]'::jsonb
 );
+SELECT pass('service_role user context can update own consent via RPC compatibility wrapper');
 
 -- ============================================================
 -- 12. UNIQUE constraint — duplicate (user_id, consent_key) fails
@@ -213,7 +203,7 @@ SELECT throws_ok(
   'duplicate (user_id, consent_key) violates unique constraint'
 );
 ROLLBACK TO SAVEPOINT before_dup;
-SELECT tests.authenticate_as('consent_user_a');
+SELECT tests.authenticate_as_service_role_user('consent_user_a');
 
 -- ============================================================
 -- 13. has_required_consents() — returns false when incomplete
@@ -225,7 +215,7 @@ SELECT results_eq(
 );
 
 -- Restore terms_of_service
-SELECT tests.authenticate_as('consent_user_a');
+SELECT tests.authenticate_as_service_role_user('consent_user_a');
 
 SELECT lives_ok(
   format(
@@ -238,7 +228,7 @@ SELECT lives_ok(
   'restore terms_of_service consent'
 );
 
-SELECT tests.authenticate_as('consent_user_a');
+SELECT tests.authenticate_as_service_role_user('consent_user_a');
 
 -- ============================================================
 -- 14. has_required_consents() — returns true when all 3 required
@@ -300,7 +290,7 @@ SELECT lives_ok(
 -- ============================================================
 -- 18. Fix #2054: server timestamp 강제 — client-supplied consented_at 무시
 -- ============================================================
-SELECT tests.authenticate_as('consent_user_a');
+SELECT tests.authenticate_as_service_role_user('consent_user_a');
 
 SELECT lives_ok(
   format(

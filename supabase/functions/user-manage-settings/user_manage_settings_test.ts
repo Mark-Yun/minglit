@@ -1,8 +1,8 @@
 import { assertEquals } from "@std/assert";
 import {
+  authenticatedJsonRequest,
   captureServeHandler,
   createFetchMock,
-  authenticatedJsonRequest,
   jsonResponse,
   readJson,
   textRequest,
@@ -11,7 +11,6 @@ import {
   withNoIntervals,
 } from "../_test_utils/mock_http.ts";
 import { authRoute } from "../_test_utils/fixtures.ts";
-
 
 const ENV = {
   SUPABASE_URL: "https://supabase.test",
@@ -61,7 +60,9 @@ Deno.test("upsert_token — 정상 등록", async () => {
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
 
         const request = authenticatedJsonRequest("http://localhost", {
           action: "upsert_token",
@@ -96,7 +97,9 @@ Deno.test("upsert_token — 같은 토큰 재등록 → last_updated_at 갱신",
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
 
         const request = authenticatedJsonRequest("http://localhost", {
           action: "upsert_token",
@@ -125,7 +128,9 @@ Deno.test("upsert_token — token 누락 → 400", async () => {
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
 
         const request = authenticatedJsonRequest("http://localhost", {
           action: "upsert_token",
@@ -147,7 +152,9 @@ Deno.test("upsert_token — 잘못된 device_type → 400", async () => {
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
 
         const request = authenticatedJsonRequest("http://localhost", {
           action: "upsert_token",
@@ -178,7 +185,9 @@ Deno.test("delete_token — 정상 삭제", async () => {
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
 
         const request = authenticatedJsonRequest("http://localhost", {
           action: "delete_token",
@@ -208,7 +217,9 @@ Deno.test("delete_token — 존재하지 않는 토큰 → 에러 없이 성공"
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
 
         const request = authenticatedJsonRequest("http://localhost", {
           action: "delete_token",
@@ -230,7 +241,9 @@ Deno.test("delete_token — token 누락 → 400", async () => {
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
 
         const request = authenticatedJsonRequest("http://localhost", {
           action: "delete_token",
@@ -256,7 +269,9 @@ Deno.test("update_settings — marketing_consent 변경 → user_settings + user
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
 
         const request = authenticatedJsonRequest("http://localhost", {
           action: "update_settings",
@@ -275,7 +290,11 @@ Deno.test("update_settings — marketing_consent 변경 → user_settings + user
             c.url.includes("/rest/v1/rpc/upsert_user_settings_with_consent") &&
             c.method === "POST",
         );
-        assertEquals(!!rpcCall, true, "upsert_user_settings_with_consent RPC must be called");
+        assertEquals(
+          !!rpcCall,
+          true,
+          "upsert_user_settings_with_consent RPC must be called",
+        );
         const rpcBody = JSON.parse(rpcCall!.body!);
         assertEquals(rpcBody.p_user_id, "user-123");
         assertEquals(rpcBody.p_marketing_consent, true);
@@ -293,7 +312,9 @@ Deno.test("update_settings — marketing_consent false → user_consents withdra
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
 
         const request = authenticatedJsonRequest("http://localhost", {
           action: "update_settings",
@@ -307,7 +328,11 @@ Deno.test("update_settings — marketing_consent false → user_consents withdra
             c.url.includes("/rest/v1/rpc/upsert_user_settings_with_consent") &&
             c.method === "POST",
         );
-        assertEquals(!!rpcCall, true, "upsert_user_settings_with_consent RPC must be called on opt-out");
+        assertEquals(
+          !!rpcCall,
+          true,
+          "upsert_user_settings_with_consent RPC must be called on opt-out",
+        );
         const rpcBody = JSON.parse(rpcCall!.body!);
         assertEquals(rpcBody.p_marketing_consent, false);
       });
@@ -324,7 +349,9 @@ Deno.test("update_settings — service_notification 변경", async () => {
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
 
         const request = authenticatedJsonRequest("http://localhost", {
           action: "update_settings",
@@ -347,7 +374,9 @@ Deno.test("update_settings — 허용되지 않은 필드만 → 400", async () 
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
 
         const request = authenticatedJsonRequest("http://localhost", {
           action: "update_settings",
@@ -372,7 +401,9 @@ Deno.test("update_settings — boolean이 아닌 값 → 400", async () => {
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
 
         const request = authenticatedJsonRequest("http://localhost", {
           action: "update_settings",
@@ -382,7 +413,10 @@ Deno.test("update_settings — boolean이 아닌 값 → 400", async () => {
         const payload = await readJson(response);
 
         assertEquals(response.status, 400);
-        assertEquals(payload.error, "Field 'marketing_consent' must be a boolean");
+        assertEquals(
+          payload.error,
+          "Field 'marketing_consent' must be a boolean",
+        );
       });
     });
   });
@@ -394,7 +428,9 @@ Deno.test("update_settings — settings 누락 → 400", async () => {
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
 
         const request = authenticatedJsonRequest("http://localhost", {
           action: "update_settings",
@@ -404,6 +440,145 @@ Deno.test("update_settings — settings 누락 → 400", async () => {
 
         assertEquals(response.status, 400);
         assertEquals(payload.error, "Missing required field: settings");
+      });
+    });
+  });
+});
+
+Deno.test("save_consents — save_user_consents_for_user RPC 호출", async () => {
+  const { fetchMock, calls } = createFetchMock([
+    authRoute,
+    {
+      matcher: (req: Request) =>
+        req.url.includes("/rest/v1/rpc/save_user_consents_for_user") &&
+        req.method === "POST",
+      handler: () => jsonResponse(null),
+    },
+  ]);
+
+  await withEnv(ENV, async () => {
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
+
+        const request = authenticatedJsonRequest("http://localhost", {
+          action: "save_consents",
+          user_id: "user-123",
+          consents: [
+            {
+              consent_key: "terms_of_service",
+              consented: true,
+              policy_version: 1,
+            },
+          ],
+        });
+        const response = await handler(request);
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 200);
+        assertEquals(payload.success, true);
+
+        const rpcCall = calls.find(
+          (c) =>
+            c.url.includes("/rest/v1/rpc/save_user_consents_for_user") &&
+            c.method === "POST",
+        );
+        assertEquals(!!rpcCall, true);
+        const rpcBody = JSON.parse(rpcCall!.body!);
+        assertEquals(rpcBody.p_user_id, "user-123");
+        assertEquals(Array.isArray(rpcBody.p_consents), true);
+      });
+    });
+  });
+});
+
+Deno.test("save_consents — 다른 user_id 요청은 403", async () => {
+  const { fetchMock } = createFetchMock([authRoute]);
+
+  await withEnv(ENV, async () => {
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
+
+        const request = authenticatedJsonRequest("http://localhost", {
+          action: "save_consents",
+          user_id: "other-user",
+          consents: [],
+        });
+        const response = await handler(request);
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 403);
+        assertEquals(payload.error, "Cannot write consents for another user");
+      });
+    });
+  });
+});
+
+Deno.test("save_consents — consents가 배열이 아니면 400", async () => {
+  const { fetchMock } = createFetchMock([authRoute]);
+
+  await withEnv(ENV, async () => {
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
+
+        const request = authenticatedJsonRequest("http://localhost", {
+          action: "save_consents",
+          user_id: "user-123",
+          consents: { consent_key: "terms_of_service" },
+        });
+        const response = await handler(request);
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 400);
+        assertEquals(payload.error, "Missing required field: consents");
+      });
+    });
+  });
+});
+
+Deno.test("save_consents — RPC 실패 시 500", async () => {
+  const { fetchMock } = createFetchMock([
+    authRoute,
+    {
+      matcher: (req: Request) =>
+        req.url.includes("/rest/v1/rpc/save_user_consents_for_user") &&
+        req.method === "POST",
+      handler: () =>
+        jsonResponse({ message: "consent rpc failed" }, { status: 500 }),
+    },
+  ]);
+
+  await withEnv(ENV, async () => {
+    await withMockedFetch(fetchMock, async () => {
+      await withNoIntervals(async () => {
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
+
+        const request = authenticatedJsonRequest("http://localhost", {
+          action: "save_consents",
+          user_id: "user-123",
+          consents: [
+            {
+              consent_key: "terms_of_service",
+              consented: true,
+              policy_version: 1,
+            },
+          ],
+        });
+        const response = await handler(request);
+        const payload = await readJson(response);
+
+        assertEquals(response.status, 500);
+        assertEquals(payload.error, "Failed to save consents");
       });
     });
   });
@@ -422,7 +597,9 @@ Deno.test("인증 없이 호출 → 401", async () => {
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
 
         const request = authenticatedJsonRequest("http://localhost", {
           action: "upsert_token",
@@ -443,7 +620,9 @@ Deno.test("잘못된 action → 400", async () => {
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
 
         const request = authenticatedJsonRequest("http://localhost", {
           action: "invalid_action",
@@ -464,7 +643,9 @@ Deno.test("action 누락 → 400", async () => {
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
 
         const request = authenticatedJsonRequest("http://localhost", {
           token: "test",
@@ -485,7 +666,9 @@ Deno.test("malformed JSON → 400", async () => {
   await withEnv(ENV, async () => {
     await withMockedFetch(fetchMock, async () => {
       await withNoIntervals(async () => {
-        const handler = await captureServeHandler(new URL("./index.ts", import.meta.url));
+        const handler = await captureServeHandler(
+          new URL("./index.ts", import.meta.url),
+        );
 
         const request = textRequest("http://localhost", "{invalid-json", {
           headers: { Authorization: "Bearer test-token" },

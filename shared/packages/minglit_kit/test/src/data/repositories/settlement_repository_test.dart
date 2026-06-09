@@ -1,5 +1,4 @@
 // ignore_for_file: unawaited_futures // test stubs fire-and-forget
-import 'dart:async' show FutureOr;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:minglit_kit/src/data/models/settlement_item_detail.dart';
@@ -9,20 +8,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../helpers/mocks.dart';
 import '../../../helpers/supabase_mock_helpers.dart';
-
-/// Fake RPC result builder that resolves to [_data] when awaited.
-class _FakeRpcResult<T> extends Fake implements PostgrestFilterBuilder<T> {
-  _FakeRpcResult(this._data);
-  final T _data;
-
-  @override
-  Future<U> then<U>(
-    FutureOr<U> Function(T) onValue, {
-    Function? onError,
-  }) {
-    return Future<T>.value(_data).then(onValue, onError: onError);
-  }
-}
 
 /// Minimal valid settlement item JSON for use in tests.
 Map<String, dynamic> _settlementItemJson({String id = 'item_1'}) => {
@@ -634,12 +619,12 @@ void main() {
     group('retryPayout', () {
       test('returns result map on success', () async {
         when(
-          () => mockClient.rpc<Map<String, dynamic>>(
-            'request_retry_payout',
-            params: any(named: 'params'),
+          () => mockFunctions.invoke(
+            'partner-manage-settlement',
+            body: any(named: 'body'),
           ),
         ).thenAnswer(
-          (_) => _FakeRpcResult<Map<String, dynamic>>({'status': 'ok'}),
+          (_) async => FunctionResponse(status: 200, data: {'status': 'ok'}),
         );
 
         final result = await repository.retryPayout(
@@ -648,22 +633,37 @@ void main() {
         );
 
         expect(result['status'], 'ok');
+        final captured = verify(
+          () => mockFunctions.invoke(
+            'partner-manage-settlement',
+            body: captureAny(named: 'body'),
+          ),
+        ).captured;
+        final body = captured.single as Map<String, dynamic>;
+        expect(body['action'], 'retry_payout');
+        expect(body['payout_id'], 'payout_1');
+        expect(body['partner_id'], 'partner_1');
       });
 
-      test('throws on rpc error', () async {
+      test('throws on EF error', () async {
         when(
-          () => mockClient.rpc<Map<String, dynamic>>(
-            'request_retry_payout',
-            params: any(named: 'params'),
+          () => mockFunctions.invoke(
+            'partner-manage-settlement',
+            body: any(named: 'body'),
           ),
-        ).thenThrow(Exception('rpc error'));
+        ).thenAnswer(
+          (_) async => FunctionResponse(
+            status: 500,
+            data: {'error': 'EF error'},
+          ),
+        );
 
         await expectLater(
           repository.retryPayout(
             payoutId: 'payout_1',
             partnerId: 'partner_1',
           ),
-          throwsA(isA<Exception>()),
+          throwsA(isA<FunctionException>()),
         );
       });
     });
