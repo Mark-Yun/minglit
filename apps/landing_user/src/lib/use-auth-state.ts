@@ -9,12 +9,13 @@ export type AuthState = {
   status: "loading" | "anonymous" | "ready";
   isVerified: boolean;
   gender: AuthGender | null;
+  birthDate: string | null;
 };
 
-const LOADING: AuthState = { status: "loading", isVerified: false, gender: null };
-const ANONYMOUS: AuthState = { status: "anonymous", isVerified: false, gender: null };
+const LOADING: AuthState = { status: "loading", isVerified: false, gender: null, birthDate: null };
+const ANONYMOUS: AuthState = { status: "anonymous", isVerified: false, gender: null, birthDate: null };
 
-type ProfileRow = { is_verified: boolean | null; gender: AuthGender | null };
+type ProfileRow = { is_verified: boolean | null; gender: AuthGender | null; birth_date: string | null };
 
 /**
  * Client-only auth snapshot shared by the user web surfaces.
@@ -24,7 +25,7 @@ type ProfileRow = { is_verified: boolean | null; gender: AuthGender | null };
  * - "ready": signed in AND user_profiles row fetched successfully.
  *
  * `isVerified` mirrors user_profiles.is_verified (same column fetchUserVerified
- * reads); `gender` mirrors user_profiles.gender (null = unset).
+ * reads); `gender` and `birthDate` mirror user_profiles eligibility fields.
  */
 export function useAuthState(): AuthState {
   const [state, setState] = useState<AuthState>(LOADING);
@@ -49,7 +50,7 @@ export function useAuthState(): AuthState {
       try {
         const { data: profile, error: profileError } = await supabase
           .from("user_profiles")
-          .select("is_verified,gender")
+          .select("is_verified,gender,birth_date")
           .eq("id", user.id)
           .single<ProfileRow>();
 
@@ -60,6 +61,7 @@ export function useAuthState(): AuthState {
           status: "ready",
           isVerified: profile?.is_verified === true,
           gender: profile?.gender ?? null,
+          birthDate: profile?.birth_date ?? null,
         });
       } catch {
         if (active) setState(ANONYMOUS);

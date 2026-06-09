@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useMemo, useState } from "react";
-import type { EntryGender, PublicEvent, Ticket } from "@/lib/events";
+import { isEventEligibleForProfile, type PublicEvent, type Ticket } from "@/lib/events";
 import { useAuthState } from "@/lib/use-auth-state";
 
 export function WebUserHome({ events }: { events: PublicEvent[] }) {
@@ -38,13 +38,18 @@ function HomeContent({ events }: { events: PublicEvent[] }) {
   const pathname = usePathname();
 
   // Checkbox only exists for signed-in + verified users with a known gender.
-  const canFilter = auth.status === "ready" && auth.isVerified;
+  const canFilter = auth.status === "ready" && auth.isVerified && auth.gender !== null;
   const checked = canFilter && searchParams.get("eligible") === "1";
 
   const visibleEvents = useMemo(() => {
     if (!checked || !auth.gender) return events;
-    return events.filter((event) => isEligibleFor(event, auth.gender as EntryGender));
-  }, [events, checked, auth.gender]);
+    return events.filter((event) =>
+      isEventEligibleForProfile(event, {
+        gender: auth.gender,
+        birthDate: auth.birthDate,
+      }),
+    );
+  }, [events, checked, auth.gender, auth.birthDate]);
 
   const setEligible = useCallback(
     (next: boolean) => {
@@ -100,12 +105,6 @@ function EventGrid({ events }: { events: PublicEvent[] }) {
       ))}
     </section>
   );
-}
-
-function isEligibleFor(event: PublicEvent, gender: EntryGender): boolean {
-  const genders = event.entryGroupGenders ?? [];
-  // Empty = no gender restriction (open). Otherwise the user's gender must match.
-  return genders.length === 0 || genders.includes(gender);
 }
 
 export function WebUserEventDetail({ event }: { event: PublicEvent }) {

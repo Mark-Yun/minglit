@@ -6,9 +6,24 @@ export type Ticket = {
   quantity: number;
   soldCount: number;
   status: string;
+  targetEntryGroupIds?: string[];
 };
 
 export type EntryGender = "male" | "female";
+
+export type EntryGroupEligibility = {
+  id: string;
+  gender: EntryGender | null;
+  birthYearMin: number | null;
+  birthYearMax: number | null;
+  requiredVerificationIds: string[];
+};
+
+export type EligibilityProfile = {
+  gender: EntryGender | null;
+  birthDate?: string | null;
+  verificationData?: Record<string, unknown> | null;
+};
 
 export type PublicEvent = {
   id: string;
@@ -29,9 +44,10 @@ export type PublicEvent = {
   locationAddress: string;
   tags: string[];
   tickets: Ticket[];
-  // Gendered entry-group eligibility. Empty = no gender restriction (open to all).
-  // A null-gender entry group also resolves to "open", so it yields [].
+  // Kept for backward-compatible callers; the home eligibility filter uses
+  // ticket target groups via `entryGroups` below.
   entryGroupGenders?: EntryGender[];
+  entryGroups?: EntryGroupEligibility[];
 };
 
 type PostgrestEvent = {
@@ -73,14 +89,23 @@ type PostgrestEvent = {
     quantity?: number | null;
     sold_count?: number | null;
     status?: string | null;
+    target_entry_group_ids?: string[] | null;
   }> | null;
-  entry_groups?: Array<{ gender?: string | null }> | null;
+  entry_groups?: Array<{
+    id: string;
+    gender?: string | null;
+    birth_year_min?: number | null;
+    birth_year_max?: number | null;
+    required_verification_ids?: string[] | null;
+  }> | null;
 };
 
 type FetchEventsResult = {
   rows: PostgrestEvent[];
   shouldUseDemoFallback: boolean;
 };
+
+type VisibilityMode = "event-public" | "inherited-public";
 
 const EVENT_SELECT = [
   "id",
@@ -95,8 +120,8 @@ const EVENT_SELECT = [
   "current_participants",
   "parties!inner(title,description,image_urls,visibility,status,partners(name,introduction),locations(name,address,region_1,region_2))",
   "locations(name,address,region_1,region_2)",
-  "tickets(id,name,description,price,quantity,sold_count,status)",
-  "entry_groups(gender)",
+  "tickets(id,name,description,price,quantity,sold_count,status,target_entry_group_ids)",
+  "entry_groups(id,gender,birth_year_min,birth_year_max,required_verification_ids)",
 ].join(",");
 
 const DEMO_EVENTS: PublicEvent[] = [
@@ -130,6 +155,7 @@ const DEMO_EVENTS: PublicEvent[] = [
         quantity: 20,
         soldCount: 12,
         status: "on_sale",
+        targetEntryGroupIds: [],
       },
     ],
   },
@@ -159,6 +185,7 @@ const DEMO_EVENTS: PublicEvent[] = [
         quantity: 16,
         soldCount: 15,
         status: "on_sale",
+        targetEntryGroupIds: [],
       },
     ],
   },
@@ -188,6 +215,7 @@ const DEMO_EVENTS: PublicEvent[] = [
         quantity: 24,
         soldCount: 24,
         status: "sold_out",
+        targetEntryGroupIds: [],
       },
     ],
   },
@@ -221,24 +249,6 @@ async function fetchEventsFromSupabase(id?: string): Promise<FetchEventsResult> 
 
   if (!url || !key) return { rows: [], shouldUseDemoFallback: true };
 
-  const endpoint = new URL("/rest/v1/events", url);
-  endpoint.searchParams.set("select", EVENT_SELECT);
-  endpoint.searchParams.set("status", "in.(scheduled,active,ongoing,completed)");
-  // 이벤트 공개 여부: 명시적 public 이거나 미설정(파티 공개 설정을 따름).
-  // PostgREST 의 root `or` 논리트리에서는 embedded 리소스 컬럼(parties.*)을
-  // 참조할 수 없으므로(PGRST100), 파티 공개 조건은 아래 embedded 필터로 분리한다.
-  endpoint.searchParams.set("or", "(visibility.eq.public,visibility.is.null)");
-  endpoint.searchParams.set("parties.visibility", "eq.public");
-  endpoint.searchParams.set("parties.status", "eq.active");
-  endpoint.searchParams.set("order", "start_time.asc");
-  endpoint.searchParams.set("limit", id ? "1" : "24");
-
-  if (id) {
-    endpoint.searchParams.set("id", `eq.${id}`);
-  } else {
-    endpoint.searchParams.set("start_time", `gte.${new Date().toISOString()}`);
-  }
-
   try {
     const fetchOptions: RequestInit & { next: { revalidate: number } } = {
       headers: {
@@ -247,14 +257,61 @@ async function fetchEventsFromSupabase(id?: string): Promise<FetchEventsResult> 
       },
       next: { revalidate: 60 },
     };
-    const response = await fetch(endpoint, fetchOptions);
+    const nowIso = new Date().toISOString();
+    const results = await Promise.all([
+      fetchEventRows(buildEventsEndpoint(url, id, nowIso, "event-public"), fetchOptions),
+      fetchEventRows(buildEventsEndpoint(url, id, nowIso, "inherited-public"), fetchOptions),
+    ]);
 
-    if (!response.ok) return { rows: [], shouldUseDemoFallback: false };
+    if (results.some((rows) => rows === null)) {
+      return { rows: [], shouldUseDemoFallback: false };
+    }
 
-    return { rows: (await response.json()) as PostgrestEvent[], shouldUseDemoFallback: false };
+    return { rows: mergeEventRows(results.flat() as PostgrestEvent[], id ? 1 : 24), shouldUseDemoFallback: false };
   } catch {
     return { rows: [], shouldUseDemoFallback: false };
   }
+}
+
+function buildEventsEndpoint(baseUrl: string, id: string | undefined, nowIso: string, visibilityMode: VisibilityMode) {
+  const endpoint = new URL("/rest/v1/events", baseUrl);
+  endpoint.searchParams.set("select", EVENT_SELECT);
+  endpoint.searchParams.set("status", "in.(scheduled,active,ongoing,completed)");
+  endpoint.searchParams.set("parties.status", "eq.active");
+  endpoint.searchParams.set("order", "start_time.asc");
+  endpoint.searchParams.set("limit", id ? "1" : "24");
+
+  if (visibilityMode === "event-public") {
+    endpoint.searchParams.set("visibility", "eq.public");
+  } else {
+    endpoint.searchParams.set("visibility", "is.null");
+    endpoint.searchParams.set("parties.visibility", "eq.public");
+  }
+
+  if (id) {
+    endpoint.searchParams.set("id", `eq.${id}`);
+  } else {
+    endpoint.searchParams.set("start_time", `gte.${nowIso}`);
+  }
+
+  return endpoint;
+}
+
+async function fetchEventRows(endpoint: URL, fetchOptions: RequestInit & { next: { revalidate: number } }) {
+  const response = await fetch(endpoint, fetchOptions);
+  if (!response.ok) return null;
+  return (await response.json()) as PostgrestEvent[];
+}
+
+function mergeEventRows(rows: PostgrestEvent[], limit: number): PostgrestEvent[] {
+  const byId = new Map<string, PostgrestEvent>();
+  for (const row of rows) {
+    if (!byId.has(row.id)) byId.set(row.id, row);
+  }
+
+  return [...byId.values()]
+    .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+    .slice(0, limit);
 }
 
 function isPubliclyVisible(row: PostgrestEvent): boolean {
@@ -272,6 +329,7 @@ function mapEvent(row: PostgrestEvent): PublicEvent {
     quantity: ticket.quantity ?? 0,
     soldCount: ticket.sold_count ?? 0,
     status: ticket.status ?? "on_sale",
+    targetEntryGroupIds: normalizeStringArray(ticket.target_entry_group_ids),
   }));
   const rawImages = (row.image_urls?.length ? row.image_urls : party?.image_urls) ?? [];
   const imageUrl = rawImages[0] ?? null;
@@ -296,7 +354,73 @@ function mapEvent(row: PostgrestEvent): PublicEvent {
     locationAddress: location?.address ?? "상세 장소는 신청 후 안내됩니다.",
     tags: buildTags(title, location?.region_2 ?? location?.region_1),
     tickets,
+    entryGroups: mapEntryGroups(row.entry_groups),
   };
+}
+
+export function isEventEligibleForProfile(
+  event: PublicEvent,
+  profile: EligibilityProfile,
+): boolean {
+  if (!profile.gender) return false;
+  if (!isEventOpenForApplication(event.status)) return false;
+  if (event.maxParticipants > 0 && event.currentParticipants >= event.maxParticipants) return false;
+
+  const entryGroups = event.entryGroups ?? [];
+  return event.tickets.some((ticket) => isTicketEligibleForProfile(ticket, entryGroups, profile));
+}
+
+function isTicketEligibleForProfile(
+  ticket: Ticket,
+  entryGroups: EntryGroupEligibility[],
+  profile: EligibilityProfile,
+): boolean {
+  if (!isTicketOrderable(ticket)) return false;
+
+  const targetGroupIds = ticket.targetEntryGroupIds ?? [];
+  if (targetGroupIds.length === 0) return true;
+
+  const groupsById = new Map(entryGroups.map((group) => [group.id, group]));
+  const targetGroups = targetGroupIds
+    .map((id) => groupsById.get(id))
+    .filter((group): group is EntryGroupEligibility => group !== undefined);
+
+  return evaluateEntryGroupEligibility(targetGroups, profile);
+}
+
+function evaluateEntryGroupEligibility(
+  entryGroups: EntryGroupEligibility[],
+  profile: EligibilityProfile,
+): boolean {
+  if (entryGroups.length === 0) return true;
+
+  const primaryGroup = entryGroups[0];
+  if (primaryGroup.gender && primaryGroup.gender !== profile.gender) return false;
+
+  const birthYear = parseBirthYear(profile.birthDate);
+  if (birthYear !== null) {
+    if (primaryGroup.birthYearMin !== null && birthYear < primaryGroup.birthYearMin) return false;
+    if (primaryGroup.birthYearMax !== null && birthYear > primaryGroup.birthYearMax) return false;
+  }
+
+  const requiredIds = entryGroups.flatMap((group) => group.requiredVerificationIds);
+  if (requiredIds.length > 0 && !profile.verificationData) return false;
+
+  return true;
+}
+
+function isEventOpenForApplication(status: string): boolean {
+  return status === "scheduled" || status === "active";
+}
+
+function isTicketOrderable(ticket: Ticket): boolean {
+  return ticket.status === "on_sale" && (ticket.quantity <= 0 || ticket.soldCount < ticket.quantity);
+}
+
+function parseBirthYear(value: string | null | undefined): number | null {
+  if (!value) return null;
+  const year = new Date(value).getFullYear();
+  return Number.isFinite(year) ? year : null;
 }
 
 function mapEntryGroupGenders(groups: PostgrestEvent["entry_groups"]): EntryGender[] {
@@ -310,6 +434,22 @@ function mapEntryGroupGenders(groups: PostgrestEvent["entry_groups"]): EntryGend
   }
 
   return Array.from(genders);
+}
+
+function mapEntryGroups(groups: PostgrestEvent["entry_groups"]): EntryGroupEligibility[] {
+  if (!groups || groups.length === 0) return [];
+
+  return groups.map((group) => ({
+    id: group.id,
+    gender: group.gender === "male" || group.gender === "female" ? group.gender : null,
+    birthYearMin: group.birth_year_min ?? null,
+    birthYearMax: group.birth_year_max ?? null,
+    requiredVerificationIds: normalizeStringArray(group.required_verification_ids),
+  }));
+}
+
+function normalizeStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 }
 
 function readableDescription(value: unknown): string {
