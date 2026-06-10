@@ -28,16 +28,14 @@ jobs:
             echo "|---|---|"
             echo "| dry_run | ${{ inputs.dry_run || false }} |"
             echo "| target_ref | dev |"
-            echo "| web | deploy-vercel(dev) |"
+            echo "| web | deploy-vercel-apps(dev: mds, landing-user, landing-partner) |"
             echo "| mobile | frozen (web MVP pivot; deploy-android-*/deploy-ios-* not called) |"
           } >> "$GITHUB_STEP_SUMMARY"
 
   web:
     needs: [plan]
     if: inputs.dry_run != true
-    uses: ./.github/workflows/deploy-vercel.yml
-    with:
-      deploy_branch: dev
+    uses: ./.github/workflows/deploy-vercel-apps.yml
     secrets: inherit
 
   # Mobile (android/ios) deploy jobs removed: Flutter mobile apps are frozen

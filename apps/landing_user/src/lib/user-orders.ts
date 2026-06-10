@@ -222,10 +222,14 @@ export function mapPurchaseRow(row: PurchaseRow): UserPurchase {
   };
 }
 
-export function statusCopy(status: PurchaseStatus, refundStatus: RefundStatus): { label: string; tone: string } {
+export function statusCopy(status: PurchaseStatus, refundStatus: RefundStatus, eventEnded = false): { label: string; tone: string } {
   if (refundStatus === "completed") return { label: "환불 완료", tone: "neutral" };
   if (refundStatus === "requested") return { label: "환불 요청됨", tone: "warning" };
   if (refundStatus === "failed") return { label: "환불 실패", tone: "error" };
+
+  if (eventEnded && refundStatus === "none" && (status === "approved" || status === "paid")) {
+    return { label: "이벤트 종료", tone: "neutral" };
+  }
 
   switch (status) {
     case "approved":

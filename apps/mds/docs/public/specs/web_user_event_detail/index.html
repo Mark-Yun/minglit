@@ -535,7 +535,7 @@
           <a href="/specs/partner_detail_page/index.html"><code>/specs/partner_detail_page/index.html</code></a>
           — 파트너 정보 블록 (아바타 + 이름 + 위치) 구성 참고<br>
           <strong>웹에서 달라지는 점</strong>: ① <strong>비로그인 공개 열람 허용</strong> (로그인 유도는 "신청하기" 시점) ·
-          ② 매칭/투표/QR/NowBar/태그 deprecated 요소 전부 제외, 참여 현황 blur 리스트는 <strong>남/여 신청 현황 게이지</strong>로 단순화 ·
+          ② 매칭/투표/QR/NowBar/태그 deprecated 요소 전부 제외, 참여 현황 blur 리스트는 <strong>단일 진행률 게이지</strong>로 단순화 (남/여 분리 비범위 — 2026-06-08 결정) ·
           ③ 모바일의 하단 고정 바 + 티켓 선택 바텀시트를 <strong>우측 sticky 티켓 패널 하나로 통합</strong> (티켓 선택 + 가격 + CTA 가 한 패널에) ·
           ④ 5탭 scroll-spy 제거 — 데스크톱은 세로 공간이 충분해 좌측 컬럼 단일 흐름으로 충분.
         </td>
@@ -575,7 +575,8 @@
           티켓 선택이 화면 안에 항상 보이므로 시트를 띄우는 중간 단계가 사라지고,
           정보를 읽는 동안에도 가격/신청 버튼이 시야에 유지된다 (모바일 하단 바와 같은 역할).
           매칭/투표/QR/NowBar/태그 계열은 deprecated 로 제외하고, 참여 현황의 blur 프로필 리스트는
-          개인정보 노출 없이 정원 충족도만 전달하는 남/여 게이지로 축소했다.
+          개인정보 노출 없이 정원 충족도만 전달하는 <strong>단일 진행률 게이지</strong>로 축소했다
+          (남/여 분리는 비범위 — 2026-06-08 Mark 결정, 정원 충족도만 단순 표시).
           환불 조건 요약은 결제 전 고지 의무(전자상거래법 — refund-policy-v2)에 따라
           CTA 바로 위, 패널 안에 상시 노출한다.
           1280px 데스크톱을 주 캔버스로 설계 (Mark 지시 2026-06-07) — 모바일 variant 는 후속 pass.
@@ -618,7 +619,7 @@
           Mobile variant 는 이번 pass 에서 생략, 후속 pass 에서 추가).
           behavior 는 <code>event_detail_page</code> · <code>event_bottom_ticket_bar</code> ·
           <code>ticket_selection_sheet</code> 모바일 spec 상속.
-          하단 바 + 바텀시트 → 우측 sticky 티켓 패널 통합, 참여 현황 → 남/여 게이지 단순화,
+          하단 바 + 바텀시트 → 우측 sticky 티켓 패널 통합, 참여 현황 → 단일 진행률 게이지 단순화,
           매칭/투표/QR/NowBar/태그 deprecated 요소 제외, 환불 요약 (그레이스 3시간 / 마감 7일) 패널 상시 노출.
         </td>
       </tr>
@@ -743,7 +744,7 @@
       │
       └─ <em>TicketPanel</em> (sticky · top = 64 + 24)         ← ③
          ├─ 패널 제목 "티켓 선택"
-         ├─ <b>ApplyStatusGauge</b> — 남/여 신청 현황 게이지
+         ├─ <b>ApplyStatusGauge</b> — 신청 현황 게이지 (정원 충족도 단일 진행률)
          ├─ <b>TicketOptionCard</b> × N (추천 자동 선택)
          ├─ <b>RefundSummary</b> — 결제 전 고지 (상시 노출)
          └─ 합계 행 + <b>"신청하기" CTA</b> (h=48 · full-width)</div>
@@ -883,7 +884,7 @@
           <span class="blueprint__region-label" style="font-size:9px;">㉠ 패널 제목 "티켓 선택"</span>
         </div>
         <div class="blueprint__region blueprint__region--shaded" style="top:52px; left:16px; right:16px; height:62px;">
-          <span class="blueprint__region-label" style="font-size:9px;">㉡ ApplyStatusGauge — 남/여 신청 현황 (bar + n/m)</span>
+          <span class="blueprint__region-label" style="font-size:9px;">㉡ ApplyStatusGauge — 신청 현황 (정원 충족도 단일 bar + n/m)</span>
         </div>
         <div class="blueprint__region blueprint__region--shaded" style="top:128px; left:16px; right:16px; height:62px; border-width:2px; border-color:rgba(var(--spec-blueprint-rgb), 0.6);">
           <span class="blueprint__region-label" style="font-size:9px;">㉢ TicketOptionCard — 추천 (자동 선택 · 2px primary)</span>

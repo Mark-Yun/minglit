@@ -793,3 +793,35 @@ BEGIN
     WHERE id = existing_id AND is_verified IS DISTINCT FROM true;
   END IF;
 END $$;
+
+-- ── Phase 11: Simulator partner party backfill ───────────────────────────────
+-- event-flow-simulator 는 partner_member_permissions 멤버 계정이 있는 파트너만 인증하고,
+-- partner_create_event 는 비-closed party 를 보유한 파트너만 이벤트를 만들 수 있다. 인증가능
+-- 파트너 중 party 보유 파트너가 소수면(예: 95명 중 10명) MIN_SCHEDULED_EVENTS 캡과 맞물려
+-- 이벤트 공급이 말라 user_apply 가 같은 풀을 두드리며 409 cascade 가 발생한다.
+-- 인증가능 파트너 중 비-closed party 가 하나도 없는 경우 시뮬레이터용 party 를 1개 만든다.
+-- 멱등: 이미 비-closed party 가 있으면 건너뜀.
+DO $$
+DECLARE
+  sim_partner_id uuid;
+  sim_location_id uuid;
+BEGIN
+  FOR sim_partner_id IN
+    SELECT DISTINCT pmp.partner_id
+    FROM public.partner_member_permissions pmp
+    WHERE NOT EXISTS (
+      SELECT 1 FROM public.parties pa
+      WHERE pa.partner_id = pmp.partner_id
+        AND pa.status <> 'closed'
+    )
+  LOOP
+    SELECT id INTO sim_location_id FROM public.locations
+    WHERE partner_id = sim_partner_id LIMIT 1;
+
+    INSERT INTO public.parties (partner_id, location_id, title, max_participants, status, image_urls)
+    VALUES (
+      sim_partner_id, sim_location_id, '[SIM] 시뮬레이터 파티', 20, 'active',
+      ARRAY['https://picsum.photos/seed/minglit-sim-' || replace(sim_partner_id::text, '-', '') || '/800/600']
+    );
+  END LOOP;
+END $$;

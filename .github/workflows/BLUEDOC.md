@@ -13,7 +13,7 @@
 | `pr-gate-` | **머지 못 함** (required check — static PR 메시지 검사 + Gitleaks 시크릿 검사 포함) | `pr-gate.yml`, `pr-gate-fresh-doc.yml` |
 | `pr-setup-` | PR push 마다 PR 브랜치를 mutate 하는 자동화 (포맷 등) | (현재 없음 — `pr-setup-format` 은 #2627 에서 `pr-gate-format-check` 잡으로 대체) |
 | `pr-review-setup-` | PR 의 "리뷰 준비" 자동화 — auto-merge enable + 조건 충족 시 `needs-review` 라벨 부여 | `pr-review-setup` |
-| `deploy-` | 사용자·dev 환경에 코드·스키마·시드가 안 갔음 | `dev-deploy`, `main-deploy`, `deploy-vercel`, `deploy-supabase`, `deploy-dev-event-flow-cron`, `deploy-android-user`, `deploy-ios-user`, `deploy-dev-seed` |
+| `deploy-` | 사용자·dev 환경에 코드·스키마·시드가 안 갔음 | `dev-deploy`, `main-deploy`, `deploy-vercel-apps`, `deploy-vercel`, `deploy-supabase`, `deploy-dev-event-flow-cron`, `deploy-android-user`, `deploy-ios-user`, `deploy-dev-seed` |
 | `monitor-` | 운영·테스트 시스템 헬스 이상 / 스케줄 유지보수 | `monitor-dev-staging-health`, `monitor-dev-cuj`, `monitor-db-invariants`, `monitor-event-flow-distributed`, `monitor-event-flow-hourly`, `monitor-event-flow-daily`, `monitor-mds-render-coverage`, `monitor-patrol-e2e`, `monitor-allure`, `monitor-build-retention`, `monitor-security-advisor`, `monitor-doc-freshness` |
 | `sync-` | repo 에 자동 commit/push 가 실패함 (dev-staging push 또는 merge 기반) | `sync-graphify`, `sync-mds-mockups`, `sync-mds-render-snapshot`, `sync-pr-branches`, `sync-test-coverage` |
 | `set-` | GitHub status/metadata 를 쓰는 수동·자동 API entrypoint 실패 | `set-dev-soak-status`, `set-rc-soak-status` |
@@ -52,6 +52,7 @@
 - `shared-ios-deploy` 는 App Store Connect 업로드 SDK 요구사항 때문에 `macos-26` runner 에 고정한다. 회귀 검사는 `.github/scripts/check-ios-deploy-branch-conditions.sh` 가 담당한다.
 - `shared-promo-tag` 는 `promo/rc-*`, `promo/main-*` tag 생성의 공통 release-bot 구현이다. Concrete workflow 는 target ref, tag name, commit SHA 만 넘긴다.
 - `deploy-dev-event-flow-cron` 은 `dev` push 에서만 dev Supabase `dev-event-flow-simulator` pg_cron 을 설치한다. `monitor-event-flow-distributed` 는 `--ref dev` 수동 smoke 전용이고, hourly/daily 는 legacy manual smoke 다.
+- `deploy-vercel-apps` 는 dev web apps(MDS docs, user landing, partner landing) 를 GitHub build + Vercel prebuilt deploy 로 배포한다.
 - `deploy-android-*`, `deploy-ios-*`, `deploy-vercel` 은 branch-level deploy 에서 호출하는 concrete adapter 다. 직접 push/schedule 로 실행하지 않는다.
 - 실제 build/upload/notify 로직은 각각 `shared-android-deploy`, `shared-ios-deploy`, `shared-vercel-deploy` 에 둔다.
 - 모바일 배포 산출물(APK/AAB/IPA)은 GitHub Release asset 으로 보관한다. Actions artifact 는 테스트/디버깅 산출물용이며, deploy archive 의 source-of-truth 로 쓰지 않는다.
@@ -80,4 +81,4 @@
 - [CLAUDE.md](../../CLAUDE.md) `## PR Conventions` — branch별 required check / auto-merge 흐름
 
 ---
-_Reviewed: 2026-06-09 01:42_
+_Reviewed: 2026-06-09 01:53_

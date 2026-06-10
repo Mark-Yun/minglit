@@ -190,9 +190,9 @@ function CheckoutHeader() {
   return (
     <header className="wuc-header">
       <div className="wuc-header__inner">
-        <Link className="minglit-logo" href="/" aria-label="Minglit 홈">
-          <span className="minglit-logo__mark">M</span>
-          <span className="minglit-logo__text">Minglit</span>
+        <Link href="/" aria-label="Minglit 홈">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="wuh-logo" src="/logos/minglit_logo_background_transparent.svg" alt="minglit" />
         </Link>
         <div className="wuc-header__spacer" />
         <Link className="wuc-avatar" href="/my/purchases" aria-label="구매 내역"><User aria-hidden="true" /></Link>

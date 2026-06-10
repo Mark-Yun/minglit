@@ -98,6 +98,13 @@ button {
   font-weight: 900;
 }
 
+.wuh-logo {
+  display: block;
+  width: auto;
+  height: 40px;
+  flex: 0 0 auto;
+}
+
 .wuh-search {
   display: inline-flex;
   flex: 0 0 420px;
@@ -169,6 +176,8 @@ button {
   height: 20px;
   border: 1.5px solid var(--color-divider);
   border-radius: 4px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
 }
 
 .wuh-grid {
@@ -230,6 +239,33 @@ button {
   color: var(--color-text-secondary);
   font-size: 13px;
   opacity: 0.6;
+}
+
+.wed-hero__dots {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  gap: 5px;
+  transform: translateX(-50%);
+}
+
+.wed-hero__dot {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.55);
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: width 200ms ease, background 200ms ease;
+}
+
+.wed-hero__dot--active {
+  width: 18px;
+  background: #ffffff;
+  border-radius: 4px;
 }
 
 .wuh-card__grad {
@@ -323,29 +359,46 @@ button {
   flex-direction: column;
 }
 
-.wuh-card__date {
-  color: var(--color-secondary);
-  font-size: 13px;
-  font-weight: 800;
-}
-
 .wuh-card__title {
-  display: -webkit-box;
-  min-height: 48px;
-  margin: 8px 0 6px;
+  margin: 0 0 4px;
   overflow: hidden;
   color: var(--color-text-primary);
-  font-size: 18px;
-  font-weight: 800;
-  line-height: 1.35;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .wuh-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   margin: 0;
+}
+
+.wuh-card__meta svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+.wuh-card__meta .txt {
+  flex: 1;
+  overflow: hidden;
   color: var(--color-text-secondary);
+  font-size: 13px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.wuh-card__meta .price {
+  flex-shrink: 0;
+  margin-left: 8px;
+  color: var(--color-secondary);
   font-size: 14px;
+  font-weight: 700;
 }
 
 .wuh-card__foot {
@@ -714,6 +767,18 @@ button {
   color: var(--color-error);
 }
 
+.wed-login-banner {
+  margin-top: 14px;
+  padding: 10px 12px;
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  background: var(--color-surface, rgba(153, 0, 255, 0.06));
+  border: 1px solid var(--color-divider);
+  border-radius: 12px;
+}
+
 .web-empty {
   display: flex;
   align-items: center;
@@ -744,7 +809,8 @@ button {
   line-height: 1.6;
 }
 
-.web-empty a {
+.web-empty a,
+.web-empty__btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -754,7 +820,9 @@ button {
   color: #fff;
   font-weight: 800;
   background: var(--color-primary);
+  border: 0;
   border-radius: 999px;
+  cursor: pointer;
 }
 
 .web-login-intent {

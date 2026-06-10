@@ -244,6 +244,42 @@ Deno.test({
 });
 
 Deno.test({
+  name:
+    "runCascade - already_applied apply result records local application without consuming capacity",
+  fn: async () => {
+    clearRegistry();
+    registerAction(applyAction);
+    const snap = snapshotWithOneEvent();
+    snap.events[0].current_participants = 0;
+    snap.events[0].tickets![0].price = 0;
+    snap.events[0].tickets![0].sold_count = 0;
+    const { transport } = recordingTransport({ type: "already_applied" });
+
+    const { finalSnapshot, trace } = await runCascade({
+      actors: [{ id: "user-1", role: "user" }],
+      initialSnapshot: snap,
+      rates: defaultRates,
+      transport,
+      rng: createPRNG(1),
+      ticks: 1,
+    });
+
+    assertEquals(trace.length, 1);
+    assertEquals(trace[0].ok, true);
+    assertEquals(finalSnapshot.events[0].current_participants, 0);
+    assertEquals(finalSnapshot.events[0].tickets![0].sold_count, 0);
+    assertEquals(finalSnapshot.applications, [
+      {
+        id: "local:user-1:e1",
+        user_id: "user-1",
+        event_id: "e1",
+        status: "local_applied",
+      },
+    ]);
+  },
+});
+
+Deno.test({
   name: "runCascade - records error in trace when transport fails",
   fn: async () => {
     clearRegistry();
