@@ -130,6 +130,129 @@ Deno.test("EFTransport includes error body for failed Edge Function calls", asyn
   });
 });
 
+Deno.test("EFTransport retries transient Edge Function load failures", async () => {
+  let calls = 0;
+  const { fetchMock } = createFetchMock([
+    {
+      matcher: (req) => req.url.endsWith("/functions/v1/apply-event"),
+      handler: () => {
+        calls++;
+        if (calls === 1) {
+          return Response.json(
+            { message: "Failed to load edge function" },
+            { status: 503 },
+          );
+        }
+        return Response.json({ type: "free", application_id: "app-1" });
+      },
+    },
+  ]);
+
+  await withMockedFetch(fetchMock, async () => {
+    const transport = new EFTransport({
+      supabase: {} as SupabaseClient,
+      supabaseUrl: "https://example.supabase.co",
+      tokenByActor: new Map([["user-1", "test-token"]]),
+      runId: "run-1",
+      edgeLoadRetryDelaysMs: [0],
+    });
+
+    const result = await transport.execute({
+      type: "user_apply",
+      actorId: "user-1",
+      ef: "apply-event",
+      payload: { event_id: "event-1", ticket_id: "ticket-1" },
+    });
+
+    assertEquals(result, {
+      ok: true,
+      status: 200,
+      data: { type: "free", application_id: "app-1" },
+      error: undefined,
+    });
+  });
+
+  assertEquals(calls, 2);
+});
+
+Deno.test("EFTransport does not retry non-load 503 failures", async () => {
+  let calls = 0;
+  const { fetchMock } = createFetchMock([
+    {
+      matcher: (req) => req.url.endsWith("/functions/v1/apply-event"),
+      handler: () => {
+        calls++;
+        return Response.json(
+          { error: "Service unavailable" },
+          { status: 503 },
+        );
+      },
+    },
+  ]);
+
+  await withMockedFetch(fetchMock, async () => {
+    const transport = new EFTransport({
+      supabase: {} as SupabaseClient,
+      supabaseUrl: "https://example.supabase.co",
+      tokenByActor: new Map([["user-1", "test-token"]]),
+      runId: "run-1",
+      edgeLoadRetryDelaysMs: [0, 0],
+    });
+
+    const result = await transport.execute({
+      type: "user_apply",
+      actorId: "user-1",
+      ef: "apply-event",
+      payload: { event_id: "event-1", ticket_id: "ticket-1" },
+    });
+
+    assertEquals(result.ok, false);
+    assertEquals(result.status, 503);
+    assertEquals(result.error, "Service unavailable");
+  });
+
+  assertEquals(calls, 1);
+});
+
+Deno.test("EFTransport preserves final Edge Function load failure after retries", async () => {
+  let calls = 0;
+  const { fetchMock } = createFetchMock([
+    {
+      matcher: (req) => req.url.endsWith("/functions/v1/apply-event"),
+      handler: () => {
+        calls++;
+        return Response.json(
+          { error: "Failed to load edge function" },
+          { status: 503 },
+        );
+      },
+    },
+  ]);
+
+  await withMockedFetch(fetchMock, async () => {
+    const transport = new EFTransport({
+      supabase: {} as SupabaseClient,
+      supabaseUrl: "https://example.supabase.co",
+      tokenByActor: new Map([["user-1", "test-token"]]),
+      runId: "run-1",
+      edgeLoadRetryDelaysMs: [0, 0],
+    });
+
+    const result = await transport.execute({
+      type: "user_apply",
+      actorId: "user-1",
+      ef: "apply-event",
+      payload: { event_id: "event-1", ticket_id: "ticket-1" },
+    });
+
+    assertEquals(result.ok, false);
+    assertEquals(result.status, 503);
+    assertEquals(result.error, "Failed to load edge function");
+  });
+
+  assertEquals(calls, 3);
+});
+
 Deno.test("EFTransport treats already-applied apply conflicts as benign", async () => {
   const { fetchMock } = createFetchMock([
     {
