@@ -18,6 +18,7 @@
 | [`check-android-deploy-workflow-contract.py`](./check-android-deploy-workflow-contract.py) | Android deploy release archive token 계약 + merge promotion 뒤 snapshot metadata 탐색 회귀 검증 | `pr-gate.static-checks` |
 | [`check-dev-soak-workflow-contract.py`](./check-dev-soak-workflow-contract.py) | dev event-flow cron install + `monitor-dev-cuj` + `dev-rc-cut-gate` + `shared-soak-gate` 판정 계약 검증 | `pr-gate.static-checks` |
 | [`check-dev-cut-workflow-contract.py`](./check-dev-cut-workflow-contract.py) | promotion cut workflow 의 full-history checkout, merge auto-merge mode, `shared-notify` repo 컨텍스트 계약 검증 | `pr-gate.static-checks` |
+| [`check-vercel-apps-deploy-contract.py`](./check-vercel-apps-deploy-contract.py) | Next.js Vercel app deploy action 이 monorepo root 에서 build/deploy 되는 계약 검증 | `pr-gate.static-checks` |
 | [`check-residual-db-hardening-guards.py`](./check-residual-db-hardening-guards.py) | dev drift 가 가능한 residual DB hardening migration 의 조건부 권한 보정 가드 검증 | `pr-gate.static-checks` |
 | [`check-ios-connectivity-plus-cap.sh`](./check-ios-connectivity-plus-cap.sh) | iOS deploy runner 가 지원할 때까지 `connectivity_plus <7.1.0` resolution 강제 | `pr-gate.guard-ios-connectivity-plus-cap` |
 | [`scan-build-artifact-secrets.py`](./scan-build-artifact-secrets.py) | APK/AAB/`.next` 등 빌드 산출물에서 Supabase service-role secret 패턴을 redacted summary 로 검사 | `pr-gate.scan-build-artifact-secrets` |
@@ -40,4 +41,4 @@
 - [.github/BLUEDOC.md](../BLUEDOC.md) — 상위 진입점
 
 ---
-_Reviewed: 2026-06-05 14:09_
+_Reviewed: 2026-06-11 07:32_
