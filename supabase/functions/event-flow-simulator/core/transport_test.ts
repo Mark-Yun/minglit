@@ -130,6 +130,41 @@ Deno.test("EFTransport includes error body for failed Edge Function calls", asyn
   });
 });
 
+Deno.test("EFTransport treats already-applied apply conflicts as benign", async () => {
+  const { fetchMock } = createFetchMock([
+    {
+      matcher: (req) => req.url.endsWith("/functions/v1/apply-event"),
+      handler: () =>
+        Response.json(
+          { error: "Already applied to this event" },
+          { status: 409 },
+        ),
+    },
+  ]);
+
+  await withMockedFetch(fetchMock, async () => {
+    const transport = new EFTransport({
+      supabase: {} as SupabaseClient,
+      supabaseUrl: "https://example.supabase.co",
+      tokenByActor: new Map([["user-1", "test-token"]]),
+      runId: "run-1",
+    });
+
+    const result = await transport.execute({
+      type: "user_apply",
+      actorId: "user-1",
+      ef: "apply-event",
+      payload: { event_id: "event-1", ticket_id: "ticket-1" },
+    });
+
+    assertEquals(result, {
+      ok: true,
+      status: 409,
+      data: { type: "already_applied" },
+    });
+  });
+});
+
 Deno.test("EFTransport preserves string error bodies for failed Edge Function calls", async () => {
   const { fetchMock } = createFetchMock([
     {

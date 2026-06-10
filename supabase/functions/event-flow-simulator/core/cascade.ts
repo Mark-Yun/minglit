@@ -164,6 +164,7 @@ function shouldReserveApplyTicketCapacity(
   const responseType = applyResponseType(responseData);
   if (responseType === "free") return true;
   if (responseType === "paid") return false;
+  if (responseType === "already_applied") return false;
   return ticketPrice === 0;
 }
 

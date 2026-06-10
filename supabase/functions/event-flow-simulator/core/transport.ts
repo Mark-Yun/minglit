@@ -15,6 +15,7 @@ export interface EFTransportConfig {
 }
 
 const IDEMPOTENCY_REQUIRED_FUNCTIONS = new Set(["apply-event"]);
+const ALREADY_APPLIED_ERROR = "Already applied to this event";
 
 /**
  * 실 EF 호출 transport. action.ef 가 정의돼 있으면 callEdgeFunction 으로 POST.
@@ -73,12 +74,21 @@ export class EFTransport implements Transport {
       token,
       extraHeaders,
     );
+    const rawError = extractResponseError(res.data);
+    if (isAlreadyAppliedConflict(action, res.status, rawError)) {
+      return {
+        ok: true,
+        status: res.status,
+        data: { type: "already_applied" },
+      };
+    }
+
     const ok = res.status >= 200 && res.status < 300;
     return {
       ok,
       status: res.status,
       data: res.data,
-      error: ok ? undefined : extractResponseError(res.data),
+      error: ok ? undefined : rawError,
     };
   }
 
@@ -93,6 +103,17 @@ export class EFTransport implements Transport {
         `event-flow-simulator:${runId}:${sequence}:${action.type}`,
     };
   }
+}
+
+function isAlreadyAppliedConflict(
+  action: Action,
+  status: number,
+  error: string | undefined,
+): boolean {
+  return action.type === "user_apply" &&
+    action.ef === "apply-event" &&
+    status === 409 &&
+    error === ALREADY_APPLIED_ERROR;
 }
 
 function extractResponseError(data: unknown): string | undefined {
