@@ -85,12 +85,17 @@ async function resolveEmail(
       .select("id")
       .eq("username", identifier)
       .maybeSingle();
-    if (error || !profile) {
+    if (!error && profile) {
+      const { data: auth } = await db.auth.admin.getUserById(profile.id as string);
+      if (!auth?.user?.email) throw new Error(`resolveEmail user: auth.users missing for ${identifier}`);
+      return auth.user.email;
+    }
+
+    const authUser = await resolveAuthUserByUsername(identifier, db);
+    if (!authUser?.email) {
       throw new Error(`resolveEmail user: profile not found for username=${identifier}`);
     }
-    const { data: auth } = await db.auth.admin.getUserById(profile.id as string);
-    if (!auth?.user?.email) throw new Error(`resolveEmail user: auth.users missing for ${identifier}`);
-    return auth.user.email;
+    return authUser.email;
   }
 
   // partner: identifier = partner_id, 첫 멤버 email 사용
@@ -116,10 +121,29 @@ async function resolveId(
     return identifier;
   }
   if (role === "user") {
-    const { data } = await db.from("user_profiles").select("id").eq("username", identifier).single();
-    return (data as { id: string }).id;
+    const { data, error } = await db.from("user_profiles").select("id").eq("username", identifier).maybeSingle();
+    if (!error && data) {
+      return (data as { id: string }).id;
+    }
+
+    const authUser = await resolveAuthUserByUsername(identifier, db);
+    if (!authUser?.id) {
+      throw new Error(`resolveId user: auth.users missing for username=${identifier}`);
+    }
+    return authUser.id;
   }
   return identifier; // partner — identifier 가 partner_id
+}
+
+async function resolveAuthUserByUsername(
+  username: string,
+  db: SupabaseClient,
+): Promise<{ id: string; email?: string } | null> {
+  const { data, error } = await db.auth.admin.listUsers();
+  if (error) {
+    throw new Error(`resolveAuthUserByUsername: ${error.message}`);
+  }
+  return data.users.find((user) => user.user_metadata?.username === username) ?? null;
 }
 
 /** 테스트 간 token 캐시 정리 (필요 시) */

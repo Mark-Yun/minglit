@@ -35,12 +35,9 @@ export const scenarios: Record<string, ScenarioFn> = {
       userId = data.user!.id;
     }
 
-    // user_profiles upsert (trigger 가 만들 수도 있지만 안전하게 upsert)
-    const { error: profileErr } = await db.from("user_profiles").upsert(
-      { id: userId, username: "user_test1" },
-      { onConflict: "id" },
-    );
-    if (profileErr) throw new Error(`scenario single-user profile: ${profileErr.message}`);
+    if (!userId) {
+      throw new Error("scenario single-user createUser: missing user id");
+    }
   },
 };
 
