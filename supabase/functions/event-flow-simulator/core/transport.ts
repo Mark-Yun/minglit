@@ -12,10 +12,14 @@ export interface EFTransportConfig {
   tokenByActor: Map<ActorId, string>;
   /** Current simulator run id, used to avoid idempotency-key reuse across runs. */
   runId?: string;
+  /** Backoff delays for Supabase Edge Runtime load transients. */
+  edgeLoadRetryDelaysMs?: number[];
 }
 
 const IDEMPOTENCY_REQUIRED_FUNCTIONS = new Set(["apply-event"]);
 const ALREADY_APPLIED_ERROR = "Already applied to this event";
+const EDGE_LOAD_FAILURE_ERROR = "Failed to load edge function";
+const DEFAULT_EDGE_LOAD_RETRY_DELAYS_MS = [500, 1_500, 3_000];
 
 /**
  * 실 EF 호출 transport. action.ef 가 정의돼 있으면 callEdgeFunction 으로 POST.
@@ -66,10 +70,10 @@ export class EFTransport implements Transport {
     if (!action.ef) {
       return { ok: false, status: 0, error: `action ${action.type} has no ef` };
     }
+    const functionName = action.ef;
     const extraHeaders = this.headersForAction(action);
-    const res = await callEdgeFunction(
-      this.cfg.supabaseUrl,
-      action.ef,
+    const res = await this.callEdgeFunctionWithLoadRetry(
+      functionName,
       action.payload,
       token,
       extraHeaders,
@@ -103,6 +107,38 @@ export class EFTransport implements Transport {
         `event-flow-simulator:${runId}:${sequence}:${action.type}`,
     };
   }
+
+  private async callEdgeFunctionWithLoadRetry(
+    functionName: string,
+    payload: Record<string, unknown>,
+    token: string,
+    extraHeaders: Record<string, string>,
+  ): Promise<{ status: number; data: unknown }> {
+    const retryDelays = this.cfg.edgeLoadRetryDelaysMs ??
+      DEFAULT_EDGE_LOAD_RETRY_DELAYS_MS;
+
+    for (let attempt = 0;; attempt++) {
+      const res = await callEdgeFunction(
+        this.cfg.supabaseUrl,
+        functionName,
+        payload,
+        token,
+        extraHeaders,
+      );
+      const rawError = extractResponseError(res.data);
+      if (
+        !isEdgeLoadFailure(res.status, rawError) ||
+        attempt >= retryDelays.length
+      ) {
+        return res;
+      }
+
+      const delayMs = retryDelays[attempt] ?? 0;
+      if (delayMs > 0) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+  }
 }
 
 function isAlreadyAppliedConflict(
@@ -126,4 +162,8 @@ function extractResponseError(data: unknown): string | undefined {
   return typeof message === "string" && message.length > 0
     ? message
     : undefined;
+}
+
+function isEdgeLoadFailure(status: number, error: string | undefined): boolean {
+  return status === 503 && error === EDGE_LOAD_FAILURE_ERROR;
 }
