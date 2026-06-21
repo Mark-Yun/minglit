@@ -35,7 +35,7 @@ jobs:
       rc_branch: ${{ steps.plan.outputs.rc_branch }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           persist-credentials: false
