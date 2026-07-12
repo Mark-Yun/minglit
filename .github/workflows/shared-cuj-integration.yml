@@ -37,7 +37,7 @@ jobs:
     # the dev APK on a cold runner. Keep this above the observed 30m ceiling.
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.target-ref || github.ref }}
 

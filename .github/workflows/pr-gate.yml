@@ -46,7 +46,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0  # BLUEDOC freshness needs history for base-ref diff
 
@@ -209,7 +209,7 @@ jobs:
       supabase_db_stack: ${{ steps.filter.outputs.supabase_migrations == 'true' || steps.filter.outputs.supabase_tests == 'true' }}
       supabase_ef_stack: ${{ steps.filter.outputs.supabase_migrations == 'true' || steps.filter.outputs.supabase_functions == 'true' }}
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - uses: dorny/paths-filter@v4
       id: filter
       with:
@@ -303,7 +303,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.head_ref || github.ref }}
       - uses: subosito/flutter-action@v2
@@ -311,7 +311,7 @@ jobs:
           flutter-version: '3.41.9'  # Fix #2640: flutter_quill 11.5.0 incompatible with Flutter 3.44.0
           cache: true
       - name: Cache pub packages
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.pub-cache
           key: ${{ runner.os }}-pub-ios-connectivity-plus-${{ hashFiles('**/pubspec.lock') }}
@@ -330,7 +330,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.head_ref || github.ref }}
       - uses: subosito/flutter-action@v2
@@ -338,7 +338,7 @@ jobs:
           flutter-version: '3.41.9'  # Fix #2640: flutter_quill 11.5.0 incompatible with Flutter 3.44.0
           cache: true
       - name: Cache pub packages
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.pub-cache
           key: ${{ runner.os }}-pub-minglit-lints-${{ hashFiles('**/pubspec.lock') }}
@@ -391,7 +391,7 @@ jobs:
             coverage_flag: mds-core
             coverage_flag_logic: ''
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         with:
           ref: ${{ github.head_ref || github.ref }}
@@ -406,7 +406,7 @@ jobs:
           cache: true
       - name: Cache pub packages
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.pub-cache
           key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
@@ -461,7 +461,7 @@ jobs:
           path: ${{ matrix.directory }}/allure-results
           retention-days: 30
       - name: Upload coverage
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' }}
         with:
           file: ${{ matrix.directory }}/coverage/lcov.info
@@ -469,7 +469,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
       - name: Upload logic layer coverage
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' && matrix.coverage_flag_logic != '' }}
         with:
           file: ${{ matrix.directory }}/coverage/lcov.info
@@ -493,7 +493,7 @@ jobs:
           - app: app_partner
             directory: apps/app_partner
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -533,7 +533,7 @@ jobs:
       run:
         working-directory: ./apps/landing_user
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
         with:
           node-version: '20'
@@ -556,7 +556,7 @@ jobs:
       run:
         working-directory: ./apps/landing_partner
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
         with:
           node-version: '20'
@@ -589,7 +589,7 @@ jobs:
       run:
         working-directory: ./${{ matrix.directory }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' || needs.changes.outputs.artifact_secret_scan == 'true' }}
 
       - name: Set up JDK 17
@@ -609,7 +609,7 @@ jobs:
 
       - name: Cache Gradle
         if: ${{ needs.changes.outputs[matrix.change_key] == 'true' || needs.changes.outputs.artifact_secret_scan == 'true' }}
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             ~/.gradle/caches
@@ -706,7 +706,7 @@ jobs:
       run:
         working-directory: ./apps/mds/docs
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
         with:
           node-version: '20'
@@ -731,12 +731,12 @@ jobs:
       run:
         working-directory: ./shared/packages/mds/icons
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.41.9'  # Fix #2640: flutter_quill 11.5.0 incompatible with Flutter 3.44.0
           cache: true
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: ~/.pub-cache
           key: ${{ runner.os }}-pub-mds-icons-${{ hashFiles('shared/packages/mds/icons/pubspec.lock') }}
@@ -768,8 +768,8 @@ jobs:
     if: ${{ needs.changes.outputs.supabase_db_stack == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: supabase/setup-cli@v2
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@v3
         with:
           version: latest
       - name: Setup Flutter
@@ -807,14 +807,14 @@ jobs:
     if: ${{ needs.changes.outputs.supabase_functions == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0   # diff-cover 가 base 와의 merge base 찾으려면 full history 필요
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
       - name: Cache Deno deps
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cache/deno
@@ -920,8 +920,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v6
-      - uses: supabase/setup-cli@v2
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@v3
         with:
           version: latest
       - uses: denoland/setup-deno@v2
@@ -977,7 +977,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 1
           persist-credentials: false
@@ -992,7 +992,7 @@ jobs:
           fallback-app-id: ${{ secrets.MINGLIT_RELEASE_BOT_APP_ID }}
           fallback-private-key: ${{ secrets.MINGLIT_RELEASE_BOT_PRIVATE_KEY }}
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.head_ref }}
           token: ${{ steps.release-bot.outputs.token }}
@@ -1037,7 +1037,7 @@ jobs:
     env:
       GITLEAKS_VERSION: '8.21.2'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Install gitleaks
