@@ -34,8 +34,8 @@ jobs:
       matrix:
         type: [security, performance]
     steps:
-      - name: Run actions/checkout@v6
-        uses: actions/checkout@v6
+      - name: Run actions/checkout@v7
+        uses: actions/checkout@v7
 
       - name: Resolve target environment
         id: env
