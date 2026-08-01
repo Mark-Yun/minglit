@@ -30,7 +30,7 @@ environment:
 # versions available, run `flutter pub outdated`.
 dependencies:
   cupertino_icons: ^1.0.8
-  file_picker: ^11.0.2  # iOS: native file picker
+  file_picker: ^12.0.0-beta.7  # iOS: native file picker
   flutter_displaymode: ^0.7.0  # Android: request 120Hz/ProMotion high refresh rate
   firebase_core: ^4.3.0
   flutter:
@@ -39,7 +39,7 @@ dependencies:
     sdk: flutter
   flutter_native_splash: ^2.4.3
   flutter_quill: ^11.5.0
-  flutter_riverpod: ^3.0.3
+  flutter_riverpod: ^3.1.0
   flutter_secure_storage: ^10.0.0  # iOS: Keychain
   freezed_annotation: ^3.1.0
   go_router: ^17.0.0
@@ -56,12 +56,12 @@ dependencies:
     path: ../../shared/packages/minglit_demo
   path_provider: ^2.1.5
   qr_flutter: ^4.1.0
-  riverpod: ^3.0.3
-  riverpod_annotation: ^3.0.3
-  package_info_plus: ^9.0.1  # iOS: CFBundleVersion (Info.plist)
+  riverpod: ^3.1.0
+  riverpod_annotation: ^4.0.0
+  package_info_plus: ^10.2.1  # iOS: CFBundleVersion (Info.plist)
   screen_brightness: ^2.1.7  # iOS: UIScreen brightness API
-  sentry_flutter: ^9.0.0  # iOS: native crash reporting
-  share_plus: ^12.0.1  # iOS: share sheet
+  sentry_flutter: ^10.0.0-alpha.2  # iOS: native crash reporting
+  share_plus: ^13.3.0  # iOS: share sheet
   shared_preferences: ^2.5.4
   supabase_flutter: ^2.12.0
   url_launcher: ^6.3.2  # iOS: LSApplicationQueriesSchemes (Info.plist)
@@ -86,8 +86,8 @@ dev_dependencies:
   patrol_finders: ^3.2.0
   plugin_platform_interface: ^2.1.8
   postgres: ^3.5.9
-  riverpod_generator: ^3.0.3
-  riverpod_lint: 3.0.3
+  riverpod_generator: ^4.0.0+1
+  riverpod_lint: 3.1.0
   test: any
   test_reporter: ^1.3.0
   url_launcher_platform_interface: ^2.3.2

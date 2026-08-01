@@ -15,12 +15,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_riverpod: ^3.0.3
+  flutter_riverpod: ^3.1.0
   # `Override` type is only reachable via the riverpod internals barrel
   # (flutter_riverpod's public barrel doesn't export it). We import it
   # explicitly to type the override list returns. Declared here so the
   # depend_on_referenced_packages lint passes.
-  riverpod: ^3.0.3
+  riverpod: ^3.1.0
   minglit_kit:
     path: ../minglit_kit
   # supabase_flutter is required for the User / SupabaseClient types only.
