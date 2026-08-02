@@ -31,7 +31,7 @@ jobs:
       target_sha: ${{ steps.plan.outputs.target_sha }}
       dry_run: ${{ steps.plan.outputs.dry_run }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: dev
           fetch-depth: 0
@@ -96,7 +96,7 @@ jobs:
       SHARD_TOTAL: 4
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.plan.outputs.target_sha }}
           persist-credentials: false
@@ -117,7 +117,7 @@ jobs:
         run: bash .github/scripts/create-dev-flutter-env.sh
 
       - name: Set up Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v5.6.0
         with:
           distribution: temurin
           java-version: 17
@@ -182,7 +182,7 @@ jobs:
       archive_commit: ${{ steps.archive.outputs.archive_commit }}
       before_commit: ${{ steps.archive.outputs.before_commit }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.plan.outputs.target_sha }}
           fetch-depth: 0
@@ -229,7 +229,7 @@ jobs:
           mkdir -p docs/infra/mds-emulator-render
 
       - name: Download render artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           pattern: mds-render-snapshot-*-shard-*
           merge-multiple: true

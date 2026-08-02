@@ -53,7 +53,7 @@ jobs:
       snapshot_build: ${{ steps.metadata.outputs.snapshot_build }}
       source_sha: ${{ steps.metadata.outputs.source_sha }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.source-ref }}
           fetch-depth: 0

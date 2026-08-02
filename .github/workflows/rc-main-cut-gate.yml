@@ -42,7 +42,7 @@ jobs:
       min_soak_hours: ${{ steps.plan.outputs.min_soak_hours }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -126,7 +126,7 @@ jobs:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Track rc -> main cut gate
         uses: ./.github/actions/cut-issue
         with:
