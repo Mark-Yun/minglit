@@ -35,7 +35,7 @@ jobs:
       SHARD_TOTAL: 4
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Create dev Flutter env file
         env:
@@ -111,7 +111,7 @@ jobs:
     needs: [render-capture]
     if: ${{ always() && !cancelled() }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -125,7 +125,7 @@ jobs:
           mkdir -p docs/infra/mds-emulator-render
 
       - name: Download render artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           pattern: mds-render-*-shard-*
           merge-multiple: true
