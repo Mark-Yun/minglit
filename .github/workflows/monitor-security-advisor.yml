@@ -35,7 +35,7 @@ jobs:
         type: [security, performance]
     steps:
       - name: Run actions/checkout@v6
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Resolve target environment
         id: env
