@@ -29,7 +29,7 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
-  animations: ^2.0.0
+  animations: ^3.0.0
   async: ^2.13.0
   collection: ^1.19.1
   cupertino_icons: ^1.0.8
@@ -41,9 +41,9 @@ dependencies:
     sdk: flutter
   flutter_native_splash: ^2.4.3
   flutter_quill: ^11.5.0
-  flutter_riverpod: ^3.0.3
+  flutter_riverpod: ^3.1.0
   freezed_annotation: ^3.1.0
-  go_router: ^17.0.0
+  go_router: ^18.0.0
   google_sign_in: 7.2.0  # iOS: GoogleService-Info.plist required
   image_picker: ^1.2.1  # iOS: camera/photo permissions
   intl: ^0.20.2
@@ -55,12 +55,12 @@ dependencies:
   minglit_demo:
     path: ../../shared/packages/minglit_demo
   mobile_scanner: any  # iOS: camera permission
-  package_info_plus: ^9.0.1  # iOS: CFBundleVersion (Info.plist)
+  package_info_plus: ^10.2.1  # iOS: CFBundleVersion (Info.plist)
   path: any
-  riverpod: ^3.0.3
-  riverpod_annotation: ^3.0.3
-  sentry_flutter: ^9.0.0  # iOS: native crash reporting
-  share_plus: ^12.0.1  # iOS: share sheet
+  riverpod: ^3.1.0
+  riverpod_annotation: ^4.0.0
+  sentry_flutter: ^10.0.0-alpha.4  # iOS: native crash reporting
+  share_plus: ^13.3.0  # iOS: share sheet
   shared_preferences: ^2.5.4
   supabase_flutter: ^2.12.0
   url_launcher: ^6.3.2  # iOS: LSApplicationQueriesSchemes (Info.plist)
@@ -84,8 +84,8 @@ dev_dependencies:
     path: ../../shared/packages/minglit_lints
   mocktail: any
   plugin_platform_interface: any
-  riverpod_generator: ^3.0.3
-  riverpod_lint: 3.0.3
+  riverpod_generator: ^4.0.0+1
+  riverpod_lint: 3.1.0
   test_reporter: ^1.3.0
   url_launcher_platform_interface: ^2.3.2
   very_good_analysis: ^10.0.0
